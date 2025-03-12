@@ -124,16 +124,16 @@ export function SidebarNav({
           icon: <CheckSquare className="h-4 w-4 text-[#29335C]" />,
         },
         {
-          name: "Lembretes",
-          path: "/agenda?view=lembretes",
-          icon: <Bell className="h-4 w-4 text-[#29335C]" />,
-        },
-        {
           name: "Desafios",
           path: "/agenda?view=desafios",
           icon: <Target className="h-4 w-4 text-[#29335C]" />,
         },
       ],
+    },
+    {
+      icon: <Bell className="h-5 w-5" />,
+      label: "Lembretes",
+      path: "/lembretes",
     },
     {
       icon: <BookOpen className="h-5 w-5" />,
@@ -407,7 +407,7 @@ export function SidebarNav({
               {!isCollapsed &&
                 item.subItems &&
                 expandedSection === item.label && (
-                  <div className="ml-8 mt-1 space-y-1 border-l-2 border-[#001427]/20 dark:border-[#001427]/30 pl-2">
+                  <div className="ml-2 mt-1 space-y-1">
                     {item.subItems.map((subItem, subIndex) => (
                       <Button
                         key={subIndex}
@@ -421,7 +421,7 @@ export function SidebarNav({
                         )}
                         onClick={() => navigate(subItem.path)}
                       >
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#001427]/50 dark:bg-[#001427]/70" />
+                        {subItem.icon}
                         <span>{subItem.name}</span>
                       </Button>
                     ))}

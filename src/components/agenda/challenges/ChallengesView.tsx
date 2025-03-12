@@ -6,7 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import MentorAIRecommendation from "./MentorAIRecommendation";
+import NotificationBanner from "./NotificationBanner";
+import QuizTask from "./QuizTask";
+import CommunitySection from "./CommunitySection";
+import RewardsSection from "./RewardsSection";
+import RankingSection from "./RankingSection";
 import {
   Search,
   Filter,
@@ -395,6 +401,10 @@ import {
   Circle,
   Link,
   Play,
+  ChevronDown,
+  ArrowUpRight,
+  Loader2,
+  Search as SearchIcon,
 } from "lucide-react";
 
 // Define module data
@@ -563,6 +573,206 @@ const currentModuleTasks = [
   },
 ];
 
+// Sample discussion data for community section
+const discussionData = [
+  {
+    id: "1",
+    title: "Como vocês organizam o tempo de estudo?",
+    content:
+      "Estou tendo dificuldades para organizar meu tempo de estudo. Quais técnicas vocês utilizam para maximizar a produtividade e manter o foco durante as sessões de estudo?",
+    author: {
+      name: "Ana Silva",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ana",
+    },
+    date: "2 horas atrás",
+    likes: 12,
+    comments: 8,
+    tags: ["Organização", "Produtividade", "Técnicas de Estudo"],
+  },
+  {
+    id: "2",
+    title: "Dicas para memorização de fórmulas matemáticas",
+    content:
+      "Alguém tem boas dicas para memorizar fórmulas matemáticas complexas? Estou estudando para o vestibular e preciso melhorar minha capacidade de memorização.",
+    author: {
+      name: "Carlos Oliveira",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Carlos",
+    },
+    date: "1 dia atrás",
+    likes: 24,
+    comments: 15,
+    tags: ["Matemática", "Memorização", "Vestibular"],
+  },
+  {
+    id: "3",
+    title: "Compartilhando meu mapa mental sobre Biologia Celular",
+    content:
+      "Criei um mapa mental detalhado sobre Biologia Celular que me ajudou muito nos estudos. Estou compartilhando com vocês para que possam utilizar também!",
+    author: {
+      name: "Mariana Santos",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mariana",
+    },
+    date: "3 dias atrás",
+    likes: 45,
+    comments: 22,
+    tags: ["Biologia", "Mapas Mentais", "Material de Estudo"],
+  },
+];
+
+// Sample rewards data
+const rewardsData = [
+  {
+    id: "1",
+    title: "Badge: Iniciante do Conhecimento",
+    description: "Concluiu o módulo Fundamentos do Conhecimento",
+    icon: <Award className="h-6 w-6" />,
+    type: "badge",
+    unlocked: true,
+  },
+  {
+    id: "2",
+    title: "Badge: Mestre da Memória",
+    description: "Concluiu o módulo Técnicas de Memorização",
+    icon: <Brain className="h-6 w-6" />,
+    type: "badge",
+    unlocked: false,
+    progress: 3,
+    total: 4,
+  },
+  {
+    id: "3",
+    title: "Certificado de Conclusão",
+    description: "Concluiu todos os módulos da Jornada do Conhecimento",
+    icon: <FileText className="h-6 w-6" />,
+    type: "certificate",
+    unlocked: false,
+    progress: 1,
+    total: 5,
+  },
+  {
+    id: "4",
+    title: "E-book: Técnicas Avançadas de Estudo",
+    description: "Desbloqueado ao atingir 500 Ponto Coins",
+    icon: <BookOpen className="h-6 w-6" />,
+    type: "item",
+    unlocked: false,
+    progress: 350,
+    total: 500,
+  },
+];
+
+// Sample ranking data
+const rankingData = [
+  {
+    id: "1",
+    name: "Pedro Almeida",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Pedro",
+    points: 1250,
+    level: 8,
+    position: 1,
+    trend: "stable",
+    isCurrentUser: false,
+  },
+  {
+    id: "2",
+    name: "Juliana Costa",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Juliana",
+    points: 1180,
+    level: 7,
+    position: 2,
+    trend: "up",
+    trendValue: 1,
+    isCurrentUser: false,
+  },
+  {
+    id: "3",
+    name: "Rafael Souza",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rafael",
+    points: 1050,
+    level: 7,
+    position: 3,
+    trend: "down",
+    trendValue: 1,
+    isCurrentUser: false,
+  },
+  {
+    id: "4",
+    name: "Camila Ferreira",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Camila",
+    points: 980,
+    level: 6,
+    position: 4,
+    trend: "up",
+    trendValue: 2,
+    isCurrentUser: false,
+  },
+  {
+    id: "5",
+    name: "Lucas Mendes",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Lucas",
+    points: 920,
+    level: 6,
+    position: 5,
+    trend: "down",
+    trendValue: 1,
+    isCurrentUser: true,
+  },
+];
+
+// Sample quiz questions
+const sampleQuizQuestions = [
+  {
+    id: "q1",
+    text: "Qual técnica de memorização envolve associar informações a locais específicos em um ambiente familiar?",
+    options: [
+      { id: "q1-a", text: "Técnica de Repetição Espaçada", isCorrect: false },
+      {
+        id: "q1-b",
+        text: "Método dos Loci (Palácio da Memória)",
+        isCorrect: true,
+      },
+      { id: "q1-c", text: "Técnica Pomodoro", isCorrect: false },
+      { id: "q1-d", text: "Mnemônicos Verbais", isCorrect: false },
+    ],
+  },
+  {
+    id: "q2",
+    text: "Qual é o intervalo de tempo ideal para uma sessão de estudo na técnica Pomodoro?",
+    options: [
+      { id: "q2-a", text: "15 minutos", isCorrect: false },
+      { id: "q2-b", text: "25 minutos", isCorrect: true },
+      { id: "q2-c", text: "45 minutos", isCorrect: false },
+      { id: "q2-d", text: "60 minutos", isCorrect: false },
+    ],
+  },
+  {
+    id: "q3",
+    text: "Qual destas NÃO é uma característica da técnica de revisão espaçada?",
+    options: [
+      {
+        id: "q3-a",
+        text: "Revisões em intervalos crescentes",
+        isCorrect: false,
+      },
+      {
+        id: "q3-b",
+        text: "Baseada na curva do esquecimento",
+        isCorrect: false,
+      },
+      {
+        id: "q3-c",
+        text: "Revisão intensiva apenas antes das provas",
+        isCorrect: true,
+      },
+      {
+        id: "q3-d",
+        text: "Melhora a retenção de longo prazo",
+        isCorrect: false,
+      },
+    ],
+  },
+];
+
 const ChallengesView: React.FC = () => {
   const [activeTab, setActiveTab] = useState("jornada");
   const [searchQuery, setSearchQuery] = useState("");
@@ -570,11 +780,36 @@ const ChallengesView: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedModule, setSelectedModule] = useState<number | null>(2); // Default to module 2 (in progress)
   const [showModuleDetails, setShowModuleDetails] = useState(false);
+  const [isFirstVisit, setIsFirstVisit] = useState(true);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(true);
+  const [hasStartedJourney, setHasStartedJourney] = useState(false);
+  const [showMentorRecommendation, setShowMentorRecommendation] =
+    useState(false);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
+  const [showQuizTask, setShowQuizTask] = useState(false);
+  const [showCommunitySection, setShowCommunitySection] = useState(false);
+  const [showRewardsSection, setShowRewardsSection] = useState(false);
+  const [showRankingSection, setShowRankingSection] = useState(false);
+  const [showInRanking, setShowInRanking] = useState(true);
 
   useEffect(() => {
     // Simular carregamento para garantir que os componentes sejam renderizados corretamente
     const timer = setTimeout(() => {
       setIsLoading(false);
+
+      // Show notification after a delay
+      setTimeout(() => {
+        setNotificationMessage(
+          "Novo módulo disponível: Técnicas de Memorização",
+        );
+        setShowNotification(true);
+      }, 2000);
+
+      // Show mentor recommendation after another delay
+      setTimeout(() => {
+        setShowMentorRecommendation(true);
+      }, 5000);
     }, 500);
 
     return () => clearTimeout(timer);
@@ -747,6 +982,82 @@ const ChallengesView: React.FC = () => {
     console.log(`Task ${taskId} toggled`);
   };
 
+  // Handle start journey
+  const handleStartJourney = () => {
+    setIsFirstVisit(false);
+    setShowWelcomeModal(false);
+    setHasStartedJourney(true);
+    setActiveTab("jornada");
+
+    // Show success notification
+    setNotificationMessage("Jornada do Conhecimento iniciada com sucesso!");
+    setShowNotification(true);
+  };
+
+  // Handle notification close
+  const handleNotificationClose = () => {
+    setShowNotification(false);
+  };
+
+  // Handle notification action
+  const handleNotificationAction = () => {
+    setShowNotification(false);
+    setActiveTab("jornada");
+  };
+
+  // Handle mentor recommendation close
+  const handleMentorRecommendationClose = () => {
+    setShowMentorRecommendation(false);
+  };
+
+  // Handle quiz completion
+  const handleQuizComplete = (score: number, totalQuestions: number) => {
+    setShowQuizTask(false);
+
+    // Show success notification
+    setNotificationMessage(
+      `Quiz concluído! Você acertou ${score} de ${totalQuestions} questões.`,
+    );
+    setShowNotification(true);
+
+    // Update task status (in a real app, this would update the backend)
+    console.log(`Quiz completed with score: ${score}/${totalQuestions}`);
+  };
+
+  // Handle community post creation
+  const handleCreatePost = () => {
+    console.log("Create new discussion post");
+    // In a real app, this would open a form to create a new post
+  };
+
+  // Handle view post
+  const handleViewPost = (postId: string) => {
+    console.log(`View post with ID: ${postId}`);
+    // In a real app, this would navigate to the post details page
+  };
+
+  // Handle view store
+  const handleViewStore = () => {
+    console.log("View rewards store");
+    // In a real app, this would navigate to the rewards store page
+  };
+
+  // Handle toggle ranking visibility
+  const handleToggleRankingVisibility = () => {
+    setShowInRanking(!showInRanking);
+  };
+
+  // Handle start task
+  const handleStartTask = (taskId: string, taskType: string) => {
+    console.log(`Starting task: ${taskId}, type: ${taskType}`);
+
+    // If it's a quiz task, show the quiz interface
+    if (taskType === "quiz") {
+      setShowQuizTask(true);
+    }
+    // Other task types would have their own handlers
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[400px]">
@@ -755,8 +1066,182 @@ const ChallengesView: React.FC = () => {
     );
   }
 
+  // Welcome Modal for First-Time Users
+  const WelcomeModal = () => (
+    <AnimatePresence>
+      {showWelcomeModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="bg-[#001427] rounded-2xl overflow-hidden max-w-3xl w-full shadow-2xl border border-[#FF6B00]/30"
+          >
+            <div className="relative h-64 overflow-hidden">
+              <img
+                src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1200&q=90"
+                alt="Jornada do Conhecimento"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/90"></div>
+              <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] flex items-center justify-center">
+                    <Route className="h-6 w-6 text-white" />
+                  </div>
+                  <h2 className="text-3xl font-bold font-montserrat bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent">
+                    Jornada do Conhecimento
+                  </h2>
+                </div>
+                <p className="text-gray-200 max-w-2xl font-open-sans">
+                  Bem-vindo à sua jornada de aprendizado personalizada!
+                  Desenvolva habilidades essenciais para o sucesso acadêmico
+                  através de desafios interativos e recompensas motivadoras.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3 font-montserrat flex items-center">
+                    <Milestone className="h-5 w-5 mr-2 text-[#FF6B00]" /> O que
+                    você vai aprender
+                  </h3>
+                  <ul className="space-y-2">
+                    {journeyModules.map((module) => (
+                      <li key={module.id} className="flex items-start">
+                        <div className="mt-0.5 mr-2 text-[#FF6B00]">
+                          {module.icon}
+                        </div>
+                        <span className="text-gray-300 font-open-sans">
+                          {module.title}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3 font-montserrat flex items-center">
+                    <Gift className="h-5 w-5 mr-2 text-[#FF6B00]" /> O que você
+                    vai ganhar
+                  </h3>
+                  <ul className="space-y-2">
+                    <li className="flex items-start">
+                      <Award className="h-5 w-5 mr-2 text-[#FF6B00] mt-0.5" />
+                      <span className="text-gray-300 font-open-sans">
+                        Badges exclusivos para cada módulo concluído
+                      </span>
+                    </li>
+                    <li className="flex items-start">
+                      <Coins className="h-5 w-5 mr-2 text-[#FF6B00] mt-0.5" />
+                      <span className="text-gray-300 font-open-sans">
+                        Até 1.000 Ponto Coins para trocar por recompensas
+                      </span>
+                    </li>
+                    <li className="flex items-start">
+                      <Brain className="h-5 w-5 mr-2 text-[#FF6B00] mt-0.5" />
+                      <span className="text-gray-300 font-open-sans">
+                        Habilidades essenciais para o sucesso acadêmico
+                      </span>
+                    </li>
+                    <li className="flex items-start">
+                      <FileText className="h-5 w-5 mr-2 text-[#FF6B00] mt-0.5" />
+                      <span className="text-gray-300 font-open-sans">
+                        Certificado de conclusão da jornada
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="bg-[#29335C]/30 p-4 rounded-xl">
+                <h3 className="text-lg font-bold text-white mb-2 font-montserrat flex items-center">
+                  <Sparkles className="h-5 w-5 mr-2 text-[#FF6B00]" /> Como
+                  funciona
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                  {howItWorks.map((step, index) => (
+                    <div
+                      key={step.id}
+                      className="flex flex-col items-center text-center"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] flex items-center justify-center mb-2">
+                        <span className="text-white font-bold">
+                          {index + 1}
+                        </span>
+                      </div>
+                      <h4 className="text-white font-medium mb-1 font-montserrat">
+                        {step.title}
+                      </h4>
+                      <p className="text-xs text-gray-400 font-open-sans">
+                        {step.description}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex justify-center pt-4">
+                <Button
+                  onClick={handleStartJourney}
+                  className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-montserrat font-semibold uppercase px-8 py-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] text-lg"
+                >
+                  <Rocket className="h-5 w-5 mr-2" /> Iniciar Minha Jornada
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
   return (
     <div className="space-y-8 bg-[#001427] p-6 rounded-xl shadow-md">
+      {isFirstVisit && <WelcomeModal />}
+
+      {/* Mentor AI Recommendation */}
+      {showMentorRecommendation && (
+        <MentorAIRecommendation
+          onClose={handleMentorRecommendationClose}
+          onStartJourney={handleStartJourney}
+        />
+      )}
+
+      {/* Notification Banner */}
+      {showNotification && (
+        <NotificationBanner
+          message={notificationMessage}
+          type="info"
+          actionText="Ver Detalhes"
+          onAction={handleNotificationAction}
+          onClose={handleNotificationClose}
+        />
+      )}
+
+      {/* Quiz Task Modal */}
+      {showQuizTask && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="max-w-3xl w-full">
+            <QuizTask
+              taskId="2-4"
+              title="Quiz: Técnicas de Memorização"
+              description="Teste seus conhecimentos sobre as técnicas de memorização estudadas neste módulo."
+              questions={sampleQuizQuestions}
+              onComplete={handleQuizComplete}
+              onClose={() => setShowQuizTask(false)}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Header with search and create button */}
       <div className="flex flex-col gap-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -794,7 +1279,7 @@ const ChallengesView: React.FC = () => {
         <div className="flex flex-col md:flex-row">
           <div className="md:w-1/3 relative">
             <img
-              src="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=1200&q=90"
+              src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1200&q=90"
               alt="Jornada do Conhecimento"
               className="w-full h-full object-cover md:absolute inset-0 opacity-90"
               style={{ minHeight: "250px" }}
@@ -813,12 +1298,14 @@ const ChallengesView: React.FC = () => {
                 <h2 className="text-2xl font-bold text-white font-montserrat bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent">
                   Jornada do Conhecimento
                 </h2>
-                <Badge
-                  variant="outline"
-                  className="border-[#FF6B00] text-[#FF6B00] font-montserrat text-xs"
-                >
-                  Módulo 2 de 5
-                </Badge>
+                {hasStartedJourney && (
+                  <Badge
+                    variant="outline"
+                    className="border-[#FF6B00] text-[#FF6B00] font-montserrat text-xs"
+                  >
+                    Módulo 1 de 5
+                  </Badge>
+                )}
               </div>
 
               <p className="text-gray-300 mb-5 font-open-sans">
@@ -827,57 +1314,108 @@ const ChallengesView: React.FC = () => {
                 resolução de problemas e muito mais.
               </p>
 
-              <div className="mb-5">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-gray-300 font-montserrat">
-                    Progresso Geral
-                  </span>
-                  <span className="text-sm font-bold text-[#FF6B00] font-montserrat">
-                    35%
-                  </span>
-                </div>
-                <div className="h-3 bg-[#29335C]/50 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full transition-all duration-500"
-                    style={{ width: `35%` }}
-                  ></div>
-                </div>
-                <div className="flex justify-between text-xs text-gray-400 mt-2 font-open-sans">
-                  <span className="flex items-center">
-                    <CheckSquare className="h-3 w-3 mr-1 text-[#FF6B00]" /> 7 de
-                    20 tarefas concluídas
-                  </span>
-                  <span className="flex items-center">
-                    <Award className="h-3 w-3 mr-1 text-[#FF6B00]" /> 350 Ponto
-                    Coins acumulados
-                  </span>
-                </div>
-              </div>
+              {hasStartedJourney ? (
+                <>
+                  <div className="mb-5">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium text-gray-300 font-montserrat">
+                        Progresso Geral
+                      </span>
+                      <span className="text-sm font-bold text-[#FF6B00] font-montserrat">
+                        0%
+                      </span>
+                    </div>
+                    <div className="h-3 bg-[#29335C]/50 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full transition-all duration-500"
+                        style={{ width: `0%` }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400 mt-2 font-open-sans">
+                      <span className="flex items-center">
+                        <CheckSquare className="h-3 w-3 mr-1 text-[#FF6B00]" />{" "}
+                        0 de 20 tarefas concluídas
+                      </span>
+                      <span className="flex items-center">
+                        <Award className="h-3 w-3 mr-1 text-[#FF6B00]" /> 0
+                        Ponto Coins acumulados
+                      </span>
+                    </div>
+                  </div>
 
-              <div className="flex items-center gap-4 mb-4 bg-[#29335C]/30 p-3 rounded-lg">
-                <div className="flex items-center">
-                  <Brain className="h-5 w-5 text-[#FF6B00] mr-2" />
-                  <span className="text-xs text-gray-300 font-montserrat">
-                    Módulo atual:{" "}
-                    <span className="font-semibold text-white">
-                      Técnicas de Memorização
-                    </span>
-                  </span>
+                  <div className="flex items-center gap-4 mb-4 bg-[#29335C]/30 p-3 rounded-lg">
+                    <div className="flex items-center">
+                      <Lightbulb className="h-5 w-5 text-[#FF6B00] mr-2" />
+                      <span className="text-xs text-gray-300 font-montserrat">
+                        Módulo atual:{" "}
+                        <span className="font-semibold text-white">
+                          Fundamentos do Conhecimento
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="mb-5 bg-[#29335C]/30 p-4 rounded-lg">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-full bg-[#FF6B00]/20 flex items-center justify-center">
+                      <Route className="h-5 w-5 text-[#FF6B00]" />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-medium">
+                        Comece sua jornada de aprendizado
+                      </h4>
+                      <p className="text-xs text-gray-400">
+                        Desenvolva habilidades essenciais para o sucesso
+                        acadêmico
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-gray-300">
+                    <div className="flex items-center gap-1">
+                      <CheckSquare className="h-3.5 w-3.5 text-[#FF6B00]" />
+                      <span>5 módulos</span>
+                    </div>
+                    <span>•</span>
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-3.5 w-3.5 text-[#FF6B00]" />
+                      <span>20 tarefas</span>
+                    </div>
+                    <span>•</span>
+                    <div className="flex items-center gap-1">
+                      <Award className="h-3.5 w-3.5 text-[#FF6B00]" />
+                      <span>5 badges</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-end">
-              <Button
-                variant="outline"
-                className="border-[#FF6B00] text-[#FF6B00] hover:bg-[#FF6B00]/10 font-montserrat font-semibold w-full sm:w-auto"
-                onClick={() => setActiveTab("jornada")}
-              >
-                <Eye className="h-4 w-4 mr-2" /> Ver Detalhes
-              </Button>
-              <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-montserrat font-semibold uppercase w-full sm:w-auto">
-                <Rocket className="h-4 w-4 mr-2" /> Continuar Jornada
-              </Button>
+              {hasStartedJourney ? (
+                <>
+                  <Button
+                    variant="outline"
+                    className="border-[#FF6B00] text-[#FF6B00] hover:bg-[#FF6B00]/10 font-montserrat font-semibold w-full sm:w-auto"
+                    onClick={() => setActiveTab("jornada")}
+                  >
+                    <Eye className="h-4 w-4 mr-2" /> Ver Detalhes
+                  </Button>
+                  <Button
+                    className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-montserrat font-semibold uppercase w-full sm:w-auto"
+                    onClick={() => setActiveTab("jornada")}
+                  >
+                    <Rocket className="h-4 w-4 mr-2" /> Continuar Jornada
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-montserrat font-semibold uppercase w-full sm:w-auto"
+                  onClick={handleStartJourney}
+                >
+                  <Rocket className="h-4 w-4 mr-2" /> Começar Jornada
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -1050,6 +1588,9 @@ const ChallengesView: React.FC = () => {
                               <Button
                                 size="sm"
                                 className="h-8 text-xs bg-[#FF6B00] hover:bg-[#FF8C40] text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
+                                onClick={() =>
+                                  handleStartTask(task.id, task.type)
+                                }
                               >
                                 Iniciar Tarefa
                               </Button>
@@ -1088,6 +1629,50 @@ const ChallengesView: React.FC = () => {
                     </div>
                   ))}
                 </div>
+
+                <div className="mt-4 pt-4 border-t border-[#FF6B00]/20">
+                  <Button
+                    className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white"
+                    onClick={() => setShowRewardsSection(true)}
+                  >
+                    <Gift className="h-4 w-4 mr-2" /> Ver Todas as Recompensas
+                  </Button>
+                </div>
+              </div>
+
+              {/* Additional Sections */}
+              <div className="mt-8 space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-bold text-white font-montserrat">
+                    Seções Adicionais
+                  </h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Button
+                    variant="outline"
+                    className="h-auto py-4 border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 flex flex-col items-center gap-2"
+                    onClick={() => setShowCommunitySection(true)}
+                  >
+                    <Users className="h-6 w-6" />
+                    <span>Comunidade da Jornada</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-auto py-4 border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 flex flex-col items-center gap-2"
+                    onClick={() => setShowRewardsSection(true)}
+                  >
+                    <Gift className="h-6 w-6" />
+                    <span>Suas Recompensas</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-auto py-4 border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 flex flex-col items-center gap-2"
+                    onClick={() => setShowRankingSection(true)}
+                  >
+                    <Trophy className="h-6 w-6" />
+                    <span>Ranking</span>
+                  </Button>
+                </div>
               </div>
             </div>
           ) : (
@@ -1105,76 +1690,105 @@ const ChallengesView: React.FC = () => {
                       essenciais de estudo e aprendizado
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1 bg-[#FF6B00]/10 px-3 py-1 rounded-full">
-                      <Trophy className="h-4 w-4 text-[#FF6B00]" />
-                      <span className="text-sm text-[#FF6B00] font-medium">
-                        350 Ponto Coins
-                      </span>
+                  {hasStartedJourney && (
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1 bg-[#FF6B00]/10 px-3 py-1 rounded-full">
+                        <Trophy className="h-4 w-4 text-[#FF6B00]" />
+                        <span className="text-sm text-[#FF6B00] font-medium">
+                          0 Ponto Coins
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 bg-[#FF6B00]/10 px-3 py-1 rounded-full">
+                        <Award className="h-4 w-4 text-[#FF6B00]" />
+                        <span className="text-sm text-[#FF6B00] font-medium">
+                          0 Badges
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1 bg-[#FF6B00]/10 px-3 py-1 rounded-full">
-                      <Award className="h-4 w-4 text-[#FF6B00]" />
-                      <span className="text-sm text-[#FF6B00] font-medium">
-                        2 Badges
-                      </span>
-                    </div>
-                  </div>
+                  )}
                 </div>
 
-                <div className="mb-6">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-300 font-montserrat">
-                      Progresso Geral
-                    </span>
-                    <span className="text-sm font-bold text-[#FF6B00] font-montserrat">
-                      35%
-                    </span>
-                  </div>
-                  <div className="h-3 bg-[#29335C]/50 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full transition-all duration-500"
-                      style={{ width: `35%` }}
-                    ></div>
-                  </div>
-                </div>
+                {hasStartedJourney ? (
+                  <>
+                    <div className="mb-6">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium text-gray-300 font-montserrat">
+                          Progresso Geral
+                        </span>
+                        <span className="text-sm font-bold text-[#FF6B00] font-montserrat">
+                          0%
+                        </span>
+                      </div>
+                      <div className="h-3 bg-[#29335C]/50 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full transition-all duration-500"
+                          style={{ width: `0%` }}
+                        ></div>
+                      </div>
+                    </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="bg-white/5 rounded-lg p-4 border border-[#FF6B00]/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CheckSquare className="h-5 w-5 text-[#FF6B00]" />
-                      <h4 className="text-white font-medium">
-                        Tarefas Concluídas
-                      </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="bg-white/5 rounded-lg p-4 border border-[#FF6B00]/20">
+                        <div className="flex items-center gap-2 mb-2">
+                          <CheckSquare className="h-5 w-5 text-[#FF6B00]" />
+                          <h4 className="text-white font-medium">
+                            Tarefas Concluídas
+                          </h4>
+                        </div>
+                        <p className="text-2xl font-bold text-white">
+                          0{" "}
+                          <span className="text-sm text-gray-400 font-normal">
+                            / 20
+                          </span>
+                        </p>
+                      </div>
+                      <div className="bg-white/5 rounded-lg p-4 border border-[#FF6B00]/20">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Milestone className="h-5 w-5 text-[#FF6B00]" />
+                          <h4 className="text-white font-medium">
+                            Módulos Concluídos
+                          </h4>
+                        </div>
+                        <p className="text-2xl font-bold text-white">
+                          0{" "}
+                          <span className="text-sm text-gray-400 font-normal">
+                            / 5
+                          </span>
+                        </p>
+                      </div>
+                      <div className="bg-white/5 rounded-lg p-4 border border-[#FF6B00]/20">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Clock className="h-5 w-5 text-[#FF6B00]" />
+                          <h4 className="text-white font-medium">
+                            Tempo Dedicado
+                          </h4>
+                        </div>
+                        <p className="text-2xl font-bold text-white">
+                          0h 00min
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-2xl font-bold text-white">
-                      7{" "}
-                      <span className="text-sm text-gray-400 font-normal">
-                        / 20
-                      </span>
+                  </>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="w-20 h-20 mx-auto bg-[#FF6B00]/10 rounded-full flex items-center justify-center mb-4">
+                      <Route className="h-10 w-10 text-[#FF6B00]" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-2 font-montserrat">
+                      Comece sua jornada de aprendizado
+                    </h3>
+                    <p className="text-gray-400 max-w-md mx-auto mb-6 font-open-sans">
+                      Inicie a Jornada do Conhecimento para desenvolver
+                      habilidades essenciais para o sucesso acadêmico.
                     </p>
+                    <Button
+                      className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-montserrat font-semibold uppercase"
+                      onClick={handleStartJourney}
+                    >
+                      <Rocket className="h-4 w-4 mr-2" /> Começar Jornada
+                    </Button>
                   </div>
-                  <div className="bg-white/5 rounded-lg p-4 border border-[#FF6B00]/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Milestone className="h-5 w-5 text-[#FF6B00]" />
-                      <h4 className="text-white font-medium">
-                        Módulos Concluídos
-                      </h4>
-                    </div>
-                    <p className="text-2xl font-bold text-white">
-                      1{" "}
-                      <span className="text-sm text-gray-400 font-normal">
-                        / 5
-                      </span>
-                    </p>
-                  </div>
-                  <div className="bg-white/5 rounded-lg p-4 border border-[#FF6B00]/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Clock className="h-5 w-5 text-[#FF6B00]" />
-                      <h4 className="text-white font-medium">Tempo Dedicado</h4>
-                    </div>
-                    <p className="text-2xl font-bold text-white">4h 30min</p>
-                  </div>
-                </div>
+                )}
               </div>
 
               {/* Module List */}
@@ -1184,116 +1798,131 @@ const ChallengesView: React.FC = () => {
                   da Jornada
                 </h3>
 
-                <div className="space-y-4">
-                  {journeyModules.map((module) => (
-                    <div
-                      key={module.id}
-                      className={`bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border ${module.status === "locked" ? "border-gray-300/30 opacity-75" : module.status === "complete" ? "border-green-500/30" : "border-[#FF6B00]/20"}`}
-                    >
-                      <div className="p-4 sm:p-6">
-                        <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-                          <div className="flex-shrink-0">
-                            <div
-                              className={`w-12 h-12 rounded-full ${module.status === "locked" ? "bg-gray-200 dark:bg-gray-700/30" : module.status === "complete" ? "bg-green-100 dark:bg-green-900/20" : "bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20"} flex items-center justify-center`}
-                            >
-                              {module.icon}
-                            </div>
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                              <div className="flex items-center gap-2">
-                                <h3 className="text-lg font-bold text-gray-900 dark:text-white font-montserrat">
-                                  {module.title}
-                                </h3>
-                                {getModuleStatusIcon(module.status)}
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Badge
-                                  className={`${module.status === "locked" ? "bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400" : module.status === "complete" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" : "bg-[#FF6B00]/10 text-[#FF6B00]"}`}
+                {hasStartedJourney ? (
+                  <div className="space-y-4">
+                    {journeyModules.map((module, index) => {
+                      // For first-time users, only the first module is available
+                      const moduleStatus = index === 0 ? "available" : "locked";
+                      const moduleProgress = 0;
+
+                      return (
+                        <div
+                          key={module.id}
+                          className={`bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border ${moduleStatus === "locked" ? "border-gray-300/30 opacity-75" : "border-[#FF6B00]/20"}`}
+                        >
+                          <div className="p-4 sm:p-6">
+                            <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                              <div className="flex-shrink-0">
+                                <div
+                                  className={`w-12 h-12 rounded-full ${moduleStatus === "locked" ? "bg-gray-200 dark:bg-gray-700/30" : "bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20"} flex items-center justify-center`}
                                 >
-                                  {module.status === "locked"
-                                    ? "Bloqueado"
-                                    : module.status === "complete"
-                                      ? "Concluído"
-                                      : "Em Progresso"}
-                                </Badge>
-                              </div>
-                            </div>
-                            <p className="text-sm mb-4 text-gray-600 dark:text-gray-300 font-open-sans">
-                              {module.description}
-                            </p>
-
-                            <div className="mb-3">
-                              <div className="flex justify-between items-center mb-1">
-                                <span className="text-xs font-medium text-gray-700 dark:text-gray-300 font-montserrat">
-                                  Progresso
-                                </span>
-                                <span className="text-xs font-bold text-[#FF6B00] font-montserrat">
-                                  {module.progress}%
-                                </span>
-                              </div>
-                              <Progress
-                                value={module.progress}
-                                className={`h-1.5 ${module.status === "locked" ? "bg-gray-100 dark:bg-gray-700" : "bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20"}`}
-                              />
-                            </div>
-
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                              <div className="flex items-center gap-4">
-                                <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 font-open-sans">
-                                  <CheckSquare className="h-3.5 w-3.5 mr-1 text-[#FF6B00]" />
-                                  {
-                                    module.tasks.filter((t) => t.completed)
-                                      .length
-                                  }{" "}
-                                  de {module.tasks.length} tarefas
-                                </div>
-                                <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 font-open-sans">
-                                  <Award className="h-3.5 w-3.5 mr-1 text-[#FF6B00]" />
-                                  {module.rewards.length} recompensas
+                                  {module.icon}
                                 </div>
                               </div>
-
-                              <div className="flex items-center gap-2">
-                                {module.status !== "locked" && (
-                                  <Button
-                                    size="sm"
-                                    className="h-8 text-xs bg-[#FF6B00] hover:bg-[#FF8C40] text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-300 uppercase font-montserrat"
-                                    onClick={() =>
-                                      handleModuleSelect(module.id)
-                                    }
-                                  >
-                                    {module.status === "complete" ? (
-                                      <>
-                                        <Eye className="h-3.5 w-3.5 mr-1" /> Ver
-                                        Detalhes
-                                      </>
+                              <div className="flex-1">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white font-montserrat">
+                                      {module.title}
+                                    </h3>
+                                    {moduleStatus === "locked" ? (
+                                      <Lock className="h-5 w-5 text-gray-400" />
                                     ) : (
-                                      <>
-                                        <Rocket className="h-3.5 w-3.5 mr-1" />{" "}
-                                        Continuar
-                                      </>
+                                      <Circle className="h-5 w-5 text-[#FF6B00]" />
                                     )}
-                                  </Button>
-                                )}
-                                {module.status === "locked" && (
-                                  <Button
-                                    size="sm"
-                                    className="h-8 text-xs bg-gray-400 text-white font-medium rounded-lg opacity-70 cursor-not-allowed uppercase font-montserrat"
-                                    disabled
-                                  >
-                                    <Lock className="h-3.5 w-3.5 mr-1" />{" "}
-                                    Bloqueado
-                                  </Button>
-                                )}
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Badge
+                                      className={`${moduleStatus === "locked" ? "bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400" : "bg-[#FF6B00]/10 text-[#FF6B00]"}`}
+                                    >
+                                      {moduleStatus === "locked"
+                                        ? "Bloqueado"
+                                        : "Disponível"}
+                                    </Badge>
+                                  </div>
+                                </div>
+                                <p className="text-sm mb-4 text-gray-600 dark:text-gray-300 font-open-sans">
+                                  {module.description}
+                                </p>
+
+                                <div className="mb-3">
+                                  <div className="flex justify-between items-center mb-1">
+                                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300 font-montserrat">
+                                      Progresso
+                                    </span>
+                                    <span className="text-xs font-bold text-[#FF6B00] font-montserrat">
+                                      {moduleProgress}%
+                                    </span>
+                                  </div>
+                                  <Progress
+                                    value={moduleProgress}
+                                    className={`h-1.5 ${moduleStatus === "locked" ? "bg-gray-100 dark:bg-gray-700" : "bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20"}`}
+                                  />
+                                </div>
+
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                  <div className="flex items-center gap-4">
+                                    <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 font-open-sans">
+                                      <CheckSquare className="h-3.5 w-3.5 mr-1 text-[#FF6B00]" />
+                                      0 de {module.tasks.length} tarefas
+                                    </div>
+                                    <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 font-open-sans">
+                                      <Award className="h-3.5 w-3.5 mr-1 text-[#FF6B00]" />
+                                      {module.rewards.length} recompensas
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-2">
+                                    {moduleStatus !== "locked" ? (
+                                      <Button
+                                        size="sm"
+                                        className="h-8 text-xs bg-[#FF6B00] hover:bg-[#FF8C40] text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-300 uppercase font-montserrat"
+                                        onClick={() =>
+                                          handleModuleSelect(module.id)
+                                        }
+                                      >
+                                        <Rocket className="h-3.5 w-3.5 mr-1" />{" "}
+                                        Iniciar
+                                      </Button>
+                                    ) : (
+                                      <Button
+                                        size="sm"
+                                        className="h-8 text-xs bg-gray-400 text-white font-medium rounded-lg opacity-70 cursor-not-allowed uppercase font-montserrat"
+                                        disabled
+                                      >
+                                        <Lock className="h-3.5 w-3.5 mr-1" />{" "}
+                                        Bloqueado
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
-                      </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="w-20 h-20 mx-auto bg-[#FF6B00]/10 rounded-full flex items-center justify-center mb-4">
+                      <Milestone className="h-10 w-10 text-[#FF6B00]" />
                     </div>
-                  ))}
-                </div>
+                    <h3 className="text-xl font-bold text-white mb-2 font-montserrat">
+                      Módulos da Jornada
+                    </h3>
+                    <p className="text-gray-400 max-w-md mx-auto mb-6 font-open-sans">
+                      Inicie a Jornada do Conhecimento para visualizar os
+                      módulos disponíveis e começar seu aprendizado.
+                    </p>
+                    <Button
+                      className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-montserrat font-semibold uppercase"
+                      onClick={handleStartJourney}
+                    >
+                      <Rocket className="h-4 w-4 mr-2" /> Começar Jornada
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1531,6 +2160,93 @@ const ChallengesView: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* Community Section Modal */}
+      {showCommunitySection && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-[#001427] rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex justify-between items-center z-10">
+              <h2 className="text-xl font-bold text-white">
+                Comunidade da Jornada
+              </h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-full text-white/80 hover:text-white hover:bg-white/20"
+                onClick={() => setShowCommunitySection(false)}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <div className="p-6">
+              <CommunitySection
+                discussions={discussionData}
+                onCreatePost={handleCreatePost}
+                onViewPost={handleViewPost}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Rewards Section Modal */}
+      {showRewardsSection && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-[#001427] rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex justify-between items-center z-10">
+              <h2 className="text-xl font-bold text-white">Suas Recompensas</h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-full text-white/80 hover:text-white hover:bg-white/20"
+                onClick={() => setShowRewardsSection(false)}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <div className="p-6">
+              <RewardsSection
+                rewards={rewardsData}
+                totalCoins={350}
+                onViewStore={handleViewStore}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Ranking Section Modal */}
+      {showRankingSection && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-[#001427] rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] p-4 flex justify-between items-center z-10">
+              <h2 className="text-xl font-bold text-white">
+                Ranking da Jornada
+              </h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-full text-white/80 hover:text-white hover:bg-white/20"
+                onClick={() => setShowRankingSection(false)}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <div className="p-6">
+              <RankingSection
+                users={rankingData}
+                currentUserRank={
+                  rankingData.find((user) => user.isCurrentUser) ||
+                  rankingData[4]
+                }
+                totalParticipants={120}
+                showInRanking={showInRanking}
+                onToggleVisibility={handleToggleRankingVisibility}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

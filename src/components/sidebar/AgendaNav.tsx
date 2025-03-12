@@ -5,13 +5,11 @@ import {
   Calendar,
   Home,
   CheckSquare,
-  Bell,
   Target,
   Plus,
   BookOpenCheck,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import CalendarMiniSection from "./CalendarMiniSection";
 
 export default function AgendaNav() {
   const navigate = useNavigate();
@@ -35,20 +33,6 @@ export default function AgendaNav() {
     } else {
       setIsExpanded(!isExpanded);
     }
-  };
-
-  const getIconForSubItem = (path: string) => {
-    if (path.includes("visao-geral"))
-      return <Home className="h-4 w-4 text-[#FF6B00]" />;
-    if (path.includes("calendario"))
-      return <Calendar className="h-4 w-4 text-[#FF6B00]" />;
-    if (path.includes("tarefas"))
-      return <CheckSquare className="h-4 w-4 text-[#FF6B00]" />;
-    if (path.includes("lembretes"))
-      return <Bell className="h-4 w-4 text-[#FF6B00]" />;
-    if (path.includes("desafios"))
-      return <Target className="h-4 w-4 text-[#FF6B00]" />;
-    return <Home className="h-4 w-4 text-[#FF6B00]" />;
   };
 
   return (
@@ -76,7 +60,7 @@ export default function AgendaNav() {
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="ml-8 space-y-3 border-l-2 border-[#29335C]/20 dark:border-[#29335C]/30 pl-2 mt-1">
+            <div className="ml-2 space-y-3 mt-1">
               <Button
                 variant="ghost"
                 size="sm"
@@ -115,16 +99,6 @@ export default function AgendaNav() {
               >
                 <CheckSquare className="h-4 w-4 text-[#FF6B00]" />
                 <span>Tarefas</span>
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`flex items-center gap-2 rounded-lg px-3 py-2 text-start w-full ${currentView === "lembretes" ? "bg-[#29335C]/10 text-[#29335C] dark:bg-[#29335C]/20 dark:text-white font-medium" : "text-[#001427] hover:bg-[#001427]/5 dark:text-white dark:hover:bg-[#001427]/10"} hover:translate-x-1 transition-transform`}
-                onClick={() => navigate("/agenda?view=lembretes")}
-              >
-                <Bell className="h-4 w-4 text-[#FF6B00]" />
-                <span>Lembretes</span>
               </Button>
 
               <Button
