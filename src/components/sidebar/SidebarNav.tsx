@@ -29,9 +29,11 @@ import {
   CheckSquare,
   Bell,
   Target,
+  BarChart,
 } from "lucide-react";
 import MentorAI from "@/components/mentor/MentorAI";
 import AgendaNav from "./AgendaNav";
+import TurmasNav from "./TurmasNav";
 
 interface SidebarNavProps extends React.HTMLAttributes<HTMLDivElement> {
   isCollapsed?: boolean;
@@ -80,11 +82,28 @@ export function SidebarNav({
       icon: <BookOpen className="h-5 w-5" />,
       label: "Minhas Turmas",
       path: "/turmas",
+      component: <TurmasNav />,
       subItems: [
-        { name: "Matemática Avançada", path: "/turmas/matematica" },
-        { name: "Física Quântica", path: "/turmas/fisica" },
-        { name: "Química Orgânica", path: "/turmas/quimica" },
-        { name: "Biologia Molecular", path: "/turmas/biologia" },
+        {
+          name: "Visão Geral",
+          path: "/turmas",
+          icon: <Home className="h-4 w-4 text-[#29335C]" />,
+        },
+        {
+          name: "Turmas Ativas",
+          path: "/turmas?view=ativas",
+          icon: <BookOpen className="h-4 w-4 text-[#29335C]" />,
+        },
+        {
+          name: "Grupos de Estudo",
+          path: "/turmas?view=grupos",
+          icon: <Users2 className="h-4 w-4 text-[#29335C]" />,
+        },
+        {
+          name: "Desempenho",
+          path: "/turmas?view=desempenho",
+          icon: <BarChart className="h-4 w-4 text-[#29335C]" />,
+        },
       ],
     },
     {
