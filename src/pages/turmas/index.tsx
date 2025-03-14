@@ -1003,11 +1003,13 @@ export default function TurmasPage() {
       />
 
       {/* Header */}
-      <TurmasHeader
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        onAddTurma={handleAddTurma}
-      />
+      <div className="turmas-header">
+        <TurmasHeader
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          onAddTurma={handleAddTurma}
+        />
+      </div>
 
       {/* Main Content */}
       {selectedTurma ? (
@@ -1018,7 +1020,7 @@ export default function TurmasPage() {
       ) : (
         <>
           <div className="flex items-center justify-end mb-4">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 epictus-ia-helper">
               <EpictusIAHelper
                 context="turmas"
                 suggestions={[
@@ -1034,7 +1036,7 @@ export default function TurmasPage() {
           <div className="space-y-6">
             {/* Category Tabs */}
             <Tabs value={currentView} className="w-full">
-              <TabsList className="w-full max-w-4xl mx-auto bg-white dark:bg-[#1E293B] p-1.5 rounded-xl shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 flex justify-between animate-gradient-x">
+              <TabsList className="turmas-tabs w-full max-w-4xl mx-auto bg-white dark:bg-[#1E293B] p-1.5 rounded-xl shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 flex justify-between animate-gradient-x">
                 <motion.div className="contents" layout>
                   <TabsTrigger
                     value="todas"
@@ -1076,7 +1078,7 @@ export default function TurmasPage() {
 
               {/* Tab Content */}
               <TabsContent value="todas" className="mt-6">
-                <div className="mb-4">
+                <div className="mb-4 turmas-filters">
                   <TurmaFilters
                     professores={[
                       { id: "prof1", nome: "Prof. Ricardo Oliveira" },

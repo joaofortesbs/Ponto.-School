@@ -26,8 +26,29 @@ const TourGuide: React.FC<TourGuideProps> = ({
 
   const tourSteps: TourStep[] = [
     {
+      target: ".turmas-header",
+      title: "Cabeçalho de Turmas",
+      content:
+        "Esta é a seção principal que mostra o título 'Minhas Turmas' e informações sobre quantas turmas ativas você possui.",
+      position: "bottom",
+    },
+    {
+      target: ".turmas-tabs",
+      title: "Categorias de Turmas",
+      content:
+        "Aqui você pode alternar entre diferentes visualizações: Todas as turmas, Turmas Oficiais, Minhas Turmas, Grupos de Estudo e Desempenho.",
+      position: "bottom",
+    },
+    {
+      target: ".turmas-filters",
+      title: "Filtros de Turmas",
+      content:
+        "Use estes filtros para encontrar turmas específicas por professor, disciplina, favoritos ou progresso.",
+      position: "bottom",
+    },
+    {
       target: ".turmas-grid",
-      title: "Suas Turmas",
+      title: "Lista de Turmas",
       content:
         "Aqui você encontra todas as turmas em que está inscrito. Cada card mostra informações importantes como progresso, próxima aula e status.",
       position: "bottom",
@@ -40,6 +61,20 @@ const TourGuide: React.FC<TourGuideProps> = ({
       position: "right",
     },
     {
+      target: ".favorite-star",
+      title: "Favoritar Turma",
+      content:
+        "Clique na estrela para adicionar ou remover uma turma dos seus favoritos. Turmas favoritas podem ser filtradas facilmente.",
+      position: "left",
+    },
+    {
+      target: ".notification-indicator",
+      title: "Indicadores de Notificação",
+      content:
+        "Estes ícones mostram quantas notificações você tem para mensagens, tarefas e materiais em cada turma.",
+      position: "top",
+    },
+    {
       target: ".turma-search",
       title: "Busca de Turmas",
       content:
@@ -50,8 +85,29 @@ const TourGuide: React.FC<TourGuideProps> = ({
       target: ".add-turma-button",
       title: "Adicionar Turma",
       content:
-        "Clique aqui para adicionar uma nova turma ao seu painel de estudos.",
+        "Clique aqui para adicionar uma nova turma ao seu painel de estudos usando um código de acesso ou buscando turmas disponíveis.",
       position: "left",
+    },
+    {
+      target: ".epictus-ia-helper",
+      title: "Assistente Epictus IA",
+      content:
+        "Este assistente inteligente pode ajudar com dúvidas sobre suas turmas, recomendar materiais de estudo e dar dicas personalizadas.",
+      position: "left",
+    },
+    {
+      target: ".sidebar-turmas-nav",
+      title: "Navegação de Turmas no Menu Lateral",
+      content:
+        "Acesse rapidamente suas turmas através deste menu lateral. Veja notificações e navegue entre diferentes categorias de turmas.",
+      position: "right",
+    },
+    {
+      target: ".clear-notifications",
+      title: "Limpar Notificações",
+      content:
+        "Clique aqui para limpar todas as notificações de uma categoria específica de turmas.",
+      position: "right",
     },
   ];
 

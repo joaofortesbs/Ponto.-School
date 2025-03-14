@@ -30,6 +30,8 @@ import {
   Bell,
   Target,
   BarChart,
+  DollarSign,
+  Plus,
 } from "lucide-react";
 import MentorAI from "@/components/mentor/MentorAI";
 import AgendaNav from "./AgendaNav";
@@ -112,9 +114,10 @@ export function SidebarNav({
       path: "/comunidades",
     },
     {
-      icon: <HelpCircle className="h-5 w-5" />,
-      label: "Pedidos de Ajuda",
+      icon: <MessageCircle className="h-5 w-5" />,
+      label: "Conexão Expert",
       path: "/pedidos-ajuda",
+      isSpecial: true,
     },
     {
       icon: <Brain className="h-5 w-5" />,
