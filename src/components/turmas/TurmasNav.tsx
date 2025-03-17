@@ -32,8 +32,8 @@ export default function TurmasNav() {
   };
 
   // Function to handle view all messages
-  const handleViewAllMessages = () => {
-    navigate("/pedidos-ajuda");
+  const handleViewAllMessages = (view = "todos") => {
+    navigate(`/pedidos-ajuda?tab=${view}`);
   };
 
   // Expand the menu when the Turmas section is active

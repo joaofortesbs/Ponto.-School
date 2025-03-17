@@ -30,6 +30,7 @@ const Organizacao = React.lazy(() => import("@/pages/organizacao"));
 const Novidades = React.lazy(() => import("@/pages/novidades"));
 const Configuracoes = React.lazy(() => import("@/pages/configuracoes"));
 const PlanosEstudo = React.lazy(() => import("@/pages/planos-estudo"));
+const Portal = React.lazy(() => import("@/pages/portal"));
 
 // Auth Pages
 const LoginPage = React.lazy(() => import("@/pages/auth/login"));
@@ -259,6 +260,14 @@ function App() {
                 element={
                   <Suspense fallback={<LoadingFallback />}>
                     <PlanosEstudo />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="portal"
+                element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Portal />
                   </Suspense>
                 }
               />

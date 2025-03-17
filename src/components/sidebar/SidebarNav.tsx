@@ -32,6 +32,9 @@ import {
   BarChart,
   DollarSign,
   Plus,
+  BookText,
+  Heart,
+  BookMarked,
 } from "lucide-react";
 import MentorAI from "@/components/mentor/MentorAI";
 import AgendaNav from "./AgendaNav";
@@ -153,14 +156,10 @@ export function SidebarNav({
       ],
     },
     {
-      icon: <Bell className="h-5 w-5" />,
-      label: "Lembretes",
-      path: "/lembretes",
-    },
-    {
-      icon: <BookOpen className="h-5 w-5" />,
-      label: "Biblioteca",
-      path: "/biblioteca",
+      icon: <BookMarked className="h-5 w-5" />,
+      label: "Portal",
+      path: "/portal",
+      isActive: true,
     },
     {
       icon: <ShoppingCart className="h-5 w-5" />,
@@ -328,7 +327,11 @@ export function SidebarNav({
                     onClick={() => handleNavigation(item.path)}
                   >
                     <div className="mx-auto">
-                      <Calendar className="h-5 w-5 text-[#001427] dark:text-white" />
+                      {item.label === "Portal" ? (
+                        <BookMarked className="h-5 w-5 text-[#001427] dark:text-white" />
+                      ) : (
+                        <Calendar className="h-5 w-5 text-[#001427] dark:text-white" />
+                      )}
                     </div>
                     <div
                       className={cn(

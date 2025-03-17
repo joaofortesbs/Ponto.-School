@@ -16,7 +16,6 @@ import {
 import {
   Filter,
   X,
-  Check,
   Clock,
   CheckCircle,
   DollarSign,
@@ -27,12 +26,17 @@ import {
   Image,
   Video,
   FileText,
-  User,
   Tag,
   SortAsc,
   SortDesc,
   Eye,
   MessageCircle,
+  Calculator,
+  Atom,
+  Beaker,
+  BookText,
+  Globe,
+  Code,
 } from "lucide-react";
 
 interface FilterPanelProps {
@@ -42,7 +46,7 @@ interface FilterPanelProps {
   activeFilters: any;
 }
 
-const FilterPanel: React.FC<FilterPanelProps> = ({
+export const FilterPanel: React.FC<FilterPanelProps> = ({
   isOpen,
   onClose,
   onApplyFilters,
@@ -135,17 +139,46 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   };
 
   const subjects = [
-    { id: "matematica", name: "Matemática" },
-    { id: "fisica", name: "Física" },
-    { id: "quimica", name: "Química" },
-    { id: "biologia", name: "Biologia" },
-    { id: "historia", name: "História" },
-    { id: "geografia", name: "Geografia" },
-    { id: "literatura", name: "Literatura" },
-    { id: "filosofia", name: "Filosofia" },
-    { id: "sociologia", name: "Sociologia" },
-    { id: "ingles", name: "Inglês" },
-    { id: "programacao", name: "Programação" },
+    {
+      id: "matematica",
+      name: "Matemática",
+      icon: <Calculator className="h-3.5 w-3.5 text-[#FF6B00]" />,
+    },
+    {
+      id: "fisica",
+      name: "Física",
+      icon: <Atom className="h-3.5 w-3.5 text-[#4361EE]" />,
+    },
+    {
+      id: "quimica",
+      name: "Química",
+      icon: <Beaker className="h-3.5 w-3.5 text-[#E85D04]" />,
+    },
+    {
+      id: "biologia",
+      name: "Biologia",
+      icon: <BookOpen className="h-3.5 w-3.5 text-[#38B000]" />,
+    },
+    {
+      id: "literatura",
+      name: "Literatura",
+      icon: <BookText className="h-3.5 w-3.5 text-[#6D597A]" />,
+    },
+    {
+      id: "programacao",
+      name: "Programação",
+      icon: <Code className="h-3.5 w-3.5 text-[#3A86FF]" />,
+    },
+    {
+      id: "geografia",
+      name: "Geografia",
+      icon: <Globe className="h-3.5 w-3.5 text-[#38B000]" />,
+    },
+    {
+      id: "historia",
+      name: "História",
+      icon: <BookOpen className="h-3.5 w-3.5 text-[#BC4749]" />,
+    },
   ];
 
   const levels = [
@@ -164,13 +197,13 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     },
     {
       id: "em_leilao",
-      name: "Em Leilão",
+      name: "Com Propostas",
       icon: <DollarSign className="h-3.5 w-3.5 text-blue-500" />,
     },
     {
       id: "respondido",
       name: "Respondido",
-      icon: <CheckCircle className="h-3.5 w-3.5 text-orange-500" />,
+      icon: <MessageCircle className="h-3.5 w-3.5 text-orange-500" />,
     },
     {
       id: "resolvido",
@@ -188,8 +221,13 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     },
     {
       id: "bid",
-      name: "Valor do Lance",
+      name: "Valor da Proposta",
       icon: <DollarSign className="h-3.5 w-3.5" />,
+    },
+    {
+      id: "views",
+      name: "Visualizações",
+      icon: <Eye className="h-3.5 w-3.5" />,
     },
   ];
 
@@ -242,9 +280,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                         />
                         <Label
                           htmlFor={`subject-${subject.id}`}
-                          className="text-sm cursor-pointer"
+                          className="text-sm cursor-pointer flex items-center gap-1"
                         >
-                          {subject.name}
+                          {subject.icon} {subject.name}
                         </Label>
                       </div>
                     ))}
@@ -377,8 +415,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                         htmlFor="myBids"
                         className="text-sm cursor-pointer flex items-center gap-1"
                       >
-                        <DollarSign className="h-3.5 w-3.5 text-[#FF6B00]" />{" "}
-                        Apenas pedidos com meus lances
+                        <DollarSign className="h-3.5 w-3.5 text-[#FF6B00]" />
+                        Apenas pedidos com minhas propostas
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2 bg-white dark:bg-gray-800/50 p-2 rounded-md border border-gray-100 dark:border-gray-700">
@@ -401,11 +439,11 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   </div>
                 </div>
 
-                {/* Valor do Lance (para leilões) */}
+                {/* Valor da Proposta */}
                 <div className="space-y-3">
                   <h4 className="text-sm font-medium text-[#29335C] dark:text-white flex items-center gap-1.5">
-                    <DollarSign className="h-4 w-4 text-[#FF6B00]" /> Valor do
-                    Lance (Ponto Coins)
+                    <DollarSign className="h-4 w-4 text-[#FF6B00]" /> Valor da
+                    Proposta (Ponto Coins)
                   </h4>
                   <div className="px-2 py-3 bg-white dark:bg-gray-800/50 rounded-md border border-gray-100 dark:border-gray-700">
                     <Slider
@@ -480,5 +518,3 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     </AnimatePresence>
   );
 };
-
-export default FilterPanel;

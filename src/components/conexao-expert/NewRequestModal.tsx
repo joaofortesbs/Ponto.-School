@@ -185,7 +185,7 @@ const NewRequestModal: React.FC<NewRequestModalProps> = ({
               <HelpCircle className="h-5 w-5 text-white" />
             </div>
             <h2 className="text-xl font-bold text-white">
-              {step === 1 ? "Novo Pedido de Ajuda" : "Configurações Adicionais"}
+              {step === 1 ? "Novo Pedido de Ajuda" : "Configurações do Leilão"}
             </h2>
           </div>
           <Button
@@ -463,59 +463,57 @@ const NewRequestModal: React.FC<NewRequestModalProps> = ({
                     </div>
                   </div>
 
-                  {formData.useAuction && (
-                    <div className="space-y-4 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800/30">
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="initialBid"
-                          className="text-base font-medium"
-                        >
-                          Lance Inicial (Ponto Coins)
-                        </Label>
-                        <div className="relative">
-                          <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                          <Input
-                            id="initialBid"
-                            name="initialBid"
-                            type="number"
-                            min={5}
-                            value={formData.initialBid}
-                            onChange={handleInputChange}
-                            className="pl-9 border-[#FF6B00]/30 focus:border-[#FF6B00] focus:ring-[#FF6B00]/30"
-                          />
-                        </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Valor mínimo: 5 Ponto Coins
-                        </p>
+                  <div className="space-y-4 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800/30">
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="initialBid"
+                        className="text-base font-medium"
+                      >
+                        Lance Inicial (Ponto Coins)
+                      </Label>
+                      <div className="relative">
+                        <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+                        <Input
+                          id="initialBid"
+                          name="initialBid"
+                          type="number"
+                          min={5}
+                          value={formData.initialBid}
+                          onChange={handleInputChange}
+                          className="pl-9 border-[#FF6B00]/30 focus:border-[#FF6B00] focus:ring-[#FF6B00]/30"
+                        />
                       </div>
-
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="timeLimit"
-                          className="text-base font-medium"
-                        >
-                          Duração do Leilão
-                        </Label>
-                        <Select
-                          value={formData.timeLimit}
-                          onValueChange={(value) =>
-                            handleSelectChange("timeLimit", value)
-                          }
-                        >
-                          <SelectTrigger className="border-[#FF6B00]/30 focus:border-[#FF6B00] focus:ring-[#FF6B00]/30">
-                            <SelectValue placeholder="Selecione a duração" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="6">6 horas</SelectItem>
-                            <SelectItem value="12">12 horas</SelectItem>
-                            <SelectItem value="24">24 horas</SelectItem>
-                            <SelectItem value="48">2 dias</SelectItem>
-                            <SelectItem value="72">3 dias</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Valor mínimo: 5 Ponto Coins
+                      </p>
                     </div>
-                  )}
+
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="timeLimit"
+                        className="text-base font-medium"
+                      >
+                        Duração do Leilão
+                      </Label>
+                      <Select
+                        value={formData.timeLimit}
+                        onValueChange={(value) =>
+                          handleSelectChange("timeLimit", value)
+                        }
+                      >
+                        <SelectTrigger className="border-[#FF6B00]/30 focus:border-[#FF6B00] focus:ring-[#FF6B00]/30">
+                          <SelectValue placeholder="Selecione a duração" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="6">6 horas</SelectItem>
+                          <SelectItem value="12">12 horas</SelectItem>
+                          <SelectItem value="24">24 horas</SelectItem>
+                          <SelectItem value="48">2 dias</SelectItem>
+                          <SelectItem value="72">3 dias</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
 
                   <div className="space-y-2">
                     <Label

@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import {
   X,
@@ -45,8 +44,6 @@ const BidModal: React.FC<BidModalProps> = ({
   );
   const [message, setMessage] = useState("");
   const [estimatedTime, setEstimatedTime] = useState("2");
-  const [autoBidEnabled, setAutoBidEnabled] = useState(false);
-  const [maxAutoBid, setMaxAutoBid] = useState(bidAmount + 20);
   const [error, setError] = useState<string | null>(null);
 
   const handleBidAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,33 +56,19 @@ const BidModal: React.FC<BidModalProps> = ({
     setError(null);
   };
 
-  const handleMaxAutoBidChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value);
-    if (isNaN(value)) {
-      setMaxAutoBid(0);
-      return;
-    }
-    setMaxAutoBid(value);
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validate bid amount
     if (request.currentBid && bidAmount <= request.currentBid) {
       setError(
-        `O lance deve ser maior que o lance atual (${request.currentBid} Ponto Coins)`,
+        `A proposta deve ser maior que a proposta atual (${request.currentBid} School Points)`,
       );
       return;
     }
 
     if (bidAmount < 5) {
-      setError("O lance mínimo é de 5 Ponto Coins");
-      return;
-    }
-
-    if (autoBidEnabled && maxAutoBid <= bidAmount) {
-      setError("O lance máximo automático deve ser maior que o lance inicial");
+      setError("A proposta mínima é de 5 School Points");
       return;
     }
 
@@ -93,8 +76,6 @@ const BidModal: React.FC<BidModalProps> = ({
       bidAmount,
       message,
       estimatedTime,
-      autoBidEnabled,
-      maxAutoBid: autoBidEnabled ? maxAutoBid : null,
     });
 
     onClose();
@@ -116,7 +97,7 @@ const BidModal: React.FC<BidModalProps> = ({
             <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
               <DollarSign className="h-5 w-5 text-white" />
             </div>
-            <h2 className="text-xl font-bold text-white">Fazer Lance</h2>
+            <h2 className="text-xl font-bold text-white">Fazer Proposta</h2>
           </div>
           <Button
             variant="ghost"
@@ -136,8 +117,8 @@ const BidModal: React.FC<BidModalProps> = ({
             {request.currentBid && (
               <div className="flex items-center justify-between">
                 <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                  <DollarSign className="h-3 w-3 mr-1" /> Lance Atual:{" "}
-                  {request.currentBid} Ponto Coins
+                  <DollarSign className="h-3 w-3 mr-1" /> Proposta Atual:{" "}
+                  {request.currentBid} School Points
                 </Badge>
                 {request.timeLeft && (
                   <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
@@ -153,7 +134,7 @@ const BidModal: React.FC<BidModalProps> = ({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="bidAmount" className="text-base font-medium">
-                  Seu Lance (Ponto Coins) *
+                  Sua Proposta (School Points) *
                 </Label>
                 <TooltipProvider>
                   <Tooltip>
@@ -169,9 +150,9 @@ const BidModal: React.FC<BidModalProps> = ({
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="w-[200px] text-xs">
-                        Este é o valor em Ponto Coins que você receberá ao
-                        resolver a dúvida do aluno. Lances mais baixos têm mais
-                        chances de serem escolhidos.
+                        Este é o valor em School Points que você receberá ao
+                        resolver a dúvida do aluno. Propostas mais baixas têm
+                        mais chances de serem escolhidas.
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -230,48 +211,11 @@ const BidModal: React.FC<BidModalProps> = ({
               <Info className="h-5 w-5 text-blue-500 mt-0.5" />
               <div>
                 <p className="text-sm text-blue-800 dark:text-blue-300">
-                  Você pode ativar o lance automático para aumentar
-                  automaticamente seu lance caso alguém ofereça um valor maior,
-                  até um limite definido por você.
+                  Propostas mais baixas têm mais chances de serem escolhidas
+                  pelo aluno.
                 </p>
               </div>
             </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="autoBidEnabled"
-                checked={autoBidEnabled}
-                onCheckedChange={(checked) => setAutoBidEnabled(!!checked)}
-                className="data-[state=checked]:bg-[#FF6B00] data-[state=checked]:border-[#FF6B00]"
-              />
-              <div className="grid gap-1.5 leading-none">
-                <label
-                  htmlFor="autoBidEnabled"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Ativar Lance Automático
-                </label>
-              </div>
-            </div>
-
-            {autoBidEnabled && (
-              <div className="space-y-2">
-                <Label htmlFor="maxAutoBid" className="text-base font-medium">
-                  Lance Máximo Automático (Ponto Coins)
-                </Label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                  <Input
-                    id="maxAutoBid"
-                    type="number"
-                    min={bidAmount + 1}
-                    value={maxAutoBid}
-                    onChange={handleMaxAutoBidChange}
-                    className="pl-9 border-[#FF6B00]/30 focus:border-[#FF6B00] focus:ring-[#FF6B00]/30"
-                  />
-                </div>
-              </div>
-            )}
 
             <div className="pt-4 flex justify-end gap-3">
               <Button
@@ -286,7 +230,7 @@ const BidModal: React.FC<BidModalProps> = ({
                 type="submit"
                 className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white"
               >
-                <DollarSign className="h-4 w-4 mr-1" /> Fazer Lance
+                <DollarSign className="h-4 w-4 mr-1" /> Fazer Proposta
               </Button>
             </div>
           </form>

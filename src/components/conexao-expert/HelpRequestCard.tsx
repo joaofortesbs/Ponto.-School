@@ -258,7 +258,7 @@ const HelpRequestCard: React.FC<HelpRequestCardProps> = ({
                 onBid();
               }}
             >
-              <DollarSign className="h-3.5 w-3.5 mr-1" /> Fazer Lance
+              <DollarSign className="h-3.5 w-3.5 mr-1" /> Fazer Proposta
             </Button>
           )}
           <Button
