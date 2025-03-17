@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, CheckCircle, Clock } from "lucide-react";
+import { Heart, CheckCircle, Clock, MoreHorizontal } from "lucide-react";
 import {
   Material,
   MaterialTypeBadge,
@@ -11,14 +11,26 @@ import {
   getColorForMaterialType,
   getIconForMaterialType,
 } from "./MaterialCard";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-const MaterialListItem = ({ material }: { material: Material }) => {
+interface MaterialListItemProps {
+  material: Material;
+  onClick?: () => void;
+}
+
+const MaterialListItem = ({ material, onClick }: MaterialListItemProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3 }}
-      className="group flex items-start p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-[#001427]/40 transition-colors"
+      className="group flex items-start p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-[#001427]/40 transition-colors cursor-pointer"
+      onClick={onClick}
     >
       <div
         className={cn(
@@ -44,6 +56,10 @@ const MaterialListItem = ({ material }: { material: Material }) => {
                   ? "text-red-500 hover:bg-red-500/10"
                   : "text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800",
               )}
+              onClick={(e) => {
+                e.stopPropagation();
+                // Toggle favorite logic would go here
+              }}
             >
               <Heart
                 className={cn("h-4 w-4", material.isFavorite && "fill-red-500")}
@@ -53,6 +69,10 @@ const MaterialListItem = ({ material }: { material: Material }) => {
               size="icon"
               variant="ghost"
               className="h-8 w-8 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+              onClick={(e) => {
+                e.stopPropagation();
+                // Toggle read status logic would go here
+              }}
             >
               <CheckCircle
                 className={cn(
@@ -61,6 +81,24 @@ const MaterialListItem = ({ material }: { material: Material }) => {
                 )}
               />
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem>Salvar</DropdownMenuItem>
+                <DropdownMenuItem>Compartilhar</DropdownMenuItem>
+                <DropdownMenuItem>Copiar link</DropdownMenuItem>
+                <DropdownMenuItem>Adicionar em trilha</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
         <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">
@@ -119,6 +157,10 @@ const MaterialListItem = ({ material }: { material: Material }) => {
         <Button
           size="sm"
           className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+          onClick={(e) => {
+            e.stopPropagation();
+            // Access logic would go here
+          }}
         >
           Acessar
         </Button>

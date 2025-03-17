@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, BookOpen, Users } from "lucide-react";
 
 export interface Trilha {
   id: string;
@@ -10,9 +10,14 @@ export interface Trilha {
   nextStep: string;
   materialsCount: number;
   image: string;
+  enrolled?: number;
 }
 
-const TrilhaCard = ({ trilha }: { trilha: Trilha }) => {
+interface TrilhaCardProps {
+  trilha: Trilha;
+}
+
+const TrilhaCard = ({ trilha }: TrilhaCardProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -21,7 +26,7 @@ const TrilhaCard = ({ trilha }: { trilha: Trilha }) => {
       className="group relative overflow-hidden rounded-xl bg-white dark:bg-[#001427]/60 shadow-md hover:shadow-lg transition-all duration-300 hover:translate-y-[-5px]"
     >
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent z-10"></div>
-      <div className="h-32 overflow-hidden">
+      <div className="h-40 overflow-hidden">
         <img
           src={trilha.image}
           alt={trilha.name}
@@ -32,16 +37,16 @@ const TrilhaCard = ({ trilha }: { trilha: Trilha }) => {
         <h3 className="text-lg font-bold text-white mb-1 group-hover:text-[#FF6B00] transition-colors">
           {trilha.name}
         </h3>
-        <p className="text-sm text-gray-200 mb-1">Próximo: {trilha.nextStep}</p>
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-xs text-gray-300">
-            {trilha.materialsCount} materiais
-          </span>
-          <span className="text-xs font-medium text-[#FF6B00]">
-            {trilha.progress}%
-          </span>
+        <div className="flex items-center text-white/80 text-sm">
+          <BookOpen className="h-4 w-4 mr-1" />
+          <span className="mr-3">{trilha.materialsCount} materiais</span>
+          {trilha.enrolled && (
+            <>
+              <Users className="h-4 w-4 mr-1" />
+              <span>{trilha.enrolled} alunos</span>
+            </>
+          )}
         </div>
-        <Progress value={trilha.progress} className="h-1 bg-gray-700" />
       </div>
       <div className="absolute top-3 right-3 z-20">
         <Button
@@ -51,6 +56,31 @@ const TrilhaCard = ({ trilha }: { trilha: Trilha }) => {
         >
           <ArrowUpRight className="h-4 w-4" />
         </Button>
+      </div>
+      <div className="p-4 pt-0 mt-4">
+        <div className="flex justify-between items-center mb-1">
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            Próximo: {trilha.nextStep}
+          </p>
+          <span className="text-xs font-medium text-[#FF6B00]">
+            {trilha.progress}%
+          </span>
+        </div>
+        <Progress
+          value={trilha.progress}
+          className="h-1.5 bg-gray-200 dark:bg-gray-700"
+        />
+        <div className="flex justify-between mt-4">
+          <Button variant="outline" size="sm">
+            Ver detalhes
+          </Button>
+          <Button
+            size="sm"
+            className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+          >
+            Continuar
+          </Button>
+        </div>
       </div>
     </motion.div>
   );

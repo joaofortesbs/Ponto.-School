@@ -159,7 +159,6 @@ export function SidebarNav({
       icon: <BookMarked className="h-5 w-5" />,
       label: "Portal",
       path: "/portal",
-      isActive: true,
     },
     {
       icon: <ShoppingCart className="h-5 w-5" />,
