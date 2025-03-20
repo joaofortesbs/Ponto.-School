@@ -48,17 +48,17 @@ const ProfilePage = React.lazy(() => import("@/pages/profile"));
 
 function App() {
   const location = useLocation();
-  const [isAuthenticated, setIsAuthenticated] = useState(true); // Set to true for development
-  const [isLoading, setIsLoading] = useState(false); // Set to false for development
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const { data } = await supabase.auth.getSession();
-        setIsAuthenticated(!!data.session || true); // Always true for development
+        setIsAuthenticated(!!data.session);
       } catch (error) {
         console.error("Auth check error:", error);
-        setIsAuthenticated(true); // Always true for development
+        setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
       }
@@ -68,7 +68,7 @@ function App() {
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        setIsAuthenticated(!!session || true); // Always true for development
+        setIsAuthenticated(!!session);
       },
     );
 

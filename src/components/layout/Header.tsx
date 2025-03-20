@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,10 +33,29 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useNavigate } from "react-router-dom";
+import { profileService } from "@/services/profileService";
+import { UserProfile } from "@/types/user-profile";
 
 export default function Header() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const profile = await profileService.getCurrentUserProfile();
+        setUserProfile(profile);
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   return (
     <header className="w-full h-[72px] px-6 bg-white dark:bg-[#0A2540] border-b border-brand-border dark:border-white/10 flex items-center justify-between">
@@ -138,14 +157,29 @@ export default function Header() {
                   >
                     <Avatar className="h-9 w-9 border-2 border-transparent group-hover:border-[#FF6B00] transition-all duration-300">
                       <AvatarImage
-                        src="https://api.dicebear.com/7.x/avataaars/svg?seed=John"
-                        alt="João Silva"
+                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile?.username || "user"}`}
+                        alt={
+                          userProfile?.display_name ||
+                          userProfile?.full_name ||
+                          userProfile?.username ||
+                          "Usuário"
+                        }
                       />
-                      <AvatarFallback>JS</AvatarFallback>
+                      <AvatarFallback>
+                        {userProfile?.display_name?.substring(0, 2) ||
+                          userProfile?.full_name?.substring(0, 2) ||
+                          userProfile?.username?.substring(0, 2) ||
+                          "U"}
+                      </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col items-start">
                       <span className="text-sm font-semibold text-brand-black dark:text-white">
-                        João Silva
+                        {isLoading
+                          ? "Carregando..."
+                          : userProfile?.display_name ||
+                            userProfile?.username ||
+                            userProfile?.full_name ||
+                            "Usuário"}
                       </span>
                       <div className="flex items-center gap-1">
                         <Diamond className="h-3 w-3 text-[#FF6B00]" />

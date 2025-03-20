@@ -2,8 +2,10 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
+import type { UserProfile } from "@/types/user-profile";
 import {
   Home,
   BookOpen,
@@ -35,6 +37,7 @@ import {
   BookText,
   Heart,
   BookMarked,
+  Map,
 } from "lucide-react";
 import MentorAI from "@/components/mentor/MentorAI";
 import AgendaNav from "./AgendaNav";
@@ -56,6 +59,38 @@ export function SidebarNav({
   const [showMentorAI, setShowMentorAI] = useState(false);
   const [showNovidadesPopup, setShowNovidadesPopup] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (user) {
+          const { data, error } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("user_id", user.id)
+            .single();
+
+          if (error) {
+            console.error("Error fetching user profile:", error);
+          } else if (data) {
+            setUserProfile(data as UserProfile);
+          }
+        }
+      } catch (error) {
+        console.error("Error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   const handleNavigation = (path: string, isSpecial?: boolean) => {
     if (path === "/mentor-ia") {
@@ -159,6 +194,11 @@ export function SidebarNav({
       icon: <BookMarked className="h-5 w-5" />,
       label: "Portal",
       path: "/portal",
+    },
+    {
+      icon: <Map className="h-5 w-5" />,
+      label: "Trilha School",
+      path: "/trilha-conhecimento",
     },
     {
       icon: <ShoppingCart className="h-5 w-5" />,
@@ -288,7 +328,8 @@ export function SidebarNav({
         {!isCollapsed && (
           <div className="text-[#001427] dark:text-white text-center">
             <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
-              <span className="mr-1">👋</span> Olá João Fortes
+              <span className="mr-1">👋</span> Olá{" "}
+              {userProfile?.display_name || userProfile?.username || "Usuário"}
             </h3>
             <div className="flex flex-col items-center mt-1">
               <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
@@ -396,6 +437,9 @@ export function SidebarNav({
                             : "",
                           item.label === "Agenda" && isActive(item.path)
                             ? "relative px-2 py-1 rounded-full border border-[#29335C]/50 bg-[#29335C]/10"
+                            : "",
+                          item.label === "Trilha School"
+                            ? "bg-clip-text text-transparent bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFA500] font-semibold"
                             : "",
                         )}
                       >

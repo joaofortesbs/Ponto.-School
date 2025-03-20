@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Eye, EyeOff, Mail, Lock, User, School, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { generateUserId } from "@/lib/generate-user-id";
 
 interface FormData {
   fullName: string;
@@ -54,6 +55,9 @@ export function RegisterForm() {
     }
 
     try {
+      // Generate a unique user ID
+      const userId = await generateUserId("BR", plan === "premium" ? 1 : 2);
+
       console.log("Attempting signup with:", {
         email: formData.email,
         password: formData.password,
@@ -64,6 +68,7 @@ export function RegisterForm() {
             institution: formData.institution,
             birth_date: formData.birthDate,
             plan_type: plan,
+            display_name: formData.username, // Set display_name to username by default
           },
         },
       });
@@ -78,6 +83,7 @@ export function RegisterForm() {
             institution: formData.institution,
             birth_date: formData.birthDate,
             plan_type: plan,
+            display_name: formData.username, // Set display_name to username by default
           },
         },
       });
@@ -91,6 +97,27 @@ export function RegisterForm() {
       }
 
       if (data?.user) {
+        // Create a profile record with the display_name set to username
+        const { error: profileError } = await supabase.from("profiles").upsert([
+          {
+            id: data.user.id,
+            full_name: formData.fullName,
+            username: formData.username,
+            email: formData.email,
+            institution: formData.institution,
+            birth_date: formData.birthDate,
+            plan_type: plan,
+            display_name: formData.username, // Set display_name to username explicitly
+            user_id: userId, // Add the generated user ID
+            level: 1, // Default level
+            rank: "Aprendiz", // Default rank
+          },
+        ]);
+
+        if (profileError) {
+          console.error("Profile creation error:", profileError);
+        }
+
         navigate("/login");
       }
     } catch (err) {
