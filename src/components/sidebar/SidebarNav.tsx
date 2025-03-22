@@ -13,7 +13,6 @@ import {
   Calendar,
   Users,
   Settings,
-  LogOut,
   Menu,
   X,
   Brain,
@@ -38,6 +37,9 @@ import {
   Heart,
   BookMarked,
   Map,
+  Compass,
+  GraduationCap,
+  CalendarClock,
 } from "lucide-react";
 import MentorAI from "@/components/mentor/MentorAI";
 import AgendaNav from "./AgendaNav";
@@ -196,10 +198,28 @@ export function SidebarNav({
       path: "/portal",
     },
     {
-      icon: <Map className="h-5 w-5" />,
-      label: "Trilha School",
-      path: "/trilha-conhecimento",
+      icon: <Compass className="h-5 w-5" />,
+      label: "Explorar",
+      path: "/explorar",
+      subItems: [
+        {
+          name: "Trilha School",
+          path: "/trilha-conhecimento",
+          icon: <Map className="h-4 w-4 text-[#FF6B00]" />,
+        },
+        {
+          name: "Trade School",
+          path: "/trade-school",
+          icon: <GraduationCap className="h-4 w-4 text-[#FF6B00]" />,
+        },
+        {
+          name: "Eventos",
+          path: "/eventos",
+          icon: <CalendarClock className="h-4 w-4 text-[#FF6B00]" />,
+        },
+      ],
     },
+
     {
       icon: <ShoppingCart className="h-5 w-5" />,
       label: "Mercado",
@@ -349,8 +369,8 @@ export function SidebarNav({
         )}
       </div>
 
-      <ScrollArea className="h-[calc(100%-220px)] py-2">
-        <nav className="grid gap-1 px-2">
+      <ScrollArea className="h-[calc(100%-180px)]">
+        <nav className="grid gap-1 px-2 py-2">
           {navItems.map((item, index) => (
             <div key={index} className="relative">
               {item.component ? (
@@ -360,8 +380,8 @@ export function SidebarNav({
                     className={cn(
                       "flex items-center justify-center rounded-lg px-3 py-2 text-start w-full",
                       isActive(item.path)
-                        ? "bg-[#001427]/10 text-[#001427] dark:bg-[#001427]/20 dark:text-white"
-                        : "text-[#001427] hover:bg-[#001427]/10 dark:text-white dark:hover:bg-[#001427]/20",
+                        ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF6B00]"
+                        : "text-[#001427] hover:bg-[#FF6B00]/5 dark:text-white dark:hover:bg-[#FF6B00]/10",
                       "group hover:scale-[1.02] transition-all duration-200 hover:shadow-sm active:scale-[0.98]",
                     )}
                     onClick={() => handleNavigation(item.path)}
@@ -373,14 +393,6 @@ export function SidebarNav({
                         <Calendar className="h-5 w-5 text-[#001427] dark:text-white" />
                       )}
                     </div>
-                    <div
-                      className={cn(
-                        "absolute left-0 top-0 h-full w-1 rounded-r-md transition-all duration-300",
-                        isActive(item.path)
-                          ? "bg-[#001427]"
-                          : "bg-transparent group-hover:bg-[#001427]/30",
-                      )}
-                    />
                   </Button>
                 ) : (
                   item.component
@@ -392,10 +404,8 @@ export function SidebarNav({
                     "flex items-center gap-3 rounded-lg px-3 py-2 text-start w-full",
                     isCollapsed ? "justify-center" : "justify-between",
                     isActive(item.path)
-                      ? item.label === "Agenda"
-                        ? "bg-[#001427]/10 text-[#001427] dark:bg-[#001427]/20 dark:text-white"
-                        : "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-white"
-                      : "text-[#001427] hover:bg-[#001427]/10 dark:text-white dark:hover:bg-[#001427]/20",
+                      ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF6B00]"
+                      : "text-[#001427] hover:bg-[#FF6B00]/5 dark:text-white dark:hover:bg-[#FF6B00]/10",
                     "group hover:scale-[1.02] transition-all duration-200 hover:shadow-sm active:scale-[0.98]",
                     item.label === "Novidades"
                       ? "relative overflow-hidden"
@@ -418,13 +428,11 @@ export function SidebarNav({
                       className={cn(
                         "transition-all duration-300",
                         isCollapsed ? "mx-auto" : "mr-3",
-                        item.label === "Novidades"
-                          ? "text-[#FF6B00] dark:text-[#FF6B00]"
-                          : isActive(item.path)
-                            ? item.label === "Agenda"
-                              ? "text-[#001427] dark:text-white"
-                              : "text-[#FF6B00] dark:text-white"
-                            : "text-[#001427] dark:text-white group-hover:text-[#001427]",
+                        isActive(item.path)
+                          ? "text-[#FF6B00]"
+                          : item.label === "Novidades"
+                            ? "text-[#FF6B00]"
+                            : "text-[#001427] dark:text-white group-hover:text-[#001427] dark:group-hover:text-white",
                       )}
                     >
                       {item.icon}
@@ -434,12 +442,6 @@ export function SidebarNav({
                         className={cn(
                           item.label === "Novidades"
                             ? "text-[#FF6B00] font-bold"
-                            : "",
-                          item.label === "Agenda" && isActive(item.path)
-                            ? "relative px-2 py-1 rounded-full border border-[#29335C]/50 bg-[#29335C]/10"
-                            : "",
-                          item.label === "Trilha School"
-                            ? "bg-clip-text text-transparent bg-gradient-to-r from-[#FF6B00] via-[#FF8C00] to-[#FFA500] font-semibold"
                             : "",
                         )}
                       >
@@ -456,18 +458,6 @@ export function SidebarNav({
                       )}
                     </div>
                   )}
-                  {item.label !== "Novidades" && (
-                    <div
-                      className={cn(
-                        "absolute left-0 top-0 h-full w-1 rounded-r-md transition-all duration-300",
-                        isActive(item.path)
-                          ? item.label === "Agenda"
-                            ? "bg-[#001427]"
-                            : "bg-[#FF6B00]"
-                          : "bg-transparent group-hover:bg-[#001427]/30",
-                      )}
-                    />
-                  )}
                 </Button>
               )}
 
@@ -475,7 +465,7 @@ export function SidebarNav({
               {!isCollapsed &&
                 item.subItems &&
                 expandedSection === item.label && (
-                  <div className="ml-2 mt-1 space-y-1">
+                  <div className="mt-1 space-y-1">
                     {item.subItems.map((subItem, subIndex) => (
                       <Button
                         key={subIndex}
@@ -483,8 +473,8 @@ export function SidebarNav({
                         className={cn(
                           "flex items-center gap-2 rounded-lg px-3 py-2 text-start w-full",
                           isActive(subItem.path)
-                            ? "bg-[#001427]/10 text-[#001427] dark:bg-[#001427]/20 dark:text-white font-medium"
-                            : "text-[#001427] hover:bg-[#001427]/5 dark:text-white dark:hover:bg-[#001427]/10",
+                            ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF6B00] font-medium"
+                            : "text-[#001427] hover:bg-[#FF6B00]/5 dark:text-white dark:hover:bg-[#FF6B00]/10",
                           "hover:translate-x-1 transition-transform",
                         )}
                         onClick={() => navigate(subItem.path)}
@@ -499,23 +489,6 @@ export function SidebarNav({
           ))}
         </nav>
       </ScrollArea>
-
-      {/* Logout Button - Inside the nav items */}
-      <div className="absolute bottom-4 left-0 right-0 px-2">
-        <Button
-          variant="ghost"
-          className={cn(
-            "flex items-center gap-3 rounded-lg px-3 py-2 text-start w-full",
-            isCollapsed ? "justify-center" : "justify-start",
-            "text-red-500 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/10",
-            "transition-all duration-200",
-          )}
-          onClick={() => navigate("/login")}
-        >
-          <LogOut className="h-5 w-5" />
-          {!isCollapsed && <span>Sair</span>}
-        </Button>
-      </div>
     </div>
   );
 }

@@ -1154,4 +1154,16 @@ const MaterialViewer = ({ material, isOpen, onClose }: { material: Material | nu
                           </div>
                         </div>
                         
-                        <div className="flex items-start space-x-3 mt-6"
+                        <div className="flex items-start space-x-3 mt-6">
+                        </div>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
