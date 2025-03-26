@@ -9,6 +9,7 @@ import EmptyTurmasState from "@/components/turmas/EmptyTurmasState";
 import TurmaFilters from "@/components/turmas/TurmaFilters";
 import EpictusIAHelper from "@/components/turmas/EpictusIAHelper";
 import DesempenhoView from "@/components/turmas/DesempenhoView";
+import EstudosView from "@/components/turmas/EstudosView";
 import {
   Atom,
   Calculator,
@@ -1184,157 +1185,33 @@ export default function TurmasPage() {
                 <div className="mb-4 flex justify-end">
                   <EpictusIAHelper context="grupos de estudo" />
                 </div>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-lg border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 mb-6 hover:shadow-xl transition-all duration-300"
-                >
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white font-montserrat flex items-center gap-2">
-                        <Users2 className="h-5 w-5 text-[#FF6B00]" /> Grupos de
-                        Estudo
-                      </h3>
-                      <p className="text-gray-500 dark:text-gray-400 text-sm">
-                        Crie ou participe de grupos de estudo colaborativos para
-                        potencializar seu aprendizado
-                      </p>
-                    </div>
-                    <Button
-                      className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white animate-gradient-x"
-                      onClick={() => navigate("/turmas/criar-grupo")}
-                    >
-                      <Plus className="h-4 w-4 mr-1" /> Criar Grupo
-                    </Button>
-                  </div>
-
-                  <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
-                    <motion.div
-                      initial={{ scale: 0.9 }}
-                      animate={{ scale: 1 }}
-                      transition={{
-                        duration: 0.5,
-                        repeat: Infinity,
-                        repeatType: "reverse",
-                        repeatDelay: 2,
-                      }}
-                      className="w-24 h-24 rounded-full bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20 flex items-center justify-center mb-6"
-                    >
+                <div className="text-center py-8">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="flex flex-col items-center justify-center"
+                  >
+                    <div className="w-24 h-24 rounded-full bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20 flex items-center justify-center mb-6 animate-pulse-custom">
                       <Users2 className="h-12 w-12 text-[#FF6B00]" />
-                    </motion.div>
-
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3 font-montserrat">
-                      Você ainda não participa de nenhum grupo de estudo
-                    </h2>
-
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3 font-montserrat animate-highlight">
+                      Grupos de Estudo em breve
+                    </h3>
                     <p className="text-gray-600 dark:text-gray-400 max-w-md mb-8 font-open-sans">
-                      Crie seu primeiro grupo de estudos e convide colegas para
-                      colaborar, compartilhar materiais e aprender juntos.
+                      Esta funcionalidade estará disponível em uma atualização
+                      futura.
                     </p>
-
-                    <Button
-                      className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white px-6 py-6 rounded-xl shadow-md transition-all duration-300 hover:shadow-lg transform hover:scale-[1.02] font-montserrat font-semibold text-lg animate-gradient-x"
-                      onClick={() => navigate("/turmas/criar-grupo")}
-                    >
-                      <Plus className="h-5 w-5 mr-2" /> Criar Meu Primeiro Grupo
-                    </Button>
-                  </div>
-                </motion.div>
-
-                <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-lg border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white font-montserrat flex items-center gap-2 mb-4">
-                    <Sparkles className="h-5 w-5 text-[#FF6B00]" /> Grupos
-                    Recomendados
-                  </h3>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {/* Grupo Recomendado 1 */}
-                    <div className="bg-white dark:bg-[#29335C]/20 rounded-xl p-4 border border-gray-200 dark:border-gray-700 hover:border-[#FF6B00]/30 transition-colors hover:shadow-md">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Badge className="bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF8C40]">
-                          Física
-                        </Badge>
-                        <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                          12 membros
-                        </Badge>
-                      </div>
-
-                      <h4 className="text-lg font-bold text-gray-900 dark:text-white font-montserrat mb-2">
-                        Grupo de Física Quântica
-                      </h4>
-
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        Discussões avançadas sobre física quântica e suas
-                        aplicações modernas.
-                      </p>
-
-                      <div className="flex justify-end">
-                        <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white text-xs">
-                          Solicitar Participação
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Grupo Recomendado 2 */}
-                    <div className="bg-white dark:bg-[#29335C]/20 rounded-xl p-4 border border-gray-200 dark:border-gray-700 hover:border-[#FF6B00]/30 transition-colors hover:shadow-md">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Badge className="bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF8C40]">
-                          Matemática
-                        </Badge>
-                        <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                          8 membros
-                        </Badge>
-                      </div>
-
-                      <h4 className="text-lg font-bold text-gray-900 dark:text-white font-montserrat mb-2">
-                        Grupo de Estatística Aplicada
-                      </h4>
-
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        Estudo de métodos estatísticos e suas aplicações em
-                        ciência de dados.
-                      </p>
-
-                      <div className="flex justify-end">
-                        <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white text-xs">
-                          Solicitar Participação
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Grupo Recomendado 3 */}
-                    <div className="bg-white dark:bg-[#29335C]/20 rounded-xl p-4 border border-gray-200 dark:border-gray-700 hover:border-[#FF6B00]/30 transition-colors hover:shadow-md">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Badge className="bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF8C40]">
-                          Biologia
-                        </Badge>
-                        <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                          15 membros
-                        </Badge>
-                      </div>
-
-                      <h4 className="text-lg font-bold text-gray-900 dark:text-white font-montserrat mb-2">
-                        Grupo de Biologia Molecular
-                      </h4>
-
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        Discussões sobre genética, DNA e técnicas de biologia
-                        molecular.
-                      </p>
-
-                      <div className="flex justify-end">
-                        <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white text-xs">
-                          Solicitar Participação
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
+                  </motion.div>
                 </div>
               </TabsContent>
 
               <TabsContent value="desempenho" className="mt-6">
                 <DesempenhoView />
+              </TabsContent>
+
+              <TabsContent value="estudos" className="mt-6">
+                <EstudosView />
               </TabsContent>
             </Tabs>
           </div>

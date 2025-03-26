@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +14,8 @@ import {
   Diamond,
   ChevronLeft,
   ChevronRight,
+  Upload,
+  Image as ImageIcon,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -35,11 +37,24 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { useNavigate } from "react-router-dom";
 import { profileService } from "@/services/profileService";
 import { UserProfile } from "@/types/user-profile";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 export default function Header() {
   const [searchQuery, setSearchQuery] = useState("");
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [customLogo, setCustomLogo] = useState<string | null>(null);
+  const [isLogoDialogOpen, setIsLogoDialogOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -55,19 +70,114 @@ export default function Header() {
     };
 
     fetchUserProfile();
+
+    // Carregar logo personalizado do localStorage, se existir
+    const savedLogo = localStorage.getItem("customLogo");
+    if (savedLogo) {
+      setCustomLogo(savedLogo);
+    }
   }, []);
+
+  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setCustomLogo(result);
+        localStorage.setItem("customLogo", result);
+        setIsLogoDialogOpen(false);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
+  const resetLogo = () => {
+    setCustomLogo(null);
+    localStorage.removeItem("customLogo");
+    setIsLogoDialogOpen(false);
+  };
 
   return (
     <header className="w-full h-[72px] px-6 bg-white dark:bg-[#0A2540] border-b border-brand-border dark:border-white/10 flex items-center justify-between">
       {/* Logo */}
       <div className="flex items-center">
-        <div className="flex items-baseline">
-          <span className="text-2xl font-bold text-brand-black dark:text-white text-glow tracking-wider">
-            Ponto
-            <span className="text-[#FF6B00] text-3xl">.</span>
-            <span className="text-[#0D00F5] dark:text-white">School</span>
-          </span>
-        </div>
+        <Dialog open={isLogoDialogOpen} onOpenChange={setIsLogoDialogOpen}>
+          <DialogTrigger asChild>
+            <div className="flex items-baseline cursor-pointer group relative">
+              {customLogo ? (
+                <div className="h-10 flex items-center">
+                  <img
+                    src={customLogo}
+                    alt="Logo personalizado"
+                    className="h-8 object-contain"
+                  />
+                </div>
+              ) : (
+                <span className="text-2xl font-bold text-brand-black dark:text-white text-glow tracking-wider">
+                  Ponto
+                  <span className="text-[#FF6B00] text-3xl">.</span>
+                  <span className="text-[#0D00F5] dark:text-white">School</span>
+                </span>
+              )}
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 dark:group-hover:bg-white/5 rounded transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                <ImageIcon className="w-4 h-4 text-brand-black/70 dark:text-white/70" />
+              </div>
+            </div>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Alterar Logo</DialogTitle>
+              <DialogDescription>
+                Faça upload de uma imagem para substituir a logo atual.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col items-center justify-center gap-4 py-4">
+              {customLogo && (
+                <div className="border rounded-md p-2 w-full max-w-[300px] flex justify-center">
+                  <img
+                    src={customLogo}
+                    alt="Logo atual"
+                    className="h-16 object-contain"
+                  />
+                </div>
+              )}
+              <div className="grid w-full max-w-sm items-center gap-1.5">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  ref={fileInputRef}
+                  onChange={handleLogoUpload}
+                />
+                <Button
+                  type="button"
+                  onClick={triggerFileInput}
+                  className="w-full"
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  Escolher Imagem
+                </Button>
+              </div>
+            </div>
+            <DialogFooter className="sm:justify-between">
+              {customLogo && (
+                <Button variant="destructive" type="button" onClick={resetLogo}>
+                  Restaurar Logo Original
+                </Button>
+              )}
+              <DialogClose asChild>
+                <Button type="button" variant="secondary">
+                  Fechar
+                </Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Search Bar */}

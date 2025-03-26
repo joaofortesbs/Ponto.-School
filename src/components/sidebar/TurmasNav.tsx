@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   BookOpen,
   Home,
@@ -9,6 +10,16 @@ import {
   GraduationCap,
   FolderKanban,
   BarChart,
+  UserPlus,
+  Plus,
+  Search,
+  Calendar,
+  MessageCircle,
+  Sparkles,
+  Brain,
+  Lightbulb,
+  Target,
+  LineChart,
 } from "lucide-react";
 import NotificationIndicator from "../turmas/NotificationIndicator";
 import { motion, AnimatePresence } from "framer-motion";
@@ -29,7 +40,55 @@ export default function TurmasNav() {
     proprias: 0,
     grupos: 2,
     desempenho: 1,
+    grupos2: 3,
+    estudos: 4,
   };
+
+  // Simulated study groups data
+  const studyGroups = [
+    {
+      id: "g1",
+      name: "Grupo de Mecânica Quântica",
+      members: ["Ana", "Pedro", "Você"],
+      nextMeeting: "16/03, 18:00",
+      course: "Física Quântica",
+      hasNewMessages: true,
+    },
+    {
+      id: "g2",
+      name: "Preparação para o Projeto Final",
+      members: ["Mariana", "João", "Carla", "Você"],
+      nextMeeting: "23/03, 19:00",
+      course: "Física Quântica",
+      hasNewMessages: true,
+    },
+    {
+      id: "g3",
+      name: "Grupo de Cálculo Avançado",
+      members: ["Roberto", "Luiza", "Você"],
+      nextMeeting: "18/03, 17:30",
+      course: "Cálculo Avançado",
+      hasNewMessages: false,
+    },
+  ];
+
+  // Simulated recommended groups
+  const recommendedGroups = [
+    {
+      id: "rg1",
+      name: "Grupo de Química Orgânica",
+      members: 8,
+      course: "Química Orgânica",
+      matchScore: 95,
+    },
+    {
+      id: "rg2",
+      name: "Biologia Molecular Avançada",
+      members: 5,
+      course: "Biologia Molecular",
+      matchScore: 87,
+    },
+  ];
 
   // Expand the menu when the Turmas section is active
   useEffect(() => {
@@ -130,24 +189,6 @@ export default function TurmasNav() {
               <Button
                 variant="ghost"
                 size="sm"
-                className={`flex items-center justify-between rounded-lg px-3 py-1.5 text-start w-full ${currentView === "grupos" ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-white font-medium" : "text-[#001427] hover:bg-[#001427]/5 dark:text-white dark:hover:bg-[#001427]/10"} hover:translate-x-1 transition-transform text-xs`}
-                onClick={() => navigate("/turmas?view=grupos")}
-              >
-                <div className="flex items-center gap-2">
-                  <Users2 className="h-3.5 w-3.5 text-[#FF6B00]" />
-                  <span>Grupos de Estudo</span>
-                </div>
-                {notifications.grupos > 0 && (
-                  <NotificationIndicator
-                    count={notifications.grupos}
-                    type="general"
-                  />
-                )}
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="sm"
                 className={`flex items-center justify-between rounded-lg px-3 py-1.5 text-start w-full ${currentView === "desempenho" ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-white font-medium" : "text-[#001427] hover:bg-[#001427]/5 dark:text-white dark:hover:bg-[#001427]/10"} hover:translate-x-1 transition-transform text-xs`}
                 onClick={() => navigate("/turmas?view=desempenho")}
               >
@@ -158,6 +199,24 @@ export default function TurmasNav() {
                 {notifications.desempenho > 0 && (
                   <NotificationIndicator
                     count={notifications.desempenho}
+                    type="general"
+                  />
+                )}
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`flex items-center justify-between rounded-lg px-3 py-1.5 text-start w-full ${currentView === "estudos" ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-white font-medium" : "text-[#001427] hover:bg-[#001427]/5 dark:text-white dark:hover:bg-[#001427]/10"} hover:translate-x-1 transition-transform text-xs`}
+                onClick={() => navigate("/turmas?view=estudos")}
+              >
+                <div className="flex items-center gap-2">
+                  <Brain className="h-3.5 w-3.5 text-[#FF6B00]" />
+                  <span>Estudos</span>
+                </div>
+                {notifications.estudos > 0 && (
+                  <NotificationIndicator
+                    count={notifications.estudos}
                     type="general"
                   />
                 )}

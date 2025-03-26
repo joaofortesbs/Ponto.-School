@@ -9,6 +9,7 @@ import {
   GraduationCap,
   FolderKanban,
   BarChart,
+  UserPlus,
 } from "lucide-react";
 import NotificationIndicator from "../turmas/NotificationIndicator";
 import { motion, AnimatePresence } from "framer-motion";
@@ -27,8 +28,8 @@ export default function TurmasNav() {
     todas: 5,
     oficiais: 3,
     proprias: 0,
-    grupos: 2,
     desempenho: 1,
+    grupos2: 3,
   };
 
   // Function to handle view all messages
@@ -135,24 +136,6 @@ export default function TurmasNav() {
               <Button
                 variant="ghost"
                 size="sm"
-                className={`flex items-center justify-between rounded-lg px-3 py-1.5 text-start w-full ${currentView === "grupos" ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-white font-medium" : "text-[#001427] hover:bg-[#001427]/5 dark:text-white dark:hover:bg-[#001427]/10"} hover:translate-x-1 transition-transform text-xs`}
-                onClick={() => navigate("/turmas?view=grupos")}
-              >
-                <div className="flex items-center gap-2">
-                  <Users2 className="h-3.5 w-3.5 text-[#FF6B00]" />
-                  <span>Grupos de Estudo</span>
-                </div>
-                {notifications.grupos > 0 && (
-                  <NotificationIndicator
-                    count={notifications.grupos}
-                    type="general"
-                  />
-                )}
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="sm"
                 className={`flex items-center justify-between rounded-lg px-3 py-1.5 text-start w-full ${currentView === "desempenho" ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-white font-medium" : "text-[#001427] hover:bg-[#001427]/5 dark:text-white dark:hover:bg-[#001427]/10"} hover:translate-x-1 transition-transform text-xs`}
                 onClick={() => navigate("/turmas?view=desempenho")}
               >
@@ -163,6 +146,24 @@ export default function TurmasNav() {
                 {notifications.desempenho > 0 && (
                   <NotificationIndicator
                     count={notifications.desempenho}
+                    type="general"
+                  />
+                )}
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`flex items-center justify-between rounded-lg px-3 py-1.5 text-start w-full ${currentView === "grupos2" ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-white font-medium" : "text-[#001427] hover:bg-[#001427]/5 dark:text-white dark:hover:bg-[#001427]/10"} hover:translate-x-1 transition-transform text-xs`}
+                onClick={() => navigate("/turmas?view=grupos2")}
+              >
+                <div className="flex items-center gap-2">
+                  <UserPlus className="h-3.5 w-3.5 text-[#FF6B00]" />
+                  <span>Grupos de Estudo 2</span>
+                </div>
+                {notifications.grupos2 > 0 && (
+                  <NotificationIndicator
+                    count={notifications.grupos2}
                     type="general"
                   />
                 )}

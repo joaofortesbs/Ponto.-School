@@ -13,6 +13,7 @@ import {
   Calendar,
   Users,
   Settings,
+  LogOut,
   Menu,
   X,
   Brain,
@@ -369,8 +370,8 @@ export function SidebarNav({
         )}
       </div>
 
-      <ScrollArea className="h-[calc(100%-180px)]">
-        <nav className="grid gap-1 px-2 py-2">
+      <ScrollArea className="h-[calc(100%-180px)] py-2">
+        <nav className="grid gap-1 px-2">
           {navItems.map((item, index) => (
             <div key={index} className="relative">
               {item.component ? (
@@ -393,6 +394,14 @@ export function SidebarNav({
                         <Calendar className="h-5 w-5 text-[#001427] dark:text-white" />
                       )}
                     </div>
+                    <div
+                      className={cn(
+                        "absolute left-0 top-0 h-full w-1 rounded-r-md transition-all duration-300",
+                        isActive(item.path)
+                          ? "bg-[#FF6B00]"
+                          : "bg-transparent group-hover:bg-[#FF6B00]/30",
+                      )}
+                    />
                   </Button>
                 ) : (
                   item.component
@@ -429,10 +438,10 @@ export function SidebarNav({
                         "transition-all duration-300",
                         isCollapsed ? "mx-auto" : "mr-3",
                         isActive(item.path)
-                          ? "text-[#FF6B00]"
+                          ? "text-[#FF6B00] dark:text-[#FF6B00]"
                           : item.label === "Novidades"
-                            ? "text-[#FF6B00]"
-                            : "text-[#001427] dark:text-white group-hover:text-[#001427] dark:group-hover:text-white",
+                            ? "text-[#FF6B00] dark:text-[#FF6B00]"
+                            : "text-[#001427] dark:text-white",
                       )}
                     >
                       {item.icon}
@@ -457,6 +466,16 @@ export function SidebarNav({
                         <ChevronDown className="h-4 w-4" />
                       )}
                     </div>
+                  )}
+                  {item.label !== "Novidades" && (
+                    <div
+                      className={cn(
+                        "absolute left-0 top-0 h-full w-1 rounded-r-md transition-all duration-300",
+                        isActive(item.path)
+                          ? "bg-[#FF6B00]"
+                          : "bg-transparent group-hover:bg-[#FF6B00]/30",
+                      )}
+                    />
                   )}
                 </Button>
               )}

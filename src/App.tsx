@@ -18,6 +18,7 @@ import { StudyGoalProvider } from "@/components/dashboard/StudyGoalContext";
 const Dashboard = React.lazy(() => import("@/pages/dashboard"));
 const Turmas = React.lazy(() => import("@/pages/turmas"));
 const TurmaDetail = React.lazy(() => import("@/pages/turmas/[id]"));
+const GruposEstudo2 = React.lazy(() => import("@/pages/turmas/grupos2"));
 const Comunidades = React.lazy(() => import("@/pages/comunidades"));
 const PedidosAjuda = React.lazy(() => import("@/pages/pedidos-ajuda"));
 const EpictusIA = React.lazy(() => import("@/pages/epictus-ia"));
@@ -31,6 +32,7 @@ const Novidades = React.lazy(() => import("@/pages/novidades"));
 const Configuracoes = React.lazy(() => import("@/pages/configuracoes"));
 const PlanosEstudo = React.lazy(() => import("@/pages/planos-estudo"));
 const Portal = React.lazy(() => import("@/pages/portal"));
+const GruposEstudo = React.lazy(() => import("@/pages/turmas/grupos"));
 
 // Auth Pages
 const LoginPage = React.lazy(() => import("@/pages/auth/login"));
@@ -164,6 +166,30 @@ function App() {
                 element={
                   <Suspense fallback={<LoadingFallback />}>
                     <TurmaDetail />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="turmas/grupos2"
+                element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <GruposEstudo2 />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="turmas/grupos"
+                element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <GruposEstudo />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="turmas/grupos/:id"
+                element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <GruposEstudo />
                   </Suspense>
                 }
               />
