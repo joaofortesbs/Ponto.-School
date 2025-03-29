@@ -7,120 +7,52 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useTheme } from "@/components/ThemeProvider";
+import GroupDetailHeader from "./GroupDetailHeader";
 import {
-  ArrowLeft,
-  Users,
-  Calendar,
-  BookOpen,
   MessageCircle,
   FileText,
+  Users,
+  Calendar,
   Info,
-  Star,
-  MoreVertical,
   Search,
   Plus,
   FileUp,
   Folder,
   Download,
-  MoreHorizontal,
+  MoreVertical,
   Clock,
   UserPlus,
   CheckCircle,
-  Phone,
-  Video,
 } from "lucide-react";
 import { members, files, events, topics, tools } from "./data/mockData";
 
 export const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("discussoes");
+  const { theme } = useTheme();
+
+  const handleViewMembers = () => {
+    setActiveTab("membros");
+  };
 
   return (
-    <div className="w-full h-full bg-[#0f1525] text-white p-0 overflow-hidden flex flex-col">
-      {/* Header */}
-      <div className="bg-[#0f1525] border-b border-gray-800 p-4 flex items-center justify-between flex-shrink-0">
-        <div className="flex items-center">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mr-3 text-white hover:bg-[#1a2236]"
-            onClick={onBack}
-          >
-            <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
-          </Button>
-          <h1 className="text-xl font-bold text-white">
-            {group.nome || "Mecânica Quântica Avançada"}
-          </h1>
-          <Badge className="ml-3 bg-[#FF6B00]/20 text-[#FF6B00] border border-[#FF6B00]/30">
-            {group.curso || "Física Quântica"}
-          </Badge>
-          {group.tags && group.tags.length > 0 && (
-            <Badge className="ml-2 bg-orange-500/20 text-orange-400 border border-orange-500/30">
-              {group.tags[0]}
-            </Badge>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-[#FF6B00] text-[#FF6B00] hover:bg-[#FF6B00]/10"
-          >
-            <Star className="h-4 w-4 mr-1" /> Favoritar
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-white hover:bg-[#1a2236]"
-          >
-            <MoreVertical className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+    <div className="w-full h-full bg-white dark:bg-[#0f1525] text-gray-900 dark:text-white p-0 overflow-hidden flex flex-col">
+      {/* Fixed Header with Cover Image */}
+      <GroupDetailHeader
+        group={group}
+        onBack={onBack}
+        onViewMembers={handleViewMembers}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
 
-      {/* Tabs */}
+      {/* Tabs Content - Below the fixed cover */}
       <Tabs
         value={activeTab}
         onValueChange={setActiveTab}
         className="w-full flex-grow flex flex-col"
       >
-        <div className="border-b border-gray-800 flex-shrink-0">
-          <TabsList className="bg-transparent border-b-0 p-0">
-            <div className="flex px-4">
-              <TabsTrigger
-                value="discussoes"
-                className="px-4 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#FF6B00] data-[state=active]:text-[#FF6B00] text-gray-400 hover:text-white"
-              >
-                <MessageCircle className="h-4 w-4 mr-2" /> Discussões
-              </TabsTrigger>
-              <TabsTrigger
-                value="arquivos"
-                className="px-4 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#FF6B00] data-[state=active]:text-[#FF6B00] text-gray-400 hover:text-white"
-              >
-                <FileText className="h-4 w-4 mr-2" /> Arquivos
-              </TabsTrigger>
-              <TabsTrigger
-                value="membros"
-                className="px-4 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#FF6B00] data-[state=active]:text-[#FF6B00] text-gray-400 hover:text-white"
-              >
-                <Users className="h-4 w-4 mr-2" /> Membros
-              </TabsTrigger>
-              <TabsTrigger
-                value="eventos"
-                className="px-4 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#FF6B00] data-[state=active]:text-[#FF6B00] text-gray-400 hover:text-white"
-              >
-                <Calendar className="h-4 w-4 mr-2" /> Eventos
-              </TabsTrigger>
-              <TabsTrigger
-                value="sobre"
-                className="px-4 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#FF6B00] data-[state=active]:text-[#FF6B00] text-gray-400 hover:text-white"
-              >
-                <Info className="h-4 w-4 mr-2" /> Sobre
-              </TabsTrigger>
-            </div>
-          </TabsList>
-        </div>
-
         {/* Discussões Tab */}
         <TabsContent
           value="discussoes"
@@ -130,6 +62,7 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             groupName={group.nome || "Mecânica Quântica Avançada"}
+            group={group}
           />
         </TabsContent>
 
@@ -138,7 +71,7 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
           value="arquivos"
           className="p-4 mt-0 flex-grow overflow-auto"
         >
-          <div className="bg-[#1a2236] rounded-lg p-4">
+          <div className="bg-gray-100 dark:bg-[#1a2236] rounded-lg p-4 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold">Arquivos do Grupo</h3>
               <div className="flex gap-2">
@@ -146,38 +79,38 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     placeholder="Pesquisar arquivos..."
-                    className="pl-10 bg-[#0f1525] border-gray-700 text-white w-64"
+                    className="pl-10 bg-white dark:bg-[#0f1525] border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white w-64 rounded-full"
                   />
                 </div>
-                <Button className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white">
+                <Button className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white transition-colors">
                   <FileUp className="h-4 w-4 mr-2" /> Adicionar arquivo
                 </Button>
               </div>
             </div>
 
             <div className="grid grid-cols-4 gap-4">
-              <div className="bg-[#0f1525] p-4 rounded-lg border border-gray-800">
+              <div className="bg-white dark:bg-[#0f1525] p-4 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-all">
                 <div className="flex flex-col">
                   <h4 className="font-bold mb-2">Massas</h4>
                   <div className="space-y-2">
-                    <div className="flex items-center text-gray-400 hover:text-white transition-colors">
+                    <div className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                       <Folder className="h-4 w-4 mr-2 text-[#FF6B00]" />
                       <span className="text-sm">Material de Aula</span>
-                      <Badge className="ml-2 bg-gray-700 text-gray-300 text-xs">
+                      <Badge className="ml-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs">
                         3
                       </Badge>
                     </div>
-                    <div className="flex items-center text-gray-400 hover:text-white transition-colors">
+                    <div className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                       <Folder className="h-4 w-4 mr-2 text-[#FF6B00]" />
                       <span className="text-sm">Exercícios</span>
-                      <Badge className="ml-2 bg-gray-700 text-gray-300 text-xs">
+                      <Badge className="ml-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs">
                         2
                       </Badge>
                     </div>
-                    <div className="flex items-center text-gray-400 hover:text-white transition-colors">
+                    <div className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                       <Folder className="h-4 w-4 mr-2 text-[#FF6B00]" />
                       <span className="text-sm">Referências</span>
-                      <Badge className="ml-2 bg-gray-700 text-gray-300 text-xs">
+                      <Badge className="ml-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs">
                         2
                       </Badge>
                     </div>
@@ -186,13 +119,13 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                 <div className="mt-4">
                   <h4 className="font-bold mb-2">Etiquetas</h4>
                   <div className="flex flex-wrap gap-2">
-                    <Badge className="bg-gray-700 hover:bg-gray-600 cursor-pointer">
+                    <Badge className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 cursor-pointer transition-colors">
                       avançado
                     </Badge>
-                    <Badge className="bg-gray-700 hover:bg-gray-600 cursor-pointer">
+                    <Badge className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 cursor-pointer transition-colors">
                       teórico
                     </Badge>
-                    <Badge className="bg-gray-700 hover:bg-gray-600 cursor-pointer">
+                    <Badge className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 cursor-pointer transition-colors">
                       prático
                     </Badge>
                   </div>
@@ -204,14 +137,14 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                   {files.map((file) => (
                     <div
                       key={file.id}
-                      className="bg-[#0f1525] p-3 rounded-lg border border-gray-800 flex items-center hover:bg-[#1e293b] transition-colors"
+                      className="bg-white dark:bg-[#0f1525] p-3 rounded-lg border border-gray-200 dark:border-gray-800 flex items-center hover:bg-gray-50 dark:hover:bg-[#1e293b] transition-colors shadow-sm hover:shadow-md"
                     >
                       <div className="p-2 bg-[#FF6B00]/10 rounded-lg mr-3">
                         <FileText className="h-6 w-6 text-[#FF6B00]" />
                       </div>
                       <div className="flex-1">
                         <h4 className="font-medium">{file.name}</h4>
-                        <div className="flex items-center text-xs text-gray-400">
+                        <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
                           <span>{file.size}</span>
                           <span className="mx-2">•</span>
                           <span>Enviado por {file.uploadedBy}</span>
@@ -222,14 +155,14 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 w-8 p-0 rounded-full hover:bg-gray-700 text-gray-400"
+                        className="h-8 w-8 p-0 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
                       >
                         <Download className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 w-8 p-0 rounded-full hover:bg-gray-700 text-gray-400"
+                        className="h-8 w-8 p-0 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
                       >
                         <MoreVertical className="h-4 w-4" />
                       </Button>
@@ -246,7 +179,7 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
           value="membros"
           className="p-4 mt-0 flex-grow overflow-auto"
         >
-          <div className="bg-[#1a2236] rounded-lg p-4">
+          <div className="bg-gray-100 dark:bg-[#1a2236] rounded-lg p-4 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold">Membros do Grupo</h3>
               <div className="flex gap-2">
@@ -254,10 +187,10 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     placeholder="Buscar membros..."
-                    className="pl-10 bg-[#0f1525] border-gray-700 text-white w-64"
+                    className="pl-10 bg-white dark:bg-[#0f1525] border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white w-64 rounded-full"
                   />
                 </div>
-                <Button className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white">
+                <Button className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white transition-colors">
                   <UserPlus className="h-4 w-4 mr-2" /> Adicionar membro
                 </Button>
               </div>
@@ -267,15 +200,15 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
               {members.map((member) => (
                 <div
                   key={member.id}
-                  className="bg-[#0f1525] p-4 rounded-lg border border-gray-800 flex items-center hover:bg-[#1e293b] transition-colors"
+                  className="bg-white dark:bg-[#0f1525] p-4 rounded-lg border border-gray-200 dark:border-gray-800 flex items-center hover:bg-gray-50 dark:hover:bg-[#1e293b] transition-colors shadow-sm hover:shadow-md"
                 >
                   <div className="relative mr-3">
-                    <Avatar className="h-12 w-12">
+                    <Avatar className="h-12 w-12 ring-2 ring-blue-500/20">
                       <AvatarImage src={member.avatar} />
                       <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     {member.isOnline && (
-                      <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-[#0f1525]"></div>
+                      <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-white dark:border-[#0f1525]"></div>
                     )}
                   </div>
                   <div className="flex-1">
@@ -287,7 +220,7 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                         </Badge>
                       )}
                     </div>
-                    <div className="flex items-center text-xs text-gray-400">
+                    <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
                       {member.isOnline ? (
                         <span className="flex items-center">
                           <div className="h-1.5 w-1.5 rounded-full bg-green-500 mr-1"></div>
@@ -304,7 +237,7 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0 rounded-full hover:bg-gray-700 text-gray-400"
+                    className="h-8 w-8 p-0 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
                   >
                     <MoreVertical className="h-4 w-4" />
                   </Button>
@@ -319,17 +252,17 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
           value="eventos"
           className="p-4 mt-0 flex-grow overflow-auto"
         >
-          <div className="bg-[#1a2236] rounded-lg p-4">
+          <div className="bg-gray-100 dark:bg-[#1a2236] rounded-lg p-4 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold">Eventos do Grupo</h3>
-              <Button className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white">
+              <Button className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white transition-colors">
                 <Plus className="h-4 w-4 mr-2" /> Criar evento
               </Button>
             </div>
 
             <div className="grid grid-cols-3 gap-6">
               <div className="col-span-1">
-                <div className="bg-[#0f1525] rounded-lg p-4 border border-gray-800">
+                <div className="bg-white dark:bg-[#0f1525] rounded-lg p-4 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-all">
                   <h4 className="font-bold mb-3">Março 2023</h4>
                   <div className="grid grid-cols-7 gap-1 text-center mb-2">
                     <div className="text-xs text-gray-500">D</div>
@@ -347,7 +280,7 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                       return (
                         <div
                           key={day}
-                          className={`h-8 w-8 flex items-center justify-center rounded-full text-sm ${isToday ? "bg-[#FF6B00] text-white" : hasEvent ? "text-[#FF6B00] font-medium" : "text-gray-400"} ${hasEvent ? "cursor-pointer hover:bg-[#FF6B00]/10" : ""}`}
+                          className={`h-8 w-8 flex items-center justify-center rounded-full text-sm ${isToday ? "bg-[#FF6B00] text-white" : hasEvent ? "text-[#FF6B00] font-medium" : "text-gray-500 dark:text-gray-400"} ${hasEvent ? "cursor-pointer hover:bg-[#FF6B00]/10" : ""}`}
                         >
                           {day}
                         </div>
@@ -357,39 +290,39 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
 
                   <div className="mt-6">
                     <h4 className="font-bold mb-3">Próximo evento</h4>
-                    <div className="bg-[#1a2236] rounded-lg p-3 border border-gray-700">
+                    <div className="bg-gray-100 dark:bg-[#1a2236] rounded-lg p-3 border border-gray-200 dark:border-gray-700 shadow-sm">
                       <h5 className="font-medium">Encontro do Grupo</h5>
-                      <p className="text-sm text-gray-400 mb-2">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                         Discussão sobre os últimos tópicos e resolução de
                         exercícios.
                       </p>
-                      <div className="flex items-center text-xs text-gray-400 mb-2">
+                      <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mb-2">
                         <Calendar className="h-3.5 w-3.5 mr-1 text-[#FF6B00]" />
                         <span>15 de mar, 19:00-20:30</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="flex -space-x-2">
-                          <Avatar className="h-6 w-6 border-2 border-[#1a2236]">
+                          <Avatar className="h-6 w-6 border-2 border-white dark:border-[#1a2236]">
                             <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=Ana" />
                             <AvatarFallback>A</AvatarFallback>
                           </Avatar>
-                          <Avatar className="h-6 w-6 border-2 border-[#1a2236]">
+                          <Avatar className="h-6 w-6 border-2 border-white dark:border-[#1a2236]">
                             <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=Pedro" />
                             <AvatarFallback>P</AvatarFallback>
                           </Avatar>
-                          <Avatar className="h-6 w-6 border-2 border-[#1a2236]">
+                          <Avatar className="h-6 w-6 border-2 border-white dark:border-[#1a2236]">
                             <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=Maria" />
                             <AvatarFallback>M</AvatarFallback>
                           </Avatar>
                         </div>
                         <div className="flex gap-1">
-                          <Badge className="bg-green-500/20 text-green-400 text-xs">
+                          <Badge className="bg-green-500/20 text-green-600 dark:text-green-400 text-xs">
                             Vou
                           </Badge>
-                          <Badge className="bg-gray-700 text-gray-300 text-xs">
+                          <Badge className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs">
                             Talvez
                           </Badge>
-                          <Badge className="bg-gray-700 text-gray-300 text-xs">
+                          <Badge className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs">
                             Não vou
                           </Badge>
                         </div>
@@ -404,23 +337,23 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                   {events.map((event) => (
                     <div
                       key={event.id}
-                      className="bg-[#0f1525] p-4 rounded-lg border border-gray-800 hover:bg-[#1e293b] transition-colors"
+                      className="bg-white dark:bg-[#0f1525] p-4 rounded-lg border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-[#1e293b] transition-colors shadow-sm hover:shadow-md"
                     >
                       <div className="flex">
                         <div className="mr-4 text-center">
                           <div className="bg-[#FF6B00]/10 text-[#FF6B00] font-bold text-xl rounded-t-lg px-3 py-1">
                             {event.date.split("/")[0]}
                           </div>
-                          <div className="bg-[#1a2236] text-gray-400 text-xs rounded-b-lg px-2 py-1">
+                          <div className="bg-gray-100 dark:bg-[#1a2236] text-gray-500 dark:text-gray-400 text-xs rounded-b-lg px-2 py-1">
                             março
                           </div>
                         </div>
                         <div className="flex-1">
                           <h4 className="font-bold text-lg">{event.title}</h4>
-                          <p className="text-sm text-gray-400 mb-2">
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                             {event.description}
                           </p>
-                          <div className="flex items-center text-xs text-gray-400 mb-3">
+                          <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mb-3">
                             <Clock className="h-3.5 w-3.5 mr-1 text-[#FF6B00]" />
                             <span>{event.time}</span>
                             <span className="mx-2">•</span>
@@ -438,7 +371,7 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                                     return (
                                       <Avatar
                                         key={participantId}
-                                        className="h-6 w-6 border-2 border-[#0f1525]"
+                                        className="h-6 w-6 border-2 border-white dark:border-[#0f1525]"
                                       >
                                         <AvatarImage
                                           src={participant?.avatar}
@@ -450,16 +383,16 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                                     );
                                   })}
                                 {event.participants.length > 3 && (
-                                  <div className="h-6 w-6 rounded-full bg-gray-700 border-2 border-[#0f1525] flex items-center justify-center text-xs text-white">
+                                  <div className="h-6 w-6 rounded-full bg-gray-300 dark:bg-gray-700 border-2 border-white dark:border-[#0f1525] flex items-center justify-center text-xs text-gray-700 dark:text-white">
                                     +{event.participants.length - 3}
                                   </div>
                                 )}
                               </div>
-                              <span className="text-xs text-gray-400">
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
                                 {event.participants.length} participantes
                               </span>
                             </div>
-                            <Button className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-8">
+                            <Button className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white text-xs h-8 transition-colors">
                               Participar
                             </Button>
                           </div>
@@ -477,26 +410,26 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
         <TabsContent value="sobre" className="p-4 mt-0 flex-grow overflow-auto">
           <div className="grid grid-cols-3 gap-6">
             <div className="col-span-2">
-              <div className="bg-[#1a2236] rounded-lg p-4 mb-6">
+              <div className="bg-white dark:bg-[#1a2236] rounded-lg p-4 mb-6 shadow-sm hover:shadow-md transition-all">
                 <h3 className="text-lg font-bold mb-3">Sobre o Grupo</h3>
-                <p className="text-gray-300 mb-4">
+                <p className="text-gray-700 dark:text-gray-300 mb-4">
                   {group.descricao ||
                     "Grupo dedicado ao estudo de mecânica quântica e suas aplicações na física moderna. Discutimos desde os fundamentos até aplicações avançadas como computação quântica e criptografia quântica."}
                 </p>
-                <p className="text-gray-300">
+                <p className="text-gray-700 dark:text-gray-300">
                   Este grupo foi criado para facilitar o estudo colaborativo e o
                   compartilhamento de recursos entre os alunos interessados em
                   mecânica quântica.
                 </p>
               </div>
 
-              <div className="bg-[#1a2236] rounded-lg p-4 mb-6">
+              <div className="bg-white dark:bg-[#1a2236] rounded-lg p-4 mb-6 shadow-sm hover:shadow-md transition-all">
                 <h3 className="text-lg font-bold mb-3">Tópicos de Estudo</h3>
                 <div className="grid grid-cols-2 gap-4">
                   {topics.map((topic) => (
                     <div
                       key={topic.id}
-                      className="bg-[#0f1525] p-3 rounded-lg border border-[#FF6B00]/30"
+                      className="bg-gray-50 dark:bg-[#0f1525] p-3 rounded-lg border border-[#FF6B00]/30 hover:shadow-md transition-all"
                     >
                       <h4 className="font-bold text-[#FF6B00]">
                         {topic.title}
@@ -512,13 +445,13 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                 </div>
               </div>
 
-              <div className="bg-[#1a2236] rounded-lg p-4">
+              <div className="bg-white dark:bg-[#1a2236] rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-lg font-bold">Ferramentas e Recursos</h3>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 border-gray-700 text-gray-300 hover:bg-[#0f1525]"
+                    className="h-8 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#0f1525] transition-colors"
                   >
                     <Plus className="h-4 w-4 mr-1" /> Adicionar
                   </Button>
@@ -527,10 +460,10 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                   {tools.map((tool) => (
                     <div
                       key={tool.id}
-                      className="bg-[#0f1525] p-4 rounded-lg border border-gray-800 flex flex-col items-center text-center"
+                      className="bg-gray-50 dark:bg-[#0f1525] p-4 rounded-lg border border-gray-200 dark:border-gray-800 flex flex-col items-center text-center hover:shadow-md transition-all"
                     >
                       <div
-                        className={`h-12 w-12 rounded-full bg-${tool.color}-500/20 flex items-center justify-center mb-2`}
+                        className={`h-12 w-12 rounded-full bg-${tool.color}-100 dark:bg-${tool.color}-500/20 flex items-center justify-center mb-2`}
                       >
                         {tool.icon === "whiteboard" && (
                           <svg
@@ -576,7 +509,7 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                         )}
                       </div>
                       <h4 className="font-bold mb-1">{tool.name}</h4>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
                         {tool.description}
                       </p>
                     </div>
@@ -586,30 +519,38 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
             </div>
 
             <div className="col-span-1">
-              <div className="bg-[#1a2236] rounded-lg p-4 mb-6">
+              <div className="bg-white dark:bg-[#1a2236] rounded-lg p-4 mb-6 shadow-sm hover:shadow-md transition-all">
                 <h3 className="text-lg font-bold mb-3">Detalhes do Grupo</h3>
                 <div className="space-y-3">
                   <div>
-                    <p className="text-xs text-gray-400">Criado em</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Criado em
+                    </p>
                     <p className="text-sm">
                       {group.dataInicio || "10/01/2023"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-400">Tipo de Grupo</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Tipo de Grupo
+                    </p>
                     <p className="text-sm">Público</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-400">Administradores</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Administradores
+                    </p>
                     <div className="flex items-center mt-1">
-                      <Avatar className="h-6 w-6">
+                      <Avatar className="h-6 w-6 ring-1 ring-blue-500/20">
                         <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=Mariana" />
                         <AvatarFallback>M</AvatarFallback>
                       </Avatar>
                     </div>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-400">Etiquetas</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Etiquetas
+                    </p>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {(group.tags || ["avançado", "teórico", "prático"]).map(
                         (tag, index) => (
@@ -626,13 +567,13 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                 </div>
               </div>
 
-              <div className="bg-[#1a2236] rounded-lg p-4">
+              <div className="bg-white dark:bg-[#1a2236] rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
                 <h3 className="text-lg font-bold mb-3">Progresso do Grupo</h3>
                 <div className="flex items-center justify-center mb-4">
                   <div className="relative h-32 w-32">
                     <svg className="w-full h-full" viewBox="0 0 100 100">
                       <circle
-                        className="text-gray-700 stroke-current"
+                        className="text-gray-200 dark:text-gray-700 stroke-current"
                         strokeWidth="10"
                         cx="50"
                         cy="50"
@@ -659,7 +600,7 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                     </div>
                   </div>
                 </div>
-                <p className="text-center text-sm text-gray-400 mb-4">
+                <p className="text-center text-sm text-gray-600 dark:text-gray-400 mb-4">
                   O grupo completou {group.progresso || 68}% do conteúdo
                   planejado
                 </p>

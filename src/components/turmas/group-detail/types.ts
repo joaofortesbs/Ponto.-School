@@ -1,6 +1,6 @@
 export interface GroupDetailProps {
   group: {
-    id: string;
+    id?: string;
     nome?: string;
     descricao?: string;
     imagem?: string;

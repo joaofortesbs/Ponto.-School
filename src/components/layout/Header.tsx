@@ -71,22 +71,191 @@ export default function Header() {
 
     fetchUserProfile();
 
-    // Carregar logo personalizado do localStorage, se existir
-    const savedLogo = localStorage.getItem("customLogo");
-    if (savedLogo) {
-      setCustomLogo(savedLogo);
+    // Obter a imagem padrão da configuração global ou usar o valor padrão
+    const defaultLogo =
+      window.PONTO_SCHOOL_CONFIG?.defaultLogo ||
+      "/images/ponto-school-logo.png";
+
+    // Definir logo imediatamente para evitar atraso na renderização
+    setCustomLogo(defaultLogo);
+
+    // Função para carregar e configurar a logo
+    const loadAndConfigureLogo = (logoUrl = null) => {
+      try {
+        // Se recebemos uma URL específica do evento, usá-la
+        if (logoUrl) {
+          setCustomLogo(logoUrl);
+          setIsLoading(false);
+          return;
+        }
+
+        // Verificar primeiro a logo específica da Ponto School
+        const pontoSchoolLogo = localStorage.getItem("pontoSchoolLogo");
+        if (
+          pontoSchoolLogo &&
+          pontoSchoolLogo !== "null" &&
+          pontoSchoolLogo !== "undefined"
+        ) {
+          setCustomLogo(pontoSchoolLogo);
+          setIsLoading(false);
+          if (window.PONTO_SCHOOL_CONFIG) {
+            window.PONTO_SCHOOL_CONFIG.logoLoaded = true;
+            window.PONTO_SCHOOL_CONFIG.defaultLogo = pontoSchoolLogo;
+          }
+          return;
+        }
+
+        // Verificar se já existe uma logo personalizada no localStorage
+        const savedLogo = localStorage.getItem("customLogo");
+        if (savedLogo && savedLogo !== "null" && savedLogo !== "undefined") {
+          setCustomLogo(savedLogo);
+          setIsLoading(false);
+          if (window.PONTO_SCHOOL_CONFIG) {
+            window.PONTO_SCHOOL_CONFIG.logoLoaded = true;
+          }
+        } else {
+          // Se não existir, usar a logo padrão e salvar no localStorage
+          setCustomLogo(defaultLogo);
+          localStorage.setItem("customLogo", defaultLogo);
+          localStorage.setItem("pontoSchoolLogo", defaultLogo);
+          localStorage.setItem("logoPreloaded", "true");
+          setIsLoading(false);
+        }
+      } catch (e) {
+        console.warn("Erro ao acessar localStorage no Header", e);
+        // Usar a logo padrão mesmo se não conseguir acessar o localStorage
+        setCustomLogo(defaultLogo);
+        setIsLoading(false);
+      }
+    };
+
+    // Pré-carregar a imagem com alta prioridade para garantir que esteja disponível
+    const preloadImg = new Image();
+    preloadImg.src = defaultLogo;
+    preloadImg.fetchPriority = "high";
+    preloadImg.crossOrigin = "anonymous";
+
+    preloadImg.onload = () => {
+      // Garantir que a imagem está carregada antes de usar
+      console.log("Logo carregada com sucesso no Header");
+      loadAndConfigureLogo();
+      document.dispatchEvent(
+        new CustomEvent("logoLoaded", { detail: defaultLogo }),
+      );
+    };
+
+    // Garantir que a imagem seja carregada mesmo se houver erro
+    preloadImg.onerror = () => {
+      console.error("Erro ao carregar logo no Header, tentando novamente...");
+
+      // Tentar novamente com um timestamp para evitar cache
+      setTimeout(() => {
+        const retryImg = new Image();
+        retryImg.src = defaultLogo + "?retry=" + Date.now();
+        retryImg.fetchPriority = "high";
+
+        retryImg.onload = () => {
+          console.log("Logo carregada com sucesso após retry no Header");
+          setCustomLogo(retryImg.src);
+          localStorage.setItem("customLogo", retryImg.src);
+          localStorage.setItem("pontoSchoolLogo", retryImg.src);
+          localStorage.setItem("logoPreloaded", "true");
+          setIsLoading(false);
+          document.dispatchEvent(
+            new CustomEvent("logoLoaded", { detail: retryImg.src }),
+          );
+        };
+
+        retryImg.onerror = () => {
+          console.error("Falha definitiva ao carregar logo no Header");
+          // Usar texto como fallback (null indica para usar o texto)
+          setCustomLogo(null);
+          setIsLoading(false);
+          document.dispatchEvent(new CustomEvent("logoLoadFailed"));
+        };
+      }, 1000);
+    };
+
+    // Verificar se a logo já foi carregada por outro componente
+    if (window.PONTO_SCHOOL_CONFIG?.logoLoaded) {
+      loadAndConfigureLogo(window.PONTO_SCHOOL_CONFIG.defaultLogo);
     }
+
+    // Adicionar listeners para eventos de carregamento da logo
+    const handleLogoLoaded = (event) => {
+      console.log("Logo loaded event received in Header", event.detail);
+      loadAndConfigureLogo(event.detail);
+    };
+
+    const handleLogoLoadFailed = () => {
+      console.log("Logo load failed event received in Header");
+      setCustomLogo(null);
+      setIsLoading(false);
+    };
+
+    document.addEventListener("logoLoaded", handleLogoLoaded);
+    document.addEventListener("logoLoadFailed", handleLogoLoadFailed);
+
+    return () => {
+      document.removeEventListener("logoLoaded", handleLogoLoaded);
+      document.removeEventListener("logoLoadFailed", handleLogoLoadFailed);
+    };
   }, []);
 
-  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         const result = e.target?.result as string;
-        setCustomLogo(result);
-        localStorage.setItem("customLogo", result);
-        setIsLogoDialogOpen(false);
+
+        try {
+          // Get current version from Supabase
+          const { data, error } = await supabase
+            .from("platform_settings")
+            .select("logo_version")
+            .single();
+
+          // Increment version
+          const newVersion = (data?.logo_version || 1) + 1;
+
+          // Update logo in Supabase with new version
+          await supabase.from("platform_settings").upsert(
+            {
+              id: 1,
+              logo_url: result,
+              logo_version: newVersion,
+            },
+            { onConflict: "id" },
+          );
+
+          // Import dynamically to avoid circular dependencies
+          const { getVersionedLogoUrl, saveLogoToLocalStorage } = await import(
+            "@/lib/logo-utils"
+          );
+
+          // Save to localStorage with new version
+          saveLogoToLocalStorage(result, newVersion);
+
+          // Update UI
+          const versionedUrl = getVersionedLogoUrl(result, newVersion);
+          setCustomLogo(versionedUrl);
+
+          // Notify other components
+          document.dispatchEvent(
+            new CustomEvent("logoLoaded", { detail: versionedUrl }),
+          );
+
+          setIsLogoDialogOpen(false);
+        } catch (error) {
+          console.error("Error updating logo:", error);
+          // Still update locally even if Supabase update fails
+          setCustomLogo(result);
+          localStorage.setItem("customLogo", result);
+          setIsLogoDialogOpen(false);
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -96,10 +265,52 @@ export default function Header() {
     fileInputRef.current?.click();
   };
 
-  const resetLogo = () => {
-    setCustomLogo(null);
-    localStorage.removeItem("customLogo");
-    setIsLogoDialogOpen(false);
+  const resetLogo = async () => {
+    try {
+      // Import dynamically to avoid circular dependencies
+      const { DEFAULT_LOGO } = await import("@/lib/logo-utils");
+
+      // Get current version from Supabase
+      const { data, error } = await supabase
+        .from("platform_settings")
+        .select("logo_version")
+        .single();
+
+      // Increment version
+      const newVersion = (data?.logo_version || 1) + 1;
+
+      // Update logo in Supabase with default logo and new version
+      await supabase.from("platform_settings").upsert(
+        {
+          id: 1,
+          logo_url: DEFAULT_LOGO,
+          logo_version: newVersion,
+        },
+        { onConflict: "id" },
+      );
+
+      // Clear localStorage
+      localStorage.removeItem("customLogo");
+      localStorage.removeItem("pontoSchoolLogo");
+      localStorage.removeItem("sidebarCustomLogo");
+      localStorage.setItem("logoVersion", newVersion.toString());
+
+      // Update UI
+      setCustomLogo(null);
+
+      // Notify other components
+      document.dispatchEvent(
+        new CustomEvent("logoLoaded", { detail: DEFAULT_LOGO }),
+      );
+
+      setIsLogoDialogOpen(false);
+    } catch (error) {
+      console.error("Error resetting logo:", error);
+      // Still reset locally even if Supabase update fails
+      setCustomLogo(null);
+      localStorage.removeItem("customLogo");
+      setIsLogoDialogOpen(false);
+    }
   };
 
   return (
@@ -113,15 +324,47 @@ export default function Header() {
                 <div className="h-10 flex items-center">
                   <img
                     src={customLogo}
-                    alt="Logo personalizado"
+                    alt="Logo Ponto School"
                     className="h-8 object-contain"
+                    loading="eager"
+                    fetchpriority="high"
+                    onError={(e) => {
+                      console.error("Erro ao renderizar logo no Header");
+                      // Tentar carregar a logo do localStorage
+                      const savedLogo = localStorage.getItem("pontoSchoolLogo");
+                      if (
+                        savedLogo &&
+                        savedLogo !== "null" &&
+                        savedLogo !== "undefined"
+                      ) {
+                        e.currentTarget.src =
+                          savedLogo + "?retry=" + Date.now();
+                      } else {
+                        // Tentar carregar a logo padrão com timestamp para evitar cache
+                        e.currentTarget.src =
+                          "/images/ponto-school-logo.png?retry=" + Date.now();
+                      }
+                      // Se ainda falhar, remover a imagem e mostrar o texto
+                      e.currentTarget.onerror = () => {
+                        // Verificar se o elemento ainda existe antes de acessar style
+                        if (e.currentTarget && e.currentTarget.style) {
+                          e.currentTarget.style.display = "none";
+                        }
+                        setCustomLogo(null);
+                        document.dispatchEvent(
+                          new CustomEvent("logoLoadFailed"),
+                        );
+                      };
+                    }}
                   />
                 </div>
               ) : (
-                <span className="text-2xl font-bold text-brand-black dark:text-white text-glow tracking-wider">
+                <span className="text-2xl font-bold text-brand-black dark:text-white text-glow tracking-wider logo-fallback">
                   Ponto
-                  <span className="text-[#FF6B00] text-3xl">.</span>
-                  <span className="text-[#0D00F5] dark:text-white">School</span>
+                  <span className="text-[#FF6B00] text-3xl orange">.</span>
+                  <span className="text-[#0D00F5] dark:text-white blue">
+                    School
+                  </span>
                 </span>
               )}
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 dark:group-hover:bg-white/5 rounded transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">

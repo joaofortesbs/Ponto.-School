@@ -17,6 +17,7 @@ import {
   Users,
   GraduationCap,
   ChevronRight,
+  ChevronLeft,
   ChevronDown,
   ChevronUp,
   CheckCircle,
@@ -104,6 +105,7 @@ import {
   Home
 } from "lucide-react";
 import GroupDetail from "./GroupDetail";
+import GroupCard from "./GroupCard";
 
 // Sample data for classes
 const turmasData = [
@@ -210,6 +212,270 @@ const turmasData = [
     icone: <Globe className="h-6 w-6 text-[#0077B6]" />
   }
 ];
+
+// Sample data for study groups organized by topics
+const gruposEstudosPorTopico = {
+  "Matemática": [
+    {
+      id: "mat1",
+      nome: "Função 1° Grau",
+      disciplina: "Matemática",
+      descricao: "Grupo de estudos focado em funções de primeiro grau, equações lineares e suas aplicações.",
+      membros: 8,
+      proximaReuniao: "18/03, 15:00",
+      tags: ["Álgebra", "Funções", "Equações"],
+      privacidade: "publico",
+      icone: <Calculator className="h-6 w-6 text-[#FF6B00]" />
+    },
+    {
+      id: "mat2",
+      nome: "Dízima Periódica",
+      disciplina: "Matemática",
+      descricao: "Estudo sobre dízimas periódicas, frações geratrizes e aplicações práticas.",
+      membros: 6,
+      proximaReuniao: "20/03, 14:30",
+      tags: ["Números", "Frações", "Decimais"],
+      privacidade: "publico",
+      icone: <Calculator className="h-6 w-6 text-[#FF6B00]" />
+    },
+    {
+      id: "mat3",
+      nome: "Conjuntos",
+      disciplina: "Matemática",
+      descricao: "Grupo dedicado ao estudo da teoria dos conjuntos, operações e aplicações.",
+      membros: 7,
+      proximaReuniao: "19/03, 16:00",
+      tags: ["Teoria dos Conjuntos", "Lógica", "Operações"],
+      privacidade: "publico",
+      icone: <Calculator className="h-6 w-6 text-[#FF6B00]" />
+    }
+  ],
+  "Língua Portuguesa": [
+    {
+      id: "port1",
+      nome: "Interpretação de Texto",
+      disciplina: "Língua Portuguesa",
+      descricao: "Grupo focado em técnicas de interpretação textual e análise crítica de diferentes gêneros.",
+      membros: 10,
+      proximaReuniao: "17/03, 14:00",
+      tags: ["Leitura", "Análise", "Compreensão"],
+      privacidade: "publico",
+      icone: <BookOpen className="h-6 w-6 text-[#FF6B00]" />
+    },
+    {
+      id: "port2",
+      nome: "Literatura",
+      disciplina: "Língua Portuguesa",
+      descricao: "Estudo das escolas literárias, autores clássicos e análise de obras importantes.",
+      membros: 9,
+      proximaReuniao: "21/03, 15:30",
+      tags: ["Escolas Literárias", "Autores", "Obras"],
+      privacidade: "publico",
+      icone: <BookOpen className="h-6 w-6 text-[#FF6B00]" />
+    },
+    {
+      id: "port3",
+      nome: "Gênero Textual",
+      disciplina: "Língua Portuguesa",
+      descricao: "Grupo para estudo dos diferentes gêneros textuais e suas características específicas.",
+      membros: 7,
+      proximaReuniao: "22/03, 16:00",
+      tags: ["Redação", "Tipologia", "Estrutura"],
+      privacidade: "publico",
+      icone: <BookOpen className="h-6 w-6 text-[#FF6B00]" />
+    }
+  ],
+  "Química": [
+    {
+      id: "quim1",
+      nome: "Densidade",
+      disciplina: "Química",
+      descricao: "Estudo sobre densidade, massa específica e suas aplicações em diferentes contextos.",
+      membros: 6,
+      proximaReuniao: "18/03, 14:00",
+      tags: ["Físico-Química", "Propriedades", "Medidas"],
+      privacidade: "publico",
+      icone: <Beaker className="h-6 w-6 text-[#E85D04]" />
+    },
+    {
+      id: "quim2",
+      nome: "Sistemas - Química",
+      disciplina: "Química",
+      descricao: "Grupo dedicado ao estudo de sistemas químicos, equilíbrio e transformações.",
+      membros: 8,
+      proximaReuniao: "20/03, 15:30",
+      tags: ["Equilíbrio", "Transformações", "Reações"],
+      privacidade: "publico",
+      icone: <Beaker className="h-6 w-6 text-[#E85D04]" />
+    },
+    {
+      id: "quim3",
+      nome: "Misturas - Química",
+      disciplina: "Química",
+      descricao: "Estudo sobre tipos de misturas, métodos de separação e aplicações práticas.",
+      membros: 7,
+      proximaReuniao: "21/03, 16:00",
+      tags: ["Separação", "Soluções", "Compostos"],
+      privacidade: "publico",
+      icone: <Beaker className="h-6 w-6 text-[#E85D04]" />
+    }
+  ],
+  "Física": [
+    {
+      id: "fis1",
+      nome: "Notação Científica",
+      disciplina: "Física",
+      descricao: "Grupo focado no estudo e aplicação da notação científica em problemas físicos.",
+      membros: 6,
+      proximaReuniao: "19/03, 14:30",
+      tags: ["Medidas", "Grandezas", "Cálculos"],
+      privacidade: "publico",
+      icone: <Atom className="h-6 w-6 text-[#FF8C40]" />
+    },
+    {
+      id: "fis2",
+      nome: "Velocidade Média",
+      disciplina: "Física",
+      descricao: "Estudo sobre cinemática, velocidade média e aplicações em problemas práticos.",
+      membros: 8,
+      proximaReuniao: "22/03, 15:00",
+      tags: ["Cinemática", "Movimento", "Cálculos"],
+      privacidade: "publico",
+      icone: <Atom className="h-6 w-6 text-[#FF8C40]" />
+    }
+  ],
+  "Biologia": [
+    {
+      id: "bio1",
+      nome: "Células",
+      disciplina: "Biologia",
+      descricao: "Grupo dedicado ao estudo da estrutura e funcionamento celular.",
+      membros: 9,
+      proximaReuniao: "18/03, 16:30",
+      tags: ["Citologia", "Organelas", "Processos Celulares"],
+      privacidade: "publico",
+      icone: <Dna className="h-6 w-6 text-[#DC2F02]" />
+    },
+    {
+      id: "bio2",
+      nome: "Fotossíntese",
+      disciplina: "Biologia",
+      descricao: "Estudo detalhado do processo de fotossíntese e sua importância para os seres vivos.",
+      membros: 7,
+      proximaReuniao: "20/03, 14:00",
+      tags: ["Metabolismo", "Plantas", "Energia"],
+      privacidade: "publico",
+      icone: <Dna className="h-6 w-6 text-[#DC2F02]" />
+    },
+    {
+      id: "bio3",
+      nome: "Fermentação",
+      disciplina: "Biologia",
+      descricao: "Grupo focado no estudo dos processos de fermentação e suas aplicações.",
+      membros: 6,
+      proximaReuniao: "21/03, 15:00",
+      tags: ["Metabolismo", "Microbiologia", "Biotecnologia"],
+      privacidade: "publico",
+      icone: <Dna className="h-6 w-6 text-[#DC2F02]" />
+    }
+  ],
+  "Geografia": [
+    {
+      id: "geo1",
+      nome: "Relevo",
+      disciplina: "Geografia",
+      descricao: "Estudo das formas de relevo, processos de formação e transformação da paisagem.",
+      membros: 7,
+      proximaReuniao: "19/03, 16:00",
+      tags: ["Geomorfologia", "Paisagem", "Formações"],
+      privacidade: "publico",
+      icone: <Globe className="h-6 w-6 text-[#0077B6]" />
+    },
+    {
+      id: "geo2",
+      nome: "Projeções",
+      disciplina: "Geografia",
+      descricao: "Grupo dedicado ao estudo de projeções cartográficas e representações espaciais.",
+      membros: 5,
+      proximaReuniao: "22/03, 14:30",
+      tags: ["Cartografia", "Mapas", "Escalas"],
+      privacidade: "publico",
+      icone: <Globe className="h-6 w-6 text-[#0077B6]" />
+    },
+    {
+      id: "geo3",
+      nome: "Geomorfologia",
+      disciplina: "Geografia",
+      descricao: "Estudo aprofundado sobre as formas de relevo e processos geomorfológicos.",
+      membros: 6,
+      proximaReuniao: "23/03, 15:30",
+      tags: ["Relevo", "Processos", "Formações"],
+      privacidade: "publico",
+      icone: <Globe className="h-6 w-6 text-[#0077B6]" />
+    }
+  ],
+  "História": [
+    {
+      id: "hist1",
+      nome: "Memória",
+      disciplina: "História",
+      descricao: "Grupo focado no estudo da memória histórica, patrimônio e identidade cultural.",
+      membros: 8,
+      proximaReuniao: "18/03, 15:30",
+      tags: ["Patrimônio", "Identidade", "Cultura"],
+      privacidade: "publico",
+      icone: <Landmark className="h-6 w-6 text-[#9D0208]" />
+    }
+  ],
+  "Filosofia": [
+    {
+      id: "fil1",
+      nome: "Senso Comum",
+      disciplina: "Filosofia",
+      descricao: "Estudo sobre o senso comum, conhecimento científico e suas diferenças.",
+      membros: 7,
+      proximaReuniao: "20/03, 16:30",
+      tags: ["Epistemologia", "Conhecimento", "Ciência"],
+      privacidade: "publico",
+      icone: <Brain className="h-6 w-6 text-[#3A0CA3]" />
+    },
+    {
+      id: "fil2",
+      nome: "Discurso Filosófico",
+      disciplina: "Filosofia",
+      descricao: "Grupo dedicado à análise do discurso filosófico e suas características.",
+      membros: 6,
+      proximaReuniao: "22/03, 16:00",
+      tags: ["Linguagem", "Argumentação", "Lógica"],
+      privacidade: "publico",
+      icone: <Brain className="h-6 w-6 text-[#3A0CA3]" />
+    }
+  ],
+  "Sociologia": [
+    {
+      id: "soc1",
+      nome: "Iluminismo",
+      disciplina: "Sociologia",
+      descricao: "Estudo sobre o movimento iluminista e suas influências na sociedade moderna.",
+      membros: 8,
+      proximaReuniao: "19/03, 15:00",
+      tags: ["Movimentos", "Pensamento", "Modernidade"],
+      privacidade: "publico",
+      icone: <Users className="h-6 w-6 text-[#4361EE]" />
+    },
+    {
+      id: "soc2",
+      nome: "Positivismo",
+      disciplina: "Sociologia",
+      descricao: "Grupo focado no estudo do positivismo e suas contribuições para as ciências sociais.",
+      membros: 7,
+      proximaReuniao: "21/03, 14:30",
+      tags: ["Teoria", "Ciência", "Auguste Comte"],
+      privacidade: "publico",
+      icone: <Users className="h-6 w-6 text-[#4361EE]" />
+    }
+  ]
+};
 
 // Sample data for a specific class
 const turmaDetalhada = {
@@ -751,6 +1017,32 @@ const TurmasView: React.FC = () => {
     setSelectedGroup(null);
   };
 
+  // Get topic icon
+  const getTopicIcon = (topic: string) => {
+    switch (topic) {
+      case "Matemática":
+        return <Calculator className="h-6 w-6 text-[#FF6B00]" />;
+      case "Língua Portuguesa":
+        return <BookOpen className="h-6 w-6 text-[#FF6B00]" />;
+      case "Química":
+        return <Beaker className="h-6 w-6 text-[#E85D04]" />;
+      case "Física":
+        return <Atom className="h-6 w-6 text-[#FF8C40]" />;
+      case "Biologia":
+        return <Dna className="h-6 w-6 text-[#DC2F02]" />;
+      case "Geografia":
+        return <Globe className="h-6 w-6 text-[#0077B6]" />;
+      case "História":
+        return <Landmark className="h-6 w-6 text-[#9D0208]" />;
+      case "Filosofia":
+        return <Brain className="h-6 w-6 text-[#3A0CA3]" />;
+      case "Sociologia":
+        return <Users className="h-6 w-6 text-[#4361EE]" />;
+      default:
+        return <BookOpen className="h-6 w-6 text-[#FF6B00]" />;
+    }
+  };
+
   // Get status color
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -823,6 +1115,19 @@ const TurmasView: React.FC = () => {
     }
   };
 
+  // Function to scroll horizontally within a topic container
+  const scrollContainer = (containerId: string, direction: 'left' | 'right') => {
+    const container = document.getElementById(containerId);
+    if (container) {
+      const scrollAmount = 300; // Adjust scroll amount as needed
+      if (direction === 'left') {
+        container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+      } else {
+        container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      }
+    }
+  };
+
   // Sample group data for demonstration
   const sampleGroup = {
     id: "g1",
@@ -884,104 +1189,159 @@ const TurmasView: React.FC = () => {
 
       {/* Main Content */}
       {!selectedTurma ? (
-        // Turmas List View
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredTurmas.map((turma) => (
-            <motion.div
-              key={turma.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 transform hover:translate-y-[-3px] cursor-pointer"
-              onClick={() => handleTurmaSelect(turma.id)}
-            >
-              <div className="flex flex-col h-full">
-                <div className="relative h-40 overflow-hidden">
-                  <img
-                    src={turma.imagem}
-                    alt={turma.nome}
-                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                  <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      {turma.icone}
-                      <h3 className="text-xl font-bold text-white font-montserrat">
-                        {turma.nome}
-                      </h3>
+        // Turmas List View with Topics and Study Groups
+        <div className="space-y-8">
+          {/* Study Groups by Topics Section */}
+          <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
+            <h2 className="text-2xl font-bold text-[#001427] dark:text-white mb-6 font-montserrat">Grupos de Estudo por Tópicos</h2>
+            
+            <div className="space-y-8">
+              {Object.entries(gruposEstudosPorTopico).map(([topico, grupos], index) => (
+                <div key={index} className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {getTopicIcon(topico)}
+                      <h3 className="text-xl font-bold text-[#001427] dark:text-white font-montserrat">{topico}</h3>
                     </div>
-                    <p className="text-sm text-gray-200 font-open-sans">
-                      {turma.professor}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="p-4 flex-1 flex flex-col justify-between">
-                  <div>
-                    <div className="mb-4">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 font-montserrat">
-                          Progresso
-                        </span>
-                        <span className="text-sm font-bold text-[#FF6B00] font-montserrat">
-                          {turma.progresso}%
-                        </span>
-                      </div>
-                      <Progress
-                        value={turma.progresso}
-                        className="h-2.5 bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                        <Clock className="h-4 w-4 text-[#FF6B00]" />
-                        <span className={turma.proximaAula.prazoProximo ? "text-red-500 dark:text-red-400 font-medium" : ""}>
-                          {turma.proximaAula.titulo} - {turma.proximaAula.data}, {turma.proximaAula.hora}
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <Badge className="bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF8C40]">
-                          {turma.status}
-                        </Badge>
-                        
-                        {turma.novasMensagens > 0 && (
-                          <Badge className="bg-blue-500 text-white">
-                            <MessageCircle className="h-3 w-3 mr-1" />
-                            {turma.novasMensagens} {turma.novasMensagens === 1 ? "nova mensagem" : "novas mensagens"}
-                          </Badge>
-                        )}
-                      </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 p-0 rounded-full hover:bg-[#FF6B00]/10"
+                        onClick={() => scrollContainer(`topic-container-${index}`, 'left')}
+                      >
+                        <ChevronLeft className="h-5 w-5 text-[#FF6B00]" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 p-0 rounded-full hover:bg-[#FF6B00]/10"
+                        onClick={() => scrollContainer(`topic-container-${index}`, 'right')}
+                      >
+                        <ChevronRight className="h-5 w-5 text-[#FF6B00]" />
+                      </Button>
                     </div>
                   </div>
                   
-                  <div className="flex gap-2 mt-4">
-                    <Button
-                      className="flex-1 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-montserrat font-semibold uppercase text-xs"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleTurmaSelect(turma.id);
-                      }}
-                    >
-                      Acessar Turma
-                    </Button>
-                    
-                    <Button
-                      variant="outline"
-                      className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-montserrat text-xs"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        // In a real app, this would navigate to the forum
-                      }}
-                    >
-                      <MessageCircle className="h-4 w-4 mr-1" /> Ver Fórum
-                    </Button>
+                  <div 
+                    id={`topic-container-${index}`} 
+                    className="flex overflow-x-auto pb-4 hide-scrollbar gap-4"
+                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                  >
+                    {grupos.map((grupo) => (
+                      <div key={grupo.id} className="min-w-[300px] max-w-[300px]">
+                        <GroupCard group={grupo} onClick={() => handleGroupSelect(grupo)} />
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              ))}
+            </div>
+          </div>
+          
+          {/* Regular Classes Section */}
+          <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
+            <h2 className="text-2xl font-bold text-[#001427] dark:text-white mb-6 font-montserrat">Minhas Turmas</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredTurmas.map((turma) => (
+                <motion.div
+                  key={turma.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 transform hover:translate-y-[-3px] cursor-pointer"
+                  onClick={() => handleTurmaSelect(turma.id)}
+                >
+                  <div className="flex flex-col h-full">
+                    <div className="relative h-40 overflow-hidden">
+                      <img
+                        src={turma.imagem}
+                        alt={turma.nome}
+                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                      <div className="absolute bottom-0 left-0 right-0 p-4">
+                        <div className="flex items-center gap-2 mb-1">
+                          {turma.icone}
+                          <h3 className="text-xl font-bold text-white font-montserrat">
+                            {turma.nome}
+                          </h3>
+                        </div>
+                        <p className="text-sm text-gray-200 font-open-sans">
+                          {turma.professor}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 flex-1 flex flex-col justify-between">
+                      <div>
+                        <div className="mb-4">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 font-montserrat">
+                              Progresso
+                            </span>
+                            <span className="text-sm font-bold text-[#FF6B00] font-montserrat">
+                              {turma.progresso}%
+                            </span>
+                          </div>
+                          <Progress
+                            value={turma.progresso}
+                            className="h-2.5 bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                            <Clock className="h-4 w-4 text-[#FF6B00]" />
+                            <span className={turma.proximaAula.prazoProximo ? "text-red-500 dark:text-red-400 font-medium" : ""}>
+                              {turma.proximaAula.titulo} - {turma.proximaAula.data}, {turma.proximaAula.hora}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <Badge className="bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF8C40]">
+                              {turma.status}
+                            </Badge>
+                            
+                            {turma.novasMensagens > 0 && (
+                              <Badge className="bg-blue-500 text-white">
+                                <MessageCircle className="h-3 w-3 mr-1" />
+                                {turma.novasMensagens} {turma.novasMensagens === 1 ? "nova mensagem" : "novas mensagens"}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2 mt-4">
+                        <Button
+                          className="flex-1 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-montserrat font-semibold uppercase text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTurmaSelect(turma.id);
+                          }}
+                        >
+                          Acessar Turma
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-montserrat text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // In a real app, this would navigate to the forum
+                          }}
+                        >
+                          <MessageCircle className="h-4 w-4 mr-1" /> Ver Fórum
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
         </div>
       ) : (
         // Turma Detail View
@@ -1085,4 +1445,236 @@ const TurmasView: React.FC = () => {
               
               <TabsTrigger
                 value="agenda"
-                className="data-[state=active]:bg-[#FF6B00]/10 data-[state=active]:text-[#
+                className="data-[state=active]:bg-[#FF6B00]/10 data-[state=active]:text-[#FF6B00] rounded-lg px-4 py-2"
+              >
+                <Calendar className="h-4 w-4 mr-2" /> Agenda
+              </TabsTrigger>
+              
+              <TabsTrigger
+                value="notas"
+                className="data-[state=active]:bg-[#FF6B00]/10 data-[state=active]:text-[#FF6B00] rounded-lg px-4 py-2"
+              >
+                <FileText className="h-4 w-4 mr-2" /> Notas
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="conteudo" className="space-y-6">
+              {/* Content Tab */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-6">
+                  {/* Modules */}
+                  <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
+                    <h3 className="text-xl font-bold text-[#001427] dark:text-white mb-4 font-montserrat">Módulos</h3>
+                    
+                    <div className="space-y-4">
+                      {turmaDetalhada.modulos.map((modulo) => (
+                        <div key={modulo.id} className="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
+                          <div 
+                            className="bg-gray-50 dark:bg-[#0f1525] p-4 flex items-center justify-between cursor-pointer"
+                            onClick={() => toggleModule(modulo.id)}
+                          >
+                            <div className="flex-1">
+                              <h4 className="font-bold text-[#001427] dark:text-white">{modulo.titulo}</h4>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">{modulo.descricao}</p>
+                            </div>
+                            
+                            <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-[#FF6B00]">{modulo.progresso}%</span>
+                                <Progress
+                                  value={modulo.progresso}
+                                  className="h-2 w-20 bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20"
+                                />
+                              </div>
+                              
+                              {expandedModules.includes(modulo.id) ? (
+                                <ChevronUp className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                              ) : (
+                                <ChevronDown className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                              )}
+                            </div>
+                          </div>
+                          
+                          {expandedModules.includes(modulo.id) && (
+                            <div className="p-4 bg-white dark:bg-[#1E293B] space-y-3">
+                              {modulo.conteudos.map((conteudo) => (
+                                <div 
+                                  key={conteudo.id} 
+                                  className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-[#0f1525] transition-colors"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-gray-100 dark:bg-[#0f1525] rounded-lg">
+                                      {conteudo.icone}
+                                    </div>
+                                    
+                                    <div>
+                                      <h5 className="font-medium text-[#001427] dark:text-white">{conteudo.titulo}</h5>
+                                      <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                                        <span className="flex items-center gap-1">
+                                          <Clock className="h-3 w-3" /> {conteudo.duracao}
+                                        </span>
+                                        <span className="flex items-center gap-1">
+                                          <Calendar className="h-3 w-3" /> {conteudo.data}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-2">
+                                    <Badge className={`${getStatusColor(conteudo.status)}`}>
+                                      <div className="flex items-center gap-1">
+                                        {getStatusIcon(conteudo.status)}
+                                        <span className="capitalize">{conteudo.status}</span>
+                                      </div>
+                                    </Badge>
+                                    
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full">
+                                      <MoreVertical className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-6">
+                  {/* Recommendations */}
+                  <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
+                    <h3 className="text-xl font-bold text-[#001427] dark:text-white mb-4 font-montserrat">Recomendações</h3>
+                    
+                    <div className="space-y-3">
+                      {turmaDetalhada.recomendacoes.map((recomendacao) => (
+                        <div 
+                          key={recomendacao.id} 
+                          className={`p-3 rounded-lg ${getPriorityColor(recomendacao.prioridade)} flex items-start gap-3`}
+                        >
+                          <div className="p-2 bg-white dark:bg-[#0f1525] rounded-lg">
+                            {recomendacao.icone}
+                          </div>
+                          
+                          <div>
+                            <h5 className="font-medium">{recomendacao.titulo}</h5>
+                            <div className="flex items-center gap-1 text-xs mt-1">
+                              <Badge className="bg-white/50 dark:bg-[#0f1525]/50 text-gray-700 dark:text-gray-300">
+                                {recomendacao.tipo}
+                              </Badge>
+                              <Badge className="bg-white/50 dark:bg-[#0f1525]/50 text-gray-700 dark:text-gray-300 capitalize">
+                                {recomendacao.prioridade}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Weekly Goals */}
+                  <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
+                    <h3 className="text-xl font-bold text-[#001427] dark:text-white mb-4 font-montserrat">Metas Semanais</h3>
+                    
+                    <div className="space-y-4">
+                      {turmaDetalhada.metasSemanais.map((meta) => (
+                        <div key={meta.id} className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <h5 className="font-medium text-[#001427] dark:text-white">{meta.titulo}</h5>
+                            <span className="text-sm font-medium text-[#FF6B00]">{meta.progresso}%</span>
+                          </div>
+                          <Progress
+                            value={meta.progresso}
+                            className="h-2 bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Study Groups */}
+                  <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
+                    <h3 className="text-xl font-bold text-[#001427] dark:text-white mb-4 font-montserrat">Grupos de Estudo</h3>
+                    
+                    <div className="space-y-3">
+                      {turmaDetalhada.gruposEstudo.map((grupo) => (
+                        <div 
+                          key={grupo.id} 
+                          className="p-4 rounded-lg border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-[#0f1525] transition-colors cursor-pointer"
+                        >
+                          <h5 className="font-medium text-[#001427] dark:text-white mb-2">{grupo.nome}</h5>
+                          
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
+                              <Users className="h-4 w-4 text-[#FF6B00]" />
+                              <span>{grupo.membros.length} membros</span>
+                            </div>
+                            
+                            <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
+                              <Calendar className="h-4 w-4 text-[#FF6B00]" />
+                              <span>{grupo.proximaReuniao}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="visao-geral">
+              {/* Overview Tab */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-6">
+                  {/* Description */}
+                  <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
+                    <h3 className="text-xl font-bold text-[#001427] dark:text-white mb-4 font-montserrat">Descrição da Turma</h3>
+                    <p className="text-gray-700 dark:text-gray-300">{turmaDetalhada.descricao}</p>
+                  </div>
+                  
+                  {/* Strengths and Weaknesses */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
+                      <h3 className="text-xl font-bold text-[#001427] dark:text-white mb-4 font-montserrat">Pontos Fortes</h3>
+                      
+                      <div className="space-y-2">
+                        {turmaDetalhada.pontosFortes.map((ponto, index) => (
+                          <div 
+                            key={index} 
+                            className="flex items-center gap-2 p-2 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300"
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                            <span>{ponto}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
+                      <h3 className="text-xl font-bold text-[#001427] dark:text-white mb-4 font-montserrat">Pontos a Melhorar</h3>
+                      
+                      <div className="space-y-2">
+                        {turmaDetalhada.pontosFracos.map((ponto, index) => (
+                          <div 
+                            key={index} 
+                            className="flex items-center gap-2 p-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300"
+                          >
+                            <AlertCircle className="h-4 w-4" />
+                            <span>{ponto}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Comparative Performance */}
+                  <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
+                    <h3 className="text-xl font-bold text-[#001427] dark:text-white mb-4 font-montserrat">Comparativo com a Turma</h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="p-4 rounded-lg bg-gray-50 dark:bg-[#0f1525] border border-gray-200 dark:border-gray-800">
+                        <div className="flex items-center justify-between mb-2">
+                          <h5 className="font-medium text-[#001427] dark:text-white">Participação</h5>
+                          {getCom
