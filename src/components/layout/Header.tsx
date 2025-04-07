@@ -1098,7 +1098,7 @@ export default function Header() {
       </Dialog>
 
       {/* Minimalist Search Bar */}
-      <div className="flex-1 max-w-md mx-auto">
+      <div className="flex-1 max-w-2xl mx-auto">
         <div className="relative group">
           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-300 dark:text-gray-500 transition-all duration-300 group-hover:text-[#FF6B00] dark:group-hover:text-[#FF6B00]">
             <Search className="h-4 w-4" />

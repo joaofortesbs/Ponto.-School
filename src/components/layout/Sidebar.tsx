@@ -1,25 +1,8 @@
 import { cn } from "@/lib/utils";
 import { SidebarNav } from "@/components/sidebar/SidebarNav";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Menu,
-  X,
-  ChevronLeft,
-  ChevronRight,
-  Upload,
-  Image as ImageIcon,
-} from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
+import { Menu, X, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   isCollapsed?: boolean;
@@ -35,8 +18,6 @@ export default function Sidebar({
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(isCollapsed);
   const [customLogo, setCustomLogo] = useState<string | null>(null);
-  const [isLogoDialogOpen, setIsLogoDialogOpen] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // Obter a imagem padrão da configuração global ou usar o valor padrão
@@ -161,30 +142,6 @@ export default function Sidebar({
     };
   }, []);
 
-  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setCustomLogo(result);
-        localStorage.setItem("sidebarCustomLogo", result);
-        setIsLogoDialogOpen(false);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
-  };
-
-  const resetLogo = () => {
-    setCustomLogo(null);
-    localStorage.removeItem("sidebarCustomLogo");
-    setIsLogoDialogOpen(false);
-  };
-
   const handleToggleCollapse = () => {
     setSidebarCollapsed(!sidebarCollapsed);
     if (onToggleCollapse) {
@@ -227,119 +184,56 @@ export default function Sidebar({
         {...props}
       >
         <div className="flex h-[72px] items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800 relative">
-          <Dialog open={isLogoDialogOpen} onOpenChange={setIsLogoDialogOpen}>
-            <DialogTrigger asChild>
-              <div
-                className={cn(
-                  "flex items-center gap-2 transition-all duration-300 cursor-pointer group relative",
-                  sidebarCollapsed ? "opacity-0 w-0" : "opacity-100",
-                )}
-              >
-                {customLogo ? (
-                  <div className="h-16 flex items-center justify-center w-full">
-                    <img
-                      src={customLogo}
-                      alt="Logo Ponto School"
-                      className="h-16 w-auto object-contain"
-                      loading="eager"
-                      fetchpriority="high"
-                      onError={(e) => {
-                        console.error("Erro ao renderizar logo no Sidebar");
-                        // Tentar carregar a logo do localStorage
-                        const savedLogo =
-                          localStorage.getItem("pontoSchoolLogo");
-                        if (
-                          savedLogo &&
-                          savedLogo !== "null" &&
-                          savedLogo !== "undefined"
-                        ) {
-                          e.currentTarget.src =
-                            savedLogo + "?retry=" + Date.now();
-                        } else {
-                          // Tentar carregar a logo padrão com timestamp para evitar cache
-                          e.currentTarget.src =
-                            "/images/ponto-school-logo.png?retry=" + Date.now();
-                        }
-                        // Se ainda falhar, remover a imagem e mostrar o texto
-                        e.currentTarget.onerror = () => {
-                          // Verificar se o elemento ainda existe antes de acessar style
-                          if (e.currentTarget && e.currentTarget.style) {
-                            e.currentTarget.style.display = "none";
-                          }
-                          setCustomLogo(null);
-                          document.dispatchEvent(
-                            new CustomEvent("logoLoadFailed"),
-                          );
-                        };
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <>
-                    <span className="font-bold text-lg text-[#001427] dark:text-white logo-fallback">
-                      Ponto<span className="orange">.</span>
-                      <span className="blue">School</span>
-                    </span>
-                  </>
-                )}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 dark:group-hover:bg-white/5 rounded transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                  <ImageIcon className="w-4 h-4 text-brand-black/70 dark:text-white/70" />
-                </div>
+          <div
+            className={cn(
+              "flex items-center gap-2 transition-all duration-300",
+              sidebarCollapsed ? "opacity-0 w-0" : "opacity-100",
+            )}
+          >
+            {customLogo ? (
+              <div className="h-16 flex items-center justify-center w-full">
+                <img
+                  src={customLogo}
+                  alt="Logo Ponto School"
+                  className="h-16 w-auto object-contain"
+                  loading="eager"
+                  fetchpriority="high"
+                  onError={(e) => {
+                    console.error("Erro ao renderizar logo no Sidebar");
+                    // Tentar carregar a logo do localStorage
+                    const savedLogo = localStorage.getItem("pontoSchoolLogo");
+                    if (
+                      savedLogo &&
+                      savedLogo !== "null" &&
+                      savedLogo !== "undefined"
+                    ) {
+                      e.currentTarget.src = savedLogo + "?retry=" + Date.now();
+                    } else {
+                      // Tentar carregar a logo padrão com timestamp para evitar cache
+                      e.currentTarget.src =
+                        "/images/ponto-school-logo.png?retry=" + Date.now();
+                    }
+                    // Se ainda falhar, remover a imagem e mostrar o texto
+                    e.currentTarget.onerror = () => {
+                      // Verificar se o elemento ainda existe antes de acessar style
+                      if (e.currentTarget && e.currentTarget.style) {
+                        e.currentTarget.style.display = "none";
+                      }
+                      setCustomLogo(null);
+                      document.dispatchEvent(new CustomEvent("logoLoadFailed"));
+                    };
+                  }}
+                />
               </div>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Alterar Logo</DialogTitle>
-                <DialogDescription>
-                  Faça upload de uma imagem para substituir a logo atual.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="flex flex-col items-center justify-center gap-4 py-4">
-                {customLogo && (
-                  <div className="border rounded-md p-2 w-full max-w-[300px] flex justify-center">
-                    <img
-                      src={customLogo}
-                      alt="Logo atual"
-                      className="h-16 object-contain"
-                    />
-                  </div>
-                )}
-                <div className="grid w-full max-w-sm items-center gap-1.5">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    ref={fileInputRef}
-                    onChange={handleLogoUpload}
-                  />
-                  <Button
-                    type="button"
-                    onClick={triggerFileInput}
-                    className="w-full"
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    Escolher Imagem
-                  </Button>
-                </div>
-              </div>
-              <DialogFooter className="sm:justify-between">
-                {customLogo && (
-                  <Button
-                    variant="destructive"
-                    type="button"
-                    onClick={resetLogo}
-                  >
-                    Restaurar Logo Original
-                  </Button>
-                )}
-                <DialogClose asChild>
-                  <Button type="button" variant="secondary">
-                    Fechar
-                  </Button>
-                </DialogClose>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+            ) : (
+              <>
+                <span className="font-bold text-lg text-[#001427] dark:text-white logo-fallback">
+                  Ponto<span className="orange">.</span>
+                  <span className="blue">School</span>
+                </span>
+              </>
+            )}
+          </div>
           <Button
             variant="outline"
             size="icon"
