@@ -14,39 +14,35 @@ import FloatingChatSupport from "@/components/chat/FloatingChatSupport";
 import { supabase } from "@/lib/supabase";
 import { StudyGoalProvider } from "@/components/dashboard/StudyGoalContext";
 
-// Main Dashboard Components
-const Dashboard = React.lazy(() => import("@/pages/dashboard"));
-const Turmas = React.lazy(() => import("@/pages/turmas"));
-const TurmaDetail = React.lazy(() => import("@/pages/turmas/[id]"));
-const GruposEstudo2 = React.lazy(() => import("@/pages/turmas/grupos2"));
-const Comunidades = React.lazy(() => import("@/pages/comunidades"));
-const PedidosAjuda = React.lazy(() => import("@/pages/pedidos-ajuda"));
-const EpictusIA = React.lazy(() => import("@/pages/epictus-ia"));
-const Agenda = React.lazy(() => import("@/pages/agenda"));
-const Biblioteca = React.lazy(() => import("@/pages/biblioteca"));
-const Mercado = React.lazy(() => import("@/pages/mercado"));
-const Conquistas = React.lazy(() => import("@/pages/conquistas"));
-const Carteira = React.lazy(() => import("@/pages/carteira"));
-const Organizacao = React.lazy(() => import("@/pages/organizacao"));
-const Novidades = React.lazy(() => import("@/pages/novidades"));
-const Configuracoes = React.lazy(() => import("@/pages/configuracoes"));
-const PlanosEstudo = React.lazy(() => import("@/pages/planos-estudo"));
-const Portal = React.lazy(() => import("@/pages/portal"));
-const GruposEstudo = React.lazy(() => import("@/pages/turmas/grupos"));
+// Importações imediatas (sem lazy loading) para garantir carregamento instantâneo
+import Dashboard from "@/pages/dashboard";
+import Turmas from "@/pages/turmas";
+import TurmaDetail from "@/pages/turmas/[id]";
+import GruposEstudo2 from "@/pages/turmas/grupos2";
+import Comunidades from "@/pages/comunidades";
+import PedidosAjuda from "@/pages/pedidos-ajuda";
+import EpictusIA from "@/pages/epictus-ia";
+import Agenda from "@/pages/agenda";
+import Biblioteca from "@/pages/biblioteca";
+import Mercado from "@/pages/mercado";
+import Conquistas from "@/pages/conquistas";
+import Carteira from "@/pages/carteira";
+import Organizacao from "@/pages/organizacao";
+import Novidades from "@/pages/novidades";
+import Configuracoes from "@/pages/configuracoes";
+import PlanosEstudo from "@/pages/planos-estudo";
+import Portal from "@/pages/portal";
+import GruposEstudo from "@/pages/turmas/grupos";
 
-// Auth Pages
-const LoginPage = React.lazy(() => import("@/pages/auth/login"));
-const RegisterPage = React.lazy(() => import("@/pages/auth/register"));
-const ForgotPasswordPage = React.lazy(
-  () => import("@/pages/auth/forgot-password"),
-);
-const ResetPasswordPage = React.lazy(
-  () => import("@/pages/auth/reset-password"),
-);
-const PlanSelectionPage = React.lazy(() => import("@/pages/plan-selection"));
+// Auth Pages - importações diretas
+import LoginPage from "@/pages/auth/login";
+import RegisterPage from "@/pages/auth/register";
+import ForgotPasswordPage from "@/pages/auth/forgot-password";
+import ResetPasswordPage from "@/pages/auth/reset-password";
+import PlanSelectionPage from "@/pages/plan-selection";
 
-// User Pages
-const ProfilePage = React.lazy(() => import("@/pages/profile"));
+// User Pages - importação direta
+import ProfilePage from "@/pages/profile";
 
 function App() {
   const location = useLocation();
@@ -88,225 +84,118 @@ function App() {
     "/select-plan",
   ].some((route) => location.pathname.startsWith(route));
 
-  // Loading component
-  const LoadingFallback = () => (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#FF6B00]"></div>
-    </div>
-  );
-
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <StudyGoalProvider>
         <div className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
           {import.meta.env.VITE_TEMPO && useRoutes(routes)}
           <Routes>
-            {/* Auth Routes */}
+            {/* Auth Routes - Sem Suspense para carregamento instantâneo */}
             <Route
               path="/login"
-              element={
-                <Suspense fallback={<LoadingFallback />}>
-                  <LoginPage />
-                </Suspense>
-              }
+              element={<LoginPage />}
             />
             <Route
               path="/register"
-              element={
-                <Suspense fallback={<LoadingFallback />}>
-                  <RegisterPage />
-                </Suspense>
-              }
+              element={<RegisterPage />}
             />
             <Route
               path="/forgot-password"
-              element={
-                <Suspense fallback={<LoadingFallback />}>
-                  <ForgotPasswordPage />
-                </Suspense>
-              }
+              element={<ForgotPasswordPage />}
             />
             <Route
               path="/reset-password"
-              element={
-                <Suspense fallback={<LoadingFallback />}>
-                  <ResetPasswordPage />
-                </Suspense>
-              }
+              element={<ResetPasswordPage />}
             />
             <Route
               path="/select-plan"
-              element={
-                <Suspense fallback={<LoadingFallback />}>
-                  <PlanSelectionPage />
-                </Suspense>
-              }
+              element={<PlanSelectionPage />}
             />
 
-            {/* Main App Routes */}
+            {/* Main App Routes - Sem Suspense para carregamento instantâneo */}
             <Route path="/" element={<Home />}>
               <Route
                 index
-                element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <Dashboard />
-                  </Suspense>
-                }
+                element={<Dashboard />}
               />
               <Route
                 path="turmas"
-                element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <Turmas />
-                  </Suspense>
-                }
+                element={<Turmas />}
               />
               <Route
                 path="turmas/:id"
-                element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <TurmaDetail />
-                  </Suspense>
-                }
+                element={<TurmaDetail />}
               />
               <Route
                 path="turmas/grupos2"
-                element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <GruposEstudo2 />
-                  </Suspense>
-                }
+                element={<GruposEstudo2 />}
               />
               <Route
                 path="turmas/grupos"
-                element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <GruposEstudo />
-                  </Suspense>
-                }
+                element={<GruposEstudo />}
               />
               <Route
                 path="turmas/grupos/:id"
-                element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <GruposEstudo />
-                  </Suspense>
-                }
+                element={<GruposEstudo />}
               />
               <Route
                 path="comunidades"
-                element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <Comunidades />
-                  </Suspense>
-                }
+                element={<Comunidades />}
               />
               <Route
                 path="pedidos-ajuda"
-                element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <PedidosAjuda />
-                  </Suspense>
-                }
+                element={<PedidosAjuda />}
               />
               <Route
                 path="epictus-ia"
-                element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <EpictusIA />
-                  </Suspense>
-                }
+                element={<EpictusIA />}
               />
               <Route
                 path="agenda"
-                element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <Agenda />
-                  </Suspense>
-                }
+                element={<Agenda />}
               />
               <Route
                 path="biblioteca"
-                element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <Biblioteca />
-                  </Suspense>
-                }
+                element={<Biblioteca />}
               />
               <Route
                 path="mercado"
-                element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <Mercado />
-                  </Suspense>
-                }
+                element={<Mercado />}
               />
               <Route
                 path="conquistas"
-                element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <Conquistas />
-                  </Suspense>
-                }
+                element={<Conquistas />}
               />
               <Route
                 path="carteira"
-                element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <Carteira />
-                  </Suspense>
-                }
+                element={<Carteira />}
               />
               <Route
                 path="organizacao"
-                element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <Organizacao />
-                  </Suspense>
-                }
+                element={<Organizacao />}
               />
               <Route
                 path="novidades"
-                element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <Novidades />
-                  </Suspense>
-                }
+                element={<Novidades />}
               />
               <Route
                 path="configuracoes"
-                element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <Configuracoes />
-                  </Suspense>
-                }
+                element={<Configuracoes />}
               />
               <Route
                 path="planos-estudo"
-                element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <PlanosEstudo />
-                  </Suspense>
-                }
+                element={<PlanosEstudo />}
               />
               <Route
                 path="portal"
-                element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <Portal />
-                  </Suspense>
-                }
+                element={<Portal />}
               />
             </Route>
 
-            {/* User Profile */}
+            {/* User Profile - Sem Suspense */}
             <Route
               path="/profile"
-              element={
-                <Suspense fallback={<LoadingFallback />}>
-                  <ProfilePage />
-                </Suspense>
-              }
+              element={<ProfilePage />}
             />
 
             {/* Tempo Routes */}
