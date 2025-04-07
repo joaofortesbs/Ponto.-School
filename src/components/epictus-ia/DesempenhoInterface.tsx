@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTheme } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -204,8 +205,12 @@ export default function DesempenhoInterface() {
     );
   };
 
+  const { theme } = useTheme();
+
   return (
-    <div className="w-full h-full bg-[#f7f9fa] dark:bg-[#001427] p-6 transition-colors duration-300">
+    <div
+      className={`w-full h-full ${theme === "dark" ? "bg-[#001427] text-white" : "bg-[#f7f9fa] text-[#29335C]"} p-6 transition-colors duration-300`}
+    >
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
           <div>

@@ -33,7 +33,7 @@ const NotificationIndicator: React.FC<NotificationIndicatorProps> = ({
       <Tooltip>
         <TooltipTrigger asChild>
           <div className="relative inline-flex">
-            <Badge className="bg-red-500 text-white text-xs min-w-5 h-5 flex items-center justify-center rounded-full">
+            <Badge className="bg-[#FF6B00] text-white text-xs min-w-5 h-5 flex items-center justify-center rounded-full">
               {count > 9 ? "9+" : count}
             </Badge>
           </div>

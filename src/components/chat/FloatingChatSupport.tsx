@@ -263,10 +263,12 @@ const commonQuestions: CommonQuestion[] = [
 ];
 
 const suggestionStatusColors = {
-  pending: "bg-gray-100 text-gray-800",
-  reviewing: "bg-blue-100 text-blue-800",
-  approved: "bg-purple-100 text-purple-800",
-  implemented: "bg-green-100 text-green-800",
+  pending: "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200",
+  reviewing: "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300",
+  approved:
+    "bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300",
+  implemented:
+    "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300",
 };
 
 const FloatingChatSupport: React.FC = () => {
@@ -439,44 +441,44 @@ const FloatingChatSupport: React.FC = () => {
   );
 
   const renderHomeContent = () => (
-    <div className="flex flex-col h-full bg-gradient-to-br from-purple-900 to-indigo-900 overflow-y-auto custom-scrollbar">
+    <div className="flex flex-col h-full bg-gradient-to-br from-orange-600 to-orange-800 overflow-y-auto custom-scrollbar">
       <div className="p-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center">
             <img src="/vite.svg" alt="Logo" className="w-4 h-4" />
           </div>
           <span className="text-white font-semibold text-sm">Ponto.School</span>
         </div>
         <div className="flex -space-x-2">
           <div className="relative">
-            <Avatar className="border-2 border-indigo-900 w-6 h-6 transition-transform hover:scale-110 hover:z-10">
+            <Avatar className="border-2 border-orange-800 w-6 h-6 transition-transform hover:scale-110 hover:z-10">
               <AvatarImage
                 src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alice"
                 alt="Support Agent"
               />
               <AvatarFallback className="text-[8px]">A</AvatarFallback>
             </Avatar>
-            <span className="absolute bottom-0 right-0 w-1.5 h-1.5 bg-green-400 rounded-full border border-indigo-900"></span>
+            <span className="absolute bottom-0 right-0 w-1.5 h-1.5 bg-green-400 rounded-full border border-orange-800"></span>
           </div>
           <div className="relative">
-            <Avatar className="border-2 border-indigo-900 w-6 h-6 transition-transform hover:scale-110 hover:z-10">
+            <Avatar className="border-2 border-orange-800 w-6 h-6 transition-transform hover:scale-110 hover:z-10">
               <AvatarImage
                 src="https://api.dicebear.com/7.x/avataaars/svg?seed=Bob"
                 alt="Support Agent"
               />
               <AvatarFallback className="text-[8px]">B</AvatarFallback>
             </Avatar>
-            <span className="absolute bottom-0 right-0 w-1.5 h-1.5 bg-green-400 rounded-full border border-indigo-900"></span>
+            <span className="absolute bottom-0 right-0 w-1.5 h-1.5 bg-green-400 rounded-full border border-orange-800"></span>
           </div>
           <div className="relative">
-            <Avatar className="border-2 border-indigo-900 w-6 h-6 transition-transform hover:scale-110 hover:z-10">
+            <Avatar className="border-2 border-orange-800 w-6 h-6 transition-transform hover:scale-110 hover:z-10">
               <AvatarImage
                 src="https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie"
                 alt="Support Agent"
               />
               <AvatarFallback className="text-[8px]">C</AvatarFallback>
             </Avatar>
-            <span className="absolute bottom-0 right-0 w-1.5 h-1.5 bg-gray-400 rounded-full border border-indigo-900"></span>
+            <span className="absolute bottom-0 right-0 w-1.5 h-1.5 bg-gray-400 rounded-full border border-orange-800"></span>
           </div>
         </div>
       </div>
@@ -498,8 +500,8 @@ const FloatingChatSupport: React.FC = () => {
           }}
         >
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-purple-500/20 flex items-center justify-center">
-              <MessageCircle className="h-3.5 w-3.5 text-purple-400" />
+            <div className="w-7 h-7 rounded-full bg-orange-500/20 flex items-center justify-center">
+              <MessageCircle className="h-3.5 w-3.5 text-orange-400" />
             </div>
             <span className="text-xs font-medium">Envie uma mensagem</span>
           </div>
@@ -508,7 +510,7 @@ const FloatingChatSupport: React.FC = () => {
 
         <div className="w-full">
           <h3 className="text-white/80 text-xs mb-2 flex items-center gap-1 font-medium">
-            <Search className="h-3.5 w-3.5 text-purple-400" />
+            <Search className="h-3.5 w-3.5 text-orange-400" />
             Qual é a sua dúvida?
           </h3>
 
@@ -527,21 +529,21 @@ const FloatingChatSupport: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 rounded-full flex items-center justify-center">
                     {index === 0 && (
-                      <Rocket className="h-3 w-3 text-purple-400" />
+                      <Rocket className="h-3 w-3 text-orange-400" />
                     )}
                     {index === 1 && (
-                      <LifeBuoy className="h-3 w-3 text-purple-400" />
+                      <LifeBuoy className="h-3 w-3 text-orange-400" />
                     )}
-                    {index === 2 && <Zap className="h-3 w-3 text-purple-400" />}
+                    {index === 2 && <Zap className="h-3 w-3 text-orange-400" />}
                     {index === 3 && (
-                      <Star className="h-3 w-3 text-purple-400" />
+                      <Star className="h-3 w-3 text-orange-400" />
                     )}
                   </div>
                   <span className="text-xs truncate max-w-[200px]">
                     {q.question}
                   </span>
                 </div>
-                <ChevronRight className="h-3 w-3 text-purple-400 flex-shrink-0" />
+                <ChevronRight className="h-3 w-3 text-orange-400 flex-shrink-0" />
               </Button>
             ))}
           </div>
@@ -566,15 +568,15 @@ const FloatingChatSupport: React.FC = () => {
 
   const renderChatHistoryContent = () => (
     <div className="flex flex-col h-full">
-      <div className="p-2 border-b bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900 dark:to-indigo-900">
+      <div className="p-2 border-b bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900 dark:to-orange-800">
         <div className="flex justify-between items-center mb-2">
           <div className="flex items-center gap-1">
-            <History className="h-3.5 w-3.5 text-purple-500" />
+            <History className="h-3.5 w-3.5 text-orange-500" />
             <h3 className="text-sm font-semibold">Histórico de Conversas</h3>
           </div>
           <Button
             size="sm"
-            className="bg-purple-500 hover:bg-purple-600 text-white rounded-full px-2 py-0 h-6 text-xs"
+            className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-2 py-0 h-6 text-xs"
             onClick={() => {
               setActiveTab("chat");
               setSelectedChat(null);
@@ -587,7 +589,7 @@ const FloatingChatSupport: React.FC = () => {
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
           <Input
             placeholder="Buscar conversas..."
-            className="pl-7 py-1 h-6 text-xs rounded-full border-indigo-200 dark:border-indigo-700 bg-white dark:bg-indigo-900/50"
+            className="pl-7 py-1 h-6 text-xs rounded-full border-orange-200 dark:border-orange-700 bg-white dark:bg-orange-900/50"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -606,7 +608,7 @@ const FloatingChatSupport: React.FC = () => {
               filteredChatHistory.map((chat) => (
                 <div
                   key={chat.id}
-                  className="border border-indigo-200 dark:border-indigo-700 rounded-xl p-4 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 transition-all duration-300 cursor-pointer hover:shadow-md hover:translate-y-[-2px]"
+                  className="border border-orange-200 dark:border-orange-700 rounded-xl p-4 hover:bg-orange-50 dark:hover:bg-orange-900/50 transition-all duration-300 cursor-pointer hover:shadow-md hover:translate-y-[-2px]"
                   onClick={() => {
                     setSelectedChat(chat.id);
                     setActiveTab("chat");
@@ -619,29 +621,29 @@ const FloatingChatSupport: React.FC = () => {
                           src="https://api.dicebear.com/7.x/avataaars/svg?seed=Support"
                           alt="Support"
                         />
-                        <AvatarFallback className="bg-purple-100 text-purple-800">
+                        <AvatarFallback className="bg-orange-100 text-orange-800">
                           SP
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <h4 className="font-medium text-gray-800 dark:text-white">
+                        <h4 className="font-medium text-gray-800 dark:text-gray-200">
                           {chat.title}
                         </h4>
                         {chat.unread && (
-                          <Badge className="bg-purple-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                          <Badge className="bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full">
                             Nova mensagem
                           </Badge>
                         )}
                       </div>
                     </div>
-                    <div className="text-xs text-muted-foreground bg-indigo-100 dark:bg-indigo-800 px-2 py-1 rounded-full">
+                    <div className="text-xs text-muted-foreground bg-orange-100 dark:bg-orange-800 px-2 py-1 rounded-full">
                       {chat.timestamp.toLocaleDateString()}
                     </div>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2 pl-10">
+                  <p className="text-sm text-muted-foreground dark:text-gray-400 mb-3 line-clamp-2 pl-10">
                     {chat.lastMessage}
                   </p>
-                  <div className="flex items-center text-xs text-muted-foreground pl-10">
+                  <div className="flex items-center text-xs text-muted-foreground dark:text-gray-400 pl-10">
                     <Clock className="h-3 w-3 mr-1" />
                     {chat.timestamp.toLocaleTimeString([], {
                       hour: "2-digit",
@@ -651,18 +653,18 @@ const FloatingChatSupport: React.FC = () => {
                 </div>
               ))
             ) : (
-              <div className="text-center py-8 px-4">
-                <div className="w-14 h-14 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center mx-auto mb-3">
-                  <History className="h-8 w-8 text-purple-500" />
+              <div className="text-center py-8 px-4 dark:text-gray-300">
+                <div className="w-14 h-14 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center mx-auto mb-3">
+                  <History className="h-8 w-8 text-orange-500" />
                 </div>
-                <p className="text-gray-800 dark:text-white font-medium mb-2">
+                <p className="text-gray-800 dark:text-gray-200 font-medium mb-2">
                   Nenhuma conversa encontrada
                 </p>
-                <p className="text-sm text-muted-foreground mb-6">
+                <p className="text-sm text-muted-foreground dark:text-gray-400 mb-6">
                   Inicie uma nova conversa com nosso suporte
                 </p>
                 <Button
-                  className="bg-purple-500 hover:bg-purple-600 text-white rounded-full px-6"
+                  className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-6"
                   onClick={() => {
                     setActiveTab("chat");
                     setSelectedChat(null);
@@ -681,10 +683,10 @@ const FloatingChatSupport: React.FC = () => {
 
   const renderNotificationsContent = () => (
     <div className="flex flex-col h-full">
-      <div className="p-2 border-b bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900 dark:to-indigo-900">
+      <div className="p-2 border-b bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900 dark:to-orange-800">
         <div className="flex justify-between items-center mb-2">
           <div className="flex items-center gap-1">
-            <Bell className="h-3.5 w-3.5 text-purple-500" />
+            <Bell className="h-3.5 w-3.5 text-orange-500" />
             <h3 className="text-sm font-semibold">Notificações</h3>
           </div>
           <Button
@@ -711,7 +713,7 @@ const FloatingChatSupport: React.FC = () => {
             notifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`border rounded-xl p-4 transition-all duration-300 hover:shadow-md ${notification.read ? "border-indigo-200 dark:border-indigo-700 bg-white dark:bg-transparent" : "border-purple-300 dark:border-purple-700 bg-purple-50 dark:bg-purple-900/20"}`}
+                className={`border rounded-xl p-4 transition-all duration-300 hover:shadow-md ${notification.read ? "border-orange-200 dark:border-orange-700 bg-white dark:bg-transparent" : "border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-900/20"}`}
               >
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex items-center gap-2">
@@ -731,20 +733,20 @@ const FloatingChatSupport: React.FC = () => {
                         <X className="h-4 w-4" />
                       )}
                     </div>
-                    <h4 className="font-medium text-gray-800 dark:text-white">
+                    <h4 className="font-medium text-gray-800 dark:text-gray-200">
                       {notification.title}
                     </h4>
                   </div>
                   {!notification.read && (
-                    <Badge className="bg-purple-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                    <Badge className="bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full">
                       Nova
                     </Badge>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground mb-3 ml-10">
+                <p className="text-sm text-muted-foreground dark:text-gray-400 mb-3 ml-10">
                   {notification.message}
                 </p>
-                <div className="flex justify-between items-center text-xs text-muted-foreground ml-10">
+                <div className="flex justify-between items-center text-xs text-muted-foreground dark:text-gray-400 ml-10">
                   <span>
                     {notification.timestamp.toLocaleDateString()} às{" "}
                     {notification.timestamp.toLocaleTimeString([], {
@@ -755,7 +757,7 @@ const FloatingChatSupport: React.FC = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-6 text-xs hover:bg-purple-100 dark:hover:bg-purple-900/20"
+                    className="h-6 text-xs hover:bg-orange-100 dark:hover:bg-orange-900/20"
                     onClick={() => {
                       setNotifications((prev) =>
                         prev.map((n) =>
@@ -770,14 +772,14 @@ const FloatingChatSupport: React.FC = () => {
               </div>
             ))
           ) : (
-            <div className="text-center py-8 px-4">
-              <div className="w-14 h-14 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center mx-auto mb-3">
-                <Bell className="h-8 w-8 text-purple-500" />
+            <div className="text-center py-8 px-4 dark:text-gray-300">
+              <div className="w-14 h-14 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center mx-auto mb-3">
+                <Bell className="h-8 w-8 text-orange-500" />
               </div>
-              <p className="text-gray-800 dark:text-white font-medium mb-2">
+              <p className="text-gray-800 dark:text-gray-200 font-medium mb-2">
                 Nenhuma notificação
               </p>
-              <p className="text-sm text-muted-foreground mb-6">
+              <p className="text-sm text-muted-foreground dark:text-gray-400 mb-6">
                 Você não tem notificações no momento
               </p>
             </div>
@@ -809,7 +811,7 @@ const FloatingChatSupport: React.FC = () => {
                 </div>
               )}
               <div
-                className={`max-w-[75%] rounded-lg px-3 py-2 ${message.sender === "user" ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-800"}`}
+                className={`max-w-[75%] rounded-lg px-3 py-2 ${message.sender === "user" ? "bg-blue-500 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200"}`}
               >
                 <p className="text-sm">{message.text}</p>
                 <div className="text-xs opacity-70 mt-1 text-right">
@@ -838,7 +840,7 @@ const FloatingChatSupport: React.FC = () => {
                   </AvatarFallback>
                 </Avatar>
               </div>
-              <div className="max-w-[75%] rounded-lg px-3 py-2 bg-gray-100 text-gray-800">
+              <div className="max-w-[75%] rounded-lg px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
                 <div className="flex space-x-2">
                   <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
                   <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse delay-150" />
@@ -851,13 +853,13 @@ const FloatingChatSupport: React.FC = () => {
         </div>
       </ScrollArea>
 
-      <div className="p-4 border-t">
+      <div className="p-4 border-t dark:border-gray-800">
         <div className="flex items-center gap-2">
           <Input
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             placeholder="Digite sua mensagem..."
-            className="flex-1"
+            className="flex-1 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
             onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
           />
           <Button
@@ -895,20 +897,25 @@ const FloatingChatSupport: React.FC = () => {
 
       {isCreatingTicket ? (
         <div className="p-4 space-y-4">
-          <h3 className="text-lg font-semibold">Novo Ticket</h3>
+          <h3 className="text-lg font-semibold dark:text-gray-200">
+            Novo Ticket
+          </h3>
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-1 block">Título</label>
+              <label className="text-sm font-medium mb-1 block dark:text-gray-300">
+                Título
+              </label>
               <Input
                 value={newTicket.title}
                 onChange={(e) =>
                   setNewTicket({ ...newTicket, title: e.target.value })
                 }
                 placeholder="Descreva o problema brevemente"
+                className="dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
               />
             </div>
             <div>
-              <label className="text-sm font-medium mb-1 block">
+              <label className="text-sm font-medium mb-1 block dark:text-gray-300">
                 Descrição
               </label>
               <textarea
@@ -917,11 +924,11 @@ const FloatingChatSupport: React.FC = () => {
                   setNewTicket({ ...newTicket, description: e.target.value })
                 }
                 placeholder="Forneça detalhes sobre o problema"
-                className="w-full min-h-[100px] p-2 rounded-md border border-input"
+                className="w-full min-h-[100px] p-2 rounded-md border border-input dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
               />
             </div>
             <div>
-              <label className="text-sm font-medium mb-1 block">
+              <label className="text-sm font-medium mb-1 block dark:text-gray-300">
                 Categoria
               </label>
               <select
@@ -929,7 +936,7 @@ const FloatingChatSupport: React.FC = () => {
                 onChange={(e) =>
                   setNewTicket({ ...newTicket, category: e.target.value })
                 }
-                className="w-full p-2 rounded-md border border-input"
+                className="w-full p-2 rounded-md border border-input dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
               >
                 <option value="Acesso e Conteúdo">Acesso e Conteúdo</option>
                 <option value="Problemas Técnicos">Problemas Técnicos</option>
@@ -942,6 +949,7 @@ const FloatingChatSupport: React.FC = () => {
               <Button
                 variant="outline"
                 onClick={() => setIsCreatingTicket(false)}
+                className="dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
               >
                 Cancelar
               </Button>
@@ -960,21 +968,28 @@ const FloatingChatSupport: React.FC = () => {
             {filteredTickets.map((ticket) => (
               <div
                 key={ticket.id}
-                className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                className="border dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               >
                 <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-medium">{ticket.title}</h4>
+                  <h4 className="font-medium dark:text-gray-200">
+                    {ticket.title}
+                  </h4>
                   <Badge
                     className={`${ticket.status === "open" ? "bg-blue-500" : ticket.status === "in_progress" ? "bg-yellow-500" : "bg-green-500"}`}
                   >
                     #{ticket.id}
                   </Badge>
                 </div>
-                <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
                   {ticket.description}
                 </p>
-                <div className="flex justify-between items-center text-xs text-gray-500">
-                  <Badge variant="outline">{ticket.category}</Badge>
+                <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+                  <Badge
+                    variant="outline"
+                    className="dark:border-gray-700 dark:text-gray-300"
+                  >
+                    {ticket.category}
+                  </Badge>
                   <div className="flex items-center">
                     <Clock className="h-3 w-3 mr-1" />
                     {ticket.createdAt.toLocaleDateString()}
@@ -983,7 +998,7 @@ const FloatingChatSupport: React.FC = () => {
               </div>
             ))}
             {filteredTickets.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 Nenhum ticket encontrado
               </div>
             )}
@@ -1013,31 +1028,35 @@ const FloatingChatSupport: React.FC = () => {
           <Button
             variant="ghost"
             size="sm"
-            className="-ml-2"
+            className="-ml-2 dark:text-gray-200 dark:hover:bg-gray-800"
             onClick={() => setSelectedFaq(null)}
           >
             ← Voltar
           </Button>
-          <h3 className="text-lg font-semibold">{selectedFaq.question}</h3>
-          <div className="bg-gray-50 p-4 rounded-lg border">
-            <p className="text-sm text-gray-700 whitespace-pre-line">
+          <h3 className="text-lg font-semibold dark:text-gray-200">
+            {selectedFaq.question}
+          </h3>
+          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
+            <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">
               {selectedFaq.answer}
             </p>
           </div>
-          <div className="pt-4 border-t">
-            <p className="text-sm font-medium mb-2">Esta resposta foi útil?</p>
+          <div className="pt-4 border-t dark:border-gray-700">
+            <p className="text-sm font-medium mb-2 dark:text-gray-300">
+              Esta resposta foi útil?
+            </p>
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
               >
                 <ThumbsUp className="h-4 w-4" /> Sim
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
               >
                 <ThumbsDown className="h-4 w-4" /> Não
               </Button>
@@ -1068,7 +1087,7 @@ const FloatingChatSupport: React.FC = () => {
                       <Button
                         key={faq.id}
                         variant="outline"
-                        className="w-full justify-start text-left h-auto py-3"
+                        className="w-full justify-start text-left h-auto py-3 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
                         onClick={() => setSelectedFaq(faq)}
                       >
                         <div className="flex items-center">
@@ -1083,7 +1102,7 @@ const FloatingChatSupport: React.FC = () => {
             })()}
 
             {filteredFaqs.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 Nenhuma pergunta encontrada
               </div>
             )}
@@ -1095,15 +1114,15 @@ const FloatingChatSupport: React.FC = () => {
 
   const renderSuggestionsContent = () => (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900 dark:to-indigo-900">
+      <div className="p-4 border-b bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900 dark:to-orange-800">
         <div className="flex justify-between items-center mb-2">
           <div className="flex items-center gap-1">
-            <Lightbulb className="h-3.5 w-3.5 text-purple-500" />
+            <Lightbulb className="h-3.5 w-3.5 text-orange-500" />
             <h3 className="text-sm font-semibold">Sugestões</h3>
           </div>
           <Button
             size="sm"
-            className="bg-purple-500 hover:bg-purple-600 text-white rounded-full px-2 py-0 h-6 text-xs"
+            className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-2 py-0 h-6 text-xs"
             onClick={() => setIsCreatingSuggestion(true)}
           >
             <Plus className="h-3 w-3 mr-1" /> Nova
@@ -1113,7 +1132,7 @@ const FloatingChatSupport: React.FC = () => {
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
           <Input
             placeholder="Buscar sugestões..."
-            className="pl-7 py-1 h-6 text-xs rounded-full border-indigo-200 dark:border-indigo-700 bg-white dark:bg-indigo-900/50"
+            className="pl-7 py-1 h-6 text-xs rounded-full border-orange-200 dark:border-orange-700 bg-white dark:bg-orange-900/50"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -1122,24 +1141,26 @@ const FloatingChatSupport: React.FC = () => {
 
       {isCreatingSuggestion ? (
         <div className="p-4 space-y-4">
-          <h3 className="text-sm font-semibold flex items-center gap-1">
-            <Lightbulb className="h-3.5 w-3.5 text-purple-500" />
+          <h3 className="text-sm font-semibold flex items-center gap-1 dark:text-gray-200">
+            <Lightbulb className="h-3.5 w-3.5 text-orange-500" />
             Nova Sugestão
           </h3>
           <div className="space-y-3">
             <div>
-              <label className="text-sm font-medium mb-1 block">Título</label>
+              <label className="text-sm font-medium mb-1 block dark:text-gray-300">
+                Título
+              </label>
               <Input
                 value={newSuggestion.title}
                 onChange={(e) =>
                   setNewSuggestion({ ...newSuggestion, title: e.target.value })
                 }
                 placeholder="Título da sua sugestão"
-                className="border-indigo-200 dark:border-indigo-700 bg-white dark:bg-indigo-900/50"
+                className="border-orange-200 dark:border-orange-700 bg-white dark:bg-gray-800 dark:text-gray-200"
               />
             </div>
             <div>
-              <label className="text-sm font-medium mb-1 block">
+              <label className="text-sm font-medium mb-1 block dark:text-gray-300">
                 Descrição
               </label>
               <textarea
@@ -1151,19 +1172,19 @@ const FloatingChatSupport: React.FC = () => {
                   })
                 }
                 placeholder="Descreva sua sugestão em detalhes"
-                className="w-full min-h-[120px] p-3 rounded-md border border-indigo-200 dark:border-indigo-700 bg-white dark:bg-indigo-900/50"
+                className="w-full min-h-[120px] p-3 rounded-md border border-orange-200 dark:border-orange-700 bg-white dark:bg-gray-800 dark:text-gray-200"
               />
             </div>
             <div className="flex justify-end gap-2 pt-2">
               <Button
                 variant="outline"
-                className="border-indigo-200 dark:border-indigo-700"
+                className="border-orange-200 dark:border-orange-700 dark:text-gray-200 dark:hover:bg-gray-800"
                 onClick={() => setIsCreatingSuggestion(false)}
               >
                 Cancelar
               </Button>
               <Button
-                className="bg-purple-500 hover:bg-purple-600 text-white"
+                className="bg-orange-500 hover:bg-orange-600 text-white"
                 onClick={handleCreateSuggestion}
               >
                 Enviar Sugestão
@@ -1181,10 +1202,10 @@ const FloatingChatSupport: React.FC = () => {
               filteredSuggestions.map((suggestion) => (
                 <div
                   key={suggestion.id}
-                  className="border border-indigo-200 dark:border-indigo-700 rounded-xl p-4 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 transition-all duration-300 hover:shadow-md hover:translate-y-[-2px]"
+                  className="border border-orange-200 dark:border-orange-700 rounded-xl p-4 hover:bg-orange-50 dark:hover:bg-orange-900/50 transition-all duration-300 hover:shadow-md hover:translate-y-[-2px]"
                 >
                   <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-medium text-gray-800 dark:text-white">
+                    <h4 className="font-medium text-gray-800 dark:text-gray-200">
                       {suggestion.title}
                     </h4>
                     <Badge
@@ -1199,7 +1220,7 @@ const FloatingChatSupport: React.FC = () => {
                             : "Implementado"}
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-3">
+                  <p className="text-sm text-muted-foreground dark:text-gray-400 mb-3">
                     {suggestion.description}
                   </p>
                   <div className="flex justify-between items-center">
@@ -1208,33 +1229,33 @@ const FloatingChatSupport: React.FC = () => {
                       size="sm"
                       className={
                         suggestion.userVoted
-                          ? "bg-purple-500 hover:bg-purple-600 text-white rounded-full"
-                          : "border-indigo-200 dark:border-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 rounded-full"
+                          ? "bg-orange-500 hover:bg-orange-600 text-white rounded-full"
+                          : "border-orange-200 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/50 rounded-full dark:text-gray-200"
                       }
                       onClick={() => handleVote(suggestion.id)}
                     >
                       <Vote className="h-4 w-4 mr-1" />
                       {suggestion.votes} votos
                     </Button>
-                    <div className="text-xs text-muted-foreground bg-indigo-100 dark:bg-indigo-800 px-2 py-1 rounded-full">
+                    <div className="text-xs text-muted-foreground bg-orange-100 dark:bg-orange-800 px-2 py-1 rounded-full">
                       {new Date(suggestion.createdAt).toLocaleDateString()}
                     </div>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="text-center py-8 px-4">
-                <div className="w-14 h-14 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center mx-auto mb-3">
-                  <Lightbulb className="h-8 w-8 text-purple-500" />
+              <div className="text-center py-8 px-4 dark:text-gray-300">
+                <div className="w-14 h-14 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center mx-auto mb-3">
+                  <Lightbulb className="h-8 w-8 text-orange-500" />
                 </div>
-                <p className="text-gray-800 dark:text-white font-medium mb-2">
+                <p className="text-gray-800 dark:text-gray-200 font-medium mb-2">
                   Nenhuma sugestão encontrada
                 </p>
-                <p className="text-sm text-muted-foreground mb-6">
+                <p className="text-sm text-muted-foreground dark:text-gray-400 mb-6">
                   Compartilhe suas ideias para melhorar a plataforma
                 </p>
                 <Button
-                  className="bg-purple-500 hover:bg-purple-600 text-white rounded-full px-6"
+                  className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-6"
                   onClick={() => setIsCreatingSuggestion(true)}
                 >
                   <Lightbulb className="h-4 w-4 mr-2" />
@@ -1270,16 +1291,16 @@ const FloatingChatSupport: React.FC = () => {
         ) : (
           <div
             className={cn(
-              "bg-white rounded-xl shadow-xl flex flex-col overflow-hidden transition-all duration-300",
+              "bg-white dark:bg-gray-900 rounded-xl shadow-xl flex flex-col overflow-hidden transition-all duration-300",
               isExpanded ? "w-[800px] h-[600px]" : "w-[380px] h-[550px]",
             )}
           >
-            <div className="flex items-center justify-between p-4 border-b">
+            <div className="flex items-center justify-between p-4 border-b dark:border-gray-800">
               <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 rounded-full hover:bg-gray-100"
+                  className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
                   onClick={() => setActiveTab("home")}
                 >
                   <Home className="h-4 w-4" />
@@ -1289,7 +1310,7 @@ const FloatingChatSupport: React.FC = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 rounded-full hover:bg-gray-100"
+                  className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
                   onClick={() => setIsExpanded(!isExpanded)}
                 >
                   <Maximize2 className="h-4 w-4" />
@@ -1297,7 +1318,7 @@ const FloatingChatSupport: React.FC = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 rounded-full hover:bg-gray-100"
+                  className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
                   onClick={() => setIsOpen(false)}
                 >
                   <X className="h-4 w-4" />
@@ -1307,7 +1328,7 @@ const FloatingChatSupport: React.FC = () => {
 
             <div className="flex-1 overflow-hidden">
               <div className="flex h-full">
-                <div className="w-[70px] border-r flex flex-col items-center py-4">
+                <div className="w-[70px] border-r dark:border-gray-800 flex flex-col items-center py-4">
                   <Button
                     variant={activeTab === "home" ? "default" : "ghost"}
                     size="icon"
@@ -1369,7 +1390,7 @@ const FloatingChatSupport: React.FC = () => {
                   >
                     <Bell className="h-5 w-5" />
                     {notifications.some((n) => !n.read) && (
-                      <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border border-white"></span>
+                      <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border border-white dark:border-gray-900"></span>
                     )}
                   </Button>
                 </div>
@@ -1414,30 +1435,30 @@ const FloatingChatSupport: React.FC = () => {
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background-color: rgba(147, 51, 234, 0.6);
+          background-color: rgba(249, 115, 22, 0.6);
           border-radius: 9999px;
         }
 
         .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-          background-color: rgba(147, 51, 234, 0.6);
+          background-color: rgba(249, 115, 22, 0.6);
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background-color: rgba(147, 51, 234, 0.8);
+          background-color: rgba(249, 115, 22, 0.8);
         }
 
         .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background-color: rgba(147, 51, 234, 0.8);
+          background-color: rgba(249, 115, 22, 0.8);
         }
 
         /* Apply custom scrollbar to all ScrollArea components */
         .ScrollAreaViewport {
           scrollbar-width: thin;
-          scrollbar-color: rgba(147, 51, 234, 0.6) transparent;
+          scrollbar-color: rgba(249, 115, 22, 0.6) transparent;
         }
 
         .dark .ScrollAreaViewport {
-          scrollbar-color: rgba(147, 51, 234, 0.6) transparent;
+          scrollbar-color: rgba(249, 115, 22, 0.6) transparent;
         }
 
         /* Fix for mobile responsiveness */

@@ -526,97 +526,56 @@ export const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       Criado em
                     </p>
-                    <p className="text-sm">
-                      {group.dataInicio || "10/01/2023"}
+                    <p className="font-medium">
+                      {group.dataInicio || "10/02/2023"}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Tipo de Grupo
+                      Nível
                     </p>
-                    <p className="text-sm">Público</p>
+                    <p className="font-medium">{group.nivel || "Avançado"}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Administradores
+                      Membros
                     </p>
-                    <div className="flex items-center mt-1">
-                      <Avatar className="h-6 w-6 ring-1 ring-blue-500/20">
-                        <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=Mariana" />
-                        <AvatarFallback>M</AvatarFallback>
-                      </Avatar>
-                    </div>
+                    <p className="font-medium">
+                      {group.membros?.length || members.length}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Etiquetas
+                      Próxima reunião
                     </p>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {(group.tags || ["avançado", "teórico", "prático"]).map(
-                        (tag, index) => (
-                          <Badge
-                            key={index}
-                            className="bg-[#FF6B00]/10 text-[#FF6B00] border border-[#FF6B00]/30"
-                          >
-                            {tag}
-                          </Badge>
-                        ),
-                      )}
-                    </div>
+                    <p className="font-medium">
+                      {group.proximaReuniao || "15/03/2023, 19:00"}
+                    </p>
                   </div>
                 </div>
               </div>
 
               <div className="bg-white dark:bg-[#1a2236] rounded-lg p-4 shadow-sm hover:shadow-md transition-all">
-                <h3 className="text-lg font-bold mb-3">Progresso do Grupo</h3>
-                <div className="flex items-center justify-center mb-4">
-                  <div className="relative h-32 w-32">
-                    <svg className="w-full h-full" viewBox="0 0 100 100">
-                      <circle
-                        className="text-gray-200 dark:text-gray-700 stroke-current"
-                        strokeWidth="10"
-                        cx="50"
-                        cy="50"
-                        r="40"
-                        fill="transparent"
-                      ></circle>
-                      <circle
-                        className="text-[#FF6B00] stroke-current"
-                        strokeWidth="10"
-                        strokeLinecap="round"
-                        strokeDasharray={`${(group.progresso || 68) * 2.51} 251.2`}
-                        strokeDashoffset="0"
-                        cx="50"
-                        cy="50"
-                        r="40"
-                        fill="transparent"
-                        transform="rotate(-90 50 50)"
-                      ></circle>
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-2xl font-bold text-[#FF6B00]">
-                        {group.progresso || 68}%
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <p className="text-center text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  O grupo completou {group.progresso || 68}% do conteúdo
-                  planejado
-                </p>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-[#FF6B00]/10 text-[#FF6B00] border border-[#FF6B00]/30 rounded-full">
-                      <CheckCircle className="h-3 w-3 mr-1" /> Participação
-                      Ativa
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-[#FF6B00]/10 text-[#FF6B00] border border-[#FF6B00]/30 rounded-full">
-                      <CheckCircle className="h-3 w-3 mr-1" /> Contribuidor de
-                      Conteúdo
-                    </Badge>
-                  </div>
+                <h3 className="text-lg font-bold mb-3">Administradores</h3>
+                <div className="space-y-3">
+                  {members
+                    .filter((m) => m.role === "Administrador")
+                    .map((admin) => (
+                      <div key={admin.id} className="flex items-center">
+                        <Avatar className="h-10 w-10 mr-3">
+                          <AvatarImage src={admin.avatar} />
+                          <AvatarFallback>
+                            {admin.name.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{admin.name}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {admin.isOnline ? "Online" : admin.lastActive}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
                 </div>
               </div>
             </div>

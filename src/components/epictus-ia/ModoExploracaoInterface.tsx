@@ -1,9 +1,11 @@
 import React, { useState } from "react";
+import { useTheme } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ThemeToggle } from "./ThemeToggle";
 import {
   Brain,
   FileText,
@@ -131,8 +133,12 @@ export default function ModoExploracaoInterface() {
 
   const selectedTopicData = topics.find((topic) => topic.id === selectedTopic);
 
+  const { theme } = useTheme();
+
   return (
-    <div className="w-full h-full bg-[#f7f9fa] dark:bg-[#001427] p-6 transition-colors duration-300">
+    <div
+      className={`w-full h-full ${theme === "dark" ? "bg-[#001427] text-white" : "bg-[#f7f9fa] text-[#29335C]"} p-6 transition-colors duration-300`}
+    >
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-[#29335C] dark:text-white flex items-center gap-2">
@@ -143,7 +149,7 @@ export default function ModoExploracaoInterface() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 placeholder="Buscar tópicos..."
-                className="pl-10 border-gray-200 focus:border-[#FF6B00] focus:ring-[#FF6B00]/20 w-60 bg-white dark:bg-[#29335C]/20 dark:border-gray-700"
+                className="pl-10 border-gray-200 focus:border-[#FF6B00] focus:ring-[#FF6B00]/20 w-60 bg-white dark:bg-[#29335C]/20 dark:border-gray-700 text-[#29335C] dark:text-white"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -154,6 +160,9 @@ export default function ModoExploracaoInterface() {
             >
               <Plus className="h-4 w-4 mr-2" /> Novo Tópico
             </Button>
+            <div className="h-8 w-8">
+              <ThemeToggle />
+            </div>
           </div>
         </div>
 
@@ -444,7 +453,7 @@ export default function ModoExploracaoInterface() {
                   <div className="flex items-center gap-2">
                     <Input
                       placeholder="Digite um tópico de seu interesse..."
-                      className="border-gray-200 dark:border-gray-700 focus:border-[#FF6B00] focus:ring-[#FF6B00]/20 bg-white dark:bg-[#29335C]/20"
+                      className="border-gray-200 dark:border-gray-700 focus:border-[#FF6B00] focus:ring-[#FF6B00]/20 bg-white dark:bg-[#29335C]/20 text-[#29335C] dark:text-white"
                     />
                     <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF6B00]/90 hover:to-[#FF8C40]/90 text-white shadow-sm whitespace-nowrap">
                       Criar Plano

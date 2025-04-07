@@ -330,6 +330,84 @@ const PortalContent = () => {
                 <TurmaCard key={turma.id} turma={turma} />
               ))}
             </div>
+
+            <div className="mt-8">
+              <h3 className="text-xl font-bold text-[#001427] dark:text-white mb-4">
+                Estudos
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {mockTurmas.slice(0, 3).map((turma) => (
+                  <div
+                    key={turma.id}
+                    className="bg-white dark:bg-[#1E293B] rounded-lg shadow-md p-4 border border-gray-100 dark:border-gray-800 hover:shadow-lg transition-all duration-300"
+                  >
+                    <div className="flex items-center mb-3">
+                      <div className="h-12 w-12 rounded-lg overflow-hidden mr-3">
+                        <img
+                          src={turma.image}
+                          alt={turma.name}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium text-[#001427] dark:text-white">
+                          {turma.name}
+                        </h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {turma.professor}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      className="w-full bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20 mt-2"
+                      size="sm"
+                    >
+                      Ver detalhes
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-8">
+              <h3 className="text-xl font-bold text-[#001427] dark:text-white mb-4">
+                Estudos 2
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {mockTurmas.slice(1, 4).map((turma) => (
+                  <div
+                    key={turma.id}
+                    className="bg-white dark:bg-[#1E293B] rounded-lg shadow-md p-4 border border-gray-100 dark:border-gray-800 hover:shadow-lg transition-all duration-300"
+                  >
+                    <div className="flex items-center mb-3">
+                      <div className="h-12 w-12 rounded-lg overflow-hidden mr-3">
+                        <img
+                          src={turma.image}
+                          alt={turma.name}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium text-[#001427] dark:text-white">
+                          {turma.name}
+                        </h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {turma.professor}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      className="w-full bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20 mt-2"
+                      size="sm"
+                    >
+                      Ver detalhes
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         );
 
@@ -580,6 +658,58 @@ const PortalContent = () => {
                       className="w-full text-[#FF6B00] hover:text-[#FF6B00] hover:bg-[#FF6B00]/10"
                     >
                       Ver histórico completo
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </CardFooter>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg font-semibold text-[#001427] dark:text-white">
+                      Estudos 2
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {mockTurmas.slice(0, 3).map((turma) => (
+                      <div
+                        key={turma.id}
+                        className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-[#001427]/40 transition-colors"
+                      >
+                        <div className="flex items-center">
+                          <div className="h-10 w-10 rounded-lg overflow-hidden mr-3">
+                            <img
+                              src={turma.image}
+                              alt={turma.name}
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-medium text-[#001427] dark:text-white">
+                              {turma.name}
+                            </h4>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {turma.professor}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </CardContent>
+                  <CardFooter>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-[#FF6B00] hover:text-[#FF6B00] hover:bg-[#FF6B00]/10"
+                      onClick={() => navigate("/portal?view=minhas-turmas")}
+                    >
+                      Ver todos os estudos
                       <ChevronRight className="h-4 w-4 ml-1" />
                     </Button>
                   </CardFooter>

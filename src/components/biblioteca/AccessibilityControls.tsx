@@ -22,7 +22,7 @@ export function AccessibilityControls() {
           <Eye className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80">
+      <PopoverContent className="w-80 popover-content-modern">
         <div className="space-y-4">
           <h4 className="font-medium">Acessibilidade</h4>
 

@@ -2,10 +2,11 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import type { UserProfile } from "@/types/user-profile";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Home,
   BookOpen,
@@ -41,6 +42,7 @@ import {
   Compass,
   GraduationCap,
   CalendarClock,
+  Upload,
 } from "lucide-react";
 import MentorAI from "@/components/mentor/MentorAI";
 import AgendaNav from "./AgendaNav";
@@ -64,6 +66,8 @@ export function SidebarNav({
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -94,6 +98,21 @@ export function SidebarNav({
 
     fetchUserProfile();
   }, []);
+
+  const handleImageUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setProfileImage(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleNavigation = (path: string, isSpecial?: boolean) => {
     if (path === "/mentor-ia") {
@@ -218,6 +237,11 @@ export function SidebarNav({
           path: "/eventos",
           icon: <CalendarClock className="h-4 w-4 text-[#FF6B00]" />,
         },
+        {
+          name: "EPC",
+          path: "/epc",
+          icon: <Upload className="h-4 w-4 text-[#FF6B00]" />,
+        },
       ],
     },
 
@@ -317,10 +341,10 @@ export function SidebarNav({
       )}
 
       {/* User Profile Component - Exactly like the image */}
-      <div className="bg-white dark:bg-[#001427] p-3 mb-4 mt-2 flex flex-col items-center">
+      <div className="bg-white dark:bg-[#001427] p-3 mb-4 mt-2 flex flex-col items-center relative group">
         <div className="relative mb-2">
           <div
-            className="rounded-full overflow-hidden mx-auto"
+            className="rounded-full overflow-hidden mx-auto relative group"
             style={{
               width: isCollapsed ? "40px" : "60px",
               height: isCollapsed ? "40px" : "60px",
@@ -328,22 +352,35 @@ export function SidebarNav({
               padding: "2px",
             }}
           >
-            <label
-              htmlFor="profile-upload"
-              className="cursor-pointer block w-full h-full rounded-full overflow-hidden"
+            <div
+              className="cursor-pointer w-full h-full rounded-full overflow-hidden relative"
+              style={{
+                background: "#001427",
+                padding: "2px",
+              }}
             >
               <img
-                src="/images/tempo-image-20250305T080643776Z.png"
-                alt="João Fortes"
+                src={
+                  profileImage ||
+                  "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&mouth=smile&eyes=happy"
+                }
+                alt="Perfil do Usuário"
                 className="w-full h-full object-cover rounded-full"
               />
+              <div
+                className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                onClick={handleImageUploadClick}
+              >
+                <Upload className="h-5 w-5 text-white" />
+              </div>
               <input
                 type="file"
-                id="profile-upload"
+                ref={fileInputRef}
                 className="hidden"
                 accept="image/*"
+                onChange={handleImageChange}
               />
-            </label>
+            </div>
           </div>
         </div>
         {!isCollapsed && (
@@ -447,15 +484,22 @@ export function SidebarNav({
                       {item.icon}
                     </div>
                     {!isCollapsed && (
-                      <span
-                        className={cn(
-                          item.label === "Novidades"
-                            ? "text-[#FF6B00] font-bold"
-                            : "",
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={cn(
+                            item.label === "Novidades"
+                              ? "text-[#FF6B00] font-bold"
+                              : "",
+                          )}
+                        >
+                          {item.label}
+                        </span>
+                        {item.label === "Explorar" && (
+                          <span className="px-1.5 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-md">
+                            Em breve
+                          </span>
                         )}
-                      >
-                        {item.label}
-                      </span>
+                      </div>
                     )}
                   </div>
                   {!isCollapsed && item.subItems && (
@@ -490,16 +534,44 @@ export function SidebarNav({
                         key={subIndex}
                         variant="ghost"
                         className={cn(
-                          "flex items-center gap-2 rounded-lg px-3 py-2 text-start w-full",
+                          "flex items-center gap-2 rounded-lg px-3 py-2 text-start w-full justify-start",
                           isActive(subItem.path)
                             ? "bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF6B00] font-medium"
                             : "text-[#001427] hover:bg-[#FF6B00]/5 dark:text-white dark:hover:bg-[#FF6B00]/10",
-                          "hover:translate-x-1 transition-transform",
+                          "hover:translate-x-1 transition-transform pl-2",
                         )}
                         onClick={() => navigate(subItem.path)}
                       >
                         {subItem.icon}
-                        <span>{subItem.name}</span>
+                        <div className="flex items-center gap-2 w-full">
+                          <span>{subItem.name}</span>
+                          {item.label === "Explorar" && (
+                            <span className="ml-auto">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="text-gray-500 dark:text-gray-400"
+                              >
+                                <rect
+                                  width="18"
+                                  height="11"
+                                  x="3"
+                                  y="11"
+                                  rx="2"
+                                  ry="2"
+                                ></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                              </svg>
+                            </span>
+                          )}
+                        </div>
                       </Button>
                     ))}
                   </div>

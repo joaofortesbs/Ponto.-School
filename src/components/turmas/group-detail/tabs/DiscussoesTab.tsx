@@ -745,7 +745,11 @@ export const DiscussoesTab: React.FC<DiscussoesTabProps> = ({
     const searchLower = searchQuery.toLowerCase();
     return (
       message.content.toLowerCase().includes(searchLower) ||
-      message.sender.toLowerCase().includes(searchLower)
+      message.sender.toLowerCase().includes(searchLower) ||
+      (message.fileInfo?.name &&
+        message.fileInfo.name.toLowerCase().includes(searchLower)) ||
+      (message.replyTo?.content &&
+        message.replyTo.content.toLowerCase().includes(searchLower))
     );
   });
 

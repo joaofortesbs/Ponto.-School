@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "@/components/ThemeProvider";
 import GroupDetailHeader from "./group-detail/GroupDetailHeader";
+import MaterialsSection from "./group-detail/MaterialsSection";
 import {
   ArrowRight,
   Calendar,
@@ -164,10 +165,54 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
     },
   ];
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Search functionality would be implemented here
+    console.log("Searching for:", searchQuery);
+  };
+
   return (
     <div className="w-full h-full bg-white dark:bg-[#0f1525] text-gray-900 dark:text-white p-0 overflow-hidden flex flex-col">
       {/* Fixed Header with Cover Image */}
       <GroupDetailHeader group={group} onBack={onBack} />
+
+      {/* Search Bar */}
+      <div className="bg-white dark:bg-[#0f1525] p-3 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
+        <form onSubmit={handleSearch} className="relative">
+          <Input
+            type="text"
+            placeholder="Buscar no grupo..."
+            className="pl-10 pr-4 py-2 w-full bg-gray-100 dark:bg-[#1a2236] border-gray-300 dark:border-gray-700 rounded-full"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          {searchQuery && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 p-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              onClick={() => setSearchQuery("")}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </Button>
+          )}
+        </form>
+      </div>
 
       {/* Tabs Navigation */}
       <div className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0f1525] flex-shrink-0 shadow-sm">
@@ -179,6 +224,13 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
               onClick={() => setActiveTab("discussoes")}
             >
               <MessageCircle className="h-4 w-4 mr-2" /> Discussões
+            </TabsTrigger>
+            <TabsTrigger
+              value="materiais"
+              className="px-4 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[#FF6B00] data-[state=active]:text-[#FF6B00] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+              onClick={() => setActiveTab("materiais")}
+            >
+              <BookOpen className="h-4 w-4 mr-2" /> Materiais
             </TabsTrigger>
             <TabsTrigger
               value="arquivos"
@@ -219,8 +271,11 @@ const GroupDetail: React.FC<GroupDetailProps> = ({ group, onBack }) => {
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             groupName={group.nome || "Mecânica Quântica Avançada"}
+            group={group}
           />
         )}
+
+        {activeTab === "materiais" && <MaterialsSection />}
 
         {activeTab === "arquivos" && (
           <div className="p-4">
