@@ -185,6 +185,11 @@ export function SidebarNav({
       path: "/epictus-ia",
     },
     {
+      icon: <MessageCircle className="h-5 w-5" />,
+      label: "Chat IA",
+      path: "/chat-ia",
+    },
+    {
       icon: <Calendar className="h-5 w-5" />,
       label: "Agenda",
       path: "/agenda",
