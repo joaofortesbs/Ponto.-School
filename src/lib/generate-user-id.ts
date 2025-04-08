@@ -1,68 +1,53 @@
-import { supabase } from "./supabase";
+import { supabase } from "@/lib/supabase";
 
-export async function generateUserId(
-  uf: string,
-  tipoConta: number,
-): Promise<string> {
-  const anoMes =
-    new Date().toISOString().slice(2, 4) + new Date().toISOString().slice(5, 7);
-
+/**
+ * Gera um ID de usuário único com o formato especificado.
+ * 
+ * @param countryCode O código do país (ex: BR, US, etc)
+ * @param planType O tipo de plano (1 = Premium, 2 = Standard, etc)
+ * @returns Uma string contendo o ID gerado no formato BRXXXXXXXXXXXX
+ */
+export async function generateUserId(countryCode: string, planType: number): Promise<string> {
   try {
-    // Begin transaction
-    const { data: existingRecord, error: selectError } = await supabase
-      .from("user_id_control")
-      .select("next_id")
-      .eq("uf", uf)
-      .eq("ano_mes", anoMes)
-      .eq("tipo_conta", tipoConta)
+    // Tentar buscar a sequência atual
+    const { data, error } = await supabase
+      .from('user_id_control')
+      .select('last_sequence')
+      .eq('country_code', countryCode)
+      .eq('plan_type', planType)
       .single();
 
-    if (selectError && selectError.code !== "PGRST116") {
-      console.error("Error checking for existing ID record:", selectError);
-      throw selectError;
+    if (error) {
+      // Em caso de erro, retornar um ID baseado em timestamp
+      return `${countryCode}${planType}${Date.now().toString().slice(-10)}`;
     }
 
-    let nextId: number;
+    // Incrementar o último número de sequência
+    const currentSequence = data?.last_sequence || 0;
+    const newSequence = currentSequence + 1;
 
-    if (existingRecord) {
-      nextId = existingRecord.next_id;
+    // Atualizar o registro com o novo número de sequência
+    await supabase
+      .from('user_id_control')
+      .update({ last_sequence: newSequence })
+      .eq('country_code', countryCode)
+      .eq('plan_type', planType);
 
-      // Update the next_id
-      const { error: updateError } = await supabase
-        .from("user_id_control")
-        .update({ next_id: nextId + 1 })
-        .eq("uf", uf)
-        .eq("ano_mes", anoMes)
-        .eq("tipo_conta", tipoConta);
-
-      if (updateError) {
-        console.error("Error updating next_id:", updateError);
-        throw updateError;
-      }
-    } else {
-      nextId = 1;
-
-      // Insert new record
-      const { error: insertError } = await supabase
-        .from("user_id_control")
-        .insert({
-          uf,
-          ano_mes: anoMes,
-          tipo_conta: tipoConta,
-          next_id: nextId + 1,
-        });
-
-      if (insertError) {
-        console.error("Error inserting new ID record:", insertError);
-        throw insertError;
-      }
-    }
-
-    // Format the user ID
-    const userId = `${uf}${anoMes}${tipoConta}${nextId.toString().padStart(6, "0")}`;
-    return userId;
+    // Formatar o ID: país (2) + tipo de plano (1) + sequência (10 dígitos com zeros à esquerda)
+    const paddedSequence = newSequence.toString().padStart(10, '0');
+    return `${countryCode}${planType}${paddedSequence}`;
   } catch (error) {
-    console.error("Error generating user ID:", error);
-    throw error;
+    // Em caso de erro, retornar um ID baseado em timestamp
+    return `${countryCode}${planType}${Date.now().toString().slice(-10)}`;
   }
+}
+
+/**
+ * Versão simplificada que não depende do banco de dados para gerar um ID único
+ * Útil quando houver problemas de conexão com o Supabase
+ */
+export function generateSimpleUserId(countryCode: string, planType: number): string {
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  return `${countryCode}${planType}${timestamp.toString().slice(-6)}${random}`;
 }

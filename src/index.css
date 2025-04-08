@@ -44,50 +44,25 @@
     }
     50% {
       opacity: 0.7;
-
-/* Regras para otimizar a renderização e carregamento inicial */
-html *, body * {
-  will-change: auto;
-  content-visibility: auto;
-}
-
-/* Preload de componentes essenciais */
-body::after {
-  content: '';
-  display: none;
-  background-image: 
-    url('/images/ponto-school-logo.png');
-}
-
-/* Evitar flash de conteúdo não estilizado */
-.js-focus-visible :focus:not(.focus-visible) {
-  outline: none;
-}
-
-/* Animação mais suave para transições */
-.transition-all {
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-property: all;
-}
-
     }
   }
 }
 
 
+/* Regras para otimizar a renderização e carregamento inicial */
+* {
+  will-change: auto;
+  content-visibility: auto;
+}
+
+/* Animação para mensagens de sucesso */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.3s ease-in-out forwards;
+  animation: fadeIn 0.5s ease-out forwards;
 }
 
 @layer base {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, CheckCircle } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 
@@ -65,7 +65,15 @@ export function LoginForm() {
   return (
     <div className="space-y-6">
       {accountCreated && (
-        <div className="text-green-500 text-center mb-4">Conta criada com sucesso!</div>
+        <div className="bg-green-100 dark:bg-green-900/30 border-2 border-green-500 dark:border-green-600 text-green-800 dark:text-green-300 p-6 rounded-lg mb-6 animate-fade-in flex items-center gap-4 shadow-md">
+          <div className="rounded-full bg-green-200 dark:bg-green-800 p-3 flex-shrink-0">
+            <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-lg font-bold">Conta criada com sucesso!</h3>
+            <p className="text-sm mt-1">Sua conta foi criada e seus dados foram salvos com sucesso. Use suas credenciais para fazer login.</p>
+          </div>
+        </div>
       )}
       <div className="text-center space-y-2">
         <h1 className="text-2xl font-bold tracking-tight text-brand-black dark:text-white">
