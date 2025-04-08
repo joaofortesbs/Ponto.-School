@@ -198,6 +198,9 @@ export function RegisterForm() {
 
       if (data?.user) {
         try {
+          // Esperar um pequeno intervalo para dar tempo ao trigger de criar o perfil
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
           // Verificar se o perfil já foi criado pelo trigger
           const { data: profileData, error: fetchError } = await supabase
             .from("profiles")
@@ -206,6 +209,7 @@ export function RegisterForm() {
             .single();
           
           if (fetchError || !profileData) {
+            console.log("Criando perfil manualmente, trigger não funcionou");
             // Se o perfil não existe, criamos manualmente
             const { error: insertError } = await supabase
               .from("profiles")
@@ -220,7 +224,9 @@ export function RegisterForm() {
                 birth_date: formData.birthDate,
                 plan_type: plan,
                 level: 1,
-                rank: "Aprendiz"
+                rank: "Aprendiz",
+                xp: 0,
+                coins: 100 // Moedas iniciais para novos usuários
               }]);
             
             if (insertError) {
@@ -228,14 +234,21 @@ export function RegisterForm() {
               throw new Error("Erro ao criar perfil de usuário");
             }
           } else {
-            // Se o perfil existe, atualizamos
+            console.log("Perfil já existente, atualizando dados");
+            // Se o perfil existe, atualizamos com os dados completos
             const { error: updateError } = await supabase
               .from("profiles")
               .update({
                 user_id: userId,
+                full_name: formData.fullName,
+                institution: formData.institution,
+                birth_date: formData.birthDate,
+                plan_type: plan,
                 level: 1,
                 rank: "Aprendiz",
                 display_name: formData.username,
+                xp: profileData.xp || 0,
+                coins: profileData.coins || 100
               })
               .eq("id", data.user.id);
             
@@ -247,9 +260,9 @@ export function RegisterForm() {
           // Mostrar mensagem de sucesso
           setSuccess(true);
           
-          // Redirecionar após 3 segundos
+          // Redirecionar após 3 segundos com estado indicando nova conta
           setTimeout(() => {
-            navigate("/login");
+            navigate("/login", { state: { newAccount: true } });
           }, 3000);
           
         } catch (err) {
@@ -278,13 +291,13 @@ export function RegisterForm() {
       </div>
 
       {success ? (
-        <div className="bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 text-green-800 dark:text-green-300 p-4 rounded-lg mb-6 animate-fade-in flex items-center gap-3">
-          <div className="rounded-full bg-green-200 dark:bg-green-800 p-2 flex-shrink-0">
-            <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+        <div className="bg-green-100 dark:bg-green-900/30 border-2 border-green-500 dark:border-green-600 text-green-800 dark:text-green-300 p-6 rounded-lg mb-6 animate-fade-in flex items-center gap-4 shadow-md">
+          <div className="rounded-full bg-green-200 dark:bg-green-800 p-3 flex-shrink-0">
+            <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
           </div>
           <div className="flex-1">
-            <h3 className="font-medium">Conta criada com sucesso!</h3>
-            <p className="text-sm">Redirecionando para a página de login...</p>
+            <h3 className="text-lg font-bold">Conta criada com sucesso!</h3>
+            <p className="text-sm mt-1">Sua conta foi criada e seus dados foram salvos com sucesso. Redirecionando para a página de login em instantes...</p>
           </div>
         </div>
       ) : (

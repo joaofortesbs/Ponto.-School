@@ -14,7 +14,11 @@ BEGIN
     display_name,
     institution,
     birth_date,
-    plan_type
+    plan_type,
+    level,
+    rank,
+    xp,
+    coins
   )
   VALUES (
     NEW.id,
@@ -29,7 +33,11 @@ BEGIN
     ),
     NEW.raw_user_meta_data->>'institution',
     (NEW.raw_user_meta_data->>'birth_date')::DATE,
-    NEW.raw_user_meta_data->>'plan_type'
+    NEW.raw_user_meta_data->>'plan_type',
+    1, -- Nível inicial
+    'Aprendiz', -- Rank inicial
+    0, -- XP inicial
+    100 -- Moedas iniciais
   );
   RETURN NEW;
 END;

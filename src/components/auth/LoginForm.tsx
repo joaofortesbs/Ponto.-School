@@ -1,36 +1,42 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 
 interface FormData {
   email: string;
   password: string;
-  remember: boolean;
+  rememberMe: boolean;
 }
 
 export function LoginForm() {
-  const [showPassword, setShowPassword] = React.useState(false);
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState("");
-  const navigate = useNavigate();
-
-  const [formData, setFormData] = React.useState<FormData>({
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [accountCreated, setAccountCreated] = useState(false);
+  const [formData, setFormData] = useState({
     email: "",
     password: "",
-    remember: false,
+    rememberMe: false,
   });
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state && location.state.newAccount) {
+      setAccountCreated(true);
+      setTimeout(() => {
+        setAccountCreated(false);
+      }, 5000);
+    }
+  }, [location]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value =
-      e.target.type === "checkbox" ? e.target.checked : e.target.value;
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: value,
-    }));
+    const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
+    setFormData((prev) => ({ ...prev, [e.target.name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,6 +64,9 @@ export function LoginForm() {
 
   return (
     <div className="space-y-6">
+      {accountCreated && (
+        <div className="text-green-500 text-center mb-4">Conta criada com sucesso!</div>
+      )}
       <div className="text-center space-y-2">
         <h1 className="text-2xl font-bold tracking-tight text-brand-black dark:text-white">
           Entrar na plataforma
@@ -127,15 +136,15 @@ export function LoginForm() {
 
         <div className="flex items-center space-x-2">
           <Checkbox
-            id="remember"
-            name="remember"
-            checked={formData.remember}
+            id="rememberMe"
+            name="rememberMe"
+            checked={formData.rememberMe}
             onCheckedChange={(checked) =>
-              setFormData((prev) => ({ ...prev, remember: checked === true }))
+              setFormData((prev) => ({ ...prev, rememberMe: checked === true }))
             }
           />
           <label
-            htmlFor="remember"
+            htmlFor="rememberMe"
             className="text-sm text-brand-muted dark:text-white/60 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
           >
             Lembrar de mim
@@ -197,4 +206,11 @@ export function LoginForm() {
       </form>
     </div>
   );
+}
+
+
+//This is a placeholder for the registration form. A complete implementation would require a separate component.
+export function RegistrationForm(){
+    //Implementation for registration form here.  This would include fields for name, email, password, etc., and a submit handler to create a new user account in Supabase.  Error handling and success messages would also be necessary.
+    return <div>Registration Form (Not implemented)</div>
 }
