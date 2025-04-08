@@ -10,28 +10,50 @@ import {
   User,
   Menu,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
 export function Header() {
-  const [logoLoaded, setLogoLoaded] = useState(false);
-
-  // Simplificar a atualização da logo
+  // Atualizar a logo no Supabase ao inicializar o componente
   useEffect(() => {
-    const logoPath = '/images/logo-oficial.png';
-
-    // Definir logo no localStorage para garantir consistência
-    localStorage.setItem("pontoSchoolLogo", logoPath);
-    localStorage.setItem("customLogo", logoPath);
-    localStorage.setItem("sidebarCustomLogo", logoPath);
-    localStorage.setItem("logoVersion", "1");
-
-    setLogoLoaded(true);
-
-    // Notificar outros componentes
-    document.dispatchEvent(
-      new CustomEvent("logoLoaded", { detail: logoPath }),
-    );
+    const updateLogoInSupabase = async () => {
+      try {
+        // Verificar se a logo já existe no Supabase
+        const { data, error } = await supabase
+          .from("platform_settings")
+          .select("logo_url, logo_version")
+          .single();
+        
+        // Se não existir ou for diferente, atualizar para a nova logo
+        if (!data || data.logo_url !== '/images/logo-oficial.png') {
+          const newVersion = (data?.logo_version || 1) + 1;
+          // Atualizar logo no Supabase
+          await supabase.from("platform_settings").upsert(
+            {
+              id: 1,
+              logo_url: '/images/logo-oficial.png',
+              logo_version: newVersion,
+            },
+            { onConflict: "id" },
+          );
+          
+          // Atualizar logo no localStorage
+          localStorage.setItem("pontoSchoolLogo", '/images/logo-oficial.png');
+          localStorage.setItem("customLogo", '/images/logo-oficial.png');
+          localStorage.setItem("sidebarCustomLogo", '/images/logo-oficial.png');
+          localStorage.setItem("logoVersion", newVersion.toString());
+          
+          // Notificar outros componentes da alteração
+          document.dispatchEvent(
+            new CustomEvent("logoLoaded", { detail: '/images/logo-oficial.png' }),
+          );
+        }
+      } catch (error) {
+        console.error("Erro ao atualizar logo:", error);
+      }
+    };
+    
+    updateLogoInSupabase();
   }, []);
 
   return (
@@ -41,40 +63,20 @@ export function Header() {
           <Menu className="h-5 w-5" />
         </Button>
       </div>
-
-      {/* Logo Oficial no Avatar */}
-      <div className="flex items-center mr-4">
-        <Avatar className="h-10 w-10 bg-transparent border-2 border-[#FF6B00] cursor-pointer">
-          <AvatarImage 
-            src="/images/logo-oficial.png" 
-            alt="Logo Oficial"
-            className="p-1"
-            onError={(e) => {
-              const target = e.currentTarget;
-              console.log("Tentando carregar logo alternativa");
-              // Retry com timestamp para evitar cache
-              target.src = "/images/logo-oficial.png?t=" + Date.now();
-              // Fallback para base64 logo se falhar novamente
-              target.onerror = () => {
-                import('@/components/LogoImageBase64').then(module => {
-                  console.log("Usando logo base64 como fallback");
-                  target.src = module.PONTO_SCHOOL_LOGO_BASE64;
-                }).catch(() => {
-                  // Nenhum texto de fallback, apenas uma cor de fundo
-                  if (target.parentElement) {
-                    target.style.display = 'none';
-                  }
-                });
-              };
-            }}
-          />
-          <AvatarFallback className="bg-[#FF6B00] text-white">PS</AvatarFallback>
-        </Avatar>
-        <span className="ml-2 font-bold text-[#001427] dark:text-white hidden sm:inline-block">
-          Ponto<span className="text-[#FF6B00]">.</span>School
-        </span>
+      
+      {/* Logo Oficial */}
+      <div className="hidden md:flex items-center mr-4">
+        <img 
+          src="/images/logo-oficial.png" 
+          alt="Logo Oficial" 
+          className="h-10 w-10"
+          onError={(e) => {
+            // Fallback em caso de erro no carregamento da imagem
+            e.currentTarget.src = "/images/logo-oficial.png?retry=" + Date.now();
+          }}
+        />
       </div>
-
+      
       <div className="relative hidden md:flex md:flex-1 md:max-w-md lg:max-w-lg">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input

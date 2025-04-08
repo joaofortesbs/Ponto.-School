@@ -44,12 +44,6 @@ import PlanSelectionPage from "@/pages/plan-selection";
 // User Pages
 import ProfilePage from "@/pages/profile";
 
-// Added components
-const LogoPreloader = () => <div>Loading Logo...</div>; // Placeholder
-const LogoManager = () => (
-  <img src="placeholder-logo.png" alt="Logo" className="h-8 w-auto" /> // Placeholder image
-);
-
 function App() {
   const location = useLocation();
   const [isAuthenticated, setIsAuthenticated] = useState(true); // Default como true para garantir carregamento
@@ -58,18 +52,20 @@ function App() {
   useEffect(() => {
     console.log("App carregado com sucesso!");
 
-    // Sempre autenticado para desenvolvimento
-    setIsAuthenticated(true);
-    setIsLoading(false);
+    // Verificação de autenticação simplificada
+    const checkAuth = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        setIsAuthenticated(!!data.session || true); // Força true para desenvolvimento
+      } catch (error) {
+        console.error("Auth check error:", error);
+        setIsAuthenticated(true); // Força true para desenvolvimento
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    // Precarregar componentes principais
-    import("./components/dashboard/Dashboard")
-      .then(() => console.log("Dashboard pré-carregado"))
-      .catch(err => console.error("Erro ao pré-carregar Dashboard:", err));
-
-    import("./components/sidebar/Sidebar")
-      .then(() => console.log("Sidebar pré-carregado"))
-      .catch(err => console.error("Erro ao pré-carregar Sidebar:", err));
+    checkAuth();
   }, []);
 
   // Rotas de autenticação
@@ -82,9 +78,7 @@ function App() {
   ].some((route) => location.pathname.startsWith(route));
 
   return (
-    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-      <LogoPreloader />
-      <LogoManager />
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <StudyGoalProvider>
         <div className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
           <Routes>

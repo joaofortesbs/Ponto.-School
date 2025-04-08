@@ -1298,12 +1298,12 @@ const FloatingChatSupport: React.FC = () => {
             <div className="flex items-center justify-between p-4 border-b dark:border-gray-800">
               <div className="flex items-center gap-2">
                 <Button
-                  variant={activeTab === "home" ? "default" : "ghost"}
+                  variant="ghost"
                   size="icon"
-                  className={`h-10 w-10 rounded-full mb-4 ${activeTab === "home" ? "bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white" : ""}`}
+                  className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
                   onClick={() => setActiveTab("home")}
                 >
-                  <Home className="h-5 w-5" />
+                  <Home className="h-4 w-4" />
                 </Button>
               </div>
               <div className="flex items-center gap-2">
