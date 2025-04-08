@@ -55,10 +55,21 @@ export function LoginForm() {
     }
 
     try {
-      // Autenticar usuário usando o ReplitDB
-      const user = await UserService.authenticateUser(formData.email, formData.password);
+      console.log("Tentando autenticar usuário...");
+      
+      // Primeiro, tentar autenticar usando o ReplitDB
+      let user = null;
+      try {
+        user = await UserService.authenticateUser(formData.email, formData.password);
+        console.log("Tentativa de autenticação no ReplitDB:", user ? "sucesso" : "falha");
+      } catch (dbError) {
+        console.error("Erro ao acessar ReplitDB:", dbError);
+        // Continuar com verificação local
+      }
       
       if (!user) {
+        console.log("Usuário não encontrado no ReplitDB, verificando armazenamento local");
+        
         // Verificar se há perfis armazenados localmente (compatibilidade com dados antigos)
         const localProfiles = localStorage.getItem('tempUserProfiles');
         const offlineProfiles = localProfiles ? JSON.parse(localProfiles) : [];

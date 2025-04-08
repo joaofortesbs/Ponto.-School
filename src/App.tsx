@@ -53,11 +53,32 @@ function App() {
   useEffect(() => {
     console.log("App carregado com sucesso!");
 
-    // Verificação de autenticação simplificada
+    // Verificação de autenticação com fallback para métodos locais
     const checkAuth = async () => {
       try {
-        const { data } = await supabase.auth.getSession();
-        setIsAuthenticated(!!data.session || true); // Força true para desenvolvimento
+        // Primeiro verificar no UserService (Replit DB)
+        const isLoggedIn = UserService.isUserLoggedIn();
+        if (isLoggedIn) {
+          console.log("Usuário autenticado via UserService");
+          setIsAuthenticated(true);
+          setIsLoading(false);
+          return;
+        }
+        
+        // Tentar verificar no Supabase como fallback
+        try {
+          const { data } = await supabase.auth.getSession();
+          if (data.session) {
+            console.log("Usuário autenticado via Supabase");
+            setIsAuthenticated(true);
+          } else {
+            console.log("Nenhuma sessão encontrada, definindo como autenticado para desenvolvimento");
+            setIsAuthenticated(true); // Força true para desenvolvimento
+          }
+        } catch (supabaseError) {
+          console.error("Erro na verificação do Supabase:", supabaseError);
+          setIsAuthenticated(true); // Força true para desenvolvimento
+        }
       } catch (error) {
         console.error("Auth check error:", error);
         setIsAuthenticated(true); // Força true para desenvolvimento
@@ -66,12 +87,24 @@ function App() {
       }
     };
 
-    checkAuth();
-
-    // Inicializar o banco de dados do Replit
+    // Inicializar o banco de dados do Replit primeiro
     initializeDB()
-      .then(() => console.log("Banco de dados Replit inicializado com sucesso"))
-      .catch(err => console.error("Erro ao inicializar banco de dados Replit:", err));
+      .then((success) => {
+        console.log("Tentativa de inicialização do banco de dados Replit:", success ? "sucesso" : "falha");
+        // Verificar autenticação após inicialização do banco
+        checkAuth();
+      })
+      .catch(err => {
+        console.error("Erro ao inicializar banco de dados Replit:", err);
+        // Mesmo com erro, verificar autenticação
+        checkAuth();
+      });
+      
+    // Adicionar evento para recarregar a página quando sair do modo offline
+    window.addEventListener('online', () => {
+      console.log("Conexão de rede restaurada, recarregando aplicação");
+      window.location.reload();
+    });
   }, []);
 
   // Rotas de autenticação

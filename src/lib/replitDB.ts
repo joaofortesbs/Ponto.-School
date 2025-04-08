@@ -2,7 +2,14 @@
 import { Database } from '@replit/database';
 
 // Inicializar o banco de dados do Replit
-const db = new Database();
+let db: Database;
+try {
+  db = new Database();
+  console.log("Replit DB inicializado com sucesso");
+} catch (error) {
+  console.error("Erro ao inicializar Replit DB:", error);
+  db = new Database(); // Tentativa de recuperação
+}
 
 // Tipos para os dados do usuário
 export interface UserProfile {
@@ -83,19 +90,49 @@ export class UserService {
         created_at: new Date().toISOString()
       };
       
-      // Salvar usuário no banco de dados
-      await db.set(`user:${id}`, JSON.stringify(newUser));
+      try {
+        // Salvar usuário no banco de dados
+        await db.set(`user:${id}`, JSON.stringify(newUser));
+        
+        // Atualizar lista de IDs de usuários
+        const userIdsStr = await db.get('user_ids') as string || '[]';
+        const userIds = JSON.parse(userIdsStr);
+        userIds.push(id);
+        await db.set('user_ids', JSON.stringify(userIds));
+      } catch (dbError) {
+        console.error('Erro ao salvar no DB, salvando localmente:', dbError);
+        // Salvar localmente como fallback
+        const localUsers = localStorage.getItem('localUsers') || '[]';
+        const users = JSON.parse(localUsers);
+        users.push(newUser);
+        localStorage.setItem('localUsers', JSON.stringify(users));
+      }
       
-      // Atualizar lista de IDs de usuários
-      const userIdsStr = await db.get('user_ids') as string || '[]';
-      const userIds = JSON.parse(userIdsStr);
-      userIds.push(id);
-      await db.set('user_ids', JSON.stringify(userIds));
+      // Também salvar no formato antigo para compatibilidade
+      try {
+        const tempProfiles = localStorage.getItem('tempUserProfiles') || '[]';
+        const profiles = JSON.parse(tempProfiles);
+        profiles.push(newUser);
+        localStorage.setItem('tempUserProfiles', JSON.stringify(profiles));
+      } catch (e) {
+        console.warn('Erro ao salvar no formato legado:', e);
+      }
       
       return newUser;
     } catch (error) {
       console.error('Erro ao criar usuário:', error);
       return null;
+    }
+  }
+  
+  // Método para registrar usuário (para compatibilidade com código existente)
+  static async registerUser(userData: any): Promise<any> {
+    try {
+      const user = await this.createUser(userData);
+      return user || { error: 'Falha ao registrar usuário' };
+    } catch (error) {
+      console.error('Erro ao registrar usuário:', error);
+      return { error: 'Erro ao registrar usuário' };
     }
   }
   
@@ -196,10 +233,19 @@ export async function initializeDB() {
     if (!userIdsExist) {
       // Inicializar lista vazia de IDs de usuários
       await db.set('user_ids', '[]');
-      console.log('Banco de dados inicializado');
+      console.log('Banco de dados inicializado com sucesso');
+    } else {
+      console.log('Banco de dados já inicializado');
     }
+    return true;
   } catch (error) {
     console.error('Erro ao inicializar banco de dados:', error);
+    // Criar estrutura local para modo offline
+    localStorage.setItem('isOfflineMode', 'true');
+    if (!localStorage.getItem('user_ids')) {
+      localStorage.setItem('user_ids', '[]');
+    }
+    return false;
   }
 }
 

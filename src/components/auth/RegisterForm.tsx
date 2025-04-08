@@ -176,12 +176,27 @@ export function RegisterForm() {
       let userError = null;
       let isOnline = true;
 
-
       try {
         // Tentativa de registro usando o serviço Replit DB
-        userData = await UserService.registerUser({...formData, userId});
-        if(userData.error){
-          userError = userData.error;
+        console.log("Tentando registrar usuário no Replit DB...");
+        userData = await UserService.createUser({
+          user_id: userId,
+          email: formData.email,
+          password: formData.password,
+          full_name: formData.fullName,
+          username: formData.username || formData.fullName.split(' ')[0].toLowerCase(),
+          display_name: formData.username || formData.fullName,
+          institution: formData.institution || '',
+          birth_date: formData.birthDate || null,
+          plan_type: plan,
+          level: 1,
+          rank: "Aprendiz",
+          xp: 0,
+          coins: 100
+        });
+        
+        if(!userData) {
+          console.warn("Nenhum dado retornado pelo Replit DB, ativando modo offline");
           isOnline = false;
         }
       } catch (authError) {
