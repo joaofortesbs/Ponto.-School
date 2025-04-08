@@ -42,29 +42,34 @@ export function Header() {
         </Button>
       </div>
 
-      {/* Logo Oficial */}
+      {/* Logo Oficial no Avatar */}
       <div className="flex items-center mr-4">
-        <img 
-          src="/images/logo-oficial.png" 
-          alt="Logo Oficial" 
-          className="h-8 w-auto"
-          style={{ minWidth: '32px' }}
-          onError={(e) => {
-            const target = e.currentTarget;
-            console.log("Tentando carregar logo alternativa");
-            // Retry com timestamp para evitar cache
-            target.src = "/images/logo-oficial.png?t=" + Date.now();
-            // Fallback para base64 logo se falhar novamente
-            target.onerror = () => {
-              import('@/components/LogoImageBase64').then(module => {
-                console.log("Usando logo base64 como fallback");
-                target.src = module.PONTO_SCHOOL_LOGO_BASE64;
-              }).catch(() => {
-                target.src = "/vite.svg";
-              });
-            };
-          }}
-        />
+        <Avatar className="h-10 w-10 bg-transparent border-2 border-[#FF6B00] cursor-pointer">
+          <AvatarImage 
+            src="/images/logo-oficial.png" 
+            alt="Logo Oficial"
+            className="p-1"
+            onError={(e) => {
+              const target = e.currentTarget;
+              console.log("Tentando carregar logo alternativa");
+              // Retry com timestamp para evitar cache
+              target.src = "/images/logo-oficial.png?t=" + Date.now();
+              // Fallback para base64 logo se falhar novamente
+              target.onerror = () => {
+                import('@/components/LogoImageBase64').then(module => {
+                  console.log("Usando logo base64 como fallback");
+                  target.src = module.PONTO_SCHOOL_LOGO_BASE64;
+                }).catch(() => {
+                  // Nenhum texto de fallback, apenas uma cor de fundo
+                  if (target.parentElement) {
+                    target.style.display = 'none';
+                  }
+                });
+              };
+            }}
+          />
+          <AvatarFallback className="bg-[#FF6B00] text-white">PS</AvatarFallback>
+        </Avatar>
         <span className="ml-2 font-bold text-[#001427] dark:text-white hidden sm:inline-block">
           Ponto<span className="text-[#FF6B00]">.</span>School
         </span>
