@@ -205,6 +205,7 @@ export default function Sidebar({
           isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
           className,
         )}
+        key="sidebar-container" // Added key prop here
         {...props}
       >
         <div className="flex h-[72px] items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800 relative">

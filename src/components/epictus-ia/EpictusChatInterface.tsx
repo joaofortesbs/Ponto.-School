@@ -1,332 +1,152 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { SendIcon, Sparkles, Bot, User, Loader2 } from 'lucide-react';
+import { generateAIResponse, createMessage, addMessageToHistory, getChatHistory, ChatMessage } from '@/services/epictusIAService';
 
-import React, { useState, useEffect, useRef } from "react";
-import { useTheme } from "@/components/ThemeProvider";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import { Avatar } from "@/components/ui/avatar";
-import { Sparkles, Send, User, Brain, ThumbsUp, ThumbsDown, Copy, Link, Download } from "lucide-react";
-import epictusIAService, { IAMessage } from "@/services/epictusIAService";
-import { v4 as uuidv4 } from 'uuid';
+const EpictusChatInterface: React.FC = () => {
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
-interface EpictusChatInterfaceProps {
-  onBack?: () => void;
-}
-
-export default function EpictusChatInterface({ onBack }: EpictusChatInterfaceProps) {
-  const { theme } = useTheme();
-  const [inputMessage, setInputMessage] = useState("");
-  const [messages, setMessages] = useState<IAMessage[]>([
-    {
-      id: uuidv4(),
-      content: "Olá! Sou o Epictus IA, seu assistente de estudos pessoal. Como posso ajudar você hoje?",
-      role: "assistant",
-      createdAt: new Date(),
-    },
-  ]);
-  const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  // Scroll para o final das mensagens quando novas mensagens são adicionadas
+  // Carrega mensagens iniciais
   useEffect(() => {
-    scrollToBottom();
+    try {
+      const welcomeMessage = createMessage(
+        "Olá! Eu sou a Epictus IA, seu assistente de estudos. Como posso ajudar você hoje?",
+        'ai'
+      );
+      setMessages([welcomeMessage]);
+    } catch (error) {
+      console.error("Erro ao carregar mensagens iniciais:", error);
+    }
+  }, []);
+
+  // Rola para a última mensagem
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
   const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
-
-    // Adicionar mensagem do usuário
-    const userMessage: IAMessage = {
-      id: uuidv4(),
-      content: inputMessage,
-      role: "user",
-      createdAt: new Date(),
-    };
-
-    // Salvar a mensagem atual para enviar para API
-    const currentMessage = inputMessage;
-    
-    setMessages((prev) => [...prev, userMessage]);
-    setInputMessage("");
-    setIsTyping(true);
+    if (!input.trim()) return;
 
     try {
-      // Buscar resposta da IA usando a API do Gemini
-      const aiResponse = await epictusIAService.getResponse(currentMessage);
+      // Cria e adiciona mensagem do usuário
+      const userMessage = createMessage(input, 'user');
+      setMessages(prev => [...prev, userMessage]);
+      setInput('');
 
-      // Adicionar resposta da IA
-      const assistantMessage: IAMessage = {
-        id: uuidv4(),
-        content: aiResponse,
-        role: "assistant",
-        createdAt: new Date(),
-      };
+      // Processa a resposta
+      setIsLoading(true);
 
-      setMessages((prev) => [...prev, assistantMessage]);
+      // Simulação simplificada
+      const aiResponse = await generateAIResponse(input);
+
+      const aiMessage = createMessage(aiResponse, 'ai');
+      setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
-      console.error("Erro ao obter resposta da IA:", error);
-      
-      // Mensagem de erro caso falhe
-      const errorMessage: IAMessage = {
-        id: uuidv4(),
-        content: "Desculpe, tive um problema ao processar sua solicitação. Por favor, tente novamente em alguns instantes. Se o problema persistir, verifique sua conexão com a internet.",
-        role: "assistant",
-        createdAt: new Date(),
-      };
-
-      setMessages((prev) => [...prev, errorMessage]);
+      console.error('Erro ao gerar resposta:', error);
+      const errorMessage = createMessage(
+        "Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.",
+        'ai'
+      );
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
-      setIsTyping(false);
-      // Focar no input após enviar a mensagem
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
+      setIsLoading(false);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
   };
 
-  // Função para formatar a data da mensagem
-  const formatMessageTime = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  };
-
-  // Função para copiar o texto da mensagem
-  const copyMessageToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    // Aqui poderia adicionar um toast para feedback
-  };
-
   return (
-    <div
-      className={`flex flex-col h-full ${
-        theme === "dark" ? "bg-[#001427]" : "bg-[#f7f9fa]"
-      }`}
-    >
-      {/* Cabeçalho */}
-      <div
-        className={`flex items-center justify-between p-4 border-b ${
-          theme === "dark" ? "border-gray-800 bg-[#0A2540]" : "border-gray-200 bg-white"
-        }`}
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#FF6B00] flex items-center justify-center">
-            <Brain className="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <h2
-              className={`font-medium ${
-                theme === "dark" ? "text-white" : "text-[#29335C]"
-              } flex items-center gap-2`}
-            >
-              Epictus IA
-              <Badge className="bg-[#FF6B00] text-white text-xs">
-                <Sparkles className="h-3 w-3 mr-1" /> Online
-              </Badge>
-            </h2>
-            <p
-              className={`text-xs ${
-                theme === "dark" ? "text-white/60" : "text-[#64748B]"
-              }`}
-            >
-              Seu assistente de estudos pessoal
-            </p>
-          </div>
-        </div>
-        {onBack && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onBack}
-            className={`${
-              theme === "dark"
-                ? "text-white/60 hover:text-white hover:bg-[#29335C]/20"
-                : "text-[#64748B] hover:text-[#29335C] hover:bg-gray-100"
-            }`}
-          >
-            Voltar
-          </Button>
-        )}
+    <div className="flex flex-col h-full border rounded-lg overflow-hidden bg-white dark:bg-[#011C3B] shadow-sm">
+      <div className="p-4 border-b bg-gray-50 dark:bg-[#001C3B]/80 flex items-center gap-2">
+        <Sparkles className="h-5 w-5 text-indigo-500" />
+        <h2 className="font-medium text-gray-900 dark:text-white">Chat Epictus IA</h2>
       </div>
 
       {/* Área de mensagens */}
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4">
-          {messages.map((message) => (
+      <div 
+        ref={chatContainerRef}
+        className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700"
+      >
+        {messages.map((message, index) => (
+          <div
+            key={message.id || index}
+            className={`flex items-start gap-3 ${
+              message.sender === 'ai' ? 'justify-start' : 'justify-end'
+            }`}
+          >
+            {message.sender === 'ai' && (
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-400 flex items-center justify-center">
+                <Bot className="h-4 w-4 text-white" />
+              </div>
+            )}
+
             <div
-              key={message.id}
-              className={`flex ${
-                message.role === "user" ? "justify-end" : "justify-start"
+              className={`rounded-lg p-3 max-w-[80%] ${
+                message.sender === 'ai'
+                  ? 'bg-gray-100 text-gray-800 dark:bg-[#122C4B] dark:text-gray-100'
+                  : 'bg-indigo-500 text-white ml-auto'
               }`}
             >
-              <div
-                className={`flex gap-3 max-w-[80%] group ${
-                  message.role === "user" ? "flex-row-reverse" : ""
-                }`}
-              >
-                {/* Avatar */}
-                <Avatar
-                  className={`w-8 h-8 rounded-full flex-shrink-0 ${
-                    message.role === "assistant"
-                      ? "bg-[#FF6B00]"
-                      : theme === "dark"
-                      ? "bg-[#29335C]"
-                      : "bg-gray-200"
-                  }`}
-                >
-                  {message.role === "assistant" ? (
-                    <Brain className="h-4 w-4 text-white" />
-                  ) : (
-                    <User className="h-4 w-4 text-white" />
-                  )}
-                </Avatar>
+              <p className="whitespace-pre-wrap">{message.content}</p>
+              <p className="text-xs opacity-50 mt-1">
+                {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </p>
+            </div>
 
-                {/* Conteúdo da mensagem */}
-                <div>
-                  <div
-                    className={`relative p-3 rounded-lg ${
-                      message.role === "assistant"
-                        ? theme === "dark"
-                          ? "bg-[#29335C]/50 text-white"
-                          : "bg-white text-[#29335C] border border-gray-200"
-                        : theme === "dark"
-                        ? "bg-[#FF6B00]/90 text-white"
-                        : "bg-[#FF6B00] text-white"
-                    }`}
-                  >
-                    <p className="whitespace-pre-wrap">{message.content}</p>
-                    <div
-                      className={`flex justify-between items-center mt-2 text-xs ${
-                        message.role === "assistant"
-                          ? "text-gray-400"
-                          : "text-white/70"
-                      }`}
-                    >
-                      <span>{formatMessageTime(message.createdAt)}</span>
-                    </div>
-                  </div>
+            {message.sender === 'user' && (
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center">
+                <User className="h-4 w-4 text-indigo-600 dark:text-indigo-300" />
+              </div>
+            )}
+          </div>
+        ))}
 
-                  {/* Ações da mensagem (aparece apenas em hover) */}
-                  {message.role === "assistant" && (
-                    <div className="flex gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={() => copyMessageToClipboard(message.content)}
-                      >
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6">
-                        <ThumbsUp className="h-3 w-3" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6">
-                        <ThumbsDown className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
+        {isLoading && (
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-400 flex items-center justify-center">
+              <Bot className="h-4 w-4 text-white" />
+            </div>
+            <div className="rounded-lg p-3 bg-gray-100 text-gray-800 dark:bg-[#122C4B] dark:text-gray-100">
+              <div className="flex items-center space-x-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Processando...</span>
               </div>
             </div>
-          ))}
-
-          {/* Indicador de digitação */}
-          {isTyping && (
-            <div className="flex justify-start">
-              <div className="flex gap-3 max-w-[80%]">
-                <Avatar className="w-8 h-8 rounded-full flex-shrink-0 bg-[#FF6B00]">
-                  <Brain className="h-4 w-4 text-white" />
-                </Avatar>
-                <div
-                  className={`p-3 rounded-lg ${
-                    theme === "dark"
-                      ? "bg-[#29335C]/50 text-white"
-                      : "bg-white text-[#29335C] border border-gray-200"
-                  }`}
-                >
-                  <div className="flex gap-1 items-center">
-                    <div className="w-2 h-2 bg-[#FF6B00] rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                    <div className="w-2 h-2 bg-[#FF6B00] rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                    <div className="w-2 h-2 bg-[#FF6B00] rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Elemento para scroll automático */}
-          <div ref={messagesEndRef} />
-        </div>
-      </ScrollArea>
+          </div>
+        )}
+      </div>
 
       {/* Área de input */}
-      <div
-        className={`p-4 border-t ${
-          theme === "dark"
-            ? "border-gray-800 bg-[#0A2540]"
-            : "border-gray-200 bg-white"
-        }`}
-      >
-        <div className="flex items-center gap-2">
-          <Input
-            ref={inputRef}
-            placeholder="Digite sua mensagem..."
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className={`flex-1 ${
-              theme === "dark"
-                ? "bg-[#29335C]/20 border-gray-700 text-white"
-                : "bg-white border-gray-200 text-[#29335C]"
-            }`}
-          />
-          <Button
-            onClick={handleSendMessage}
-            className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
-            disabled={!inputMessage.trim() || isTyping}
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {/* Sugestões rápidas */}
-        <div className="flex flex-wrap gap-2 mt-3">
-          {[
-            "Como criar um plano de estudos?",
-            "Explique a fotossíntese",
-            "Fórmulas de Física",
-            "Dicas para o ENEM",
-          ].map((suggestion, index) => (
-            <Button
-              key={index}
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setInputMessage(suggestion);
-                inputRef.current?.focus();
-              }}
-              className={`text-xs ${
-                theme === "dark"
-                  ? "text-white/60 border-gray-700 hover:bg-[#29335C]/20"
-                  : "text-[#64748B] border-gray-200 hover:bg-gray-100"
-              }`}
-            >
-              {suggestion}
-            </Button>
-          ))}
-        </div>
+      <div className="p-3 border-t flex items-end gap-2">
+        <Textarea
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Digite sua mensagem..."
+          className="resize-none min-h-[50px] max-h-[150px] flex-1"
+          disabled={isLoading}
+        />
+        <Button 
+          onClick={handleSendMessage}
+          disabled={isLoading || !input.trim()} 
+          size="icon"
+        >
+          <SendIcon className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );
-}
+};
+
+export default EpictusChatInterface;
