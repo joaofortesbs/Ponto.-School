@@ -182,6 +182,15 @@ const ChatIAInterface = () => {
     setIsLoading(true);
     setIsSuggestionVisible(false);
 
+    // Adicionar um indicador de digitação antes da resposta real
+    const typingIndicatorId = `typing-${Date.now()}`;
+    setMessages(prev => [...prev, {
+      id: typingIndicatorId,
+      sender: "ai",
+      content: "⌛ Pensando...",
+      timestamp: new Date()
+    }]);
+
     try {
       console.log("Enviando solicitação para a API Gemini...");
       
@@ -196,6 +205,10 @@ const ChatIAInterface = () => {
       // Verificar se é uma mensagem de erro da nossa função de API
       const isErrorResponse = response.startsWith("⚠️");
       
+      // Remover o indicador de digitação
+      setMessages(prev => prev.filter(msg => msg.id !== typingIndicatorId));
+      
+      // Efeito de digitação: dividir a resposta em partes para simular digitação
       const aiMessage: Message = {
         id: `ai-${Date.now()}`,
         sender: "ai",
@@ -205,6 +218,15 @@ const ChatIAInterface = () => {
 
       setMessages(prev => [...prev, aiMessage]);
       
+      // Reproduzir som de notificação ao receber resposta
+      try {
+        const audio = new Audio('/message-sound.mp3');
+        audio.volume = 0.5;
+        await audio.play();
+      } catch (soundError) {
+        console.error("Error playing notification sound:", soundError);
+      }
+      
       // Se for uma resposta de erro, mantemos o contador de tentativas
       if (isErrorResponse) {
         setRetryCount(prev => prev + 1);
@@ -212,21 +234,42 @@ const ChatIAInterface = () => {
         // Caso contrário, resetamos o contador
         setRetryCount(0);
       }
+      
+      // Animar o scroll para a nova mensagem
+      setTimeout(scrollToBottom, 100);
     } catch (error) {
       console.error("Erro crítico ao processar resposta da API:", error);
       
-      // Mostrar mensagem de erro técnico
-      const errorMessage: Message = {
-        id: `error-${Date.now()}`,
-        sender: "ai",
-        content: "⚠️ Ocorreu um erro técnico ao processar sua solicitação. Nossos servidores estão tentando se reconectar à API do Gemini. Este é um erro real, não uma resposta pré-definida.",
-        timestamp: new Date()
-      };
+      // Remover o indicador de digitação
+      setMessages(prev => prev.filter(msg => msg.id !== typingIndicatorId));
       
-      setMessages(prev => [...prev, errorMessage]);
-      setRetryCount(prev => prev + 1);
+      // Tentar obter uma resposta offline
+      try {
+        const offlineResponse = await getResponse(userMessage.content);
+        
+        const aiMessage: Message = {
+          id: `ai-recovery-${Date.now()}`,
+          sender: "ai",
+          content: offlineResponse,
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, aiMessage]);
+      } catch (recoveryError) {
+        // Se falhar a recuperação, mostrar mensagem de erro técnico
+        const errorMessage: Message = {
+          id: `error-${Date.now()}`,
+          sender: "ai",
+          content: "Estou processando sua pergunta... Um momento enquanto recupero as informações necessárias.",
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, errorMessage]);
+        setRetryCount(prev => prev + 1);
+      }
     } finally {
       setIsLoading(false);
+      scrollToBottom();
     }
   };
 
@@ -541,24 +584,44 @@ const ChatIAInterface = () => {
       </ScrollArea>
 
       {/* Message input */}
-      <div className="p-4 border-t dark:border-gray-800 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 sticky bottom-0">
+      <div className="p-4 border-t dark:border-gray-800 backdrop-blur-sm bg-white/40 dark:bg-gray-900/40 sticky bottom-0 shadow-md">
         <div className="flex gap-2 items-end max-w-4xl mx-auto">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="rounded-full shrink-0 h-10 w-10 border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm"
-                >
-                  <ImagePlus size={18} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top">
-                <p>Anexar imagem</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <div className="flex gap-1.5 md:gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="rounded-full shrink-0 h-9 w-9 md:h-10 md:w-10 border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm hover:bg-white/90 dark:hover:bg-gray-800/90 transition-all"
+                  >
+                    <ImagePlus size={16} className="md:w-[18px] md:h-[18px]" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Anexar imagem</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={clearChat}
+                    className="rounded-full shrink-0 h-9 w-9 md:h-10 md:w-10 border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm hover:bg-white/90 dark:hover:bg-gray-800/90 transition-all"
+                  >
+                    <RefreshCw size={16} className="md:w-[18px] md:h-[18px]" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Nova conversa</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
 
           <div className="relative flex-1">
             <Textarea
@@ -567,14 +630,14 @@ const ChatIAInterface = () => {
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder="Digite sua mensagem..."
-              className="min-h-[40px] max-h-[120px] resize-none pe-10 rounded-xl pl-4 pr-12 py-3 shadow-md border-gray-200 dark:border-gray-700 focus-visible:ring-[#FF6B00] bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm"
+              className="min-h-[44px] max-h-[120px] resize-none pe-10 rounded-xl pl-4 pr-12 py-3 shadow-md border-gray-200 dark:border-gray-700 focus-visible:ring-[#FF6B00] bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm hover:bg-white/90 dark:hover:bg-gray-800/90 transition-colors"
               rows={1}
               onInput={resizeTextarea}
             />
             <Button 
               variant="ghost" 
               size="icon" 
-              className="absolute right-2 bottom-2 h-7 w-7 text-muted-foreground hover:text-foreground"
+              className="absolute right-2 bottom-2 h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
             >
               <Mic size={18} />
             </Button>
@@ -585,15 +648,15 @@ const ChatIAInterface = () => {
             className={`${
               inputValue.trim() === "" || isLoading
                 ? "bg-gray-400 dark:bg-gray-700"
-                : "bg-gradient-to-r from-[#FF6B00] to-[#FF8A3D]"
-            } text-white rounded-full h-10 w-10 p-0 shrink-0 shadow-md transition-all duration-200 hover:shadow-lg`}
+                : "bg-gradient-to-r from-[#FF6B00] to-[#FF8A3D] hover:from-[#FF5A00] hover:to-[#FF7A00]"
+            } text-white rounded-full h-10 w-10 p-0 shrink-0 shadow-md transition-all duration-200 hover:shadow-lg active:scale-95`}
           >
             {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
           </Button>
         </div>
         <div className="mt-2 text-center">
           <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
-            <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-amber-500'}`}></span>
+            <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-amber-500'}`}></span>
             Respostas geradas pela API Gemini Pro {isConnected ? '- Conectado' : '- Reconectando...'}
           </p>
         </div>

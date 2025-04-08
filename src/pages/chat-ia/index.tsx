@@ -14,29 +14,61 @@ export default function ChatIAPage() {
         // Verificar se a API do Gemini está acessível
         const API_KEY = "AIzaSyBSRpPQPyK6H96Z745ICsFtKzsTFdKpxWU";
         
-        // Usar AbortController para limitar o tempo de espera
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos de timeout
+        // Verificar múltiplos endpoints para aumentar chances de sucesso
+        const endpoints = [
+          // Endpoint v1beta (mais recente)
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`,
+          // Endpoint v1 (mais estável)
+          `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${API_KEY}`,
+          // Endpoint de listagem de modelos (mais leve)
+          `https://generativelanguage.googleapis.com/v1/models?key=${API_KEY}`
+        ];
         
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${API_KEY}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          signal: controller.signal,
-          cache: 'no-store' // Desativar cache para ter resposta atual
+        // Verificar todos os endpoints em paralelo
+        const requests = endpoints.map(endpoint => {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 segundos de timeout
+          
+          return fetch(endpoint, {
+            method: endpoint.includes('models?') ? 'GET' : 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: endpoint.includes('models?') ? undefined : JSON.stringify({
+              contents: [{ parts: [{ text: "Hello" }] }],
+              generationConfig: { temperature: 0.1, maxOutputTokens: 20 }
+            }),
+            signal: controller.signal,
+            cache: 'no-store'
+          })
+            .then(response => {
+              clearTimeout(timeoutId);
+              return { endpoint, status: response.status, ok: response.ok };
+            })
+            .catch(error => {
+              clearTimeout(timeoutId);
+              return { endpoint, status: 0, ok: false, error };
+            });
         });
         
-        clearTimeout(timeoutId);
+        // Esperar pelo primeiro endpoint que responder ou por todos falharem
+        const results = await Promise.all(requests);
+        const successResult = results.find(result => result.ok);
         
-        if (response.ok) {
-          console.log("API do Gemini verificada com sucesso");
+        if (successResult) {
+          console.log("API do Gemini verificada com sucesso via:", successResult.endpoint);
           setApiStatus('available');
           
-          // Fazer um pequeno teste com uma chamada real
+          // Não é necessário fazer teste adicional se já tivemos sucesso em uma chamada
+          if (!successResult.endpoint.includes('models?')) {
+            return; // Se foi endpoint de geração, já temos confirmação suficiente
+          }
+          
+          // Fazer um pequeno teste com uma chamada real só se usamos o endpoint de listagem
           await testGeminiAPI(API_KEY);
         } else {
-          console.warn("API do Gemini respondeu com status:", response.status);
+          console.warn("Todos os endpoints da API do Gemini falharam:", 
+            results.map(r => `${r.endpoint.split('/').pop()}: ${r.status}`).join(', '));
           setApiStatus('unavailable');
         }
       } catch (error) {
@@ -49,30 +81,43 @@ export default function ChatIAPage() {
     const testGeminiAPI = async (apiKey: string) => {
       try {
         const testMessage = "test connection";
-        const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`;
+        // Tentar primeiro v1beta, depois v1 como fallback
+        const urls = [
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`,
+          `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`
+        ];
         
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
-        
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: testMessage }] }],
-            generationConfig: { temperature: 0.1, maxOutputTokens: 50 }
-          }),
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log("Teste de API bem-sucedido:", data ? "Resposta recebida" : "Sem dados");
-        } else {
-          console.warn("Teste de API falhou com status:", response.status);
+        for (const url of urls) {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 8000);
+          
+          try {
+            const response = await fetch(url, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: testMessage }] }],
+                generationConfig: { temperature: 0.1, maxOutputTokens: 20 }
+              }),
+              signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (response.ok) {
+              const data = await response.json();
+              console.log("Teste de API bem-sucedido via:", url.split('/').pop(), 
+                          data ? "Resposta recebida" : "Sem dados");
+              return; // Sucesso, sair do loop
+            } else {
+              console.warn("Teste de API falhou com status:", response.status, "para", url.split('/').pop());
+            }
+          } catch (innerError) {
+            clearTimeout(timeoutId);
+            console.warn("Erro no teste para", url.split('/').pop(), ":", innerError);
+          }
         }
       } catch (error) {
         console.warn("Erro no teste de chamada à API:", error);
@@ -88,7 +133,7 @@ export default function ChatIAPage() {
         console.log("Timeout atingido na verificação da API");
         setApiStatus('unavailable');
       }
-    }, 15000); // 15 segundos para timeout total
+    }, 10000); // 10 segundos para timeout total
     
     // Limpar timeout
     return () => clearTimeout(timeout);
