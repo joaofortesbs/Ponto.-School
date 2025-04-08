@@ -80,21 +80,40 @@ const ChatIAInterface = () => {
     // Verificar conectividade com a API
     const checkConnection = async () => {
       try {
-        const response = await fetch("https://generativelanguage.googleapis.com/v1/models?key=AIzaSyDaMGN00DG-3KHgV9b7Fm_SHGvfruuMdgM", {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
+        const response = await fetch("https://generativelanguage.googleapis.com/v1/models?key=AIzaSyBSRpPQPyK6H96Z745ICsFtKzsTFdKpxWU", {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
-          }
+          },
+          signal: controller.signal
         });
-        setIsConnected(response.ok);
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          console.log("Conectado com sucesso à API Gemini");
+          setIsConnected(true);
+        } else {
+          console.warn("API Gemini respondeu com status:", response.status);
+          setIsConnected(false);
+        }
       } catch (error) {
         console.error("Erro ao verificar conectividade:", error);
         setIsConnected(false);
       }
     };
 
+    // Verificar conectividade ao carregar e a cada 2 minutos
     checkConnection();
-  }, [messages]);
+
+    // Programar verificações periódicas de conectividade para manter o status atualizado
+    const intervalId = setInterval(checkConnection, 120000); // A cada 2 minutos
+
+    return () => clearInterval(intervalId); // Limpar o intervalo ao desmontar o componente
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

@@ -10,7 +10,7 @@ export default function ChatIAPage() {
     const preloadGeminiAPI = async () => {
       try {
         // Verificar se a API do Gemini está acessível
-        const API_KEY = "AIzaSyDaMGN00DG-3KHgV9b7Fm_SHGvfruuMdgM";
+        const API_KEY = "AIzaSyBSRpPQPyK6H96Z745ICsFtKzsTFdKpxWU";
         const response = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${API_KEY}`, {
           method: 'GET',
           headers: {

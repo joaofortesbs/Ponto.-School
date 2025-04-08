@@ -41,15 +41,15 @@ export const generateAIResponse = async (
 
 // Função para interagir com a API do Gemini
 export const getResponse = async (message: string): Promise<string> => {
-  // API Key fixa para garantir o funcionamento
-  const apiKey = "AIzaSyDaMGN00DG-3KHgV9b7Fm_SHGvfruuMdgM";
-  
+  // API Key fixa para garantir o funcionamento com a nova chave
+  const apiKey = "AIzaSyBSRpPQPyK6H96Z745ICsFtKzsTFdKpxWU";
+
   try {
-    console.log("Iniciando requisição para API Gemini...");
-    
+    console.log("Iniciando requisição para API Gemini com nova chave...");
+
     // URL da API Gemini
     const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`;
-    
+
     // Preparar corpo da requisição com configurações otimizadas
     const requestBody = {
       contents: [
@@ -66,36 +66,72 @@ export const getResponse = async (message: string): Promise<string> => {
         topK: 40,
         topP: 0.95,
         maxOutputTokens: 2048,
-      }
+      },
+      safetySettings: [
+        {
+          category: "HARM_CATEGORY_HARASSMENT",
+          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        },
+        {
+          category: "HARM_CATEGORY_HATE_SPEECH",
+          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        },
+        {
+          category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        },
+        {
+          category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        }
+      ]
     };
-    
+
+    // Utilizar timeout para não bloquear a interface por muito tempo
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos de timeout
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify(requestBody),
+      signal: controller.signal
     });
-    
+
+    clearTimeout(timeoutId); // Limpar o timeout se a resposta for recebida
+
     if (!response.ok) {
+      console.error("Erro na resposta da API:", response.status, response.statusText);
       // Em vez de lançar erro, vamos usar respostas pré-definidas
       return getLocalResponse(message);
     }
-    
+
     const data = await response.json();
-    console.log("Resposta da API Gemini:", data);
-    
-    // Extrair texto da resposta
-    if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+    console.log("Resposta da API Gemini recebida com sucesso");
+
+    // Extrair texto da resposta com validação mais robusta
+    if (data.candidates && data.candidates.length > 0 && 
+        data.candidates[0].content && 
+        data.candidates[0].content.parts && 
+        data.candidates[0].content.parts.length > 0) {
       return data.candidates[0].content.parts[0].text;
     } else if (data.content && data.content.parts && data.content.parts.length > 0) {
       return data.content.parts[0].text;
     } else {
+      console.warn("Formato de resposta da API não reconhecido:", data);
       // Em vez de lançar erro, usar resposta local
       return getLocalResponse(message);
     }
   } catch (error) {
     console.error("Erro ao chamar a API Gemini:", error);
+
+    // Verificar se é um erro de timeout/abort
+    if (error.name === 'AbortError') {
+      return "A conexão com a API Gemini excedeu o tempo limite. Por favor, tente novamente. Estou trabalhando para melhorar a velocidade de resposta.";
+    }
+
     return getLocalResponse(message);
   }
 };
@@ -148,7 +184,7 @@ const getResponseWithProxy = async (message: string): Promise<string> => {
     `Sua pergunta sobre "${message.substring(0, 20)}..." é relevante. Deixe-me explicar alguns pontos principais sobre este assunto.`,
     `Analisando sua questão sobre "${message.substring(0, 20)}...", existem diferentes perspectivas a considerar.`
   ];
-  
+
   return demoResponses[Math.floor(Math.random() * demoResponses.length)];
 };
 
