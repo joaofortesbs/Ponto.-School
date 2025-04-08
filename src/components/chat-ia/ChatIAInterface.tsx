@@ -163,41 +163,20 @@ const ChatIAInterface = () => {
     setIsLoading(true);
     setIsSuggestionVisible(false);
 
-    try {
-      // Usando a API do Gemini através do serviço epictusIAService
-      const response = await getResponse(userMessage.content);
+    // Usando a API do Gemini através do serviço epictusIAService
+    // A função getResponse agora sempre retorna uma resposta, mesmo em caso de erro
+    const response = await getResponse(userMessage.content);
 
-      const aiMessage: Message = {
-        id: `ai-${Date.now()}`,
-        sender: "ai",
-        content: response,
-        timestamp: new Date()
-      };
+    const aiMessage: Message = {
+      id: `ai-${Date.now()}`,
+      sender: "ai",
+      content: response,
+      timestamp: new Date()
+    };
 
-      setMessages(prev => [...prev, aiMessage]);
-      setRetryCount(0); // Reset retry count on success
-    } catch (error) {
-      console.error("Erro ao processar mensagem:", error);
-      setRetryCount(prev => prev + 1);
-
-      let errorMessage: string;
-      if (retryCount >= 2) {
-        errorMessage = "Estamos enfrentando dificuldades persistentes na conexão com a API do Gemini. Por favor, tente novamente mais tarde ou verifique sua conexão com a internet.";
-      } else {
-        errorMessage = "Desculpe, tive um problema ao processar sua mensagem. Tentarei novamente em instantes. Você pode reformular a pergunta ou ser mais específico?";
-      }
-
-      const errorResponse: Message = {
-        id: `error-${Date.now()}`,
-        sender: "ai",
-        content: errorMessage,
-        timestamp: new Date()
-      };
-
-      setMessages(prev => [...prev, errorResponse]);
-    } finally {
-      setIsLoading(false);
-    }
+    setMessages(prev => [...prev, aiMessage]);
+    setRetryCount(0); // Reset retry count on success
+    setIsLoading(false);
   };
 
   const handleSuggestionClick = (suggestion: string) => {
