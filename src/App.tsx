@@ -32,7 +32,7 @@ import Configuracoes from "@/pages/configuracoes";
 import PlanosEstudo from "@/pages/planos-estudo";
 import Portal from "@/pages/portal";
 import GruposEstudo from "@/pages/turmas/grupos";
-import ChatIA from "@/pages/chat-ia";
+
 
 // Auth Pages
 import LoginPage from "@/pages/auth/login";
@@ -51,7 +51,7 @@ function App() {
 
   useEffect(() => {
     console.log("App carregado com sucesso!");
-    
+
     // Verificação de autenticação simplificada
     const checkAuth = async () => {
       try {
@@ -100,7 +100,6 @@ function App() {
               <Route path="comunidades" element={<Comunidades />} />
               <Route path="pedidos-ajuda" element={<PedidosAjuda />} />
               <Route path="epictus-ia" element={<EpictusIA />} />
-              <Route path="chat-ia" element={<ChatIA />} />
               <Route path="agenda" element={<Agenda />} />
               <Route path="biblioteca" element={<Biblioteca />} />
               <Route path="mercado" element={<Mercado />} />
@@ -115,7 +114,7 @@ function App() {
 
             {/* User Profile */}
             <Route path="/profile" element={<ProfilePage />} />
-            
+
             {/* Agenda standalone */}
             <Route path="/agenda-preview" element={<Agenda />} />
             <Route path="/agenda-standalone" element={<Agenda />} />
