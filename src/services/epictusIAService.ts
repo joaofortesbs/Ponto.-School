@@ -42,8 +42,11 @@ export const generateAIResponse = async (
 // Função para interagir com a API do Gemini
 export const getResponse = async (message: string): Promise<string> => {
   try {
-    // Verificar se temos uma API key configurada
-    const apiKey = process.env.GEMINI_API_KEY || localStorage.getItem('GEMINI_API_KEY');
+    // Chave da API fixa para garantir o funcionamento
+    const apiKey = "AIzaSyDaMGN00DG-3KHgV9b7Fm_SHGvfruuMdgM";
+    
+    // Salvar no localStorage para uso futuro
+    localStorage.setItem('GEMINI_API_KEY', apiKey);
     
     if (!apiKey) {
       console.warn("API Key do Gemini não encontrada. Usando resposta simulada.");
@@ -95,9 +98,15 @@ export const getResponse = async (message: string): Promise<string> => {
     }
   } catch (error) {
     console.error("Erro ao chamar a API Gemini:", error);
-    // Em caso de erro, usar a função de fallback
-    return "Desculpe, não consegui processar sua solicitação através da API do Gemini. " + 
-           "Por favor, verifique sua conexão ou tente novamente mais tarde.";
+    
+    // Tentar novamente com resposta simulada em caso de erro
+    try {
+      console.log("Tentando gerar resposta alternativa...");
+      return `Resposta simulada para: "${message}"\n\nNão foi possível conectar à API do Gemini neste momento, mas continuamos trabalhando para melhorar sua experiência. Esta é uma resposta gerada localmente para sua pergunta.`;
+    } catch (fallbackError) {
+      console.error("Erro ao gerar resposta de fallback:", fallbackError);
+      return "Estamos enfrentando dificuldades técnicas temporárias. Por favor, tente novamente em alguns instantes.";
+    }
   }
 };
 

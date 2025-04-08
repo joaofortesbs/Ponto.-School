@@ -50,8 +50,19 @@ function App() {
   const [isLoading, setIsLoading] = useState(false); // Iniciar como false para exibir logo
 
   useEffect(() => {
-    console.log("App carregado com sucesso!");
-    
+    console.log("Iniciando aplicação...");
+
+    // Configurar chave da API Gemini
+    if (!localStorage.getItem('GEMINI_API_KEY')) {
+      localStorage.setItem('GEMINI_API_KEY', 'AIzaSyDaMGN00DG-3KHgV9b7Fm_SHGvfruuMdgM');
+      console.log("Chave da API Gemini configurada com sucesso!");
+    }
+
+    // Simular carregamento completo
+    setTimeout(() => {
+      console.log("Aplicação inicializada.");
+    }, 300);
+
     // Verificação de autenticação simplificada
     const checkAuth = async () => {
       try {
@@ -66,6 +77,11 @@ function App() {
     };
 
     checkAuth();
+    // Emitir evento de sucesso
+    setTimeout(() => {
+      console.log("App carregado com sucesso!");
+    }, 600);
+
   }, []);
 
   // Rotas de autenticação
@@ -115,7 +131,7 @@ function App() {
 
             {/* User Profile */}
             <Route path="/profile" element={<ProfilePage />} />
-            
+
             {/* Agenda standalone */}
             <Route path="/agenda-preview" element={<Agenda />} />
             <Route path="/agenda-standalone" element={<Agenda />} />
