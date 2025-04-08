@@ -15,7 +15,7 @@ let chatHistory: ChatMessage[] = [];
 export const generateAIResponse = async (
   userInput: string,
   apiKey?: string
-): Promise<string> {
+): Promise<string> => {
   // Respostas pré-definidas para não depender de API externa
   const responses = [
     "Estou processando sua pergunta... Poderia fornecer mais detalhes?",
