@@ -169,22 +169,7 @@ export function RegisterForm() {
       const effectiveGrade =
         formData.grade === "outra" ? formData.customGrade : formData.grade;
 
-      console.log("Attempting signup with:", {
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            full_name: formData.fullName,
-            username: formData.username,
-            institution: formData.institution,
-            class_group: effectiveClassGroup,
-            grade: effectiveGrade,
-            birth_date: formData.birthDate,
-            plan_type: plan,
-            display_name: formData.username, // Set display_name to username by default
-          },
-        },
-      });
+      // Signup com apenas os campos necessários para o trigger automático
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -194,11 +179,9 @@ export function RegisterForm() {
             full_name: formData.fullName,
             username: formData.username,
             institution: formData.institution,
-            class_group: effectiveClassGroup,
-            grade: effectiveGrade,
             birth_date: formData.birthDate,
             plan_type: plan,
-            display_name: formData.username, // Set display_name to username by default
+            display_name: formData.username,
           },
         },
       });
@@ -212,29 +195,20 @@ export function RegisterForm() {
       }
 
       if (data?.user) {
-        // Create a profile record with the display_name set to username
-        const { error: profileError } = await supabase.from("profiles").upsert([
-          {
-            id: data.user.id,
-            full_name: formData.fullName,
-            username: formData.username,
-            email: formData.email,
-            institution: formData.institution,
-            class_group: effectiveClassGroup,
-            grade: effectiveGrade,
-            birth_date: formData.birthDate,
-            plan_type: plan,
-            display_name: formData.username, // Set display_name to username explicitly
-            user_id: userId, // Add the generated user ID
-            level: 1, // Default level
-            rank: "Aprendiz", // Default rank
-          },
-        ], {
-          onConflict: 'id'
-        });
+        // Atualizamos o perfil apenas com campos extras, o trigger já criou o registro básico
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({
+            user_id: userId,
+            level: 1,
+            rank: "Aprendiz",
+            display_name: formData.username,
+          })
+          .eq("id", data.user.id);
 
         if (profileError) {
-          console.error("Profile creation error:", profileError);
+          console.error("Profile update error:", profileError);
+          // Não falharemos o registro por erro no update
         }
 
         navigate("/login");

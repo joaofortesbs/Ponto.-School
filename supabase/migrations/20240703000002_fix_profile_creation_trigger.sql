@@ -2,7 +2,7 @@
 -- Drop existing trigger
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 
--- Create or replace the function with all fields
+-- Create or replace the function with proper fields matching the profiles table
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -14,9 +14,7 @@ BEGIN
     display_name,
     institution,
     birth_date,
-    plan_type,
-    level,
-    rank
+    plan_type
   )
   VALUES (
     NEW.id,
@@ -31,9 +29,7 @@ BEGIN
     ),
     NEW.raw_user_meta_data->>'institution',
     (NEW.raw_user_meta_data->>'birth_date')::DATE,
-    NEW.raw_user_meta_data->>'plan_type',
-    1,
-    'Aprendiz'
+    NEW.raw_user_meta_data->>'plan_type'
   );
   RETURN NEW;
 END;
