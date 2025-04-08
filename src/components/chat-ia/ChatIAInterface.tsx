@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { 
   Send, 
@@ -77,7 +76,7 @@ const ChatIAInterface = () => {
 
   useEffect(() => {
     scrollToBottom();
-    
+
     // Verificar conectividade com a API
     const checkConnection = async () => {
       try {
@@ -93,7 +92,7 @@ const ChatIAInterface = () => {
         setIsConnected(false);
       }
     };
-    
+
     checkConnection();
   }, [messages]);
 
@@ -129,7 +128,7 @@ const ChatIAInterface = () => {
           description: "O conteúdo da mensagem foi copiado para a área de transferência.",
           duration: 3000,
         });
-        
+
         // Reset copied state after 3 seconds
         setTimeout(() => {
           setCopiedMessageId(null);
@@ -226,20 +225,20 @@ const ChatIAInterface = () => {
 
   const retryLastMessage = async () => {
     if (messages.length < 2) return;
-    
+
     // Find the last user message
     const lastUserMessageIndex = [...messages].reverse().findIndex(m => m.sender === "user");
     if (lastUserMessageIndex === -1) return;
-    
+
     const lastUserMessage = [...messages].reverse()[lastUserMessageIndex];
-    
+
     // Remove the last AI response if it was an error
     if (messages[messages.length - 1].sender === "ai") {
       setMessages(prev => prev.slice(0, -1));
     }
-    
+
     setIsLoading(true);
-    
+
     try {
       const response = await getResponse(lastUserMessage.content);
 
@@ -254,7 +253,7 @@ const ChatIAInterface = () => {
       setRetryCount(0);
     } catch (error) {
       console.error("Erro ao processar mensagem na tentativa:", error);
-      
+
       const errorMessage: Message = {
         id: `error-retry-${Date.now()}`,
         sender: "ai",
@@ -318,7 +317,7 @@ const ChatIAInterface = () => {
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon" className="rounded-full h-8 w-8">
@@ -395,7 +394,7 @@ const ChatIAInterface = () => {
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
-                      
+
                       {message.content.includes("Desculpe, tive um problema") || 
                        message.content.includes("Não foi possível conectar") && (
                         <TooltipProvider>
@@ -505,7 +504,7 @@ const ChatIAInterface = () => {
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          
+
           <div className="relative flex-1">
             <Textarea
               ref={textareaRef}
@@ -538,8 +537,9 @@ const ChatIAInterface = () => {
           </Button>
         </div>
         <div className="mt-2 text-center">
-          <p className="text-xs text-muted-foreground">
-            Respostas geradas pela API Gemini Pro. A IA aprende continuamente e pode evoluir com o tempo.
+          <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
+            <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-amber-500'}`}></span>
+            Respostas geradas pela API Gemini Pro {isConnected ? '- Conectado' : '- Reconectando...'}
           </p>
         </div>
       </div>

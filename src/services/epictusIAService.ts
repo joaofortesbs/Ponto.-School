@@ -41,18 +41,10 @@ export const generateAIResponse = async (
 
 // Função para interagir com a API do Gemini
 export const getResponse = async (message: string): Promise<string> => {
+  // API Key fixa para garantir o funcionamento
+  const apiKey = "AIzaSyDaMGN00DG-3KHgV9b7Fm_SHGvfruuMdgM";
+  
   try {
-    // Chave da API fixa para garantir o funcionamento
-    const apiKey = "AIzaSyDaMGN00DG-3KHgV9b7Fm_SHGvfruuMdgM";
-    
-    // Salvar no localStorage para uso futuro
-    localStorage.setItem('GEMINI_API_KEY', apiKey);
-    
-    if (!apiKey) {
-      console.warn("API Key do Gemini não encontrada. Usando resposta simulada.");
-      return generateAIResponse(message);
-    }
-    
     console.log("Iniciando requisição para API Gemini...");
     
     // URL da API Gemini
@@ -73,87 +65,88 @@ export const getResponse = async (message: string): Promise<string> => {
         temperature: 0.7,
         topK: 40,
         topP: 0.95,
-        maxOutputTokens: 1024,
+        maxOutputTokens: 2048,
       },
       safetySettings: [
         {
           category: "HARM_CATEGORY_HARASSMENT",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          threshold: "BLOCK_ONLY_HIGH"
         },
         {
           category: "HARM_CATEGORY_HATE_SPEECH",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          threshold: "BLOCK_ONLY_HIGH"
         },
         {
           category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          threshold: "BLOCK_ONLY_HIGH"
         },
         {
           category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          threshold: "BLOCK_ONLY_HIGH"
         }
       ]
     };
     
-    // Fazer a requisição com timeout mais longo
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos de timeout
-    
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Origin': window.location.origin
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify(requestBody),
-      signal: controller.signal
+      body: JSON.stringify(requestBody)
     });
     
-    clearTimeout(timeoutId);
-    
     if (!response.ok) {
-      console.error(`Erro HTTP: ${response.status} ${response.statusText}`);
       throw new Error(`Erro na API: ${response.status} ${response.statusText}`);
     }
     
     const data = await response.json();
-    console.log("Resposta recebida da API Gemini:", data);
+    console.log("Resposta da API Gemini:", data);
     
     // Extrair texto da resposta
     if (data.candidates && data.candidates[0] && data.candidates[0].content) {
       return data.candidates[0].content.parts[0].text;
     } else if (data.content && data.content.parts && data.content.parts.length > 0) {
-      // Formato alternativo da resposta
       return data.content.parts[0].text;
     } else {
-      console.error("Formato de resposta inesperado:", data);
       throw new Error("Formato de resposta inesperado da API Gemini");
     }
   } catch (error) {
     console.error("Erro ao chamar a API Gemini:", error);
     
-    // Se o erro for de CORS, tente com um proxy
-    if (error.message && error.message.includes('CORS')) {
-      try {
-        return await getResponseWithProxy(message);
-      } catch (proxyError) {
-        console.error("Erro ao usar proxy:", proxyError);
+    // Se houve um erro real na API, tente uma segunda vez com configurações simplificadas
+    try {
+      console.log("Tentando novamente com configurações simplificadas...");
+      const simplifiedUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`;
+      
+      const simplifiedRequestBody = {
+        contents: [{ parts: [{ text: message }] }]
+      };
+      
+      const retryResponse = await fetch(simplifiedUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(simplifiedRequestBody)
+      });
+      
+      if (retryResponse.ok) {
+        const retryData = await retryResponse.json();
+        if (retryData.candidates && retryData.candidates[0] && retryData.candidates[0].content) {
+          return retryData.candidates[0].content.parts[0].text;
+        }
       }
+      
+      // Se ainda falhar, lançar erro para tratamento no catch externo
+      throw error;
+    } catch (retryError) {
+      // Falha na tentativa de recuperação, mas não mostramos mensagem de erro ao usuário
+      console.error("Também falhou na segunda tentativa:", retryError);
+      
+      // Em caso de falha em ambas as tentativas, retorne uma mensagem informando o problema específico
+      // mas sem detalhes técnicos para o usuário final
+      return "Estou enfrentando problemas de conexão com meus servidores neste momento. Vou registrar este problema e trabalhar para resolvê-lo rapidamente. Você poderia tentar novamente em alguns instantes?";
     }
-    
-    // Se o erro for de timeout ou qualquer outro
-    if (error.name === 'AbortError') {
-      return "O tempo de resposta da API excedeu o limite. Por favor, tente novamente com uma pergunta mais curta.";
-    }
-    
-    // Resposta de fallback melhorada
-    return `Olá! Estou processando sua pergunta sobre "${message.substring(0, 30)}${message.length > 30 ? '...' : ''}". 
-    
-Como estou funcionando em modo local no momento, posso oferecer informações gerais sobre este assunto. 
-
-Para obter uma resposta mais detalhada, por favor tente novamente em alguns instantes quando a conexão com o Gemini for reestabelecida.
-
-Posso ajudar com alguma outra questão enquanto isso?`;
   }
 };
 
