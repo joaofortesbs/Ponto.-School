@@ -3,6 +3,8 @@ import { SidebarNav } from "@/components/sidebar/SidebarNav";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { profileService } from "@/services/profileService";
+import { UserProfile } from "@/types/user-profile";
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   isCollapsed?: boolean;
@@ -18,6 +20,7 @@ export default function Sidebar({
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(isCollapsed);
   const [customLogo, setCustomLogo] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     // Obter a imagem padrão da configuração global ou usar o valor padrão
@@ -136,9 +139,29 @@ export default function Sidebar({
     document.addEventListener("logoLoaded", handleLogoLoaded);
     document.addEventListener("logoLoadFailed", handleLogoLoadFailed);
 
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setSidebarCollapsed(true);
+      }
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    // Carregar perfil do usuário
+    const loadUserProfile = async () => {
+      const profile = await profileService.getCurrentUserProfile();
+      if (profile) {
+        setUserProfile(profile);
+      }
+    };
+
+    loadUserProfile();
+
     return () => {
       document.removeEventListener("logoLoaded", handleLogoLoaded);
       document.removeEventListener("logoLoadFailed", handleLogoLoadFailed);
+      window.removeEventListener("resize", handleResize);
     };
   }, []);
 
@@ -255,6 +278,11 @@ export default function Sidebar({
           onToggleCollapse={handleToggleCollapse}
           className="p-2"
         />
+        {userProfile && (
+          <div className="text-sm font-medium mt-4 ml-4">
+            {userProfile?.display_name || userProfile?.username || "Usuário"}
+          </div>
+        )}
       </aside>
     </>
   );

@@ -1,3 +1,4 @@
+
 import { supabase } from "@/lib/supabase";
 import { UserProfile } from "@/types/user-profile";
 
@@ -72,10 +73,17 @@ export const profileService = {
             user.user_metadata?.username ||
             user.user_metadata?.full_name ||
             user.email,
+          level: 1,
+          rank: "Aprendiz",
         },
       ])
       .select();
 
     return { data, error };
   },
+
+  async getUserDisplayName() {
+    const profile = await this.getCurrentUserProfile();
+    return profile?.display_name || profile?.username || profile?.full_name || "Usuário";
+  }
 };

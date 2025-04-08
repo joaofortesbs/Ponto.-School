@@ -229,7 +229,9 @@ export function RegisterForm() {
             level: 1, // Default level
             rank: "Aprendiz", // Default rank
           },
-        ]);
+        ], {
+          onConflict: 'id'
+        });
 
         if (profileError) {
           console.error("Profile creation error:", profileError);

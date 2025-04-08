@@ -985,7 +985,7 @@ export default function Header() {
   // Handle click outside of search dropdown
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      // Skip if we're generating suggestions or if the dropdown isn't open
+            // Skip if we're generating suggestions or if the dropdown isn't open
       if (isGeneratingAiSuggestions || !isSearchFocused) return;
 
       // Check if click is inside the dropdown or search input
@@ -1005,6 +1005,21 @@ export default function Header() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isSearchFocused, isGeneratingAiSuggestions]);
+
+  useEffect(() => {
+    const darkMode = localStorage.getItem("darkMode") === "true";
+    setIsDark(darkMode);
+
+    // Carregar perfil do usuário
+    const loadUserProfile = async () => {
+      const profile = await profileService.getCurrentUserProfile();
+      if (profile) {
+        setUserProfile(profile);
+      }
+    };
+
+    loadUserProfile();
+  }, []);
 
   return (
     <header className="w-full h-[72px] px-6 bg-white dark:bg-[#0A2540] border-b border-brand-border dark:border-white/10 flex items-center justify-between">

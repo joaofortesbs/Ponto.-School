@@ -1,8 +1,9 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Edit, Share2, Diamond, Camera } from "lucide-react";
 import type { UserProfile } from "@/types/user-profile";
+import { profileService } from "@/services/profileService"; // Added import
 
 interface ProfileHeaderProps {
   userProfile: UserProfile | null;
@@ -17,6 +18,7 @@ export default function ProfileHeader({
   const profileNameRef = useRef<HTMLHeadingElement>(null);
   const profileAvatarRef = useRef<HTMLDivElement>(null);
   const profileLevelRef = useRef<HTMLParagraphElement>(null);
+  const [displayName, setDisplayName] = useState(""); // Added state for display name
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -25,15 +27,12 @@ export default function ProfileHeader({
       const container = profileContainerRef.current;
       const rect = container.getBoundingClientRect();
 
-      // Calculate mouse position relative to the container center
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
 
-      // Calculate rotation based on mouse position
-      const rotateY = ((e.clientX - centerX) / (rect.width / 2)) * 5; // Max 5 degrees
-      const rotateX = ((e.clientY - centerY) / (rect.height / 2)) * -5; // Max 5 degrees
+      const rotateY = ((e.clientX - centerX) / (rect.width / 2)) * 5;
+      const rotateX = ((e.clientY - centerY) / (rect.height / 2)) * -5;
 
-      // Apply transforms to elements
       if (profileNameRef.current) {
         profileNameRef.current.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
         profileNameRef.current.style.textShadow = `${rotateY * 0.2}px ${rotateX * -0.2}px 1px rgba(0,0,0,0.2)`;
@@ -55,6 +54,27 @@ export default function ProfileHeader({
       document.removeEventListener("mousemove", handleMouseMove);
     };
   }, []);
+
+  useEffect(() => {
+    // Attempt to load display name.  Error handling is crucial here but omitted due to incomplete information.
+    const loadDisplayName = async () => {
+      try {
+        const name = await profileService.getUserDisplayName();
+        setDisplayName(name);
+      } catch (error) {
+        console.error("Error loading display name:", error);
+        setDisplayName("Usuário"); //Fallback
+      }
+    };
+
+    if (!userProfile?.display_name) {
+      loadDisplayName();
+    } else {
+      setDisplayName(userProfile.display_name);
+    }
+  }, [userProfile]);
+
+
   return (
     <div
       ref={profileContainerRef}
@@ -86,7 +106,7 @@ export default function ProfileHeader({
           ref={profileNameRef}
           className="text-xl font-bold text-[#29335C] dark:text-white profile-3d-element profile-3d-text"
         >
-          {userProfile?.display_name || userProfile?.username || "Usuário"}
+          {displayName || userProfile?.display_name || userProfile?.username || "Usuário"} {/* Display name prioritized */}
         </h2>
         <div className="flex items-center justify-center gap-1 mt-1">
           <p className="text-xs text-[#64748B] dark:text-white/60">
