@@ -103,6 +103,22 @@ export const profileService = {
 
   async getUserDisplayName() {
     try {
+      // Verificar primeiro o perfil do usuário atual (mais recente)
+      const currentProfile = localStorage.getItem('currentUserProfile');
+      if (currentProfile) {
+        try {
+          const profile = JSON.parse(currentProfile);
+          const displayName = profile.display_name || profile.username || profile.full_name || "Usuário";
+          
+          // Atualizar o cache para futuras consultas
+          localStorage.setItem('cachedUserDisplayName', displayName);
+          
+          return displayName;
+        } catch (parseErr) {
+          console.warn("Erro ao analisar perfil atual:", parseErr);
+        }
+      }
+      
       // Verificar se estamos em modo offline
       if (localStorage.getItem('isOfflineMode') === 'true') {
         console.log("Modo offline ativo, usando dados locais");
@@ -111,22 +127,6 @@ export const profileService = {
         const cachedName = localStorage.getItem('cachedUserDisplayName');
         if (cachedName) {
           return cachedName;
-        }
-        
-        // Verificar perfil atual no modo offline
-        const currentProfile = localStorage.getItem('currentUserProfile');
-        if (currentProfile) {
-          try {
-            const profile = JSON.parse(currentProfile);
-            const displayName = profile.display_name || profile.username || profile.full_name || "Usuário";
-            
-            // Atualizar o cache para futuras consultas
-            localStorage.setItem('cachedUserDisplayName', displayName);
-            
-            return displayName;
-          } catch (parseErr) {
-            console.warn("Erro ao analisar perfil atual:", parseErr);
-          }
         }
         
         // Tente obter do perfil temporário salvo
@@ -145,22 +145,69 @@ export const profileService = {
           }
         }
         
+        // Se ainda não encontrou, buscar na lista de perfis
+        try {
+          const localProfiles = localStorage.getItem('tempUserProfiles');
+          if (localProfiles) {
+            const profiles = JSON.parse(localProfiles);
+            // Pegar o primeiro perfil (normalmente seria o do usuário logado)
+            if (profiles.length > 0) {
+              const profile = profiles[0];
+              const displayName = profile.display_name || profile.username || profile.full_name || "Usuário";
+              localStorage.setItem('cachedUserDisplayName', displayName);
+              return displayName;
+            }
+          }
+        } catch (err) {
+          console.warn("Erro ao buscar nos perfis salvos:", err);
+        }
+        
         return "Usuário";
       }
       
-      // Se não estamos em modo offline, tentar obter o perfil da API normalmente
-      const profile = await this.getCurrentUserProfile();
-      
-      if (profile) {
-        // Armazenar em cache local para uso offline
-        try {
-          const displayName = profile.display_name || profile.username || profile.full_name || "Usuário";
-          localStorage.setItem('cachedUserDisplayName', displayName);
-          return displayName;
-        } catch (err) {
-          console.warn("Não foi possível armazenar nome em cache:", err);
-          return profile.display_name || profile.username || profile.full_name || "Usuário";
+      // Se não estamos em modo offline, tentar obter o perfil da API
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          // Tentar obter o perfil do banco de dados
+          const { data, error } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", user.id)
+            .single();
+          
+          if (data && !error) {
+            const displayName = data.display_name || data.username || data.full_name || "Usuário";
+            localStorage.setItem('cachedUserDisplayName', displayName);
+            
+            // Atualizar o perfil atual também
+            localStorage.setItem('currentUserProfile', JSON.stringify(data));
+            return displayName;
+          }
+          
+          // Se não encontrou o perfil, usar os metadados do usuário
+          if (user.user_metadata) {
+            const displayName = 
+              user.user_metadata.display_name || 
+              user.user_metadata.username || 
+              user.user_metadata.full_name || 
+              user.email || 
+              "Usuário";
+            
+            localStorage.setItem('cachedUserDisplayName', displayName);
+            return displayName;
+          }
+          
+          // Último recurso, usar email
+          if (user.email) {
+            const displayName = user.email.split('@')[0];
+            localStorage.setItem('cachedUserDisplayName', displayName);
+            return displayName;
+          }
         }
+      } catch (apiErr) {
+        console.warn("Erro ao obter perfil da API:", apiErr);
       }
       
       // Se o perfil não estiver disponível, tente obter do cache
@@ -169,54 +216,14 @@ export const profileService = {
         return cachedName;
       }
       
-      // Tente obter do perfil temporário salvo
-      try {
-        const tempProfile = localStorage.getItem('tempUserProfile');
-        if (tempProfile) {
-          const profile = JSON.parse(tempProfile);
-          const displayName = profile.display_name || profile.username || profile.full_name || "Usuário";
-          
-          // Atualizar o cache para futuras consultas
-          localStorage.setItem('cachedUserDisplayName', displayName);
-          
-          return displayName;
-        }
-        
-        // Verificar perfil atual no modo offline
-        const currentProfile = localStorage.getItem('currentUserProfile');
-        if (currentProfile) {
-          const profile = JSON.parse(currentProfile);
-          const displayName = profile.display_name || profile.username || profile.full_name || "Usuário";
-          
-          // Atualizar o cache para futuras consultas
-          localStorage.setItem('cachedUserDisplayName', displayName);
-          
-          return displayName;
-        }
-      } catch (parseErr) {
-        console.warn("Erro ao analisar perfil local:", parseErr);
-      }
-      
-      // Retornar valor padrão se todas as opções falharem
+      // Último recurso, retornar valor padrão
       return "Usuário";
     } catch (err) {
       console.error("Erro ao obter nome do usuário:", err);
       
-      // Em caso de erro, tentar os caches locais
-      try {
-        // Tentar obter do cache
-        const cachedName = localStorage.getItem('cachedUserDisplayName');
-        if (cachedName) return cachedName;
-        
-        // Tentar obter do perfil atual
-        const currentProfile = localStorage.getItem('currentUserProfile');
-        if (currentProfile) {
-          const profile = JSON.parse(currentProfile);
-          return profile.display_name || profile.username || profile.full_name || "Usuário";
-        }
-      } catch (fallbackErr) {
-        console.error("Erro no fallback local:", fallbackErr);
-      }
+      // Em caso de erro, tentar o cache
+      const cachedName = localStorage.getItem('cachedUserDisplayName');
+      if (cachedName) return cachedName;
       
       return "Usuário";
     }

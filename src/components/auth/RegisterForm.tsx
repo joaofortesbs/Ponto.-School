@@ -171,104 +171,104 @@ export function RegisterForm() {
 
       // Gerar um ID de usuário único baseado no timestamp e plano
       const userId = `BR${plan === "premium" ? 1 : 2}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-
-      // Verificar se é possível conectar ao Supabase
-      const { ok: isOnline } = await checkSupabaseConnection().catch(() => ({ ok: false }));
       
-      // Primeiro tente registrar o usuário no sistema de autenticação se estiver online
       let userData = null;
       let userError = null;
+      let isOnline = true;
 
-      if (isOnline) {
-        try {
-          // Tente registrar com o Supabase Auth
-          const { data, error } = await supabase.auth.signUp({
-            email: formData.email,
-            password: formData.password,
-            options: {
-              emailRedirectTo: `${window.location.origin}/login`,
-              data: {
-                full_name: formData.fullName,
-                username: formData.username,
-                institution: formData.institution,
-                birth_date: formData.birthDate,
-                plan_type: plan,
-                display_name: formData.username || formData.fullName,
-              },
+      try {
+        // Tente registrar o usuário diretamente, sem verificação prévia
+        const { data, error } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/login`,
+            data: {
+              full_name: formData.fullName,
+              username: formData.username || formData.fullName.split(' ')[0].toLowerCase(),
+              institution: formData.institution,
+              birth_date: formData.birthDate,
+              plan_type: plan,
+              display_name: formData.username || formData.fullName,
             },
-          });
+          },
+        });
 
-          userData = data;
-          userError = error;
-          
-          if (error) {
-            console.error("Signup error:", error);
-            if (!error.message.includes("fetch") && !error.message.includes("network")) {
-              // Se o erro não for de conectividade, mostre-o
-              setError(error.message || "Erro ao criar conta. Por favor, tente novamente.");
-              setLoading(false);
-              return;
-            }
+        userData = data;
+        userError = error;
+        
+        if (error) {
+          console.error("Signup error:", error);
+          if (error.message.includes("fetch") || error.message.includes("network") || error.message.includes("timeout") || error.status === 0) {
+            isOnline = false;
+            console.log("Detectada conexão offline, entrando em modo fallback");
+          } else {
+            // Outros tipos de erros (email já existe, etc)
+            setError(error.message || "Erro ao criar conta. Por favor, tente novamente.");
+            setLoading(false);
+            return;
           }
-        } catch (authError) {
-          console.error("Auth connection error:", authError);
-          // Continue com offline fallback
         }
+      } catch (authError) {
+        console.error("Auth connection error:", authError);
+        isOnline = false;
+      }
 
-        // Se conseguimos criar o usuário, tente criar o perfil
-        if (userData?.user) {
-          try {
-            // Criar o perfil no banco de dados
-            const { error: profileError } = await supabase
-              .from("profiles")
-              .insert([{
-                id: userData.user.id,
-                user_id: userId,
-                full_name: formData.fullName,
-                username: formData.username || formData.fullName.split(' ')[0].toLowerCase(),
-                email: formData.email,
-                display_name: formData.username || formData.fullName,
-                institution: formData.institution || '',
-                birth_date: formData.birthDate || null,
-                plan_type: plan,
-                level: 1,
-                rank: "Aprendiz",
-                xp: 0,
-                coins: 100
-              }]);
+      // Se conseguiu criar o usuário online, criar perfil
+      if (isOnline && userData?.user) {
+        try {
+          // Criar o perfil no banco de dados
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .insert([{
+              id: userData.user.id,
+              user_id: userId,
+              full_name: formData.fullName,
+              username: formData.username || formData.fullName.split(' ')[0].toLowerCase(),
+              email: formData.email,
+              display_name: formData.username || formData.fullName,
+              institution: formData.institution || '',
+              birth_date: formData.birthDate || null,
+              plan_type: plan,
+              level: 1,
+              rank: "Aprendiz",
+              xp: 0,
+              coins: 100
+            }]);
 
-            if (profileError) {
-              console.error("Profile creation error:", profileError);
-              // Se houver erro na criação do perfil, tente atualizar caso já exista
-              if (profileError.code === '23505') { // código de violação de unicidade
-                const { error: updateError } = await supabase
-                  .from("profiles")
-                  .update({
-                    user_id: userId,
-                    full_name: formData.fullName,
-                    username: formData.username || formData.fullName.split(' ')[0].toLowerCase(),
-                    institution: formData.institution || '',
-                    birth_date: formData.birthDate || null,
-                    plan_type: plan,
-                    level: 1,
-                    rank: "Aprendiz",
-                    display_name: formData.username || formData.fullName,
-                    coins: 100
-                  })
-                  .eq("id", userData.user.id);
+          if (profileError) {
+            console.error("Profile creation error:", profileError);
+            
+            // Tente atualizar o perfil se já existir
+            if (profileError.code === '23505') {
+              const { error: updateError } = await supabase
+                .from("profiles")
+                .update({
+                  user_id: userId,
+                  full_name: formData.fullName,
+                  username: formData.username || formData.fullName.split(' ')[0].toLowerCase(),
+                  institution: formData.institution || '',
+                  birth_date: formData.birthDate || null,
+                  plan_type: plan,
+                  level: 1,
+                  rank: "Aprendiz",
+                  display_name: formData.username || formData.fullName,
+                  coins: 100
+                })
+                .eq("id", userData.user.id);
 
-                if (updateError) {
-                  console.error("Profile update error:", updateError);
-                }
+              if (updateError) {
+                console.error("Profile update error:", updateError);
               }
             }
-          } catch (profileOpsError) {
-            console.error("Profile operations error:", profileOpsError);
           }
+        } catch (profileOpsError) {
+          console.error("Profile operations error:", profileOpsError);
+          // Continue mesmo com erro de perfil, para pelo menos ter o usuário criado
         }
       }
 
-      // Salvar no armazenamento local (para todos os casos, online ou offline)
+      // Em todos os casos, salvar no armazenamento local para modo offline
       try {
         // Criar o perfil com todas as informações necessárias
         const newUserProfile = {
@@ -277,7 +277,7 @@ export function RegisterForm() {
           full_name: formData.fullName,
           username: formData.username || formData.fullName.split(' ')[0].toLowerCase(),
           email: formData.email,
-          password: formData.password, // NOTA: Em produção, nunca armazene senhas em texto simples
+          password: formData.password, // Para login offline
           display_name: formData.username || formData.fullName,
           institution: formData.institution || '',
           birth_date: formData.birthDate || null,
@@ -320,6 +320,12 @@ export function RegisterForm() {
       setSuccess(true);
       setLoading(false);
 
+      // Disparar evento de conta criada
+      const registerEvent = new CustomEvent('account-created', {
+        detail: { user: newUserProfile }
+      });
+      window.dispatchEvent(registerEvent);
+      
       setTimeout(() => {
         navigate("/login", { state: { newAccount: true } });
       }, 3000);

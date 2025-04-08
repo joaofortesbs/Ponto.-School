@@ -66,207 +66,213 @@ export function LoginForm() {
     }
 
     try {
-      // Verificar se há um perfil armazenado localmente para este email
+      // Obter perfis armazenados localmente
       const localProfiles = localStorage.getItem('tempUserProfiles');
       const offlineProfiles = localProfiles ? JSON.parse(localProfiles) : [];
       const matchingProfile = offlineProfiles.find((p: any) => p.email === formData.email);
 
-      let offlineMode = false;
+      // Verificar primeiro o modo offline ou problema de conectividade
+      const isOffline = !navigator.onLine || localStorage.getItem('isOfflineMode') === 'true';
 
-      // Check for internet connection or Supabase availability issues
-      if (!navigator.onLine) {
-        console.log("Dispositivo offline, tentando modo de emergência");
-        offlineMode = true;
-      }
-
-      // Se não estiver offline, tente autenticação normal
-      if (!offlineMode) {
+      // Tentar login com Supabase se não estiver em modo offline
+      if (!isOffline) {
         try {
-          // Add timeout to Supabase request to prevent long hanging requests
-          const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error("Tempo limite excedido. Verificando modo alternativo...")), 8000);
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: formData.email,
+            password: formData.password,
           });
 
-          // Race between Supabase request and timeout
-          const result = await Promise.race([
-            supabase.auth.signInWithPassword({
-              email: formData.email,
-              password: formData.password,
-            }),
-            timeoutPromise
-          ]) as { data: any, error: any } | Error;
+          if (error) {
+            console.log("Login error:", error);
 
-          // Handle timeout or other errors
-          if (result instanceof Error) {
-            console.log("Timeout no login, tentando modo alternativo", result);
-            offlineMode = true;
-          } else {
-            const { data, error } = result;
-
-            if (error) {
-              console.log("Login error:", error);
-
-              if (error.message.includes("Invalid login credentials") ||
-                  error.message.includes("Email not confirmed")) {
-                // Se as credenciais são inválidas mas temos um perfil armazenado localmente,
-                // podemos tentar verificar localmente
-                if (matchingProfile) {
-                  console.log("Credenciais inválidas no Supabase, tentando verificar localmente");
-                  offlineMode = true;
+            // Verificar se é um erro de credenciais e temos um perfil local
+            if (error.message.includes("Invalid login credentials") && matchingProfile) {
+              console.log("Tentando validar localmente devido a credenciais inválidas no Supabase");
+              
+              // Verificar senha do perfil local (em um app real, isso seria feito com hash)
+              if (matchingProfile.password === formData.password) {
+                console.log("Login local bem-sucedido");
+                setSuccess(true);
+                
+                // Armazenar estado de sessão local
+                localStorage.setItem('isOfflineMode', 'true');
+                localStorage.setItem('currentUserProfile', JSON.stringify(matchingProfile));
+                
+                setTimeout(() => {
+                  navigate("/");
+                }, 1000);
+                return;
+              } else {
+                setError("Email ou senha inválidos");
+                setLoading(false);
+                return;
+              }
+            } 
+            
+            // Verificar erros de conectividade para tentar modo offline
+            else if (error.status === 0 || 
+                    error.message.includes("fetch") || 
+                    error.message.includes("Failed to fetch") ||
+                    error.message.includes("network")) {
+              
+              // Se temos um perfil local, tentar modo offline
+              if (matchingProfile) {
+                // Verificar a senha no modo offline
+                if (matchingProfile.password === formData.password) {
+                  console.log("Login offline bem-sucedido");
+                  setSuccess(true);
+                  
+                  localStorage.setItem('isOfflineMode', 'true');
+                  localStorage.setItem('currentUserProfile', JSON.stringify(matchingProfile));
+                  
+                  toast({
+                    title: "Conectado em modo offline",
+                    description: "Você está usando o aplicativo em modo offline devido a problemas de conexão.",
+                    variant: "warning",
+                    duration: 5000,
+                  });
+                  
+                  // Disparar evento de login bem-sucedido
+                  const loginEvent = new CustomEvent('login-status-changed', {
+                    detail: { user: matchingProfile }
+                  });
+                  window.dispatchEvent(loginEvent);
+                  
+                  setTimeout(() => {
+                    navigate("/");
+                  }, 1000);
+                  return;
                 } else {
                   setError("Email ou senha inválidos");
                   setLoading(false);
                   return;
                 }
-              } else if (error.status === 0 || error.message.includes("fetch") || error.message.includes("Failed to fetch")) {
-                console.log("Erro de conexão, tentando modo alternativo");
-                offlineMode = true;
-              } else if (error.message.includes("network")) {
-                console.log("Problema de rede, tentando modo alternativo");
-                offlineMode = true;
               } else {
-                // Se for outro tipo de erro e temos um perfil local, tente o modo offline
-                if (matchingProfile) {
-                  console.log("Erro diverso, tentando modo alternativo", error);
-                  offlineMode = true;
-                } else {
-                  setError("Erro ao fazer login: " + error.message);
-                  setLoading(false);
-                  return;
-                }
+                setError("Erro de conexão. Verifique sua internet e tente novamente.");
+                setLoading(false);
+                return;
               }
-            } else if (data?.user) {
-              // Login normal bem-sucedido
-              setSuccess(true);
-
-              // Try to pre-load user profile after login success
-              try {
-                await profileService.createProfileIfNotExists();
-              } catch (profileErr) {
-                console.warn("Erro ao carregar perfil, mas login concluído:", profileErr);
-              }
-
-              // Armazenar dados da sessão para uso offline futuro
-              try {
-                localStorage.setItem('lastLoginSession', JSON.stringify({
-                  user: data.user,
-                  timestamp: new Date().toISOString()
-                }));
-              } catch (storageErr) {
-                console.warn("Não foi possível salvar sessão:", storageErr);
-              }
-
-              setTimeout(() => {
-                navigate("/");
-              }, 1000);
-
-              return; // Sair da função se o login for bem-sucedido
             } else {
-              // Se não houver usuário mas também não houver erro, tente modo offline
-              offlineMode = true;
+              // Outros erros do Supabase
+              setError(error.message || "Erro ao fazer login. Por favor, tente novamente.");
+              setLoading(false);
+              return;
             }
+          } 
+          
+          // Login bem-sucedido no Supabase
+          if (data?.user) {
+            setSuccess(true);
+            
+            // Carregar o perfil do usuário
+            try {
+              await profileService.createProfileIfNotExists();
+            } catch (profileErr) {
+              console.warn("Erro ao carregar perfil, continuando com login:", profileErr);
+            }
+            
+            // Armazenar sessão para uso offline futuro
+            try {
+              localStorage.setItem('lastLoginSession', JSON.stringify({
+                user: data.user,
+                timestamp: new Date().toISOString()
+              }));
+              
+              // Se temos um perfil local, atualizar também
+              if (matchingProfile) {
+                localStorage.setItem('currentUserProfile', JSON.stringify({
+                  ...matchingProfile,
+                  id: data.user.id
+                }));
+              }
+              
+              localStorage.removeItem('isOfflineMode');
+            } catch (storageErr) {
+              console.warn("Erro ao salvar dados de sessão:", storageErr);
+            }
+            
+            // Disparar evento de login bem-sucedido para atualizar componentes
+            const loginEvent = new CustomEvent('login-status-changed', {
+              detail: { user: data.user }
+            });
+            window.dispatchEvent(loginEvent);
+            
+            setTimeout(() => {
+              navigate("/");
+            }, 1000);
+            return;
           }
         } catch (authError) {
-          console.error("Erro inesperado na autenticação:", authError);
-          offlineMode = true; // Falha na autenticação, tente o modo offline
-        }
-      }
-
-      // Modo offline/alternativo
-      if (offlineMode) {
-        console.log("Entrando em modo offline/emergência");
-
-        // Verificação simplificada - em produção, você teria um mecanismo mais seguro
-        if (matchingProfile) {
-          console.log("Perfil encontrado localmente:", matchingProfile.email);
-
-          // Em um cenário real, você teria alguma forma de verificar a senha localmente
-          // Esta é uma simplificação para fins de demonstração
-
-          // Simular login bem-sucedido
-          setSuccess(true);
-
-          // Armazenar indicador de modo offline
-          localStorage.setItem('isOfflineMode', 'true');
-
-          // Armazenar usuário atual
-          try {
-            localStorage.setItem('currentUserProfile', JSON.stringify(matchingProfile));
-          } catch (err) {
-            console.warn("Erro ao salvar perfil do usuário:", err);
-          }
-
-          // Mostrar uma mensagem informando o usuário sobre o modo offline
-          toast({
-            title: "Conectado em modo limitado",
-            description: "Você está usando o aplicativo em modo offline. Algumas funcionalidades podem estar indisponíveis.",
-            variant: "warning",
-            duration: 5000,
-          });
-
-          setTimeout(() => {
-            navigate("/");
-          }, 1500);
-        } else {
-          // Recuperar do localStorage para ver se há uma sessão recente
-          const lastSession = localStorage.getItem('lastLoginSession');
-
-          if (lastSession) {
-            const { user, timestamp } = JSON.parse(lastSession);
-            const sessionAge = new Date().getTime() - new Date(timestamp).getTime();
-            const sessionAgeHours = sessionAge / (1000 * 60 * 60);
-
-            // Se a sessão for recente (menos de 24 horas) e o email corresponder
-            if (sessionAgeHours < 24 && user.email === formData.email) {
-              console.log("Usando sessão recente para login de emergência");
+          console.error("Erro na autenticação:", authError);
+          
+          // Se temos um perfil local, tentar modo offline
+          if (matchingProfile) {
+            if (matchingProfile.password === formData.password) {
+              console.log("Fallback para login offline após erro de autenticação");
               setSuccess(true);
+              
               localStorage.setItem('isOfflineMode', 'true');
-
+              localStorage.setItem('currentUserProfile', JSON.stringify(matchingProfile));
+              
               toast({
-                title: "Conectado com sessão recente",
-                description: "Usando uma sessão salva anteriormente. Funcionalidades limitadas disponíveis.",
+                title: "Conectado em modo limitado",
+                description: "Usando dados locais devido a problemas de conexão.",
                 variant: "warning",
                 duration: 5000,
               });
-
+              
               setTimeout(() => {
                 navigate("/");
-              }, 1500);
+              }, 1000);
               return;
             }
           }
-
-          setError("Não foi possível fazer login. Verifique sua conexão com a internet e tente novamente.");
+          
+          setError("Erro ao tentar autenticar. Verifique sua conexão e tente novamente.");
+          setLoading(false);
+          return;
         }
+      } 
+      
+      // Modo offline direto
+      else if (matchingProfile) {
+        console.log("Modo offline ativo, tentando login local");
+        
+        // Verificar senha no modo offline
+        if (matchingProfile.password === formData.password) {
+          console.log("Login offline bem-sucedido");
+          setSuccess(true);
+          
+          localStorage.setItem('isOfflineMode', 'true');
+          localStorage.setItem('currentUserProfile', JSON.stringify(matchingProfile));
+          
+          toast({
+            title: "Conectado em modo offline",
+            description: "Você está usando o aplicativo em modo offline.",
+            variant: "warning",
+            duration: 5000,
+          });
+          
+          setTimeout(() => {
+            navigate("/");
+          }, 1000);
+          return;
+        } else {
+          setError("Email ou senha inválidos");
+          setLoading(false);
+          return;
+        }
+      } 
+      
+      // Não temos perfil local e estamos offline
+      else {
+        setError("Não foi possível fazer login. Verifique sua conexão ou crie uma conta.");
+        setLoading(false);
+        return;
       }
     } catch (err: any) {
-      console.error("Erro fatal ao logar:", err);
-
-      // Último recurso - verificar se há alguma sessão anterior para usar
-      try {
-        const lastSession = localStorage.getItem('lastLoginSession');
-        if (lastSession) {
-          const session = JSON.parse(lastSession);
-          const sessionAge = new Date().getTime() - new Date(session.timestamp).getTime();
-          const sessionAgeHours = sessionAge / (1000 * 60 * 60);
-
-          if (sessionAgeHours < 48) {
-            console.log("Usando último login como fallback de emergência");
-            setSuccess(true);
-            localStorage.setItem('isEmergencyMode', 'true');
-
-            setTimeout(() => {
-              navigate("/");
-            }, 1500);
-            return;
-          }
-        }
-      } catch (fallbackErr) {
-        console.error("Falha no último recurso:", fallbackErr);
-      }
-
-      setError("Erro ao conectar ao servidor. Verifique sua internet e tente novamente mais tarde.");
-    } finally {
+      console.error("Erro fatal no login:", err);
+      setError("Ocorreu um erro inesperado. Tente novamente mais tarde.");
       setLoading(false);
     }
   };

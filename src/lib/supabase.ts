@@ -118,37 +118,41 @@ export const checkSupabaseConnection = async () => {
   try {
     const start = Date.now();
     
-    // Timeout mais curto para esta verificação específica
+    // Use Promise.race com timeout mais curto
     const controller = new AbortController();
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error("Timeout na verificação de conexão")), 5000);
-    });
+    const signal = controller.signal;
     
-    // Race entre a consulta real e o timeout
-    const result = await Promise.race([
-      supabase.from('profiles').select('id').limit(1).maybeSingle(),
-      timeoutPromise
-    ]);
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 4000);
     
-    const elapsed = Date.now() - start;
-    
-    // Se chegou aqui, temos uma resposta válida
-    if (result.error && result.error.code === 'PGRST116') {
-      // Tabela não existe, mas conexão funciona
-      isOffline = false;
-      localStorage.removeItem('isOfflineMode');
-      return { ok: true, latency: elapsed };
-    }
-    
-    isOffline = !!result.error;
-    
-    if (isOffline) {
+    try {
+      // Tentar fazer uma consulta simples
+      const { data, error } = await supabase.from('profiles')
+        .select('id')
+        .limit(1);
+      
+      clearTimeout(timeoutId);
+      const elapsed = Date.now() - start;
+      
+      // Se temos dados ou um erro que não é de conectividade, a conexão funciona
+      if (data || (error && error.code !== 'PGRST0001' && error.code !== '20000')) {
+        isOffline = false;
+        localStorage.removeItem('isOfflineMode');
+        return { ok: true, latency: elapsed };
+      } else {
+        isOffline = true;
+        localStorage.setItem('isOfflineMode', 'true');
+        return { ok: false, latency: elapsed, error: error };
+      }
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      
+      console.error("Erro na consulta:", fetchError);
+      isOffline = true;
       localStorage.setItem('isOfflineMode', 'true');
-    } else {
-      localStorage.removeItem('isOfflineMode');
+      return { ok: false, error: fetchError, offline: true };
     }
-    
-    return { ok: !result.error, latency: elapsed, error: result.error };
   } catch (err) {
     console.error("Verificação de conexão falhou:", err);
     isOffline = true;
