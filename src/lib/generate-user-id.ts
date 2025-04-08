@@ -53,7 +53,7 @@ export function generateSimpleUserId(countryCode: string, planType: number): str
 }
 import { supabase } from './supabase';
 
-export const generateUserId = async (planType: string): Promise<string> => {
+export const generateUserIdSupabase = async (planType: string): Promise<string> => {
   // Gerar um ID baseado no tipo de plano
   // BR1 para premium, BR2 para lite/básico
   const prefix = `BR${planType === 'premium' ? '1' : '2'}`;
@@ -80,7 +80,7 @@ export const generateUserId = async (planType: string): Promise<string> => {
     if (data) {
       console.log("ID already exists, generating a new one");
       // Chamada recursiva com baixíssima probabilidade de execução
-      return generateUserId(planType);
+      return generateUserIdSupabase(planType);
     }
     
     return generatedId;
@@ -90,3 +90,26 @@ export const generateUserId = async (planType: string): Promise<string> => {
     return generatedId;
   }
 };
+
+/**
+ * Gera um ID único para usuários baseado em timestamp e valores aleatórios
+ * para garantir unicidade mesmo em caso de múltiplos registros simultâneos
+ */
+export function generateUserId(): string {
+  // Usar timestamp para garantir sequência crescente
+  const timestamp = new Date().getTime();
+
+  // Adicionar componente aleatório para evitar colisões
+  const randomComponent = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+
+  // Combinar os componentes em um formato único
+  return `user_${timestamp}_${randomComponent}`;
+}
+
+/**
+ * Valida se um ID de usuário está no formato correto
+ */
+export function isValidUserId(id: string): boolean {
+  // Verificar se corresponde ao padrão esperado
+  return /^user_\d+_\d{4}$/.test(id);
+}

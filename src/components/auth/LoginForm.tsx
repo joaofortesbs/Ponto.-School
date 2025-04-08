@@ -22,6 +22,7 @@ export function LoginForm() {
     password: "",
     rememberMe: false,
   });
+  const [success, setSuccess] = useState(false); // Added success state
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -43,52 +44,45 @@ export function LoginForm() {
     e.preventDefault();
     setError("");
     setLoading(true);
+    setSuccess(false); // Reset success on submit
+
+    // Basic field validation
+    if (!formData.email || !formData.password) {
+      setError("Preencha todos os campos");
+      setLoading(false);
+      return;
+    }
 
     try {
-      // Verificar primeiro se temos dados no localStorage (para fallback offline)
-      const tempUserProfile = localStorage.getItem('tempUserProfile');
-      let offlineLogin = false;
-      
-      if (tempUserProfile) {
-        try {
-          const userProfile = JSON.parse(tempUserProfile);
-          // Verificar se o email corresponde ao que está no perfil temporário
-          if (userProfile.email === formData.email) {
-            // Implementação simplificada - em um caso real, você precisaria
-            // verificar a senha com segurança, aqui estamos apenas permitindo
-            // o login offline para melhorar a experiência do usuário
-            offlineLogin = true;
-          }
-        } catch (e) {
-          console.error("Erro ao processar perfil local:", e);
-        }
-      }
-
-      // Tente o login online primeiro
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
 
-      // Se o login online funcionar OU o login offline for válido
-      if ((data && data.user) || (error && error.message.includes("fetch") && offlineLogin)) {
-        // Login bem-sucedido
-        navigate("/");
+      if (error) {
+        if (error.message.includes("Invalid login credentials") ||
+            error.message.includes("Email not confirmed")) {
+          setError("Email ou senha inválidos");
+        } else if (error.status === 0) { //Improved network error handling
+          setError("Erro de conexão. Verifique sua internet.");
+        } else {
+          setError("Erro ao fazer login: " + error.message);
+        }
+        setLoading(false);
         return;
       }
 
-      // Se chegamos aqui, o login falhou
-      if (error) throw error;
-      
-    } catch (err: any) {
-      // Verificar se o erro é de conectividade
-      if (err.message && err.message.includes("fetch")) {
-        setError("Erro de conexão. Verifique sua internet e tente novamente.");
-      } else if (err.message && err.message.includes("Invalid login")) {
-        setError("E-mail ou senha incorretos. Tente novamente.");
+      if (data?.user) {
+        setSuccess(true);
+        setTimeout(() => {
+          navigate("/");
+        }, 1000);
       } else {
-        setError(err.message || "Erro ao fazer login");
+        setError("Erro ao completar login");
       }
+    } catch (err: any) {
+      setError("Erro ao fazer login, tente novamente");
+      console.error("Erro ao logar:", err);
     } finally {
       setLoading(false);
     }
@@ -104,6 +98,17 @@ export function LoginForm() {
           <div className="flex-1">
             <h3 className="text-lg font-bold">Conta criada com sucesso!</h3>
             <p className="text-sm mt-1">Sua conta foi criada e seus dados foram salvos com sucesso. Use suas credenciais para fazer login.</p>
+          </div>
+        </div>
+      )}
+      {success && ( //Improved success message
+        <div className="success-message mb-4 rounded-lg p-4">
+          <div className="success-message-icon">
+            <CheckCircle className="h-5 w-5 text-[#00a045]" />
+          </div>
+          <div>
+            <span className="font-medium text-[#00a045]">Login bem-sucedido!</span>
+            <p className="text-sm text-[#00a045]">Redirecionando para o dashboard...</p>
           </div>
         </div>
       )}

@@ -150,16 +150,25 @@ export function RegisterForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
-
-    if (formData.password !== formData.confirmPassword) {
-      setError("As senhas não coincidem");
-      setLoading(false);
-      return;
-    }
+    setError("");
+    setSuccess(false);
 
     try {
+      // Validar senha
+      if (formData.password !== formData.confirmPassword) {
+        setError("As senhas não coincidem");
+        setLoading(false);
+        return;
+      }
+
+      // Verificar campo obrigatório
+      if (!formData.fullName || !formData.email || !formData.password) {
+        setError("Preencha todos os campos obrigatórios");
+        setLoading(false);
+        return;
+      }
+
       // Gerar um ID de usuário único baseado no timestamp e plano
       const userId = `BR${plan === "premium" ? 1 : 2}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
 
@@ -184,7 +193,7 @@ export function RegisterForm() {
             },
           },
         });
-        
+
         userData = data;
         userError = error;
       } catch (authError) {
@@ -204,7 +213,7 @@ export function RegisterForm() {
       if (userData?.user || (userError && userError.message && userError.message.includes("fetch"))) {
         // ID do usuário real ou temporário para uso offline
         const profileId = userData?.user?.id || `temp-${userId}`;
-        
+
         try {
           // Tente criar o perfil no banco de dados
           if (userData?.user) {
@@ -226,7 +235,7 @@ export function RegisterForm() {
                   xp: 0,
                   coins: 100
                 }]);
-              
+
               if (insertError && !insertError.message.includes("fetch")) {
                 // Se houver erro diferente de conectividade, tente atualizar o perfil existente
                 console.log("Tentando atualizar perfil existente");
@@ -245,7 +254,7 @@ export function RegisterForm() {
                     coins: 100
                   })
                   .eq("id", profileId);
-                  
+
                 if (updateError && !updateError.message.includes("fetch")) {
                   console.error("Profile update error:", updateError);
                 }
@@ -254,7 +263,7 @@ export function RegisterForm() {
               console.log("Profile operation failed, continuing to success state:", profileError);
             }
           }
-          
+
           // Armazenar temporariamente os dados do usuário no localStorage para uso offline
           // Isso permite que a aplicação mostre os dados do usuário mesmo sem conexão
           try {
@@ -277,21 +286,21 @@ export function RegisterForm() {
           } catch (storageError) {
             console.error("LocalStorage error:", storageError);
           }
-          
+
           // Registro considerado bem-sucedido - mostrar mensagem e redirecionar após 3 segundos
           setSuccess(true);
           setLoading(false);
-          
+
           setTimeout(() => {
             navigate("/login", { state: { newAccount: true } });
           }, 3000);
-          
+
         } catch (err) {
           console.error("Error in profile operations:", err);
           // Mesmo com erro no perfil, consideramos que a conta foi criada com sucesso
           setSuccess(true);
           setLoading(false);
-          
+
           setTimeout(() => {
             navigate("/login", { state: { newAccount: true } });
           }, 3000);
@@ -305,10 +314,12 @@ export function RegisterForm() {
       // Mesmo com erro inesperado, vamos permitir o fluxo continuar para melhorar a experiência do usuário
       setSuccess(true);
       setLoading(false);
-      
+
       setTimeout(() => {
         navigate("/login", { state: { newAccount: true } });
       }, 3000);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -335,342 +346,342 @@ export function RegisterForm() {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Nome Completo */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-brand-black dark:text-white">
-            Nome Completo
-          </label>
-          <div className="relative">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              name="fullName"
-              value={formData.fullName}
-              onChange={handleChange}
-              placeholder="Digite seu nome completo"
-              className="pl-10 h-11"
-              required
-            />
-          </div>
-        </div>
-
-        {/* Nome de Usuário */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-brand-black dark:text-white">
-            Nome de Usuário
-          </label>
-          <div className="relative">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              placeholder="Digite seu nome de usuário"
-              className="pl-10 h-11"
-              required
-            />
-          </div>
-        </div>
-
-        {/* E-mail */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-brand-black dark:text-white">
-            E-mail
-          </label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Digite seu e-mail"
-              className="pl-10 h-11"
-              required
-            />
-          </div>
-        </div>
-
-        {/* Instituição */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-brand-black dark:text-white">
-            Instituição de Ensino
-          </label>
-          <div className="relative rounded-md shadow-sm">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <School className="h-4 w-4 text-brand-muted" />
+          {/* Nome Completo */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-brand-black dark:text-white">
+              Nome Completo
+            </label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                name="fullName"
+                value={formData.fullName}
+                onChange={handleChange}
+                placeholder="Digite seu nome completo"
+                className="pl-10 h-11"
+                required
+              />
             </div>
-            <Input
-              type="text"
-              name="institution"
-              value={formData.institution}
-              onChange={handleChange}
-              placeholder="Digite o nome da sua instituição"
-              className="pl-10 h-11 focus-visible:ring-brand-primary focus-visible:border-brand-primary"
-              required
-              autoComplete="organization"
-            />
-            {institutionFound && formData.institution && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center text-xs bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 py-1 px-2 rounded-full">
-                <CheckCircle className="h-3.5 w-3.5 mr-1" />
-                <span>Instituição encontrada</span>
-              </div>
-            )}
           </div>
-        </div>
 
-        {/* Turma e Série - Mostrados apenas quando a instituição é preenchida */}
-        {showClassAndGrade && (
-          <div className="space-y-6 border border-gray-200 dark:border-gray-700 rounded-lg p-5 bg-white dark:bg-gray-800/40 shadow-sm transition-all duration-300">
-            <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-3">
-              <h3 className="text-base font-semibold text-brand-black dark:text-white flex items-center">
-                <GraduationCap className="h-5 w-5 mr-2 text-brand-primary" />
-                Informações Acadêmicas
-              </h3>
-              {loadingOptions && (
-                <span className="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 py-1 px-2 rounded-full flex items-center">
-                  <span className="w-2 h-2 bg-blue-500 rounded-full mr-1.5 animate-pulse"></span>
-                  Carregando opções
-                </span>
+          {/* Nome de Usuário */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-brand-black dark:text-white">
+              Nome de Usuário
+            </label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                placeholder="Digite seu nome de usuário"
+                className="pl-10 h-11"
+                required
+              />
+            </div>
+          </div>
+
+          {/* E-mail */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-brand-black dark:text-white">
+              E-mail
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Digite seu e-mail"
+                className="pl-10 h-11"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Instituição */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-brand-black dark:text-white">
+              Instituição de Ensino
+            </label>
+            <div className="relative rounded-md shadow-sm">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <School className="h-4 w-4 text-brand-muted" />
+              </div>
+              <Input
+                type="text"
+                name="institution"
+                value={formData.institution}
+                onChange={handleChange}
+                placeholder="Digite o nome da sua instituição"
+                className="pl-10 h-11 focus-visible:ring-brand-primary focus-visible:border-brand-primary"
+                required
+                autoComplete="organization"
+              />
+              {institutionFound && formData.institution && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center text-xs bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 py-1 px-2 rounded-full">
+                  <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                  <span>Instituição encontrada</span>
+                </div>
               )}
             </div>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* Turma */}
-              <div className="space-y-3">
-                <label className="text-sm font-medium text-brand-black dark:text-white flex items-center">
-                  Turma
-                </label>
-                <div className="relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <GraduationCap className="h-4 w-4 text-brand-muted" />
-                  </div>
-                  <select
-                    name="classGroup"
-                    value={formData.classGroup}
-                    onChange={(e) =>
-                      handleSelectChange("classGroup", e.target.value)
-                    }
-                    className="w-full pl-10 h-11 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary focus-visible:border-brand-primary dark:bg-[#0A2540] dark:border-gray-700 transition-colors"
-                    required
-                    disabled={loadingOptions}
-                  >
-                    <option value="" disabled>
-                      Selecione sua turma
-                    </option>
-                    {classOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                    <option value="outra">Outra</option>
-                  </select>
-                </div>
-                {formData.classGroup === "outra" && (
-                  <div className="mt-3 pl-3 border-l-2 border-brand-primary">
-                    <label className="text-xs font-medium text-brand-muted mb-1 block">
-                      Especifique sua turma
-                    </label>
-                    <Input
-                      type="text"
-                      name="customClassGroup"
-                      value={formData.customClassGroup}
-                      onChange={handleChange}
-                      placeholder="Digite o nome da sua turma"
-                      className="h-10 focus-visible:ring-brand-primary focus-visible:border-brand-primary"
-                      required
-                    />
-                  </div>
+          {/* Turma e Série - Mostrados apenas quando a instituição é preenchida */}
+          {showClassAndGrade && (
+            <div className="space-y-6 border border-gray-200 dark:border-gray-700 rounded-lg p-5 bg-white dark:bg-gray-800/40 shadow-sm transition-all duration-300">
+              <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-3">
+                <h3 className="text-base font-semibold text-brand-black dark:text-white flex items-center">
+                  <GraduationCap className="h-5 w-5 mr-2 text-brand-primary" />
+                  Informações Acadêmicas
+                </h3>
+                {loadingOptions && (
+                  <span className="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 py-1 px-2 rounded-full flex items-center">
+                    <span className="w-2 h-2 bg-blue-500 rounded-full mr-1.5 animate-pulse"></span>
+                    Carregando opções
+                  </span>
                 )}
               </div>
 
-              {/* Série */}
-              <div className="space-y-3">
-                <label className="text-sm font-medium text-brand-black dark:text-white flex items-center">
-                  Série
-                </label>
-                <div className="relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <GraduationCap className="h-4 w-4 text-brand-muted" />
-                  </div>
-                  <select
-                    name="grade"
-                    value={formData.grade}
-                    onChange={(e) =>
-                      handleSelectChange("grade", e.target.value)
-                    }
-                    className="w-full pl-10 h-11 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary focus-visible:border-brand-primary dark:bg-[#0A2540] dark:border-gray-700 transition-colors"
-                    required
-                    disabled={loadingOptions}
-                  >
-                    <option value="" disabled>
-                      Selecione sua série
-                    </option>
-                    {gradeOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                    <option value="outra">Outra</option>
-                  </select>
-                </div>
-                {formData.grade === "outra" && (
-                  <div className="mt-3 pl-3 border-l-2 border-brand-primary">
-                    <label className="text-xs font-medium text-brand-muted mb-1 block">
-                      Especifique sua série
-                    </label>
-                    <Input
-                      type="text"
-                      name="customGrade"
-                      value={formData.customGrade}
-                      onChange={handleChange}
-                      placeholder="Digite o nome da sua série"
-                      className="h-10 focus-visible:ring-brand-primary focus-visible:border-brand-primary"
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Turma */}
+                <div className="space-y-3">
+                  <label className="text-sm font-medium text-brand-black dark:text-white flex items-center">
+                    Turma
+                  </label>
+                  <div className="relative rounded-md shadow-sm">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <GraduationCap className="h-4 w-4 text-brand-muted" />
+                    </div>
+                    <select
+                      name="classGroup"
+                      value={formData.classGroup}
+                      onChange={(e) =>
+                        handleSelectChange("classGroup", e.target.value)
+                      }
+                      className="w-full pl-10 h-11 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary focus-visible:border-brand-primary dark:bg-[#0A2540] dark:border-gray-700 transition-colors"
                       required
-                    />
+                      disabled={loadingOptions}
+                    >
+                      <option value="" disabled>
+                        Selecione sua turma
+                      </option>
+                      {classOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                      <option value="outra">Outra</option>
+                    </select>
                   </div>
-                )}
+                  {formData.classGroup === "outra" && (
+                    <div className="mt-3 pl-3 border-l-2 border-brand-primary">
+                      <label className="text-xs font-medium text-brand-muted mb-1 block">
+                        Especifique sua turma
+                      </label>
+                      <Input
+                        type="text"
+                        name="customClassGroup"
+                        value={formData.customClassGroup}
+                        onChange={handleChange}
+                        placeholder="Digite o nome da sua turma"
+                        className="h-10 focus-visible:ring-brand-primary focus-visible:border-brand-primary"
+                        required
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Série */}
+                <div className="space-y-3">
+                  <label className="text-sm font-medium text-brand-black dark:text-white flex items-center">
+                    Série
+                  </label>
+                  <div className="relative rounded-md shadow-sm">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <GraduationCap className="h-4 w-4 text-brand-muted" />
+                    </div>
+                    <select
+                      name="grade"
+                      value={formData.grade}
+                      onChange={(e) =>
+                        handleSelectChange("grade", e.target.value)
+                      }
+                      className="w-full pl-10 h-11 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary focus-visible:border-brand-primary dark:bg-[#0A2540] dark:border-gray-700 transition-colors"
+                      required
+                      disabled={loadingOptions}
+                    >
+                      <option value="" disabled>
+                        Selecione sua série
+                      </option>
+                      {gradeOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                      <option value="outra">Outra</option>
+                    </select>
+                  </div>
+                  {formData.grade === "outra" && (
+                    <div className="mt-3 pl-3 border-l-2 border-brand-primary">
+                      <label className="text-xs font-medium text-brand-muted mb-1 block">
+                        Especifique sua série
+                      </label>
+                      <Input
+                        type="text"
+                        name="customGrade"
+                        value={formData.customGrade}
+                        onChange={handleChange}
+                        placeholder="Digite o nome da sua série"
+                        className="h-10 focus-visible:ring-brand-primary focus-visible:border-brand-primary"
+                        required
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
+          )}
+
+          {/* Data de Nascimento */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-brand-black dark:text-white">
+              Data de Nascimento
+            </label>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="date"
+                name="birthDate"
+                value={formData.birthDate}
+                onChange={handleChange}
+                className="pl-10 h-11"
+                required
+              />
+            </div>
           </div>
-        )}
 
-        {/* Data de Nascimento */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-brand-black dark:text-white">
-            Data de Nascimento
-          </label>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="date"
-              name="birthDate"
-              value={formData.birthDate}
-              onChange={handleChange}
-              className="pl-10 h-11"
-              required
-            />
+          {/* Senha */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-brand-black dark:text-white">
+              Senha
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Digite sua senha"
+                className="pl-10 pr-10 h-11"
+                required
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <Eye className="h-4 w-4 text-muted-foreground" />
+                )}
+              </Button>
+            </div>
           </div>
-        </div>
 
-        {/* Senha */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-brand-black dark:text-white">
-            Senha
-          </label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type={showPassword ? "text" : "password"}
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Digite sua senha"
-              className="pl-10 pr-10 h-11"
-              required
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4 text-muted-foreground" />
-              ) : (
-                <Eye className="h-4 w-4 text-muted-foreground" />
-              )}
-            </Button>
+          {/* Confirmar Senha */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-brand-black dark:text-white">
+              Confirmar Senha
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type={showConfirmPassword ? "text" : "password"}
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Confirme sua senha"
+                className="pl-10 pr-10 h-11"
+                required
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <Eye className="h-4 w-4 text-muted-foreground" />
+                )}
+              </Button>
+            </div>
           </div>
-        </div>
 
-        {/* Confirmar Senha */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-brand-black dark:text-white">
-            Confirmar Senha
-          </label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type={showConfirmPassword ? "text" : "password"}
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Confirme sua senha"
-              className="pl-10 pr-10 h-11"
-              required
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            >
-              {showConfirmPassword ? (
-                <EyeOff className="h-4 w-4 text-muted-foreground" />
-              ) : (
-                <Eye className="h-4 w-4 text-muted-foreground" />
-              )}
-            </Button>
-          </div>
-        </div>
+          {error && (
+            <div className="text-sm text-red-500 text-center">{error}</div>
+          )}
 
-        {error && (
-          <div className="text-sm text-red-500 text-center">{error}</div>
-        )}
-
-        <Button
-          type="submit"
-          className="w-full h-11 text-base bg-brand-primary hover:bg-brand-primary/90 text-white"
-          disabled={loading}
-        >
-          {loading ? "Criando conta..." : "Criar conta"}
-        </Button>
-
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white dark:bg-[#0A2540] px-2 text-muted-foreground">
-              Ou continue com
-            </span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <Button variant="outline" className="h-11">
-            <img
-              src="https://www.svgrepo.com/show/506498/google.svg"
-              alt="Google"
-              className="w-5 h-5 mr-2"
-            />
-            Google
-          </Button>
-          <Button variant="outline" className="h-11">
-            <img
-              src="https://www.svgrepo.com/show/521654/facebook.svg"
-              alt="Facebook"
-              className="w-5 h-5 mr-2"
-            />
-            Facebook
-          </Button>
-        </div>
-
-        <p className="text-center text-sm text-brand-muted dark:text-white/60">
-          Já tem uma conta?{" "}
           <Button
-            variant="link"
-            className="text-brand-primary hover:text-brand-primary/90 p-0 h-auto"
-            onClick={() => navigate("/login")}
+            type="submit"
+            className="w-full h-11 text-base bg-brand-primary hover:bg-brand-primary/90 text-white"
+            disabled={loading}
           >
-            Fazer login
+            {loading ? "Criando conta..." : "Criar conta"}
           </Button>
-        </p>
-      </form>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white dark:bg-[#0A2540] px-2 text-muted-foreground">
+                Ou continue com
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Button variant="outline" className="h-11">
+              <img
+                src="https://www.svgrepo.com/show/506498/google.svg"
+                alt="Google"
+                className="w-5 h-5 mr-2"
+              />
+              Google
+            </Button>
+            <Button variant="outline" className="h-11">
+              <img
+                src="https://www.svgrepo.com/show/521654/facebook.svg"
+                alt="Facebook"
+                className="w-5 h-5 mr-2"
+              />
+              Facebook
+            </Button>
+          </div>
+
+          <p className="text-center text-sm text-brand-muted dark:text-white/60">
+            Já tem uma conta?{" "}
+            <Button
+              variant="link"
+              className="text-brand-primary hover:text-brand-primary/90 p-0 h-auto"
+              onClick={() => navigate("/login")}
+            >
+              Fazer login
+            </Button>
+          </p>
+        </form>
       )}
     </div>
   );

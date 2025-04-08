@@ -27,6 +27,7 @@ import {
   BellRing,
   Brain,
   Reply,
+  Menu
 } from "lucide-react";
 import {
   DropdownMenu,

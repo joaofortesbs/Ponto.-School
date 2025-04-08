@@ -1,12 +1,52 @@
 @keyframes shimmer {
   0% {
     transform: translateX(-100%);
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.8;
   }
   100% {
     transform: translateX(100%);
+    opacity: 0.5;
   }
 }
 
 .animate-shimmer {
-  animation: shimmer 2s infinite;
+  animation: shimmer 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: transform, opacity;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Novos efeitos para melhorar a experiência visual */
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.02);
+  }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 3s ease-in-out infinite;
+}
+
+/* Efeito de entrada suave para elementos */
+@keyframes fade-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-slide-in {
+  animation: fade-slide-in 0.4s ease-out forwards;
 }
