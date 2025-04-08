@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { generateAIResponse } from "@/services/epictusIAService";
+import { getResponse } from "@/services/epictusIAService";
 
 type Message = {
   id: string;
@@ -80,8 +80,8 @@ const ChatIAInterface = () => {
     setIsLoading(true);
 
     try {
-      // Usando o serviço epictusIAService para obter a resposta
-      const response = await generateAIResponse(userMessage.content);
+      // Usando a API do Gemini através do serviço epictusIAService
+      const response = await getResponse(userMessage.content);
 
       const aiMessage: Message = {
         id: `ai-${Date.now()}`,
