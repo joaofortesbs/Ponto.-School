@@ -44,96 +44,105 @@ export const getResponse = async (message: string): Promise<string> => {
   // API Key fixa para garantir o funcionamento com a nova chave
   const apiKey = "AIzaSyBSRpPQPyK6H96Z745ICsFtKzsTFdKpxWU";
 
-  try {
-    console.log("Iniciando requisição para API Gemini com nova chave...");
+  // Número máximo de tentativas
+  const maxRetries = 3;
+  let attemptCount = 0;
+  let lastError = null;
 
-    // URL da API Gemini
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`;
+  while (attemptCount < maxRetries) {
+    try {
+      console.log(`Tentativa ${attemptCount + 1} de requisição para API Gemini...`);
 
-    // Preparar corpo da requisição com configurações otimizadas
-    const requestBody = {
-      contents: [
-        {
-          parts: [
-            {
-              text: message
-            }
-          ]
-        }
-      ],
-      generationConfig: {
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 2048,
-      },
-      safetySettings: [
-        {
-          category: "HARM_CATEGORY_HARASSMENT",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+      // URL da API Gemini
+      const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`;
+
+      // Preparar corpo da requisição com configurações otimizadas
+      const requestBody = {
+        contents: [
+          {
+            parts: [
+              {
+                text: message
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 2048,
         },
-        {
-          category: "HARM_CATEGORY_HATE_SPEECH",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        safetySettings: [
+          {
+            category: "HARM_CATEGORY_HARASSMENT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            category: "HARM_CATEGORY_HATE_SPEECH",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          }
+        ]
+      };
+
+      // Utilizar timeout um pouco maior para dar tempo à API
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 segundos de timeout
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
         },
-        {
-          category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
-        },
-        {
-          category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
-        }
-      ]
-    };
+        body: JSON.stringify(requestBody),
+        signal: controller.signal,
+        // Desativar o cache para garantir uma nova requisição a cada vez
+        cache: 'no-store'
+      });
 
-    // Utilizar timeout para não bloquear a interface por muito tempo
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos de timeout
+      clearTimeout(timeoutId); // Limpar o timeout se a resposta for recebida
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestBody),
-      signal: controller.signal
-    });
+      if (!response.ok) {
+        throw new Error(`API respondeu com status: ${response.status} - ${response.statusText}`);
+      }
 
-    clearTimeout(timeoutId); // Limpar o timeout se a resposta for recebida
+      const data = await response.json();
+      console.log("Resposta da API Gemini recebida com sucesso");
 
-    if (!response.ok) {
-      console.error("Erro na resposta da API:", response.status, response.statusText);
-      // Em vez de lançar erro, vamos usar respostas pré-definidas
-      return getLocalResponse(message);
+      // Extrair texto da resposta com validação mais robusta
+      if (data.candidates && data.candidates.length > 0 && 
+          data.candidates[0].content && 
+          data.candidates[0].content.parts && 
+          data.candidates[0].content.parts.length > 0) {
+        return data.candidates[0].content.parts[0].text;
+      } else if (data.content && data.content.parts && data.content.parts.length > 0) {
+        return data.content.parts[0].text;
+      } else {
+        throw new Error("Formato de resposta da API não reconhecido");
+      }
+    } catch (error) {
+      console.error(`Erro na tentativa ${attemptCount + 1}:`, error);
+      lastError = error;
+      attemptCount++;
+      
+      // Pequeno delay antes da próxima tentativa
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
-
-    const data = await response.json();
-    console.log("Resposta da API Gemini recebida com sucesso");
-
-    // Extrair texto da resposta com validação mais robusta
-    if (data.candidates && data.candidates.length > 0 && 
-        data.candidates[0].content && 
-        data.candidates[0].content.parts && 
-        data.candidates[0].content.parts.length > 0) {
-      return data.candidates[0].content.parts[0].text;
-    } else if (data.content && data.content.parts && data.content.parts.length > 0) {
-      return data.content.parts[0].text;
-    } else {
-      console.warn("Formato de resposta da API não reconhecido:", data);
-      // Em vez de lançar erro, usar resposta local
-      return getLocalResponse(message);
-    }
-  } catch (error) {
-    console.error("Erro ao chamar a API Gemini:", error);
-
-    // Verificar se é um erro de timeout/abort
-    if (error.name === 'AbortError') {
-      return "A conexão com a API Gemini excedeu o tempo limite. Por favor, tente novamente. Estou trabalhando para melhorar a velocidade de resposta.";
-    }
-
-    return getLocalResponse(message);
   }
+
+  // Se chegamos aqui, todas as tentativas falharam
+  console.error("Todas as tentativas de conexão com a API Gemini falharam");
+  
+  // Retornar uma mensagem de erro ao usuário que indica claramente que é da API
+  return "⚠️ A API do Gemini não conseguiu processar sua solicitação após várias tentativas. Este é um erro real da API, não uma resposta predefinida. Por favor, tente novamente em alguns instantes.";
 };
 
 // Função para gerar respostas locais quando a API falha

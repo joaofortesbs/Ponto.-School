@@ -182,20 +182,52 @@ const ChatIAInterface = () => {
     setIsLoading(true);
     setIsSuggestionVisible(false);
 
-    // Usando a API do Gemini através do serviço epictusIAService
-    // A função getResponse agora sempre retorna uma resposta, mesmo em caso de erro
-    const response = await getResponse(userMessage.content);
+    try {
+      console.log("Enviando solicitação para a API Gemini...");
+      
+      // Estamos usando a API do Gemini para processar a mensagem do usuário
+      const response = await getResponse(userMessage.content);
+      
+      // Validamos que a resposta não é vazia
+      if (!response || response.trim() === "") {
+        throw new Error("A API retornou uma resposta vazia");
+      }
+      
+      // Verificar se é uma mensagem de erro da nossa função de API
+      const isErrorResponse = response.startsWith("⚠️");
+      
+      const aiMessage: Message = {
+        id: `ai-${Date.now()}`,
+        sender: "ai",
+        content: response,
+        timestamp: new Date()
+      };
 
-    const aiMessage: Message = {
-      id: `ai-${Date.now()}`,
-      sender: "ai",
-      content: response,
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, aiMessage]);
-    setRetryCount(0); // Reset retry count on success
-    setIsLoading(false);
+      setMessages(prev => [...prev, aiMessage]);
+      
+      // Se for uma resposta de erro, mantemos o contador de tentativas
+      if (isErrorResponse) {
+        setRetryCount(prev => prev + 1);
+      } else {
+        // Caso contrário, resetamos o contador
+        setRetryCount(0);
+      }
+    } catch (error) {
+      console.error("Erro crítico ao processar resposta da API:", error);
+      
+      // Mostrar mensagem de erro técnico
+      const errorMessage: Message = {
+        id: `error-${Date.now()}`,
+        sender: "ai",
+        content: "⚠️ Ocorreu um erro técnico ao processar sua solicitação. Nossos servidores estão tentando se reconectar à API do Gemini. Este é um erro real, não uma resposta pré-definida.",
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+      setRetryCount(prev => prev + 1);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -236,8 +268,26 @@ const ChatIAInterface = () => {
     }
 
     setIsLoading(true);
+    
+    // Adicionar uma mensagem indicando que estamos tentando novamente
+    const retryingMessage: Message = {
+      id: `retrying-${Date.now()}`,
+      sender: "ai",
+      content: "Estou tentando novamente conectar com a API do Gemini...",
+      timestamp: new Date()
+    };
+    
+    setMessages(prev => [...prev, retryingMessage]);
 
     try {
+      // Fazemos uma pausa breve antes de tentar novamente
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Remover a mensagem de tentativa
+      setMessages(prev => prev.filter(msg => msg.id !== retryingMessage.id));
+      
+      // Diretamente chamar a API do Gemini sem fallbacks
+      console.log("Tentando novamente com a API do Gemini...");
       const response = await getResponse(lastUserMessage.content);
 
       const aiMessage: Message = {
@@ -248,14 +298,21 @@ const ChatIAInterface = () => {
       };
 
       setMessages(prev => [...prev, aiMessage]);
-      setRetryCount(0);
+      
+      // Se a resposta não é de erro, resetar contador
+      if (!response.startsWith("⚠️")) {
+        setRetryCount(0);
+      }
     } catch (error) {
       console.error("Erro ao processar mensagem na tentativa:", error);
+
+      // Remover a mensagem de tentativa
+      setMessages(prev => prev.filter(msg => msg.id !== retryingMessage.id));
 
       const errorMessage: Message = {
         id: `error-retry-${Date.now()}`,
         sender: "ai",
-        content: "Desculpe, ainda estou tendo dificuldades. Vamos tentar algo diferente ou voltar mais tarde?",
+        content: "⚠️ A API do Gemini continua inacessível. Este é um erro real com a API, não uma resposta local. Por favor, tente novamente em alguns instantes.",
         timestamp: new Date()
       };
 
