@@ -52,20 +52,18 @@ function App() {
   useEffect(() => {
     console.log("App carregado com sucesso!");
 
-    // Verificação de autenticação simplificada
-    const checkAuth = async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        setIsAuthenticated(!!data.session || true); // Força true para desenvolvimento
-      } catch (error) {
-        console.error("Auth check error:", error);
-        setIsAuthenticated(true); // Força true para desenvolvimento
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
+    // Sempre autenticado para desenvolvimento
+    setIsAuthenticated(true);
+    setIsLoading(false);
+    
+    // Precarregar componentes principais
+    import("./components/dashboard/Dashboard")
+      .then(() => console.log("Dashboard pré-carregado"))
+      .catch(err => console.error("Erro ao pré-carregar Dashboard:", err));
+      
+    import("./components/sidebar/Sidebar")
+      .then(() => console.log("Sidebar pré-carregado"))
+      .catch(err => console.error("Erro ao pré-carregar Sidebar:", err));
   }, []);
 
   // Rotas de autenticação
