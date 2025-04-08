@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeToggle } from "./ThemeToggle";
 import PlanoEstudosInterface from "./PlanoEstudosInterface";
 import EpictusChatInterface from "./EpictusChatInterface";
+import ChatEpictus from "./ChatEpictus";
 import {
   Brain,
   BookOpen,
@@ -30,13 +31,33 @@ import {
   Rocket,
   Code,
   Globe,
+  Sparkle,
 } from "lucide-react";
 
 export default function EpictusIAInterface() {
   const { theme } = useTheme();
-  const [activeTab, setActiveTab] = useState("conversation");
+  // Obter o parâmetro de URL 'tab' se existir
+  const urlParams = new URLSearchParams(window.location.search);
+  const tabParam = urlParams.get('tab');
+  const [activeTab, setActiveTab] = useState(tabParam || "conversation");
   const [inputMessage, setInputMessage] = useState("");
   const [showChat, setShowChat] = useState(true);
+  
+  // Atualizar a URL quando a aba mudar
+  const updateTab = (tab: string) => {
+    setActiveTab(tab);
+    // Verificar se tab é chat-epictus ou conversation para definir showChat
+    if (tab === 'chat-epictus' || tab === 'conversation') {
+      setShowChat(true);
+    } else {
+      setShowChat(false);
+    }
+    
+    // Atualizar a URL sem recarregar a página
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', tab);
+    window.history.pushState({}, '', url);
+  };
 
   return (
     <div
@@ -190,42 +211,49 @@ export default function EpictusIAInterface() {
                 <TabsTrigger
                   value="visao-geral"
                   className={`data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white ${theme === "dark" ? "text-white/60" : "text-[#64748B]"}`}
-                  onClick={() => setShowChat(false)}
+                  onClick={() => updateTab("visao-geral")}
                 >
                   Visão Geral
                 </TabsTrigger>
                 <TabsTrigger
                   value="conversation"
                   className={`data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white ${theme === "dark" ? "text-white/60" : "text-[#64748B]"}`}
-                  onClick={() => setShowChat(true)}
+                  onClick={() => updateTab("conversation")}
                 >
                   Conversação
                 </TabsTrigger>
                 <TabsTrigger
+                  value="chat-epictus"
+                  className={`data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white ${theme === "dark" ? "text-white/60" : "text-[#64748B]"}`}
+                  onClick={() => updateTab("chat-epictus")}
+                >
+                  Chat Epictus
+                </TabsTrigger>
+                <TabsTrigger
                   value="plano-estudos"
                   className={`data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white ${theme === "dark" ? "text-white/60" : "text-[#64748B]"}`}
-                  onClick={() => setShowChat(false)}
+                  onClick={() => updateTab("plano-estudos")}
                 >
                   Plano de Estudos
                 </TabsTrigger>
                 <TabsTrigger
                   value="resumos"
                   className={`data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white ${theme === "dark" ? "text-white/60" : "text-[#64748B]"}`}
-                  onClick={() => setShowChat(false)}
+                  onClick={() => updateTab("resumos")}
                 >
                   Resumos
                 </TabsTrigger>
                 <TabsTrigger
                   value="desempenho"
                   className={`data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white ${theme === "dark" ? "text-white/60" : "text-[#64748B]"}`}
-                  onClick={() => setShowChat(false)}
+                  onClick={() => updateTab("desempenho")}
                 >
                   Desempenho
                 </TabsTrigger>
                 <TabsTrigger
                   value="modo-exploracao"
                   className={`data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white ${theme === "dark" ? "text-white/60" : "text-[#64748B]"}`}
-                  onClick={() => setShowChat(false)}
+                  onClick={() => updateTab("modo-exploracao")}
                 >
                   Modo Exploração
                 </TabsTrigger>
@@ -235,6 +263,10 @@ export default function EpictusIAInterface() {
             <ScrollArea className="flex-1">
               <TabsContent value="conversation" className="h-full mt-0 flex-1 flex flex-col">
                 <EpictusChatInterface />
+              </TabsContent>
+              
+              <TabsContent value="chat-epictus" className="h-full mt-0 flex-1 flex flex-col">
+                <ChatEpictus />
               </TabsContent>
 
               <TabsContent value="visao-geral" className="mt-0 p-6 space-y-6">

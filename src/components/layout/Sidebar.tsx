@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { profileService } from "@/services/profileService";
 import { UserProfile } from "@/types/user-profile";
+import { Brain, MessageSquare } from "lucide-react"; // Import missing icons
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   isCollapsed?: boolean;
