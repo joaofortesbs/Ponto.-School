@@ -11,6 +11,7 @@ import {
   Calendar,
   GraduationCap,
   CheckCircle,
+  Check,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -45,6 +46,7 @@ export function RegisterForm() {
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
+  const [success, setSuccess] = React.useState(false);
   const navigate = useNavigate();
 
   // Class and grade options state
@@ -195,23 +197,66 @@ export function RegisterForm() {
       }
 
       if (data?.user) {
-        // Atualizamos o perfil apenas com campos extras, o trigger já criou o registro básico
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .update({
-            user_id: userId,
-            level: 1,
-            rank: "Aprendiz",
-            display_name: formData.username,
-          })
-          .eq("id", data.user.id);
-
-        if (profileError) {
-          console.error("Profile update error:", profileError);
-          // Não falharemos o registro por erro no update
+        try {
+          // Verificar se o perfil já foi criado pelo trigger
+          const { data: profileData, error: fetchError } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", data.user.id)
+            .single();
+          
+          if (fetchError || !profileData) {
+            // Se o perfil não existe, criamos manualmente
+            const { error: insertError } = await supabase
+              .from("profiles")
+              .insert([{
+                id: data.user.id,
+                user_id: userId,
+                full_name: formData.fullName,
+                username: formData.username,
+                email: formData.email,
+                display_name: formData.username,
+                institution: formData.institution,
+                birth_date: formData.birthDate,
+                plan_type: plan,
+                level: 1,
+                rank: "Aprendiz"
+              }]);
+            
+            if (insertError) {
+              console.error("Profile creation error:", insertError);
+              throw new Error("Erro ao criar perfil de usuário");
+            }
+          } else {
+            // Se o perfil existe, atualizamos
+            const { error: updateError } = await supabase
+              .from("profiles")
+              .update({
+                user_id: userId,
+                level: 1,
+                rank: "Aprendiz",
+                display_name: formData.username,
+              })
+              .eq("id", data.user.id);
+            
+            if (updateError) {
+              console.error("Profile update error:", updateError);
+            }
+          }
+          
+          // Mostrar mensagem de sucesso
+          setSuccess(true);
+          
+          // Redirecionar após 3 segundos
+          setTimeout(() => {
+            navigate("/login");
+          }, 3000);
+          
+        } catch (err) {
+          console.error("Error creating/updating profile:", err);
+          setError("Erro ao finalizar criação da conta");
+          setLoading(false);
         }
-
-        navigate("/login");
       }
     } catch (err) {
       console.error("Unexpected error:", err);
@@ -232,7 +277,18 @@ export function RegisterForm() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      {success ? (
+        <div className="bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 text-green-800 dark:text-green-300 p-4 rounded-lg mb-6 animate-fade-in flex items-center gap-3">
+          <div className="rounded-full bg-green-200 dark:bg-green-800 p-2 flex-shrink-0">
+            <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-medium">Conta criada com sucesso!</h3>
+            <p className="text-sm">Redirecionando para a página de login...</p>
+          </div>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-4">
         {/* Nome Completo */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-brand-black dark:text-white">
@@ -569,6 +625,7 @@ export function RegisterForm() {
           </Button>
         </p>
       </form>
+      )}
     </div>
   );
 }
