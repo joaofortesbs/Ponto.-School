@@ -1,64 +1,80 @@
+
 import { useEffect, useState } from "react";
-import {
-  DEFAULT_LOGO,
-  getVersionedLogoUrl,
-  saveLogoToLocalStorage,
-  getLogoVersion,
-  preloadLogo as preloadLogoUtil,
-} from "@/lib/logo-utils";
+import { getLogoVersion, DEFAULT_LOGO } from "@/lib/logo-utils";
+import { PONTO_SCHOOL_LOGO_BASE64 } from "./LogoImageBase64";
 
 export function LogoPreloader() {
   const [retryCount, setRetryCount] = useState(0);
-  const defaultLogo = window.PONTO_SCHOOL_CONFIG?.defaultLogo || DEFAULT_LOGO;
-  const currentVersion =
-    window.PONTO_SCHOOL_CONFIG?.logoVersion || getLogoVersion();
+  const currentVersion = getLogoVersion();
+  const defaultLogo = DEFAULT_LOGO;
 
   useEffect(() => {
-    // Sistema avançado de preload da logo com redundância
+    console.log("LogoPreloader inicializado");
+    
+    // Função para pré-carregar a logo com retry
     const preloadLogoWithRetry = () => {
-      // Use the utility function to preload with versioning
-      preloadLogoUtil(
-        defaultLogo,
-        currentVersion + (retryCount > 0 ? retryCount : 0),
-        (versionedUrl) => {
-          console.log("Logo preloaded successfully in LogoPreloader component");
-          // Logo is already saved to localStorage in the utility function
-
-          // Notificar que a logo foi carregada
+      const preloadImage = new Image();
+      preloadImage.src = defaultLogo + "?v=" + currentVersion;
+      preloadImage.fetchPriority = "high";
+      
+      preloadImage.onload = () => {
+        console.log("Logo pré-carregada com sucesso");
+        
+        // Salvar no localStorage
+        localStorage.setItem("pontoSchoolLogo", defaultLogo);
+        localStorage.setItem("customLogo", defaultLogo);
+        localStorage.setItem("sidebarCustomLogo", defaultLogo);
+        localStorage.setItem("logoPreloaded", "true");
+        localStorage.setItem("logoVersion", currentVersion.toString());
+        
+        // Configurar objeto global
+        window.PONTO_SCHOOL_CONFIG = {
+          defaultLogo: defaultLogo,
+          logoLoaded: true,
+          logoVersion: currentVersion,
+        };
+        
+        // Notificar outros componentes
+        document.dispatchEvent(
+          new CustomEvent("logoLoaded", { detail: defaultLogo + "?v=" + currentVersion })
+        );
+      };
+      
+      preloadImage.onerror = () => {
+        console.error("Erro ao pré-carregar logo, tentando novamente...");
+        
+        // Tentar com base64 fallback se falhar mais de 2 vezes
+        if (retryCount >= 2) {
+          console.log("Usando logo base64");
+          
+          // Usar base64 como fallback
+          localStorage.setItem("pontoSchoolLogo", PONTO_SCHOOL_LOGO_BASE64);
+          localStorage.setItem("customLogo", PONTO_SCHOOL_LOGO_BASE64);
+          localStorage.setItem("sidebarCustomLogo", PONTO_SCHOOL_LOGO_BASE64);
+          localStorage.setItem("logoPreloaded", "true");
+          
+          window.PONTO_SCHOOL_CONFIG = {
+            defaultLogo: PONTO_SCHOOL_LOGO_BASE64,
+            logoLoaded: true,
+            logoVersion: currentVersion,
+          };
+          
           document.dispatchEvent(
-            new CustomEvent("logoLoaded", { detail: versionedUrl }),
+            new CustomEvent("logoLoaded", { detail: PONTO_SCHOOL_LOGO_BASE64 })
           );
-        },
-        () => {
-          console.error(`Failed to preload logo (attempt ${retryCount + 1})`);
-          if (retryCount < 3) {
-            // Tentar novamente após um pequeno atraso com incremento na versão
-            setTimeout(() => {
-              setRetryCount((prev) => prev + 1);
-            }, 1000);
-          } else {
-            // Após várias tentativas, usar um fallback
-            console.warn(
-              "Using fallback for logo after multiple failed attempts",
-            );
-            try {
-              // Usar null para indicar que devemos mostrar o texto como fallback
-              localStorage.setItem("logoPreloaded", "false");
-              localStorage.setItem("customLogo", "null");
-              localStorage.setItem("sidebarCustomLogo", "null");
-
-              // Notificar que a logo falhou ao carregar
-              document.dispatchEvent(new CustomEvent("logoLoadFailed"));
-            } catch (e) {
-              console.error("Failed to set fallback in localStorage", e);
-            }
-          }
-        },
-      );
+          
+          return;
+        }
+        
+        // Incrementar contador de tentativas e tentar novamente
+        setRetryCount(prev => prev + 1);
+        
+        // Tentar novamente com um timestamp para evitar cache
+        setTimeout(() => {
+          preloadLogoWithRetry();
+        }, 1000);
+      };
     };
-
-    // Executar o preload
-    preloadLogoWithRetry();
 
     // Verificar se a logo já foi carregada por outro componente
     const checkExistingLogo = () => {

@@ -44,6 +44,12 @@ import PlanSelectionPage from "@/pages/plan-selection";
 // User Pages
 import ProfilePage from "@/pages/profile";
 
+// Added components
+const LogoPreloader = () => <div>Loading Logo...</div>; // Placeholder
+const LogoManager = () => (
+  <img src="placeholder-logo.png" alt="Logo" className="h-8 w-auto" /> // Placeholder image
+);
+
 function App() {
   const location = useLocation();
   const [isAuthenticated, setIsAuthenticated] = useState(true); // Default como true para garantir carregamento
@@ -55,12 +61,12 @@ function App() {
     // Sempre autenticado para desenvolvimento
     setIsAuthenticated(true);
     setIsLoading(false);
-    
+
     // Precarregar componentes principais
     import("./components/dashboard/Dashboard")
       .then(() => console.log("Dashboard pré-carregado"))
       .catch(err => console.error("Erro ao pré-carregar Dashboard:", err));
-      
+
     import("./components/sidebar/Sidebar")
       .then(() => console.log("Sidebar pré-carregado"))
       .catch(err => console.error("Erro ao pré-carregar Sidebar:", err));
@@ -76,7 +82,9 @@ function App() {
   ].some((route) => location.pathname.startsWith(route));
 
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+      <LogoPreloader />
+      <LogoManager />
       <StudyGoalProvider>
         <div className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
           <Routes>

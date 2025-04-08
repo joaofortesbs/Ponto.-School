@@ -1,5 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { initLogoConfig } from "@/lib/logo-utils";
+
+// Inicializa a configuração global da logo
+initLogoConfig();
 import App from "./App.tsx";
 import "./index.css";
 import { BrowserRouter } from "react-router-dom";

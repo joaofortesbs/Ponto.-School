@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -62,6 +61,10 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
         className,
       )}
     >
+      {/* Força o carregamento da logo no componente principal */}
+      <div className="hidden">
+        <img src="/images/logo-oficial.png" alt="Logo preload" />
+      </div>
       {/* User Profile */}
       <div className="flex items-center space-x-3 px-4 py-3 mb-6">
         <Avatar className="h-10 w-10 border-2 border-[#FF6B00]">
