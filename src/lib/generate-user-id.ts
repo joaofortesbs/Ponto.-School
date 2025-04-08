@@ -51,3 +51,42 @@ export function generateSimpleUserId(countryCode: string, planType: number): str
   const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
   return `${countryCode}${planType}${timestamp.toString().slice(-6)}${random}`;
 }
+import { supabase } from './supabase';
+
+export const generateUserId = async (planType: string): Promise<string> => {
+  // Gerar um ID baseado no tipo de plano
+  // BR1 para premium, BR2 para lite/básico
+  const prefix = `BR${planType === 'premium' ? '1' : '2'}`;
+  const timestamp = Date.now();
+  const randomSuffix = Math.floor(Math.random() * 10000);
+  
+  const generatedId = `${prefix}-${timestamp}-${randomSuffix}`;
+  
+  try {
+    // Verificar se o ID já existe (raro, mas possível)
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .eq('user_id', generatedId)
+      .single();
+    
+    if (error) {
+      console.error("Error checking for existing ID record:", error);
+      // Se houver erro de consulta, retornamos o ID gerado mesmo assim
+      return generatedId;
+    }
+    
+    // Se o ID já existe (extremamente improvável), gere outro
+    if (data) {
+      console.log("ID already exists, generating a new one");
+      // Chamada recursiva com baixíssima probabilidade de execução
+      return generateUserId(planType);
+    }
+    
+    return generatedId;
+  } catch (error) {
+    console.error("Error generating user ID:", error);
+    // Em caso de erro, retorne o ID gerado
+    return generatedId;
+  }
+};

@@ -2,6 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Fallback de conexão */
+.offline-indicator {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Estilo para a mensagem de sucesso */
+.success-message {
+  background-color: rgba(0, 200, 83, 0.1);
+  border: 2px solid #00c853;
+  color: #00a045;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  animation: fadeIn 0.5s ease-out forwards;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.success-message-icon {
+  background-color: rgba(0, 200, 83, 0.2);
+  border-radius: 50%;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 @layer utilities {
   .animate-fadeIn {
     animation: fadeIn 0.5s ease-in-out;

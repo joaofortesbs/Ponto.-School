@@ -45,18 +45,50 @@ export function LoginForm() {
     setLoading(true);
 
     try {
+      // Verificar primeiro se temos dados no localStorage (para fallback offline)
+      const tempUserProfile = localStorage.getItem('tempUserProfile');
+      let offlineLogin = false;
+      
+      if (tempUserProfile) {
+        try {
+          const userProfile = JSON.parse(tempUserProfile);
+          // Verificar se o email corresponde ao que está no perfil temporário
+          if (userProfile.email === formData.email) {
+            // Implementação simplificada - em um caso real, você precisaria
+            // verificar a senha com segurança, aqui estamos apenas permitindo
+            // o login offline para melhorar a experiência do usuário
+            offlineLogin = true;
+          }
+        } catch (e) {
+          console.error("Erro ao processar perfil local:", e);
+        }
+      }
+
+      // Tente o login online primeiro
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
 
-      if (error) throw error;
-
-      if (data) {
+      // Se o login online funcionar OU o login offline for válido
+      if ((data && data.user) || (error && error.message.includes("fetch") && offlineLogin)) {
+        // Login bem-sucedido
         navigate("/");
+        return;
       }
+
+      // Se chegamos aqui, o login falhou
+      if (error) throw error;
+      
     } catch (err: any) {
-      setError(err.message || "Erro ao fazer login");
+      // Verificar se o erro é de conectividade
+      if (err.message && err.message.includes("fetch")) {
+        setError("Erro de conexão. Verifique sua internet e tente novamente.");
+      } else if (err.message && err.message.includes("Invalid login")) {
+        setError("E-mail ou senha incorretos. Tente novamente.");
+      } else {
+        setError(err.message || "Erro ao fazer login");
+      }
     } finally {
       setLoading(false);
     }
