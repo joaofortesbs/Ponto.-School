@@ -23,9 +23,10 @@ export function LoginForm() {
     password: "",
     rememberMe: false,
   });
-  const [success, setSuccess] = useState(false); // Added success state
+  const [success, setSuccess] = useState(false); 
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast(); // Assuming useToast provides a toast function
 
   useEffect(() => {
     if (location.state && location.state.newAccount) {
@@ -45,7 +46,7 @@ export function LoginForm() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    setSuccess(false); // Reset success on submit
+    setSuccess(false); 
 
     // Basic field validation
     if (!formData.email || !formData.password) {
@@ -56,7 +57,10 @@ export function LoginForm() {
 
     try {
       console.log("Tentando autenticar usuário...");
-      
+
+      const isOffline = localStorage.getItem('isOfflineMode') === 'true' || !navigator.onLine;
+
+
       // Primeiro, tentar autenticar usando o ReplitDB
       let user = null;
       try {
@@ -64,56 +68,49 @@ export function LoginForm() {
         console.log("Tentativa de autenticação no ReplitDB:", user ? "sucesso" : "falha");
       } catch (dbError) {
         console.error("Erro ao acessar ReplitDB:", dbError);
-        // Continuar com verificação local
-      }
-      
-      if (!user) {
-        console.log("Usuário não encontrado no ReplitDB, verificando armazenamento local");
-        
-        // Verificar se há perfis armazenados localmente (compatibilidade com dados antigos)
-        const localProfiles = localStorage.getItem('tempUserProfiles');
-        const offlineProfiles = localProfiles ? JSON.parse(localProfiles) : [];
-        const matchingProfile = offlineProfiles.find((p: any) => p.email === formData.email);
-        
-        if (matchingProfile && matchingProfile.password === formData.password) {
-          // Login com perfil local legado
-          console.log("Login com perfil local legado bem-sucedido");
-          setSuccess(true);
-          
-          // Salvar o perfil na sessão do usuário
-          UserService.saveUserSession(matchingProfile);
-          
-          // Navegar para a página inicial
-          setTimeout(() => {
-            navigate("/");
-          }, 1000);
-          return;
-        } else {
-          setError("Email ou senha inválidos");
+        if(isOffline){
+          setError("Não é possível verificar suas credenciais no modo offline. Tente novamente quando estiver online.");
           setLoading(false);
           return;
         }
+        // Continuar com verificação local
       }
-      
-      // Login bem-sucedido
-      setSuccess(true);
-      
-      // Salvar o perfil na sessão do usuário
-      UserService.saveUserSession(user);
-      
-      // Disparar evento de login bem-sucedido para atualizar componentes
-      const loginEvent = new CustomEvent('login-status-changed', {
-        detail: { user }
-      });
-      window.dispatchEvent(loginEvent);
-      
-      // Navegar para a página inicial
-      setTimeout(() => {
-        navigate("/");
-      }, 1000);
+
+      if (user) {
+        // Login bem-sucedido via ReplitDB
+        setSuccess(true);
+        UserService.saveUserSession(user);
+
+        // Disparar evento de login bem-sucedido para atualizar componentes
+        const loginEvent = new CustomEvent('login-status-changed', { detail: { user } });
+        window.dispatchEvent(loginEvent);
+
+        setTimeout(() => {
+          navigate("/");
+        }, 1000);
+        return;
+      } else {
+          //Verificar armazenamento local (offline)
+          const localProfiles = localStorage.getItem('tempUserProfiles');
+          const offlineProfiles = localProfiles ? JSON.parse(localProfiles) : [];
+          const matchingProfile = offlineProfiles.find((p: any) => p.email === formData.email && p.password === formData.password);
+
+          if (matchingProfile) {
+            setSuccess(true);
+            UserService.saveUserSession(matchingProfile); // Adapt to use existing UserService
+            setTimeout(() => navigate("/"), 1000);
+            return;
+          } else {
+            setError("Email ou senha inválidos");
+            setLoading(false);
+            return;
+          }
+      }
     } catch (err: any) {
       console.error("Erro fatal no login:", err);
       setError("Ocorreu um erro inesperado. Tente novamente mais tarde.");
+      setLoading(false);
+    } finally {
       setLoading(false);
     }
   };

@@ -48,7 +48,7 @@ import ProfilePage from "@/pages/profile";
 function App() {
   const location = useLocation();
   const [isAuthenticated, setIsAuthenticated] = useState(true); // Default como true para garantir carregamento
-  const [isLoading, setIsLoading] = useState(false); // Iniciar como false para exibir logo
+  const [isLoading, setIsLoading] = useState(true); // Iniciar como true durante a inicialização inicial
 
   useEffect(() => {
     console.log("App carregado com sucesso!");
@@ -57,16 +57,14 @@ function App() {
     const checkAuth = async () => {
       try {
         // Usar o localStorage primeiro por ser mais rápido
-        if (localStorage.getItem('user')) {
+        if (localStorage.getItem('currentUser') || localStorage.getItem('user') || localStorage.getItem('isAuthenticated') === 'true') {
           console.log("Usuário autenticado via localStorage");
           setIsAuthenticated(true);
-          setIsLoading(false);
-          return;
+        } else {
+          // Para desenvolvimento, manter autenticado
+          setIsAuthenticated(true);
+          console.log("Modo de desenvolvimento: autenticação automática");
         }
-        
-        // Método redundante para garantir autenticação no modo desenvolvimento
-        setIsAuthenticated(true);
-        console.log("Modo de desenvolvimento: autenticação automática");
       } catch (error) {
         console.error("Erro na verificação de autenticação:", error);
         // Garantir que a aplicação carregue mesmo com erro
@@ -81,33 +79,40 @@ function App() {
     const initializeApp = async () => {
       try {
         // Inicializar DB com retry simplificado
-        let success = false;
         try {
-          success = await initializeDB();
+          const success = await initializeDB();
           console.log("Inicialização do banco de dados Replit:", success ? "sucesso" : "modo fallback");
         } catch (err) {
           console.warn("Tentando método alternativo de inicialização");
           // Fallback para localStorage se o DB falhar
           localStorage.setItem('dbInitialized', 'true');
-          success = true;
+          // Configurar modo offline
+          localStorage.setItem('isOfflineMode', 'true');
         }
-        
-        // Sempre continuar, mesmo que a inicialização falhe
-        checkAuth();
       } catch (e) {
         console.error("Erro na inicialização:", e);
-        // Garantir que checkAuth seja chamado mesmo com erro
+        // Configurar modo offline como fallback
+        localStorage.setItem('isOfflineMode', 'true');
+      } finally {
+        // Sempre verificar autenticação, independente do resultado da inicialização
         checkAuth();
       }
     };
     
-    // Iniciar a aplicação imediatamente
-    initializeApp();
+    // Iniciar a aplicação imediatamente com um pequeno atraso para garantir carregamento
+    setTimeout(() => {
+      initializeApp();
+    }, 100);
     
     // Simplificar eventos online/offline
     const handleOnline = () => {
       console.log("Conexão de rede restaurada");
       localStorage.setItem('isOfflineMode', 'false');
+      
+      // Tentar sincronizar dados
+      if (window.userService) {
+        console.log("Tentando sincronizar dados...");
+      }
     };
     
     const handleOffline = () => {

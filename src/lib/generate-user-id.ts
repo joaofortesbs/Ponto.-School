@@ -1,3 +1,4 @@
+
 import { supabase } from "@/lib/supabase";
 
 /**
@@ -7,7 +8,7 @@ import { supabase } from "@/lib/supabase";
  * @param planType O tipo de plano (1 = Premium, 2 = Standard, etc)
  * @returns Uma string contendo o ID gerado no formato BRXXXXXXXXXXXX
  */
-export async function generateUserId(countryCode: string, planType: number): Promise<string> {
+export async function generateUserIdWithDB(countryCode: string, planType: number): Promise<string> {
   try {
     // Tentar buscar a sequência atual
     const { data, error } = await supabase
@@ -51,8 +52,10 @@ export function generateSimpleUserId(countryCode: string, planType: number): str
   const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
   return `${countryCode}${planType}${timestamp.toString().slice(-6)}${random}`;
 }
-import { supabase } from './supabase';
 
+/**
+ * Gera um ID baseado no tipo de plano para o Supabase
+ */
 export const generateUserIdSupabase = async (planType: string): Promise<string> => {
   // Gerar um ID baseado no tipo de plano
   // BR1 para premium, BR2 para lite/básico
@@ -92,24 +95,22 @@ export const generateUserIdSupabase = async (planType: string): Promise<string> 
 };
 
 /**
- * Gera um ID único para usuários baseado em timestamp e valores aleatórios
- * para garantir unicidade mesmo em caso de múltiplos registros simultâneos
+ * Função principal para gerar IDs de usuário
+ * Esta função será usada como ponto de entrada principal
  */
-export function generateUserId(): string {
+export function generateUserId(countryCode: string = "BR", planType: number = 1): string {
   // Usar timestamp para garantir sequência crescente
   const timestamp = new Date().getTime();
-
   // Adicionar componente aleatório para evitar colisões
   const randomComponent = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-
   // Combinar os componentes em um formato único
-  return `user_${timestamp}_${randomComponent}`;
+  return `${countryCode}${planType}_${timestamp}_${randomComponent}`;
 }
 
 /**
  * Valida se um ID de usuário está no formato correto
  */
 export function isValidUserId(id: string): boolean {
-  // Verificar se corresponde ao padrão esperado
-  return /^user_\d+_\d{4}$/.test(id);
+  // Verificar se corresponde ao padrão esperado para o novo formato
+  return /^[A-Z]{2}[0-9]_\d+_\d{4}$/.test(id);
 }

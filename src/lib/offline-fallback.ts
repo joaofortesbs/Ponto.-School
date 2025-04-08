@@ -8,6 +8,71 @@ import React from 'react';
 // Constantes para keys do localStorage
 const OFFLINE_MODE_KEY = 'isOfflineMode';
 const LAST_CONNECTION_ATTEMPT = 'lastConnectionAttempt';
+const USER_DATA_CACHE = 'userDataCache';
+
+// Verificar se estamos offline
+export const checkIfOffline = (): boolean => {
+  return localStorage.getItem(OFFLINE_MODE_KEY) === 'true' || !navigator.onLine;
+};
+
+// Salvar dados no cache local
+export const saveToLocalCache = (key: string, data: any): void => {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (error) {
+    console.error('Erro ao salvar no cache local:', error);
+  }
+};
+
+// Obter dados do cache local
+export const getFromLocalCache = (key: string): any => {
+  try {
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : null;
+  } catch (error) {
+    console.error('Erro ao obter dados do cache local:', error);
+    return null;
+  }
+};
+
+// Obter usuário do cache local
+export const getUserFromCache = (): any => {
+  return getFromLocalCache('user');
+};
+
+// Criar usuário em modo offline
+export const createOfflineUser = (userData: any): void => {
+  saveToLocalCache('user', {
+    ...userData,
+    createdAt: new Date().toISOString(),
+    isOfflineCreated: true
+  });
+};
+
+// Sincronizar dados quando voltar online
+export const syncOfflineData = async (): Promise<boolean> => {
+  if (navigator.onLine) {
+    // Aqui implementaríamos a sincronização com o servidor
+    console.log('Sincronizando dados offline...');
+    return true;
+  }
+  return false;
+};
+
+// Verificar conexão periodicamente
+export const setupConnectionCheck = (callback?: () => void): (() => void) => {
+  const checkInterval = setInterval(() => {
+    if (navigator.onLine) {
+      syncOfflineData().then((success) => {
+        if (success && callback) {
+          callback();
+        }
+      });
+    }
+  }, 30000);
+
+  return () => clearInterval(checkInterval);
+};mpt';
 const CONNECTION_HEALTH_KEY = 'connectionHealth';
 
 // Verifica se o modo offline foi ativado

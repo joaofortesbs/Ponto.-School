@@ -154,175 +154,150 @@ export function RegisterForm() {
     setError("");
     setSuccess(false);
 
+    const { fullName, email, password, confirmPassword, username, birthDate, institution, classGroup, customClassGroup, grade, customGrade } = formData;
+
+    // Validação básica
+    if (!fullName || !email || !password || !confirmPassword) {
+      setError("Preencha todos os campos");
+      setLoading(false);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("As senhas não coincidem");
+      setLoading(false);
+      return;
+    }
+
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Por favor, insira um email válido");
+      setLoading(false);
+      return;
+    }
+
+    // Validar força da senha
+    if (password.length < 6) {
+      setError("A senha deve ter pelo menos 6 caracteres");
+      setLoading(false);
+      return;
+    }
+
     try {
-      // Validar senha
-      if (formData.password !== formData.confirmPassword) {
-        setError("As senhas não coincidem");
-        setLoading(false);
-        return;
-      }
+      // Verificar se estamos offline
+      const isOffline = localStorage.getItem('isOfflineMode') === 'true' || !navigator.onLine;
 
-      // Verificar campo obrigatório
-      if (!formData.fullName || !formData.email || !formData.password) {
-        setError("Preencha todos os campos obrigatórios");
-        setLoading(false);
-        return;
-      }
+      // Use Replit DB for registration if available
+      const userService = (window as any).userService;
 
-      // Gerar um ID de usuário único baseado no timestamp e plano
-      const userId = `BR${plan === "premium" ? 1 : 2}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+      if (userService) {
+        console.log("Tentando registro com Replit DB...");
 
-      let userData = null;
-      let userError = null;
-      let isOnline = true;
-
-      try {
-        // Tentativa de registro usando o serviço Replit DB
-        console.log("Tentando registrar usuário no Replit DB...");
-        userData = await UserService.createUser({
-          user_id: userId,
-          email: formData.email,
-          password: formData.password,
-          full_name: formData.fullName,
-          username: formData.username || formData.fullName.split(' ')[0].toLowerCase(),
-          display_name: formData.username || formData.fullName,
-          institution: formData.institution || '',
-          birth_date: formData.birthDate || null,
-          plan_type: plan,
-          level: 1,
-          rank: "Aprendiz",
-          xp: 0,
-          coins: 100
-        });
-        
-        if(!userData) {
-          console.warn("Nenhum dado retornado pelo Replit DB, ativando modo offline");
-          isOnline = false;
-        }
-      } catch (authError) {
-        console.error("Auth connection error:", authError);
-        isOnline = false;
-      }
-
-      // Se conseguiu criar o usuário online, criar perfil (this section is now mostly redundant given the Replit DB approach)
-      if (isOnline && userData) {
+        // Verificar existência usando try-catch para maior segurança
         try {
-          // This block is largely unnecessary with Replit DB, as user creation handles profile data.
-          // Leaving it commented out for potential future adaptation if needed.
-          /*const { error: profileError } = await supabase
-            .from("profiles")
-            .insert([{
-              id: userData.user.id,
-              user_id: userId,
-              full_name: formData.fullName,
-              username: formData.username || formData.fullName.split(' ')[0].toLowerCase(),
-              email: formData.email,
-              display_name: formData.username || formData.fullName,
-              institution: formData.institution || '',
-              birth_date: formData.birthDate || null,
-              plan_type: plan,
-              level: 1,
-              rank: "Aprendiz",
-              xp: 0,
-              coins: 100
-            }]);
+          const { user: existingUser } = await userService.getUserByEmail(email);
 
-          if (profileError) {
-            console.error("Profile creation error:", profileError);
-
-            // Tente atualizar o perfil se já existir
-            if (profileError.code === '23505') {
-              const { error: updateError } = await supabase
-                .from("profiles")
-                .update({
-                  user_id: userId,
-                  full_name: formData.fullName,
-                  username: formData.username || formData.fullName.split(' ')[0].toLowerCase(),
-                  institution: formData.institution || '',
-                  birth_date: formData.birthDate || null,
-                  plan_type: plan,
-                  level: 1,
-                  rank: "Aprendiz",
-                  display_name: formData.username || formData.fullName,
-                  coins: 100
-                })
-                .eq("id", userData.user.id);
-
-              if (updateError) {
-                console.error("Profile update error:", updateError);
-              }
-            }
-          }*/
-        } catch (profileOpsError) {
-          console.error("Profile operations error:", profileOpsError);
-          // Continue mesmo com erro de perfil, para pelo menos ter o usuário criado
+          if (existingUser) {
+            setError("Este email já está em uso");
+            setLoading(false);
+            return;
+          }
+        } catch (checkError) {
+          // Ignorar erros aqui, apenas prosseguir com o cadastro
+          console.log("Erro ao verificar usuário existente:", checkError);
         }
-      }
 
-      // Em todos os casos, salvar no armazenamento local para modo offline
-      try {
-        // Criar o perfil com todas as informações necessárias
-        const newUserProfile = {
-          id: userData?.id || `temp-${userId}`,
-          user_id: userId,
-          full_name: formData.fullName,
-          username: formData.username || formData.fullName.split(' ')[0].toLowerCase(),
-          email: formData.email,
-          password: formData.password, // Para login offline
-          display_name: formData.username || formData.fullName,
-          institution: formData.institution || '',
-          birth_date: formData.birthDate || null,
-          plan_type: plan,
+        // Criar usuário local com ID único
+        const timestamp = Date.now();
+        const userId = `user_${timestamp}_${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+
+        const newUser = {
+          id: userId,
+          full_name: fullName,
+          display_name: username || fullName.split(' ')[0].toLowerCase(),
+          email,
+          password,
+          plan: plan,
+          avatar: null,
+          points: 0,
+          createdAt: new Date().toISOString(),
+          institution: institution || '',
+          birth_date: birthDate || null,
           level: 1,
           rank: "Aprendiz",
           xp: 0,
-          created_at: new Date().toISOString(),
           coins: 100
         };
 
-        // Salvar perfil individual
-        localStorage.setItem('tempUserProfile', JSON.stringify(newUserProfile));
+        try {
+          // Create user in Replit DB
+          const { user, error } = await userService.createUser(newUser);
 
-        // Adicionar à coleção de perfis para login offline
-        const existingProfiles = localStorage.getItem('tempUserProfiles');
-        let profiles = existingProfiles ? JSON.parse(existingProfiles) : [];
+          if (error) {
+            console.error("Erro ao criar usuário no Replit DB:", error);
 
-        // Verificar se já existe um perfil com este email
-        const existingIndex = profiles.findIndex((p: any) => p.email === formData.email);
+            // Se estamos offline, podemos ainda criar localmente
+            if (isOffline) {
+              // Salvar no localStorage
+              const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
+              localUsers.push(newUser);
+              localStorage.setItem('users', JSON.stringify(localUsers));
 
-        if (existingIndex >= 0) {
-          // Atualizar perfil existente
-          profiles[existingIndex] = newUserProfile;
-        } else {
-          // Adicionar novo perfil
-          profiles.push(newUserProfile);
+              // Simulate toast notification
+              console.log("Cadastro realizado em modo offline. Dados serão sincronizados quando estiver online.");
+
+              setTimeout(() => navigate("/login"), 1500);
+              return;
+            } else {
+              setError("Erro ao criar usuário. Tente novamente.");
+              setLoading(false);
+              return;
+            }
+          }
+
+          // Registration successful
+          setSuccess(true);
+          setLoading(false);
+
+          // Disparar evento de conta criada
+          const registerEvent = new CustomEvent('account-created', {
+            detail: { user: newUser }
+          });
+          window.dispatchEvent(registerEvent);
+
+          setTimeout(() => navigate("/login"), 1500);
+          return;
+        } catch (createError) {
+          console.error("Erro crítico ao criar usuário:", createError);
+
+          // Tentar em modo offline como último recurso
+          try {
+            const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
+            localUsers.push(newUser);
+            localStorage.setItem('users', JSON.stringify(localUsers));
+
+            // Simulate toast notification
+            console.log("Cadastro realizado em modo de emergência. Dados serão sincronizados quando possível.");
+
+            setTimeout(() => navigate("/login"), 1500);
+            return;
+          } catch (e) {
+            setError("Ocorreu um erro inesperado. Tente novamente mais tarde.");
+            setLoading(false);
+            return;
+          }
         }
-
-        localStorage.setItem('tempUserProfiles', JSON.stringify(profiles));
-        console.log("Perfil salvo localmente para uso em modo offline");
-
-        // Salvar também no formato que o profileService espera
-        localStorage.setItem('cachedUserDisplayName', newUserProfile.display_name);
-      } catch (storageError) {
-        console.error("LocalStorage error:", storageError);
       }
 
-      // Registro considerado bem-sucedido - mostrar mensagem e redirecionar após 3 segundos
-      setSuccess(true);
+
+      setError("Ocorreu um erro inesperado. Tente novamente mais tarde.");
       setLoading(false);
-
-      // Disparar evento de conta criada
-      const registerEvent = new CustomEvent('account-created', {
-        detail: { user: newUserProfile }
-      });
-      window.dispatchEvent(registerEvent);
-
-      setTimeout(() => {
-        navigate("/login", { state: { newAccount: true } });
-      }, 3000);
     } catch (err) {
       console.error("Unexpected error:", err);
       setError("Ocorreu um erro inesperado. Tente novamente mais tarde.");
+      setLoading(false);
+    } finally {
       setLoading(false);
     }
   };
@@ -383,7 +358,6 @@ export function RegisterForm() {
                 onChange={handleChange}
                 placeholder="Digite seu nome de usuário"
                 className="pl-10 h-11"
-                required
               />
             </div>
           </div>

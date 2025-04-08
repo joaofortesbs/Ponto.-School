@@ -101,7 +101,23 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
           <AvatarFallback className="bg-[#FF6B00] text-white">PS</AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium truncate">{userName}</p>
+          <p className="text-sm font-medium truncate">
+            {(() => {
+                      try {
+                        // Tentar obter o nome do usuário de várias fontes
+                        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+
+                        // Retornar o primeiro nome válido encontrado
+                        return currentUser.name || 
+                               currentUser.displayName || 
+                               userData.display_name || 
+                               (currentUser.email ? currentUser.email.split('@')[0] : 'Usuário');
+                      } catch (e) {
+                        return 'Usuário';
+                      }
+                    })()}
+          </p>
           <div className="flex items-center">
             <Badge className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white text-xs px-1.5 py-0 h-4 rounded">
               Nível 3

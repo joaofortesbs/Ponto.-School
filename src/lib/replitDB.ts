@@ -1,245 +1,356 @@
-import { generateUserId } from './generate-user-id';
+import { Database } from '@replit/database';
 
-const DB_KEY = 'PS_DATABASE';
-const DB_VERSION = '1.0.1'; // Incrementada para nova versão
+// Serviço de usuário simplificado usando o Replit Database
+export class UserService {
+  private db: Database;
+  private initialized: boolean = false;
+  private offlineMode: boolean = false;
 
-// Interfaces para usuários e serviço do banco de dados
-interface User {
-  id: string;
-  email: string;
-  password: string;
-  name: string;
-  created_at: string;
-}
-
-// Estrutura do banco de dados
-interface Database {
-  users: User[];
-  metadata: {
-    created_at: string;
-    version: string;
-    last_updated: string;
-  };
-}
-
-// Função para inicializar o banco de dados
-export const initializeDB = async (): Promise<boolean> => {
-  try {
-    // Verificar se já existe um banco de dados no localStorage
-    let dbExists = false;
-    let db: Database;
-
-    try {
-      const existingData = localStorage.getItem(DB_KEY);
-      if (existingData) {
-        db = JSON.parse(existingData);
-        dbExists = true;
-
-        // Verificar e atualizar versão se necessário
-        if (db.metadata?.version !== DB_VERSION) {
-          db.metadata.version = DB_VERSION;
-          db.metadata.last_updated = new Date().toISOString();
-          localStorage.setItem(DB_KEY, JSON.stringify(db));
-          console.log('Banco de dados atualizado para a versão', DB_VERSION);
-        }
-      } else {
-        throw new Error('Banco de dados não encontrado');
-      }
-    } catch (error) {
-      // Criar uma nova estrutura de banco de dados
-      db = {
-        users: [],
-        metadata: {
-          created_at: new Date().toISOString(),
-          version: DB_VERSION,
-          last_updated: new Date().toISOString()
-        }
-      };
-      localStorage.setItem(DB_KEY, JSON.stringify(db));
-      console.log('Novo banco de dados inicializado com sucesso');
-    }
-
-    // Tentar criar uma usuário demo se o banco estiver vazio
-    if (db.users.length === 0) {
-      const demoUser: User = {
-        id: generateUserId(),
-        email: 'demo@pontoschool.com',
-        password: 'demo123',
-        name: 'Usuário Demo',
-        created_at: new Date().toISOString()
-      };
-
-      db.users.push(demoUser);
-      localStorage.setItem(DB_KEY, JSON.stringify(db));
-      console.log('Usuário demo criado para facilitar teste');
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Erro na inicialização do banco de dados:', error);
-
-    // Tentar criar uma estrutura mínima mesmo em caso de erro
-    try {
-      const fallbackDB = {
-        users: [{
-          id: 'demo-' + Date.now(),
-          email: 'demo@pontoschool.com',
-          password: 'demo123',
-          name: 'Usuário Demo (Fallback)',
-          created_at: new Date().toISOString()
-        }],
-        metadata: {
-          created_at: new Date().toISOString(),
-          version: 'fallback-' + DB_VERSION,
-          last_updated: new Date().toISOString()
-        }
-      };
-      localStorage.setItem(DB_KEY, JSON.stringify(fallbackDB));
-      console.log('Banco de dados de fallback criado após erro');
-      return true; // Retornar como sucesso mesmo sendo fallback
-    } catch (fallbackError) {
-      console.error('Falha crítica na inicialização do banco:', fallbackError);
-      return false;
-    }
+  constructor(db: Database) {
+    this.db = db;
+    this.offlineMode = localStorage.getItem('isOfflineMode') === 'true';
   }
-};
 
-// Serviço para gerenciar usuários
-export const UserService = {
-  // Verifica se um usuário está logado baseado no localStorage
-  isUserLoggedIn: () => {
-    return !!localStorage.getItem('user');
-  },
-
-  // Busca um usuário pelo email
-  getUserByEmail: (email: string): User | null => {
+  async init() {
     try {
-      // Garantir que o DB esteja inicializado
-      const dbData = localStorage.getItem(DB_KEY);
-      if (!dbData) {
-        console.warn('Banco não inicializado ao buscar usuário');
-        initializeDB(); // Tentar inicializar
-        return null;
+      if (this.offlineMode) {
+        console.log("Inicializando em modo offline usando localStorage");
+        if (!localStorage.getItem('users')) {
+          localStorage.setItem('users', JSON.stringify([]));
+        }
+        this.initialized = true;
+        return true;
       }
 
-      const db = JSON.parse(dbData) as Database;
-      return db.users.find((u: User) => u.email === email) || null;
-    } catch (error) {
-      console.error('Erro ao buscar usuário:', error);
-      return null;
-    }
-  },
-
-  // Registra um novo usuário
-  registerUser: (email: string, password: string, name: string): boolean => {
-    try {
-      // Garantir que o DB esteja inicializado
-      const dbData = localStorage.getItem(DB_KEY);
-      if (!dbData) {
-        console.warn('Banco não inicializado ao registrar usuário');
-        initializeDB(); // Tentar inicializar
+      // Inicializar o banco de dados, se necessário
+      const hasUsers = await this.db.get('hasUsers');
+      if (!hasUsers) {
+        await this.db.set('hasUsers', true);
+        await this.db.set('users', JSON.stringify([]));
       }
+      this.initialized = true;
 
-      const db = JSON.parse(localStorage.getItem(DB_KEY) || '{"users": []}') as Database;
-
-      // Verificar se o e-mail já existe
-      if (db.users.some((u: User) => u.email === email)) {
-        console.warn('Usuário já existe com o email:', email);
-        return false;
-      }
-
-      // Criar novo usuário
-      const newUser: User = {
-        id: generateUserId(),
-        email,
-        password, // Nota: Em produção, usar hash seguro
-        name,
-        created_at: new Date().toISOString()
-      };
-
-      // Adicionar ao banco
-      db.users.push(newUser);
-      db.metadata.last_updated = new Date().toISOString();
-      localStorage.setItem(DB_KEY, JSON.stringify(db));
-
-      // Armazenar usuário logado (sem a senha)
-      const { password: _, ...userWithoutPassword } = newUser;
-      localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-      console.log('Usuário registrado com sucesso:', email);
+      // Sincronizar dados do localStorage, se existirem
+      this.syncFromLocalStorage();
 
       return true;
     } catch (error) {
-      console.error('Erro ao registrar usuário:', error);
-      return false;
-    }
-  },
+      console.error('Error initializing UserService:', error);
+      // Fallback para localStorage
+      this.offlineMode = true;
+      localStorage.setItem('isOfflineMode', 'true');
 
-  // Realiza login
-  loginUser: (email: string, password: string): boolean => {
-    try {
-      // Tentar login com o usuário demo para diagnóstico
-      if (email === 'demo@pontoschool.com' && password === 'demo123') {
-        const demoUser = {
-          id: 'demo-' + Date.now(),
-          email: 'demo@pontoschool.com',
-          name: 'Usuário Demo',
-          created_at: new Date().toISOString()
-        };
-
-        localStorage.setItem('user', JSON.stringify(demoUser));
-        console.log('Login com usuário demo realizado');
-        return true;
+      if (!localStorage.getItem('users')) {
+        localStorage.setItem('users', JSON.stringify([]));
       }
-
-      const user = UserService.getUserByEmail(email);
-
-      if (!user) {
-        console.warn('Usuário não encontrado no login:', email);
-        return false;
-      }
-
-      if (user.password === password) {
-        // Armazenar usuário logado (sem a senha)
-        const { password: _, ...userWithoutPassword } = user;
-        localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-        console.log('Login realizado com sucesso:', email);
-        return true;
-      }
-
-      console.warn('Senha incorreta para usuário:', email);
-      return false;
-    } catch (error) {
-      console.error('Erro no processo de login:', error);
-      return false;
-    }
-  },
-
-  // Realiza logout
-  logoutUser: (): void => {
-    localStorage.removeItem('user');
-    console.log('Logout realizado com sucesso');
-  },
-
-  // Obtém o usuário atual
-  getCurrentUser: (): Omit<User, 'password'> | null => {
-    const userJson = localStorage.getItem('user');
-    if (!userJson) return null;
-
-    try {
-      return JSON.parse(userJson);
-    } catch (error) {
-      console.error('Erro ao obter usuário atual:', error);
-      return null;
-    }
-  },
-
-  // Obter nome do usuário atual
-  getCurrentUserName: (): string => {
-    try {
-      const user = UserService.getCurrentUser();
-      return user?.name || 'Usuário';
-    } catch (error) {
-      return 'Usuário';
+      this.initialized = true;
+      return true; // Retornar true mesmo em fallback para não bloquear a aplicação
     }
   }
-};
+
+  // Sincronizar dados do localStorage para o DB quando estiver online
+  private async syncFromLocalStorage() {
+    try {
+      const localUsers = localStorage.getItem('users');
+      if (localUsers) {
+        const usersToSync = JSON.parse(localUsers);
+        if (usersToSync.length > 0) {
+          const currentUsersStr = await this.db.get('users') as string;
+          const currentUsers = JSON.parse(currentUsersStr || '[]');
+
+          // Mesclar usuários locais com usuários do banco de dados
+          const mergedUsers = [...currentUsers];
+
+          for (const localUser of usersToSync) {
+            const existingIndex = mergedUsers.findIndex((u: any) => u.email === localUser.email);
+            if (existingIndex === -1) {
+              mergedUsers.push(localUser);
+            }
+          }
+
+          await this.db.set('users', JSON.stringify(mergedUsers));
+          console.log("Usuários sincronizados do localStorage para o banco de dados");
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao sincronizar usuários do localStorage:", error);
+    }
+  }
+
+  async createUser(user: any) {
+    try {
+      if (!this.initialized) await this.init();
+
+      if (this.offlineMode) {
+        const usersStr = localStorage.getItem('users') || '[]';
+        const users = JSON.parse(usersStr);
+
+        // Verificar se o email já existe
+        const existingUser = users.find((u: any) => u.email === user.email);
+        if (existingUser) {
+          return { error: 'User with this email already exists' };
+        }
+
+        // Adicionar novo usuário
+        const newUser = {
+          ...user,
+          id: `user_${Date.now()}`,
+          createdAt: new Date().toISOString()
+        };
+
+        users.push(newUser);
+        localStorage.setItem('users', JSON.stringify(users));
+
+        return { user: newUser };
+      }
+
+      const usersStr = await this.db.get('users') as string;
+      const users = JSON.parse(usersStr || '[]');
+
+      // Verificar se o email já existe
+      const existingUser = users.find((u: any) => u.email === user.email);
+      if (existingUser) {
+        return { error: 'User with this email already exists' };
+      }
+
+      // Adicionar novo usuário
+      const newUser = {
+        ...user,
+        id: `user_${Date.now()}`,
+        createdAt: new Date().toISOString()
+      };
+
+      users.push(newUser);
+      await this.db.set('users', JSON.stringify(users));
+
+      // Também salvar no localStorage para uso offline
+      localStorage.setItem('currentUser', JSON.stringify(newUser));
+
+      // Atualizar também o cache local
+      const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
+      localUsers.push(newUser);
+      localStorage.setItem('users', JSON.stringify(localUsers));
+
+      return { user: newUser };
+    } catch (error) {
+      console.error('Error creating user:', error);
+
+      // Tentar criar no localStorage em caso de erro
+      try {
+        const usersStr = localStorage.getItem('users') || '[]';
+        const users = JSON.parse(usersStr);
+
+        // Adicionar novo usuário
+        const newUser = {
+          ...user,
+          id: `user_${Date.now()}`,
+          createdAt: new Date().toISOString()
+        };
+
+        users.push(newUser);
+        localStorage.setItem('users', JSON.stringify(users));
+        localStorage.setItem('currentUser', JSON.stringify(newUser));
+
+        return { user: newUser };
+      } catch (localError) {
+        return { error: 'Failed to create user in any storage' };
+      }
+    }
+  }
+
+  async getUserByEmail(email: string) {
+    try {
+      if (!this.initialized) await this.init();
+
+      if (this.offlineMode) {
+        const usersStr = localStorage.getItem('users') || '[]';
+        const users = JSON.parse(usersStr);
+
+        const user = users.find((u: any) => u.email === email);
+
+        return user ? { user } : { error: 'User not found' };
+      }
+
+      const usersStr = await this.db.get('users') as string;
+      const users = JSON.parse(usersStr || '[]');
+
+      const user = users.find((u: any) => u.email === email);
+
+      if (user) {
+        // Salvar usuário atual no localStorage
+        localStorage.setItem('currentUser', JSON.stringify(user));
+      }
+
+      return user ? { user } : { error: 'User not found' };
+    } catch (error) {
+      console.error('Error getting user by email:', error);
+
+      // Fallback para localStorage
+      try {
+        const usersStr = localStorage.getItem('users') || '[]';
+        const users = JSON.parse(usersStr);
+
+        const user = users.find((u: any) => u.email === email);
+
+        if (user) {
+          localStorage.setItem('currentUser', JSON.stringify(user));
+        }
+
+        return user ? { user } : { error: 'User not found' };
+      } catch (localError) {
+        return { error: 'Failed to get user from any storage' };
+      }
+    }
+  }
+
+  async updateUser(id: string, updates: any) {
+    try {
+      if (!this.initialized) await this.init();
+
+      if (this.offlineMode) {
+        const usersStr = localStorage.getItem('users') || '[]';
+        const users = JSON.parse(usersStr);
+
+        const userIndex = users.findIndex((u: any) => u.id === id);
+
+        if (userIndex === -1) {
+          return { error: 'User not found' };
+        }
+
+        users[userIndex] = { ...users[userIndex], ...updates };
+        localStorage.setItem('users', JSON.stringify(users));
+
+        // Atualizar também o usuário atual
+        if (JSON.parse(localStorage.getItem('currentUser') || '{}').id === id) {
+          localStorage.setItem('currentUser', JSON.stringify(users[userIndex]));
+        }
+
+        return { user: users[userIndex] };
+      }
+
+      const usersStr = await this.db.get('users') as string;
+      const users = JSON.parse(usersStr || '[]');
+
+      const userIndex = users.findIndex((u: any) => u.id === id);
+
+      if (userIndex === -1) {
+        return { error: 'User not found' };
+      }
+
+      users[userIndex] = { ...users[userIndex], ...updates };
+      await this.db.set('users', JSON.stringify(users));
+
+      // Atualizar também o cache local
+      const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
+      const localUserIndex = localUsers.findIndex((u: any) => u.id === id);
+      if (localUserIndex !== -1) {
+        localUsers[localUserIndex] = { ...localUsers[localUserIndex], ...updates };
+        localStorage.setItem('users', JSON.stringify(localUsers));
+      }
+
+      // Atualizar também o usuário atual
+      if (JSON.parse(localStorage.getItem('currentUser') || '{}').id === id) {
+        localStorage.setItem('currentUser', JSON.stringify(users[userIndex]));
+      }
+
+      return { user: users[userIndex] };
+    } catch (error) {
+      console.error('Error updating user:', error);
+
+      // Fallback para localStorage
+      try {
+        const usersStr = localStorage.getItem('users') || '[]';
+        const users = JSON.parse(usersStr);
+
+        const userIndex = users.findIndex((u: any) => u.id === id);
+
+        if (userIndex === -1) {
+          return { error: 'User not found' };
+        }
+
+        users[userIndex] = { ...users[userIndex], ...updates };
+        localStorage.setItem('users', JSON.stringify(users));
+
+        // Atualizar também o usuário atual
+        if (JSON.parse(localStorage.getItem('currentUser') || '{}').id === id) {
+          localStorage.setItem('currentUser', JSON.stringify(users[userIndex]));
+        }
+
+        return { user: users[userIndex] };
+      } catch (localError) {
+        return { error: 'Failed to update user in any storage' };
+      }
+    }
+  }
+
+  async getCurrentUser() {
+    // Obter usuário atual do localStorage (mais rápido)
+    const storedUser = localStorage.getItem('currentUser');
+    if (storedUser) {
+      return { user: JSON.parse(storedUser) };
+    }
+    return { error: 'No user currently logged in' };
+  }
+}
+
+// Inicializar o banco de dados
+let dbService: UserService | null = null;
+
+export async function initializeDB() {
+  try {
+    console.log("Iniciando banco de dados Replit...");
+
+    // Tentar inicializar o banco de dados com 3 tentativas
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const db = new Database();
+        dbService = new UserService(db);
+        const success = await dbService.init();
+        console.log(`Banco de dados inicializado com sucesso (tentativa ${attempt + 1})`);
+
+        // Registrar como global para fácil acesso
+        (window as any).userService = dbService;
+
+        return success;
+      } catch (error) {
+        console.error(`Falha na tentativa ${attempt + 1} de inicializar DB:`, error);
+
+        if (attempt < 2) {
+          // Esperar um pouco antes de tentar novamente
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+    }
+
+    // Se todas as tentativas falharem, inicializar em modo offline
+    console.log("Todas as tentativas falharam, inicializando em modo offline");
+    localStorage.setItem('isOfflineMode', 'true');
+
+    const db = {
+      get: async () => null,
+      set: async () => null
+    } as any;
+
+    dbService = new UserService(db as Database);
+    await dbService.init();
+
+    // Registrar como global para fácil acesso
+    (window as any).userService = dbService;
+
+    return true;
+  } catch (error) {
+    console.error('Erro crítico inicializando DB:', error);
+    // Garantir que a aplicação continue mesmo com erro
+    localStorage.setItem('isOfflineMode', 'true');
+    return true;
+  }
+}
+
+// Função para obter o serviço de usuário
+export function getUserService() {
+  if (!dbService) {
+    // Se não estiver inicializado, inicializar imediatamente
+    initializeDB();
+  }
+  return dbService;
+}
