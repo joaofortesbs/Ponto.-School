@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Mail, Lock, CheckCircle } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import { supabase, checkSupabaseConnection } from "@/lib/supabase";
+import { profileService } from "@/services/profileService";
 
 interface FormData {
   email: string;
@@ -33,6 +34,16 @@ export function LoginForm() {
         setAccountCreated(false);
       }, 5000);
     }
+    
+    // Check Supabase connection on component mount
+    const verifyConnection = async () => {
+      const { ok } = await checkSupabaseConnection();
+      if (!ok) {
+        console.warn("Supabase connection check failed on login page load");
+      }
+    };
+    
+    verifyConnection();
   }, [location]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,17 +65,46 @@ export function LoginForm() {
     }
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
+      // Check for internet connection
+      if (!navigator.onLine) {
+        setError("Você está offline. Verifique sua conexão com a internet.");
+        setLoading(false);
+        return;
+      }
+
+      // Add timeout to Supabase request to prevent long hanging requests
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Tempo limite excedido. Verifique sua conexão.")), 10000);
       });
 
+      // Race between Supabase request and timeout
+      const result = await Promise.race([
+        supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        }),
+        timeoutPromise
+      ]) as { data: any, error: any } | Error;
+
+      // Handle timeout or other errors
+      if (result instanceof Error) {
+        setError(result.message);
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = result;
+
       if (error) {
+        console.log("Login error:", error); // For debugging
+        
         if (error.message.includes("Invalid login credentials") ||
             error.message.includes("Email not confirmed")) {
           setError("Email ou senha inválidos");
-        } else if (error.status === 0) { //Improved network error handling
-          setError("Erro de conexão. Verifique sua internet.");
+        } else if (error.status === 0 || error.message.includes("fetch")) {
+          setError("Erro de conexão com o servidor. Tente novamente em alguns instantes.");
+        } else if (error.message.includes("network")) {
+          setError("Problema de rede detectado. Verifique sua conexão.");
         } else {
           setError("Erro ao fazer login: " + error.message);
         }
@@ -73,16 +113,26 @@ export function LoginForm() {
       }
 
       if (data?.user) {
+        // Successful login
         setSuccess(true);
+        
+        // Try to pre-load user profile after login success
+        try {
+          await profileService.createProfileIfNotExists();
+        } catch (profileErr) {
+          console.warn("Erro ao carregar perfil, mas login concluído:", profileErr);
+          // Continue with login even if profile fails
+        }
+        
         setTimeout(() => {
           navigate("/");
         }, 1000);
       } else {
-        setError("Erro ao completar login");
+        setError("Erro ao completar login. Usuário não encontrado.");
       }
     } catch (err: any) {
-      setError("Erro ao fazer login, tente novamente");
       console.error("Erro ao logar:", err);
+      setError("Erro inesperado ao fazer login. Tente novamente mais tarde.");
     } finally {
       setLoading(false);
     }
@@ -197,7 +247,21 @@ export function LoginForm() {
         </div>
 
         {error && (
-          <div className="text-sm text-red-500 text-center">{error}</div>
+          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md mb-4">
+            <div className="flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500 dark:text-red-400">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <span className="text-sm font-medium text-red-700 dark:text-red-300">{error}</span>
+            </div>
+            {error.includes("conexão") && (
+              <div className="text-xs text-red-600 dark:text-red-400 mt-1 pl-6">
+                Dica: Verifique se o Supabase está acessível e se sua conexão com a internet está funcionando.
+              </div>
+            )}
+          </div>
         )}
 
         <Button

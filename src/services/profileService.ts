@@ -4,24 +4,43 @@ import { UserProfile } from "@/types/user-profile";
 
 export const profileService = {
   async getCurrentUserProfile() {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-    if (!user) return null;
+      if (userError) {
+        console.error("Error getting authenticated user:", userError);
+        return null;
+      }
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
+      if (!user) return null;
 
-    if (error) {
-      console.error("Error fetching profile:", error);
+      // Add a timeout for profile fetch
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+
+        clearTimeout(timeoutId);
+
+        if (error) {
+          console.error("Error fetching profile:", error);
+          return null;
+        }
+
+        return data as UserProfile;
+      } catch (fetchError) {
+        console.error("Profile fetch failed or timed out:", fetchError);
+        return null;
+      }
+    } catch (err) {
+      console.error("Unexpected error in getCurrentUserProfile:", err);
       return null;
     }
-
-    return data as UserProfile;
   },
 
   async updateProfile(profile: Partial<UserProfile>) {
