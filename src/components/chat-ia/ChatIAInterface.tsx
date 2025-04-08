@@ -13,7 +13,12 @@ import {
   Sparkles,
   Zap,
   Settings,
-  HelpCircle
+  HelpCircle,
+  Copy,
+  CheckCircle,
+  AlertCircle,
+  BrainCircuit,
+  Waypoints
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,9 +31,12 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import { getResponse } from "@/services/epictusIAService";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { toast } from "@/components/ui/use-toast";
+import { useTheme } from "@/components/ThemeProvider";
 
 type Message = {
   id: string;
@@ -38,11 +46,12 @@ type Message = {
 };
 
 const ChatIAInterface = () => {
+  const { theme } = useTheme();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome-message",
       sender: "ai",
-      content: "Olá! Eu sou a Epictus IA, sua assistente inteligente. Como posso ajudar você hoje?",
+      content: "Olá! Eu sou a Epictus IA, sua assistente inteligente. Como posso ajudar você hoje? Estou integrada com o Google Gemini para fornecer as melhores respostas para suas dúvidas.",
       timestamp: new Date()
     }
   ]);
@@ -50,6 +59,9 @@ const ChatIAInterface = () => {
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSuggestionVisible, setIsSuggestionVisible] = useState(true);
+  const [isConnected, setIsConnected] = useState(true);
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -58,11 +70,31 @@ const ChatIAInterface = () => {
     "Como funciona o método científico?",
     "Explique o teorema de Pitágoras",
     "Qual a diferença entre mitose e meiose?",
-    "Quais são as principais causas da Revolução Francesa?"
+    "Quais são as principais causas da Revolução Francesa?",
+    "Como posso melhorar minha concentração nos estudos?",
+    "O que é inteligência artificial e como funciona?"
   ];
 
   useEffect(() => {
     scrollToBottom();
+    
+    // Verificar conectividade com a API
+    const checkConnection = async () => {
+      try {
+        const response = await fetch("https://generativelanguage.googleapis.com/v1/models?key=AIzaSyDaMGN00DG-3KHgV9b7Fm_SHGvfruuMdgM", {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        setIsConnected(response.ok);
+      } catch (error) {
+        console.error("Erro ao verificar conectividade:", error);
+        setIsConnected(false);
+      }
+    };
+    
+    checkConnection();
   }, [messages]);
 
   const scrollToBottom = () => {
@@ -86,6 +118,32 @@ const ChatIAInterface = () => {
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
     }
+  };
+
+  const copyMessageToClipboard = (content: string, id: string) => {
+    navigator.clipboard.writeText(content)
+      .then(() => {
+        setCopiedMessageId(id);
+        toast({
+          title: "Texto copiado!",
+          description: "O conteúdo da mensagem foi copiado para a área de transferência.",
+          duration: 3000,
+        });
+        
+        // Reset copied state after 3 seconds
+        setTimeout(() => {
+          setCopiedMessageId(null);
+        }, 3000);
+      })
+      .catch(err => {
+        console.error("Erro ao copiar texto:", err);
+        toast({
+          title: "Erro ao copiar",
+          description: "Não foi possível copiar o texto. Tente novamente.",
+          variant: "destructive",
+          duration: 3000,
+        });
+      });
   };
 
   const handleSendMessage = async () => {
@@ -118,17 +176,26 @@ const ChatIAInterface = () => {
       };
 
       setMessages(prev => [...prev, aiMessage]);
+      setRetryCount(0); // Reset retry count on success
     } catch (error) {
       console.error("Erro ao processar mensagem:", error);
+      setRetryCount(prev => prev + 1);
 
-      const errorMessage: Message = {
+      let errorMessage: string;
+      if (retryCount >= 2) {
+        errorMessage = "Estamos enfrentando dificuldades persistentes na conexão com a API do Gemini. Por favor, tente novamente mais tarde ou verifique sua conexão com a internet.";
+      } else {
+        errorMessage = "Desculpe, tive um problema ao processar sua mensagem. Tentarei novamente em instantes. Você pode reformular a pergunta ou ser mais específico?";
+      }
+
+      const errorResponse: Message = {
         id: `error-${Date.now()}`,
         sender: "ai",
-        content: "Desculpe, tive um problema ao processar sua mensagem. Poderia tentar novamente?",
+        content: errorMessage,
         timestamp: new Date()
       };
 
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => [...prev, errorResponse]);
     } finally {
       setIsLoading(false);
     }
@@ -149,26 +216,72 @@ const ChatIAInterface = () => {
       content: "Chat reiniciado. Como posso ajudar você agora?",
       timestamp: new Date()
     }]);
+    setIsSuggestionVisible(true);
+    setRetryCount(0);
   };
 
   const formatMessageTimestamp = (date: Date): string => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const retryLastMessage = async () => {
+    if (messages.length < 2) return;
+    
+    // Find the last user message
+    const lastUserMessageIndex = [...messages].reverse().findIndex(m => m.sender === "user");
+    if (lastUserMessageIndex === -1) return;
+    
+    const lastUserMessage = [...messages].reverse()[lastUserMessageIndex];
+    
+    // Remove the last AI response if it was an error
+    if (messages[messages.length - 1].sender === "ai") {
+      setMessages(prev => prev.slice(0, -1));
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      const response = await getResponse(lastUserMessage.content);
+
+      const aiMessage: Message = {
+        id: `ai-retry-${Date.now()}`,
+        sender: "ai",
+        content: response,
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+      setRetryCount(0);
+    } catch (error) {
+      console.error("Erro ao processar mensagem na tentativa:", error);
+      
+      const errorMessage: Message = {
+        id: `error-retry-${Date.now()}`,
+        sender: "ai",
+        content: "Desculpe, ainda estou tendo dificuldades. Vamos tentar algo diferente ou voltar mais tarde?",
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-5rem)] bg-gradient-to-b from-background to-background/95 dark:from-[#001427] dark:to-[#00080f]">
       {/* Header */}
-      <div className="border-b dark:border-gray-800 p-4 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30">
+      <div className="border-b dark:border-gray-800 p-4 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 sticky top-0 z-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative">
               <Avatar className="h-10 w-10 bg-gradient-to-br from-[#FF6B00] to-[#FF8A3D] shadow-md">
                 <AvatarImage src="/images/tempo-image-20250329T044440497Z.png" />
                 <AvatarFallback className="bg-[#FF6B00]/20 text-[#FF6B00]">
-                  <Bot size={18} />
+                  <BrainCircuit size={18} />
                 </AvatarFallback>
               </Avatar>
-              <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-900 rounded-full"></span>
+              <span className={`absolute bottom-0 right-0 w-3 h-3 ${isConnected ? 'bg-green-500' : 'bg-amber-500'} border-2 border-white dark:border-gray-900 rounded-full transition-colors duration-300`}></span>
             </div>
             <div>
               <h2 className="font-semibold text-lg leading-none flex items-center gap-2">
@@ -177,7 +290,7 @@ const ChatIAInterface = () => {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Badge variant="outline" className="ml-2 bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 hover:bg-blue-500/15 transition-colors">
-                        <Sparkles size={12} className="mr-1" /> Gemini
+                        <Sparkles size={12} className="mr-1" /> Gemini Pro
                       </Badge>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -187,8 +300,8 @@ const ChatIAInterface = () => {
                 </TooltipProvider>
               </h2>
               <p className="text-sm text-muted-foreground flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                Assistente inteligente para seus estudos
+                <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-amber-500'}`}></span>
+                {isConnected ? 'Conectado à API do Gemini' : 'Modo local - tentando reconectar'}
               </p>
             </div>
           </div>
@@ -212,12 +325,16 @@ const ChatIAInterface = () => {
                   <MoreHorizontal size={16} />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem className="flex items-center gap-2">
-                  <Settings size={14} /> Configurações
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                  <Settings size={14} /> Configurações do chat
                 </DropdownMenuItem>
-                <DropdownMenuItem className="flex items-center gap-2">
-                  <HelpCircle size={14} /> Ajuda
+                <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => setIsSuggestionVisible(true)}>
+                  <Waypoints size={14} /> Mostrar sugestões
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                  <HelpCircle size={14} /> Ajuda e suporte
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -238,7 +355,7 @@ const ChatIAInterface = () => {
                   <Avatar className="h-8 w-8 mt-1 bg-gradient-to-br from-[#FF6B00] to-[#FF8A3D] shadow-md flex-shrink-0">
                     <AvatarImage src="/images/tempo-image-20250329T044440497Z.png" />
                     <AvatarFallback className="bg-[#FF6B00]/20 text-[#FF6B00]">
-                      <Bot size={16} />
+                      <BrainCircuit size={16} />
                     </AvatarFallback>
                   </Avatar>
                 )}
@@ -246,7 +363,9 @@ const ChatIAInterface = () => {
                   <Card className={`border-0 shadow-md ${
                     message.sender === "user" 
                       ? "bg-gradient-to-br from-[#FF6B00] to-[#FF7B20] text-white"
-                      : "bg-white dark:bg-gray-800/80 backdrop-blur-sm"
+                      : message.content.includes("Desculpe, tive um problema") || message.content.includes("Não foi possível conectar") 
+                        ? "bg-white dark:bg-gray-800/80 backdrop-blur-sm border-l-4 border-l-amber-500"
+                        : "bg-white dark:bg-gray-800/80 backdrop-blur-sm"
                   } overflow-hidden`}>
                     <CardContent className="p-3 pb-2">
                       <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{message.content}</p>
@@ -259,9 +378,44 @@ const ChatIAInterface = () => {
                   </Card>
                   {message.sender === "ai" && (
                     <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full">
-                        <Zap size={14} />
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-7 w-7 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                              onClick={() => copyMessageToClipboard(message.content, message.id)}
+                            >
+                              {copiedMessageId === message.id ? <CheckCircle size={14} className="text-green-500" /> : <Copy size={14} />}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom">
+                            <p>{copiedMessageId === message.id ? "Copiado!" : "Copiar mensagem"}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      
+                      {message.content.includes("Desculpe, tive um problema") || 
+                       message.content.includes("Não foi possível conectar") && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-7 w-7 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                                onClick={retryLastMessage}
+                              >
+                                <RefreshCw size={14} className="text-amber-500" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom">
+                              <p>Tentar novamente</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
                     </div>
                   )}
                 </div>
@@ -282,27 +436,30 @@ const ChatIAInterface = () => {
                 <Avatar className="h-8 w-8 mt-1 bg-gradient-to-br from-[#FF6B00] to-[#FF8A3D] shadow-md flex-shrink-0">
                   <AvatarImage src="/images/tempo-image-20250329T044440497Z.png" />
                   <AvatarFallback className="bg-[#FF6B00]/20 text-[#FF6B00]">
-                    <Bot size={16} />
+                    <BrainCircuit size={16} />
                   </AvatarFallback>
                 </Avatar>
                 <Card className="border-0 shadow-md bg-white dark:bg-gray-800/80 backdrop-blur-sm">
                   <CardContent className="p-3 flex items-center gap-2">
                     <Loader2 size={16} className="animate-spin" />
-                    <p>A IA está processando sua mensagem...</p>
+                    <p>Processando sua solicitação...</p>
                   </CardContent>
                 </Card>
               </div>
             </div>
           )}
-          {isSuggestionVisible && messages.length <= 1 && !isLoading && (
-            <div className="mt-6">
-              <p className="text-sm text-muted-foreground mb-3 font-medium">Sugestões de perguntas:</p>
+          {isSuggestionVisible && messages.length <= 3 && !isLoading && (
+            <div className="mt-6 mb-2">
+              <p className="text-sm text-muted-foreground mb-3 font-medium flex items-center gap-1">
+                <Sparkles size={14} className="text-amber-500" /> 
+                Sugestões de perguntas:
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {suggestions.map((suggestion, index) => (
                   <Button 
                     key={index} 
                     variant="outline" 
-                    className="justify-start text-left h-auto py-2 px-3 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800/60"
+                    className="justify-start text-left h-auto py-2 px-3 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800/60 transition-all"
                     onClick={() => handleSuggestionClick(suggestion)}
                   >
                     <span className="truncate">{suggestion}</span>
@@ -311,17 +468,35 @@ const ChatIAInterface = () => {
               </div>
             </div>
           )}
+          {!isConnected && !isLoading && messages.length <= 1 && (
+            <Card className="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 mb-4 mt-4">
+              <CardContent className="p-4 flex items-start gap-3">
+                <AlertCircle size={20} className="text-amber-500 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h3 className="font-medium text-amber-800 dark:text-amber-400 mb-1">Conectividade limitada</h3>
+                  <p className="text-sm text-amber-700 dark:text-amber-300">
+                    Detectamos que a conexão com a API do Gemini pode estar instável. 
+                    Suas perguntas ainda serão processadas, mas pode haver algum atraso nas respostas.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
 
       {/* Message input */}
-      <div className="p-4 border-t dark:border-gray-800 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30">
+      <div className="p-4 border-t dark:border-gray-800 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 sticky bottom-0">
         <div className="flex gap-2 items-end max-w-4xl mx-auto">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" className="rounded-full shrink-0 h-10 w-10 border-gray-200 dark:border-gray-700">
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="rounded-full shrink-0 h-10 w-10 border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm"
+                >
                   <ImagePlus size={18} />
                 </Button>
               </TooltipTrigger>
@@ -338,7 +513,7 @@ const ChatIAInterface = () => {
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder="Digite sua mensagem..."
-              className="min-h-[40px] max-h-[120px] resize-none pe-10 rounded-xl pl-4 pr-12 py-3 shadow-sm border-gray-200 dark:border-gray-700 focus-visible:ring-[#FF6B00]"
+              className="min-h-[40px] max-h-[120px] resize-none pe-10 rounded-xl pl-4 pr-12 py-3 shadow-md border-gray-200 dark:border-gray-700 focus-visible:ring-[#FF6B00] bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm"
               rows={1}
               onInput={resizeTextarea}
             />
@@ -353,14 +528,18 @@ const ChatIAInterface = () => {
           <Button 
             onClick={handleSendMessage} 
             disabled={inputValue.trim() === "" || isLoading}
-            className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white rounded-full h-10 w-10 p-0 shrink-0 shadow-md"
+            className={`${
+              inputValue.trim() === "" || isLoading
+                ? "bg-gray-400 dark:bg-gray-700"
+                : "bg-gradient-to-r from-[#FF6B00] to-[#FF8A3D]"
+            } text-white rounded-full h-10 w-10 p-0 shrink-0 shadow-md transition-all duration-200 hover:shadow-lg`}
           >
-            <Send size={18} />
+            {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
           </Button>
         </div>
         <div className="mt-2 text-center">
           <p className="text-xs text-muted-foreground">
-            As respostas são geradas pela API Gemini. A IA pode cometer erros.
+            Respostas geradas pela API Gemini Pro. A IA aprende continuamente e pode evoluir com o tempo.
           </p>
         </div>
       </div>
