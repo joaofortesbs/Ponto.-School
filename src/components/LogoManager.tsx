@@ -20,36 +20,98 @@ export function LogoManager() {
     // Initialize logo configuration
     initLogoConfig();
 
-    // Função simplificada para garantir que a logo esteja disponível
-    const ensureLogoAvailability = () => {
+    // Função para garantir que a logo esteja disponível
+    const ensureLogoAvailability = async () => {
       // Definir a logo oficial como padrão
       const officialLogo = LOGO_OFICIAL_PATH;
       
-      console.log("Usando logo oficial diretamente");
-      saveLogoToLocalStorage(officialLogo, 1);
+      // Usar a versão base64 como fallback garantido
+      const fallbackLogo = PONTO_SCHOOL_LOGO_BASE64;
 
-      window.PONTO_SCHOOL_CONFIG = {
-        defaultLogo: officialLogo,
-        logoLoaded: true,
-        logoVersion: 1,
-      };
-      
-      setLogoLoaded(true);
-      
-      // Despachar o evento logo após definir a configuração
-      document.dispatchEvent(
-        new CustomEvent("logoLoaded", { detail: officialLogo })
-      );
-      
-      // Tentar salvar no Supabase sem bloquear a interface
-      supabase
-        .from("platform_settings")
-        .upsert(
-          { id: 1, logo_url: officialLogo, logo_version: 1 },
-          { onConflict: "id" }
-        )
-        .then(() => console.log("Logo salva no Supabase com sucesso"))
-        .catch(err => console.log("Erro ao salvar logo no Supabase:", err));
+      try {
+        // Verificar se a logo já está no localStorage
+        const savedLogo = localStorage.getItem("pontoSchoolLogo");
+        const currentVersion = getLogoVersion();
+
+        if (savedLogo && savedLogo !== "null" && savedLogo !== "undefined") {
+          console.log("Logo encontrada no localStorage");
+          // Ensure the URL has the current version
+          const versionedUrl = getVersionedLogoUrl(savedLogo, currentVersion);
+
+          window.PONTO_SCHOOL_CONFIG = {
+            defaultLogo: versionedUrl,
+            logoLoaded: true,
+            logoVersion: currentVersion,
+          };
+          setLogoLoaded(true);
+          document.dispatchEvent(
+            new CustomEvent("logoLoaded", { detail: versionedUrl }),
+          );
+          return;
+        }
+
+        // Tentar buscar a logo do Supabase
+        const { data, error } = await supabase
+          .from("platform_settings")
+          .select("logo_url, logo_version")
+          .single();
+
+        if (data && data.logo_url) {
+          console.log("Logo encontrada no Supabase");
+          const logoVersion = data.logo_version || 1;
+          const versionedUrl = getVersionedLogoUrl(data.logo_url, logoVersion);
+
+          // Save to localStorage with version
+          saveLogoToLocalStorage(data.logo_url, logoVersion);
+
+          window.PONTO_SCHOOL_CONFIG = {
+            defaultLogo: versionedUrl,
+            logoLoaded: true,
+            logoVersion: logoVersion,
+          };
+          setLogoLoaded(true);
+          document.dispatchEvent(
+            new CustomEvent("logoLoaded", { detail: versionedUrl }),
+          );
+          return;
+        }
+
+        // Se não encontrou no Supabase, usar a logo oficial
+        console.log("Usando logo oficial");
+        saveLogoToLocalStorage(LOGO_OFICIAL_PATH, 1);
+
+        window.PONTO_SCHOOL_CONFIG = {
+          defaultLogo: LOGO_OFICIAL_PATH,
+          logoLoaded: true,
+          logoVersion: 1,
+        };
+        setLogoLoaded(true);
+        document.dispatchEvent(
+          new CustomEvent("logoLoaded", { detail: LOGO_OFICIAL_PATH }),
+        );
+
+        // Salvar a logo padrão no Supabase para uso futuro
+        await supabase
+          .from("platform_settings")
+          .upsert(
+            { id: 1, logo_url: DEFAULT_LOGO, logo_version: 1 },
+            { onConflict: "id" },
+          );
+      } catch (e) {
+        console.error("Erro ao carregar logo:", e);
+        // Em caso de erro, usar a versão base64 como fallback garantido
+        saveLogoToLocalStorage(fallbackLogo, 1);
+
+        window.PONTO_SCHOOL_CONFIG = {
+          defaultLogo: fallbackLogo,
+          logoLoaded: true,
+          logoVersion: 1,
+        };
+        setLogoLoaded(true);
+        document.dispatchEvent(
+          new CustomEvent("logoLoaded", { detail: fallbackLogo }),
+        );
+      }
     };
 
     // Executar imediatamente
@@ -60,7 +122,7 @@ export function LogoManager() {
 
     // Adicionar listener para o evento de erro de carregamento da logo
     const handleLogoError = () => {
-      console.log("Erro ao carregar logo, usando a oficial diretamente");
+      console.log("Erro ao carregar logo, tentando novamente");
       ensureLogoAvailability();
     };
 

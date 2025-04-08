@@ -23,7 +23,7 @@ export function Header() {
           .from("platform_settings")
           .select("logo_url, logo_version")
           .single();
-
+        
         // Se não existir ou for diferente, atualizar para a nova logo
         if (!data || data.logo_url !== '/images/logo-oficial.png') {
           const newVersion = (data?.logo_version || 1) + 1;
@@ -36,13 +36,13 @@ export function Header() {
             },
             { onConflict: "id" },
           );
-
+          
           // Atualizar logo no localStorage
           localStorage.setItem("pontoSchoolLogo", '/images/logo-oficial.png');
           localStorage.setItem("customLogo", '/images/logo-oficial.png');
           localStorage.setItem("sidebarCustomLogo", '/images/logo-oficial.png');
           localStorage.setItem("logoVersion", newVersion.toString());
-
+          
           // Notificar outros componentes da alteração
           document.dispatchEvent(
             new CustomEvent("logoLoaded", { detail: '/images/logo-oficial.png' }),
@@ -52,7 +52,7 @@ export function Header() {
         console.error("Erro ao atualizar logo:", error);
       }
     };
-
+    
     updateLogoInSupabase();
   }, []);
 
@@ -63,7 +63,7 @@ export function Header() {
           <Menu className="h-5 w-5" />
         </Button>
       </div>
-
+      
       {/* Logo Oficial */}
       <div className="hidden md:flex items-center mr-4">
         <img 
@@ -76,7 +76,7 @@ export function Header() {
           }}
         />
       </div>
-
+      
       <div className="relative hidden md:flex md:flex-1 md:max-w-md lg:max-w-lg">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input

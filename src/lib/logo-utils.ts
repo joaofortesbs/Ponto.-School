@@ -37,21 +37,15 @@ export function getVersionedLogoUrl(
  * Initialize the global logo configuration
  */
 export function initLogoConfig(): void {
-  // Definir configuração com a logo oficial
   if (!window.PONTO_SCHOOL_CONFIG) {
     window.PONTO_SCHOOL_CONFIG = {
-      defaultLogo: "/images/logo-oficial.png",
-      logoLoaded: true,
+      defaultLogo: DEFAULT_LOGO,
+      logoLoaded: false,
       logoVersion: 1,
     };
+  } else if (!window.PONTO_SCHOOL_CONFIG.logoVersion) {
+    window.PONTO_SCHOOL_CONFIG.logoVersion = 1;
   }
-
-  // Garantir que os eventos sejam enviados para informar que a logo está pronta
-  setTimeout(() => {
-    document.dispatchEvent(
-      new CustomEvent("logoLoaded", { detail: "/images/logo-oficial.png" })
-    );
-  }, 100);
 }
 
 /**
