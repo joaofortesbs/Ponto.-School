@@ -40,6 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
     "dashboard",
   );
   const [expandedItems, setExpandedItems] = React.useState<string[]>([]);
+  const [userName, setUserName] = React.useState("Carregando..."); // Updated to use state for username
 
   const toggleExpand = (item: string) => {
     setExpandedItems((prev) =>
@@ -54,22 +55,20 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
     navigate(path);
   };
 
-  // Assuming profileService is available in the scope.  This needs to be defined elsewhere.
-  const userName = "Carregando..."; //default value
-  //Example using async/await and useEffect hook for fetching the username.  Replace with your actual implementation
-  React.useEffect(()=>{
+  // Placeholder for fetching username.  Replace with your actual service call.
+  React.useEffect(() => {
     const fetchUsername = async () => {
-        try{
-            const name = await profileService.getUserDisplayName(); //replace profileService with your actual service
-            if (name){
-                setUserName(name);
-            }
-        }catch(error){
-            console.error("Error fetching username:", error);
-        }
-    }
+      try {
+        // Replace with your actual username fetching logic
+        const name = await new Promise((resolve) => setTimeout(() => resolve("Your Name"), 1000)); 
+        setUserName(name);
+      } catch (error) {
+        console.error("Error fetching username:", error);
+        setUserName("Erro ao carregar nome"); // Handle error gracefully
+      }
+    };
     fetchUsername();
-  },[]);
+  }, []);
 
   return (
     <div

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff, Mail, Lock, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, CheckCircle, AlertCircle } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase, checkSupabaseConnection } from "@/lib/supabase";
 import { profileService } from "@/services/profileService";
@@ -35,7 +35,7 @@ export function LoginForm() {
         setAccountCreated(false);
       }, 5000);
     }
-    
+
     // Check Supabase connection on component mount
     const verifyConnection = async () => {
       const { ok } = await checkSupabaseConnection();
@@ -43,7 +43,7 @@ export function LoginForm() {
         console.warn("Supabase connection check failed on login page load");
       }
     };
-    
+
     verifyConnection();
   }, [location]);
 
@@ -70,9 +70,9 @@ export function LoginForm() {
       const localProfiles = localStorage.getItem('tempUserProfiles');
       const offlineProfiles = localProfiles ? JSON.parse(localProfiles) : [];
       const matchingProfile = offlineProfiles.find((p: any) => p.email === formData.email);
-      
+
       let offlineMode = false;
-      
+
       // Check for internet connection or Supabase availability issues
       if (!navigator.onLine) {
         console.log("Dispositivo offline, tentando modo de emergência");
@@ -105,7 +105,7 @@ export function LoginForm() {
 
             if (error) {
               console.log("Login error:", error);
-              
+
               if (error.message.includes("Invalid login credentials") ||
                   error.message.includes("Email not confirmed")) {
                 // Se as credenciais são inválidas mas temos um perfil armazenado localmente,
@@ -138,14 +138,14 @@ export function LoginForm() {
             } else if (data?.user) {
               // Login normal bem-sucedido
               setSuccess(true);
-              
+
               // Try to pre-load user profile after login success
               try {
                 await profileService.createProfileIfNotExists();
               } catch (profileErr) {
                 console.warn("Erro ao carregar perfil, mas login concluído:", profileErr);
               }
-              
+
               // Armazenar dados da sessão para uso offline futuro
               try {
                 localStorage.setItem('lastLoginSession', JSON.stringify({
@@ -155,11 +155,11 @@ export function LoginForm() {
               } catch (storageErr) {
                 console.warn("Não foi possível salvar sessão:", storageErr);
               }
-              
+
               setTimeout(() => {
                 navigate("/");
               }, 1000);
-              
+
               return; // Sair da função se o login for bem-sucedido
             } else {
               // Se não houver usuário mas também não houver erro, tente modo offline
@@ -175,27 +175,27 @@ export function LoginForm() {
       // Modo offline/alternativo
       if (offlineMode) {
         console.log("Entrando em modo offline/emergência");
-        
+
         // Verificação simplificada - em produção, você teria um mecanismo mais seguro
         if (matchingProfile) {
           console.log("Perfil encontrado localmente:", matchingProfile.email);
-          
+
           // Em um cenário real, você teria alguma forma de verificar a senha localmente
           // Esta é uma simplificação para fins de demonstração
-          
+
           // Simular login bem-sucedido
           setSuccess(true);
-          
+
           // Armazenar indicador de modo offline
           localStorage.setItem('isOfflineMode', 'true');
-          
+
           // Armazenar usuário atual
           try {
             localStorage.setItem('currentUserProfile', JSON.stringify(matchingProfile));
           } catch (err) {
             console.warn("Erro ao salvar perfil do usuário:", err);
           }
-          
+
           // Mostrar uma mensagem informando o usuário sobre o modo offline
           toast({
             title: "Conectado em modo limitado",
@@ -203,45 +203,45 @@ export function LoginForm() {
             variant: "warning",
             duration: 5000,
           });
-          
+
           setTimeout(() => {
             navigate("/");
           }, 1500);
         } else {
           // Recuperar do localStorage para ver se há uma sessão recente
           const lastSession = localStorage.getItem('lastLoginSession');
-          
+
           if (lastSession) {
             const { user, timestamp } = JSON.parse(lastSession);
             const sessionAge = new Date().getTime() - new Date(timestamp).getTime();
             const sessionAgeHours = sessionAge / (1000 * 60 * 60);
-            
+
             // Se a sessão for recente (menos de 24 horas) e o email corresponder
             if (sessionAgeHours < 24 && user.email === formData.email) {
               console.log("Usando sessão recente para login de emergência");
               setSuccess(true);
               localStorage.setItem('isOfflineMode', 'true');
-              
+
               toast({
                 title: "Conectado com sessão recente",
                 description: "Usando uma sessão salva anteriormente. Funcionalidades limitadas disponíveis.",
                 variant: "warning",
                 duration: 5000,
               });
-              
+
               setTimeout(() => {
                 navigate("/");
               }, 1500);
               return;
             }
           }
-          
+
           setError("Não foi possível fazer login. Verifique sua conexão com a internet e tente novamente.");
         }
       }
     } catch (err: any) {
       console.error("Erro fatal ao logar:", err);
-      
+
       // Último recurso - verificar se há alguma sessão anterior para usar
       try {
         const lastSession = localStorage.getItem('lastLoginSession');
@@ -249,12 +249,12 @@ export function LoginForm() {
           const session = JSON.parse(lastSession);
           const sessionAge = new Date().getTime() - new Date(session.timestamp).getTime();
           const sessionAgeHours = sessionAge / (1000 * 60 * 60);
-          
+
           if (sessionAgeHours < 48) {
             console.log("Usando último login como fallback de emergência");
             setSuccess(true);
             localStorage.setItem('isEmergencyMode', 'true');
-            
+
             setTimeout(() => {
               navigate("/");
             }, 1500);
@@ -264,7 +264,7 @@ export function LoginForm() {
       } catch (fallbackErr) {
         console.error("Falha no último recurso:", fallbackErr);
       }
-      
+
       setError("Erro ao conectar ao servidor. Verifique sua internet e tente novamente mais tarde.");
     } finally {
       setLoading(false);

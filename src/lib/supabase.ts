@@ -11,7 +11,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Track offline state
 let isOffline = false;
 let retryCount = 0;
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 5; // Increased retries
+
+// Initialize a flag to track if we've shown the connection error
+let connectionErrorShown = false;
 
 // Custom fetch function with retry and offline detection
 const customFetch = async (...args: [RequestInfo | URL, RequestInit | undefined]) => {

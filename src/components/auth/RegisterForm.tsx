@@ -172,174 +172,160 @@ export function RegisterForm() {
       // Gerar um ID de usuário único baseado no timestamp e plano
       const userId = `BR${plan === "premium" ? 1 : 2}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
 
-      // Primeiro tente registrar o usuário no sistema de autenticação
+      // Verificar se é possível conectar ao Supabase
+      const { ok: isOnline } = await checkSupabaseConnection().catch(() => ({ ok: false }));
+      
+      // Primeiro tente registrar o usuário no sistema de autenticação se estiver online
       let userData = null;
       let userError = null;
 
-      try {
-        // Tente registrar com o Supabase Auth
-        const { data, error } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/login`,
-            data: {
-              full_name: formData.fullName,
-              username: formData.username,
-              institution: formData.institution,
-              birth_date: formData.birthDate,
-              plan_type: plan,
-              display_name: formData.username,
-            },
-          },
-        });
-
-        userData = data;
-        userError = error;
-      } catch (authError) {
-        console.error("Auth connection error:", authError);
-        // Continue com offline fallback
-      }
-
-      // Se houver erro explícito no signup (como e-mail já existente), mostre o erro
-      if (userError && userError.message && !userError.message.includes("fetch")) {
-        console.error("Signup error:", userError);
-        setError(userError.message || "Erro ao criar conta. Por favor, tente novamente.");
-        setLoading(false);
-        return;
-      }
-
-      // Se conseguimos criar o usuário OU se o erro foi apenas de conectividade
-      if (userData?.user || (userError && userError.message && userError.message.includes("fetch"))) {
-        // ID do usuário real ou temporário para uso offline
-        const profileId = userData?.user?.id || `temp-${userId}`;
-
+      if (isOnline) {
         try {
-          // Tente criar o perfil no banco de dados
-          if (userData?.user) {
-            try {
-              const { error: insertError } = await supabase
-                .from("profiles")
-                .insert([{
-                  id: profileId,
-                  user_id: userId,
-                  full_name: formData.fullName,
-                  username: formData.username,
-                  email: formData.email,
-                  display_name: formData.username,
-                  institution: formData.institution,
-                  birth_date: formData.birthDate,
-                  plan_type: plan,
-                  level: 1,
-                  rank: "Aprendiz",
-                  xp: 0,
-                  coins: 100
-                }]);
+          // Tente registrar com o Supabase Auth
+          const { data, error } = await supabase.auth.signUp({
+            email: formData.email,
+            password: formData.password,
+            options: {
+              emailRedirectTo: `${window.location.origin}/login`,
+              data: {
+                full_name: formData.fullName,
+                username: formData.username,
+                institution: formData.institution,
+                birth_date: formData.birthDate,
+                plan_type: plan,
+                display_name: formData.username || formData.fullName,
+              },
+            },
+          });
 
-              if (insertError && !insertError.message.includes("fetch")) {
-                // Se houver erro diferente de conectividade, tente atualizar o perfil existente
-                console.log("Tentando atualizar perfil existente");
+          userData = data;
+          userError = error;
+          
+          if (error) {
+            console.error("Signup error:", error);
+            if (!error.message.includes("fetch") && !error.message.includes("network")) {
+              // Se o erro não for de conectividade, mostre-o
+              setError(error.message || "Erro ao criar conta. Por favor, tente novamente.");
+              setLoading(false);
+              return;
+            }
+          }
+        } catch (authError) {
+          console.error("Auth connection error:", authError);
+          // Continue com offline fallback
+        }
+
+        // Se conseguimos criar o usuário, tente criar o perfil
+        if (userData?.user) {
+          try {
+            // Criar o perfil no banco de dados
+            const { error: profileError } = await supabase
+              .from("profiles")
+              .insert([{
+                id: userData.user.id,
+                user_id: userId,
+                full_name: formData.fullName,
+                username: formData.username || formData.fullName.split(' ')[0].toLowerCase(),
+                email: formData.email,
+                display_name: formData.username || formData.fullName,
+                institution: formData.institution || '',
+                birth_date: formData.birthDate || null,
+                plan_type: plan,
+                level: 1,
+                rank: "Aprendiz",
+                xp: 0,
+                coins: 100
+              }]);
+
+            if (profileError) {
+              console.error("Profile creation error:", profileError);
+              // Se houver erro na criação do perfil, tente atualizar caso já exista
+              if (profileError.code === '23505') { // código de violação de unicidade
                 const { error: updateError } = await supabase
                   .from("profiles")
                   .update({
                     user_id: userId,
                     full_name: formData.fullName,
-                    username: formData.username,
-                    institution: formData.institution,
-                    birth_date: formData.birthDate,
+                    username: formData.username || formData.fullName.split(' ')[0].toLowerCase(),
+                    institution: formData.institution || '',
+                    birth_date: formData.birthDate || null,
                     plan_type: plan,
                     level: 1,
                     rank: "Aprendiz",
-                    display_name: formData.username,
+                    display_name: formData.username || formData.fullName,
                     coins: 100
                   })
-                  .eq("id", profileId);
+                  .eq("id", userData.user.id);
 
-                if (updateError && !updateError.message.includes("fetch")) {
+                if (updateError) {
                   console.error("Profile update error:", updateError);
                 }
               }
-            } catch (profileError) {
-              console.log("Profile operation failed, continuing to success state:", profileError);
             }
+          } catch (profileOpsError) {
+            console.error("Profile operations error:", profileOpsError);
           }
-
-          // Armazenar temporariamente os dados do usuário no localStorage para uso offline
-          // Isso permite que a aplicação mostre os dados do usuário mesmo sem conexão
-          try {
-            const newUserProfile = {
-              id: profileId,
-              user_id: userId,
-              full_name: formData.fullName,
-              username: formData.username,
-              email: formData.email,
-              display_name: formData.username,
-              institution: formData.institution,
-              birth_date: formData.birthDate,
-              plan_type: plan,
-              level: 1,
-              rank: "Aprendiz",
-              xp: 0,
-              created_at: new Date().toISOString(),
-              coins: 100
-            };
-            
-            // Salvar perfil individual
-            localStorage.setItem('tempUserProfile', JSON.stringify(newUserProfile));
-            
-            // Adicionar à coleção de perfis para login offline
-            const existingProfiles = localStorage.getItem('tempUserProfiles');
-            let profiles = existingProfiles ? JSON.parse(existingProfiles) : [];
-            
-            // Verificar se já existe um perfil com este email
-            const existingIndex = profiles.findIndex((p: any) => p.email === formData.email);
-            
-            if (existingIndex >= 0) {
-              // Atualizar perfil existente
-              profiles[existingIndex] = newUserProfile;
-            } else {
-              // Adicionar novo perfil
-              profiles.push(newUserProfile);
-            }
-            
-            localStorage.setItem('tempUserProfiles', JSON.stringify(profiles));
-            console.log("Perfil salvo localmente para uso em modo offline");
-          } catch (storageError) {
-            console.error("LocalStorage error:", storageError);
-          }
-
-          // Registro considerado bem-sucedido - mostrar mensagem e redirecionar após 3 segundos
-          setSuccess(true);
-          setLoading(false);
-
-          setTimeout(() => {
-            navigate("/login", { state: { newAccount: true } });
-          }, 3000);
-
-        } catch (err) {
-          console.error("Error in profile operations:", err);
-          // Mesmo com erro no perfil, consideramos que a conta foi criada com sucesso
-          setSuccess(true);
-          setLoading(false);
-
-          setTimeout(() => {
-            navigate("/login", { state: { newAccount: true } });
-          }, 3000);
         }
-      } else {
-        setError("Não foi possível criar a conta. Tente novamente mais tarde.");
-        setLoading(false);
       }
-    } catch (err) {
-      console.error("Unexpected error:", err);
-      // Mesmo com erro inesperado, vamos permitir o fluxo continuar para melhorar a experiência do usuário
+
+      // Salvar no armazenamento local (para todos os casos, online ou offline)
+      try {
+        // Criar o perfil com todas as informações necessárias
+        const newUserProfile = {
+          id: userData?.user?.id || `temp-${userId}`,
+          user_id: userId,
+          full_name: formData.fullName,
+          username: formData.username || formData.fullName.split(' ')[0].toLowerCase(),
+          email: formData.email,
+          password: formData.password, // NOTA: Em produção, nunca armazene senhas em texto simples
+          display_name: formData.username || formData.fullName,
+          institution: formData.institution || '',
+          birth_date: formData.birthDate || null,
+          plan_type: plan,
+          level: 1,
+          rank: "Aprendiz",
+          xp: 0,
+          created_at: new Date().toISOString(),
+          coins: 100
+        };
+        
+        // Salvar perfil individual
+        localStorage.setItem('tempUserProfile', JSON.stringify(newUserProfile));
+        
+        // Adicionar à coleção de perfis para login offline
+        const existingProfiles = localStorage.getItem('tempUserProfiles');
+        let profiles = existingProfiles ? JSON.parse(existingProfiles) : [];
+        
+        // Verificar se já existe um perfil com este email
+        const existingIndex = profiles.findIndex((p: any) => p.email === formData.email);
+        
+        if (existingIndex >= 0) {
+          // Atualizar perfil existente
+          profiles[existingIndex] = newUserProfile;
+        } else {
+          // Adicionar novo perfil
+          profiles.push(newUserProfile);
+        }
+        
+        localStorage.setItem('tempUserProfiles', JSON.stringify(profiles));
+        console.log("Perfil salvo localmente para uso em modo offline");
+        
+        // Salvar também no formato que o profileService espera
+        localStorage.setItem('cachedUserDisplayName', newUserProfile.display_name);
+      } catch (storageError) {
+        console.error("LocalStorage error:", storageError);
+      }
+
+      // Registro considerado bem-sucedido - mostrar mensagem e redirecionar após 3 segundos
       setSuccess(true);
       setLoading(false);
 
       setTimeout(() => {
         navigate("/login", { state: { newAccount: true } });
       }, 3000);
-    } finally {
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      setError("Ocorreu um erro inesperado. Tente novamente mais tarde.");
       setLoading(false);
     }
   };
