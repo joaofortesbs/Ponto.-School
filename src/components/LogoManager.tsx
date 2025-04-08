@@ -1,74 +1,63 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { PONTO_SCHOOL_LOGO_BASE64 } from "./LogoImageBase64";
-import {
-  DEFAULT_LOGO,
-  getVersionedLogoUrl,
-  saveLogoToLocalStorage,
-  getLogoVersion,
-  preloadLogo,
-  initLogoConfig,
-} from "@/lib/logo-utils";
 
-// Caminho para a nova logo oficial
+// Caminho para a logo oficial
 const LOGO_OFICIAL_PATH = "/images/logo-oficial.png";
 
 export function LogoManager() {
   const [logoLoaded, setLogoLoaded] = useState(false);
 
   useEffect(() => {
-    // Initialize logo configuration
-    initLogoConfig();
-
     // Função simplificada para garantir que a logo esteja disponível
     const ensureLogoAvailability = () => {
-      // Definir a logo oficial como padrão
-      const officialLogo = LOGO_OFICIAL_PATH;
-      
-      console.log("Usando logo oficial diretamente");
-      saveLogoToLocalStorage(officialLogo, 1);
+      console.log("Definindo logo oficial");
 
+      // Definir logo no localStorage
+      localStorage.setItem("pontoSchoolLogo", LOGO_OFICIAL_PATH);
+      localStorage.setItem("customLogo", LOGO_OFICIAL_PATH);
+      localStorage.setItem("sidebarCustomLogo", LOGO_OFICIAL_PATH);
+      localStorage.setItem("logoVersion", "1");
+
+      // Definir configuração global
       window.PONTO_SCHOOL_CONFIG = {
-        defaultLogo: officialLogo,
+        defaultLogo: LOGO_OFICIAL_PATH,
         logoLoaded: true,
         logoVersion: 1,
       };
-      
+
       setLogoLoaded(true);
-      
-      // Despachar o evento logo após definir a configuração
+
+      // Notificar outros componentes
       document.dispatchEvent(
-        new CustomEvent("logoLoaded", { detail: officialLogo })
+        new CustomEvent("logoLoaded", { detail: LOGO_OFICIAL_PATH })
       );
-      
+
       // Tentar salvar no Supabase sem bloquear a interface
-      supabase
-        .from("platform_settings")
-        .upsert(
-          { id: 1, logo_url: officialLogo, logo_version: 1 },
-          { onConflict: "id" }
-        )
-        .then(() => console.log("Logo salva no Supabase com sucesso"))
-        .catch(err => console.log("Erro ao salvar logo no Supabase:", err));
+      try {
+        supabase
+          .from("platform_settings")
+          .upsert(
+            { id: 1, logo_url: LOGO_OFICIAL_PATH, logo_version: 1 },
+            { onConflict: "id" }
+          )
+          .then(() => console.log("Logo salva no Supabase com sucesso"))
+          .catch(err => console.log("Erro ao salvar logo no Supabase:", err));
+      } catch (error) {
+        console.error("Erro ao atualizar configurações de logo:", error);
+      }
     };
 
     // Executar imediatamente
     ensureLogoAvailability();
 
-    // Adicionar listener para o evento de carregamento da página
-    window.addEventListener("load", ensureLogoAvailability);
-
-    // Adicionar listener para o evento de erro de carregamento da logo
-    const handleLogoError = () => {
-      console.log("Erro ao carregar logo, usando a oficial diretamente");
-      ensureLogoAvailability();
-    };
-
-    document.addEventListener("logoLoadFailed", handleLogoError);
+    // Pré-carregar a imagem para garantir disponibilidade
+    const preloadImage = new Image();
+    preloadImage.src = LOGO_OFICIAL_PATH;
+    preloadImage.onload = () => console.log("Logo pré-carregada com sucesso");
+    preloadImage.onerror = () => console.error("Erro ao pré-carregar logo");
 
     return () => {
-      window.removeEventListener("load", ensureLogoAvailability);
-      document.removeEventListener("logoLoadFailed", handleLogoError);
+      // Cleanup se necessário
     };
   }, []);
 

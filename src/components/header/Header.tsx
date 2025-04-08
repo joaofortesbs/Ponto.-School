@@ -10,50 +10,28 @@ import {
   User,
   Menu,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 export function Header() {
-  // Atualizar a logo no Supabase ao inicializar o componente
+  const [logoLoaded, setLogoLoaded] = useState(false);
+
+  // Simplificar a atualização da logo
   useEffect(() => {
-    const updateLogoInSupabase = async () => {
-      try {
-        // Verificar se a logo já existe no Supabase
-        const { data, error } = await supabase
-          .from("platform_settings")
-          .select("logo_url, logo_version")
-          .single();
+    const logoPath = '/images/logo-oficial.png';
 
-        // Se não existir ou for diferente, atualizar para a nova logo
-        if (!data || data.logo_url !== '/images/logo-oficial.png') {
-          const newVersion = (data?.logo_version || 1) + 1;
-          // Atualizar logo no Supabase
-          await supabase.from("platform_settings").upsert(
-            {
-              id: 1,
-              logo_url: '/images/logo-oficial.png',
-              logo_version: newVersion,
-            },
-            { onConflict: "id" },
-          );
+    // Definir logo no localStorage para garantir consistência
+    localStorage.setItem("pontoSchoolLogo", logoPath);
+    localStorage.setItem("customLogo", logoPath);
+    localStorage.setItem("sidebarCustomLogo", logoPath);
+    localStorage.setItem("logoVersion", "1");
 
-          // Atualizar logo no localStorage
-          localStorage.setItem("pontoSchoolLogo", '/images/logo-oficial.png');
-          localStorage.setItem("customLogo", '/images/logo-oficial.png');
-          localStorage.setItem("sidebarCustomLogo", '/images/logo-oficial.png');
-          localStorage.setItem("logoVersion", newVersion.toString());
+    setLogoLoaded(true);
 
-          // Notificar outros componentes da alteração
-          document.dispatchEvent(
-            new CustomEvent("logoLoaded", { detail: '/images/logo-oficial.png' }),
-          );
-        }
-      } catch (error) {
-        console.error("Erro ao atualizar logo:", error);
-      }
-    };
-
-    updateLogoInSupabase();
+    // Notificar outros componentes
+    document.dispatchEvent(
+      new CustomEvent("logoLoaded", { detail: logoPath }),
+    );
   }, []);
 
   return (
@@ -71,8 +49,14 @@ export function Header() {
           alt="Logo Oficial" 
           className="h-10 w-10"
           onError={(e) => {
-            // Fallback em caso de erro no carregamento da imagem
-            e.currentTarget.src = "/images/logo-oficial.png?retry=" + Date.now();
+            const target = e.currentTarget;
+            // Retry com timestamp para evitar cache
+            target.src = "/images/logo-oficial.png?t=" + Date.now();
+            // Fallback para um ícone padrão se falhar novamente
+            target.onerror = () => {
+              console.log("Usando logo fallback");
+              target.src = "/vite.svg";
+            };
           }}
         />
       </div>
