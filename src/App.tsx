@@ -12,6 +12,7 @@ import { Toaster } from "@/components/ui/toaster";
 import FloatingChatSupport from "@/components/chat/FloatingChatSupport";
 import { supabase } from "@/lib/supabase";
 import { StudyGoalProvider } from "@/components/dashboard/StudyGoalContext";
+import { initializeDB } from "@/lib/replitDB"; // Added import for Replit DB initialization
 
 // Importações diretas
 import Dashboard from "@/pages/dashboard";
@@ -66,6 +67,11 @@ function App() {
     };
 
     checkAuth();
+
+    // Inicializar o banco de dados do Replit
+    initializeDB()
+      .then(() => console.log("Banco de dados Replit inicializado com sucesso"))
+      .catch(err => console.error("Erro ao inicializar banco de dados Replit:", err));
   }, []);
 
   // Rotas de autenticação

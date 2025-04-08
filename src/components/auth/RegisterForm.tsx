@@ -14,7 +14,7 @@ import {
   Check,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import { UserService } from "@/lib/replitDB";
 import { generateUserId } from "@/lib/generate-user-id";
 
 interface FormData {
@@ -171,54 +171,30 @@ export function RegisterForm() {
 
       // Gerar um ID de usuário único baseado no timestamp e plano
       const userId = `BR${plan === "premium" ? 1 : 2}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-      
+
       let userData = null;
       let userError = null;
       let isOnline = true;
 
-      try {
-        // Tente registrar o usuário diretamente, sem verificação prévia
-        const { data, error } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/login`,
-            data: {
-              full_name: formData.fullName,
-              username: formData.username || formData.fullName.split(' ')[0].toLowerCase(),
-              institution: formData.institution,
-              birth_date: formData.birthDate,
-              plan_type: plan,
-              display_name: formData.username || formData.fullName,
-            },
-          },
-        });
 
-        userData = data;
-        userError = error;
-        
-        if (error) {
-          console.error("Signup error:", error);
-          if (error.message.includes("fetch") || error.message.includes("network") || error.message.includes("timeout") || error.status === 0) {
-            isOnline = false;
-            console.log("Detectada conexão offline, entrando em modo fallback");
-          } else {
-            // Outros tipos de erros (email já existe, etc)
-            setError(error.message || "Erro ao criar conta. Por favor, tente novamente.");
-            setLoading(false);
-            return;
-          }
+      try {
+        // Tentativa de registro usando o serviço Replit DB
+        userData = await UserService.registerUser({...formData, userId});
+        if(userData.error){
+          userError = userData.error;
+          isOnline = false;
         }
       } catch (authError) {
         console.error("Auth connection error:", authError);
         isOnline = false;
       }
 
-      // Se conseguiu criar o usuário online, criar perfil
-      if (isOnline && userData?.user) {
+      // Se conseguiu criar o usuário online, criar perfil (this section is now mostly redundant given the Replit DB approach)
+      if (isOnline && userData) {
         try {
-          // Criar o perfil no banco de dados
-          const { error: profileError } = await supabase
+          // This block is largely unnecessary with Replit DB, as user creation handles profile data.
+          // Leaving it commented out for potential future adaptation if needed.
+          /*const { error: profileError } = await supabase
             .from("profiles")
             .insert([{
               id: userData.user.id,
@@ -238,7 +214,7 @@ export function RegisterForm() {
 
           if (profileError) {
             console.error("Profile creation error:", profileError);
-            
+
             // Tente atualizar o perfil se já existir
             if (profileError.code === '23505') {
               const { error: updateError } = await supabase
@@ -261,7 +237,7 @@ export function RegisterForm() {
                 console.error("Profile update error:", updateError);
               }
             }
-          }
+          }*/
         } catch (profileOpsError) {
           console.error("Profile operations error:", profileOpsError);
           // Continue mesmo com erro de perfil, para pelo menos ter o usuário criado
@@ -272,7 +248,7 @@ export function RegisterForm() {
       try {
         // Criar o perfil com todas as informações necessárias
         const newUserProfile = {
-          id: userData?.user?.id || `temp-${userId}`,
+          id: userData?.id || `temp-${userId}`,
           user_id: userId,
           full_name: formData.fullName,
           username: formData.username || formData.fullName.split(' ')[0].toLowerCase(),
@@ -288,17 +264,17 @@ export function RegisterForm() {
           created_at: new Date().toISOString(),
           coins: 100
         };
-        
+
         // Salvar perfil individual
         localStorage.setItem('tempUserProfile', JSON.stringify(newUserProfile));
-        
+
         // Adicionar à coleção de perfis para login offline
         const existingProfiles = localStorage.getItem('tempUserProfiles');
         let profiles = existingProfiles ? JSON.parse(existingProfiles) : [];
-        
+
         // Verificar se já existe um perfil com este email
         const existingIndex = profiles.findIndex((p: any) => p.email === formData.email);
-        
+
         if (existingIndex >= 0) {
           // Atualizar perfil existente
           profiles[existingIndex] = newUserProfile;
@@ -306,10 +282,10 @@ export function RegisterForm() {
           // Adicionar novo perfil
           profiles.push(newUserProfile);
         }
-        
+
         localStorage.setItem('tempUserProfiles', JSON.stringify(profiles));
         console.log("Perfil salvo localmente para uso em modo offline");
-        
+
         // Salvar também no formato que o profileService espera
         localStorage.setItem('cachedUserDisplayName', newUserProfile.display_name);
       } catch (storageError) {
@@ -325,7 +301,7 @@ export function RegisterForm() {
         detail: { user: newUserProfile }
       });
       window.dispatchEvent(registerEvent);
-      
+
       setTimeout(() => {
         navigate("/login", { state: { newAccount: true } });
       }, 3000);
