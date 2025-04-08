@@ -49,13 +49,16 @@ export default function EpictusChatInterface({ onBack }: EpictusChatInterfacePro
       createdAt: new Date(),
     };
 
+    // Salvar a mensagem atual para enviar para API
+    const currentMessage = inputMessage;
+    
     setMessages((prev) => [...prev, userMessage]);
     setInputMessage("");
     setIsTyping(true);
 
     try {
-      // Buscar resposta da IA
-      const aiResponse = await epictusIAService.getResponse(inputMessage);
+      // Buscar resposta da IA usando a API do Gemini
+      const aiResponse = await epictusIAService.getResponse(currentMessage);
 
       // Adicionar resposta da IA
       const assistantMessage: IAMessage = {
@@ -72,7 +75,7 @@ export default function EpictusChatInterface({ onBack }: EpictusChatInterfacePro
       // Mensagem de erro caso falhe
       const errorMessage: IAMessage = {
         id: uuidv4(),
-        content: "Desculpe, tive um problema ao processar sua solicitação. Por favor, tente novamente.",
+        content: "Desculpe, tive um problema ao processar sua solicitação. Por favor, tente novamente em alguns instantes. Se o problema persistir, verifique sua conexão com a internet.",
         role: "assistant",
         createdAt: new Date(),
       };
