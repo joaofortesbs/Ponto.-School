@@ -102,7 +102,54 @@ export const profileService = {
   },
 
   async getUserDisplayName() {
-    const profile = await this.getCurrentUserProfile();
-    return profile?.display_name || profile?.username || profile?.full_name || "Usuário";
+    try {
+      // Primeiro, tente obter o perfil da API normalmente
+      const profile = await this.getCurrentUserProfile();
+      
+      if (profile) {
+        // Armazenar em cache local para uso offline
+        try {
+          localStorage.setItem('cachedUserDisplayName', profile.display_name || profile.username || profile.full_name || "Usuário");
+        } catch (err) {
+          console.warn("Não foi possível armazenar nome em cache:", err);
+        }
+        
+        return profile.display_name || profile.username || profile.full_name || "Usuário";
+      }
+      
+      // Se o perfil não estiver disponível, tente obter do cache
+      const cachedName = localStorage.getItem('cachedUserDisplayName');
+      if (cachedName) {
+        return cachedName;
+      }
+      
+      // Tente obter do perfil temporário salvo
+      try {
+        const tempProfile = localStorage.getItem('tempUserProfile');
+        if (tempProfile) {
+          const profile = JSON.parse(tempProfile);
+          return profile.display_name || profile.username || profile.full_name || "Usuário";
+        }
+        
+        // Verificar perfil atual no modo offline
+        const currentProfile = localStorage.getItem('currentUserProfile');
+        if (currentProfile) {
+          const profile = JSON.parse(currentProfile);
+          return profile.display_name || profile.username || profile.full_name || "Usuário";
+        }
+      } catch (parseErr) {
+        console.warn("Erro ao analisar perfil local:", parseErr);
+      }
+      
+      // Retornar valor padrão se todas as opções falharem
+      return "Usuário";
+    } catch (err) {
+      console.error("Erro ao obter nome do usuário:", err);
+      return "Usuário";
+    }
+  },
+  
+  async isOfflineMode() {
+    return localStorage.getItem('isOfflineMode') === 'true';
   }
 };

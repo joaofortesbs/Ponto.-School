@@ -267,7 +267,7 @@ export function RegisterForm() {
           // Armazenar temporariamente os dados do usuário no localStorage para uso offline
           // Isso permite que a aplicação mostre os dados do usuário mesmo sem conexão
           try {
-            localStorage.setItem('tempUserProfile', JSON.stringify({
+            const newUserProfile = {
               id: profileId,
               user_id: userId,
               full_name: formData.fullName,
@@ -282,7 +282,28 @@ export function RegisterForm() {
               xp: 0,
               created_at: new Date().toISOString(),
               coins: 100
-            }));
+            };
+            
+            // Salvar perfil individual
+            localStorage.setItem('tempUserProfile', JSON.stringify(newUserProfile));
+            
+            // Adicionar à coleção de perfis para login offline
+            const existingProfiles = localStorage.getItem('tempUserProfiles');
+            let profiles = existingProfiles ? JSON.parse(existingProfiles) : [];
+            
+            // Verificar se já existe um perfil com este email
+            const existingIndex = profiles.findIndex((p: any) => p.email === formData.email);
+            
+            if (existingIndex >= 0) {
+              // Atualizar perfil existente
+              profiles[existingIndex] = newUserProfile;
+            } else {
+              // Adicionar novo perfil
+              profiles.push(newUserProfile);
+            }
+            
+            localStorage.setItem('tempUserProfiles', JSON.stringify(profiles));
+            console.log("Perfil salvo localmente para uso em modo offline");
           } catch (storageError) {
             console.error("LocalStorage error:", storageError);
           }

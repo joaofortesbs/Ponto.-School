@@ -8,6 +8,80 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error("Supabase environment variables are missing or invalid!");
 }
 
+// Track offline state
+let isOffline = false;
+let retryCount = 0;
+const MAX_RETRIES = 3;
+
+// Custom fetch function with retry and offline detection
+const customFetch = async (...args: [RequestInfo | URL, RequestInit | undefined]) => {
+  const [resource, config] = args;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 12000); // 12 second timeout
+  
+  // Add signal to config
+  const updatedConfig = {
+    ...config,
+    signal: controller.signal
+  };
+  
+  // If we're already offline, don't even try to fetch
+  if (isOffline && localStorage.getItem('isOfflineMode') === 'true') {
+    clearTimeout(timeoutId);
+    return Promise.reject(new Error("Aplicação em modo offline"));
+  }
+  
+  try {
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        if (attempt > 0) {
+          console.log(`Tentativa ${attempt} de ${MAX_RETRIES}...`);
+        }
+        
+        const response = await fetch(resource, updatedConfig);
+        
+        // Se a resposta for bem-sucedida, resete o contador de tentativas e estado offline
+        if (response.ok) {
+          isOffline = false;
+          retryCount = 0;
+          localStorage.removeItem('isOfflineMode');
+        }
+        
+        return response;
+      } catch (err: any) {
+        // Se for a última tentativa, lance o erro
+        if (attempt === MAX_RETRIES) {
+          throw err;
+        }
+        
+        // Caso contrário, espere um pouco antes de tentar novamente
+        // Aumentando o tempo de espera a cada tentativa (exponential backoff)
+        const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
+        console.log(`Falha na tentativa ${attempt}. Tentando novamente em ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+    
+    // Caso improvavelmente chegue aqui
+    throw new Error("Todas as tentativas falharam");
+  } catch (err) {
+    // Incrementar contador de falhas consecutivas
+    retryCount++;
+    
+    // Se tivermos muitas falhas consecutivas, marcar como offline
+    if (retryCount >= 3) {
+      isOffline = true;
+      localStorage.setItem('isOfflineMode', 'true');
+      console.log("Aplicação entrando em modo offline após falhas consecutivas");
+    }
+    
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+};
+
+// Criar o cliente Supabase com configurações melhoradas
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
@@ -16,36 +90,106 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storage: window.localStorage,
   },
   global: {
-    fetch: (...args) => {
-      // Custom fetch with timeout for all Supabase requests
-      const [resource, config] = args;
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
-      
-      return fetch(resource, {
-        ...config,
-        signal: controller.signal
-      }).finally(() => clearTimeout(timeoutId));
+    fetch: customFetch
+  },
+  // Adicionar mais tolerância a falhas
+  db: {
+    schema: 'public'
+  },
+  // Otimizações de desempenho
+  realtime: {
+    params: {
+      eventsPerSecond: 2
     }
   }
 });
 
-// Function to check connection status
+// Function to check connection status with more resilience
 export const checkSupabaseConnection = async () => {
+  // Se já soubermos que estamos offline, retorne imediatamente
+  if (isOffline && localStorage.getItem('isOfflineMode') === 'true') {
+    console.log("Verificação de conexão pulada - modo offline ativo");
+    return { ok: false, offline: true };
+  }
+  
   try {
     const start = Date.now();
-    // Simple query to test connection
-    const { data, error } = await supabase.from('profiles').select('id').limit(1).maybeSingle();
+    
+    // Timeout mais curto para esta verificação específica
+    const controller = new AbortController();
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error("Timeout na verificação de conexão")), 5000);
+    });
+    
+    // Race entre a consulta real e o timeout
+    const result = await Promise.race([
+      supabase.from('profiles').select('id').limit(1).maybeSingle(),
+      timeoutPromise
+    ]);
+    
     const elapsed = Date.now() - start;
     
-    if (error && error.code === 'PGRST116') {
-      // This is a 404 error which means the table doesn't exist but connection works
+    // Se chegou aqui, temos uma resposta válida
+    if (result.error && result.error.code === 'PGRST116') {
+      // Tabela não existe, mas conexão funciona
+      isOffline = false;
+      localStorage.removeItem('isOfflineMode');
       return { ok: true, latency: elapsed };
     }
     
-    return { ok: !error, latency: elapsed, error };
+    isOffline = !!result.error;
+    
+    if (isOffline) {
+      localStorage.setItem('isOfflineMode', 'true');
+    } else {
+      localStorage.removeItem('isOfflineMode');
+    }
+    
+    return { ok: !result.error, latency: elapsed, error: result.error };
   } catch (err) {
-    console.error("Supabase connection check failed:", err);
-    return { ok: false, error: err };
+    console.error("Verificação de conexão falhou:", err);
+    isOffline = true;
+    localStorage.setItem('isOfflineMode', 'true');
+    return { ok: false, error: err, offline: true };
   }
 };
+
+// Verificar conexão periodicamente
+setInterval(async () => {
+  if (navigator.onLine) {
+    try {
+      const { ok } = await checkSupabaseConnection();
+      if (ok && isOffline) {
+        console.log("Conexão com Supabase restaurada!");
+        isOffline = false;
+        localStorage.removeItem('isOfflineMode');
+        
+        // Avisar o usuário que voltamos ao modo online
+        const event = new CustomEvent('supabaseConnectionRestored');
+        window.dispatchEvent(event);
+      }
+    } catch (err) {
+      console.log("Falha na verificação periódica de conexão", err);
+    }
+  }
+}, 30000); // Verificar a cada 30 segundos
+
+// Detectar quando o dispositivo fica online/offline
+window.addEventListener('online', async () => {
+  console.log("Dispositivo ficou online, verificando conexão com Supabase");
+  const { ok } = await checkSupabaseConnection();
+  if (ok) {
+    isOffline = false;
+    localStorage.removeItem('isOfflineMode');
+    const event = new CustomEvent('supabaseConnectionRestored');
+    window.dispatchEvent(event);
+  }
+});
+
+window.addEventListener('offline', () => {
+  console.log("Dispositivo ficou offline");
+  isOffline = true;
+  localStorage.setItem('isOfflineMode', 'true');
+  const event = new CustomEvent('supabaseConnectionLost');
+  window.dispatchEvent(event);
+});
