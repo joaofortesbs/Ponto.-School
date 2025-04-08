@@ -42,7 +42,10 @@ export default function EpictusIAInterface() {
   const [activeTab, setActiveTab] = useState(tabParam || "conversation");
   const [inputMessage, setInputMessage] = useState("");
   const [showChat, setShowChat] = useState(true);
-  
+
+  // Mini-seções - ativar ou desativar
+  const [showMiniChat, setShowMiniChat] = useState(false);
+
   // Atualizar a URL quando a aba mudar
   const updateTab = (tab: string) => {
     setActiveTab(tab);
@@ -52,11 +55,16 @@ export default function EpictusIAInterface() {
     } else {
       setShowChat(false);
     }
-    
+
     // Atualizar a URL sem recarregar a página
     const url = new URL(window.location.href);
     url.searchParams.set('tab', tab);
     window.history.pushState({}, '', url);
+  };
+
+  // Alternar mini-seção de chat
+  const toggleMiniChat = () => {
+    setShowMiniChat(!showMiniChat);
   };
 
   return (
@@ -264,7 +272,7 @@ export default function EpictusIAInterface() {
               <TabsContent value="conversation" className="h-full mt-0 flex-1 flex flex-col">
                 <EpictusChatInterface />
               </TabsContent>
-              
+
               <TabsContent value="chat-epictus" className="h-full mt-0 flex-1 flex flex-col">
                 <ChatEpictus />
               </TabsContent>
