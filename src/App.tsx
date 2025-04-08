@@ -12,7 +12,7 @@ import { Toaster } from "@/components/ui/toaster";
 import FloatingChatSupport from "@/components/chat/FloatingChatSupport";
 import { supabase } from "@/lib/supabase";
 import { StudyGoalProvider } from "@/components/dashboard/StudyGoalContext";
-import { initializeDB } from "@/lib/replitDB"; // Added import for Replit DB initialization
+import { initializeDB, UserService } from "@/lib/replitDB"; // Added import for Replit DB initialization
 
 // Importações diretas
 import Dashboard from "@/pages/dashboard";
@@ -52,14 +52,16 @@ function App() {
 
   useEffect(() => {
     console.log("App carregado com sucesso!");
+    
+    // Forçar isLoading para iniciar renderização
+    setIsLoading(true);
 
     // Verificação de autenticação com fallback para métodos locais
     const checkAuth = async () => {
       try {
-        // Primeiro verificar no UserService (Replit DB)
-        const isLoggedIn = UserService.isUserLoggedIn();
-        if (isLoggedIn) {
-          console.log("Usuário autenticado via UserService");
+        // Verificar primeiramente no localStorage (mais rápido e não depende de conexão)
+        if (UserService.isUserLoggedIn()) {
+          console.log("Usuário autenticado via localStorage");
           setIsAuthenticated(true);
           setIsLoading(false);
           return;
@@ -73,38 +75,62 @@ function App() {
             setIsAuthenticated(true);
           } else {
             console.log("Nenhuma sessão encontrada, definindo como autenticado para desenvolvimento");
-            setIsAuthenticated(true); // Força true para desenvolvimento
+            // Permita acesso sem login para desenvolvimento
+            setIsAuthenticated(true);
           }
         } catch (supabaseError) {
-          console.error("Erro na verificação do Supabase:", supabaseError);
-          setIsAuthenticated(true); // Força true para desenvolvimento
+          console.warn("Erro na verificação do Supabase:", supabaseError);
+          console.log("Continuando em modo offline");
+          setIsAuthenticated(true);
         }
       } catch (error) {
-        console.error("Auth check error:", error);
-        setIsAuthenticated(true); // Força true para desenvolvimento
+        console.error("Erro na verificação de autenticação:", error);
+        setIsAuthenticated(true); // Força true para sempre exibir o conteúdo
       } finally {
         setIsLoading(false);
       }
     };
 
-    // Inicializar o banco de dados do Replit primeiro
-    initializeDB()
-      .then((success) => {
-        console.log("Tentativa de inicialização do banco de dados Replit:", success ? "sucesso" : "falha");
-        // Verificar autenticação após inicialização do banco
-        checkAuth();
-      })
-      .catch(err => {
+    // Inicializar o banco de dados do Replit
+    const initializeApp = async () => {
+      try {
+        const success = await initializeDB();
+        console.log("Inicialização do banco de dados Replit:", success ? "sucesso" : "modo fallback");
+      } catch (err) {
         console.error("Erro ao inicializar banco de dados Replit:", err);
-        // Mesmo com erro, verificar autenticação
-        checkAuth();
-      });
+        console.log("Usando modo localStorage como fallback");
+      }
       
-    // Adicionar evento para recarregar a página quando sair do modo offline
+      // Verificar autenticação após inicialização do banco
+      checkAuth();
+    };
+    
+    // Iniciar a aplicação
+    initializeApp();
+      
+    // Adicionar eventos para gerenciar estado online/offline
     window.addEventListener('online', () => {
-      console.log("Conexão de rede restaurada, recarregando aplicação");
-      window.location.reload();
+      console.log("Conexão de rede restaurada");
+      localStorage.setItem('isOfflineMode', 'false');
+      // Não recarrega imediatamente para não perder dados não salvos
     });
+    
+    window.addEventListener('offline', () => {
+      console.log("Conexão de rede perdida, entrando em modo offline");
+      localStorage.setItem('isOfflineMode', 'true');
+    });
+    
+    // Verificar estado atual da conexão
+    if (!navigator.onLine) {
+      console.log("Iniciando em modo offline");
+      localStorage.setItem('isOfflineMode', 'true');
+    }
+    
+    return () => {
+      // Limpar event listeners quando o componente for desmontado
+      window.removeEventListener('online', () => {});
+      window.removeEventListener('offline', () => {});
+    };
   }, []);
 
   // Rotas de autenticação

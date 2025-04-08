@@ -2,13 +2,40 @@
 import { Database } from '@replit/database';
 
 // Inicializar o banco de dados do Replit
-let db: Database;
+let db: Database | null = null;
+
 try {
   db = new Database();
   console.log("Replit DB inicializado com sucesso");
 } catch (error) {
   console.error("Erro ao inicializar Replit DB:", error);
-  db = new Database(); // Tentativa de recuperação
+  
+  // Criar um objeto falso para suporte offline
+  db = {
+    get: async (key: string) => {
+      console.log(`[Offline DB] Tentando obter: ${key}`);
+      return localStorage.getItem(key);
+    },
+    set: async (key: string, value: string) => {
+      console.log(`[Offline DB] Salvando: ${key}`);
+      localStorage.setItem(key, value);
+      return true;
+    },
+    delete: async (key: string) => {
+      console.log(`[Offline DB] Removendo: ${key}`);
+      localStorage.removeItem(key);
+      return true;
+    },
+    list: async () => {
+      console.log(`[Offline DB] Listando chaves`);
+      return Object.keys(localStorage);
+    },
+    empty: async () => {
+      console.log(`[Offline DB] Esvaziando banco`);
+      localStorage.clear();
+      return true;
+    }
+  } as unknown as Database;
 }
 
 // Tipos para os dados do usuário

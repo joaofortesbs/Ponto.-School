@@ -1,81 +1,109 @@
 
-// Funções de fallback para modo offline
+/**
+ * Módulo de fallback para quando o aplicativo está offline ou o banco de dados não está disponível
+ */
 
-// Verificar se estamos no modo offline
-export function isOfflineMode(): boolean {
-  return localStorage.getItem('isOfflineMode') === 'true';
-}
+// Verificar se o aplicativo está em modo offline
+export const isOfflineMode = (): boolean => {
+  return localStorage.getItem('isOfflineMode') === 'true' || !navigator.onLine;
+};
 
-// Ativar modo offline
-export function activateOfflineMode(): void {
-  localStorage.setItem('isOfflineMode', 'true');
-  console.log("Modo offline ativado");
-}
-
-// Desativar modo offline
-export function deactivateOfflineMode(): void {
-  localStorage.removeItem('isOfflineMode');
-  console.log("Modo offline desativado");
-}
-
-// Armazenar dados localmente
-export function storeLocalData(key: string, data: any): void {
+// Salvar dados no localStorage com retry para IndexedDB ou outro mecanismo
+export const saveLocalData = (key: string, data: any): void => {
   try {
-    localStorage.setItem(key, JSON.stringify(data));
+    const serializedData = typeof data === 'string' ? data : JSON.stringify(data);
+    localStorage.setItem(key, serializedData);
+    console.log(`Dados salvos localmente: ${key}`);
   } catch (error) {
-    console.error(`Erro ao armazenar dados locais (${key}):`, error);
+    console.error(`Erro ao salvar dados localmente (${key}):`, error);
   }
-}
+};
 
-// Recuperar dados locais
-export function getLocalData(key: string): any {
+// Recuperar dados do localStorage com fallback para cache
+export const getLocalData = (key: string): any => {
   try {
     const data = localStorage.getItem(key);
-    return data ? JSON.parse(data) : null;
+    if (!data) return null;
+    
+    try {
+      return JSON.parse(data);
+    } catch {
+      // Se não for JSON, retornar como string
+      return data;
+    }
   } catch (error) {
     console.error(`Erro ao recuperar dados locais (${key}):`, error);
     return null;
   }
-}
+};
 
-// Sincronizar dados quando estiver online novamente
-export async function syncDataWhenOnline(): Promise<void> {
-  if (isOfflineMode()) {
-    // Implementar lógica para sincronizar dados com o banco de dados
-    console.log("Sincronizando dados offline com o banco de dados...");
-    
-    // Após a sincronização bem-sucedida, desativar o modo offline
-    deactivateOfflineMode();
-  }
-}
+// Verificar conexão com o servidor
+export const checkServerConnection = async (
+  url: string = '/api/health',
+  timeout: number = 5000
+): Promise<boolean> => {
+  return new Promise((resolve) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+      resolve(false);
+    }, timeout);
 
-// Detectar quando a conexão for restaurada
-export function setupOfflineListener(): void {
-  window.addEventListener('online', () => {
-    console.log("Conexão de rede restaurada");
-    syncDataWhenOnline()
-      .then(() => {
-        console.log("Dados sincronizados com sucesso");
-        // Recarregar a aplicação para usar os dados sincronizados
-        window.location.reload();
+    fetch(url, { 
+      method: 'GET',
+      signal: controller.signal,
+      headers: { 'Cache-Control': 'no-cache' }
+    })
+      .then(response => {
+        clearTimeout(timeoutId);
+        resolve(response.ok);
       })
-      .catch(error => {
-        console.error("Erro ao sincronizar dados:", error);
+      .catch(() => {
+        clearTimeout(timeoutId);
+        resolve(false);
       });
   });
-  
-  window.addEventListener('offline', () => {
-    console.log("Conexão de rede perdida");
-    activateOfflineMode();
-  });
-}
+};
 
-export default {
-  isOfflineMode,
-  activateOfflineMode,
-  deactivateOfflineMode,
-  storeLocalData,
-  getLocalData,
-  syncDataWhenOnline,
-  setupOfflineListener
+// Sincronizar dados locais com o servidor quando online
+export const syncDataWithServer = async (): Promise<boolean> => {
+  if (!navigator.onLine) return false;
+  
+  try {
+    const pendingActions = getLocalData('pendingServerActions') || [];
+    if (pendingActions.length === 0) return true;
+    
+    console.log(`Sincronizando ${pendingActions.length} ações pendentes...`);
+    // Implementar a lógica de sincronização
+    
+    return true;
+  } catch (error) {
+    console.error('Erro ao sincronizar dados com o servidor:', error);
+    return false;
+  }
+};
+
+// Registrar ação pendente para sincronização posterior
+export const registerPendingAction = (action: any): void => {
+  try {
+    const pendingActions = getLocalData('pendingServerActions') || [];
+    pendingActions.push({
+      ...action,
+      timestamp: new Date().toISOString()
+    });
+    saveLocalData('pendingServerActions', pendingActions);
+  } catch (error) {
+    console.error('Erro ao registrar ação pendente:', error);
+  }
+};
+
+// Configurar modo de trabalho offline
+export const setupOfflineMode = (): void => {
+  if (isOfflineMode()) {
+    console.log('Modo offline ativado');
+    document.body.classList.add('offline-mode');
+  } else {
+    console.log('Modo online ativado');
+    document.body.classList.remove('offline-mode');
+  }
 };

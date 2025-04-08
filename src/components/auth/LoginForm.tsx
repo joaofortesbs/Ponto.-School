@@ -131,14 +131,14 @@ export function LoginForm() {
           </div>
         </div>
       )}
-      {success && ( //Improved success message
-        <div className="success-message mb-4 rounded-lg p-4">
+      {success && (
+        <div className="success-message mb-4 rounded-lg p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 flex items-center gap-3">
           <div className="success-message-icon">
-            <CheckCircle className="h-5 w-5 text-[#00a045]" />
+            <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
           </div>
           <div>
-            <span className="font-medium text-[#00a045]">Login bem-sucedido!</span>
-            <p className="text-sm text-[#00a045]">Redirecionando para o dashboard...</p>
+            <span className="font-medium text-green-700 dark:text-green-300">Login bem-sucedido!</span>
+            <p className="text-sm text-green-600 dark:text-green-400">Redirecionando para o dashboard...</p>
           </div>
         </div>
       )}
@@ -229,16 +229,12 @@ export function LoginForm() {
         {error && (
           <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md mb-4">
             <div className="flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500 dark:text-red-400">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-              </svg>
+              <AlertCircle className="h-4 w-4 text-red-500 dark:text-red-400" />
               <span className="text-sm font-medium text-red-700 dark:text-red-300">{error}</span>
             </div>
             {error.includes("conexão") && (
               <div className="text-xs text-red-600 dark:text-red-400 mt-1 pl-6">
-                Dica: Verifique se o Supabase está acessível e se sua conexão com a internet está funcionando.
+                Dica: Verifique se a sua conexão com a internet está funcionando. A plataforma continuará funcionando em modo offline.
               </div>
             )}
           </div>
