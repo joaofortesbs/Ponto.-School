@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { profileService } from "@/services/profileService";
 import { UserProfile } from "@/types/user-profile";
-import { Brain, MessageSquare } from "lucide-react"; // Import missing icons
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   isCollapsed?: boolean;
@@ -205,7 +204,6 @@ export default function Sidebar({
           isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
           className,
         )}
-        key="sidebar-container" // Added key prop here
         {...props}
       >
         <div className="flex h-[72px] items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800 relative">
