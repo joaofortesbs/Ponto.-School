@@ -33,6 +33,7 @@ import Configuracoes from "@/pages/configuracoes";
 import PlanosEstudo from "@/pages/planos-estudo";
 import Portal from "@/pages/portal";
 import GruposEstudo from "@/pages/turmas/grupos";
+import ChatIA from "@/pages/chat-ia"; // Added import for ChatIA page
 
 // Auth Pages - importações diretas
 import LoginPage from "@/pages/auth/login";
@@ -150,6 +151,10 @@ function App() {
                 path="epictus-ia"
                 element={<EpictusIA />}
               />
+              <Route
+                path="chat-ia"
+                element={<ChatIA />}
+              /> {/* Added route for ChatIA */}
               <Route
                 path="agenda"
                 element={<Agenda />}
