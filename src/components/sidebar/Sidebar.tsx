@@ -104,16 +104,25 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
           <p className="text-sm font-medium truncate">
             {(() => {
                       try {
-                        // Tentar obter o nome do usuário de várias fontes
+                        // Obter nome do usuário de várias fontes possíveis
                         const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
                         const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-
-                        // Retornar o primeiro nome válido encontrado
-                        return currentUser.name || 
-                               currentUser.displayName || 
-                               userData.display_name || 
-                               (currentUser.email ? currentUser.email.split('@')[0] : 'Usuário');
+                        const user = JSON.parse(localStorage.getItem('user') || '{}');
+                        
+                        // Verificar todas as fontes possíveis de nome
+                        const userName = 
+                          currentUser.name || 
+                          currentUser.displayName || 
+                          userData.display_name ||
+                          user.name ||
+                          user.displayName ||
+                          (currentUser.email ? currentUser.email.split('@')[0] : null) ||
+                          (user.email ? user.email.split('@')[0] : null) ||
+                          'Usuário';
+                          
+                        return userName;
                       } catch (e) {
+                        console.error("Erro ao obter nome do usuário:", e);
                         return 'Usuário';
                       }
                     })()}

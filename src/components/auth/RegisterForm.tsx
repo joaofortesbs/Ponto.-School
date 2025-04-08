@@ -156,7 +156,7 @@ export function RegisterForm() {
 
     const { fullName, email, password, confirmPassword, username, birthDate, institution, classGroup, customClassGroup, grade, customGrade } = formData;
 
-    // Validação básica
+    // Basic validation
     if (!fullName || !email || !password || !confirmPassword) {
       setError("Preencha todos os campos");
       setLoading(false);
@@ -169,7 +169,7 @@ export function RegisterForm() {
       return;
     }
 
-    // Validar formato de email
+    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError("Por favor, insira um email válido");
@@ -177,7 +177,7 @@ export function RegisterForm() {
       return;
     }
 
-    // Validar força da senha
+    // Validate password strength
     if (password.length < 6) {
       setError("A senha deve ter pelo menos 6 caracteres");
       setLoading(false);
@@ -185,35 +185,95 @@ export function RegisterForm() {
     }
 
     try {
-      // Verificar se estamos offline
+      // Simulate offline mode for testing purposes.  Remove in production.
       const isOffline = localStorage.getItem('isOfflineMode') === 'true' || !navigator.onLine;
 
-      // Use Replit DB for registration if available
       const userService = (window as any).userService;
 
       if (userService) {
-        console.log("Tentando registro com Replit DB...");
+          //Existing online registration logic (unchanged)
+          console.log("Tentando registro com Replit DB...");
 
-        // Verificar existência usando try-catch para maior segurança
-        try {
-          const { user: existingUser } = await userService.getUserByEmail(email);
-
-          if (existingUser) {
-            setError("Este email já está em uso");
-            setLoading(false);
-            return;
+          try {
+            const { user: existingUser } = await userService.getUserByEmail(email);
+            if (existingUser) {
+              setError("Este email já está em uso");
+              setLoading(false);
+              return;
+            }
+          } catch (checkError) {
+            console.log("Erro ao verificar usuário existente:", checkError);
           }
-        } catch (checkError) {
-          // Ignorar erros aqui, apenas prosseguir com o cadastro
-          console.log("Erro ao verificar usuário existente:", checkError);
+
+          const timestamp = Date.now();
+          const userId = `user_${timestamp}_${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+
+          const newUser = {
+            id: userId,
+            full_name: fullName,
+            display_name: username || fullName.split(' ')[0].toLowerCase(),
+            email,
+            password,
+            plan: plan,
+            avatar: null,
+            points: 0,
+            createdAt: new Date().toISOString(),
+            institution: institution || '',
+            birth_date: birthDate || null,
+            level: 1,
+            rank: "Aprendiz",
+            xp: 0,
+            coins: 100
+          };
+
+          try {
+            const { user, error } = await userService.createUser(newUser);
+            if (error) {
+              console.error("Erro ao criar usuário no Replit DB:", error);
+              if (isOffline) {
+                //Offline fallback (modified to use existing data structure)
+                let localUsers = JSON.parse(localStorage.getItem('users') || '[]');
+                localUsers.push(newUser);
+                localStorage.setItem('users', JSON.stringify(localUsers));
+                console.log("Cadastro realizado em modo offline. Dados serão sincronizados quando estiver online.");
+                setTimeout(() => navigate("/login"), 1500);
+                return;
+              } else {
+                setError("Erro ao criar usuário. Tente novamente.");
+                setLoading(false);
+                return;
+              }
+            }
+            setSuccess(true);
+            setLoading(false);
+            const registerEvent = new CustomEvent('account-created', { detail: { user: newUser } });
+            window.dispatchEvent(registerEvent);
+            setTimeout(() => navigate("/login"), 1500);
+            return;
+          } catch (createError) {
+            console.error("Erro crítico ao criar usuário:", createError);
+            try {
+              let localUsers = JSON.parse(localStorage.getItem('users') || '[]');
+              localUsers.push(newUser);
+              localStorage.setItem('users', JSON.stringify(localUsers));
+              console.log("Cadastro realizado em modo de emergência. Dados serão sincronizados quando possível.");
+              setTimeout(() => navigate("/login"), 1500);
+              return;
+            } catch (e) {
+              setError("Ocorreu um erro inesperado. Tente novamente mais tarde.");
+              setLoading(false);
+              return;
+            }
+          }
+      } else {
+        //Offline-only registration (added)
+        let localUsers = JSON.parse(localStorage.getItem('users') || '[]');
+        const existingUser = localUsers.find((u: any) => u.email === email);
+        if (existingUser) {
+          throw new Error('Este email já está em uso. Por favor, escolha outro.');
         }
-
-        // Criar usuário local com ID único
-        const timestamp = Date.now();
-        const userId = `user_${timestamp}_${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
-
         const newUser = {
-          id: userId,
+          id: `user_${Date.now()}`,
           full_name: fullName,
           display_name: username || fullName.split(' ')[0].toLowerCase(),
           email,
@@ -222,77 +282,21 @@ export function RegisterForm() {
           avatar: null,
           points: 0,
           createdAt: new Date().toISOString(),
-          institution: institution || '',
+          institution: institution || null,
           birth_date: birthDate || null,
           level: 1,
           rank: "Aprendiz",
           xp: 0,
           coins: 100
         };
-
-        try {
-          // Create user in Replit DB
-          const { user, error } = await userService.createUser(newUser);
-
-          if (error) {
-            console.error("Erro ao criar usuário no Replit DB:", error);
-
-            // Se estamos offline, podemos ainda criar localmente
-            if (isOffline) {
-              // Salvar no localStorage
-              const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
-              localUsers.push(newUser);
-              localStorage.setItem('users', JSON.stringify(localUsers));
-
-              // Simulate toast notification
-              console.log("Cadastro realizado em modo offline. Dados serão sincronizados quando estiver online.");
-
-              setTimeout(() => navigate("/login"), 1500);
-              return;
-            } else {
-              setError("Erro ao criar usuário. Tente novamente.");
-              setLoading(false);
-              return;
-            }
-          }
-
-          // Registration successful
-          setSuccess(true);
-          setLoading(false);
-
-          // Disparar evento de conta criada
-          const registerEvent = new CustomEvent('account-created', {
-            detail: { user: newUser }
-          });
-          window.dispatchEvent(registerEvent);
-
-          setTimeout(() => navigate("/login"), 1500);
-          return;
-        } catch (createError) {
-          console.error("Erro crítico ao criar usuário:", createError);
-
-          // Tentar em modo offline como último recurso
-          try {
-            const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
-            localUsers.push(newUser);
-            localStorage.setItem('users', JSON.stringify(localUsers));
-
-            // Simulate toast notification
-            console.log("Cadastro realizado em modo de emergência. Dados serão sincronizados quando possível.");
-
-            setTimeout(() => navigate("/login"), 1500);
-            return;
-          } catch (e) {
-            setError("Ocorreu um erro inesperado. Tente novamente mais tarde.");
-            setLoading(false);
-            return;
-          }
-        }
+        localUsers.push(newUser);
+        localStorage.setItem('users', JSON.stringify(localUsers));
+        console.log("Usuário registrado com sucesso em modo offline:", newUser.full_name);
+        setTimeout(() => navigate("/login"), 1500);
+        return;
       }
 
 
-      setError("Ocorreu um erro inesperado. Tente novamente mais tarde.");
-      setLoading(false);
     } catch (err) {
       console.error("Unexpected error:", err);
       setError("Ocorreu um erro inesperado. Tente novamente mais tarde.");
