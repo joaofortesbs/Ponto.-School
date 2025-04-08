@@ -46,7 +46,7 @@
       opacity: 0.7;
 
 /* Regras para otimizar a renderização e carregamento inicial */
-* {
+html *, body * {
   will-change: auto;
   content-visibility: auto;
 }

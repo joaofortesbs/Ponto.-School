@@ -113,6 +113,8 @@ export default function Header() {
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [isGeneratingAiSuggestions, setIsGeneratingAiSuggestions] =
     useState(false);
+  const [isDark, setIsDark] = useState(false); // Added isDark state
+  const [theme, setTheme] = useState("light"); // Added theme state
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -966,7 +968,7 @@ export default function Header() {
         ? {
             ...item,
             unread: false,
-            responseCount: (item.responseCount || 0) + 1,
+            responseCount: (item.responseCount || 0) +1,
           }
         : item,
     );
@@ -1020,6 +1022,11 @@ export default function Header() {
 
     loadUserProfile();
   }, []);
+
+  // Function to toggle between light and dark themes
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
 
   return (
     <header className="w-full h-[72px] px-6 bg-white dark:bg-[#0A2540] border-b border-brand-border dark:border-white/10 flex items-center justify-between">

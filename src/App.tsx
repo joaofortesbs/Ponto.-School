@@ -204,6 +204,7 @@ function App() {
             <Route path="/agenda-standalone" element={<Agenda />} />
 
             {/* Fallback Route */}
+            <Route path="/" element={<Dashboard />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
 
