@@ -42,6 +42,7 @@
     "@radix-ui/react-toggle": "^1.0.3",
     "@radix-ui/react-tooltip": "^1.1.8",
     "@supabase/supabase-js": "^2.45.6",
+    "@types/uuid": "^10.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
@@ -60,6 +61,7 @@
     "react-router-dom": "^6.23.1",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
+    "uuid": "^11.1.0",
     "vaul": "^0.9.1",
     "zod": "^3.23.8"
   },
