@@ -969,7 +969,7 @@ export default function Header() {
         ? {
             ...item,
             unread: false,
-            responseCount: (item.responseCount || 0) +1,
+            responseCount: (item.responseCount || 0) + 1,
           }
         : item,
     );
@@ -1027,6 +1027,11 @@ export default function Header() {
   // Function to toggle between light and dark themes
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
+  };
+
+  const handleLogout = () => {
+    // Implement logout logic here
+    console.log("Logging out...");
   };
 
   return (
@@ -1680,7 +1685,7 @@ export default function Header() {
                             </span>
                           </div>
                         </div>
-                      </div>
+                      </</div>
                       <div
                         className="delete-button"
                         onClick={() =>
@@ -1691,7 +1696,7 @@ export default function Header() {
                       </div>
                     </div>
                   ))
-                ) :(
+                ) : (
                   <div className="flex flex-col items-center justify-center h-40 p-4 text-center">
                     <Bell className="h-10 w-10 text-gray-300 dark:text-gray-600 mb-2" />
                     <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -1776,7 +1781,7 @@ export default function Header() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col items-start">
-                      <span className="text-sm font-semibold text-brand-black dark:text-white">
+                      <span className="text-sm font-medium text-brand-black dark:text-white">
                         {isLoading
                           ? "Carregando..."
                           : userProfile?.display_name ||
@@ -1784,49 +1789,39 @@ export default function Header() {
                             userProfile?.full_name ||
                             "Usuário"}
                       </span>
-                      <div className="flex items-center gap-1">
-                        <Diamond className="h-3 w-3 text-[#FF6B00]" />
-                        <span className="text-xs text-[#FF6B00]">Premium</span>
-                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        {userProfile?.plan_type === "premium"
+                          ? "Premium"
+                          : "Lite"}
+                      </span>
                     </div>
-                    <ChevronDown className="h-4 w-4 text-brand-muted dark:text-white/40 ml-1" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent className="w-56 mt-1" align="end">
                   <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => navigate("/profile")}
-                    className="cursor-pointer"
-                  >
+                  <DropdownMenuItem onClick={() => navigate("/profile")}>
                     <User className="mr-2 h-4 w-4" />
                     Perfil
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => navigate("/configuracoes")}
-                    className="cursor-pointer"
-                  >
+                  <DropdownMenuItem onClick={() => navigate("/configuracoes")}>
                     <Settings className="mr-2 h-4 w-4" />
                     Configurações
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer">
+                  <DropdownMenuItem>
                     <HelpCircle className="mr-2 h-4 w-4" />
                     Ajuda
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => navigate("/login")}
-                    className="text-red-600 cursor-pointer"
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sair
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4 text-red-500" />
+                    <span className="text-red-500">Sair</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </TooltipTrigger>
             <TooltipContent>
               <div className="text-xs">
-                Conta Premium
+                Conta {userProfile?.plan_type === "premium" ? "Premium" : "Lite"}
                 <br />
                 Acesso a todos os recursos
               </div>
