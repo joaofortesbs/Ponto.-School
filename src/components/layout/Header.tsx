@@ -1032,7 +1032,7 @@ export default function Header() {
   const handleLogout = () => {
     // Implement logout logic here
     console.log("Logging out...");
-  };
+  }
 
   return (
     <header className="w-full h-[72px] px-6 bg-white dark:bg-[#0A2540] border-b border-brand-border dark:border-white/10 flex items-center justify-between">
