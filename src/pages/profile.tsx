@@ -1,3 +1,4 @@
+
 import React from "react";
 import ProfilePage from "@/components/profile/ProfilePage";
 import Header from "@/components/layout/Header";

@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Edit, Share2, Diamond, Camera } from "lucide-react";
 import type { UserProfile } from "@/types/user-profile";
-import { profileService } from "@/services/profileService"; // Added import
+import { profileService } from "@/services/profileService";
 
 interface ProfileHeaderProps {
   userProfile: UserProfile | null;
@@ -18,7 +18,7 @@ export default function ProfileHeader({
   const profileNameRef = useRef<HTMLHeadingElement>(null);
   const profileAvatarRef = useRef<HTMLDivElement>(null);
   const profileLevelRef = useRef<HTMLParagraphElement>(null);
-  const [displayName, setDisplayName] = useState(""); // Added state for display name
+  const [displayName, setDisplayName] = useState("");
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -56,14 +56,13 @@ export default function ProfileHeader({
   }, []);
 
   useEffect(() => {
-    // Attempt to load display name.  Error handling is crucial here but omitted due to incomplete information.
     const loadDisplayName = async () => {
       try {
         const name = await profileService.getUserDisplayName();
         setDisplayName(name);
       } catch (error) {
         console.error("Error loading display name:", error);
-        setDisplayName("Usuário"); //Fallback
+        setDisplayName("Usuário");
       }
     };
 
@@ -106,7 +105,7 @@ export default function ProfileHeader({
           ref={profileNameRef}
           className="text-xl font-bold text-[#29335C] dark:text-white profile-3d-element profile-3d-text"
         >
-          {displayName || userProfile?.display_name || userProfile?.username || "Usuário"} {/* Display name prioritized */}
+          {displayName || userProfile?.display_name || userProfile?.username || "Usuário"}
         </h2>
         <div className="flex items-center justify-center gap-1 mt-1">
           <p className="text-xs text-[#64748B] dark:text-white/60">
