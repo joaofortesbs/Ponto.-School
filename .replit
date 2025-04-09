@@ -46,6 +46,15 @@ mode = "sequential"
 task = "shell.exec"
 args = "node scripts/setup-supabase.js"
 
+[[workflows.workflow]]
+name = "Testar Conexão Supabase"
+author = 41255696
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node scripts/test-supabase-connection.js"
+
 [auth]
 pageEnabled = false
 buttonEnabled = false

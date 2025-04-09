@@ -1691,7 +1691,7 @@ export default function Header() {
                       </div>
                     </div>
                   ))
-                ) : (
+                ) :(
                   <div className="flex flex-col items-center justify-center h-40 p-4 text-center">
                     <Bell className="h-10 w-10 text-gray-300 dark:text-gray-600 mb-2" />
                     <p className="text-sm text-gray-500 dark:text-gray-400">

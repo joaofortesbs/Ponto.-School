@@ -58,14 +58,14 @@ function App() {
         // Tentar verificar conexão com Supabase (com tratamento de erro)
         try {
           const { checkSupabaseConnection, setupSupabaseHealthCheck } = await import('@/lib/supabase');
-          
+
           // Primeiro configurar verificação de saúde (apenas em desenvolvimento)
           if (import.meta.env.DEV) {
             await setupSupabaseHealthCheck();
           }
-          
+
           const isConnected = await checkSupabaseConnection();
-          
+
           if (!isConnected) {
             console.warn("Aviso: Falha na conexão com o Supabase. A aplicação continuará funcionando com dados locais.");
           } else {
@@ -75,7 +75,7 @@ function App() {
           console.warn("Aviso: Erro ao verificar conexão com Supabase:", connectionError);
           // Continuar mesmo com erro de conexão
         }
-        
+
         // Verificação de autenticação (com tratamento de erro)
         try {
           const { data } = await supabase.auth.getSession();
@@ -153,6 +153,7 @@ function App() {
 
             {/* User Profile */}
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/perfil" element={<ProfilePage />} />
 
             {/* Agenda standalone */}
             <Route path="/agenda-preview" element={<Agenda />} />

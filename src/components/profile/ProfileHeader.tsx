@@ -55,15 +55,20 @@ export default function ProfileHeader({
     };
   }, []);
 
+  // Certifique-se de que o perfil é carregado corretamente
   useEffect(() => {
-    // Attempt to load display name.  Error handling is crucial here but omitted due to incomplete information.
+    console.log("ProfileHeader - userProfile:", userProfile);
+  }, [userProfile]);
+
+  useEffect(() => {
+    // Attempt to load display name
     const loadDisplayName = async () => {
       try {
         const name = await profileService.getUserDisplayName();
         setDisplayName(name);
       } catch (error) {
         console.error("Error loading display name:", error);
-        setDisplayName("Usuário"); //Fallback
+        setDisplayName("Usuário"); // Fallback
       }
     };
 
@@ -72,7 +77,7 @@ export default function ProfileHeader({
     } else {
       setDisplayName(userProfile.display_name);
     }
-  }, [userProfile]);
+  }, [userProfile]);;
 
 
   return (
