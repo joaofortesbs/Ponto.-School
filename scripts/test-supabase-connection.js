@@ -1,134 +1,75 @@
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
 
-require('dotenv').config();
-const { createClient } = require('@supabase/supabase-js');
+// Configurar variáveis de ambiente
+dotenv.config();
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Verifique se as variáveis de ambiente estão definidas
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error("Variáveis de ambiente do Supabase não configuradas corretamente. Verifique o arquivo .env");
+  console.error('❌ Variáveis de ambiente do Supabase não configuradas');
+  console.log('Verifique se VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY estão definidas no arquivo .env');
   process.exit(1);
 }
 
-console.log("Usando as seguintes credenciais:");
-console.log("URL:", supabaseUrl);
-console.log("Anon Key:", supabaseAnonKey ? "Configurada" : "Não configurada");
-console.log("Service Role Key:", supabaseServiceKey ? "Configurada" : "Não configurada");
-
-// Cliente com chave anônima
+// Criar cliente Supabase
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Cliente com chave de serviço (se disponível)
-const adminClient = supabaseServiceKey 
-  ? createClient(supabaseUrl, supabaseServiceKey)
-  : null;
-
 async function testConnection() {
+  console.log('🔄 Testando conexão com o Supabase...');
+
   try {
-    console.log("\n=== Testando conexão com Supabase (chave anônima) ===");
-    const { error } = await supabase.from('profiles').select('count');
-    
+    // Testando autenticação anônima
+    const { data, error } = await supabase.auth.getSession();
+
     if (error) {
-      console.error("Erro ao conectar com Supabase:", error);
-    } else {
-      console.log("✅ Conexão com Supabase estabelecida com sucesso!");
+      console.error('❌ Erro ao verificar sessão:', error.message);
+      return false;
     }
 
-    // Teste função RPC
-    try {
-      console.log("\n=== Testando função RPC de ping ===");
-      const { data, error: rpcError } = await supabase.rpc('rpc_ping');
-      
-      if (rpcError) {
-        console.error("Erro ao executar função RPC de ping:", rpcError);
-        
-        if (adminClient) {
-          console.log("\n=== Tentando criar função RPC de ping ===");
-          const { error: createError } = await adminClient.rpc('execute_sql', {
-            sql_query: `
-              CREATE OR REPLACE FUNCTION public.rpc_ping()
-              RETURNS TEXT AS $$
-              BEGIN
-                RETURN 'pong';
-              END;
-              $$ LANGUAGE plpgsql;
-            `
-          });
-          
-          if (createError) {
-            console.error("Erro ao criar função de ping:", createError);
-          } else {
-            console.log("✅ Função de ping criada com sucesso!");
-            
-            // Teste novamente
-            const { data: pingData, error: pingError } = await supabase.rpc('rpc_ping');
-            if (pingError) {
-              console.error("Erro ao executar função RPC de ping após criação:", pingError);
-            } else {
-              console.log("✅ Função de ping executada com sucesso. Resposta:", pingData);
-            }
-          }
-        } else {
-          console.log("❌ Chave de serviço não configurada. Não é possível criar a função de ping.");
-        }
-      } else {
-        console.log("✅ Função RPC de ping executada com sucesso! Resposta:", data);
+    // Testando acesso à tabela profiles
+    const { data: profilesData, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id')
+      .limit(1);
+
+    if (profilesError) {
+      console.error('❌ Erro ao acessar tabela profiles:', profilesError.message);
+      if (profilesError.code === 'PGRST301') {
+        console.log('⚠️ A tabela "profiles" parece não existir. Verifique se as migrações foram executadas.');
       }
-    } catch (e) {
-      console.error("Erro ao testar função RPC:", e);
+      return false;
     }
 
-    // Teste execute_sql
-    if (adminClient) {
-      try {
-        console.log("\n=== Testando função execute_sql ===");
-        const { error: sqlError } = await adminClient.rpc('execute_sql', {
-          sql_query: `SELECT 1 as test;`
-        });
-        
-        if (sqlError) {
-          console.error("Erro ao executar função execute_sql:", sqlError);
-          
-          console.log("\n=== Tentando criar função execute_sql ===");
-          const { error: createError } = await adminClient.sql(`
-            CREATE OR REPLACE FUNCTION public.execute_sql(sql_query text)
-            RETURNS void AS $$
-            BEGIN
-              EXECUTE sql_query;
-            END;
-            $$ LANGUAGE plpgsql SECURITY DEFINER;
-          `);
-          
-          if (createError) {
-            console.error("Erro ao criar função execute_sql:", createError);
-          } else {
-            console.log("✅ Função execute_sql criada com sucesso!");
-            
-            // Teste novamente
-            const { error: testError } = await adminClient.rpc('execute_sql', {
-              sql_query: `SELECT 1 as test;`
-            });
-            if (testError) {
-              console.error("Erro ao executar função execute_sql após criação:", testError);
-            } else {
-              console.log("✅ Função execute_sql executada com sucesso.");
-            }
-          }
-        } else {
-          console.log("✅ Função execute_sql executada com sucesso!");
-        }
-      } catch (e) {
-        console.error("Erro ao testar função execute_sql:", e);
-      }
+    console.log('✅ Conexão com o Supabase estabelecida com sucesso!');
+    console.log('📊 Tabela profiles acessível.');
+
+    // Verifique se há registros na tabela profiles
+    if (profilesData && profilesData.length > 0) {
+      console.log(`ℹ️ Encontrado ${profilesData.length} registro(s) na tabela profiles.`);
     } else {
-      console.log("❌ Chave de serviço não configurada. Não é possível testar execute_sql.");
+      console.log('ℹ️ Nenhum registro encontrado na tabela profiles.');
     }
 
-  } catch (error) {
-    console.error("Erro ao testar conexão:", error);
+    return true;
+  } catch (err) {
+    console.error('❌ Erro ao testar conexão com o Supabase:', err);
+    return false;
   }
 }
 
-testConnection();
+// Executar teste
+testConnection()
+  .then(success => {
+    if (success) {
+      console.log('🎉 Testes de conexão com o Supabase completados com sucesso!');
+    } else {
+      console.error('❌ Falha nos testes de conexão com o Supabase.');
+      process.exit(1);
+    }
+  })
+  .catch(err => {
+    console.error('❌ Erro inesperado durante o teste:', err);
+    process.exit(1);
+  });
