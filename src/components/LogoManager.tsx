@@ -10,9 +10,6 @@ import {
   initLogoConfig,
 } from "@/lib/logo-utils";
 
-// Caminho para a nova logo oficial
-const LOGO_OFICIAL_PATH = "/images/logo-oficial.png";
-
 export function LogoManager() {
   const [logoLoaded, setLogoLoaded] = useState(false);
 
@@ -22,9 +19,6 @@ export function LogoManager() {
 
     // Função para garantir que a logo esteja disponível
     const ensureLogoAvailability = async () => {
-      // Definir a logo oficial como padrão
-      const officialLogo = LOGO_OFICIAL_PATH;
-      
       // Usar a versão base64 como fallback garantido
       const fallbackLogo = PONTO_SCHOOL_LOGO_BASE64;
 
@@ -76,18 +70,18 @@ export function LogoManager() {
           return;
         }
 
-        // Se não encontrou no Supabase, usar a logo oficial
-        console.log("Usando logo oficial");
-        saveLogoToLocalStorage(LOGO_OFICIAL_PATH, 1);
+        // Se não encontrou no Supabase, usar a logo padrão
+        console.log("Usando logo padrão");
+        saveLogoToLocalStorage(DEFAULT_LOGO, 1);
 
         window.PONTO_SCHOOL_CONFIG = {
-          defaultLogo: LOGO_OFICIAL_PATH,
+          defaultLogo: DEFAULT_LOGO,
           logoLoaded: true,
           logoVersion: 1,
         };
         setLogoLoaded(true);
         document.dispatchEvent(
-          new CustomEvent("logoLoaded", { detail: LOGO_OFICIAL_PATH }),
+          new CustomEvent("logoLoaded", { detail: DEFAULT_LOGO }),
         );
 
         // Salvar a logo padrão no Supabase para uso futuro

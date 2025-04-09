@@ -10,7 +10,7 @@ export interface LogoConfig {
 }
 
 // Default logo path
-export const DEFAULT_LOGO = "/images/logo-oficial.png";
+export const DEFAULT_LOGO = "/images/ponto-school-logo.png";
 
 /**
  * Add version parameter to logo URL to prevent caching

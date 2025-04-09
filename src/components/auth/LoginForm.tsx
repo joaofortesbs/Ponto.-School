@@ -1,11 +1,10 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff, Mail, Lock, CheckCircle, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, CheckCircle } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { UserService } from "@/lib/replitDB";
-import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/lib/supabase";
 
 interface FormData {
   email: string;
@@ -23,10 +22,9 @@ export function LoginForm() {
     password: "",
     rememberMe: false,
   });
-  const [success, setSuccess] = useState(false); 
+  const [success, setSuccess] = useState(false); // Added success state
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast(); 
 
   useEffect(() => {
     if (location.state && location.state.newAccount) {
@@ -44,63 +42,47 @@ export function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
+    setLoading(true);
+    setSuccess(false); // Reset success on submit
+
+    // Basic field validation
+    if (!formData.email || !formData.password) {
+      setError("Preencha todos os campos");
+      setLoading(false);
+      return;
+    }
 
     try {
-      // Forçar modo offline para garantir funcionamento
-      localStorage.setItem('isOfflineMode', 'true');
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
 
-      // Verificar credenciais no localStorage
-      const usersStr = localStorage.getItem('users');
-
-      if (usersStr) {
-        const users = JSON.parse(usersStr);
-        const user = users.find((u: any) => 
-          u.email === formData.email && (u.password === formData.password || formData.password === 'senha123')
-        );
-
-        if (user) {
-          // Login bem-sucedido
-          localStorage.setItem('currentUser', JSON.stringify(user));
-          localStorage.setItem('isAuthenticated', 'true');
-          console.log("Login realizado com sucesso:", user.name);
-          navigate('/');
-          return;
+      if (error) {
+        if (error.message.includes("Invalid login credentials") ||
+            error.message.includes("Email not confirmed")) {
+          setError("Email ou senha inválidos");
+        } else if (error.status === 0) { //Improved network error handling
+          setError("Erro de conexão. Verifique sua internet.");
+        } else {
+          setError("Erro ao fazer login: " + error.message);
         }
-      }
-
-      // Se não encontrou o usuário ou não há usuários, criar um novo
-      if (!usersStr || JSON.parse(usersStr).length === 0) {
-        // Criar usuário mock para desenvolvimento
-        const newUser = {
-          id: `user_${Date.now()}`,
-          name: formData.email.split('@')[0],
-          email: formData.email,
-          password: formData.password,
-          createdAt: new Date().toISOString()
-        };
-
-        // Salvar no localStorage
-        localStorage.setItem('currentUser', JSON.stringify(newUser));
-        localStorage.setItem('isAuthenticated', 'true');
-
-        // Adicionar à lista de usuários
-        const users = usersStr ? JSON.parse(usersStr) : [];
-        users.push(newUser);
-        localStorage.setItem('users', JSON.stringify(users));
-
-        console.log("Novo usuário criado para desenvolvimento:", newUser.name);
-        navigate('/');
+        setLoading(false);
         return;
       }
 
-      // Se chegou aqui, nenhuma correspondência foi encontrada
-      throw new Error('Credenciais inválidas. Verifique seu email e senha.');
-
-    } catch (error: any) {
-      setError(error.message || 'Erro de conexão. Verifique sua internet.');
-      console.error('Erro no login:', error);
+      if (data?.user) {
+        setSuccess(true);
+        setTimeout(() => {
+          navigate("/");
+        }, 1000);
+      } else {
+        setError("Erro ao completar login");
+      }
+    } catch (err: any) {
+      setError("Erro ao fazer login, tente novamente");
+      console.error("Erro ao logar:", err);
     } finally {
       setLoading(false);
     }
@@ -119,14 +101,14 @@ export function LoginForm() {
           </div>
         </div>
       )}
-      {success && (
-        <div className="success-message mb-4 rounded-lg p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 flex items-center gap-3">
+      {success && ( //Improved success message
+        <div className="success-message mb-4 rounded-lg p-4">
           <div className="success-message-icon">
-            <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+            <CheckCircle className="h-5 w-5 text-[#00a045]" />
           </div>
           <div>
-            <span className="font-medium text-green-700 dark:text-green-300">Login bem-sucedido!</span>
-            <p className="text-sm text-green-600 dark:text-green-400">Redirecionando para o dashboard...</p>
+            <span className="font-medium text-[#00a045]">Login bem-sucedido!</span>
+            <p className="text-sm text-[#00a045]">Redirecionando para o dashboard...</p>
           </div>
         </div>
       )}
@@ -215,17 +197,7 @@ export function LoginForm() {
         </div>
 
         {error && (
-          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md mb-4">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-red-500 dark:text-red-400" />
-              <span className="text-sm font-medium text-red-700 dark:text-red-300">{error}</span>
-            </div>
-            {error.includes("conexão") && (
-              <div className="text-xs text-red-600 dark:text-red-400 mt-1 pl-6">
-                Dica: Verifique se a sua conexão com a internet está funcionando. A plataforma continuará funcionando em modo offline.
-              </div>
-            )}
-          </div>
+          <div className="text-sm text-red-500 text-center">{error}</div>
         )}
 
         <Button

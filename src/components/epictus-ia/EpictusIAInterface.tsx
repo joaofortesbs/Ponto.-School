@@ -8,8 +8,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeToggle } from "./ThemeToggle";
 import PlanoEstudosInterface from "./PlanoEstudosInterface";
-import EpictusChatInterface from "./EpictusChatInterface";
-import ChatEpictus from "./ChatEpictus";
 import {
   Brain,
   BookOpen,
@@ -31,41 +29,12 @@ import {
   Rocket,
   Code,
   Globe,
-  Sparkle,
 } from "lucide-react";
 
 export default function EpictusIAInterface() {
   const { theme } = useTheme();
-  // Obter o parâmetro de URL 'tab' se existir
-  const urlParams = new URLSearchParams(window.location.search);
-  const tabParam = urlParams.get('tab');
-  const [activeTab, setActiveTab] = useState(tabParam || "conversation");
+  const [activeTab, setActiveTab] = useState("plano-estudos");
   const [inputMessage, setInputMessage] = useState("");
-  const [showChat, setShowChat] = useState(true);
-
-  // Mini-seções - ativar ou desativar
-  const [showMiniChat, setShowMiniChat] = useState(false);
-
-  // Atualizar a URL quando a aba mudar
-  const updateTab = (tab: string) => {
-    setActiveTab(tab);
-    // Verificar se tab é chat-epictus ou conversation para definir showChat
-    if (tab === 'chat-epictus' || tab === 'conversation') {
-      setShowChat(true);
-    } else {
-      setShowChat(false);
-    }
-
-    // Atualizar a URL sem recarregar a página
-    const url = new URL(window.location.href);
-    url.searchParams.set('tab', tab);
-    window.history.pushState({}, '', url);
-  };
-
-  // Alternar mini-seção de chat
-  const toggleMiniChat = () => {
-    setShowMiniChat(!showMiniChat);
-  };
 
   return (
     <div
@@ -219,49 +188,30 @@ export default function EpictusIAInterface() {
                 <TabsTrigger
                   value="visao-geral"
                   className={`data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white ${theme === "dark" ? "text-white/60" : "text-[#64748B]"}`}
-                  onClick={() => updateTab("visao-geral")}
                 >
                   Visão Geral
                 </TabsTrigger>
                 <TabsTrigger
-                  value="conversation"
-                  className={`data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white ${theme === "dark" ? "text-white/60" : "text-[#64748B]"}`}
-                  onClick={() => updateTab("conversation")}
-                >
-                  Conversação
-                </TabsTrigger>
-                <TabsTrigger
-                  value="chat-epictus"
-                  className={`data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white ${theme === "dark" ? "text-white/60" : "text-[#64748B]"}`}
-                  onClick={() => updateTab("chat-epictus")}
-                >
-                  Chat Epictus
-                </TabsTrigger>
-                <TabsTrigger
                   value="plano-estudos"
                   className={`data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white ${theme === "dark" ? "text-white/60" : "text-[#64748B]"}`}
-                  onClick={() => updateTab("plano-estudos")}
                 >
                   Plano de Estudos
                 </TabsTrigger>
                 <TabsTrigger
                   value="resumos"
                   className={`data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white ${theme === "dark" ? "text-white/60" : "text-[#64748B]"}`}
-                  onClick={() => updateTab("resumos")}
                 >
                   Resumos
                 </TabsTrigger>
                 <TabsTrigger
                   value="desempenho"
                   className={`data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white ${theme === "dark" ? "text-white/60" : "text-[#64748B]"}`}
-                  onClick={() => updateTab("desempenho")}
                 >
                   Desempenho
                 </TabsTrigger>
                 <TabsTrigger
                   value="modo-exploracao"
                   className={`data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white ${theme === "dark" ? "text-white/60" : "text-[#64748B]"}`}
-                  onClick={() => updateTab("modo-exploracao")}
                 >
                   Modo Exploração
                 </TabsTrigger>
@@ -269,14 +219,6 @@ export default function EpictusIAInterface() {
             </div>
 
             <ScrollArea className="flex-1">
-              <TabsContent value="conversation" className="h-full mt-0 flex-1 flex flex-col">
-                <EpictusChatInterface />
-              </TabsContent>
-
-              <TabsContent value="chat-epictus" className="h-full mt-0 flex-1 flex flex-col">
-                <ChatEpictus />
-              </TabsContent>
-
               <TabsContent value="visao-geral" className="mt-0 p-6 space-y-6">
                 <div className="flex items-center justify-between">
                   <h2
@@ -577,60 +519,42 @@ export default function EpictusIAInterface() {
             </ScrollArea>
           </Tabs>
 
-          {/* Chat Input (apenas mostrado quando não estamos na tela de conversação) */}
-          {!showChat && (
-            <div
-              className={`p-4 border-t ${theme === "dark" ? "border-gray-800 bg-[#0A2540]" : "border-gray-200 bg-white"}`}
-            >
-              <div className="flex items-center gap-2">
-                <Input
-                  placeholder="Digite suas mensagens..."
-                  className={`flex-1 ${theme === "dark" ? "bg-[#29335C]/20 border-gray-700 text-white" : "bg-white border-gray-200 text-[#29335C]"}`}
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                />
-                <Button 
-                  className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
-                  onClick={() => {
-                    setShowChat(true);
-                    setActiveTab("conversation");
-                  }}
+          {/* Chat Input */}
+          <div
+            className={`p-4 border-t ${theme === "dark" ? "border-gray-800 bg-[#0A2540]" : "border-gray-200 bg-white"}`}
+          >
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="Digite suas mensagens..."
+                className={`flex-1 ${theme === "dark" ? "bg-[#29335C]/20 border-gray-700 text-white" : "bg-white border-gray-200 text-[#29335C]"}`}
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+              />
+              <Button className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white">
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex justify-center mt-2">
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={`text-xs ${theme === "dark" ? "text-white/60 border-gray-700 hover:bg-[#29335C]/20" : "text-[#64748B] border-gray-200 hover:bg-gray-100"}`}
                 >
-                  <Send className="h-4 w-4" />
+                  <Zap className="h-3 w-3 mr-1" /> Crie um plano de estudos para
+                  o ENEM
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={`text-xs ${theme === "dark" ? "text-white/60 border-gray-700 hover:bg-[#29335C]/20" : "text-[#64748B] border-gray-200 hover:bg-gray-100"}`}
+                >
+                  <Star className="h-3 w-3 mr-1" /> Resumo o capítulo sobre
+                  Revolução Industrial
                 </Button>
               </div>
-              <div className="flex justify-center mt-2">
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={`text-xs ${theme === "dark" ? "text-white/60 border-gray-700 hover:bg-[#29335C]/20" : "text-[#64748B] border-gray-200 hover:bg-gray-100"}`}
-                    onClick={() => {
-                      setInputMessage("Crie um plano de estudos para o ENEM");
-                      setShowChat(true);
-                      setActiveTab("conversation");
-                    }}
-                  >
-                    <Zap className="h-3 w-3 mr-1" /> Crie um plano de estudos para
-                    o ENEM
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={`text-xs ${theme === "dark" ? "text-white/60 border-gray-700 hover:bg-[#29335C]/20" : "text-[#64748B] border-gray-200 hover:bg-gray-100"}`}
-                    onClick={() => {
-                      setInputMessage("Resumo o capítulo sobre Revolução Industrial");
-                      setShowChat(true);
-                      setActiveTab("conversation");
-                    }}
-                  >
-                    <Star className="h-3 w-3 mr-1" /> Resumo o capítulo sobre
-                    Revolução Industrial
-                  </Button>
-                </div>
-              </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
