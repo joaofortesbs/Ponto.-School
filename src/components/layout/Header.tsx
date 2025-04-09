@@ -1031,20 +1031,31 @@ export default function Header() {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
-      console.log("Usuário deslogado com sucesso");
-
-      // Limpar dados de autenticação do localStorage
+      // Primeiro limpar dados de autenticação do localStorage
       localStorage.removeItem('auth_status');
       localStorage.removeItem('auth_checked');
+      
+      // Depois realizar signOut no Supabase
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        throw error;
+      }
+      
+      console.log("Usuário deslogado com sucesso");
 
       // Disparar evento de logout
-      window.dispatchEvent(new Event('logout'));
+      window.dispatchEvent(new CustomEvent('logout'));
 
-      // Redirecionar após logout
-      window.location.href = "/login";
+      // Pequeno delay para garantir que o evento foi processado
+      setTimeout(() => {
+        // Forçar redirecionamento para a página de login
+        window.location.href = "/login";
+      }, 100);
     } catch (error) {
       console.error("Erro ao realizar logout:", error);
+      // Em caso de erro, ainda tentar redirecionar
+      window.location.href = "/login";
     }
   };
 

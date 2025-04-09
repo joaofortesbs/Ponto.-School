@@ -12,6 +12,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
 import FloatingChatSupport from "@/components/chat/FloatingChatSupport";
 import { supabase } from "@/lib/supabase";
+import { checkAuthentication } from "@/lib/auth-utils";
 import { StudyGoalProvider } from "@/components/dashboard/StudyGoalContext";
 
 // Importações diretas
@@ -54,45 +55,33 @@ function ProtectedRoute({ children }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Verificar primeiro se já verificamos a autenticação anteriormente
-        const hasCheckedAuth = localStorage.getItem('auth_checked');
-        const authStatus = localStorage.getItem('auth_status');
-        
-        // Se já verificamos antes nesta sessão, use o valor armazenado
-        if (hasCheckedAuth && authStatus) {
-          setIsAuthenticated(authStatus === 'authenticated');
-          setIsCheckingAuth(false);
-          
-          // Se não estiver autenticado, redirecione
-          if (authStatus !== 'authenticated') {
-            navigate('/login', { replace: true });
-          }
-          return;
-        }
-        
-        // Se for a primeira verificação, consulte o Supabase
+        // Forçar verificação do Supabase para garantir o estado correto
         const { data } = await supabase.auth.getSession();
         const isAuth = !!data.session;
         
-        // Armazenar resultado para futuras verificações
+        // Atualizar o estado no localStorage
         localStorage.setItem('auth_checked', 'true');
         localStorage.setItem('auth_status', isAuth ? 'authenticated' : 'unauthenticated');
         
         setIsAuthenticated(isAuth);
         
         if (!isAuth) {
+          console.log("Usuário não autenticado, redirecionando para login");
           // Redirecionar para login se não estiver autenticado
           navigate('/login', { replace: true });
         }
       } catch (error) {
         console.error("Erro ao verificar autenticação:", error);
         // Em caso de erro, redirecionar para login por segurança
+        localStorage.removeItem('auth_checked');
+        localStorage.removeItem('auth_status');
         navigate('/login', { replace: true });
       } finally {
         setIsCheckingAuth(false);
       }
     };
 
+    // Executar verificação ao carregar o componente
     checkAuth();
   }, [navigate]);
 
@@ -175,6 +164,20 @@ function App() {
     "/select-plan",
     "/admin/db-console",
   ].some((route) => location.pathname.startsWith(route));
+
+  // Verificar se está na rota raiz e redirecionar para login se não estiver autenticado
+  useEffect(() => {
+    const checkRootRoute = async () => {
+      if (location.pathname === "/") {
+        const isAuth = await checkAuthentication();
+        if (!isAuth) {
+          navigate('/login', { replace: true });
+        }
+      }
+    };
+    
+    checkRootRoute();
+  }, [location.pathname, navigate]);
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">

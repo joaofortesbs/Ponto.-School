@@ -7,26 +7,20 @@ import { supabase } from "./supabase";
  */
 export const checkAuthentication = async (): Promise<boolean> => {
   try {
-    // Verificar se já consultamos a autenticação anteriormente nesta sessão
-    const hasCheckedAuth = localStorage.getItem('auth_checked');
-    const authStatus = localStorage.getItem('auth_status');
-    
-    // Se já verificamos e temos status, usar o valor armazenado
-    if (hasCheckedAuth && authStatus) {
-      return authStatus === 'authenticated';
-    }
-    
-    // Caso contrário, consultar o Supabase
+    // Sempre consultar o Supabase para garantir estado atualizado
     const { data } = await supabase.auth.getSession();
     const isAuthenticated = !!data.session;
     
-    // Armazenar resultado para futuras verificações
+    // Atualizar o estado no localStorage
     localStorage.setItem('auth_checked', 'true');
     localStorage.setItem('auth_status', isAuthenticated ? 'authenticated' : 'unauthenticated');
     
     return isAuthenticated;
   } catch (error) {
     console.error("Erro ao verificar autenticação:", error);
+    // Limpar dados em caso de erro
+    localStorage.removeItem('auth_checked');
+    localStorage.removeItem('auth_status');
     return false;
   }
 };
