@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/lib/supabase";
-import { profileService } from "@/services/profileService";
 import type { UserProfile } from "@/types/user-profile";
 
 // Import profile components
