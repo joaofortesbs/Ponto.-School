@@ -49,16 +49,6 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
 
         if (user) {
           console.log("Usuário autenticado:", user.id);
-          
-          // Primeiro tentar criar o perfil para garantir que ele exista
-          console.log("Verificando/criando perfil do usuário se necessário...");
-          const { data: createdProfileData, error: creationError } = await profileService.createProfileIfNotExists();
-          
-          if (creationError) {
-            console.error("Erro ao verificar/criar perfil:", creationError);
-          }
-          
-          // Tente buscar o perfil novamente
           const { data, error } = await supabase
             .from("profiles")
             .select("*")
@@ -67,23 +57,33 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
 
           if (error) {
             console.error("Error fetching user profile:", error);
-            setLoading(false);
+            
+            // Tente criar o perfil se ele não existir
+            if (error.code === 'PGRST116') {
+              console.log("Perfil não encontrado, tentando criar...");
+              await profileService.createProfileIfNotExists();
+              // Tente buscar novamente após criar
+              const { data: newData, error: newError } = await supabase
+                .from("profiles")
+                .select("*")
+                .eq("id", user.id)
+                .single();
+                
+              if (newError) {
+                console.error("Erro ao buscar perfil após criar:", newError);
+              } else if (newData) {
+                handleProfileData(newData, user);
+              }
+            }
           } else if (data) {
-            console.log("Perfil encontrado com sucesso:", data);
             handleProfileData(data, user);
-          } else if (createdProfileData) {
-            console.log("Usando perfil recém-criado:", createdProfileData);
-            handleProfileData(createdProfileData, user);
-          } else {
-            console.error("Não foi possível obter dados do perfil");
-            setLoading(false);
           }
         } else {
           console.error("Usuário não autenticado");
-          setLoading(false);
         }
       } catch (error) {
         console.error("Error:", error);
+      } finally {
         setLoading(false);
       }
     };

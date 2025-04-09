@@ -90,11 +90,7 @@ export const profileService = {
 
       if (profileError && profileError.code !== 'PGRST116') {
         console.error("createProfileIfNotExists: Erro ao verificar perfil existente:", profileError);
-        
-        // Se não for erro de "não encontrado", retorne o erro
-        if (profileError.code !== 'PGRST116') {
-          return { data: null, error: profileError };
-        }
+        return { data: null, error: profileError };
       }
 
       if (existingProfile) {
@@ -104,87 +100,53 @@ export const profileService = {
 
       console.log("createProfileIfNotExists: Criando novo perfil para usuário", user.id);
       
-      // Prepare profile data
-      const profileData = {
-        id: user.id,
-        email: user.email,
-        full_name: user.user_metadata?.full_name || "",
-        username: user.user_metadata?.username || user.email?.split('@')[0] || "",
-        display_name:
-          user.user_metadata?.display_name ||
-          user.user_metadata?.username ||
-          user.user_metadata?.full_name ||
-          user.email?.split('@')[0] ||
-          "Usuário",
-        level: 1,
-        rank: "Aprendiz",
-        balance: 150,
-        expert_balance: 320,
-        bio: "Olá! Sou estudante de Engenharia de Software na Universidade de São Paulo. Apaixonado por tecnologia, programação e matemática.",
-      };
-      
-      console.log("createProfileIfNotExists: Dados do perfil a serem inseridos:", profileData);
-      
-      // Try to create the profile
-      const { data: insertData, error: insertError } = await supabase
-        .from("profiles")
-        .insert([profileData])
-        .select();
-
-      if (insertError) {
-        console.error("createProfileIfNotExists: Erro ao criar perfil:", insertError);
-        
-        // If error is due to unique constraint violation, profile likely exists already
-        if (insertError.code === '23505') { // Unique constraint violation
-          console.log("createProfileIfNotExists: Perfil já existe (chave duplicada), tentando buscar...");
-          const { data: existingData, error: fetchError } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", user.id)
-            .single();
-            
-          if (fetchError) {
-            console.error("createProfileIfNotExists: Erro ao buscar perfil existente:", fetchError);
-            return { data: null, error: fetchError };
-          }
-          
-          return { data: existingData, error: null };
-        }
-        
-        // Try upsert as fallback
-        console.log("createProfileIfNotExists: Tentando upsert como fallback...");
-        const { data: upsertData, error: upsertError } = await supabase
+      // Create profile if it doesn't exist
+      try {
+        const { data, error } = await supabase
           .from("profiles")
-          .upsert([profileData], { onConflict: 'id' })
+          .insert([
+            {
+              id: user.id,
+              email: user.email,
+              full_name: user.user_metadata?.full_name || "",
+              username: user.user_metadata?.username || user.email?.split('@')[0] || "",
+              display_name:
+                user.user_metadata?.display_name ||
+                user.user_metadata?.username ||
+                user.user_metadata?.full_name ||
+                user.email?.split('@')[0] ||
+                "Usuário",
+              level: 1,
+              rank: "Aprendiz",
+              balance: 150,
+              expert_balance: 320,
+              bio: "Olá! Sou estudante de Engenharia de Software na Universidade de São Paulo. Apaixonado por tecnologia, programação e matemática.",
+            },
+          ])
           .select();
-          
-        if (upsertError) {
-          console.error("createProfileIfNotExists: Erro no upsert:", upsertError);
-          return { data: null, error: upsertError };
-        }
-        
-        return { data: upsertData, error: null };
-      }
 
-      if (insertData && insertData.length > 0) {
-        console.log("createProfileIfNotExists: Perfil criado com sucesso:", insertData[0]);
-        return { data: insertData[0], error: null };
-      } else {
-        console.error("createProfileIfNotExists: Inserção retornou resultado vazio");
-        
-        // Try to fetch the profile as a fallback
-        const { data: checkData, error: checkError } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single();
+        if (error) {
+          console.error("createProfileIfNotExists: Erro ao criar perfil:", error);
           
-        if (checkError) {
-          console.error("createProfileIfNotExists: Erro ao verificar perfil após inserção:", checkError);
-          return { data: null, error: checkError };
+          // Tentar atualizar se o erro for de duplicidade (pode acontecer em condições de corrida)
+          if (error.code === '23505') { // Código para violação de chave única
+            console.log("createProfileIfNotExists: Perfil já existe, tentando buscar...");
+            const { data: existingData } = await supabase
+              .from("profiles")
+              .select("*")
+              .eq("id", user.id)
+              .single();
+              
+            return { data: existingData, error: null };
+          }
+          return { data: null, error };
         }
-        
-        return { data: checkData, error: null };
+
+        console.log("createProfileIfNotExists: Perfil criado com sucesso:", data);
+        return { data, error: null };
+      } catch (err) {
+        console.error("createProfileIfNotExists: Erro ao criar perfil:", err);
+        return { data: null, error: err as any };
       }
     } catch (err) {
       console.error("createProfileIfNotExists: Erro inesperado:", err);

@@ -20,10 +20,6 @@ externalPort = 3000
 localPort = 5175
 externalPort = 3001
 
-[[ports]]
-localPort = 5176
-externalPort = 3002
-
 [workflows]
 runButton = "Run App"
 
@@ -62,15 +58,6 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "node scripts/test-supabase-connection.js"
-
-[[workflows.workflow]]
-name = "Testar Conexão com Supabase"
-author = 41255696
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node --experimental-modules scripts/test-supabase-connection.js"
 
 [auth]
 pageEnabled = false
