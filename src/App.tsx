@@ -43,6 +43,7 @@ import PlanSelectionPage from "@/pages/plan-selection";
 
 // User Pages
 import ProfilePage from "@/pages/profile";
+import DebugPage from "./pages/debug"; // Added import for DebugPage
 
 function App() {
   const location = useLocation();
@@ -114,6 +115,9 @@ function App() {
 
             {/* User Profile */}
             <Route path="/profile" element={<ProfilePage />} />
+
+            {/* Debug Route */}
+            <Route path="/debug" element={<DebugPage />} />
 
             {/* Agenda standalone */}
             <Route path="/agenda-preview" element={<Agenda />} />
