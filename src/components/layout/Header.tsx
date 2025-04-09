@@ -527,11 +527,18 @@ export default function Header() {
 
     // Play notification sound if audio ref is available
     if (audioRef.current) {
-      audioRef.current
-        .play()
-        .catch((err) =>
-          console.error("Error playing notification sound:", err),
-        );
+      try {
+        // Tentar reproduzir o som com tratamento de erros melhorado
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {
+            // Silenciar erros de reprodução de áudio (geralmente por interação do usuário)
+            console.log("Notificação silenciosa (interação do usuário necessária)");
+          });
+        }
+      } catch (err) {
+        // Falha silenciosa para evitar erros no console
+      }
     }
 
     // Update the last notification time and type

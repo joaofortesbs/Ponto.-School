@@ -6,6 +6,7 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import routes from "./tempo-routes";
 import Home from "@/components/home";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -166,6 +167,8 @@ function App() {
   ].some((route) => location.pathname.startsWith(route));
 
   // Verificar se está na rota raiz e redirecionar para login se não estiver autenticado
+  const navigate = useNavigate();
+  
   useEffect(() => {
     const checkRootRoute = async () => {
       if (location.pathname === "/") {
@@ -182,7 +185,8 @@ function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <StudyGoalProvider>
-        <div className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
+        <ErrorBoundary>
+          <div className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
           <Routes>
             {/* Auth Routes - Públicas */}
             <Route path="/login" element={<LoginPage />} />
@@ -249,7 +253,8 @@ function App() {
           {/* Floating Chat Support */}
           {!isAuthRoute && !isLoading && <FloatingChatSupport />}
         </div>
-        <Toaster />
+          <Toaster />
+        </ErrorBoundary>
       </StudyGoalProvider>
     </ThemeProvider>
   );
