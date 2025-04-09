@@ -41,73 +41,39 @@
   <body>
     <div id="root"></div>
     <script>
-      // Configuração global da logo
-      window.PONTO_SCHOOL_CONFIG = {
-        defaultLogo: "/images/logo-oficial.png",
-        logoLoaded: false,
+      // Script para inicializar a aplicação e preparar o modo offline
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log("Iniciando aplicação...");
+        // Configurar modo offline caso necessário
+        if (localStorage.getItem('isOfflineMode') !== 'true' && localStorage.getItem('isOfflineMode') !== 'false') {
+          localStorage.setItem('isOfflineMode', 'true'); // Default para offline no primeiro carregamento
+        }
+        // Criar usuários padrão caso necessário
+        if (!localStorage.getItem('users')) {
+          const defaultUsers = [
+            {
+              id: 'user_default_1',
+              email: 'usuario@teste.com',
+              password: 'senha123',
+              full_name: 'Usuário de Teste',
+              display_name: 'Usuário',
+              avatar: null,
+              createdAt: new Date().toISOString(),
+              level: 3,
+              rank: "Estudante",
+              xp: 350,
+              coins: 120
+            }
+          ];
+          localStorage.setItem('users', JSON.stringify(defaultUsers));
+        }
+        console.log("Aplicação inicializada.");
+      });
+
+      // Sinalizar quando a aplicação carregar completamente
+      window.onload = function() {
+        console.log("App carregado com sucesso!");
       };
-
-      // Inline script para pré-carregar e garantir que a logo esteja disponível
-      (function () {
-        // Função para salvar a logo no localStorage
-        function saveLogo(logoPath) {
-          try {
-            localStorage.setItem("customLogo", logoPath);
-            localStorage.setItem("sidebarCustomLogo", logoPath);
-            localStorage.setItem("logoPreloaded", "true");
-            window.PONTO_SCHOOL_CONFIG.logoLoaded = true;
-            console.log("Logo salva no localStorage com sucesso");
-          } catch (e) {
-            console.warn("Não foi possível salvar a logo no localStorage", e);
-          }
-        }
-
-        // Pré-carregar a logo com alta prioridade
-        var img = new Image();
-        img.src = window.PONTO_SCHOOL_CONFIG.defaultLogo;
-        img.fetchPriority = "high";
-        img.crossOrigin = "anonymous";
-
-        // Quando a imagem carregar, salvar no localStorage
-        img.onload = function () {
-          saveLogo(window.PONTO_SCHOOL_CONFIG.defaultLogo);
-          document.dispatchEvent(new CustomEvent("logoLoaded"));
-        };
-
-        // Se houver erro, tentar novamente com um fallback
-        img.onerror = function () {
-          console.warn("Erro ao carregar a logo, tentando novamente...");
-          setTimeout(function () {
-            var retryImg = new Image();
-            retryImg.src =
-              window.PONTO_SCHOOL_CONFIG.defaultLogo +
-              "?retry=" +
-              new Date().getTime();
-            retryImg.onload = function () {
-              saveLogo(retryImg.src);
-              document.dispatchEvent(new CustomEvent("logoLoaded"));
-            };
-            retryImg.onerror = function () {
-              console.error("Falha definitiva ao carregar a logo");
-              // Usar texto como fallback
-              saveLogo(null);
-              document.dispatchEvent(new CustomEvent("logoLoadFailed"));
-            };
-          }, 1000);
-        };
-
-        // Verificar se já existe no localStorage
-        try {
-          var savedLogo = localStorage.getItem("customLogo");
-          if (savedLogo && savedLogo !== "null" && savedLogo !== "undefined") {
-            window.PONTO_SCHOOL_CONFIG.logoLoaded = true;
-          } else {
-            saveLogo(window.PONTO_SCHOOL_CONFIG.defaultLogo);
-          }
-        } catch (e) {
-          console.warn("Erro ao acessar localStorage", e);
-        }
-      })();
     </script>
     <script type="module" src="/src/main.tsx"></script>
     <script src="/preload.js"></script>
