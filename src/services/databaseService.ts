@@ -193,31 +193,37 @@ export const updateRequestStatus = async (
 
 // Funções para respostas
 export const addResponse = async (responseData: Omit<Response, "id">): Promise<Response | null> => {
-  const { data, error } = await supabase
-    .from("responses")
-    .insert({
-      request_id: responseData.requestId,
-      expert_id: responseData.expertId,
-      content: responseData.content,
-      timestamp: responseData.timestamp,
-      status: responseData.status,
-      price: responseData.price,
-      response_time: responseData.responseTime,
-    })
-    .select()
-    .single();
-  
-  if (error || !data) return null;
-  
-  return {
-    id: data.id,
-    requestId: data.request_id,
-    expertId: data.expert_id,
-    content: data.content,
-    timestamp: data.timestamp,
-    status: data.status,
-    price: data.price,
-    responseTime: data.response_time,
+  try {
+    const { data, error } = await supabase
+      .from("responses")
+      .insert({
+        request_id: responseData.requestId,
+        expert_id: responseData.expertId,
+        content: responseData.content,
+        timestamp: responseData.timestamp || new Date().toISOString(),
+        status: responseData.status,
+        price: responseData.price,
+        response_time: responseData.responseTime,
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Erro ao adicionar resposta:', error);
+      return null;
+    }
+    
+    if (!data) return null;
+    
+    return {
+      id: data.id,
+      requestId: data.request_id,
+      expertId: data.expert_id,
+      content: data.content,
+      timestamp: data.timestamp,
+      status: data.status,
+      price: data.price,
+      responseTime: data.response_timeme,
   };
 };
 
@@ -299,56 +305,105 @@ export const acceptResponse = async (responseId: string): Promise<Response | nul
     timestamp: updatedResponse.timestamp,
     status: updatedResponse.status,
     price: updatedResponse.price,
-    responseTime: updatedResponse.response_time,
+    responseTime: updatedResponse.response},
   };
+};
+
+// Função para obter resposta por ID
+export const getResponseById = async (responseId: string): Promise<Response | null> => {
+  try {
+    const { data, error } = await supabase
+      .from("responses")
+      .select("*")
+      .eq("id", responseId)
+      .single();
+    
+    if (error) {
+      console.error('Erro ao buscar resposta:', error);
+      return null;
+    }
+    
+    if (!data) return null;
+    
+    return {
+      id: data.id,
+      requestId: data.request_id,
+      expertId: data.expert_id,
+      content: data.content,
+      timestamp: data.timestamp,
+      status: data.status,
+      price: data.price,
+      responseTime: data.response_time,
+    };
+  } catch (error) {
+    console.error('Erro ao buscar resposta:', error);
+    return null;
+  }
 };
 
 // Funções para mensagens
 export const addMessage = async (
   messageData: Omit<Message, "id" | "timestamp" | "read">,
 ): Promise<Message | null> => {
-  const { data, error } = await supabase
-    .from("messages")
-    .insert({
-      sender_id: messageData.senderId,
-      receiver_id: messageData.receiverId,
-      request_id: messageData.requestId,
-      content: messageData.content,
-      timestamp: new Date().toISOString(),
-      read: false,
-    })
-    .select()
-    .single();
-  
-  if (error || !data) return null;
-  
-  return {
-    id: data.id,
-    senderId: data.sender_id,
-    receiverId: data.receiver_id,
-    requestId: data.request_id,
-    content: data.content,
-    timestamp: data.timestamp,
-    read: data.read,
-  };
+  try {
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({
+        sender_id: messageData.senderId,
+        receiver_id: messageData.receiverId,
+        request_id: messageData.requestId,
+        content: messageData.content,
+        timestamp: new Date().toISOString(),
+        read: false,
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Erro ao adicionar mensagem:', error);
+      return null;
+    }
+    
+    if (!data) return null;
+    
+    return {
+      id: data.id,
+      senderId: data.sender_id,
+      receiverId: data.receiver_id,
+      requestId: data.request_id,
+      content: data.content,
+      timestamp: data.timestamp,
+      read: data.read,
+    };
+  } catch (error) {
+    console.error('Erro ao adicionar mensagem:', error);
+    return null;
+  }
 };
 
 export const getMessagesByRequestId = async (requestId: string): Promise<Message[]> => {
-  const { data, error } = await supabase
-    .from("messages")
-    .select("*")
-    .eq("request_id", requestId);
-  
-  if (error || !data) return [];
-  
-  return data.map(item => ({
-    id: item.id,
-    senderId: item.sender_id,
-    receiverId: item.receiver_id,
-    requestId: item.request_id,
-    content: item.content,
-    timestamp: item.timestamp,
-    read: item.read,
+  try {
+    const { data, error } = await supabase
+      .from("messages")
+      .select("*")
+      .eq("request_id", requestId)
+      .order('timestamp', { ascending: true });
+    
+    if (error) {
+      console.error('Erro ao buscar mensagens:', error);
+      return [];
+    }
+    
+    if (!data) return [];
+    
+    return data.map(item => ({
+      id: item.id,
+      senderId: item.sender_id,
+      receiverId: item.receiver_id,
+      requestId: item.request_id,
+      content: item.content,
+      timestamp: item.timestamp,
+      read: item.readem.read,
   }));
 };
 

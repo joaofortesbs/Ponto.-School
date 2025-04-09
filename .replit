@@ -28,6 +28,24 @@ mode = "sequential"
 task = "shell.exec"
 args = "npm run dev"
 
+[[workflows.workflow]]
+name = "Inicialização Completa"
+author = 41255696
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node scripts/start-app.js"
+
+[[workflows.workflow]]
+name = "Configurar Banco de Dados"
+author = 41255696
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node scripts/setup-supabase.js"
+
 [auth]
 pageEnabled = false
 buttonEnabled = false

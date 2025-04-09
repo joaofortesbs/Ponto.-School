@@ -57,7 +57,13 @@ function App() {
       try {
         // Tentar verificar conexão com Supabase (com tratamento de erro)
         try {
-          const { checkSupabaseConnection } = await import('@/lib/supabase');
+          const { checkSupabaseConnection, setupSupabaseHealthCheck } = await import('@/lib/supabase');
+          
+          // Primeiro configurar verificação de saúde (apenas em desenvolvimento)
+          if (import.meta.env.DEV) {
+            await setupSupabaseHealthCheck();
+          }
+          
           const isConnected = await checkSupabaseConnection();
           
           if (!isConnected) {
@@ -73,14 +79,14 @@ function App() {
         // Verificação de autenticação (com tratamento de erro)
         try {
           const { data } = await supabase.auth.getSession();
-          setIsAuthenticated(!!data.session || true); // Força true para desenvolvimento
+          setIsAuthenticated(!!data.session || import.meta.env.DEV); // Em desenvolvimento, permite acesso sem autenticação
         } catch (authError) {
           console.warn("Aviso: Erro na verificação de autenticação:", authError);
-          setIsAuthenticated(true); // Força true para desenvolvimento
+          setIsAuthenticated(import.meta.env.DEV); // Em desenvolvimento, permite acesso sem autenticação
         }
       } catch (error) {
         console.error("Auth/connection check error:", error);
-        setIsAuthenticated(true); // Força true para desenvolvimento
+        setIsAuthenticated(import.meta.env.DEV); // Em desenvolvimento, permite acesso sem autenticação
       } finally {
         // Sempre definir loading como false para garantir a renderização
         setIsLoading(false);
