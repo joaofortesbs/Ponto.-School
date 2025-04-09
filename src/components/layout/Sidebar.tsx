@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { SidebarNav } from "@/components/sidebar/SidebarNav";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, ChevronLeft, ChevronRight, Bug } from "lucide-react";
+import { Menu, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { profileService } from "@/services/profileService";
 import { UserProfile } from "@/types/user-profile";
 import { Brain, MessageSquare } from "lucide-react"; // Import missing icons
