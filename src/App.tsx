@@ -75,6 +75,7 @@ function App() {
     "/forgot-password",
     "/reset-password",
     "/select-plan",
+    "/admin/db-console",
   ].some((route) => location.pathname.startsWith(route));
 
   return (

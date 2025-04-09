@@ -75,6 +75,8 @@ export const profileService = {
             user.email,
           level: 1,
           rank: "Aprendiz",
+          balance: 150,
+          expert_balance: 320,
         },
       ])
       .select();
