@@ -74,6 +74,8 @@ export function LoginForm() {
 
       if (data?.user) {
         setSuccess(true);
+        localStorage.setItem('auth_checked', 'true');
+        localStorage.setItem('auth_status', 'authenticated'); //Added to persist login status.
         setTimeout(() => {
           navigate("/");
         }, 1000);

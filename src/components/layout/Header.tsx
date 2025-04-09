@@ -1029,6 +1029,25 @@ export default function Header() {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      console.log("Usuário deslogado com sucesso");
+
+      // Limpar dados de autenticação do localStorage
+      localStorage.removeItem('auth_status');
+      localStorage.removeItem('auth_checked');
+
+      // Disparar evento de logout
+      window.dispatchEvent(new Event('logout'));
+
+      // Redirecionar após logout
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("Erro ao realizar logout:", error);
+    }
+  };
+
   return (
     <header className="w-full h-[72px] px-6 bg-white dark:bg-[#0A2540] border-b border-brand-border dark:border-white/10 flex items-center justify-between">
       {/* Hidden audio element for notification sounds */}
@@ -1815,7 +1834,7 @@ export default function Header() {
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={() => navigate("/login")}
+                    onClick={handleLogout}
                     className="text-red-600 cursor-pointer"
                   >
                     <LogOut className="mr-2 h-4 w-4" />

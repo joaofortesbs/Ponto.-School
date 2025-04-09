@@ -4,6 +4,7 @@ import {
   Route,
   Navigate,
   useLocation,
+  useNavigate,
 } from "react-router-dom";
 import routes from "./tempo-routes";
 import Home from "@/components/home";
@@ -44,16 +45,77 @@ import PlanSelectionPage from "@/pages/plan-selection";
 // User Pages
 import ProfilePage from "@/pages/profile";
 
+// Componente para proteger rotas
+function ProtectedRoute({ children }) {
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        // Verificar primeiro se já verificamos a autenticação anteriormente
+        const hasCheckedAuth = localStorage.getItem('auth_checked');
+        const authStatus = localStorage.getItem('auth_status');
+        
+        // Se já verificamos antes nesta sessão, use o valor armazenado
+        if (hasCheckedAuth && authStatus) {
+          setIsAuthenticated(authStatus === 'authenticated');
+          setIsCheckingAuth(false);
+          
+          // Se não estiver autenticado, redirecione
+          if (authStatus !== 'authenticated') {
+            navigate('/login', { replace: true });
+          }
+          return;
+        }
+        
+        // Se for a primeira verificação, consulte o Supabase
+        const { data } = await supabase.auth.getSession();
+        const isAuth = !!data.session;
+        
+        // Armazenar resultado para futuras verificações
+        localStorage.setItem('auth_checked', 'true');
+        localStorage.setItem('auth_status', isAuth ? 'authenticated' : 'unauthenticated');
+        
+        setIsAuthenticated(isAuth);
+        
+        if (!isAuth) {
+          // Redirecionar para login se não estiver autenticado
+          navigate('/login', { replace: true });
+        }
+      } catch (error) {
+        console.error("Erro ao verificar autenticação:", error);
+        // Em caso de erro, redirecionar para login por segurança
+        navigate('/login', { replace: true });
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
+
+  // Mostrar nada enquanto verifica autenticação
+  if (isCheckingAuth) {
+    return <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+    </div>;
+  }
+
+  // Se estiver autenticado, renderiza as rotas filhas
+  return isAuthenticated ? children : null;
+}
+
 function App() {
   const location = useLocation();
-  const [isAuthenticated, setIsAuthenticated] = useState(true); // Default como true para garantir carregamento
-  const [isLoading, setIsLoading] = useState(false); // Iniciar como false para exibir logo
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     console.log("App carregado com sucesso!");
 
-    // Verificação de conexão com Supabase e autenticação
-    const checkAuthAndConnection = async () => {
+    // Verificação de conexão com Supabase
+    const checkConnection = async () => {
       try {
         // Tentar verificar conexão com Supabase (com tratamento de erro)
         try {
@@ -73,22 +135,10 @@ function App() {
           }
         } catch (connectionError) {
           console.warn("Aviso: Erro ao verificar conexão com Supabase:", connectionError);
-          // Continuar mesmo com erro de conexão
-        }
-
-        // Verificação de autenticação (com tratamento de erro)
-        try {
-          const { data } = await supabase.auth.getSession();
-          setIsAuthenticated(!!data.session || import.meta.env.DEV); // Em desenvolvimento, permite acesso sem autenticação
-        } catch (authError) {
-          console.warn("Aviso: Erro na verificação de autenticação:", authError);
-          setIsAuthenticated(import.meta.env.DEV); // Em desenvolvimento, permite acesso sem autenticação
         }
       } catch (error) {
-        console.error("Auth/connection check error:", error);
-        setIsAuthenticated(import.meta.env.DEV); // Em desenvolvimento, permite acesso sem autenticação
+        console.error("Connection check error:", error);
       } finally {
-        // Sempre definir loading como false para garantir a renderização
         setIsLoading(false);
       }
     };
@@ -96,14 +146,24 @@ function App() {
     // Definir um timeout para garantir que a aplicação será carregada mesmo se houver problemas
     const loadingTimeout = setTimeout(() => {
       setIsLoading(false);
-      setIsAuthenticated(true);
       console.log("Timeout de carregamento atingido. Forçando renderização.");
     }, 3000);
 
-    checkAuthAndConnection();
+    checkConnection();
+
+    // Verificar logout
+    const handleLogout = () => {
+      localStorage.removeItem('auth_status');
+      localStorage.removeItem('auth_checked');
+    };
+
+    window.addEventListener('logout', handleLogout);
 
     // Limpar timeout se a verificação terminar antes
-    return () => clearTimeout(loadingTimeout);
+    return () => {
+      clearTimeout(loadingTimeout);
+      window.removeEventListener('logout', handleLogout);
+    };
   }, []);
 
   // Rotas de autenticação
@@ -121,15 +181,19 @@ function App() {
       <StudyGoalProvider>
         <div className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
           <Routes>
-            {/* Auth Routes */}
+            {/* Auth Routes - Públicas */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/select-plan" element={<PlanSelectionPage />} />
 
-            {/* Main App Routes */}
-            <Route path="/" element={<Home />}>
+            {/* Main App Routes - Protegidas */}
+            <Route path="/" element={
+              <ProtectedRoute>
+                <Home />
+              </ProtectedRoute>
+            }>
               <Route index element={<Dashboard />} />
               <Route path="turmas" element={<Turmas />} />
               <Route path="turmas/:id" element={<TurmaDetail />} />
@@ -151,16 +215,32 @@ function App() {
               <Route path="portal" element={<Portal />} />
             </Route>
 
-            {/* User Profile */}
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="profile" element={<ProfilePage />} />
+            {/* User Profile - Protegida */}
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            } />
+            <Route path="profile" element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            } />
 
-            {/* Agenda standalone */}
-            <Route path="/agenda-preview" element={<Agenda />} />
-            <Route path="/agenda-standalone" element={<Agenda />} />
+            {/* Agenda standalone - Protegida */}
+            <Route path="/agenda-preview" element={
+              <ProtectedRoute>
+                <Agenda />
+              </ProtectedRoute>
+            } />
+            <Route path="/agenda-standalone" element={
+              <ProtectedRoute>
+                <Agenda />
+              </ProtectedRoute>
+            } />
 
-            {/* Fallback Route */}
-            <Route path="*" element={<Navigate to="/" />} />
+            {/* Fallback Route - Redireciona para login */}
+            <Route path="*" element={<Navigate to="/login" />} />
           </Routes>
 
           {/* Floating Chat Support */}
