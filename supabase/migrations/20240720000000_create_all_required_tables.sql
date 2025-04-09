@@ -1,131 +1,124 @@
 
--- Certifique-se de que as tabelas existem no Supabase
+-- Criar função para executar SQL dinamicamente (usada por scripts)
+CREATE OR REPLACE FUNCTION execute_sql(sql_query TEXT)
+RETURNS VOID AS $$
+BEGIN
+    EXECUTE sql_query;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Criar tabela de perfis de usuário se não existir
+-- Criar tabela de perfis se não existir
 CREATE TABLE IF NOT EXISTS profiles (
-  id UUID PRIMARY KEY,
-  full_name TEXT,
-  username TEXT,
-  email TEXT,
+  id UUID PRIMARY KEY REFERENCES auth.users(id),
   display_name TEXT,
   avatar_url TEXT,
-  institution TEXT,
-  birth_date DATE,
-  plan_type TEXT,
-  balance NUMERIC DEFAULT 150,
-  expert_balance NUMERIC DEFAULT 320,
-  level INTEGER DEFAULT 1,
-  rank TEXT DEFAULT 'Aprendiz',
-  role TEXT DEFAULT 'user',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(username),
-  UNIQUE(email)
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
 );
 
--- Criar tabela de configurações da plataforma
-CREATE TABLE IF NOT EXISTS platform_settings (
-  id BIGINT PRIMARY KEY,
-  logo_url TEXT NOT NULL,
-  logo_version INTEGER DEFAULT 1,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+-- Criar trigger para criar perfil automaticamente quando um usuário é criado
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, display_name, avatar_url)
+  VALUES (NEW.id, COALESCE(NEW.email, 'Usuário'), '');
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Tabelas para o Conexão Expert
-CREATE TABLE IF NOT EXISTS requests (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  title TEXT NOT NULL,
-  description TEXT NOT NULL,
-  subject TEXT NOT NULL,
-  difficulty TEXT,
-  urgency BOOLEAN DEFAULT FALSE,
-  status TEXT DEFAULT 'aberto',
-  user_id UUID NOT NULL REFERENCES profiles(id),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  tags TEXT[],
-  auction JSONB
-);
-
-CREATE TABLE IF NOT EXISTS responses (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  request_id UUID REFERENCES requests(id),
-  expert_id UUID REFERENCES profiles(id),
-  content TEXT NOT NULL,
-  timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  status TEXT DEFAULT 'pending',
-  price NUMERIC DEFAULT 0,
-  response_time TEXT
-);
-
-CREATE TABLE IF NOT EXISTS messages (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  sender_id UUID REFERENCES profiles(id),
-  receiver_id UUID REFERENCES profiles(id),
-  request_id UUID REFERENCES requests(id),
-  content TEXT NOT NULL,
-  timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  read BOOLEAN DEFAULT FALSE
-);
-
-CREATE TABLE IF NOT EXISTS feedback (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  response_id UUID REFERENCES responses(id),
-  user_id UUID REFERENCES profiles(id),
-  rating INTEGER NOT NULL,
-  comment TEXT,
-  timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Controle de ID de usuário
-CREATE TABLE IF NOT EXISTS user_id_control (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  last_id INTEGER DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Inserir valores padrão
-INSERT INTO platform_settings (id, logo_url)
-VALUES (1, '/images/ponto-school-logo.png')
-ON CONFLICT (id) DO UPDATE
-SET logo_url = '/images/ponto-school-logo.png', updated_at = NOW();
-
-INSERT INTO user_id_control (id, last_id)
-VALUES (uuid_generate_v4(), 0)
-ON CONFLICT DO NOTHING;
-
--- Habilitar extensões necessárias
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- Configurar políticas de segurança
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE platform_settings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE requests ENABLE ROW LEVEL SECURITY;
-ALTER TABLE responses ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Usuários podem ler seus próprios perfis" ON profiles;
+CREATE POLICY "Usuários podem ler seus próprios perfis"
+  ON profiles FOR SELECT
+  USING (auth.uid() = id);
+  
+DROP POLICY IF EXISTS "Usuários podem atualizar seus próprios perfis" ON profiles;
+CREATE POLICY "Usuários podem atualizar seus próprios perfis"
+  ON profiles FOR UPDATE
+  USING (auth.uid() = id);
+
+-- Tabela para mensagens do chat
+CREATE TABLE IF NOT EXISTS messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) NOT NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
+);
+
+-- Habilitar RLS para mensagens
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE feedback ENABLE ROW LEVEL SECURITY;
 
--- Criar políticas para tabela profiles
-DROP POLICY IF EXISTS "Users can view their own profile" ON profiles;
-CREATE POLICY "Users can view their own profile"
-ON profiles FOR SELECT
-USING (auth.uid() = id);
+-- Política para permitir que usuários vejam todas as mensagens
+DROP POLICY IF EXISTS "Usuários podem ver todas as mensagens" ON messages;
+CREATE POLICY "Usuários podem ver todas as mensagens"
+  ON messages FOR SELECT
+  TO authenticated
+  USING (true);
 
-DROP POLICY IF EXISTS "Users can update their own profile" ON profiles;
-CREATE POLICY "Users can update their own profile"
-ON profiles FOR UPDATE
-USING (auth.uid() = id);
+-- Política para permitir que usuários criem suas próprias mensagens
+DROP POLICY IF EXISTS "Usuários podem criar suas próprias mensagens" ON messages;
+CREATE POLICY "Usuários podem criar suas próprias mensagens"
+  ON messages FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = user_id);
 
--- Políticas para platform_settings
-DROP POLICY IF EXISTS "Permitir leitura para todos" ON platform_settings;
-CREATE POLICY "Permitir leitura para todos"
-ON platform_settings FOR SELECT
-USING (true);
+-- Tabela para configurações da plataforma
+CREATE TABLE IF NOT EXISTS platform_settings (
+  id SERIAL PRIMARY KEY,
+  key TEXT UNIQUE NOT NULL,
+  value JSONB NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
+);
 
--- Habilitar suporte realtime
-ALTER PUBLICATION supabase_realtime ADD TABLE profiles;
-ALTER PUBLICATION supabase_realtime ADD TABLE platform_settings;
-ALTER PUBLICATION supabase_realtime ADD TABLE requests;
-ALTER PUBLICATION supabase_realtime ADD TABLE responses;
-ALTER PUBLICATION supabase_realtime ADD TABLE messages;
-ALTER PUBLICATION supabase_realtime ADD TABLE feedback;
+-- Inserir algumas configurações padrão
+INSERT INTO platform_settings (key, value)
+VALUES 
+  ('logo', '{"url": "/images/ponto-school-logo.png", "version": 1}'),
+  ('theme', '{"default": "dark"}')
+ON CONFLICT (key) DO NOTHING;
+
+-- Criar tabela para turmas
+CREATE TABLE IF NOT EXISTS turmas (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  nome TEXT NOT NULL,
+  descricao TEXT,
+  codigo TEXT UNIQUE NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
+);
+
+-- Criar tabela para participantes de turmas
+CREATE TABLE IF NOT EXISTS turma_participantes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  turma_id UUID REFERENCES turmas(id) NOT NULL,
+  user_id UUID REFERENCES auth.users(id) NOT NULL,
+  tipo TEXT NOT NULL CHECK (tipo IN ('professor', 'aluno', 'monitor')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
+  UNIQUE(turma_id, user_id)
+);
+
+-- Políticas de segurança para turmas
+ALTER TABLE turmas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE turma_participantes ENABLE ROW LEVEL SECURITY;
+
+-- Todos usuários autenticados podem ver turmas
+DROP POLICY IF EXISTS "Todos usuários podem ver turmas" ON turmas;
+CREATE POLICY "Todos usuários podem ver turmas"
+  ON turmas FOR SELECT
+  TO authenticated
+  USING (true);
+
+-- Usuários podem ver apenas turmas em que participam
+DROP POLICY IF EXISTS "Usuários podem ver turmas em que participam" ON turma_participantes;
+CREATE POLICY "Usuários podem ver turmas em que participam"
+  ON turma_participantes FOR SELECT
+  TO authenticated
+  USING (auth.uid() = user_id);

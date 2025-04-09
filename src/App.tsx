@@ -55,26 +55,49 @@ function App() {
     // Verificação de conexão com Supabase e autenticação
     const checkAuthAndConnection = async () => {
       try {
-        // Verificar conexão com Supabase
-        const { checkSupabaseConnection } = await import('@/lib/supabase');
-        const isConnected = await checkSupabaseConnection();
-        
-        if (!isConnected) {
-          console.error("Falha na conexão com o Supabase. Verifique suas credenciais.");
+        // Tentar verificar conexão com Supabase (com tratamento de erro)
+        try {
+          const { checkSupabaseConnection } = await import('@/lib/supabase');
+          const isConnected = await checkSupabaseConnection();
+          
+          if (!isConnected) {
+            console.warn("Aviso: Falha na conexão com o Supabase. A aplicação continuará funcionando com dados locais.");
+          } else {
+            console.log("Conexão com Supabase estabelecida com sucesso!");
+          }
+        } catch (connectionError) {
+          console.warn("Aviso: Erro ao verificar conexão com Supabase:", connectionError);
+          // Continuar mesmo com erro de conexão
         }
         
-        // Verificação de autenticação
-        const { data } = await supabase.auth.getSession();
-        setIsAuthenticated(!!data.session || true); // Força true para desenvolvimento
+        // Verificação de autenticação (com tratamento de erro)
+        try {
+          const { data } = await supabase.auth.getSession();
+          setIsAuthenticated(!!data.session || true); // Força true para desenvolvimento
+        } catch (authError) {
+          console.warn("Aviso: Erro na verificação de autenticação:", authError);
+          setIsAuthenticated(true); // Força true para desenvolvimento
+        }
       } catch (error) {
         console.error("Auth/connection check error:", error);
         setIsAuthenticated(true); // Força true para desenvolvimento
       } finally {
+        // Sempre definir loading como false para garantir a renderização
         setIsLoading(false);
       }
     };
 
+    // Definir um timeout para garantir que a aplicação será carregada mesmo se houver problemas
+    const loadingTimeout = setTimeout(() => {
+      setIsLoading(false);
+      setIsAuthenticated(true);
+      console.log("Timeout de carregamento atingido. Forçando renderização.");
+    }, 3000);
+
     checkAuthAndConnection();
+
+    // Limpar timeout se a verificação terminar antes
+    return () => clearTimeout(loadingTimeout);
   }, []);
 
   // Rotas de autenticação
