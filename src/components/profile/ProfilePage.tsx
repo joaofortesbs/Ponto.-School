@@ -41,13 +41,11 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        console.log("Buscando perfil do usuário...");
         const {
           data: { user },
         } = await supabase.auth.getUser();
 
         if (user) {
-          console.log("Usuário autenticado:", user.id);
           const { data, error } = await supabase
             .from("profiles")
             .select("*")
@@ -56,56 +54,31 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
 
           if (error) {
             console.error("Error fetching user profile:", error);
-            
-            // Tente criar o perfil se ele não existir
-            if (error.code === 'PGRST116') {
-              console.log("Perfil não encontrado, tentando criar...");
-              await profileService.createProfileIfNotExists();
-              // Tente buscar novamente após criar
-              const { data: newData, error: newError } = await supabase
-                .from("profiles")
-                .select("*")
-                .eq("id", user.id)
-                .single();
-                
-              if (newError) {
-                console.error("Erro ao buscar perfil após criar:", newError);
-              } else if (newData) {
-                handleProfileData(newData, user);
-              }
-            }
           } else if (data) {
-            handleProfileData(data, user);
+            // Ensure level and rank are set with defaults if not present
+            setUserProfile({
+              ...(data as unknown as UserProfile),
+              level: data.level || 1,
+              rank: data.rank || "Aprendiz",
+            });
+
+            // Set contact info from user data
+            setContactInfo({
+              email: data.email || user.email || "",
+              phone: data.phone || "Adicionar telefone",
+              location: data.location || "Adicionar localização",
+              birthDate: data.birth_date || "Adicionar data de nascimento",
+            });
+
+            if (data.bio) {
+              setAboutMe(data.bio);
+            }
           }
-        } else {
-          console.error("Usuário não autenticado");
         }
       } catch (error) {
         console.error("Error:", error);
       } finally {
         setLoading(false);
-      }
-    };
-    
-    const handleProfileData = (data: any, user: any) => {
-      console.log("Dados do perfil obtidos:", data);
-      // Ensure level and rank are set with defaults if not present
-      setUserProfile({
-        ...(data as unknown as UserProfile),
-        level: data.level || 1,
-        rank: data.rank || "Aprendiz",
-      });
-
-      // Set contact info from user data
-      setContactInfo({
-        email: data.email || user.email || "",
-        phone: data.phone || "Adicionar telefone",
-        location: data.location || "Adicionar localização",
-        birthDate: data.birth_date || "Adicionar data de nascimento",
-      });
-
-      if (data.bio) {
-        setAboutMe(data.bio);
       }
     };
 
