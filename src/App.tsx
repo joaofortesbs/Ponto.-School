@@ -52,20 +52,29 @@ function App() {
   useEffect(() => {
     console.log("App carregado com sucesso!");
 
-    // Verificação de autenticação simplificada
-    const checkAuth = async () => {
+    // Verificação de conexão com Supabase e autenticação
+    const checkAuthAndConnection = async () => {
       try {
+        // Verificar conexão com Supabase
+        const { checkSupabaseConnection } = await import('@/lib/supabase');
+        const isConnected = await checkSupabaseConnection();
+        
+        if (!isConnected) {
+          console.error("Falha na conexão com o Supabase. Verifique suas credenciais.");
+        }
+        
+        // Verificação de autenticação
         const { data } = await supabase.auth.getSession();
         setIsAuthenticated(!!data.session || true); // Força true para desenvolvimento
       } catch (error) {
-        console.error("Auth check error:", error);
+        console.error("Auth/connection check error:", error);
         setIsAuthenticated(true); // Força true para desenvolvimento
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkAuth();
+    checkAuthAndConnection();
   }, []);
 
   // Rotas de autenticação
