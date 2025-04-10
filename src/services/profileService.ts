@@ -1,6 +1,6 @@
+
 import { supabase } from "@/lib/supabase";
 import type { UserProfile } from "@/types/user-profile";
-import crypto from 'crypto';
 
 export const profileService = {
   async getUserProfile(): Promise<UserProfile | null> {
@@ -25,7 +25,24 @@ export const profileService = {
         return this.getMockProfile();
       }
 
-      return data as UserProfile;
+      return {
+        id: data.id || crypto.randomUUID(),
+        user_id: data.user_id || `USR${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
+        full_name: data.full_name || "Usuário Demonstração",
+        display_name: data.display_name || "Usuário",
+        email: data.email || "usuario@exemplo.com",
+        avatar_url: data.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=Demo",
+        level: data.level || 1,
+        plan_type: data.plan_type || "lite",
+        website: data.website,
+        bio: data.bio,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        skills: data.skills,
+        interests: data.interests,
+        education: data.education,
+        contact_info: data.contact_info
+      };
     } catch (error) {
       console.error("Erro inesperado ao buscar perfil:", error);
       return this.getMockProfile();
@@ -34,20 +51,16 @@ export const profileService = {
 
   // Perfil padrão para quando não conseguir buscar do banco
   getMockProfile(): UserProfile {
-    const userId = crypto.randomUUID().substring(0, 8).toUpperCase();
+    const userId = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
     return {
       id: crypto.randomUUID(),
       user_id: `USR${userId}`,
       full_name: "Usuário Demonstração",
       display_name: "Usuário",
-      email: "usuario@example.com",
+      email: "usuario@exemplo.com",
       avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Demo",
       level: 15,
-      plan_type: "lite",
-      coins: 0, //Adding coins to meet UserProfile type
-      rank: "Aprendiz", //Adding rank to meet UserProfile type
-      created_at: new Date().toISOString() //Adding created_at to meet UserProfile type
-
+      plan_type: "lite"
     };
   },
 

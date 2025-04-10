@@ -18,15 +18,26 @@ const ProfileHeader = ({ userProfile, isEditing, onEdit }: ProfileHeaderProps) =
   const rotateX = useMotionValue(0);
   const rotateY = useMotionValue(0);
 
-  // Valores padrão para o perfil do usuário
-  const profile = userProfile || {
+  // Garantir que o perfil sempre tenha valores válidos
+  const profile = userProfile ? {
+    ...userProfile,
+    // Definir valores padrão para propriedades ausentes
+    id: userProfile.id || "1",
+    user_id: userProfile.user_id || `USR${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
+    full_name: userProfile.full_name || "Usuário",
+    display_name: userProfile.display_name || "Usuário",
+    avatar_url: userProfile.avatar_url || "",
+    level: userProfile.level || 1,
+    plan_type: userProfile.plan_type || "lite"
+  } : {
     id: "1",
-    user_id: "USR" + Math.floor(Math.random() * 10000).toString().padStart(4, '0'),
+    user_id: `USR${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
     full_name: "Usuário",
     display_name: "Usuário",
     avatar_url: "",
     level: 1,
     plan_type: "lite",
+    email: "usuario@exemplo.com"
   };
 
   const progressToNextLevel = 72; // Porcentagem de progresso para o próximo nível

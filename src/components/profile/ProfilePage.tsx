@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import AboutMe from "@/components/profile/AboutMe";
@@ -9,6 +10,7 @@ import Achievements from "@/components/profile/Achievements";
 import type { UserProfile } from "@/types/user-profile";
 import { motion } from "framer-motion";
 import { profileService } from "@/services/profileService";
+import { generateUserId } from "@/lib/generate-user-id";
 
 interface ProfilePageProps {
   isOwnProfile?: boolean;
@@ -16,17 +18,7 @@ interface ProfilePageProps {
 
 export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>({
-    id: "1",
-    full_name: "João Silva",
-    display_name: "João",
-    email: "joao.silva@email.com",
-    avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
-    level: 15,
-    plan_type: "lite",
-    user_id: "", // Será preenchido durante o carregamento
-  });
-
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -36,25 +28,42 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
         const profile = await profileService.getUserProfile();
         if (profile) {
           setUserProfile({
-            ...userProfile,
             ...profile,
-            level: profile.level || 15,
-            plan_type: profile.plan_type || "lite",
-            // Gerar ID temporário se não existir
-            user_id: profile.user_id || `USR${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`
+            // Garantir que os campos essenciais estejam definidos
+            id: profile.id || "1",
+            user_id: profile.user_id || `USR${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
+            full_name: profile.full_name || "Usuário Demonstração",
+            display_name: profile.display_name || "Usuário",
+            email: profile.email || "usuario@exemplo.com",
+            avatar_url: profile.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=Demo",
+            level: profile.level || 1,
+            plan_type: profile.plan_type || "lite"
+          });
+        } else {
+          // Criar um perfil padrão se nenhum for retornado
+          setUserProfile({
+            id: "1",
+            user_id: `USR${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
+            full_name: "Usuário Demonstração",
+            display_name: "Usuário",
+            email: "usuario@exemplo.com",
+            avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Demo",
+            level: 1,
+            plan_type: "lite"
           });
         }
       } catch (error) {
         console.error("Error fetching user profile:", error);
-        // Em caso de erro, apenas garantir que há um ID de usuário
-        setUserProfile(prev => {
-          if (prev && !prev.user_id) {
-            return {
-              ...prev,
-              user_id: `USR${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`
-            };
-          }
-          return prev;
+        // Em caso de erro, criar um perfil padrão
+        setUserProfile({
+          id: "1",
+          user_id: `USR${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
+          full_name: "Usuário Demonstração",
+          display_name: "Usuário",
+          email: "usuario@exemplo.com",
+          avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Demo",
+          level: 1,
+          plan_type: "lite"
         });
       } finally {
         setIsLoading(false);

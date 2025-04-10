@@ -28,4 +28,6 @@ export interface UserProfile {
       github?: string;
     };
   };
+  coins?: number;
+  rank?: string;
 }
