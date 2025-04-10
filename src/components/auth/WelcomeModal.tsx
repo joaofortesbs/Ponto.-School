@@ -114,6 +114,20 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
     onClose();
   };
 
+  // Garantir que o corpo da página não possa ser rolado quando o modal estiver aberto
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+    }
+    
+    // Remover classe quando o componente for desmontado
+    return () => {
+      document.body.classList.remove('modal-open');
+    };
+  }, [isOpen]);
+
 
   // Primeiro login - Modal completo com confetes e animações avançadas
   if (isFirstLogin) {

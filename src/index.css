@@ -98,6 +98,7 @@
     50% {
       opacity: 0.7;
     }
+  }
 }
 
 /* Estilos para prevenir rolagem quando modal estiver aberto */
@@ -112,6 +113,14 @@ body.modal-open {
   right: 0 !important;
   bottom: 0 !important;
   z-index: 9990 !important;
+}
+
+/* Estilos para efeitos do modal */
+.bg-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(255, 107, 0, 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 107, 0, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
 /* Garantir que o modal de boas-vindas tenha prioridade sobre outros elementos */
@@ -131,6 +140,7 @@ body.modal-open {
   bottom: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
+  overflow: hidden !important;
 }
 
 .welcome-modal-content {
