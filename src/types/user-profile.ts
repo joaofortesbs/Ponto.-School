@@ -1,73 +1,58 @@
-export interface UserProfile {
-  id: string;
-  user_id?: string;
-  displayName?: string;
-  email?: string;
-  avatar?: string;
-  coverImage?: string;
-  bio?: string;
-  location?: string;
-  website?: string;
-  joinedAt?: string;
-  following?: number;
-  followers?: number;
-  friends?: number;
-  postsCount?: number;
-  skills?: string[];
-  interests?: string[];
-  education?: EducationItem[];
-  achievements?: AchievementItem[];
-  created_at?: string;
-  updated_at?: string;
-  phone?: string;
-  tagline?: string;
-}
-
-export interface EducationItem {
+export interface Education {
   institution: string;
   degree: string;
-  fieldOfStudy: string;
-  startDate: string;
-  endDate?: string;
-  description?: string;
+  startYear: number;
+  endYear?: number;
 }
 
-export interface AchievementItem {
+export interface Achievement {
   title: string;
-  date: string;
   description: string;
-  icon?: string;
+  date: string;
+  icon: string;
+}
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  username: string;
+  avatar: string;
+  bio?: string;
+  coverImage?: string;
+  location?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
+  skills?: string[];
+  interests?: string[];
+  education?: Education[];
+  achievements?: Achievement[];
+  joinDate?: string;
+  lastActive?: string;
+  plan?: string;
+  isVerified?: boolean;
+  userId: string;
 }
 
 // Valores padrão para perfil do usuário
 export const DEFAULT_USER_PROFILE: UserProfile = {
   id: crypto.randomUUID(),
-  user_id: `USR${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
-  full_name: "Usuário Demonstração",
-  display_name: "Usuário",
+  userId: `USR${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
+  name: "Usuário Demonstração",
+  username: "Usuário",
   email: "usuario@exemplo.com",
-  avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Demo",
+  avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Demo",
   bio: "Estudante utilizando a plataforma Epictus",
-  level: 1,
-  plan_type: "lite",
   skills: ["Aprendizado", "Organização"],
   interests: ["Educação", "Tecnologia"],
   education: [
     {
       institution: "Epictus Academy",
       degree: "Curso Online",
-      years: "2024-Presente"
+      startYear: 2024,
     }
   ],
-  contact_info: {
-    phone: "",
-    address: "",
-    social: {
-      twitter: "",
-      linkedin: "",
-      github: ""
-    }
-  },
-  coins: 100,
-  rank: "Iniciante"
+  joinDate: new Date().toISOString(), // Added joinDate
+  plan: "lite", // Added plan
+
 };

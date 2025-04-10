@@ -1,234 +1,189 @@
-import React, { useEffect, useRef } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Edit, Share2, Camera, Check, Award } from "lucide-react";
-import { motion, useAnimate, useMotionValue } from "framer-motion";
-import type { UserProfile } from "@/types/user-profile";
+import React, { useState } from 'react';
+import { UserProfile } from '@/types/user-profile';
+import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
+import { Pencil, Camera, Check, X } from 'lucide-react';
 
 interface ProfileHeaderProps {
-  userProfile?: UserProfile | null;
-  isEditing: boolean;
-  onEdit: () => void;
+  profile: UserProfile | null;
+  isCurrentUser: boolean;
 }
 
-const ProfileHeader = ({ userProfile, isEditing, onEdit }: ProfileHeaderProps) => {
-  const [scope, animate] = useAnimate();
-  const cardRef = useRef<HTMLDivElement>(null);
-  const rotateX = useMotionValue(0);
-  const rotateY = useMotionValue(0);
+const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile, isCurrentUser }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [previewAvatar, setPreviewAvatar] = useState<string | null>(null);
+  const [previewCover, setPreviewCover] = useState<string | null>(null);
 
-  // Garantir que o perfil sempre tenha valores válidos
-  const profile = userProfile || {
-    id: "1",
-    user_id: `USR${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
-    full_name: "Usuário",
-    display_name: "Usuário",
-    avatar_url: "",
-    level: 1,
-    plan_type: "lite",
-    email: "usuario@exemplo.com",
-    bio: "Estudante utilizando a plataforma Epictus",
-    skills: ["Aprendizado", "Organização"],
-    interests: ["Educação", "Tecnologia"],
-    education: [
-      {
-        institution: "Epictus Academy",
-        degree: "Curso Online",
-        years: "2024-Presente"
-      }
-    ],
-    contact_info: {
-      phone: "",
-      address: "",
-      social: {
-        twitter: "",
-        linkedin: "",
-        github: ""
-      }
-    },
-    coins: 100,
-    rank: "Iniciante"
-  };
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setAvatarFile(file);
 
-  const progressToNextLevel = 72; // Porcentagem de progresso para o próximo nível
-
-  useEffect(() => {
-    // Animar ao carregar o componente
-    animate(scope.current, { opacity: 1, y: 0 }, { duration: 0.5 });
-
-    // Gerar ID de usuário se não existir
-    if (!profile.user_id) {
-      profile.user_id = "USR" + Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    }
-  }, []);
-
-  // Efeito 3D no cartão
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current) return;
-
-    const rect = cardRef.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-
-    const mouseX = e.clientX - centerX;
-    const mouseY = e.clientY - centerY;
-
-    // Calcular rotação limitada a +/- 5 graus
-    const rotX = (mouseY / (rect.height / 2)) * -5;
-    const rotY = (mouseX / (rect.width / 2)) * 5;
-
-    rotateX.set(rotX);
-    rotateY.set(rotY);
-  };
-
-  const handleMouseLeave = () => {
-    // Animar de volta à posição inicial
-    animate(rotateX, 0, { duration: 0.5 });
-    animate(rotateY, 0, { duration: 0.5 });
-  };
-
-  const getPlanBadgeClass = () => {
-    switch (profile.plan_type?.toLowerCase()) {
-      case 'pro':
-        return 'bg-gradient-to-r from-purple-500 to-indigo-600';
-      case 'premium':
-        return 'bg-gradient-to-r from-yellow-400 to-amber-600';
-      default:
-        return 'bg-gradient-to-r from-orange-400 to-amber-500';
+      // Criar preview da imagem
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewAvatar(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  return (
-    <motion.div
-      ref={scope}
-      initial={{ opacity: 0, y: 20 }}
-      className="mx-auto mb-8 max-w-md"
-    >
-      <motion.div
-        ref={cardRef}
-        className="profile-3d-container overflow-hidden rounded-xl bg-white dark:bg-gray-800/90 shadow-lg border border-gray-200 dark:border-gray-700"
-        style={{
-          transform: "perspective(1000px)",
-          rotateX: rotateX,
-          rotateY: rotateY,
-          boxShadow: "0 20px 30px -10px rgba(0,0,0,0.15)"
-        }}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        whileHover={{ scale: 1.02 }}
-        transition={{ type: "spring", stiffness: 300 }}
-      >
-        {/* Gradiente superior */}
-        <div className="h-24 bg-gradient-to-r from-blue-600 to-indigo-700 dark:from-blue-800 dark:to-indigo-900 relative overflow-hidden">
-          <div className="absolute inset-0 bg-grid-pattern opacity-20"></div>
-          <motion.div 
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-            initial={{ x: "-100%" }}
-            animate={{ x: "100%" }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-          />
-        </div>
+  const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setCoverFile(file);
 
-        {/* Avatar e informações do perfil */}
-        <div className="relative px-6 pb-6">
-          <motion.div 
-            className="profile-3d-avatar absolute -top-14 left-1/2 transform -translate-x-1/2"
-            whileHover={{ scale: 1.05, y: -5 }}
-          >
-            <Avatar className="w-28 h-28 border-4 border-white dark:border-gray-800 shadow-lg">
-              <AvatarImage src={profile.avatar_url || ""} alt={profile.display_name} />
-              <AvatarFallback className="bg-orange-500 text-white text-3xl">
-                {profile.display_name?.charAt(0) || "U"}
-              </AvatarFallback>
-            </Avatar>
+      // Criar preview da imagem
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewCover(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
-            {/* Círculo de câmera para trocar avatar */}
-            <Button 
-              variant="secondary" 
-              size="icon" 
-              className="absolute -bottom-1 -right-1 rounded-full w-8 h-8 shadow-md"
-            >
-              <Camera className="w-4 h-4" />
-            </Button>
-          </motion.div>
+  const handleSaveChanges = () => {
+    // Aqui você implementaria a lógica para salvar as imagens atualizadas
+    // Por exemplo, chamando uma API ou atualizando o estado global
+    console.log('Avatar:', avatarFile);
+    console.log('Cover:', coverFile);
+    setIsEditing(false);
 
-          <div className="mt-16 flex flex-col items-center">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-              {profile.display_name || "Usuário"}
-            </h2>
+    // Limpar previews e arquivos
+    setPreviewAvatar(null);
+    setPreviewCover(null);
+    setAvatarFile(null);
+    setCoverFile(null);
+  };
 
-            {/* ID do usuário com efeito de destaque */}
-            <motion.div 
-              className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5"
-              initial={{ opacity: 0.5 }}
-              whileHover={{ scale: 1.05, opacity: 1 }}
-            >
-              ID: <span className="font-mono bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-md text-orange-600 dark:text-orange-400">{profile.user_id || "—"}</span>
-            </motion.div>
+  const handleCancelChanges = () => {
+    setIsEditing(false);
+    setPreviewAvatar(null);
+    setPreviewCover(null);
+    setAvatarFile(null);
+    setCoverFile(null);
+  };
 
-            {/* Badge do plano */}
-            <motion.div 
-              className={`mt-2 px-3 py-1 rounded-full text-xs font-medium text-white flex items-center gap-1.5 ${getPlanBadgeClass()}`}
-              whileHover={{ scale: 1.05 }}
-            >
-              <Award className="w-3.5 h-3.5" />
-              <span className="profile-premium-badge">Plano {profile.plan_type || "Lite"}</span>
-            </motion.div>
-
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-              {profile.full_name || "Estudante de Engenharia de Software"}
-            </p>
-
-            {/* Métricas */}
-            <div className="w-full grid grid-cols-3 gap-2 mt-5 pt-4 border-t border-gray-100 dark:border-gray-700">
-              <div className="flex flex-col items-center">
-                <span className="text-xl font-semibold text-gray-900 dark:text-white">{profile.level || 1}</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">Nível</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="text-xl font-semibold text-gray-900 dark:text-white">8</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">Turmas</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="text-xl font-semibold text-gray-900 dark:text-white">12</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">Conquistas</span>
-              </div>
-            </div>
-
-            {/* Barra de progresso */}
-            <div className="w-full mt-4">
-              <div className="flex items-center justify-between mb-1.5">
-                <p className="text-xs text-gray-500 dark:text-gray-400">Progresso para o próximo nível</p>
-                <p className="text-xs font-medium text-orange-600 dark:text-orange-400">{progressToNextLevel}%</p>
-              </div>
-              <div className="relative w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                <motion.div 
-                  className="absolute h-full bg-gradient-to-r from-orange-500 to-orange-400 progress-bar-shine"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${progressToNextLevel}%` }}
-                  transition={{ duration: 1, ease: "easeOut" }}
-                />
-              </div>
-            </div>
-
-            {/* Botões de ação */}
-            <div className="flex w-full gap-2 mt-6">
-              <Button 
-                variant="default" 
-                className="flex-1 bg-orange-500 hover:bg-orange-600"
-                onClick={onEdit}
-              >
-                <Edit className="w-4 h-4 mr-2" />
-                Editar Perfil
-              </Button>
-              <Button variant="outline" size="icon" className="aspect-square">
-                <Share2 className="w-4 h-4" />
-              </Button>
+  if (!profile) {
+    return (
+      <div className="animate-pulse">
+        <div className="relative overflow-hidden rounded-xl bg-gray-200 dark:bg-gray-700 shadow-md mb-4" style={{ height: '200px' }}></div>
+        <div className="relative flex flex-col sm:flex-row items-center sm:items-end gap-4 -mt-12 px-4">
+          <div className="relative z-10">
+            <div className="h-24 w-24 sm:h-32 sm:w-32 rounded-full border-4 border-background overflow-hidden shadow-lg bg-gray-300 dark:bg-gray-600"></div>
+          </div>
+          <div className="flex-1 flex flex-col sm:flex-row items-center sm:items-end justify-between gap-2 sm:gap-4 pt-2 mb-2">
+            <div className="text-center sm:text-left w-full">
+              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-2"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="relative overflow-hidden rounded-xl shadow-md mb-4" style={{ height: '200px' }}>
+        <img 
+          src={previewCover || profile.coverImage || '/images/tempo-image-20250329T044458419Z.png'} 
+          alt="Capa do Perfil" 
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            e.currentTarget.src = '/images/tempo-image-20250329T044458419Z.png';
+          }}
+        />
+
+        {isEditing && (
+          <label className="absolute bottom-4 right-4 p-2 bg-white dark:bg-gray-800 rounded-full cursor-pointer shadow-md">
+            <Camera className="h-5 w-5 text-primary" />
+            <input 
+              type="file" 
+              accept="image/*" 
+              onChange={handleCoverChange} 
+              className="hidden"
+            />
+          </label>
+        )}
+      </div>
+
+      <div className="relative flex flex-col sm:flex-row items-center sm:items-end gap-4 -mt-12 px-4">
+        <div className="relative z-10">
+          <div className="h-24 w-24 sm:h-32 sm:w-32 rounded-full border-4 border-background overflow-hidden shadow-lg">
+            <img 
+              src={previewAvatar || profile.avatar || '/images/tempo-image-20250329T020819629Z.png'} 
+              alt={profile.name} 
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.src = '/images/tempo-image-20250329T020819629Z.png';
+              }}
+            />
+          </div>
+
+          {isEditing && (
+            <label className="absolute bottom-1 right-1 p-2 bg-white dark:bg-gray-800 rounded-full cursor-pointer shadow-md">
+              <Camera className="h-4 w-4 text-primary" />
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={handleAvatarChange} 
+                className="hidden"
+              />
+            </label>
+          )}
+        </div>
+
+        <div className="flex-1 flex flex-col sm:flex-row items-center sm:items-end justify-between gap-2 sm:gap-4 pt-2 mb-2">
+          <div className="text-center sm:text-left">
+            <h1 className="text-2xl font-bold">{profile.name}</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">@{profile.username}</p>
+          </div>
+
+          <div className="flex gap-2">
+            {isCurrentUser && !isEditing && (
+              <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
+                <Pencil className="h-4 w-4 mr-1" />
+                Editar Perfil
+              </Button>
+            )}
+
+            {isEditing && (
+              <>
+                <Button onClick={handleCancelChanges} variant="outline" size="sm">
+                  <X className="h-4 w-4 mr-1" />
+                  Cancelar
+                </Button>
+                <Button onClick={handleSaveChanges} variant="default" size="sm">
+                  <Check className="h-4 w-4 mr-1" />
+                  Salvar
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 bg-gray-100 dark:bg-gray-800/50 rounded-lg p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+        <div className="space-y-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Usuário desde</p>
+          <p className="font-medium">{profile.joinDate || 'Não informado'}</p>
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Último acesso</p>
+          <p className="font-medium">{profile.lastActive || 'Não informado'}</p>
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Plano</p>
+          <p className="font-medium">{profile.plan || 'Não informado'}</p>
+        </div>
+      </div>
     </motion.div>
   );
 };
