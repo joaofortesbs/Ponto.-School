@@ -76,6 +76,12 @@ export function LoginForm() {
         setSuccess(true);
         localStorage.setItem('auth_checked', 'true');
         localStorage.setItem('auth_status', 'authenticated'); //Added to persist login status.
+        
+        // Armazenar o timestamp de última sessão
+        const userId = data.user.id;
+        if (userId) {
+          localStorage.setItem(`userSession_${userId}`, new Date().getTime().toString());
+        }
 
         // Não mostrar o primeiro modal de boas-vindas quando o usuário fizer login aqui
         // Os modais serão controlados pelo App.tsx quando o usuário chegar nas páginas protegidas

@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Settings, MapPin, CheckCircle } from "lucide-react";
+import { X, Settings, MapPin, CheckCircle, Bell, Calendar, MessageSquare, Globe, Users } from "lucide-react";
 import { Button } from "../ui/button";
 import Confetti from 'react-confetti';
 
@@ -19,6 +19,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
 }) => {
   const navigate = useNavigate();
   const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
+  const [showUpdates, setShowUpdates] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -35,6 +36,15 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
   const handleSettingsClick = () => {
     navigate("/configuracoes");
     onClose();
+  };
+
+  const handleAgendaClick = () => {
+    navigate("/agenda");
+    onClose();
+  };
+
+  const toggleUpdates = () => {
+    setShowUpdates(!showUpdates);
   };
 
   // Primeiro login - Modal completo com confetes
@@ -166,7 +176,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
     );
   }
 
-  // Login subsequente - Modal simples
+  // Login subsequente - Modal simples com mais opções
   return (
     <AnimatePresence>
       {isOpen && (
@@ -203,6 +213,83 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                 A Ponto. School está feliz por te ter de volta!
               </p>
             </div>
+            
+            {!showUpdates ? (
+              <div className="space-y-3 mb-6">
+                <Button
+                  onClick={handleAgendaClick}
+                  className="flex items-center justify-start w-full bg-gray-50 hover:bg-gray-100 dark:bg-gray-800/50 dark:hover:bg-gray-800 text-gray-800 dark:text-white p-3 rounded-lg border border-gray-200 dark:border-gray-700"
+                >
+                  <Calendar className="h-5 w-5 text-[#FF6B00] mr-3" />
+                  <div className="text-left">
+                    <div className="font-medium">Ver compromissos do dia</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Confira sua agenda e planeje seu dia</div>
+                  </div>
+                </Button>
+                
+                <Button
+                  onClick={toggleUpdates}
+                  className="flex items-center justify-start w-full bg-gray-50 hover:bg-gray-100 dark:bg-gray-800/50 dark:hover:bg-gray-800 text-gray-800 dark:text-white p-3 rounded-lg border border-gray-200 dark:border-gray-700"
+                >
+                  <Bell className="h-5 w-5 text-[#FF6B00] mr-3" />
+                  <div className="text-left">
+                    <div className="font-medium">Ver atualizações</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Notificações, mensagens e novidades</div>
+                  </div>
+                </Button>
+              </div>
+            ) : (
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="font-medium text-gray-900 dark:text-white">Suas atualizações</h3>
+                  <Button variant="ghost" size="sm" onClick={toggleUpdates} className="text-sm">
+                    Voltar
+                  </Button>
+                </div>
+                
+                <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+                  <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-start">
+                      <Bell className="h-5 w-5 text-[#FF6B00] mr-3 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="font-medium text-gray-900 dark:text-white">Notificações</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">Você tem 3 notificações não lidas</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-start">
+                      <MessageSquare className="h-5 w-5 text-[#FF6B00] mr-3 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="font-medium text-gray-900 dark:text-white">Mensagens</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">2 novas mensagens de colegas</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-start">
+                      <Globe className="h-5 w-5 text-[#FF6B00] mr-3 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="font-medium text-gray-900 dark:text-white">Novidades da plataforma</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">Nova funcionalidade de AI disponível!</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-start">
+                      <Users className="h-5 w-5 text-[#FF6B00] mr-3 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="font-medium text-gray-900 dark:text-white">Conexão Expert</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">Um expert escolheu responder sua dúvida</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="flex justify-center">
               <Button
