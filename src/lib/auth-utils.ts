@@ -1,4 +1,3 @@
-
 import { supabase } from "./supabase";
 
 /**
@@ -10,11 +9,11 @@ export const checkAuthentication = async (): Promise<boolean> => {
     // Sempre consultar o Supabase para garantir estado atualizado
     const { data } = await supabase.auth.getSession();
     const isAuthenticated = !!data.session;
-    
+
     // Atualizar o estado no localStorage
     localStorage.setItem('auth_checked', 'true');
     localStorage.setItem('auth_status', isAuthenticated ? 'authenticated' : 'unauthenticated');
-    
+
     return isAuthenticated;
   } catch (error) {
     console.error("Erro ao verificar autenticação:", error);
@@ -31,7 +30,7 @@ export const checkAuthentication = async (): Promise<boolean> => {
 export const clearAuthState = (): void => {
   localStorage.removeItem('auth_checked');
   localStorage.removeItem('auth_status');
-  
+
   // Opcionalmente, remover a flag de primeiro login para testes
   // Descomente para testes:
   // localStorage.removeItem('hasLoggedInBefore');
@@ -64,4 +63,27 @@ export const markUserAsLoggedIn = (userId: string): void => {
   if (!userId) return;
   const key = `hasLoggedInBefore_${userId}`;
   localStorage.setItem(key, 'true');
+};
+
+export const signInWithEmail = async (email: string, password: string) => {
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) throw error;
+
+    if (data?.user) {
+      localStorage.setItem('auth_checked', 'true');
+      localStorage.setItem('auth_status', 'authenticated');
+
+      // Não armazenamos mais timestamp de sessão para que o modal sempre apareça
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    console.error("Erro ao fazer login:", error);
+    return { success: false, error };
+  }
 };

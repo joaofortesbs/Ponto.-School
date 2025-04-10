@@ -215,32 +215,20 @@ function App() {
           
           // Chave específica para este usuário
           const userLoginKey = `hasLoggedInBefore_${currentUserId}`;
-          const userSessionKey = `userSession_${currentUserId}`;
           const userHasLoggedBefore = localStorage.getItem(userLoginKey);
           
-          // Verificar se é uma nova sessão do usuário
-          const lastSessionTime = localStorage.getItem(userSessionKey);
-          const currentTime = new Date().getTime();
-          const isNewSession = !lastSessionTime || (currentTime - parseInt(lastSessionTime)) > 30 * 60 * 1000; // 30 minutos
-          
-          // Atualizar o timestamp da sessão
-          localStorage.setItem(userSessionKey, currentTime.toString());
-          
           if (!userHasLoggedBefore) {
-            // Primeiro login desta conta específica - mostrar modal de boas-vindas
+            // Primeiro login desta conta específica - mostrar modal de comemoração
             console.log("Primeiro login detectado para esta conta!");
             setIsFirstLogin(true);
             setShowWelcomeModal(true);
             localStorage.setItem(userLoginKey, 'true');
             localStorage.setItem('hasLoggedInBefore', 'true'); // Compatibilidade com código existente
-          } else if (isNewSession) {
-            // Nova sessão de um usuário existente - mostrar modal de boas-vindas de volta
+          } else {
+            // Qualquer acesso subsequente - sempre mostrar modal de boas-vindas de volta
             console.log("Login subsequente detectado para esta conta");
             setIsFirstLogin(false);
             setShowWelcomeModal(true);
-          } else {
-            // Continuação de sessão existente - não mostrar nenhum modal
-            setShowWelcomeModal(false);
           }
         }
         console.log("Aplicação inicializada com sucesso.");
