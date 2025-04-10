@@ -206,38 +206,38 @@ function App() {
           return;
         }
 
+        // Verificar se é o primeiro login do usuário
+        const hasLoggedInBefore = localStorage.getItem('hasLoggedInBefore');
+
         if (isAuthenticated) {
           // Obter ID do usuário atual para controle de primeiro login por conta
           const { data: { session } } = await supabase.auth.getSession();
           const currentUserId = session?.user?.id;
           
-          if (currentUserId) {
-            // Usar a nova função para determinar se devemos mostrar o modal
-            const [shouldShow, isFirstTime] = shouldShowWelcomeModal(currentUserId);
+          // Chave específica para este usuário
+          const userLoginKey = currentUserId ? `hasLoggedInBefore_${currentUserId}` : null;
+          const userHasLoggedBefore = userLoginKey ? localStorage.getItem(userLoginKey) : null;
+
+          if (currentUserId && !userHasLoggedBefore) {
+            // Primeiro login desta conta específica
+            console.log("Primeiro login detectado para esta conta!");
+            setIsFirstLogin(true);
+            setShowWelcomeModal(true);
+            localStorage.setItem(userLoginKey, 'true');
             
-            if (shouldShow) {
-              // Se deve mostrar o modal, verificar se é primeiro login ou retorno
-              console.log(isFirstTime ? "Primeiro login detectado para esta conta!" : "Bem-vindo de volta detectado!");
-              setIsFirstLogin(isFirstTime);
-              setShowWelcomeModal(true);
-              
-              // Se for primeiro login, registrar que o usuário já logou antes
-              if (isFirstTime) {
-                markUserAsLoggedIn(currentUserId);
-                // Manter compatibilidade com código existente
-                localStorage.setItem('hasLoggedInBefore', 'true');
-              }
-              
-              // Marcar que o modal foi mostrado nesta sessão
-              markWelcomeModalAsShown(currentUserId);
-            } else {
-              console.log("Modal já foi mostrado nesta sessão");
-              setShowWelcomeModal(false);
+            // Manter compatibilidade com código existente
+            if (!hasLoggedInBefore) {
+              localStorage.setItem('hasLoggedInBefore', 'true');
             }
+          } else if (currentUserId) {
+            // Login subsequente para esta conta
+            console.log("Login subsequente detectado para esta conta");
+            setIsFirstLogin(false);
+            setShowWelcomeModal(true);
           }
         }
-        
         console.log("Aplicação inicializada com sucesso.");
+
       } catch (error) {
         console.error("Erro ao inicializar aplicação:", error);
       }
