@@ -117,6 +117,7 @@ body.modal-open {
   right: 0 !important;
   bottom: 0 !important;
   z-index: 9990 !important;
+  position: fixed !important;
 }
 
 /* Garantir que o modal de boas-vindas tenha prioridade sobre outros elementos */

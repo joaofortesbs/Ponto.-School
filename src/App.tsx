@@ -271,16 +271,21 @@ function App() {
 
     // Priorizar o modal no carregamento inicial da aplicação
     useEffect(() => {
-      const timer = setTimeout(() => {
-        if (isAuthenticated && !isAuthRoute) {
-          setShowWelcomeModal(true);
-        }
-      }, 500);
-      
-      return () => {
-        clearTimeout(timer);
-      };
-    }, []);
+      // Este efeito será executado apenas uma vez, para garantir que o modal tenha prioridade no carregamento inicial
+      if (!isAuthRoute) {
+        const timer = setTimeout(() => {
+          checkAuthentication().then(isAuth => {
+            if (isAuth) {
+              setShowWelcomeModal(true);
+            }
+          });
+        }, 500);
+        
+        return () => {
+          clearTimeout(timer);
+        };
+      }
+    }, [isAuthRoute]);
 
     // Aguardar apenas um curto tempo para inicialização prioritária do modal
     const timer = setTimeout(() => {

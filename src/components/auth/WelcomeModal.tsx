@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
+import { motion, useAnimationControls } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { X, Settings, MapPin, CheckCircle, Bell, Calendar, MessageSquare, Globe, Users, Sparkles, Zap, Lightbulb, PanelRight, Rocket } from "lucide-react";
 import { Button } from "../ui/button";
 import Confetti from 'react-confetti';
@@ -198,7 +199,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={onClose}
+                    onClick={() => safeCloseModal(onClose)}
                     className="absolute top-4 right-4 rounded-full bg-black/20 text-white hover:bg-black/40 hover:text-white"
                   >
                     <X className="h-4 w-4" />
@@ -299,7 +300,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                           variant="default"
                           size="sm"
                           className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white w-full shadow-md shadow-orange-500/20"
-                          onClick={onClose}
+                          onClick={() => safeCloseModal(onClose)}
                         >
                           Ir para o Dashboard
                         </Button>
@@ -371,7 +372,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
             <Button
               variant="ghost"
               size="icon"
-              onClick={onClose}
+              onClick={() => safeCloseModal(onClose)}
               className="absolute top-3 right-3 rounded-full hover:bg-white/10 text-white z-10"
             >
               <X className="h-4 w-4" />
@@ -619,13 +620,13 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
               >
                 <Button
                   className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white px-8 py-6 text-lg font-medium shadow-lg shadow-[#FF6B00]/20 relative overflow-hidden group"
-                  onClick={onClose}
+                  onClick={() => safeCloseModal(onClose)}
                 >
                   <span className="relative z-10 flex items-center gap-2">
                     Continuar
                     <motion.div
                       animate={{ x: [0, 5, 0] }}
-                      transition={{ repeat: Infinity, duration: 1.5, ease: ""easeInOut" }}
+                      transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
                     >
                       <Rocket className="h-4 w-4" />
                     </motion.div>
