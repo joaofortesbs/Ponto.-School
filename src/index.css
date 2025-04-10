@@ -154,15 +154,6 @@ body.modal-open {
   z-index: 9990 !important;
 }
 
-/* Tamanhos personalizados para ícones */
-.h-4\.5 {
-  height: 1.125rem !important;
-}
-
-.w-4\.5 {
-  width: 1.125rem !important;
-}
-
 /* Estilos para efeitos do modal */
 .bg-grid-pattern {
   background-image: 
