@@ -689,3 +689,18 @@ select:hover,
 .animate-pulse-border {
   animation: pulse-border 2s ease-in-out infinite;
 }
+
+.welcome-modal-overlay {
+  pointer-events: auto;
+}
+
+/* Estilos adicionais para botões interativos no modal */
+.welcome-modal-overlay button {
+  cursor: pointer;
+}
+
+/* Estilos para botão de voltar */
+.welcome-modal-overlay button:focus-visible {
+  outline: 2px solid #FF6B00;
+  outline-offset: 2px;
+}

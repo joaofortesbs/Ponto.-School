@@ -557,7 +557,12 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                     initial={{ x: 10, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                   >
-                    <Button variant="ghost" size="sm" onClick={toggleUpdates} className="text-sm text-white/80 hover:text-white">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={toggleUpdates} 
+                      className="text-sm text-white/80 hover:text-white hover:bg-white/10 px-4 py-1 rounded transition-colors duration-200"
+                    >
                       Voltar
                     </Button>
                   </motion.div>
