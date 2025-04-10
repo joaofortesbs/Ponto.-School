@@ -113,3 +113,35 @@ export function isValidUserId(id: string): boolean {
   // Verificar se corresponde ao padrão esperado
   return /^user_\d+_\d{4}$/.test(id);
 }
+
+/**
+ * Gera um ID de usuário formatado
+ * @param seed String opcional para criar IDs consistentes
+ * @returns ID de usuário formatado (ex: USR1234)
+ */
+export function generateUserId(seed?: string): string {
+  let id: string;
+
+  if (seed) {
+    // Criar hash simples da seed
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+      hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+      hash |= 0; // Converter para inteiro de 32 bits
+    }
+    // Converter para positivo e limitar a 4 dígitos
+    id = Math.abs(hash % 10000).toString().padStart(4, '0');
+  } else {
+    // Gerar ID aleatório
+    id = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  }
+
+  return `USR${id}`;
+}
+
+/**
+ * Verifica se uma string é um ID de usuário válido
+ */
+export function isValidUserId(id: string): boolean {
+  return /^USR\d{4}$/.test(id);
+}

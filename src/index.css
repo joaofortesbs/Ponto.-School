@@ -548,7 +548,7 @@ select:hover,
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
   transform: translateX(-100%);
   animation: progressShine 2s infinite;
-} 0.1s ease-out;
+  transition: all 0.1s ease-out;
 }
 
 .profile-3d-avatar {

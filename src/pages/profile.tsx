@@ -1,30 +1,7 @@
-import React from "react";
-import ProfilePage from "@/components/profile/ProfilePage";
-import Header from "@/components/layout/Header";
-import Sidebar from "@/components/layout/Sidebar";
-
-const Profile = () => {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
-
-  return (
-    <div className="flex h-screen bg-[#f7f9fa] dark:bg-[#001427] transition-colors duration-300">
-      <Sidebar
-        isCollapsed={isSidebarCollapsed}
-        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-      />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
-        <main className="flex-1 overflow-y-auto bg-[#f7f9fa] dark:bg-[#001427] transition-colors duration-300">
-          <ProfilePage isOwnProfile={true} />
-        </main>
-      </div>
-    </div>
-  );
-};
-
-export default Profile;
 
 import React, { useState, useEffect } from "react";
+import Header from "@/components/layout/Header";
+import Sidebar from "@/components/layout/Sidebar";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import AboutMe from "@/components/profile/AboutMe";
 import Skills from "@/components/profile/Skills";
@@ -36,7 +13,8 @@ import type { UserProfile } from "@/types/user-profile";
 import { motion } from "framer-motion";
 import { profileService } from "@/services/profileService";
 
-export default function ProfilePage() {
+// Componente ProfilePage isolado
+export function ProfilePageContent({ isOwnProfile = true }) {
   const [isEditing, setIsEditing] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>({
     id: "1",
@@ -61,7 +39,8 @@ export default function ProfilePage() {
             ...userProfile,
             ...profile,
             level: profile.level || 15,
-            plan_type: profile.plan_type || "lite"
+            plan_type: profile.plan_type || "lite",
+            user_id: profile.user_id || crypto.randomUUID().substring(0, 8) // Gerar ID temporário se não existir
           });
         }
       } catch (error) {
@@ -79,7 +58,7 @@ export default function ProfilePage() {
   };
 
   if (isLoading) {
-    return <p>Loading...</p>;
+    return <p className="p-4 text-center">Carregando perfil...</p>;
   }
 
   return (
@@ -88,6 +67,7 @@ export default function ProfilePage() {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
+      className="container mx-auto p-4"
     >
       <ProfileHeader userProfile={userProfile} isEditing={isEditing} onEdit={handleEditProfile} />
       <AboutMe userProfile={userProfile} isEditing={isEditing} />
@@ -99,3 +79,25 @@ export default function ProfilePage() {
     </motion.div>
   );
 }
+
+// Componente principal Profile que renderiza a estrutura da página
+const Profile = () => {
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
+
+  return (
+    <div className="flex h-screen bg-[#f7f9fa] dark:bg-[#001427] transition-colors duration-300">
+      <Sidebar
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+      />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header />
+        <main className="flex-1 overflow-y-auto bg-[#f7f9fa] dark:bg-[#001427] transition-colors duration-300">
+          <ProfilePageContent isOwnProfile={true} />
+        </main>
+      </div>
+    </div>
+  );
+};
+
+export default Profile;
