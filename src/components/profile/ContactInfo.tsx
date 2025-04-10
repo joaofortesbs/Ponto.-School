@@ -61,7 +61,7 @@ export default function ContactInfo({
               </label>
               <Input
                 id="contact-email"
-                value={contactInfo.email}
+                value={contactInfo.email || ""}
                 onChange={(e) =>
                   setContactInfo({ ...contactInfo, email: e.target.value })
                 }
@@ -77,16 +77,12 @@ export default function ContactInfo({
               </label>
               <Input
                 id="contact-phone"
-                value={
-                  contactInfo.phone === "Adicionar telefone"
-                    ? ""
-                    : contactInfo.phone
-                }
+                value={contactInfo.phone || ""}
                 placeholder="Adicionar telefone"
                 onChange={(e) =>
                   setContactInfo({
                     ...contactInfo,
-                    phone: e.target.value || "Adicionar telefone",
+                    phone: e.target.value,
                   })
                 }
                 className="border-[#E0E1DD] dark:border-white/10 focus:border-[#FF6B00] focus:ring-[#FF6B00]/10"
@@ -101,16 +97,12 @@ export default function ContactInfo({
               </label>
               <Input
                 id="contact-location"
-                value={
-                  contactInfo.location === "Adicionar localização"
-                    ? ""
-                    : contactInfo.location
-                }
+                value={contactInfo.location || ""}
                 placeholder="Adicionar localização"
                 onChange={(e) =>
                   setContactInfo({
                     ...contactInfo,
-                    location: e.target.value || "Adicionar localização",
+                    location: e.target.value,
                   })
                 }
                 className="border-[#E0E1DD] dark:border-white/10 focus:border-[#FF6B00] focus:ring-[#FF6B00]/10"
@@ -125,16 +117,12 @@ export default function ContactInfo({
               </label>
               <Input
                 id="contact-birthdate"
-                value={
-                  contactInfo.birthDate === "Adicionar data de nascimento"
-                    ? ""
-                    : contactInfo.birthDate
-                }
+                value={contactInfo.birthDate || ""}
                 placeholder="Adicionar data de nascimento"
                 onChange={(e) =>
                   setContactInfo({
                     ...contactInfo,
-                    birthDate: e.target.value || "Adicionar data de nascimento",
+                    birthDate: e.target.value,
                   })
                 }
                 className="border-[#E0E1DD] dark:border-white/10 focus:border-[#FF6B00] focus:ring-[#FF6B00]/10"
@@ -167,7 +155,7 @@ export default function ContactInfo({
           <div>
             <p className="text-xs text-[#64748B] dark:text-white/60">Email</p>
             <p className="text-sm font-medium text-[#29335C] dark:text-white">
-              {contactInfo.email}
+              {contactInfo.email || ""}
             </p>
           </div>
         </div>
@@ -181,7 +169,7 @@ export default function ContactInfo({
               Telefone
             </p>
             <p className="text-sm font-medium text-[#29335C] dark:text-white">
-              {contactInfo.phone}
+              {contactInfo.phone || ""}
             </p>
           </div>
         </div>
@@ -195,7 +183,7 @@ export default function ContactInfo({
               Localização
             </p>
             <p className="text-sm font-medium text-[#29335C] dark:text-white">
-              {contactInfo.location}
+              {contactInfo.location || ""}
             </p>
           </div>
         </div>
@@ -209,7 +197,7 @@ export default function ContactInfo({
               Data de Nascimento
             </p>
             <p className="text-sm font-medium text-[#29335C] dark:text-white">
-              {contactInfo.birthDate}
+              {contactInfo.birthDate || ""}
             </p>
           </div>
         </div>

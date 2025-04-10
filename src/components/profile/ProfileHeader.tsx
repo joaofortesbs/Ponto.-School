@@ -28,7 +28,29 @@ const ProfileHeader = ({ userProfile, isEditing, onEdit }: ProfileHeaderProps) =
     display_name: userProfile.display_name || "Usuário",
     avatar_url: userProfile.avatar_url || "",
     level: userProfile.level || 1,
-    plan_type: userProfile.plan_type || "lite"
+    plan_type: userProfile.plan_type || "lite",
+    email: userProfile.email || "usuario@exemplo.com",
+    bio: userProfile.bio || "Estudante utilizando a plataforma Epictus",
+    skills: userProfile.skills || ["Aprendizado", "Organização"],
+    interests: userProfile.interests || ["Educação", "Tecnologia"],
+    education: userProfile.education || [
+      {
+        institution: "Epictus Academy",
+        degree: "Curso Online",
+        years: "2024-Presente"
+      }
+    ],
+    contact_info: userProfile.contact_info || {
+      phone: "",
+      address: "",
+      social: {
+        twitter: "",
+        linkedin: "",
+        github: ""
+      }
+    },
+    coins: userProfile.coins || 100,
+    rank: userProfile.rank || "Iniciante"
   } : {
     id: "1",
     user_id: `USR${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
@@ -37,7 +59,28 @@ const ProfileHeader = ({ userProfile, isEditing, onEdit }: ProfileHeaderProps) =
     avatar_url: "",
     level: 1,
     plan_type: "lite",
-    email: "usuario@exemplo.com"
+    email: "usuario@exemplo.com",
+    bio: "Estudante utilizando a plataforma Epictus",
+    skills: ["Aprendizado", "Organização"],
+    interests: ["Educação", "Tecnologia"],
+    education: [
+      {
+        institution: "Epictus Academy",
+        degree: "Curso Online",
+        years: "2024-Presente"
+      }
+    ],
+    contact_info: {
+      phone: "",
+      address: "",
+      social: {
+        twitter: "",
+        linkedin: "",
+        github: ""
+      }
+    },
+    coins: 100,
+    rank: "Iniciante"
   };
 
   const progressToNextLevel = 72; // Porcentagem de progresso para o próximo nível

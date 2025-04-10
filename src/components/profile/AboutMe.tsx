@@ -1,52 +1,40 @@
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Edit, Save } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { User } from "lucide-react";
+import { motion } from "framer-motion";
+import { UserProfile, DEFAULT_USER_PROFILE } from "@/types/user-profile";
 
 interface AboutMeProps {
-  aboutMe: string;
+  userProfile: UserProfile | null;
   isEditing: boolean;
-  setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
-  setAboutMe: React.Dispatch<React.SetStateAction<string>>;
-  saveAboutMe: () => void;
 }
 
-export default function AboutMe({
-  aboutMe,
-  isEditing,
-  setIsEditing,
-  setAboutMe,
-  saveAboutMe,
-}: AboutMeProps) {
+const AboutMe = ({ userProfile, isEditing }: AboutMeProps) => {
+  // Usar perfil padrão se userProfile for null
+  const profile = userProfile || DEFAULT_USER_PROFILE;
+
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-bold text-[#29335C] dark:text-white">
+    <Card className="mb-6 border border-gray-200 dark:border-gray-800 shadow-sm transition-all duration-300 hover:shadow-md">
+      <CardHeader>
+        <CardTitle className="flex items-center">
+          <User className="h-5 w-5 mr-2 text-[#FF6B00]" />
           Sobre Mim
-        </h3>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-[#64748B] dark:text-white/60 hover:text-[#FF6B00] hover:bg-[#FF6B00]/10"
-          onClick={() => (isEditing ? saveAboutMe() : setIsEditing(true))}
+        </CardTitle>
+        <CardDescription>Um breve resumo sobre quem sou</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
         >
-          {isEditing ? (
-            <Save className="h-4 w-4" />
-          ) : (
-            <Edit className="h-4 w-4" />
-          )}
-        </Button>
-      </div>
-
-      {isEditing ? (
-        <Textarea
-          className="min-h-[120px] border-[#E0E1DD] dark:border-white/10 focus:border-[#FF6B00] focus:ring-[#FF6B00]/10"
-          value={aboutMe}
-          onChange={(e) => setAboutMe(e.target.value)}
-        />
-      ) : (
-        <p className="text-[#64748B] dark:text-white/80">{aboutMe}</p>
-      )}
-    </div>
+          <p className="text-gray-700 dark:text-gray-300">
+            {profile.bio || 
+              "Estudante utilizando a plataforma Epictus para aprimorar meus conhecimentos."}
+          </p>
+        </motion.div>
+      </CardContent>
+    </Card>
   );
-}
+};
+export default AboutMe;
