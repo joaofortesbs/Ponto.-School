@@ -485,8 +485,70 @@ select:hover,
     1px 1px 0 rgba(0, 0, 0, 0.1),
     2px 2px 0 rgba(0, 0, 0, 0.05);
   transition:
-    transform 0.1s ease-out,
-    text-shadow 0.1s ease-out;
+    transform 0.3s cubic-bezier(0.17, 0.67, 0.83, 0.67),
+    text-shadow 0.3s ease-out;
+  transform-style: preserve-3d;
+}
+
+/* Efeitos para o card de perfil */
+.profile-3d-container {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease, box-shadow 0.5s ease;
+}
+
+.profile-3d-container:hover {
+  box-shadow: 0 22px 40px rgba(0, 0, 0, 0.15);
+}
+
+.profile-3d-element {
+  transition: transform 0.3s cubic-bezier(0.17, 0.67, 0.83, 0.67), box-shadow 0.3s ease-out;
+  transform-style: preserve-3d;
+}
+
+.profile-3d-avatar {
+  transition: transform 0.3s cubic-bezier(0.17, 0.67, 0.83, 0.67), box-shadow 0.3s ease-out;
+  transform-style: preserve-3d;
+  position: relative;
+  z-index: 10;
+}
+
+.profile-3d-avatar:hover {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Gradiente animado para planos premium */
+@keyframes shimmer {
+  0% { background-position: -100% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.profile-premium-badge {
+  background: linear-gradient(90deg, #FF6B00, #FFB566, #FF6B00, #FFB566);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 4s linear infinite;
+}
+
+/* Progress Bar com gradiente e efeito de brilho */
+@keyframes progressShine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.progress-bar-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transform: translateX(-100%);
+  animation: progressShine 2s infinite;
+} 0.1s ease-out;
 }
 
 .profile-3d-avatar {

@@ -1,4 +1,3 @@
-
 import React from "react";
 import ProfilePage from "@/components/profile/ProfilePage";
 import Header from "@/components/layout/Header";
@@ -24,3 +23,79 @@ const Profile = () => {
 };
 
 export default Profile;
+
+import React, { useState, useEffect } from "react";
+import ProfileHeader from "@/components/profile/ProfileHeader";
+import AboutMe from "@/components/profile/AboutMe";
+import Skills from "@/components/profile/Skills";
+import Interests from "@/components/profile/Interests";
+import Education from "@/components/profile/Education";
+import ContactInfo from "@/components/profile/ContactInfo";
+import Achievements from "@/components/profile/Achievements";
+import type { UserProfile } from "@/types/user-profile";
+import { motion } from "framer-motion";
+import { profileService } from "@/services/profileService";
+
+export default function ProfilePage() {
+  const [isEditing, setIsEditing] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>({
+    id: "1",
+    full_name: "João Silva",
+    display_name: "João",
+    email: "joao.silva@email.com",
+    avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
+    level: 15,
+    plan_type: "lite",
+    user_id: "", // Será preenchido durante o carregamento
+  });
+
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      setIsLoading(true);
+      try {
+        const profile = await profileService.getUserProfile();
+        if (profile) {
+          setUserProfile({
+            ...userProfile,
+            ...profile,
+            level: profile.level || 15,
+            plan_type: profile.plan_type || "lite"
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
+  const handleEditProfile = () => {
+    setIsEditing(true);
+  };
+
+  if (isLoading) {
+    return <p>Loading...</p>;
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <ProfileHeader userProfile={userProfile} isEditing={isEditing} onEdit={handleEditProfile} />
+      <AboutMe userProfile={userProfile} isEditing={isEditing} />
+      <Skills userProfile={userProfile} isEditing={isEditing} />
+      <Interests userProfile={userProfile} isEditing={isEditing} />
+      <Education userProfile={userProfile} isEditing={isEditing} />
+      <ContactInfo userProfile={userProfile} isEditing={isEditing} />
+      <Achievements userProfile={userProfile} isEditing={isEditing} />
+    </motion.div>
+  );
+}
