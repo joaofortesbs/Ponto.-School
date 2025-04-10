@@ -1693,7 +1693,7 @@ export default function Header() {
                               <Upload className="h-4 w-4" />
                             )}
                             {notification.type === "warning" && (
-                              <<Bell className="h-4 w-4" />
+                              <Bell className="h-4 w-4" />
                             )}
                             {notification.type === "info" && (
                               <MessageCircle className="h-4 w-4" />
