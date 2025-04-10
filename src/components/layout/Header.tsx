@@ -1041,14 +1041,14 @@ export default function Header() {
       // Primeiro limpar dados de autenticação do localStorage
       localStorage.removeItem('auth_status');
       localStorage.removeItem('auth_checked');
-      
+
       // Depois realizar signOut no Supabase
       const { error } = await supabase.auth.signOut();
-      
+
       if (error) {
         throw error;
       }
-      
+
       console.log("Usuário deslogado com sucesso");
 
       // Disparar evento de logout
@@ -1069,6 +1069,7 @@ export default function Header() {
   return (
     <header className="w-full h-[72px] px-6 bg-white dark:bg-[#0A2540] border-b border-brand-border dark:border-white/10 flex items-center justify-between">
       {/* Hidden audio element for notification sounds */}
+      <audio ref={audioRef} src="/message-sound.mp3" preload="auto" />
       {/* Modern Platform Avatar */}
       <div className="flex items-center">
         <div className="relative group cursor-pointer">
@@ -1692,7 +1693,7 @@ export default function Header() {
                               <Upload className="h-4 w-4" />
                             )}
                             {notification.type === "warning" && (
-                              <Bell className="h-4 w-4" />
+                              <<Bell className="h-4 w-4" />
                             )}
                             {notification.type === "info" && (
                               <MessageCircle className="h-4 w-4" />
