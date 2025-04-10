@@ -215,7 +215,9 @@ function App() {
           
           // Chave específica para este usuário
           const userLoginKey = `hasLoggedInBefore_${currentUserId}`;
+          const sessionKey = `currentSession_${currentUserId}`;
           const userHasLoggedBefore = localStorage.getItem(userLoginKey);
+          const currentSession = sessionStorage.getItem(sessionKey);
           
           if (!userHasLoggedBefore) {
             // Primeiro login desta conta específica - mostrar modal de comemoração
@@ -224,11 +226,19 @@ function App() {
             setShowWelcomeModal(true);
             localStorage.setItem(userLoginKey, 'true');
             localStorage.setItem('hasLoggedInBefore', 'true'); // Compatibilidade com código existente
-          } else {
-            // Qualquer acesso subsequente - sempre mostrar modal de boas-vindas de volta
-            console.log("Login subsequente detectado para esta conta");
+            // Marcar sessão atual
+            sessionStorage.setItem(sessionKey, 'active');
+          } else if (!currentSession) {
+            // Login subsequente, mas primeira visita nesta sessão de navegador
+            console.log("Nova sessão detectada - mostrando modal de boas-vindas");
             setIsFirstLogin(false);
             setShowWelcomeModal(true);
+            // Marcar sessão atual
+            sessionStorage.setItem(sessionKey, 'active');
+          } else {
+            // Navegação dentro da mesma sessão - não mostrar o modal
+            console.log("Navegação dentro da mesma sessão - modal não será mostrado");
+            setShowWelcomeModal(false);
           }
         }
         console.log("Aplicação inicializada com sucesso.");
