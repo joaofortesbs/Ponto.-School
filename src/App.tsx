@@ -269,19 +269,18 @@ function App() {
       }
     };
 
-    // Efeito colateral para gerenciar a rolagem quando o modal muda
+    // Priorizar o modal no carregamento inicial da aplicação
     useEffect(() => {
-      if (showWelcomeModal) {
-        preventScroll();
-      } else {
-        restoreScroll();
-      }
+      const timer = setTimeout(() => {
+        if (isAuthenticated && !isAuthRoute) {
+          setShowWelcomeModal(true);
+        }
+      }, 500);
       
-      // Cleanup quando o componente for desmontado
       return () => {
-        restoreScroll();
+        clearTimeout(timer);
       };
-    }, [showWelcomeModal]);
+    }, []);
 
     // Aguardar apenas um curto tempo para inicialização prioritária do modal
     const timer = setTimeout(() => {

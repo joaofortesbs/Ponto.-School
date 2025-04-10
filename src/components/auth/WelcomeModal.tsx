@@ -118,7 +118,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
   // Primeiro login - Modal completo com confetes e animações avançadas
   if (isFirstLogin) {
     return (
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {isOpen && (
           <>
             <Confetti
@@ -317,7 +317,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
 
   // Login subsequente - Modal redesenhado com efeitos modernos
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {isOpen && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -625,7 +625,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                     Continuar
                     <motion.div
                       animate={{ x: [0, 5, 0] }}
-                      transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                      transition={{ repeat: Infinity, duration: 1.5, ease: ""easeInOut" }}
                     >
                       <Rocket className="h-4 w-4" />
                     </motion.div>
