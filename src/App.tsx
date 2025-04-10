@@ -269,24 +269,6 @@ function App() {
       }
     };
 
-    // Priorizar o modal no carregamento inicial da aplicação
-    useEffect(() => {
-      // Este efeito será executado apenas uma vez, para garantir que o modal tenha prioridade no carregamento inicial
-      if (!isAuthRoute) {
-        const timer = setTimeout(() => {
-          checkAuthentication().then(isAuth => {
-            if (isAuth) {
-              setShowWelcomeModal(true);
-            }
-          });
-        }, 500);
-        
-        return () => {
-          clearTimeout(timer);
-        };
-      }
-    }, [isAuthRoute]);
-
     // Aguardar apenas um curto tempo para inicialização prioritária do modal
     const timer = setTimeout(() => {
       console.log("Iniciando aplicação e verificando autenticação...");
@@ -298,6 +280,36 @@ function App() {
       restoreScroll(); // Garantir que a rolagem seja restaurada ao desmontar
     };
   }, [location.pathname]);
+
+  // Este efeito será executado apenas uma vez, para garantir que o modal tenha prioridade no carregamento inicial
+  useEffect(() => {
+    // Define quais rotas são consideradas rotas de autenticação
+    const isAuthRoute = [
+      "/login",
+      "/register",
+      "/forgot-password",
+      "/reset-password",
+      "/select-plan",
+    ].some((route) => location.pathname.startsWith(route));
+    
+    // Não mostrar o modal em rotas de autenticação
+    if (!isAuthRoute) {
+      const timer = setTimeout(() => {
+        checkAuthentication().then(isAuth => {
+          if (isAuth) {
+            // Forçar a exibição do modal de boas-vindas no carregamento inicial
+            setShowWelcomeModal(true);
+            // Prevenir rolagem quando o modal for exibido
+            document.body.classList.add('modal-open');
+          }
+        });
+      }, 300); // Tempo reduzido para mostrar mais rapidamente
+      
+      return () => {
+        clearTimeout(timer);
+      };
+    }
+  }, [location.pathname]); // Reavaliar quando a rota mudar
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
