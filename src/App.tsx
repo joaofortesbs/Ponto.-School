@@ -213,20 +213,11 @@ function App() {
           
           if (!currentUserId) return;
           
-          // Salvar ID do usuário no localStorage para uso no modal
-          localStorage.setItem('current_user_id', currentUserId);
-          
           // Chave específica para este usuário
           const userLoginKey = `hasLoggedInBefore_${currentUserId}`;
           const sessionKey = `currentSession_${currentUserId}`;
-          const modalShownKey = `modal_shown_${currentUserId}`;
-          
           const userHasLoggedBefore = localStorage.getItem(userLoginKey);
           const currentSession = sessionStorage.getItem(sessionKey);
-          const modalAlreadyShown = sessionStorage.getItem(modalShownKey);
-          
-          // Verificar se estamos na rota principal após login
-          const isMainRoute = location.pathname === "/" || location.pathname === "/dashboard";
           
           if (!userHasLoggedBefore) {
             // Primeiro login desta conta específica - mostrar modal de comemoração
@@ -237,20 +228,15 @@ function App() {
             localStorage.setItem('hasLoggedInBefore', 'true'); // Compatibilidade com código existente
             // Marcar sessão atual
             sessionStorage.setItem(sessionKey, 'active');
-          } else if (!modalAlreadyShown && isMainRoute) {
-            // Login subsequente - mostrar modal de boas-vindas de volta
-            console.log("Login subsequente detectado para esta conta");
+          } else if (!currentSession) {
+            // Login subsequente, mas primeira visita nesta sessão de navegador
+            console.log("Nova sessão detectada - mostrando modal de boas-vindas");
             setIsFirstLogin(false);
             setShowWelcomeModal(true);
-            // Marcar que o modal já foi mostrado nesta sessão
-            sessionStorage.setItem(modalShownKey, 'true');
+            // Marcar sessão atual
             sessionStorage.setItem(sessionKey, 'active');
-          } else if (!isMainRoute) {
-            // Navegação para outras rotas - não mostrar o modal
-            console.log("Navegação para outras rotas - modal não será mostrado");
-            setShowWelcomeModal(false);
           } else {
-            // Navegação dentro da mesma sessão após o modal já ter sido exibido
+            // Navegação dentro da mesma sessão - não mostrar o modal
             console.log("Navegação dentro da mesma sessão - modal não será mostrado");
             setShowWelcomeModal(false);
           }
