@@ -107,10 +107,11 @@
 
 /* Estilos para prevenir rolagem quando modal estiver aberto */
 body.modal-open {
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
-  height: 100%;
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
+  height: 100% !important;
+  padding-right: 15px !important; /* Compensar a barra de rolagem */
 }
 
 /* Garantir que o modal de boas-vindas tenha prioridade sobre outros elementos */
@@ -119,11 +120,17 @@ body.modal-open {
   position: fixed !important;
   inset: 0 !important;
   pointer-events: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  backdrop-filter: blur(5px) !important;
 }
 
 .welcome-modal-content {
   pointer-events: auto !important;
   overscroll-behavior: none !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
 }
 
 /* Scrollbar personalizada para o modal */

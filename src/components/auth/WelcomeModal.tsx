@@ -106,6 +106,15 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
     tap: { scale: 0.95 }
   };
 
+  // Função auxiliar para garantir que o evento de fechamento do modal seja executado corretamente
+  const safeCloseModal = (onClose: () => void) => {
+    // Remover classe do body
+    document.body.classList.remove('modal-open');
+    // Executar callback de fechamento
+    onClose();
+  };
+
+
   // Primeiro login - Modal completo com confetes e animações avançadas
   if (isFirstLogin) {
     return (
@@ -620,7 +629,8 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                     >
                       <Rocket className="h-4 w-4" />
                     </motion.div>
-                  </span                  <div className="absolute inset-0 bg-gradient-to-r from-[#FF8C40] to-[#FF6B00] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#FF8C40] to-[#FF6B00] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 </Button>
               </motion.div>
             </motion.div>

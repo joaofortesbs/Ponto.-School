@@ -187,6 +187,16 @@ function App() {
   }, [location.pathname, navigate]);
 
   useEffect(() => {
+    // Função que previne a rolagem quando o modal está aberto
+    const preventScroll = () => {
+      document.body.classList.add('modal-open');
+    };
+    
+    // Função que restaura a rolagem quando o modal é fechado
+    const restoreScroll = () => {
+      document.body.classList.remove('modal-open');
+    };
+    
     const checkAuth = async () => {
       try {
         const isAuthenticated = await checkAuthentication();
@@ -203,6 +213,7 @@ function App() {
         // Não mostrar o modal nas rotas de autenticação
         if (isAuthRoute) {
           setShowWelcomeModal(false);
+          restoreScroll();
           return;
         }
 
@@ -224,6 +235,7 @@ function App() {
             console.log("Primeiro login detectado para esta conta!");
             setIsFirstLogin(true);
             setShowWelcomeModal(true);
+            preventScroll(); // Evitar rolagem
             localStorage.setItem(userLoginKey, 'true');
             localStorage.setItem('hasLoggedInBefore', 'true'); // Compatibilidade com código existente
             // Marcar sessão atual
@@ -233,30 +245,54 @@ function App() {
             console.log("Nova sessão detectada - mostrando modal de boas-vindas");
             setIsFirstLogin(false);
             setShowWelcomeModal(true);
+            preventScroll(); // Evitar rolagem
             // Marcar sessão atual
             sessionStorage.setItem(sessionKey, 'active');
           } else if (location.pathname === "/") {
             // Na página inicial, sempre mostrar o modal para garantir que seja visto
             setIsFirstLogin(false);
             setShowWelcomeModal(true);
+            preventScroll(); // Evitar rolagem
           } else {
             // Navegação dentro da mesma sessão - não mostrar o modal em outras páginas
             console.log("Navegação dentro da mesma sessão - modal não será mostrado");
             setShowWelcomeModal(false);
+            restoreScroll(); // Restaurar rolagem
           }
         }
         console.log("Aplicação inicializada com sucesso.");
 
       } catch (error) {
         console.error("Erro ao inicializar aplicação:", error);
+        setShowWelcomeModal(false);
+        restoreScroll(); // Restaurar rolagem em caso de erro
       }
     };
 
+    // Efeito colateral para gerenciar a rolagem quando o modal muda
+    useEffect(() => {
+      if (showWelcomeModal) {
+        preventScroll();
+      } else {
+        restoreScroll();
+      }
+      
+      // Cleanup quando o componente for desmontado
+      return () => {
+        restoreScroll();
+      };
+    }, [showWelcomeModal]);
+
     // Aguardar apenas um curto tempo para inicialização prioritária do modal
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       console.log("Iniciando aplicação e verificando autenticação...");
       checkAuth();
     }, 100);
+    
+    return () => {
+      clearTimeout(timer);
+      restoreScroll(); // Garantir que a rolagem seja restaurada ao desmontar
+    };
   }, [location.pathname]);
 
   return (
