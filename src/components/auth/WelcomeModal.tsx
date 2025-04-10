@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
@@ -44,12 +43,12 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       controls.start("visible");
-      
+
       // Efeito de rotação das bolhas
       const interval = setInterval(() => {
         setActiveBubble((prev) => (prev + 1) % 4);
       }, 3000);
-      
+
       return () => clearInterval(interval);
     }
   }, [isOpen, controls]);
@@ -70,11 +69,11 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!modalRef.current) return;
-    
+
     const rect = modalRef.current.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width;
     const y = (e.clientY - rect.top) / rect.height;
-    
+
     setMousePosition({ x, y });
   };
 
@@ -125,7 +124,8 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] welcome-modal-overlay flex items-center justify-center p-4"
+              style={{ pointerEvents: 'auto' }}
             >
               <motion.div
                 ref={modalRef}
@@ -148,7 +148,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
               >
                 <div className="absolute -top-16 -right-16 w-32 h-32 bg-[#FF6B00]/20 rounded-full blur-3xl"></div>
                 <div className="absolute -bottom-20 -left-16 w-48 h-48 bg-[#FF8C40]/10 rounded-full blur-3xl"></div>
-                
+
                 <div className="relative h-48 overflow-hidden">
                   <motion.img
                     initial={{ scale: 1.1 }}
@@ -314,7 +314,8 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] welcome-modal-overlay flex items-center justify-center p-4"
+          style={{ pointerEvents: 'auto' }}
         >
           <motion.div
             ref={modalRef}
@@ -335,7 +336,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
             {/* Efeitos visuais de fundo */}
             <div className="absolute -top-20 -right-20 w-40 h-40 bg-[#FF6B00]/15 rounded-full blur-3xl"></div>
             <div className="absolute -bottom-24 -left-20 w-40 h-40 bg-[#FF8C40]/15 rounded-full blur-3xl"></div>
-            
+
             {/* Bolhas de efeito */}
             {[...Array(4)].map((_, i) => (
               <motion.div 
@@ -354,10 +355,10 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                 transition={{ duration: 2, ease: "easeInOut" }}
               />
             ))}
-            
+
             {/* Linhas de grade de fundo - efeito Tron/cyberpunk */}
             <div className="absolute inset-0 bg-grid-pattern bg-[length:40px_40px] opacity-5"></div>
-            
+
             <Button
               variant="ghost"
               size="icon"
@@ -404,7 +405,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                   <CheckCircle className="h-7 w-7 text-white" />
                 </motion.div>
               </motion.div>
-              
+
               <motion.h2 
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -428,7 +429,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                 A Ponto. School está feliz por te ter de volta!
               </motion.p>
             </motion.div>
-            
+
             {!showUpdates ? (
               <div className="space-y-4 mb-6">
                 <motion.div
@@ -459,7 +460,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                     <div className="absolute top-0 left-0 h-full w-0 bg-gradient-to-r from-transparent to-[#FF6B00]/10 group-hover:w-full transition-all duration-700 ease-in-out"></div>
                   </Button>
                 </motion.div>
-                
+
                 <motion.div
                   initial={{ x: -20, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
@@ -488,7 +489,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                     <div className="absolute top-0 left-0 h-full w-0 bg-gradient-to-r from-transparent to-[#FF6B00]/10 group-hover:w-full transition-all duration-700 ease-in-out"></div>
                   </Button>
                 </motion.div>
-                
+
                 <motion.div
                   initial={{ x: -20, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
@@ -538,7 +539,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                     </Button>
                   </motion.div>
                 </div>
-                
+
                 <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 pb-2 scrollbar-thin scrollbar-thumb-[#FF6B00]/20 scrollbar-track-transparent">
                   {[
                     {
@@ -619,12 +620,11 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                     >
                       <Rocket className="h-4 w-4" />
                     </motion.div>
-                  </span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#FF8C40] to-[#FF6B00] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  </span                  <div className="absolute inset-0 bg-gradient-to-r from-[#FF8C40] to-[#FF6B00] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 </Button>
               </motion.div>
             </motion.div>
-            
+
             {/* Efeito de partículas flutuantes */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
               {[...Array(8)].map((_, i) => (

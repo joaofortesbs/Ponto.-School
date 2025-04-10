@@ -235,8 +235,12 @@ function App() {
             setShowWelcomeModal(true);
             // Marcar sessão atual
             sessionStorage.setItem(sessionKey, 'active');
+          } else if (location.pathname === "/") {
+            // Na página inicial, sempre mostrar o modal para garantir que seja visto
+            setIsFirstLogin(false);
+            setShowWelcomeModal(true);
           } else {
-            // Navegação dentro da mesma sessão - não mostrar o modal
+            // Navegação dentro da mesma sessão - não mostrar o modal em outras páginas
             console.log("Navegação dentro da mesma sessão - modal não será mostrado");
             setShowWelcomeModal(false);
           }
@@ -248,8 +252,11 @@ function App() {
       }
     };
 
-    console.log("Iniciando aplicação...");
-    checkAuth();
+    // Aguardar apenas um curto tempo para inicialização prioritária do modal
+    setTimeout(() => {
+      console.log("Iniciando aplicação e verificando autenticação...");
+      checkAuth();
+    }, 100);
   }, [location.pathname]);
 
   return (
