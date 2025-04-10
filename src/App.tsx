@@ -190,18 +190,48 @@ function App() {
     const checkAuth = async () => {
       try {
         const isAuthenticated = await checkAuthentication();
+        
+        // Verificar a rota atual
+        const isAuthRoute = [
+          "/login",
+          "/register",
+          "/forgot-password",
+          "/reset-password",
+          "/select-plan",
+        ].some((route) => location.pathname.startsWith(route));
+        
+        // Não mostrar o modal nas rotas de autenticação
+        if (isAuthRoute) {
+          setShowWelcomeModal(false);
+          return;
+        }
 
         // Verificar se é o primeiro login do usuário
         const hasLoggedInBefore = localStorage.getItem('hasLoggedInBefore');
 
         if (isAuthenticated) {
-          if (!hasLoggedInBefore) {
-            // Primeiro login
+          // Obter ID do usuário atual para controle de primeiro login por conta
+          const { data: { session } } = await supabase.auth.getSession();
+          const currentUserId = session?.user?.id;
+          
+          // Chave específica para este usuário
+          const userLoginKey = currentUserId ? `hasLoggedInBefore_${currentUserId}` : null;
+          const userHasLoggedBefore = userLoginKey ? localStorage.getItem(userLoginKey) : null;
+
+          if (currentUserId && !userHasLoggedBefore) {
+            // Primeiro login desta conta específica
+            console.log("Primeiro login detectado para esta conta!");
             setIsFirstLogin(true);
             setShowWelcomeModal(true);
-            localStorage.setItem('hasLoggedInBefore', 'true');
-          } else {
-            // Login subsequente
+            localStorage.setItem(userLoginKey, 'true');
+            
+            // Manter compatibilidade com código existente
+            if (!hasLoggedInBefore) {
+              localStorage.setItem('hasLoggedInBefore', 'true');
+            }
+          } else if (currentUserId) {
+            // Login subsequente para esta conta
+            console.log("Login subsequente detectado para esta conta");
             setIsFirstLogin(false);
             setShowWelcomeModal(true);
           }
@@ -215,7 +245,7 @@ function App() {
 
     console.log("Iniciando aplicação...");
     checkAuth();
-  }, []);
+  }, [location.pathname]);
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
@@ -287,11 +317,15 @@ function App() {
 
             {/* Floating Chat Support */}
             {!isAuthRoute && !isLoading && <FloatingChatSupport />}
-            <WelcomeModal 
-              isOpen={showWelcomeModal} 
-              onClose={() => setShowWelcomeModal(false)} 
-              isFirstLogin={isFirstLogin} 
-            /> {/* Added WelcomeModal */}
+            
+            {/* Welcome Modal - apenas mostrado em rotas protegidas (não auth) */}
+            {!isAuthRoute && 
+              <WelcomeModal 
+                isOpen={showWelcomeModal} 
+                onClose={() => setShowWelcomeModal(false)} 
+                isFirstLogin={isFirstLogin} 
+              />
+            }
           </div>
           <Toaster />
         </ErrorBoundary>

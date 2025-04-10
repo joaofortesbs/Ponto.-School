@@ -44,3 +44,24 @@ export const setAuthenticatedState = (): void => {
   localStorage.setItem('auth_checked', 'true');
   localStorage.setItem('auth_status', 'authenticated');
 };
+
+/**
+ * Verifica se é o primeiro login do usuário específico
+ * @param userId ID do usuário atual
+ * @returns true se for o primeiro login deste usuário específico
+ */
+export const isFirstLoginForUser = (userId: string): boolean => {
+  if (!userId) return false;
+  const key = `hasLoggedInBefore_${userId}`;
+  return !localStorage.getItem(key);
+};
+
+/**
+ * Marca como não sendo mais o primeiro login para este usuário específico
+ * @param userId ID do usuário atual
+ */
+export const markUserAsLoggedIn = (userId: string): void => {
+  if (!userId) return;
+  const key = `hasLoggedInBefore_${userId}`;
+  localStorage.setItem(key, 'true');
+};
