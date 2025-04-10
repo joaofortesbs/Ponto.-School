@@ -29,6 +29,25 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
 
+  // Garantir que o modal apareça imediatamente ao carregar a página
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'; // Impedir rolagem da página
+      controls.start("visible");
+      
+      // Efeito de rotação das bolhas
+      const interval = setInterval(() => {
+        setActiveBubble((prev) => (prev + 1) % 4);
+      }, 3000);
+      
+      return () => {
+        clearInterval(interval);
+        document.body.style.overflow = ''; // Restaurar rolagem quando fechar
+      };
+    }
+  }, [isOpen, controls]);
+
+  // Lidar com redimensionamento da janela para confetes
   useEffect(() => {
     const handleResize = () => {
       setDimensions({
@@ -41,19 +60,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => {
-    if (isOpen) {
-      controls.start("visible");
-      
-      // Efeito de rotação das bolhas
-      const interval = setInterval(() => {
-        setActiveBubble((prev) => (prev + 1) % 4);
-      }, 3000);
-      
-      return () => clearInterval(interval);
-    }
-  }, [isOpen, controls]);
-
+  // Handlers para navegação
   const handleSettingsClick = () => {
     navigate("/configuracoes");
     onClose();
@@ -68,6 +75,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
     setShowUpdates(!showUpdates);
   };
 
+  // Handler para efeito de iluminação ao passar o mouse
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!modalRef.current) return;
     
@@ -76,6 +84,17 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
     const y = (e.clientY - rect.top) / rect.height;
     
     setMousePosition({ x, y });
+  };
+
+  // Funções de fechamento do modal
+  const handleClose = () => {
+    // Salvar no sessionStorage para evitar que o modal apareça novamente na mesma sessão
+    if (!isFirstLogin) {
+      // Use o ID do usuário para criar uma chave única por sessão (exemplo)
+      const userId = localStorage.getItem('current_user_id') || 'anonymous';
+      sessionStorage.setItem(`modal_shown_${userId}`, 'true');
+    }
+    onClose();
   };
 
   // Animação para os cartões
@@ -125,7 +144,8 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              transition={{ duration: 0.3 }}
+              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
             >
               <motion.div
                 ref={modalRef}
@@ -189,7 +209,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={onClose}
+                    onClick={handleClose}
                     className="absolute top-4 right-4 rounded-full bg-black/20 text-white hover:bg-black/40 hover:text-white"
                   >
                     <X className="h-4 w-4" />
@@ -290,7 +310,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                           variant="default"
                           size="sm"
                           className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white w-full shadow-md shadow-orange-500/20"
-                          onClick={onClose}
+                          onClick={handleClose}
                         >
                           Ir para o Dashboard
                         </Button>
@@ -314,7 +334,8 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          transition={{ duration: 0.3 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
         >
           <motion.div
             ref={modalRef}
@@ -361,7 +382,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
             <Button
               variant="ghost"
               size="icon"
-              onClick={onClose}
+              onClick={handleClose}
               className="absolute top-3 right-3 rounded-full hover:bg-white/10 text-white z-10"
             >
               <X className="h-4 w-4" />
@@ -497,7 +518,10 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                   className="relative"
                 >
                   <Button
-                    onClick={() => navigate("/epictus-ia")}
+                    onClick={() => {
+                      navigate("/epictus-ia");
+                      handleClose();
+                    }}
                     className="flex items-center justify-start w-full bg-gradient-to-r from-white/5 to-white/10 hover:from-white/10 hover:to-white/15 text-white p-4 rounded-lg border border-white/10 relative overflow-hidden group"
                   >
                     <div className="h-10 w-10 rounded-full bg-[#FF6B00]/20 flex items-center justify-center mr-4 relative z-10">
@@ -609,7 +633,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
               >
                 <Button
                   className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white px-8 py-6 text-lg font-medium shadow-lg shadow-[#FF6B00]/20 relative overflow-hidden group"
-                  onClick={onClose}
+                  onClick={handleClose}
                 >
                   <span className="relative z-10 flex items-center gap-2">
                     Continuar
