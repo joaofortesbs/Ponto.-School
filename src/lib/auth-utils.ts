@@ -31,6 +31,10 @@ export const checkAuthentication = async (): Promise<boolean> => {
 export const clearAuthState = (): void => {
   localStorage.removeItem('auth_checked');
   localStorage.removeItem('auth_status');
+  
+  // Opcionalmente, remover a flag de primeiro login para testes
+  // Descomente para testes:
+  // localStorage.removeItem('hasLoggedInBefore');
 };
 
 /**
