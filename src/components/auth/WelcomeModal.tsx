@@ -121,7 +121,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
     } else {
       document.body.classList.remove('modal-open');
     }
-
+    
     // Remover classe quando o componente for desmontado
     return () => {
       document.body.classList.remove('modal-open');
@@ -560,8 +560,8 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      onClick={() => setShowUpdates(false)} 
-                      className="text-sm text-white/80 hover:text-white hover:bg-white/10 px-4 py-1 rounded transition-colors duration-200 active:bg-white/20"
+                      onClick={toggleUpdates} 
+                      className="text-sm text-white/80 hover:text-white hover:bg-white/10 px-4 py-1 rounded transition-colors duration-200"
                     >
                       Voltar
                     </Button>
@@ -606,7 +606,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                         boxShadow: "0 5px 15px -5px rgba(255, 107, 0, 0.3)",
                         x: 3
                       }}
-                      className="bg-gradient-to-r from-white/5 to-white/10 dark:from-[#001427]/70 dark:to-[#001f3b]/70 p-3 rounded-lg border border-white/10 hover:border-[#FF6B00]/30 transition-all duration-300 relative overflow-hidden group"
+                      className="bg-gradient-to-r from-white/5 to-white/10 p-3 rounded-lg border border-white/10 hover:border-[#FF6B00]/30 transition-all duration-300 relative overflow-hidden group"
                     >
                       <div className="absolute -right-6 -top-6 w-16 h-16 bg-[#FF6B00]/5 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                       <div className="flex items-start">

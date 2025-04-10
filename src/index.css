@@ -704,26 +704,3 @@ select:hover,
   outline: 2px solid #FF6B00;
   outline-offset: 2px;
 }
-
-/* Melhorias para tema escuro */
-.dark .welcome-modal-overlay .bg-gradient-to-b {
-  background: linear-gradient(to bottom, #001427, #001427e8);
-}
-
-/* Melhoria de interação nos cards */
-.welcome-modal-overlay .group {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.welcome-modal-overlay .group:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(255, 107, 0, 0.15);
-}
-
-/* Ajuste de altura para mini cards */
-.welcome-modal-overlay .h-10.w-10.rounded-full,
-.welcome-modal-overlay .h-9.w-9.rounded-full {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
