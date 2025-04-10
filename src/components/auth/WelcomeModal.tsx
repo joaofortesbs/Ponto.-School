@@ -39,6 +39,27 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
   const [expertRequests, setExpertRequests] = useState<Notification[]>([]);
   const [news, setNews] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
+  
+  // Salvar estado do modal para restaurar em caso de refresh da página
+  useEffect(() => {
+    if (showNotifications) {
+      try {
+        sessionStorage.setItem('showingNotificationsModal', 'true');
+      } catch (error) {
+        console.error('Erro ao salvar estado do modal de notificações:', error);
+      }
+    } else {
+      sessionStorage.removeItem('showingNotificationsModal');
+    }
+  }, [showNotifications]);
+  
+  // Verificar se devemos restaurar o modal de notificações ao carregar
+  useEffect(() => {
+    const shouldShowNotifications = sessionStorage.getItem('showingNotificationsModal') === 'true';
+    if (shouldShowNotifications) {
+      setShowNotifications(true);
+    }
+  }, []);
 
   // Função para buscar notificações e mensagens
   const fetchUpdates = async () => {

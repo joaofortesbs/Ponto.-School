@@ -77,7 +77,7 @@ export function LoginForm() {
         localStorage.setItem('auth_checked', 'true');
         localStorage.setItem('auth_status', 'authenticated'); //Added to persist login status.
 
-        // Obter ID do usuário para armazenar timestamp do login
+        // Obter ID do usuário para controlar a sessão
         try {
           const { data: { session } } = await supabase.auth.getSession();
           const userId = session?.user?.id;
@@ -86,11 +86,20 @@ export function LoginForm() {
             // Limpar modal mostrado nesta sessão para permitir que apareça após login
             sessionStorage.removeItem(`welcomeModalShown_${userId}`);
             
-            // Registrar timestamp do login atual 
+            // Gerar nova ID de sessão para que o modal apareça após login
+            const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+            
+            // Atualizar a sessão atual e última sessão
+            sessionStorage.setItem(`currentSession_${userId}`, newSessionId);
+            localStorage.setItem(`lastSession_${userId}`, newSessionId);
+            
+            // Registrar timestamp do login atual para compatibilidade
             localStorage.setItem(`lastLogin_${userId}`, Date.now().toString());
+            
+            console.log("Sessão atualizada após login bem-sucedido");
           }
         } catch (error) {
-          console.error("Erro ao registrar timestamp de login:", error);
+          console.error("Erro ao atualizar sessão após login:", error);
         }
 
         setTimeout(() => {
