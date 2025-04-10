@@ -1,158 +1,172 @@
+import { supabase } from '@/lib/supabase';
+import { UserProfile } from '@/types/user-profile';
+import { generateUserId } from '@/lib/generate-user-id';
 
-import { supabase } from "@/lib/supabase";
-import { UserProfile } from "@/types/user-profile";
-import { generateSimpleUserId } from "@/lib/generate-user-id";
+// Função para obter o perfil do usuário
+export const getUserProfile = async (userId: string): Promise<UserProfile> => {
+  if (!userId) {
+    throw new Error('ID de usuário não fornecido');
+  }
 
-// Função para buscar o perfil do usuário
-export async function getUserProfile(userId: string): Promise<UserProfile> {
   try {
-    // Primeiro, tentar buscar do Supabase
+    // Primeiro, tente buscar o perfil pelo ID do usuário
     const { data, error } = await supabase
-      .from('user_profiles')
+      .from('profiles')
       .select('*')
-      .eq('user_id', userId)
+      .eq('id', userId)
       .single();
 
     if (error) {
-      console.warn("Erro ao buscar perfil do Supabase:", error.message);
-      // Caso haja erro, gerar um perfil fictício
-      return createMockProfile(userId);
+      // Se ocorrer um erro, tente buscar pelo user_id
+      console.warn('Erro ao buscar perfil pelo id, tentando pelo user_id:', error);
+
+      const { data: dataByUserId, error: errorByUserId } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (errorByUserId) {
+        console.error('Erro ao buscar perfil pelo user_id:', errorByUserId);
+
+        // Se ainda não encontrou, verifique se o usuário existe na tabela auth.users
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('id, email')
+          .eq('id', userId)
+          .single();
+
+        if (userError) {
+          console.error('Usuário não encontrado:', userError);
+          throw new Error('Perfil não encontrado');
+        }
+
+        // Se o usuário existe mas não tem perfil, crie um perfil padrão
+        if (userData) {
+          return createDefaultProfile(userId, userData.email);
+        }
+
+        // Caso contrário, lançar erro
+        throw new Error('Perfil não encontrado');
+      }
+
+      return dataByUserId as UserProfile;
     }
 
-    if (data) {
-      return {
-        id: data.user_id,
-        name: data.full_name || 'Usuário',
-        username: data.username || 'usuario' + userId.substring(0, 4),
-        avatar: data.avatar_url || '/images/tempo-image-20250329T020819629Z.png',
-        bio: data.bio || 'Estudante dedicado usando a plataforma para aprimorar conhecimentos.',
-        coverImage: data.cover_image || '/images/tempo-image-20250329T044458419Z.png',
-        location: data.location || 'Brasil',
-        email: data.email || 'usuario@exemplo.com',
-        phone: data.phone || '+55 11 98765-4321',
-        website: data.website || 'https://meuportfolio.com',
-        skills: data.skills || ['Matemática', 'Física', 'Química', 'Programação'],
-        interests: data.interests || ['Tecnologia', 'Ciência', 'Leitura', 'Música'],
-        education: data.education || [
-          {
-            institution: 'Universidade Federal',
-            degree: 'Bacharelado em Ciências da Computação',
-            startYear: 2020,
-            endYear: 2024,
-          }
-        ],
-        achievements: data.achievements || [
-          {
-            title: '100 dias de estudo',
-            description: 'Completou 100 dias consecutivos de estudo',
-            date: '2023-12-15',
-            icon: '🏆',
-          },
-          {
-            title: 'Mestre em Matemática',
-            description: 'Completou todos os desafios avançados de matemática',
-            date: '2023-11-20',
-            icon: '🔢',
-          }
-        ],
-        joinDate: data.join_date || '2023-10-01',
-        lastActive: data.last_active || new Date().toISOString().split('T')[0],
-        plan: data.plan || 'Premium',
-        isVerified: data.is_verified || true,
-        userId: data.user_id,
-      };
+    if (!data) {
+      // Se não encontrar o perfil, retornar um modelo básico
+      return createDefaultProfile(userId);
     }
 
-    // Se chegou aqui, não encontrou dados no Supabase
-    return createMockProfile(userId);
-  } catch (err) {
-    console.error("Erro ao buscar perfil do usuário:", err);
-    return createMockProfile(userId);
+    return data as UserProfile;
+  } catch (error) {
+    console.error('Erro ao buscar perfil do usuário:', error);
+
+    // Em caso de erro, tentar criar um perfil básico para não quebrar a UI
+    try {
+      const defaultProfile = createDefaultProfile(userId);
+
+      // Tentar salvar este perfil padrão no banco
+      await supabase
+        .from('profiles')
+        .insert([defaultProfile])
+        .select();
+
+      return defaultProfile;
+    } catch (saveError) {
+      console.error('Erro ao salvar perfil padrão:', saveError);
+      throw error; // Repassar o erro original
+    }
   }
-}
+};
 
-// Função para criar um perfil fictício
-function createMockProfile(userId: string): UserProfile {
+// Função para criar um perfil padrão
+const createDefaultProfile = (userId: string, email?: string): UserProfile => {
+  const randomAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}-${Date.now()}`;
+
   return {
     id: userId,
-    name: 'Estudante Epictus',
-    username: 'epictus' + userId.substring(0, 4),
-    avatar: '/images/tempo-image-20250329T020819629Z.png',
-    bio: 'Estudante dedicado usando a plataforma para aprimorar conhecimentos.',
-    coverImage: '/images/tempo-image-20250329T044458419Z.png',
-    location: 'Brasil',
-    email: 'estudante@exemplo.com',
-    phone: '+55 11 98765-4321',
-    website: 'https://meuportfolio.com',
-    skills: ['Matemática', 'Física', 'Química', 'Programação'],
-    interests: ['Tecnologia', 'Ciência', 'Leitura', 'Música'],
-    education: [
-      {
-        institution: 'Universidade Federal',
-        degree: 'Bacharelado em Ciências da Computação',
-        startYear: 2020,
-        endYear: 2024,
-      }
-    ],
-    achievements: [
-      {
-        title: '100 dias de estudo',
-        description: 'Completou 100 dias consecutivos de estudo',
-        date: '2023-12-15',
-        icon: '🏆',
-      },
-      {
-        title: 'Mestre em Matemática',
-        description: 'Completou todos os desafios avançados de matemática',
-        date: '2023-11-20',
-        icon: '🔢',
-      }
-    ],
-    joinDate: '2023-10-01',
-    lastActive: new Date().toISOString().split('T')[0],
-    plan: 'Premium',
-    isVerified: true,
-    userId: userId,
+    user_id: generateUserId(),
+    displayName: 'Usuário',
+    email: email || '',
+    avatar: randomAvatar,
+    coverImage: '',
+    bio: '',
+    location: '',
+    website: '',
+    joinedAt: new Date().toISOString(),
+    following: 0,
+    followers: 0,
+    friends: 0,
+    postsCount: 0,
+    skills: [],
+    interests: [],
+    education: [],
+    achievements: [],
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   };
-}
+};
 
 // Função para atualizar o perfil do usuário
-export async function updateUserProfile(profile: Partial<UserProfile>): Promise<{ success: boolean; error?: any }> {
+export const updateUserProfile = async (
+  userId: string,
+  profileData: Partial<UserProfile>
+): Promise<UserProfile> => {
+  if (!userId) {
+    throw new Error('ID de usuário não fornecido');
+  }
+
   try {
-    if (!profile.userId) {
-      return { success: false, error: 'ID de usuário não fornecido' };
+    // Verificar se o perfil existe
+    const { data: existingProfile, error: fetchError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', userId)
+      .single();
+
+    if (fetchError || !existingProfile) {
+      console.log('Perfil não encontrado, criando novo perfil');
+
+      // Se não existir, criar um novo perfil
+      const newProfile = {
+        ...createDefaultProfile(userId),
+        ...profileData,
+      };
+
+      const { data: insertedData, error: insertError } = await supabase
+        .from('profiles')
+        .insert([newProfile])
+        .select('*')
+        .single();
+
+      if (insertError) {
+        console.error('Erro ao inserir novo perfil:', insertError);
+        throw insertError;
+      }
+
+      return insertedData as UserProfile;
     }
 
-    const { error } = await supabase
-      .from('user_profiles')
-      .upsert({
-        user_id: profile.userId,
-        full_name: profile.name,
-        username: profile.username,
-        avatar_url: profile.avatar,
-        bio: profile.bio,
-        cover_image: profile.coverImage,
-        location: profile.location,
-        email: profile.email,
-        phone: profile.phone,
-        website: profile.website,
-        skills: profile.skills,
-        interests: profile.interests,
-        education: profile.education,
-        achievements: profile.achievements,
-        plan: profile.plan,
-        is_verified: profile.isVerified,
-        last_active: new Date().toISOString(),
-      });
+    // Se existir, atualizar
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({
+        ...profileData,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', userId)
+      .select('*')
+      .single();
 
     if (error) {
-      console.error("Erro ao atualizar perfil:", error);
-      return { success: false, error };
+      console.error('Erro ao atualizar perfil:', error);
+      throw error;
     }
 
-    return { success: true };
-  } catch (err) {
-    console.error("Erro ao atualizar perfil:", err);
-    return { success: false, error: err };
+    return data as UserProfile;
+  } catch (error) {
+    console.error('Erro ao atualizar perfil do usuário:', error);
+    throw error;
   }
-}
+};

@@ -1,58 +1,73 @@
-export interface Education {
-  institution: string;
-  degree: string;
-  startYear: number;
-  endYear?: number;
-}
-
-export interface Achievement {
-  title: string;
-  description: string;
-  date: string;
-  icon: string;
-}
-
 export interface UserProfile {
   id: string;
-  name: string;
-  username: string;
-  avatar: string;
-  bio?: string;
-  coverImage?: string;
-  location?: string;
+  user_id?: string;
+  displayName?: string;
   email?: string;
-  phone?: string;
+  avatar?: string;
+  coverImage?: string;
+  bio?: string;
+  location?: string;
   website?: string;
+  joinedAt?: string;
+  following?: number;
+  followers?: number;
+  friends?: number;
+  postsCount?: number;
   skills?: string[];
   interests?: string[];
-  education?: Education[];
-  achievements?: Achievement[];
-  joinDate?: string;
-  lastActive?: string;
-  plan?: string;
-  isVerified?: boolean;
-  userId: string;
+  education?: EducationItem[];
+  achievements?: AchievementItem[];
+  created_at?: string;
+  updated_at?: string;
+  phone?: string;
+  tagline?: string;
+}
+
+export interface EducationItem {
+  institution: string;
+  degree: string;
+  fieldOfStudy: string;
+  startDate: string;
+  endDate?: string;
+  description?: string;
+}
+
+export interface AchievementItem {
+  title: string;
+  date: string;
+  description: string;
+  icon?: string;
 }
 
 // Valores padrão para perfil do usuário
 export const DEFAULT_USER_PROFILE: UserProfile = {
   id: crypto.randomUUID(),
-  userId: `USR${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
-  name: "Usuário Demonstração",
-  username: "Usuário",
+  user_id: `USR${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
+  full_name: "Usuário Demonstração",
+  display_name: "Usuário",
   email: "usuario@exemplo.com",
-  avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Demo",
+  avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Demo",
   bio: "Estudante utilizando a plataforma Epictus",
+  level: 1,
+  plan_type: "lite",
   skills: ["Aprendizado", "Organização"],
   interests: ["Educação", "Tecnologia"],
   education: [
     {
       institution: "Epictus Academy",
       degree: "Curso Online",
-      startYear: 2024,
+      years: "2024-Presente"
     }
   ],
-  joinDate: new Date().toISOString(), // Added joinDate
-  plan: "lite", // Added plan
-
+  contact_info: {
+    phone: "",
+    address: "",
+    social: {
+      twitter: "",
+      linkedin: "",
+      github: ""
+    }
+  },
+  coins: 100,
+  rank: "Iniciante"
 };
