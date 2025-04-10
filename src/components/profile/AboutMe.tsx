@@ -1,40 +1,37 @@
-import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { User } from "lucide-react";
-import { motion } from "framer-motion";
-import { UserProfile, DEFAULT_USER_PROFILE } from "@/types/user-profile";
+import React from 'react';
+import { Edit } from 'lucide-react';
+import { UserProfile } from '@/types/user-profile';
 
 interface AboutMeProps {
-  userProfile: UserProfile | null;
-  isEditing: boolean;
+  profile?: UserProfile | null;
+  isCurrentUser: boolean;
 }
 
-const AboutMe = ({ userProfile, isEditing }: AboutMeProps) => {
-  // Usar perfil padrão se userProfile for null
-  const profile = userProfile || DEFAULT_USER_PROFILE;
+const AboutMe: React.FC<AboutMeProps> = ({ profile, isCurrentUser }) => {
+  if (!profile) {
+    return (
+      <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-gray-200 dark:border-gray-700">
+        <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Sobre Mim</h2>
+        <div className="text-gray-500 dark:text-gray-400">Carregando informações...</div>
+      </div>
+    );
+  }
 
   return (
-    <Card className="mb-6 border border-gray-200 dark:border-gray-800 shadow-sm transition-all duration-300 hover:shadow-md">
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <User className="h-5 w-5 mr-2 text-[#FF6B00]" />
-          Sobre Mim
-        </CardTitle>
-        <CardDescription>Um breve resumo sobre quem sou</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <p className="text-gray-700 dark:text-gray-300">
-            {profile.bio || 
-              "Estudante utilizando a plataforma Epictus para aprimorar meus conhecimentos."}
-          </p>
-        </motion.div>
-      </CardContent>
-    </Card>
+    <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-gray-200 dark:border-gray-700">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Sobre Mim</h2>
+        {isCurrentUser && (
+          <button className="text-[#FF6B00] hover:text-[#FF8C40] transition-colors">
+            <Edit className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+      <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+        {profile.bio || 'Nenhuma informação disponível.'}
+      </p>
+    </div>
   );
 };
+
 export default AboutMe;

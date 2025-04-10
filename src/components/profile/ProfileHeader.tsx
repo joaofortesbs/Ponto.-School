@@ -7,7 +7,7 @@ import { motion, useAnimate, useMotionValue } from "framer-motion";
 import type { UserProfile } from "@/types/user-profile";
 
 interface ProfileHeaderProps {
-  userProfile: UserProfile | null;
+  userProfile?: UserProfile | null;
   isEditing: boolean;
   onEdit: () => void;
 }
@@ -19,39 +19,7 @@ const ProfileHeader = ({ userProfile, isEditing, onEdit }: ProfileHeaderProps) =
   const rotateY = useMotionValue(0);
 
   // Garantir que o perfil sempre tenha valores válidos
-  const profile = userProfile ? {
-    ...userProfile,
-    // Definir valores padrão para propriedades ausentes
-    id: userProfile.id || "1",
-    user_id: userProfile.user_id || `USR${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
-    full_name: userProfile.full_name || "Usuário",
-    display_name: userProfile.display_name || "Usuário",
-    avatar_url: userProfile.avatar_url || "",
-    level: userProfile.level || 1,
-    plan_type: userProfile.plan_type || "lite",
-    email: userProfile.email || "usuario@exemplo.com",
-    bio: userProfile.bio || "Estudante utilizando a plataforma Epictus",
-    skills: userProfile.skills || ["Aprendizado", "Organização"],
-    interests: userProfile.interests || ["Educação", "Tecnologia"],
-    education: userProfile.education || [
-      {
-        institution: "Epictus Academy",
-        degree: "Curso Online",
-        years: "2024-Presente"
-      }
-    ],
-    contact_info: userProfile.contact_info || {
-      phone: "",
-      address: "",
-      social: {
-        twitter: "",
-        linkedin: "",
-        github: ""
-      }
-    },
-    coins: userProfile.coins || 100,
-    rank: userProfile.rank || "Iniciante"
-  } : {
+  const profile = userProfile || {
     id: "1",
     user_id: `USR${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
     full_name: "Usuário",

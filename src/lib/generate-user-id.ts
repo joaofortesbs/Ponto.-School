@@ -1,3 +1,4 @@
+
 import { supabase } from "@/lib/supabase";
 
 /**
@@ -7,7 +8,7 @@ import { supabase } from "@/lib/supabase";
  * @param planType O tipo de plano (1 = Premium, 2 = Standard, etc)
  * @returns Uma string contendo o ID gerado no formato BRXXXXXXXXXXXX
  */
-export async function generateUserId(countryCode: string, planType: number): Promise<string> {
+export async function generateUserIdWithCountry(countryCode: string, planType: number): Promise<string> {
   try {
     // Tentar buscar a sequência atual
     const { data, error } = await supabase
@@ -51,8 +52,10 @@ export function generateSimpleUserId(countryCode: string, planType: number): str
   const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
   return `${countryCode}${planType}${timestamp.toString().slice(-6)}${random}`;
 }
-import { supabase } from './supabase';
 
+/**
+ * Gera um ID de usuário baseado no tipo de plano (premium ou lite/básico)
+ */
 export const generateUserIdSupabase = async (planType: string): Promise<string> => {
   // Gerar um ID baseado no tipo de plano
   // BR1 para premium, BR2 para lite/básico
@@ -95,7 +98,7 @@ export const generateUserIdSupabase = async (planType: string): Promise<string> 
  * Gera um ID único para usuários baseado em timestamp e valores aleatórios
  * para garantir unicidade mesmo em caso de múltiplos registros simultâneos
  */
-export function generateUserId(): string {
+export function generateTimestampUserId(): string {
   // Usar timestamp para garantir sequência crescente
   const timestamp = new Date().getTime();
 

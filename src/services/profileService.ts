@@ -1,142 +1,172 @@
+import { supabase } from '@/lib/supabase';
+import { UserProfile } from '@/types/user-profile';
+import { generateUserId } from '@/lib/generate-user-id';
 
-import { supabase } from "@/lib/supabase";
-import type { UserProfile } from "@/types/user-profile";
-import { generateUserId } from "@/lib/generate-user-id";
+// Função para obter o perfil do usuário
+export const getUserProfile = async (userId: string): Promise<UserProfile> => {
+  if (!userId) {
+    throw new Error('ID de usuário não fornecido');
+  }
 
-export const profileService = {
-  async getUserProfile(): Promise<UserProfile | null> {
-    try {
-      // Tentar buscar usuário autenticado
-      const { data: { user } } = await supabase.auth.getUser();
+  try {
+    // Primeiro, tente buscar o perfil pelo ID do usuário
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
 
-      if (!user) {
-        console.warn("Usuário não autenticado, retornando perfil mock");
-        return this.getFullMockProfile();
-      }
+    if (error) {
+      // Se ocorrer um erro, tente buscar pelo user_id
+      console.warn('Erro ao buscar perfil pelo id, tentando pelo user_id:', error);
 
-      // Tentar buscar perfil do usuário
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
+      const { data: dataByUserId, error: errorByUserId } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
         .single();
 
-      if (error) {
-        console.error("Erro ao buscar perfil:", error);
-        return this.getFullMockProfile();
+      if (errorByUserId) {
+        console.error('Erro ao buscar perfil pelo user_id:', errorByUserId);
+
+        // Se ainda não encontrou, verifique se o usuário existe na tabela auth.users
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('id, email')
+          .eq('id', userId)
+          .single();
+
+        if (userError) {
+          console.error('Usuário não encontrado:', userError);
+          throw new Error('Perfil não encontrado');
+        }
+
+        // Se o usuário existe mas não tem perfil, crie um perfil padrão
+        if (userData) {
+          return createDefaultProfile(userId, userData.email);
+        }
+
+        // Caso contrário, lançar erro
+        throw new Error('Perfil não encontrado');
       }
 
-      // Garantir que todos os campos essenciais estejam presentes
-      return {
-        id: data.id || crypto.randomUUID(),
-        user_id: data.user_id || generateUserId(),
-        full_name: data.full_name || "Usuário Demonstração",
-        display_name: data.display_name || "Usuário",
-        email: data.email || "usuario@exemplo.com",
-        avatar_url: data.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=Demo",
-        level: data.level || 1,
-        plan_type: data.plan_type || "lite",
-        website: data.website || "",
-        bio: data.bio || "Estudante utilizando a plataforma Epictus",
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        skills: data.skills || ["Aprendizado", "Organização"],
-        interests: data.interests || ["Educação", "Tecnologia"],
-        education: data.education || [
-          {
-            institution: "Epictus Academy",
-            degree: "Curso Online",
-            years: "2024-Presente"
-          }
-        ],
-        contact_info: data.contact_info || {
-          phone: "",
-          address: "",
-          social: {
-            twitter: "",
-            linkedin: "",
-            github: ""
-          }
-        },
-        coins: data.coins || 100,
-        rank: data.rank || "Iniciante"
-      };
-    } catch (error) {
-      console.error("Erro inesperado ao buscar perfil:", error);
-      return this.getFullMockProfile();
+      return dataByUserId as UserProfile;
     }
-  },
 
-  // Perfil padrão para quando não conseguir buscar do banco
-  getMockProfile(): UserProfile {
-    const userId = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    return {
-      id: crypto.randomUUID(),
-      user_id: `USR${userId}`,
-      full_name: "Usuário Demonstração",
-      display_name: "Usuário",
-      email: "usuario@exemplo.com",
-      avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Demo",
-      level: 15,
-      plan_type: "lite"
-    };
-  },
-  
-  // Perfil mock completo com todos os campos necessários
-  getFullMockProfile(): UserProfile {
-    const userId = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    return {
-      id: crypto.randomUUID(),
-      user_id: `USR${userId}`,
-      full_name: "Usuário Demonstração",
-      display_name: "Usuário",
-      email: "usuario@exemplo.com",
-      avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Demo",
-      level: 15,
-      plan_type: "lite",
-      bio: "Estudante utilizando a plataforma Epictus",
-      website: "",
-      skills: ["Aprendizado", "Organização"],
-      interests: ["Educação", "Tecnologia"],
-      education: [
-        {
-          institution: "Epictus Academy",
-          degree: "Curso Online",
-          years: "2024-Presente"
-        }
-      ],
-      contact_info: {
-        phone: "",
-        address: "",
-        social: {
-          twitter: "",
-          linkedin: "",
-          github: ""
-        }
-      },
-      coins: 100,
-      rank: "Iniciante"
-    };
-  },
+    if (!data) {
+      // Se não encontrar o perfil, retornar um modelo básico
+      return createDefaultProfile(userId);
+    }
 
-  async updateProfile(profile: Partial<UserProfile>): Promise<{ success: boolean; error?: any }> {
+    return data as UserProfile;
+  } catch (error) {
+    console.error('Erro ao buscar perfil do usuário:', error);
+
+    // Em caso de erro, tentar criar um perfil básico para não quebrar a UI
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const defaultProfile = createDefaultProfile(userId);
 
-      if (!user) {
-        return { success: false, error: "Usuário não autenticado" };
-      }
+      // Tentar salvar este perfil padrão no banco
+      await supabase
+        .from('profiles')
+        .insert([defaultProfile])
+        .select();
 
-      const { error } = await supabase
-        .from("profiles")
-        .update(profile)
-        .eq("id", user.id);
-
-      return { success: !error, error };
-    } catch (error) {
-      return { success: false, error };
+      return defaultProfile;
+    } catch (saveError) {
+      console.error('Erro ao salvar perfil padrão:', saveError);
+      throw error; // Repassar o erro original
     }
   }
 };
 
-export default profileService;
+// Função para criar um perfil padrão
+const createDefaultProfile = (userId: string, email?: string): UserProfile => {
+  const randomAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}-${Date.now()}`;
+
+  return {
+    id: userId,
+    user_id: generateUserId(),
+    displayName: 'Usuário',
+    email: email || '',
+    avatar: randomAvatar,
+    coverImage: '',
+    bio: '',
+    location: '',
+    website: '',
+    joinedAt: new Date().toISOString(),
+    following: 0,
+    followers: 0,
+    friends: 0,
+    postsCount: 0,
+    skills: [],
+    interests: [],
+    education: [],
+    achievements: [],
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+};
+
+// Função para atualizar o perfil do usuário
+export const updateUserProfile = async (
+  userId: string,
+  profileData: Partial<UserProfile>
+): Promise<UserProfile> => {
+  if (!userId) {
+    throw new Error('ID de usuário não fornecido');
+  }
+
+  try {
+    // Verificar se o perfil existe
+    const { data: existingProfile, error: fetchError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', userId)
+      .single();
+
+    if (fetchError || !existingProfile) {
+      console.log('Perfil não encontrado, criando novo perfil');
+
+      // Se não existir, criar um novo perfil
+      const newProfile = {
+        ...createDefaultProfile(userId),
+        ...profileData,
+      };
+
+      const { data: insertedData, error: insertError } = await supabase
+        .from('profiles')
+        .insert([newProfile])
+        .select('*')
+        .single();
+
+      if (insertError) {
+        console.error('Erro ao inserir novo perfil:', insertError);
+        throw insertError;
+      }
+
+      return insertedData as UserProfile;
+    }
+
+    // Se existir, atualizar
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({
+        ...profileData,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', userId)
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Erro ao atualizar perfil:', error);
+      throw error;
+    }
+
+    return data as UserProfile;
+  } catch (error) {
+    console.error('Erro ao atualizar perfil do usuário:', error);
+    throw error;
+  }
+};
