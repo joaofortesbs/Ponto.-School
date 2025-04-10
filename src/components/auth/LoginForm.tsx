@@ -77,8 +77,21 @@ export function LoginForm() {
         localStorage.setItem('auth_checked', 'true');
         localStorage.setItem('auth_status', 'authenticated'); //Added to persist login status.
 
-        // Não mostrar o primeiro modal de boas-vindas quando o usuário fizer login aqui
-        // Os modais serão controlados pelo App.tsx quando o usuário chegar nas páginas protegidas
+        // Obter ID do usuário para armazenar timestamp do login
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          const userId = session?.user?.id;
+          
+          if (userId) {
+            // Limpar modal mostrado nesta sessão para permitir que apareça após login
+            sessionStorage.removeItem(`welcomeModalShown_${userId}`);
+            
+            // Registrar timestamp do login atual 
+            localStorage.setItem(`lastLogin_${userId}`, Date.now().toString());
+          }
+        } catch (error) {
+          console.error("Erro ao registrar timestamp de login:", error);
+        }
 
         setTimeout(() => {
           navigate("/");

@@ -217,23 +217,44 @@ function App() {
           // Chave específica para este usuário
           const userLoginKey = currentUserId ? `hasLoggedInBefore_${currentUserId}` : null;
           const userHasLoggedBefore = userLoginKey ? localStorage.getItem(userLoginKey) : null;
-
-          if (currentUserId && !userHasLoggedBefore) {
-            // Primeiro login desta conta específica
-            console.log("Primeiro login detectado para esta conta!");
-            setIsFirstLogin(true);
-            setShowWelcomeModal(true);
-            localStorage.setItem(userLoginKey, 'true');
+          
+          // Chave para controlar se já mostramos o modal de boas-vindas nesta sessão
+          const welcomeModalShownKey = currentUserId ? `welcomeModalShown_${currentUserId}` : null;
+          const welcomeModalShown = welcomeModalShownKey ? sessionStorage.getItem(welcomeModalShownKey) : null;
+          
+          // Verificar se estamos em uma nova sessão (login recente)
+          const lastLoginTime = localStorage.getItem(`lastLogin_${currentUserId}`);
+          const currentTime = Date.now();
+          const isNewLogin = !lastLoginTime || (currentTime - parseInt(lastLoginTime)) > 1000 * 60 * 60; // 1 hora
+          
+          if (currentUserId && !welcomeModalShown && isNewLogin) {
+            // Registrar que o modal já foi mostrado nesta sessão
+            sessionStorage.setItem(welcomeModalShownKey, 'true');
             
-            // Manter compatibilidade com código existente
-            if (!hasLoggedInBefore) {
-              localStorage.setItem('hasLoggedInBefore', 'true');
+            // Atualizar timestamp do último login
+            localStorage.setItem(`lastLogin_${currentUserId}`, currentTime.toString());
+            
+            if (!userHasLoggedBefore) {
+              // Primeiro login desta conta específica
+              console.log("Primeiro login detectado para esta conta!");
+              setIsFirstLogin(true);
+              setShowWelcomeModal(true);
+              localStorage.setItem(userLoginKey, 'true');
+              
+              // Manter compatibilidade com código existente
+              if (!hasLoggedInBefore) {
+                localStorage.setItem('hasLoggedInBefore', 'true');
+              }
+            } else {
+              // Login subsequente para esta conta (apenas mostra no login, não na navegação)
+              console.log("Login subsequente detectado para esta conta");
+              setIsFirstLogin(false);
+              setShowWelcomeModal(true);
             }
-          } else if (currentUserId) {
-            // Login subsequente para esta conta
-            console.log("Login subsequente detectado para esta conta");
-            setIsFirstLogin(false);
-            setShowWelcomeModal(true);
+          } else {
+            // Já mostramos o modal nesta sessão ou não é um novo login
+            console.log("Modal já foi mostrado nesta sessão ou não é um novo login");
+            setShowWelcomeModal(false);
           }
         }
         console.log("Aplicação inicializada com sucesso.");
