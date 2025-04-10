@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, useAnimationControls, AnimatePresence } from "framer-motion";
-import { X, Settings, MapPin, CheckCircle, Bell, Calendar, MessageSquare, Globe, Users, Sparkles, Zap, Lightbulb, PanelRight, Rocket } from "lucide-react";
+import { X, Settings, MapPin, CheckCircle, Bell, Calendar, MessageSquare, Globe, Users, Sparkles, Zap, Lightbulb, PanelRight, Rocket, ChevronLeft } from "lucide-react";
 import { Button } from "../ui/button";
 import Confetti from 'react-confetti';
 import { cn } from "@/lib/utils";
@@ -23,6 +23,9 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
   const [activeBubble, setActiveBubble] = useState(0);
   const controls = useAnimationControls();
   const modalRef = useRef<HTMLDivElement>(null);
+  const [currentOption, setCurrentOption] = useState('');
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+
 
   // Para efeitos de iluminação
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -121,7 +124,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
     } else {
       document.body.classList.remove('modal-open');
     }
-    
+
     // Remover classe quando o componente for desmontado
     return () => {
       document.body.classList.remove('modal-open');
@@ -467,7 +470,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                     className="flex items-center justify-start w-full bg-gradient-to-r from-white/5 to-white/10 hover:from-white/10 hover:to-white/15 text-white p-4 rounded-lg border border-white/10 relative overflow-hidden group"
                   >
                     <div className="h-10 w-10 rounded-full bg-[#FF6B00]/20 flex items-center justify-center mr-4 relative z-10">
-                      <Calendar className="h-5 w-5 text-[#FF6B00]" />
+                      <Calendar className="h-4.5 w-4.5 text-[#FF6B00]" />
                     </div>
                     <div className="text-left">
                       <div className="font-medium">Ver compromissos do dia</div>
@@ -496,7 +499,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                     className="flex items-center justify-start w-full bg-gradient-to-r from-white/5 to-white/10 hover:from-white/10 hover:to-white/15 text-white p-4 rounded-lg border border-white/10 relative overflow-hidden group"
                   >
                     <div className="h-10 w-10 rounded-full bg-[#FF6B00]/20 flex items-center justify-center mr-4 relative z-10">
-                      <Bell className="h-5 w-5 text-[#FF6B00]" />
+                      <Bell className="h-4.5 w-4.5 text-[#FF6B00]" />
                     </div>
                     <div className="text-left">
                       <div className="font-medium">Ver atualizações</div>
@@ -525,7 +528,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                     className="flex items-center justify-start w-full bg-gradient-to-r from-white/5 to-white/10 hover:from-white/10 hover:to-white/15 text-white p-4 rounded-lg border border-white/10 relative overflow-hidden group"
                   >
                     <div className="h-10 w-10 rounded-full bg-[#FF6B00]/20 flex items-center justify-center mr-4 relative z-10">
-                      <Lightbulb className="h-5 w-5 text-[#FF6B00]" />
+                      <Lightbulb className="h-4.5 w-4.5 text-[#FF6B00]" />
                     </div>
                     <div className="text-left">
                       <div className="font-medium">Pergunte ao Epictus IA</div>
@@ -566,27 +569,27 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                 <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 pb-2 scrollbar-thin scrollbar-thumb-[#FF6B00]/20 scrollbar-track-transparent">
                   {[
                     {
-                      icon: <Bell className="h-5 w-5 text-[#FF6B00]" />,
+                      icon: <Bell className="h-4 w-4 text-[#FF6B00]" />,
                       title: "Notificações",
                       description: "Você tem 3 notificações não lidas"
                     },
                     {
-                      icon: <MessageSquare className="h-5 w-5 text-[#FF6B00]" />,
+                      icon: <MessageSquare className="h-4 w-4 text-[#FF6B00]" />,
                       title: "Mensagens",
                       description: "2 novas mensagens de colegas"
                     },
                     {
-                      icon: <Globe className="h-5 w-5 text-[#FF6B00]" />,
+                      icon: <Globe className="h-4 w-4 text-[#FF6B00]" />,
                       title: "Novidades da plataforma",
                       description: "Nova funcionalidade de AI disponível!"
                     },
                     {
-                      icon: <Users className="h-5 w-5 text-[#FF6B00]" />,
+                      icon: <Users className="h-4 w-4 text-[#FF6B00]" />,
                       title: "Conexão Expert",
                       description: "Um expert escolheu responder sua dúvida"
                     },
                     {
-                      icon: <PanelRight className="h-5 w-5 text-[#FF6B00]" />,
+                      icon: <PanelRight className="h-4 w-4 text-[#FF6B00]" />,
                       title: "Painel de controle",
                       description: "Acesse suas estatísticas atualizadas"
                     }
@@ -681,4 +684,44 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
   );
 };
 
-export default WelcomeModal;
+const handleOptionClick = (option: string) => {
+    setCurrentOption(option);
+
+    console.log(`Opção selecionada: ${option}`);
+
+    // Abre a página correspondente à opção
+    switch (option) {
+      case "agenda":
+        navigate("/agenda");
+        break;
+      case "notificacoes":
+        setIsNotificationsOpen(true);
+        break;
+      case "epictus":
+        navigate("/epictus-ia");
+        break;
+      default:
+        break;
+    }
+
+    // Fecha o modal após a seleção
+    if (onClose) {
+      onClose();
+    }
+  };
+
+  const handleBack = () => {
+    // Função para voltar da opção atual
+    console.log("Voltando para a tela anterior");
+
+    // Dependendo do contexto, você pode querer voltar para uma página específica
+    // ou simplesmente fechar o modal
+    if (currentOption === "notificacoes") {
+      setIsNotificationsOpen(false);
+    }
+
+    // Se necessário, navegue para uma página específica
+    // navigate.back() ou navigate.push("/caminho-anterior");
+  };
+
+  export default WelcomeModal;
