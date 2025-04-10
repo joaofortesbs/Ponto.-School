@@ -1,10 +1,10 @@
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React, { Component, ErrorInfo, ReactNode } from "react";
+import { AlertTriangle, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface Props {
-  children: ReactNode;
+  children?: ReactNode;
   fallback?: ReactNode;
 }
 
@@ -14,95 +14,87 @@ interface State {
   errorInfo: ErrorInfo | null;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      hasError: false,
-      error: null,
-      errorInfo: null,
-    };
+class ErrorBoundary extends Component<Props, State> {
+  public state: State = {
+    hasError: false,
+    error: null,
+    errorInfo: null
+  };
+
+  public static getDerivedStateFromError(error: Error): State {
+    // Atualiza o estado para mostrar o fallback UI
+    return { hasError: true, error, errorInfo: null };
   }
 
-  static getDerivedStateFromError(error: Error): State {
-    return {
-      hasError: true,
-      error,
-      errorInfo: null,
-    };
-  }
-
-  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Erro capturado pelo ErrorBoundary:", error, errorInfo);
     this.setState({
       error,
-      errorInfo,
+      errorInfo
     });
-    console.error('Erro capturado pelo ErrorBoundary:', error, errorInfo);
+
+    // Opcional: Reportar erro para um serviço de monitoramento
+    // reportErrorToService(error, errorInfo);
   }
 
-  handleReload = (): void => {
+  private handleReload = () => {
     window.location.reload();
   };
 
-  handleGoBack = (): void => {
-    window.history.back();
+  private handleGoHome = () => {
+    window.location.href = "/";
   };
 
-  render(): ReactNode {
+  public render() {
     if (this.state.hasError) {
-      // Verificar se há um fallback personalizado
-      if (this.props.fallback) {
-        return this.props.fallback;
-      }
-
-      // Interface padrão de erro
+      // Renderizar UI de fallback customizada
       return (
-        <div className="min-h-[50vh] flex flex-col items-center justify-center p-6 bg-white dark:bg-[#1E293B] rounded-lg shadow-md border border-gray-200 dark:border-gray-700 m-4">
-          <div className="flex flex-col items-center text-center max-w-md">
-            <AlertTriangle className="h-16 w-16 text-red-500 mb-4" />
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
-              Ops! Algo deu errado
-            </h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
-              Ocorreu um erro inesperado ao renderizar esta página. Nossa equipe foi notificada e estamos trabalhando para corrigir o problema.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                variant="outline"
-                className="flex items-center"
-                onClick={this.handleGoBack}
-              >
-                Voltar
-              </Button>
-              <Button
-                className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white flex items-center"
-                onClick={this.handleReload}
-              >
-                <RefreshCw className="h-4 w-4 mr-2" /> Tentar novamente
-              </Button>
-            </div>
-
-            {process.env.NODE_ENV !== 'production' && this.state.error && (
-              <div className="mt-6 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-auto text-left w-full">
-                <h3 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-2">
-                  Detalhes do erro:
-                </h3>
-                <p className="text-sm font-mono text-gray-800 dark:text-gray-200 mb-2">
-                  {this.state.error.toString()}
-                </p>
-                {this.state.errorInfo && (
-                  <pre className="text-xs font-mono text-gray-700 dark:text-gray-300 overflow-x-auto">
-                    {this.state.errorInfo.componentStack}
-                  </pre>
-                )}
+        <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-50 dark:bg-gray-900">
+          <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+            <div className="p-6">
+              <div className="flex justify-center mb-4">
+                <div className="w-16 h-16 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
+                </div>
               </div>
-            )}
+
+              <h1 className="text-xl font-bold text-center text-gray-900 dark:text-white mb-2">
+                Ocorreu um erro
+              </h1>
+              
+              <p className="text-center text-gray-600 dark:text-gray-400 mb-4">
+                A aplicação encontrou um erro inesperado. Por favor, tente recarregar a página.
+              </p>
+
+              <div className="bg-gray-100 dark:bg-gray-700 rounded-md p-4 mb-4 overflow-auto max-h-32">
+                <p className="text-sm text-gray-700 dark:text-gray-300 font-mono">
+                  {this.state.error?.toString()}
+                </p>
+              </div>
+
+              <div className="flex justify-center gap-4">
+                <Button
+                  onClick={this.handleReload}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Recarregar Página
+                </Button>
+                <Button
+                  onClick={this.handleGoHome}
+                  variant="outline"
+                  className="border-gray-300 dark:border-gray-600"
+                >
+                  Ir para o Início
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       );
     }
 
+    // Se não houver erro, renderiza os filhos normalmente
     return this.props.children;
   }
 }

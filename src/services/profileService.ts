@@ -1,15 +1,22 @@
-import { supabase } from '@/lib/supabase';
-import { UserProfile } from '@/types/user-profile';
-import { generateUserId } from '@/lib/generate-user-id';
 
-// Função para obter o perfil do usuário
-export const getUserProfile = async (userId: string): Promise<UserProfile> => {
-  if (!userId) {
-    throw new Error('ID de usuário não fornecido');
-  }
+import { supabase } from "@/lib/supabase";
+import { UserProfile } from "@/types/user-profile";
+import { generateSimpleUserId } from "@/lib/generate-user-id";
 
+// Função para obter o perfil do usuário atual
+export async function getCurrentUserProfile(): Promise<UserProfile | null> {
   try {
-    // Primeiro, tente buscar o perfil pelo ID do usuário
+    // Primeiro, obter a sessão atual para pegar o ID do usuário
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      console.error("Nenhuma sessão ativa encontrada");
+      return null;
+    }
+
+    const userId = session.user.id;
+
+    // Buscar o perfil do usuário no banco de dados
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -17,156 +24,132 @@ export const getUserProfile = async (userId: string): Promise<UserProfile> => {
       .single();
 
     if (error) {
-      // Se ocorrer um erro, tente buscar pelo user_id
-      console.warn('Erro ao buscar perfil pelo id, tentando pelo user_id:', error);
-
-      const { data: dataByUserId, error: errorByUserId } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (errorByUserId) {
-        console.error('Erro ao buscar perfil pelo user_id:', errorByUserId);
-
-        // Se ainda não encontrou, verifique se o usuário existe na tabela auth.users
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('id, email')
-          .eq('id', userId)
-          .single();
-
-        if (userError) {
-          console.error('Usuário não encontrado:', userError);
-          throw new Error('Perfil não encontrado');
-        }
-
-        // Se o usuário existe mas não tem perfil, crie um perfil padrão
-        if (userData) {
-          return createDefaultProfile(userId, userData.email);
-        }
-
-        // Caso contrário, lançar erro
-        throw new Error('Perfil não encontrado');
-      }
-
-      return dataByUserId as UserProfile;
-    }
-
-    if (!data) {
-      // Se não encontrar o perfil, retornar um modelo básico
-      return createDefaultProfile(userId);
-    }
-
-    return data as UserProfile;
-  } catch (error) {
-    console.error('Erro ao buscar perfil do usuário:', error);
-
-    // Em caso de erro, tentar criar um perfil básico para não quebrar a UI
-    try {
-      const defaultProfile = createDefaultProfile(userId);
-
-      // Tentar salvar este perfil padrão no banco
-      await supabase
-        .from('profiles')
-        .insert([defaultProfile])
-        .select();
-
-      return defaultProfile;
-    } catch (saveError) {
-      console.error('Erro ao salvar perfil padrão:', saveError);
-      throw error; // Repassar o erro original
-    }
-  }
-};
-
-// Função para criar um perfil padrão
-const createDefaultProfile = (userId: string, email?: string): UserProfile => {
-  const randomAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}-${Date.now()}`;
-
-  return {
-    id: userId,
-    user_id: generateUserId(),
-    displayName: 'Usuário',
-    email: email || '',
-    avatar: randomAvatar,
-    coverImage: '',
-    bio: '',
-    location: '',
-    website: '',
-    joinedAt: new Date().toISOString(),
-    following: 0,
-    followers: 0,
-    friends: 0,
-    postsCount: 0,
-    skills: [],
-    interests: [],
-    education: [],
-    achievements: [],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
-};
-
-// Função para atualizar o perfil do usuário
-export const updateUserProfile = async (
-  userId: string,
-  profileData: Partial<UserProfile>
-): Promise<UserProfile> => {
-  if (!userId) {
-    throw new Error('ID de usuário não fornecido');
-  }
-
-  try {
-    // Verificar se o perfil existe
-    const { data: existingProfile, error: fetchError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', userId)
-      .single();
-
-    if (fetchError || !existingProfile) {
-      console.log('Perfil não encontrado, criando novo perfil');
-
-      // Se não existir, criar um novo perfil
-      const newProfile = {
-        ...createDefaultProfile(userId),
-        ...profileData,
-      };
-
-      const { data: insertedData, error: insertError } = await supabase
-        .from('profiles')
-        .insert([newProfile])
-        .select('*')
-        .single();
-
-      if (insertError) {
-        console.error('Erro ao inserir novo perfil:', insertError);
-        throw insertError;
-      }
-
-      return insertedData as UserProfile;
-    }
-
-    // Se existir, atualizar
-    const { data, error } = await supabase
-      .from('profiles')
-      .update({
-        ...profileData,
+      console.error("Erro ao buscar perfil:", error);
+      
+      // Criar um perfil fictício para desenvolvimento se o perfil real não for encontrado
+      const fallbackProfile: UserProfile = {
+        id: userId,
+        user_id: generateSimpleUserId("BR", 1),
+        username: "usuario_temporario",
+        full_name: "Usuário Temporário",
+        display_name: "Usuário da Plataforma",
+        bio: "Este é um perfil temporário.",
+        avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}`,
+        email: session.user.email || "usuario@exemplo.com",
+        phone: "",
+        website: "",
+        status: "active",
+        country: "Brasil",
+        state: "SP",
+        city: "São Paulo",
+        address: "",
+        postal_code: "",
+        language: "pt-BR",
+        timezone: "America/Sao_Paulo",
+        role: "student",
+        created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      })
-      .eq('id', userId)
-      .select('*')
-      .single();
-
-    if (error) {
-      console.error('Erro ao atualizar perfil:', error);
-      throw error;
+        last_login: new Date().toISOString(),
+        plan_type: "premium",
+        school_points: 500,
+        interests: ["matemática", "ciência", "tecnologia"],
+        achievements: [],
+        social_links: {},
+      };
+      
+      return fallbackProfile;
     }
 
-    return data as UserProfile;
+    // Transformar dados para o formato UserProfile
+    const userProfile: UserProfile = {
+      id: data.id,
+      user_id: data.user_id || generateSimpleUserId("BR", 1),
+      username: data.username || data.email?.split('@')[0] || "usuario",
+      full_name: data.full_name || "",
+      display_name: data.display_name || data.full_name || data.username || "Usuário",
+      bio: data.bio || "",
+      avatar_url: data.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.id}`,
+      email: data.email || session.user.email || "",
+      phone: data.phone || "",
+      website: data.website || "",
+      status: data.status || "active",
+      country: data.country || "Brasil",
+      state: data.state || "",
+      city: data.city || "",
+      address: data.address || "",
+      postal_code: data.postal_code || "",
+      language: data.language || "pt-BR",
+      timezone: data.timezone || "America/Sao_Paulo",
+      role: data.role || "student",
+      created_at: data.created_at || new Date().toISOString(),
+      updated_at: data.updated_at || new Date().toISOString(),
+      last_login: data.last_login || new Date().toISOString(),
+      plan_type: data.plan_type || "premium",
+      school_points: data.school_points || 500,
+      interests: data.interests || [],
+      achievements: data.achievements || [],
+      social_links: data.social_links || {},
+    };
+
+    return userProfile;
   } catch (error) {
-    console.error('Erro ao atualizar perfil do usuário:', error);
-    throw error;
+    console.error("Erro ao buscar perfil do usuário:", error);
+    return null;
+  }
+}
+
+// Serviço principal que contém métodos para gerenciar perfis de usuários
+export const profileService = {
+  getCurrentUserProfile,
+  
+  // Método para atualizar o perfil do usuário
+  async updateUserProfile(profileData: Partial<UserProfile>): Promise<UserProfile | null> {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error("Usuário não autenticado");
+      }
+      
+      const userId = session.user.id;
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(profileData)
+        .eq('id', userId)
+        .select()
+        .single();
+        
+      if (error) {
+        console.error("Erro ao atualizar perfil:", error);
+        return null;
+      }
+      
+      return data as UserProfile;
+    } catch (error) {
+      console.error("Erro ao atualizar perfil:", error);
+      return null;
+    }
+  },
+  
+  // Método para obter perfil por ID de usuário
+  async getUserProfileById(userId: string): Promise<UserProfile | null> {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+        
+      if (error) {
+        console.error("Erro ao buscar perfil por ID:", error);
+        return null;
+      }
+      
+      return data as UserProfile;
+    } catch (error) {
+      console.error("Erro ao buscar perfil por ID:", error);
+      return null;
+    }
   }
 };
