@@ -1,7 +1,7 @@
 
 import { supabase } from "@/lib/supabase";
 import { UserProfile } from "@/types/user-profile";
-import { generateUserId } from "@/lib/generate-user-id";
+import { generateUserId, generateUserIdWithDB } from "@/lib/generate-user-id";
 
 /**
  * Obtém o perfil do usuário atual

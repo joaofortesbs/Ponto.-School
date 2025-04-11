@@ -1,84 +1,112 @@
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Phone, MapPin, Calendar, Edit, Save, X, Plus } from "lucide-react";
-import type { UserProfile } from "@/types/user-profile";
-import { useMediaQuery } from "@/lib/utils"; // Added import
+import { Mail, Phone, Globe, MapPin, Linkedin, Twitter, Github, Instagram } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
 
 interface ContactInfoProps {
-  userProfile: UserProfile | null;
-  isEditing: boolean;
+  userEmail: string;
+  initialContactInfo?: {
+    email: string;
+    phone: string;
+    website: string;
+    location: string;
+    linkedin: string;
+    twitter: string;
+    github: string;
+    instagram: string;
+  };
+  onSave?: (contactInfo: any) => void;
+  isCurrentUser?: boolean;
 }
 
-export default function ContactInfo({ userProfile, isEditing }: ContactInfoProps) {
-  const [localIsEditing, setLocalIsEditing] = useState(false);
+const ContactInfo: React.FC<ContactInfoProps> = ({
+  userEmail,
+  initialContactInfo,
+  onSave,
+  isCurrentUser = false,
+}) => {
+  const { toast } = useToast();
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [contactInfo, setContactInfo] = useState({
-    email: userProfile?.email || "usuario@exemplo.com",
-    phone: "+55 (11) 98765-4321",
-    location: "São Paulo, SP",
-    birthday: "15 de Janeiro"
+    email: userEmail || "",
+    phone: "",
+    website: "",
+    location: "",
+    linkedin: "",
+    twitter: "",
+    github: "",
+    instagram: "",
   });
 
-  const toggleEditing = () => {
-    setLocalIsEditing(!localIsEditing);
-  };
-
-  const saveContactInfo = () => {
-    // Aqui você adicionaria a lógica para salvar no banco de dados
-    setLocalIsEditing(false);
-  };
-
-  const actualIsEditing = isEditing || localIsEditing;
-
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: {
-        duration: 0.5,
-        ease: [0.6, 0.05, -0.01, 0.9]
-      }
+  // Atualizar o estado com dados iniciais se fornecidos
+  useEffect(() => {
+    if (initialContactInfo) {
+      setContactInfo({
+        ...contactInfo,
+        ...initialContactInfo,
+      });
     }
-  };
+  }, [initialContactInfo]);
 
-  const itemVariants = {
-    hidden: { opacity: 0, x: -10 },
-    visible: { 
-      opacity: 1, 
-      x: 0,
-      transition: { duration: 0.3 }
+  const actualIsEditing = isEditing && isCurrentUser;
+
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      
+      if (onSave) {
+        await onSave(contactInfo);
+      }
+      
+      toast({
+        title: "Informações de contato atualizadas",
+        description: "Suas informações de contato foram salvas com sucesso.",
+      });
+      
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Erro ao salvar informações de contato:", error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Ocorreu um erro ao salvar suas informações de contato.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const contactItems = [
-    { icon: <Mail className="h-4 w-4 text-gray-500 dark:text-gray-400" />, label: "Email", value: contactInfo.email, key: "email" },
-    { icon: <Phone className="h-4 w-4 text-gray-500 dark:text-gray-400" />, label: "Telefone", value: contactInfo.phone, key: "phone" },
-    { icon: <MapPin className="h-4 w-4 text-gray-500 dark:text-gray-400" />, label: "Localização", value: contactInfo.location, key: "location" },
-    { icon: <Calendar className="h-4 w-4 text-gray-500 dark:text-gray-400" />, label: "Aniversário", value: contactInfo.birthday, key: "birthday" }
+    { key: "email", label: "Email", icon: <Mail className="h-4 w-4" /> },
+    { key: "phone", label: "Telefone", icon: <Phone className="h-4 w-4" /> },
+    { key: "website", label: "Website", icon: <Globe className="h-4 w-4" /> },
+    { key: "location", label: "Localização", icon: <MapPin className="h-4 w-4" /> },
+    { key: "linkedin", label: "LinkedIn", icon: <Linkedin className="h-4 w-4" /> },
+    { key: "twitter", label: "Twitter", icon: <Twitter className="h-4 w-4" /> },
+    { key: "github", label: "GitHub", icon: <Github className="h-4 w-4" /> },
+    { key: "instagram", label: "Instagram", icon: <Instagram className="h-4 w-4" /> },
   ];
 
   return (
-    <motion.div 
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl overflow-hidden border border-gray-200/50 dark:border-gray-700/50 shadow-lg"
-    >
-      <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Informações de Contato</h2>
-
-        {!isEditing && (
-          <motion.button
-            onClick={toggleEditing}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="text-sm text-gray-500 hover:text-orange-500 dark:text-gray-400 dark:hover:text-orange-400 transition-colors"
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-all duration-500 transform hover:shadow-lg">
+      <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 px-6 py-3 flex justify-between items-center">
+        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
+          <Mail className="h-5 w-5 text-orange-500" />
+          <span>Informações de Contato</span>
+        </h3>
+        {isCurrentUser && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsEditing(!isEditing)}
+            disabled={isSaving}
+            className="text-sm"
           >
-            <Edit size={16} />
-          </motion.button>
+            {actualIsEditing ? "Cancelar" : "Editar"}
+          </Button>
         )}
       </div>
 
@@ -112,77 +140,71 @@ export default function ContactInfo({ userProfile, isEditing }: ContactInfoProps
                   />
                 </div>
               ))}
-            </div>
-
-            <div className="flex justify-end gap-2 mt-6">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={toggleEditing}
-                className="flex items-center gap-1"
-              >
-                <X size={16} />
-                <span>Cancelar</span>
-              </Button>
-
-              <Button
-                size="sm"
-                onClick={saveContactInfo}
-                className="bg-orange-500 hover:bg-orange-600 text-white flex items-center gap-1"
-              >
-                <Save size={16} />
-                <span>Salvar</span>
-              </Button>
+              
+              <div className="pt-4 flex justify-end">
+                <Button 
+                  onClick={handleSave} 
+                  disabled={isSaving}
+                  className="bg-orange-500 hover:bg-orange-600 text-white"
+                >
+                  {isSaving ? "Salvando..." : "Salvar Alterações"}
+                </Button>
+              </div>
             </div>
           </motion.div>
         ) : (
           <motion.div
             key="viewing"
-            initial="hidden"
-            animate="visible"
-            variants={containerVariants}
-            className="px-6 py-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="p-6"
           >
-            <div className="space-y-4">
-              {contactItems.map((item, index) => (
-                <motion.div 
-                  key={item.key} 
-                  variants={itemVariants}
-                  custom={index}
-                  className="flex items-center hover:bg-gray-50 dark:hover:bg-gray-700/50 p-2 -mx-2 rounded-md transition-colors group"
-                >
-                  <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mr-3">
-                    {item.icon}
+            <div className="space-y-3">
+              {contactItems.map((item) => {
+                const value = contactInfo[item.key as keyof typeof contactInfo];
+                if (!value) return null;
+                
+                return (
+                  <div key={item.key} className="flex items-start gap-3">
+                    <div className="mt-0.5 bg-orange-100 dark:bg-orange-900/30 p-1.5 rounded-md">
+                      {item.icon}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {item.label}
+                      </p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {item.key.includes('mail') || item.key.includes('website') ? (
+                          <a 
+                            href={item.key.includes('mail') ? `mailto:${value}` : value.startsWith('http') ? value : `https://${value}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-orange-500 hover:underline"
+                          >
+                            {value}
+                          </a>
+                        ) : (
+                          value
+                        )}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex-grow">
-                    <div className="text-xs text-gray-500 dark:text-gray-400">{item.label}</div>
-                    <div className="text-sm text-gray-900 dark:text-white font-medium">{item.value}</div>
-                  </div>
-                  {item.key !== 'email' && (
-                    <motion.button
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      whileTap={{ scale: 0.9 }}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-orange-500"
-                    >
-                      <Edit size={14} />
-                    </motion.button>
-                  )}
-                </motion.div>
-              ))}
+                );
+              })}
+              
+              {contactItems.every(item => !contactInfo[item.key as keyof typeof contactInfo]) && (
+                <p className="text-gray-500 dark:text-gray-400 italic text-center py-4">
+                  Nenhuma informação de contato disponível
+                </p>
+              )}
             </div>
-
-            {/* Botão para adicionar mais informações de contato */}
-            <motion.button
-              whileHover={{ scale: 1.01 }}
-              className="mt-4 text-sm text-gray-500 dark:text-gray-400 hover:text-orange-500 dark:hover:text-orange-400 flex items-center gap-1 transition-colors w-full justify-center py-1.5 border border-dashed border-gray-200 dark:border-gray-700 rounded-md"
-              onClick={toggleEditing}
-            >
-              <Plus size={14} />
-              <span>Adicionar informação</span>
-            </motion.button>
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
-}
+};
+
+export default ContactInfo;
