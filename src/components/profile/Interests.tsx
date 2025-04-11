@@ -5,7 +5,7 @@ import { Plus } from "lucide-react";
 
 export default function Interests() {
   return (
-    <div>
+    <div className="w-full bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 shadow overflow-hidden"> {/* Added w-full here */}
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-bold text-[#29335C] dark:text-white">
           Interesses

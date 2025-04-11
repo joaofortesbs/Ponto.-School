@@ -4,7 +4,7 @@ import { Plus, GraduationCap, BookOpen } from "lucide-react";
 
 export default function Education() {
   return (
-    <div>
+    <div className="w-full"> {/* Added w-full here */}
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-bold text-[#29335C] dark:text-white">
           Educação

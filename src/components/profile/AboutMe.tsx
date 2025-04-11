@@ -19,7 +19,7 @@ export default function AboutMe({
   saveAboutMe,
 }: AboutMeProps) {
   return (
-    <div>
+    <div className="w-full"> {/* Added w-full to match parent width */}
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-bold text-[#29335C] dark:text-white">
           Sobre Mim
