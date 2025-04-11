@@ -559,6 +559,346 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                       </div>
                     </motion.div>
 
+                    {/* Avatar realista interativo */}
+                    <motion.div
+                      className="absolute top-8 right-10 z-30"
+                      initial={{ opacity: 0, x: 50 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ 
+                        type: "spring", 
+                        damping: 15, 
+                        stiffness: 80, 
+                        delay: 0.3 
+                      }}
+                    >
+                      <div className="relative">
+                        {/* Aura do avatar */}
+                        <motion.div 
+                          className="absolute inset-0 rounded-full"
+                          animate={{ 
+                            boxShadow: [
+                              "0 0 25px 5px rgba(255, 107, 0, 0.3)",
+                              "0 0 40px 10px rgba(255, 107, 0, 0.5)",
+                              "0 0 25px 5px rgba(255, 107, 0, 0.3)"
+                            ],
+                            scale: [1, 1.05, 1]
+                          }}
+                          transition={{ 
+                            duration: 4, 
+                            repeat: Infinity, 
+                            ease: "easeInOut" 
+                          }}
+                        />
+                        
+                        {/* Personagem detalhado */}
+                        <motion.div 
+                          className="w-32 h-32 relative"
+                          whileHover={{ scale: 1.05 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                        >
+                          {/* Corpo do personagem */}
+                          <div className="w-full h-full flex items-center justify-center relative">
+                            {/* Cabeça realista */}
+                            <div className="absolute w-24 h-24 top-1 rounded-full bg-gradient-to-b from-[#FFD1B3] to-[#F5BA93] overflow-hidden border-2 border-[#FF6B00]/30">
+                              {/* Detalhes faciais */}
+                              <div className="relative w-full h-full">
+                                {/* Cabelo */}
+                                <div className="absolute -top-2 -left-1 -right-1 h-16 bg-[#2B1D0D] rounded-t-full">
+                                  <motion.div 
+                                    className="absolute bottom-0 left-0 w-full h-4"
+                                    style={{
+                                      background: "linear-gradient(to right, #2B1D0D 0%, #5A3A1A 20%, #2B1D0D 40%, #5A3A1A 60%, #2B1D0D 80%, #5A3A1A 100%)",
+                                      backgroundSize: "200% auto",
+                                    }}
+                                    animate={{
+                                      backgroundPosition: ["0% center", "200% center"]
+                                    }}
+                                    transition={{ 
+                                      duration: 7,
+                                      repeat: Infinity,
+                                      ease: "linear" 
+                                    }}
+                                  />
+                                </div>
+                                
+                                {/* Sobrancelhas */}
+                                <motion.div 
+                                  className="absolute w-4 h-1 bg-[#2B1D0D] rounded-full left-5 top-10"
+                                  animate={{ 
+                                    y: [0, -2, 0],
+                                    scaleY: [1, 1.2, 1] 
+                                  }}
+                                  transition={{ 
+                                    duration: 3,
+                                    repeat: Infinity,
+                                    repeatDelay: 2,
+                                    ease: "easeInOut"
+                                  }}
+                                />
+                                <motion.div 
+                                  className="absolute w-4 h-1 bg-[#2B1D0D] rounded-full right-5 top-10"
+                                  animate={{ 
+                                    y: [0, -2, 0],
+                                    scaleY: [1, 1.2, 1] 
+                                  }}
+                                  transition={{ 
+                                    duration: 3,
+                                    repeat: Infinity,
+                                    repeatDelay: 2, 
+                                    ease: "easeInOut",
+                                    delay: 0.2
+                                  }}
+                                />
+                                
+                                {/* Olhos realistas */}
+                                <div className="absolute left-4 top-12 w-5 h-5 bg-white rounded-full overflow-hidden flex items-center justify-center">
+                                  <motion.div 
+                                    className="w-3 h-3 rounded-full bg-[#47A0FF]"
+                                    animate={{
+                                      scale: [1, 0.9, 1]
+                                    }}
+                                    transition={{
+                                      duration: 4,
+                                      repeat: Infinity,
+                                      ease: "easeInOut"
+                                    }}
+                                  >
+                                    <motion.div 
+                                      className="absolute top-0 left-0 w-1 h-1 rounded-full bg-white opacity-80"
+                                      animate={{
+                                        x: [0.5, 0.7, 0.5],
+                                        y: [0.5, 0.3, 0.5]
+                                      }}
+                                      transition={{
+                                        duration: 4,
+                                        repeat: Infinity,
+                                        ease: "easeInOut"
+                                      }}
+                                    />
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-black"></div>
+                                    </div>
+                                  </motion.div>
+                                </div>
+                                
+                                <div className="absolute right-4 top-12 w-5 h-5 bg-white rounded-full overflow-hidden flex items-center justify-center">
+                                  <motion.div 
+                                    className="w-3 h-3 rounded-full bg-[#47A0FF]"
+                                    animate={{
+                                      scale: [1, 0.9, 1]
+                                    }}
+                                    transition={{
+                                      duration: 4,
+                                      repeat: Infinity,
+                                      ease: "easeInOut"
+                                    }}
+                                  >
+                                    <motion.div 
+                                      className="absolute top-0 left-0 w-1 h-1 rounded-full bg-white opacity-80"
+                                      animate={{
+                                        x: [0.5, 0.7, 0.5],
+                                        y: [0.5, 0.3, 0.5]
+                                      }}
+                                      transition={{
+                                        duration: 4,
+                                        repeat: Infinity,
+                                        ease: "easeInOut"
+                                      }}
+                                    />
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-black"></div>
+                                    </div>
+                                  </motion.div>
+                                </div>
+                                
+                                {/* Cílios animados */}
+                                <motion.div 
+                                  className="absolute left-4 top-11.5 w-5 h-2 z-10"
+                                  animate={{
+                                    scaleY: [1, 0.1, 1, 1, 1, 0.1, 1]
+                                  }}
+                                  transition={{
+                                    duration: 3,
+                                    repeat: Infinity,
+                                    repeatDelay: 2.5,
+                                    ease: "easeInOut"
+                                  }}
+                                >
+                                  {[...Array(4)].map((_, i) => (
+                                    <div 
+                                      key={`left-lash-${i}`}
+                                      className="absolute bg-[#2B1D0D] w-0.5 h-1.5 rounded-full"
+                                      style={{
+                                        left: `${i * 25}%`,
+                                        transform: `rotate(${-80 + i * 15}deg)`,
+                                        transformOrigin: 'bottom'
+                                      }}
+                                    />
+                                  ))}
+                                </motion.div>
+                                
+                                <motion.div 
+                                  className="absolute right-4 top-11.5 w-5 h-2 z-10"
+                                  animate={{
+                                    scaleY: [1, 0.1, 1, 1, 1, 0.1, 1]
+                                  }}
+                                  transition={{
+                                    duration: 3,
+                                    repeat: Infinity,
+                                    repeatDelay: 2.5,
+                                    delay: 0.1,
+                                    ease: "easeInOut"
+                                  }}
+                                >
+                                  {[...Array(4)].map((_, i) => (
+                                    <div 
+                                      key={`right-lash-${i}`}
+                                      className="absolute bg-[#2B1D0D] w-0.5 h-1.5 rounded-full"
+                                      style={{
+                                        right: `${i * 25}%`,
+                                        transform: `rotate(${80 - i * 15}deg)`,
+                                        transformOrigin: 'bottom'
+                                      }}
+                                    />
+                                  ))}
+                                </motion.div>
+                                
+                                {/* Nariz */}
+                                <div className="absolute left-1/2 top-[60%] w-2 h-2.5 -translate-x-1/2 -translate-y-1/2">
+                                  <div className="absolute w-2 h-1.5 rounded-full bg-[#E5A989]"></div>
+                                  <div className="absolute top-1 left-0 w-0.5 h-1.5 bg-[#E09980]" style={{ transform: 'rotate(-10deg)' }}></div>
+                                  <div className="absolute top-1 right-0 w-0.5 h-1.5 bg-[#E09980]" style={{ transform: 'rotate(10deg)' }}></div>
+                                </div>
+                                
+                                {/* Boca animada realista */}
+                                <motion.div 
+                                  className="absolute bottom-5 left-1/2 -translate-x-1/2 w-10 h-1 bg-[#C56D51]"
+                                  animate={{
+                                    height: [1, 3, 1],
+                                    width: [10, 12, 10],
+                                    y: [0, 1, 0],
+                                    borderRadius: ["40%", "40% 40% 60% 60%", "40%"]
+                                  }}
+                                  transition={{
+                                    duration: 3,
+                                    repeat: Infinity,
+                                    repeatDelay: 1,
+                                    ease: "easeInOut"
+                                  }}
+                                >
+                                  <motion.div 
+                                    className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-[#ED9E8A]"
+                                    animate={{
+                                      width: [8, 10, 8],
+                                      opacity: [1, 0.8, 1]
+                                    }}
+                                    transition={{
+                                      duration: 3,
+                                      repeat: Infinity,
+                                      repeatDelay: 1,
+                                      ease: "easeInOut"
+                                    }}
+                                  />
+                                </motion.div>
+                                
+                                {/* Bochechas coradas */}
+                                <div className="absolute left-2 bottom-7 w-3 h-2 rounded-full bg-[#E5A989] opacity-50"></div>
+                                <div className="absolute right-2 bottom-7 w-3 h-2 rounded-full bg-[#E5A989] opacity-50"></div>
+                                
+                                {/* Detalhes realistas */}
+                                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#E5A989]/20"></div>
+                                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiPgo8cmVjdCB3aWR0aD0iNSIgaGVpZ2h0PSI1IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDIiPjwvcmVjdD4KPC9zdmc+')] opacity-20"></div>
+                              </div>
+                            </div>
+                            
+                            {/* Corpo e mão acenando */}
+                            <div className="absolute w-18 h-8 rounded-lg bg-gradient-to-b from-[#FF6B00] to-[#FF8C40] bottom-0 left-1/2 -translate-x-1/2"></div>
+                            <motion.div 
+                              className="absolute -right-4 top-10 w-6 h-14"
+                              style={{ 
+                                transformOrigin: "top center", 
+                                zIndex: 5 
+                              }}
+                              animate={{ 
+                                rotate: [-5, 30, -5]
+                              }}
+                              transition={{ 
+                                duration: 1.5, 
+                                repeat: Infinity, 
+                                repeatDelay: 1,
+                                ease: "easeInOut" 
+                              }}
+                            >
+                              <div className="w-3 h-12 rounded-full bg-gradient-to-b from-[#FF6B00] to-[#FF8C40]"></div>
+                              <div className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-[#FFD1B3]"></div>
+                            </motion.div>
+                          </div>
+                        </motion.div>
+
+                        {/* Balão de fala realista */}
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0, x: -10, y: 5 }}
+                          animate={{ opacity: 1, scale: 1, x: -80, y: -20 }}
+                          transition={{
+                            delay: 1.2,
+                            duration: 0.6,
+                            type: "spring",
+                            stiffness: 200,
+                            damping: 15
+                          }}
+                          className="absolute bg-white rounded-xl p-3 shadow-lg"
+                          style={{
+                            clipPath: "polygon(0% 0%, 100% 0%, 100% 70%, 90% 70%, 100% 100%, 75% 70%, 0% 70%)",
+                            width: "120px"
+                          }}
+                        >
+                          <motion.div 
+                            className="relative"
+                            animate={{ y: [0, -2, 0] }}
+                            transition={{
+                              duration: 1.5,
+                              repeat: Infinity,
+                              ease: "easeInOut"
+                            }}
+                          >
+                            <motion.p 
+                              className="text-[#001427] font-bold text-sm px-1 text-center"
+                              initial={{ opacity: 0 }}
+                              animate={{ 
+                                opacity: [0, 1, 1, 0],
+                                scale: [0.9, 1, 1, 0.9]
+                              }}
+                              transition={{
+                                duration: 4,
+                                repeat: Infinity,
+                                times: [0, 0.1, 0.7, 1],
+                                ease: "easeInOut"
+                              }}
+                            >
+                              Olá! Bem-vindo!
+                            </motion.p>
+                          </motion.div>
+                          
+                          {/* Efeito de brilho */}
+                          <motion.div 
+                            className="absolute inset-0 rounded-xl"
+                            animate={{ 
+                              boxShadow: [
+                                "0 0 0px 0px rgba(255, 107, 0, 0)",
+                                "0 0 10px 2px rgba(255, 107, 0, 0.3)",
+                                "0 0 0px 0px rgba(255, 107, 0, 0)"
+                              ] 
+                            }}
+                            transition={{ 
+                              duration: 3, 
+                              repeat: Infinity, 
+                              ease: "easeInOut" 
+                            }}
+                          />
+                        </motion.div>
+                      </div>
+                    </motion.div>
+
                     {/* Conteúdo do título no topo da página */}
                     <div className="absolute top-36 left-0 right-0 text-center z-20">
                       <motion.div 
