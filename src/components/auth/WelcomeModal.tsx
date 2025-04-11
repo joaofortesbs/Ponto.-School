@@ -194,99 +194,300 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
 
                 <div className="relative h-48 overflow-hidden">
                   <div className="relative w-full h-full overflow-hidden">
-                    {/* Fundo dinâmico com várias camadas */}
+                    {/* Fundo dinâmico com camadas avançadas */}
                     <motion.div 
-                      className="absolute inset-0 bg-gradient-to-r from-[#001427] via-[#001f3d] to-[#001427]"
+                      className="absolute inset-0"
+                      style={{
+                        background: "radial-gradient(circle at 50% 50%, #001427, #001427)",
+                      }}
                       animate={{ 
                         background: [
-                          "linear-gradient(to right, #001427, #001f3d, #001427)",
-                          "linear-gradient(to right, #001f3d, #002a54, #001f3d)",
-                          "linear-gradient(to right, #001427, #001f3d, #001427)"
+                          "radial-gradient(circle at 30% 30%, #002a54, #001427)",
+                          "radial-gradient(circle at 70% 70%, #001f3d, #001427)",
+                          "radial-gradient(circle at 30% 70%, #002a54, #001427)",
+                          "radial-gradient(circle at 70% 30%, #001f3d, #001427)",
+                          "radial-gradient(circle at 50% 50%, #002a54, #001427)",
                         ] 
                       }}
-                      transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                      transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
                     />
 
-                    {/* Elementos gráficos animados */}
+                    {/* Efeito de brilho pulsante */}
+                    <motion.div
+                      className="absolute inset-0"
+                      initial={{ opacity: 0 }}
+                      animate={{ 
+                        opacity: [0, 0.05, 0.1, 0.05, 0],
+                        scale: [1, 1.05, 1.1, 1.05, 1]
+                      }}
+                      transition={{ 
+                        duration: 8, 
+                        repeat: Infinity, 
+                        ease: "easeInOut" 
+                      }}
+                      style={{
+                        background: "radial-gradient(circle at center, rgba(255, 107, 0, 0.4), transparent 60%)",
+                        mixBlendMode: "overlay"
+                      }}
+                    />
+
+                    {/* Efeito de linhas digitais movendo-se (tipo Tron) */}
+                    <motion.div 
+                      className="absolute inset-0 opacity-20"
+                      style={{
+                        backgroundImage: `
+                          linear-gradient(90deg, #FF6B00 1px, transparent 1px),
+                          linear-gradient(0deg, #FF6B00 1px, transparent 1px)
+                        `,
+                        backgroundSize: "60px 60px"
+                      }}
+                      animate={{
+                        backgroundPosition: ["0px 0px", "60px 60px"]
+                      }}
+                      transition={{
+                        duration: 20,
+                        repeat: Infinity,
+                        ease: "linear"
+                      }}
+                    />
+
+                    {/* Efeito de constelação com pontos conectados */}
+                    <div className="absolute inset-0">
+                      <svg width="100%" height="100%" className="absolute inset-0">
+                        <defs>
+                          <radialGradient id="star-gradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                            <stop offset="0%" stopColor="#FF6B00" stopOpacity="0.8" />
+                            <stop offset="100%" stopColor="#FF6B00" stopOpacity="0" />
+                          </radialGradient>
+                          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                            <feGaussianBlur stdDeviation="2" result="blur" />
+                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                          </filter>
+                        </defs>
+                        {/* Linhas de conexão animadas */}
+                        {[...Array(8)].map((_, i) => (
+                          <motion.path 
+                            key={`constellation-line-${i}`}
+                            stroke="#FF6B00"
+                            strokeWidth="0.5"
+                            strokeOpacity="0.3"
+                            fill="none"
+                            strokeDasharray="3,3"
+                            initial={{ pathLength: 0, opacity: 0 }}
+                            animate={{ 
+                              pathLength: 1, 
+                              opacity: [0, 0.5, 0],
+                              d: [
+                                `M${30 + (i*20)},${ 20 + (i*15)} Q${100 + Math.sin(i)*50},${50 + Math.cos(i)*50} ${150 + (i*10)},${70 + (i*10)}`,
+                                `M${40 + (i*20)},${ 25 + (i*15)} Q${110 + Math.sin(i+1)*50},${60 + Math.cos(i+1)*50} ${160 + (i*10)},${80 + (i*10)}`,
+                                `M${30 + (i*20)},${ 20 + (i*15)} Q${100 + Math.sin(i)*50},${50 + Math.cos(i)*50} ${150 + (i*10)},${70 + (i*10)}`
+                              ]
+                            }}
+                            transition={{ 
+                              duration: 8 + i, 
+                              repeat: Infinity, 
+                              ease: "easeInOut",
+                              delay: i * 0.5
+                            }}
+                          />
+                        ))}
+                      </svg>
+                    </div>
+
+                    {/* Partículas avançadas com efeitos */}
                     <div className="absolute inset-0 overflow-hidden">
-                      {/* Partículas flutuantes */}
-                      {[...Array(20)].map((_, i) => (
+                      {[...Array(40)].map((_, i) => (
                         <motion.div
                           key={`particle-${i}`}
-                          className="absolute rounded-full"
+                          className="absolute rounded-full z-10"
                           style={{
-                            width: Math.random() * 6 + 2,
-                            height: Math.random() * 6 + 2,
-                            background: `rgba(255, ${Math.floor(107 + Math.random() * 100)}, ${Math.floor(Math.random() * 100)}, ${0.3 + Math.random() * 0.5})`,
+                            width: Math.random() * 8 + 2,
+                            height: Math.random() * 8 + 2,
+                            background: i % 3 === 0 
+                              ? `rgba(255, ${Math.floor(107 + Math.random() * 100)}, ${Math.floor(Math.random() * 100)}, ${0.4 + Math.random() * 0.6})` 
+                              : "rgba(255, 255, 255, 0.4)",
+                            boxShadow: i % 3 === 0 
+                              ? `0 0 ${Math.floor(Math.random() * 10) + 5}px rgba(255, 107, 0, 0.6)` 
+                              : `0 0 ${Math.floor(Math.random() * 5) + 2}px rgba(255, 255, 255, 0.6)`,
                             top: `${Math.random() * 100}%`,
                             left: `${Math.random() * 100}%`,
+                            filter: "blur(0.5px)"
                           }}
                           animate={{
-                            y: [0, -(Math.random() * 100 + 50)],
-                            opacity: [0, 0.8, 0],
-                            scale: [0, 1, 0.5]
+                            y: [0, -(Math.random() * 150 + 50)],
+                            x: [0, (Math.random() * 50 - 25)],
+                            opacity: [0, 0.9, 0],
+                            scale: [0, 1 + Math.random(), 0.2]
                           }}
                           transition={{
-                            duration: 3 + Math.random() * 5,
+                            duration: 4 + Math.random() * 6,
                             repeat: Infinity,
-                            delay: Math.random() * 5,
+                            delay: Math.random() * 10,
                             ease: "easeInOut"
                           }}
                         />
                       ))}
                       
-                      {/* Ondas de gradiente */}
-                      <motion.div
-                        className="absolute bottom-0 left-0 right-0 h-32 opacity-30"
-                        style={{
-                          background: "linear-gradient(to top, #FF6B00, transparent)",
-                          clipPath: "url(#wave-path)"
-                        }}
-                        animate={{
-                          y: [0, -10, 0],
-                        }}
-                        transition={{
-                          duration: 5,
-                          repeat: Infinity,
-                          ease: "easeInOut"
-                        }}
-                      />
+                      {/* Efeito de movimento de ondas melhorado */}
+                      {[...Array(3)].map((_, i) => (
+                        <motion.div
+                          key={`wave-${i}`}
+                          className="absolute bottom-0 left-0 right-0"
+                          style={{
+                            height: `${40 + i * 20}px`,
+                            background: `linear-gradient(to top, rgba(255, 107, 0, ${0.2 - i * 0.05}), transparent)`,
+                            clipPath: "url(#wave-path-" + i + ")",
+                            zIndex: 2
+                          }}
+                          animate={{
+                            y: [0, -10, 5, -5, 0],
+                          }}
+                          transition={{
+                            duration: 10 - i * 2,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                            delay: i * 0.5
+                          }}
+                        />
+                      ))}
                       
-                      {/* SVG para ondas */}
+                      {/* SVGs para ondas múltiplas */}
                       <svg width="0" height="0" className="absolute">
                         <defs>
-                          <clipPath id="wave-path">
+                          <clipPath id="wave-path-0">
                             <path d="M0,64 C32,32 64,96 96,64 C128,32 160,96 192,64 C224,32 256,96 288,64 C320,32 352,96 384,64 C416,32 448,96 480,64 C512,32 544,96 576,64 C608,32 640,96 672,64 C704,32 736,96 768,64 C800,32 832,96 864,64 C896,32 928,96 960,64 C992,32 1024,96 1056,64 L1056,192 L0,192 Z" />
+                          </clipPath>
+                          <clipPath id="wave-path-1">
+                            <path d="M0,74 C48,42 96,106 144,74 C192,42 240,106 288,74 C336,42 384,106 432,74 C480,42 528,106 576,74 C624,42 672,106 720,74 C768,42 816,106 864,74 C912,42 960,106 1008,74 L1008,192 L0,192 Z" />
+                          </clipPath>
+                          <clipPath id="wave-path-2">
+                            <path d="M0,84 C64,52 128,116 192,84 C256,52 320,116 384,84 C448,52 512,116 576,84 C640,52 704,116 768,84 C832,52 896,116 960,84 L960,192 L0,192 Z" />
                           </clipPath>
                         </defs>
                       </svg>
                     </div>
 
-                    {/* Linhas geométricas hexagonais */}
-                    <div className="absolute inset-0" 
-                         style={{ 
-                           backgroundImage: "url('data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627,22.5 L60,30 L54.627,37.5 L45.373,37.5 L40,30 L45.373,22.5 L54.627,22.5 Z M14.627,22.5 L20,30 L14.627,37.5 L5.373,37.5 L0,30 L5.373,22.5 L14.627,22.5 Z M34.627,0 L40,7.5 L34.627,15 L25.373,15 L20,7.5 L25.373,0 L34.627,0 Z M34.627,45 L40,52.5 L34.627,60 L25.373,60 L20,52.5 L25.373,45 L34.627,45 Z' fill='%23FF6B00' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E')",
-                           backgroundSize: "120px 120px"
-                         }}
-                    />
+                    {/* Padrões geométricos com animação */}
+                    <div className="absolute inset-0 z-1"> 
+                      <div className="absolute inset-0 opacity-20" 
+                        style={{ 
+                          backgroundImage: "url('data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627,22.5 L60,30 L54.627,37.5 L45.373,37.5 L40,30 L45.373,22.5 L54.627,22.5 Z M14.627,22.5 L20,30 L14.627,37.5 L5.373,37.5 L0,30 L5.373,22.5 L14.627,22.5 Z M34.627,0 L40,7.5 L34.627,15 L25.373,15 L20,7.5 L25.373,0 L34.627,0 Z M34.627,45 L40,52.5 L34.627,60 L25.373,60 L20,52.5 L25.373,45 L34.627,45 Z' fill='%23FF6B00' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E')",
+                          backgroundSize: "120px 120px"
+                        }}
+                      >
+                        <motion.div 
+                          className="absolute inset-0"
+                          animate={{
+                            backgroundPosition: ["0% 0%", "120px 120px"]
+                          }}
+                          transition={{
+                            duration: 30,
+                            repeat: Infinity,
+                            ease: "linear"
+                          }}
+                          style={{ 
+                            backgroundImage: "url('data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627,22.5 L60,30 L54.627,37.5 L45.373,37.5 L40,30 L45.373,22.5 L54.627,22.5 Z M14.627,22.5 L20,30 L14.627,37.5 L5.373,37.5 L0,30 L5.373,22.5 L14.627,22.5 Z M34.627,0 L40,7.5 L34.627,15 L25.373,15 L20,7.5 L25.373,0 L34.627,0 Z M34.627,45 L40,52.5 L34.627,60 L25.373,60 L20,52.5 L25.373,45 L34.627,45 Z' fill='%23FF6B00' fill-opacity='0.15' fill-rule='evenodd'/%3E%3C/svg%3E')",
+                            backgroundSize: "120px 120px"
+                          }}
+                        />
+                      </div>
+                    </div>
                     
-                    {/* Efeito de iluminação lateral */}
-                    <div className="absolute -top-20 -right-20 w-40 h-40 bg-[#FF6B00]/20 rounded-full blur-3xl"></div>
-                    <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-[#FF8C40]/20 rounded-full blur-3xl"></div>
+                    {/* Efeitos de iluminação aprimorados */}
+                    <motion.div 
+                      className="absolute -top-40 -right-40 w-80 h-80 bg-[#FF6B00]/15 rounded-full blur-3xl"
+                      animate={{
+                        opacity: [0.5, 0.8, 0.5],
+                        scale: [1, 1.2, 1]
+                      }}
+                      transition={{
+                        duration: 8,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                    <motion.div 
+                      className="absolute -bottom-40 -left-40 w-80 h-80 bg-[#FF8C40]/15 rounded-full blur-3xl"
+                      animate={{
+                        opacity: [0.5, 0.8, 0.5],
+                        scale: [1.2, 1, 1.2]
+                      }}
+                      transition={{
+                        duration: 8,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: 4
+                      }}
+                    />
 
-                    {/* Overlay gradiente para garantir legibilidade */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/90"></div>
+                    {/* Overlay sofisticado para garantir legibilidade */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/80 z-10"></div>
 
-                    {/* Conteúdo com animação */}
-                    <div className="absolute bottom-0 left-0 right-0 p-6">
+                    {/* Conteúdo com animação ultra-sofisticada */}
+                    <div className="absolute bottom-0 left-0 right-0 p-6 z-20">
                       <motion.div 
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.3, duration: 0.5 }}
                         className="mb-2 relative"
                       >
-                        {/* Círculo de sucesso com animação */}
-                        <div className="flex items-center gap-3 mb-2">
+                        {/* Efeito de celebração com fogos de artifício digitais */}
+                        <div className="absolute -top-20 left-0 right-0 h-20 overflow-hidden pointer-events-none">
+                          {[...Array(10)].map((_, i) => (
+                            <motion.div
+                              key={`firework-${i}`}
+                              className="absolute"
+                              style={{
+                                left: `${10 + i * 8}%`,
+                                bottom: "-5px",
+                                width: "2px",
+                                height: "2px",
+                                borderRadius: "50%",
+                                backgroundColor: i % 2 === 0 ? "#FF6B00" : "#FFD700",
+                              }}
+                              initial={{ y: 0, scale: 0.5, opacity: 0 }}
+                              animate={{
+                                y: [-60 - Math.random() * 40, -120 - Math.random() * 80],
+                                scale: [0.5, 0],
+                                opacity: [0, 1, 0],
+                              }}
+                              transition={{
+                                duration: 1.5 + Math.random(),
+                                repeat: Infinity,
+                                delay: 0.5 + i * 0.3,
+                                ease: [0.4, 0.0, 0.2, 1],
+                                repeatDelay: Math.random() * 3 + i
+                              }}
+                            >
+                              <motion.div
+                                className="absolute"
+                                animate={{
+                                  scale: [0, 3, 0],
+                                  opacity: [1, 0],
+                                }}
+                                transition={{
+                                  duration: 0.6,
+                                  ease: "easeOut",
+                                  delay: 1.5 + Math.random() * 0.3,
+                                  repeat: Infinity,
+                                  repeatDelay: 1.5 + Math.random() * 3 + i
+                                }}
+                                style={{
+                                  width: "8px",
+                                  height: "8px",
+                                  borderRadius: "50%",
+                                  background: `radial-gradient(circle, ${i % 2 === 0 ? '#FF6B00' : '#FFD700'} 0%, transparent 70%)`,
+                                  boxShadow: `0 0 10px 2px ${i % 2 === 0 ? '#FF6B00' : '#FFD700'}`,
+                                  left: "-4px",
+                                  top: "-4px",
+                                }}
+                              />
+                            </motion.div>
+                          ))}
+                        </div>
+
+                        {/* Título de sucesso ultra aprimorado */}
+                        <div className="flex items-center gap-3 mb-4">
                           <motion.div 
                             initial={{ scale: 0, rotate: -90 }}
                             animate={{ scale: 1, rotate: 0 }}
@@ -298,41 +499,316 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                             }}
                             className="relative"
                           >
-                            <div className="absolute inset-0 rounded-full bg-[#FF6B00]/30 animate-ping opacity-75"></div>
-                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center relative z-10 shadow-lg shadow-[#FF6B00]/20">
-                              <CheckCircle className="h-5 w-5 text-white" />
-                            </div>
+                            {/* Círculos de pulso animados */}
+                            {[...Array(3)].map((_, i) => (
+                              <motion.div
+                                key={`pulse-${i}`}
+                                className={`absolute inset-0 rounded-full bg-[#FF6B00]/${30 - i * 10}`}
+                                initial={{ scale: 0.8, opacity: 0 }}
+                                animate={{ 
+                                  scale: [0.8, 2.2 - i * 0.3, 0.8],
+                                  opacity: [0, 0.6 - i * 0.2, 0]
+                                }}
+                                transition={{
+                                  duration: 3,
+                                  repeat: Infinity,
+                                  delay: i * 0.4,
+                                  ease: "easeInOut"
+                                }}
+                              />
+                            ))}
+                            
+                            {/* Ícone de sucesso com efeito de brilho */}
+                            <motion.div 
+                              className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center relative z-10 shadow-lg shadow-[#FF6B00]/30"
+                              animate={{ 
+                                boxShadow: ["0 0 10px 0px rgba(255, 107, 0, 0.5)", "0 0 20px 5px rgba(255, 107, 0, 0.6)", "0 0 10px 0px rgba(255, 107, 0, 0.5)"]
+                              }}
+                              transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                ease: "easeInOut"
+                              }}
+                            >
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1, rotate: [0, 5, 0, -5, 0] }}
+                                transition={{
+                                  scale: { type: "spring", stiffness: 260, damping: 20, delay: 0.7 },
+                                  rotate: { 
+                                    duration: 2, 
+                                    delay: 2,
+                                    repeat: 1,
+                                    repeatType: "reverse"
+                                  }
+                                }}
+                              >
+                                <CheckCircle className="h-6 w-6 text-white" />
+                              </motion.div>
+                            </motion.div>
                           </motion.div>
                           
-                          <motion.h3 
-                            initial={{ x: -20, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            transition={{ delay: 0.6, duration: 0.4 }}
-                            className="text-xl font-bold text-white"
-                          >
-                            Conta criada com sucesso!
-                          </motion.h3>
+                          {/* Título com efeito de entrada + glow dinâmico */}
+                          <div className="relative">
+                            <motion.h3 
+                              initial={{ x: -20, opacity: 0, scale: 0.9 }}
+                              animate={{ x: 0, opacity: 1, scale: 1 }}
+                              transition={{ 
+                                delay: 0.6, 
+                                duration: 0.6, 
+                                type: "spring",
+                                stiffness: 150
+                              }}
+                              className="text-2xl font-bold text-white relative z-10"
+                            >
+                              <motion.span
+                                animate={{ 
+                                  textShadow: [
+                                    "0 0 5px rgba(255, 107, 0, 0.3)", 
+                                    "0 0 15px rgba(255, 107, 0, 0.5)", 
+                                    "0 0 5px rgba(255, 107, 0, 0.3)"
+                                  ]
+                                }}
+                                transition={{ 
+                                  duration: 3,
+                                  repeat: Infinity,
+                                  ease: "easeInOut" 
+                                }}
+                                className="bg-clip-text"
+                              >
+                                {/* Texto com efeito de gradiente animado */}
+                                <motion.span
+                                  className="inline-block"
+                                  animate={{
+                                    color: ["#ffffff", "#FF8C40", "#ffffff"]
+                                  }}
+                                  transition={{
+                                    duration: 3,
+                                    ease: "easeInOut",
+                                    repeat: Infinity
+                                  }}
+                                >C</motion.span>
+                                <motion.span
+                                  className="inline-block"
+                                  animate={{
+                                    color: ["#ffffff", "#FF8C40", "#ffffff"]
+                                  }}
+                                  transition={{
+                                    duration: 3,
+                                    ease: "easeInOut",
+                                    delay: 0.1,
+                                    repeat: Infinity
+                                  }}
+                                >o</motion.span>
+                                <motion.span
+                                  className="inline-block"
+                                  animate={{
+                                    color: ["#ffffff", "#FF8C40", "#ffffff"]
+                                  }}
+                                  transition={{
+                                    duration: 3,
+                                    ease: "easeInOut",
+                                    delay: 0.2,
+                                    repeat: Infinity
+                                  }}
+                                >n</motion.span>
+                                <motion.span
+                                  className="inline-block"
+                                  animate={{
+                                    color: ["#ffffff", "#FF8C40", "#ffffff"]
+                                  }}
+                                  transition={{
+                                    duration: 3,
+                                    ease: "easeInOut",
+                                    delay: 0.3,
+                                    repeat: Infinity
+                                  }}
+                                >t</motion.span>
+                                <motion.span
+                                  className="inline-block"
+                                  animate={{
+                                    color: ["#ffffff", "#FF8C40", "#ffffff"]
+                                  }}
+                                  transition={{
+                                    duration: 3,
+                                    ease: "easeInOut",
+                                    delay: 0.4,
+                                    repeat: Infinity
+                                  }}
+                                >a</motion.span>
+                                <motion.span className="inline-block mx-1">criada</motion.span>
+                                <motion.span
+                                  className="inline-block"
+                                  animate={{
+                                    color: ["#ffffff", "#FF8C40", "#ffffff"]
+                                  }}
+                                  transition={{
+                                    duration: 3,
+                                    ease: "easeInOut",
+                                    delay: 0.5,
+                                    repeat: Infinity
+                                  }}
+                                >c</motion.span>
+                                <motion.span
+                                  className="inline-block"
+                                  animate={{
+                                    color: ["#ffffff", "#FF8C40", "#ffffff"]
+                                  }}
+                                  transition={{
+                                    duration: 3,
+                                    ease: "easeInOut",
+                                    delay: 0.6,
+                                    repeat: Infinity
+                                  }}
+                                >o</motion.span>
+                                <motion.span
+                                  className="inline-block"
+                                  animate={{
+                                    color: ["#ffffff", "#FF8C40", "#ffffff"]
+                                  }}
+                                  transition={{
+                                    duration: 3,
+                                    ease: "easeInOut",
+                                    delay: 0.7,
+                                    repeat: Infinity
+                                  }}
+                                >m</motion.span>
+                                <motion.span className="inline-block mx-1">sucesso!</motion.span>
+                                
+                                {/* Efeito de estrela no título */}
+                                <motion.span
+                                  className="absolute -right-6 -top-6 text-yellow-400"
+                                  initial={{ scale: 0, opacity: 0, rotate: 0 }}
+                                  animate={{ 
+                                    scale: [0, 1.5, 1],
+                                    opacity: [0, 1, 1],
+                                    rotate: [0, 45, 0],
+                                  }}
+                                  transition={{
+                                    duration: 1,
+                                    delay: 1.2
+                                  }}
+                                >
+                                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#FFD700" />
+                                  </svg>
+                                  <motion.div
+                                    className="absolute inset-0"
+                                    animate={{ 
+                                      opacity: [1, 0.5, 1],
+                                      scale: [1, 1.2, 1]
+                                    }}
+                                    transition={{
+                                      duration: 2,
+                                      repeat: Infinity
+                                    }}
+                                  >
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                      <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#FFD700" />
+                                    </svg>
+                                  </motion.div>
+                                </motion.span>
+                              </motion.span>
+                            </motion.h3>
+                            
+                            {/* Barra decorativa animada sob o título */}
+                            <motion.div
+                              className="absolute -bottom-2 left-0 h-[2px] bg-gradient-to-r from-[#FF6B00] via-[#FF8C40] to-[#FF6B00]"
+                              initial={{ width: 0, opacity: 0 }}
+                              animate={{ width: "100%", opacity: 1 }}
+                              transition={{ delay: 0.9, duration: 0.7 }}
+                            />
+                            <motion.div
+                              className="absolute -bottom-2 left-0 h-[2px] w-full opacity-0"
+                              animate={{ 
+                                opacity: [0, 0.8, 0],
+                                left: ["0%", "100%"] 
+                              }}
+                              transition={{ 
+                                duration: 2,
+                                repeat: Infinity,
+                                delay: 1.7,
+                                repeatDelay: 3
+                              }}
+                              style={{
+                                background: "linear-gradient(to right, transparent, #FF6B00, transparent)",
+                                width: "30px"
+                              }}
+                            />
+                          </div>
                         </div>
                         
-                        <motion.p 
+                        {/* Subtítulo aprimorado */}
+                        <motion.div 
                           initial={{ y: 10, opacity: 0 }}
                           animate={{ y: 0, opacity: 1 }}
                           transition={{ delay: 0.7, duration: 0.4 }}
-                          className="text-white/90 ml-12 relative"
+                          className="text-white/90 ml-14 relative"
                         >
+                          <motion.div
+                            className="absolute -left-1 top-1/2 w-4 h-[1px] bg-[#FF6B00]"
+                            initial={{ width: 0 }}
+                            animate={{ width: 4 }}
+                            transition={{ delay: 0.9, duration: 0.3 }}
+                          />
                           <span className="relative">
                             Estamos muito felizes em ter você na 
-                            <span className="font-semibold text-[#FF8C40] ml-1 relative">
-                              Ponto. School
+                            <motion.span 
+                              className="font-semibold text-[#FF8C40] mx-1 relative inline-block"
+                              animate={{ 
+                                color: ["#FF8C40", "#FF6B00", "#FF8C40"]
+                              }}
+                              transition={{
+                                duration: 3,
+                                repeat: Infinity,
+                                ease: "easeInOut"
+                              }}
+                            >
+                              <motion.span
+                                animate={{
+                                  textShadow: [
+                                    "0 0 5px rgba(255, 107, 0, 0.3)",
+                                    "0 0 10px rgba(255, 107, 0, 0.5)",
+                                    "0 0 5px rgba(255, 107, 0, 0.3)"
+                                  ]
+                                }}
+                                transition={{
+                                  duration: 2,
+                                  repeat: Infinity,
+                                  ease: "easeInOut"
+                                }}
+                              >
+                                Ponto. School
+                              </motion.span>
                               <motion.span 
-                                className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]"
+                                className="absolute bottom-0 left-0 w-full h-[2px]"
                                 initial={{ width: 0 }}
                                 animate={{ width: "100%" }}
                                 transition={{ delay: 1, duration: 0.5 }}
+                                style={{
+                                  background: "linear-gradient(to right, #FF6B00, #FF8C40)"
+                                }}
                               />
-                            </span>!
+                              {/* Efeito de brilho deslizante */}
+                              <motion.span 
+                                className="absolute bottom-0 left-0 h-[2px] opacity-60"
+                                animate={{ 
+                                  left: ["-10%", "110%"]
+                                }}
+                                transition={{ 
+                                  duration: 1.5,
+                                  repeat: Infinity,
+                                  repeatDelay: 2.5,
+                                  delay: 1.5 
+                                }}
+                                style={{
+                                  width: "20%",
+                                  background: "linear-gradient(to right, transparent, white, transparent)"
+                                }}
+                              />
+                            </motion.span>!
                           </span>
-                        </motion.p>
+                        </motion.div>
                       </motion.div>
                     </div>
                   </div>
