@@ -13,6 +13,21 @@ export interface LogoConfig {
 export const DEFAULT_LOGO = "/images/ponto-school-logo.png";
 
 /**
+ * Função para tratar erros de carregamento de logo
+ */
+export const handleLogoError = () => {
+  console.log("Erro ao carregar logo, usando fallback");
+  return DEFAULT_LOGO;
+};
+
+/**
+ * Verifica se a URL da logo é válida
+ */
+export const isValidLogoUrl = (url: string | null): boolean => {
+  return !!url && url !== "null" && url !== "undefined";
+};
+
+/**
  * Add version parameter to logo URL to prevent caching
  * @param logoUrl The original logo URL
  * @param version The version number to append

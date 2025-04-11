@@ -527,11 +527,18 @@ export default function Header() {
 
     // Play notification sound if audio ref is available
     if (audioRef.current) {
-      audioRef.current
-        .play()
-        .catch((err) =>
-          console.error("Error playing notification sound:", err),
-        );
+      try {
+        // Tentar reproduzir o som com tratamento de erros melhorado
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {
+            // Silenciar erros de reprodução de áudio (geralmente por interação do usuário)
+            console.log("Notificação silenciosa (interação do usuário necessária)");
+          });
+        }
+      } catch (err) {
+        // Falha silenciosa para evitar erros no console
+      }
     }
 
     // Update the last notification time and type
@@ -1029,9 +1036,40 @@ export default function Header() {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
+  const handleLogout = async () => {
+    try {
+      // Primeiro limpar dados de autenticação do localStorage
+      localStorage.removeItem('auth_status');
+      localStorage.removeItem('auth_checked');
+
+      // Depois realizar signOut no Supabase
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        throw error;
+      }
+
+      console.log("Usuário deslogado com sucesso");
+
+      // Disparar evento de logout
+      window.dispatchEvent(new CustomEvent('logout'));
+
+      // Pequeno delay para garantir que o evento foi processado
+      setTimeout(() => {
+        // Forçar redirecionamento para a página de login
+        window.location.href = "/login";
+      }, 100);
+    } catch (error) {
+      console.error("Erro ao realizar logout:", error);
+      // Em caso de erro, ainda tentar redirecionar
+      window.location.href = "/login";
+    }
+  };
+
   return (
     <header className="w-full h-[72px] px-6 bg-white dark:bg-[#0A2540] border-b border-brand-border dark:border-white/10 flex items-center justify-between">
       {/* Hidden audio element for notification sounds */}
+      <audio ref={audioRef} src="/message-sound.mp3" preload="auto" />
       {/* Modern Platform Avatar */}
       <div className="flex items-center">
         <div className="relative group cursor-pointer">
@@ -1815,7 +1853,7 @@ export default function Header() {
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={() => navigate("/login")}
+                    onClick={handleLogout}
                     className="text-red-600 cursor-pointer"
                   >
                     <LogOut className="mr-2 h-4 w-4" />

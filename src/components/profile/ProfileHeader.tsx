@@ -1,182 +1,223 @@
-import React, { useEffect, useState, useRef } from "react";
+
+import React, { useEffect, useRef } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Edit, Share2, Diamond, Camera } from "lucide-react";
+import { Edit, Share2, Camera, Award } from "lucide-react";
+import { motion, useAnimate, useMotionValue } from "framer-motion";
 import type { UserProfile } from "@/types/user-profile";
-import { profileService } from "@/services/profileService";
 
 interface ProfileHeaderProps {
   userProfile: UserProfile | null;
-  onEditClick: () => void;
+  isEditing: boolean;
+  onEdit: () => void;
 }
 
-export default function ProfileHeader({
-  userProfile,
-  onEditClick,
-}: ProfileHeaderProps) {
-  const profileContainerRef = useRef<HTMLDivElement>(null);
-  const profileNameRef = useRef<HTMLHeadingElement>(null);
-  const profileAvatarRef = useRef<HTMLDivElement>(null);
-  const profileLevelRef = useRef<HTMLParagraphElement>(null);
-  const [displayName, setDisplayName] = useState("");
+const ProfileHeader = ({ userProfile, isEditing, onEdit }: ProfileHeaderProps) => {
+  const [scope, animate] = useAnimate();
+  const cardRef = useRef<HTMLDivElement>(null);
+  const rotateX = useMotionValue(0);
+  const rotateY = useMotionValue(0);
+
+  // Garantir que o perfil sempre tenha valores válidos
+  const profile = userProfile ? {
+    ...userProfile,
+    // Definir valores padrão para propriedades ausentes
+    id: userProfile.id || "1",
+    user_id: userProfile.user_id || `USR${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
+    full_name: userProfile.full_name || "Usuário",
+    display_name: userProfile.display_name || "Usuário",
+    avatar_url: userProfile.avatar_url || "",
+    level: userProfile.level || 1,
+    plan_type: userProfile.plan_type || "lite",
+    email: userProfile.email || "usuario@exemplo.com"
+  } : {
+    id: "1",
+    user_id: `USR${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
+    full_name: "Usuário",
+    display_name: "Usuário",
+    avatar_url: "",
+    level: 1,
+    plan_type: "lite",
+    email: "usuario@exemplo.com"
+  };
+
+  const progressToNextLevel = 72; // Porcentagem de progresso para o próximo nível
 
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!profileContainerRef.current) return;
+    // Animar ao carregar o componente
+    animate(scope.current, { opacity: 1, y: 0 }, { duration: 0.5 });
+  }, [animate, scope]);
 
-      const container = profileContainerRef.current;
-      const rect = container.getBoundingClientRect();
+  // Efeito 3D no cartão
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return;
 
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
+    const rect = cardRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
 
-      const rotateY = ((e.clientX - centerX) / (rect.width / 2)) * 5;
-      const rotateX = ((e.clientY - centerY) / (rect.height / 2)) * -5;
+    const mouseX = e.clientX - centerX;
+    const mouseY = e.clientY - centerY;
 
-      if (profileNameRef.current) {
-        profileNameRef.current.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-        profileNameRef.current.style.textShadow = `${rotateY * 0.2}px ${rotateX * -0.2}px 1px rgba(0,0,0,0.2)`;
-      }
+    // Calcular rotação limitada a +/- 5 graus
+    const rotX = (mouseY / (rect.height / 2)) * -5;
+    const rotY = (mouseX / (rect.width / 2)) * 5;
 
-      if (profileAvatarRef.current) {
-        profileAvatarRef.current.style.transform = `rotateX(${rotateX * 0.7}deg) rotateY(${rotateY * 0.7}deg) translateZ(10px)`;
-        profileAvatarRef.current.style.boxShadow = `${rotateY * 0.5}px ${rotateX * -0.5}px 15px rgba(0,0,0,0.15)`;
-      }
+    rotateX.set(rotX);
+    rotateY.set(rotY);
+  };
 
-      if (profileLevelRef.current) {
-        profileLevelRef.current.style.transform = `rotateX(${rotateX * 1.2}deg) rotateY(${rotateY * 1.2}deg) translateZ(5px)`;
-      }
-    };
+  const handleMouseLeave = () => {
+    // Animar de volta à posição inicial
+    animate(rotateX, 0, { duration: 0.5 });
+    animate(rotateY, 0, { duration: 0.5 });
+  };
 
-    document.addEventListener("mousemove", handleMouseMove);
-
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-    };
-  }, []);
-
-  useEffect(() => {
-    const loadDisplayName = async () => {
-      try {
-        const name = await profileService.getUserDisplayName();
-        setDisplayName(name);
-      } catch (error) {
-        console.error("Error loading display name:", error);
-        setDisplayName("Usuário");
-      }
-    };
-
-    if (!userProfile?.display_name) {
-      loadDisplayName();
-    } else {
-      setDisplayName(userProfile.display_name);
+  const getPlanBadgeClass = () => {
+    const planType = profile.plan_type?.toLowerCase() || 'lite';
+    switch (planType) {
+      case 'pro':
+        return 'bg-gradient-to-r from-purple-500 to-indigo-600';
+      case 'premium':
+        return 'bg-gradient-to-r from-yellow-400 to-amber-600';
+      default:
+        return 'bg-gradient-to-r from-orange-400 to-amber-500';
     }
-  }, [userProfile]);
-
+  };
 
   return (
-    <div
-      ref={profileContainerRef}
-      className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 overflow-hidden shadow-sm profile-3d-container"
+    <motion.div
+      ref={scope}
+      initial={{ opacity: 0, y: 20 }}
+      className="mx-auto mb-8 max-w-md"
     >
-      <div className="relative">
-        <div className="h-32 bg-gradient-to-r from-[#29335C] to-[#001427]"></div>
-        <div className="absolute top-20 left-1/2 transform -translate-x-1/2">
-          <div className="relative">
-            <div
-              ref={profileAvatarRef}
-              className="w-24 h-24 rounded-full border-4 border-white dark:border-[#0A2540] overflow-hidden bg-white dark:bg-[#0A2540] profile-3d-element profile-3d-avatar"
+      <motion.div
+        ref={cardRef}
+        className="profile-3d-container overflow-hidden rounded-xl bg-white dark:bg-gray-800/90 shadow-lg border border-gray-200 dark:border-gray-700"
+        style={{
+          transform: "perspective(1000px)",
+          rotateX: rotateX,
+          rotateY: rotateY,
+          boxShadow: "0 20px 30px -10px rgba(0,0,0,0.15)"
+        }}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        whileHover={{ scale: 1.02 }}
+        transition={{ type: "spring", stiffness: 300 }}
+      >
+        {/* Gradiente superior */}
+        <div className="h-24 bg-gradient-to-r from-blue-600 to-indigo-700 dark:from-blue-800 dark:to-indigo-900 relative overflow-hidden">
+          <div className="absolute inset-0 opacity-20"></div>
+          <motion.div 
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+            initial={{ x: "-100%" }}
+            animate={{ x: "100%" }}
+            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          />
+        </div>
+
+        {/* Avatar e informações do perfil */}
+        <div className="relative px-6 pb-6">
+          <motion.div 
+            className="profile-3d-avatar absolute -top-14 left-1/2 transform -translate-x-1/2"
+            whileHover={{ scale: 1.05, y: -5 }}
+          >
+            <Avatar className="w-28 h-28 border-4 border-white dark:border-gray-800 shadow-lg">
+              <AvatarImage src={profile.avatar_url || ""} alt={profile.display_name} />
+              <AvatarFallback className="bg-orange-500 text-white text-3xl">
+                {profile.display_name?.charAt(0) || "U"}
+              </AvatarFallback>
+            </Avatar>
+
+            {/* Círculo de câmera para trocar avatar */}
+            <Button 
+              variant="secondary" 
+              size="icon" 
+              className="absolute -bottom-1 -right-1 rounded-full w-8 h-8 shadow-md"
             >
-              <img
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=John"
-                alt="Profile"
-                className="w-full h-full object-cover"
-              />
+              <Camera className="w-4 h-4" />
+            </Button>
+          </motion.div>
+
+          <div className="mt-16 flex flex-col items-center">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+              {profile.display_name || "Usuário"}
+            </h2>
+
+            {/* ID do usuário com efeito de destaque */}
+            <motion.div 
+              className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5"
+              initial={{ opacity: 0.5 }}
+              whileHover={{ scale: 1.05, opacity: 1 }}
+            >
+              ID: <span className="font-mono bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-md text-orange-600 dark:text-orange-400">{profile.user_id || "—"}</span>
+            </motion.div>
+
+            {/* Badge do plano */}
+            <motion.div 
+              className={`mt-2 px-3 py-1 rounded-full text-xs font-medium text-white flex items-center gap-1.5 ${getPlanBadgeClass()}`}
+              whileHover={{ scale: 1.05 }}
+            >
+              <Award className="w-3.5 h-3.5" />
+              <span className="profile-premium-badge">Plano {profile.plan_type || "Lite"}</span>
+            </motion.div>
+
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+              {profile.full_name || "Estudante de Engenharia de Software"}
+            </p>
+
+            {/* Métricas */}
+            <div className="w-full grid grid-cols-3 gap-2 mt-5 pt-4 border-t border-gray-100 dark:border-gray-700">
+              <div className="flex flex-col items-center">
+                <span className="text-xl font-semibold text-gray-900 dark:text-white">{profile.level || 1}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">Nível</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="text-xl font-semibold text-gray-900 dark:text-white">8</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">Turmas</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="text-xl font-semibold text-gray-900 dark:text-white">12</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">Conquistas</span>
+              </div>
             </div>
-            <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#FF6B00] text-white flex items-center justify-center hover:bg-[#FF6B00]/90 transition-colors">
-              <Camera className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      </div>
 
-      <div className="pt-16 pb-6 px-6 text-center">
-        <h2
-          ref={profileNameRef}
-          className="text-xl font-bold text-[#29335C] dark:text-white profile-3d-element profile-3d-text"
-        >
-          {displayName || userProfile?.display_name || userProfile?.username || "Usuário"}
-        </h2>
-        <div className="flex items-center justify-center gap-1 mt-1">
-          <p className="text-xs text-[#64748B] dark:text-white/60">
-            ID: {userProfile?.user_id || "--"}
-          </p>
-        </div>
-        <div className="flex items-center justify-center gap-1 mt-1">
-          <Diamond className="h-4 w-4 text-[#FF6B00]" />
-          <span className="text-sm text-[#FF6B00] font-medium">
-            {userProfile?.plan_type === "premium"
-              ? "Plano Premium"
-              : "Plano Lite"}
-          </span>
-        </div>
-        <p className="text-[#64748B] dark:text-white/60 text-sm mt-2">
-          Estudante de Engenharia de Software
-        </p>
+            {/* Barra de progresso */}
+            <div className="w-full mt-4">
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-xs text-gray-500 dark:text-gray-400">Progresso para o próximo nível</p>
+                <p className="text-xs font-medium text-orange-600 dark:text-orange-400">{progressToNextLevel}%</p>
+              </div>
+              <div className="relative w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                <motion.div 
+                  className="absolute h-full bg-gradient-to-r from-orange-500 to-orange-400"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progressToNextLevel}%` }}
+                  transition={{ duration: 1, ease: "easeOut" }}
+                />
+              </div>
+            </div>
 
-        <div className="flex items-center justify-center gap-4 mt-4">
-          <div className="text-center">
-            <p
-              ref={profileLevelRef}
-              className="text-lg font-bold text-[#29335C] dark:text-white profile-3d-element profile-3d-text"
-            >
-              {userProfile?.level || 1}
-            </p>
-            <p className="text-xs text-[#64748B] dark:text-white/60">Nível</p>
-          </div>
-          <div className="h-10 border-r border-[#E0E1DD] dark:border-white/10"></div>
-          <div className="text-center">
-            <p className="text-lg font-bold text-[#29335C] dark:text-white">
-              8
-            </p>
-            <p className="text-xs text-[#64748B] dark:text-white/60">Turmas</p>
-          </div>
-          <div className="h-10 border-r border-[#E0E1DD] dark:border-white/10"></div>
-          <div className="text-center">
-            <p className="text-lg font-bold text-[#29335C] dark:text-white">
-              12
-            </p>
-            <p className="text-xs text-[#64748B] dark:text-white/60">
-              Conquistas
-            </p>
+            {/* Botões de ação */}
+            <div className="flex w-full gap-2 mt-6">
+              <Button 
+                variant="default" 
+                className="flex-1 bg-orange-500 hover:bg-orange-600"
+                onClick={onEdit}
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                {isEditing ? "Salvar Perfil" : "Editar Perfil"}
+              </Button>
+              <Button variant="outline" size="icon" className="aspect-square">
+                <Share2 className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
-
-        <div className="mt-6">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-xs text-[#64748B] dark:text-white/60">
-              Progresso para o próximo nível
-            </span>
-            <span className="text-xs font-medium text-[#FF6B00]">72%</span>
-          </div>
-          <Progress value={72} className="h-2" />
-        </div>
-
-        <div className="mt-6 flex gap-2">
-          <Button
-            className="flex-1 bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
-            onClick={onEditClick}
-          >
-            <Edit className="h-4 w-4 mr-2" /> Editar Perfil
-          </Button>
-          <Button
-            variant="outline"
-            className="w-10 h-10 p-0 border-[#E0E1DD] dark:border-white/10"
-          >
-            <Share2 className="h-4 w-4 text-[#64748B] dark:text-white/60" />
-          </Button>
-        </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
-}
+};
+
+export default ProfileHeader;
