@@ -1,37 +1,52 @@
-import React from 'react';
-import { Edit } from 'lucide-react';
-import { UserProfile } from '@/types/user-profile';
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Edit, Save } from "lucide-react";
 
 interface AboutMeProps {
-  profile?: UserProfile | null;
-  isCurrentUser: boolean;
+  aboutMe: string;
+  isEditing: boolean;
+  setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
+  setAboutMe: React.Dispatch<React.SetStateAction<string>>;
+  saveAboutMe: () => void;
 }
 
-const AboutMe: React.FC<AboutMeProps> = ({ profile, isCurrentUser }) => {
-  if (!profile) {
-    return (
-      <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-gray-200 dark:border-gray-700">
-        <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Sobre Mim</h2>
-        <div className="text-gray-500 dark:text-gray-400">Carregando informações...</div>
-      </div>
-    );
-  }
-
+export default function AboutMe({
+  aboutMe,
+  isEditing,
+  setIsEditing,
+  setAboutMe,
+  saveAboutMe,
+}: AboutMeProps) {
   return (
-    <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-gray-200 dark:border-gray-700">
+    <div>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Sobre Mim</h2>
-        {isCurrentUser && (
-          <button className="text-[#FF6B00] hover:text-[#FF8C40] transition-colors">
+        <h3 className="text-lg font-bold text-[#29335C] dark:text-white">
+          Sobre Mim
+        </h3>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-[#64748B] dark:text-white/60 hover:text-[#FF6B00] hover:bg-[#FF6B00]/10"
+          onClick={() => (isEditing ? saveAboutMe() : setIsEditing(true))}
+        >
+          {isEditing ? (
+            <Save className="h-4 w-4" />
+          ) : (
             <Edit className="h-4 w-4" />
-          </button>
-        )}
+          )}
+        </Button>
       </div>
-      <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-        {profile.bio || 'Nenhuma informação disponível.'}
-      </p>
+
+      {isEditing ? (
+        <Textarea
+          className="min-h-[120px] border-[#E0E1DD] dark:border-white/10 focus:border-[#FF6B00] focus:ring-[#FF6B00]/10"
+          value={aboutMe}
+          onChange={(e) => setAboutMe(e.target.value)}
+        />
+      ) : (
+        <p className="text-[#64748B] dark:text-white/80">{aboutMe}</p>
+      )}
     </div>
   );
-};
-
-export default AboutMe;
+}

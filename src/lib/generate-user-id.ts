@@ -51,65 +51,51 @@ export function generateSimpleUserId(countryCode: string, planType: number): str
   const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
   return `${countryCode}${planType}${timestamp.toString().slice(-6)}${random}`;
 }
+import { supabase } from './supabase';
 
 export const generateUserIdSupabase = async (planType: string): Promise<string> => {
   // Gerar um ID baseado no tipo de plano
-  const countryCode = "BR";
-  const planNumber = planType === "premium" ? 1 : 2;
-
+  // BR1 para premium, BR2 para lite/básico
+  const prefix = `BR${planType === 'premium' ? '1' : '2'}`;
+  const timestamp = Date.now();
+  const randomSuffix = Math.floor(Math.random() * 10000);
+  
+  const generatedId = `${prefix}-${timestamp}-${randomSuffix}`;
+  
   try {
-    return await generateUserId(countryCode, planNumber);
+    // Verificar se o ID já existe (raro, mas possível)
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .eq('user_id', generatedId)
+      .single();
+    
+    if (error) {
+      console.error("Error checking for existing ID record:", error);
+      // Se houver erro de consulta, retornamos o ID gerado mesmo assim
+      return generatedId;
+    }
+    
+    // Se o ID já existe (extremamente improvável), gere outro
+    if (data) {
+      console.log("ID already exists, generating a new one");
+      // Chamada recursiva com baixíssima probabilidade de execução
+      return generateUserIdSupabase(planType);
+    }
+    
+    return generatedId;
   } catch (error) {
-    return generateSimpleUserId(countryCode, planNumber);
+    console.error("Error generating user ID:", error);
+    // Em caso de erro, retorne o ID gerado
+    return generatedId;
   }
 };
-
-/**
- * Gera um ID de usuário baseado no tipo de plano (premium ou lite/básico)
- */
-//export const generateUserIdSupabase = async (planType: string): Promise<string> => {
-//  // Gerar um ID baseado no tipo de plano
-//  // BR1 para premium, BR2 para lite/básico
-//  const prefix = `BR${planType === 'premium' ? '1' : '2'}`;
-//  const timestamp = Date.now();
-//  const randomSuffix = Math.floor(Math.random() * 10000);
-//
-//  const generatedId = `${prefix}-${timestamp}-${randomSuffix}`;
-//
-//  try {
-//    // Verificar se o ID já existe (raro, mas possível)
-//    const { data, error } = await supabase
-//      .from('profiles')
-//      .select('user_id')
-//      .eq('user_id', generatedId)
-//      .single();
-//
-//    if (error) {
-//      console.error("Error checking for existing ID record:", error);
-//      // Se houver erro de consulta, retornamos o ID gerado mesmo assim
-//      return generatedId;
-//    }
-//
-//    // Se o ID já existe (extremamente improvável), gere outro
-//    if (data) {
-//      console.log("ID already exists, generating a new one");
-//      // Chamada recursiva com baixíssima probabilidade de execução
-//      return generateUserIdSupabase(planType);
-//    }
-//
-//    return generatedId;
-//  } catch (error) {
-//    console.error("Error generating user ID:", error);
-//    // Em caso de erro, retorne o ID gerado
-//    return generatedId;
-//  }
-//};
 
 /**
  * Gera um ID único para usuários baseado em timestamp e valores aleatórios
  * para garantir unicidade mesmo em caso de múltiplos registros simultâneos
  */
-export function generateTimestampUserId(): string {
+export function generateUserId(): string {
   // Usar timestamp para garantir sequência crescente
   const timestamp = new Date().getTime();
 
@@ -129,21 +115,33 @@ export function isValidUserId(id: string): boolean {
 }
 
 /**
- * Gera um ID de usuário único com o formato USR + 4 dígitos
- * @returns ID de usuário formatado
+ * Gera um ID de usuário formatado
+ * @param seed String opcional para criar IDs consistentes
+ * @returns ID de usuário formatado (ex: USR1234)
  */
-export function generateUserIdUSR(): string {
-  return `USR${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+export function generateUserId(seed?: string): string {
+  let id: string;
+
+  if (seed) {
+    // Criar hash simples da seed
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+      hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+      hash |= 0; // Converter para inteiro de 32 bits
+    }
+    // Converter para positivo e limitar a 4 dígitos
+    id = Math.abs(hash % 10000).toString().padStart(4, '0');
+  } else {
+    // Gerar ID aleatório
+    id = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  }
+
+  return `USR${id}`;
 }
 
 /**
- * Verifica se o ID de usuário fornecido é válido, caso contrário gera um novo
- * @param userId ID de usuário para verificar
- * @returns ID de usuário válido
+ * Verifica se uma string é um ID de usuário válido
  */
-export function ensureValidUserId(userId?: string): string {
-  if (!userId || !userId.startsWith('USR') || userId.length < 7) {
-    return generateUserIdUSR();
-  }
-  return userId;
+export function isValidUserId(id: string): boolean {
+  return /^USR\d{4}$/.test(id);
 }

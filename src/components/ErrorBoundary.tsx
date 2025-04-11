@@ -1,100 +1,59 @@
 
 import React, { Component, ErrorInfo, ReactNode } from "react";
-import { AlertTriangle, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 interface Props {
-  children?: ReactNode;
+  children: ReactNode;
   fallback?: ReactNode;
 }
 
 interface State {
   hasError: boolean;
   error: Error | null;
-  errorInfo: ErrorInfo | null;
 }
 
 class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
-    error: null,
-    errorInfo: null
+    error: null
   };
 
   public static getDerivedStateFromError(error: Error): State {
-    // Atualiza o estado para mostrar o fallback UI
-    return { hasError: true, error, errorInfo: null };
+    return { hasError: true, error };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("Erro capturado pelo ErrorBoundary:", error, errorInfo);
-    this.setState({
-      error,
-      errorInfo
-    });
-
-    // Opcional: Reportar erro para um serviço de monitoramento
-    // reportErrorToService(error, errorInfo);
   }
-
-  private handleReload = () => {
-    window.location.reload();
-  };
-
-  private handleGoHome = () => {
-    window.location.href = "/";
-  };
 
   public render() {
     if (this.state.hasError) {
-      // Renderizar UI de fallback customizada
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
+      
       return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-50 dark:bg-gray-900">
-          <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-            <div className="p-6">
-              <div className="flex justify-center mb-4">
-                <div className="w-16 h-16 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
-                  <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
-                </div>
-              </div>
-
-              <h1 className="text-xl font-bold text-center text-gray-900 dark:text-white mb-2">
-                Ocorreu um erro
-              </h1>
-              
-              <p className="text-center text-gray-600 dark:text-gray-400 mb-4">
-                A aplicação encontrou um erro inesperado. Por favor, tente recarregar a página.
-              </p>
-
-              <div className="bg-gray-100 dark:bg-gray-700 rounded-md p-4 mb-4 overflow-auto max-h-32">
-                <p className="text-sm text-gray-700 dark:text-gray-300 font-mono">
-                  {this.state.error?.toString()}
-                </p>
-              </div>
-
-              <div className="flex justify-center gap-4">
-                <Button
-                  onClick={this.handleReload}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Recarregar Página
-                </Button>
-                <Button
-                  onClick={this.handleGoHome}
-                  variant="outline"
-                  className="border-gray-300 dark:border-gray-600"
-                >
-                  Ir para o Início
-                </Button>
-              </div>
+        <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-white dark:bg-[#001427]">
+          <div className="max-w-md w-full p-6 bg-white dark:bg-[#0A2540] rounded-lg shadow-lg border border-gray-200 dark:border-gray-800">
+            <h2 className="text-xl font-bold text-red-600 mb-4">Algo deu errado</h2>
+            <p className="text-gray-700 dark:text-gray-300 mb-4">
+              Ocorreu um problema ao carregar a plataforma.
+            </p>
+            <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md overflow-auto mb-4">
+              <code className="text-sm text-red-500 dark:text-red-400">
+                {this.state.error?.message || "Erro desconhecido"}
+              </code>
             </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors"
+            >
+              Tentar novamente
+            </button>
           </div>
         </div>
       );
     }
 
-    // Se não houver erro, renderiza os filhos normalmente
     return this.props.children;
   }
 }
