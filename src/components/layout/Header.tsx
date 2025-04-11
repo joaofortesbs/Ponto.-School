@@ -1696,7 +1696,7 @@ export default function Header() {
                               <Bell className="h-4 w-4" />
                             )}
                             {notification.type === "info" && (
-                              <MessageCircle className="h-4 w-4/>
+                              <MessageCircle className="h-4 w-4" />
                             )}
                           </div>
                           <div className="flex-1 space-y-1">
