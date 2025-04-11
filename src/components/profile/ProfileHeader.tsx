@@ -1,223 +1,174 @@
 
-import React, { useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Edit, Share2, Camera, Award } from "lucide-react";
-import { motion, useAnimate, useMotionValue } from "framer-motion";
-import type { UserProfile } from "@/types/user-profile";
+import { Edit, Star } from "lucide-react";
+import { UserProfile } from "@/types/user-profile";
+import { profileService } from "@/services/profileService";
 
 interface ProfileHeaderProps {
   userProfile: UserProfile | null;
-  isEditing: boolean;
-  onEdit: () => void;
+  onEditClick: () => void;
 }
 
-const ProfileHeader = ({ userProfile, isEditing, onEdit }: ProfileHeaderProps) => {
-  const [scope, animate] = useAnimate();
-  const cardRef = useRef<HTMLDivElement>(null);
-  const rotateX = useMotionValue(0);
-  const rotateY = useMotionValue(0);
+export default function ProfileHeader({ userProfile, onEditClick }: ProfileHeaderProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const profileLevelRef = useRef<HTMLDivElement>(null);
+  const [displayName, setDisplayName] = useState(userProfile?.display_name || "Usuário");
+  const [userInitials, setUserInitials] = useState("U");
 
-  // Garantir que o perfil sempre tenha valores válidos
-  const profile = userProfile ? {
-    ...userProfile,
-    // Definir valores padrão para propriedades ausentes
-    id: userProfile.id || "1",
-    user_id: userProfile.user_id || `USR${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
-    full_name: userProfile.full_name || "Usuário",
-    display_name: userProfile.display_name || "Usuário",
-    avatar_url: userProfile.avatar_url || "",
-    level: userProfile.level || 1,
-    plan_type: userProfile.plan_type || "lite",
-    email: userProfile.email || "usuario@exemplo.com"
-  } : {
-    id: "1",
-    user_id: `USR${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
-    full_name: "Usuário",
-    display_name: "Usuário",
-    avatar_url: "",
-    level: 1,
-    plan_type: "lite",
-    email: "usuario@exemplo.com"
-  };
+  // Calcular iniciais do nome
+  useEffect(() => {
+    if (userProfile?.display_name) {
+      const nameParts = userProfile.display_name.split(" ");
+      if (nameParts.length > 1) {
+        setUserInitials(nameParts[0][0] + nameParts[1][0]);
+      } else if (nameParts.length === 1 && nameParts[0].length > 0) {
+        setUserInitials(nameParts[0][0]);
+      }
+    }
+  }, [userProfile]);
 
-  const progressToNextLevel = 72; // Porcentagem de progresso para o próximo nível
+  // Animação de cartão 3D para o perfil
+  useEffect(() => {
+    const handleMouseMove = (event: MouseEvent) => {
+      if (!containerRef.current) return;
+
+      const { clientX, clientY } = event;
+      const { left, top, width, height } = containerRef.current.getBoundingClientRect();
+
+      const x = (clientX - left) / width - 0.5;
+      const y = (clientY - top) / height - 0.5;
+
+      // Transforma baseado na posição do mouse
+      const rotateY = x * 10; // Rotate horizontally
+      const rotateX = -y * 10; // Rotate vertically
+
+      if (containerRef.current) {
+        containerRef.current.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1, 1, 1)`;
+      }
+
+      if (profileLevelRef.current) {
+        profileLevelRef.current.style.transform = `rotateX(${rotateX * 1.2}deg) rotateY(${rotateY * 1.2}deg) translateZ(5px)`;
+      }
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+    };
+  }, []);
+
+  // Certifique-se de que o perfil é carregado corretamente
+  useEffect(() => {
+    console.log("ProfileHeader - userProfile:", userProfile);
+  }, [userProfile]);
 
   useEffect(() => {
-    // Animar ao carregar o componente
-    animate(scope.current, { opacity: 1, y: 0 }, { duration: 0.5 });
-  }, [animate, scope]);
+    // Attempt to load display name
+    const loadDisplayName = async () => {
+      try {
+        const name = await profileService.getUserDisplayName();
+        setDisplayName(name);
+      } catch (error) {
+        console.error("Error loading display name:", error);
+        setDisplayName("Usuário"); // Fallback
+      }
+    };
 
-  // Efeito 3D no cartão
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current) return;
-
-    const rect = cardRef.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-
-    const mouseX = e.clientX - centerX;
-    const mouseY = e.clientY - centerY;
-
-    // Calcular rotação limitada a +/- 5 graus
-    const rotX = (mouseY / (rect.height / 2)) * -5;
-    const rotY = (mouseX / (rect.width / 2)) * 5;
-
-    rotateX.set(rotX);
-    rotateY.set(rotY);
-  };
-
-  const handleMouseLeave = () => {
-    // Animar de volta à posição inicial
-    animate(rotateX, 0, { duration: 0.5 });
-    animate(rotateY, 0, { duration: 0.5 });
-  };
-
-  const getPlanBadgeClass = () => {
-    const planType = profile.plan_type?.toLowerCase() || 'lite';
-    switch (planType) {
-      case 'pro':
-        return 'bg-gradient-to-r from-purple-500 to-indigo-600';
-      case 'premium':
-        return 'bg-gradient-to-r from-yellow-400 to-amber-600';
-      default:
-        return 'bg-gradient-to-r from-orange-400 to-amber-500';
+    if (!userProfile?.display_name) {
+      loadDisplayName();
+    } else {
+      setDisplayName(userProfile.display_name);
     }
-  };
+  }, [userProfile]);
 
   return (
-    <motion.div
-      ref={scope}
-      initial={{ opacity: 0, y: 20 }}
-      className="mx-auto mb-8 max-w-md"
+    <div
+      ref={containerRef}
+      className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 overflow-hidden shadow-sm transition-all duration-300 profile-3d-container"
+      style={{ transformStyle: "preserve-3d" }}
     >
-      <motion.div
-        ref={cardRef}
-        className="profile-3d-container overflow-hidden rounded-xl bg-white dark:bg-gray-800/90 shadow-lg border border-gray-200 dark:border-gray-700"
-        style={{
-          transform: "perspective(1000px)",
-          rotateX: rotateX,
-          rotateY: rotateY,
-          boxShadow: "0 20px 30px -10px rgba(0,0,0,0.15)"
-        }}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        whileHover={{ scale: 1.02 }}
-        transition={{ type: "spring", stiffness: 300 }}
-      >
-        {/* Gradiente superior */}
-        <div className="h-24 bg-gradient-to-r from-blue-600 to-indigo-700 dark:from-blue-800 dark:to-indigo-900 relative overflow-hidden">
-          <div className="absolute inset-0 opacity-20"></div>
-          <motion.div 
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-            initial={{ x: "-100%" }}
-            animate={{ x: "100%" }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-          />
-        </div>
+      <div className="p-6">
+        <div className="flex flex-col items-center">
+          <Avatar className="h-24 w-24 border-4 border-white dark:border-[#0A2540] shadow-lg mb-4">
+            <AvatarImage
+              src={userProfile?.avatar_url || ""}
+              alt={displayName}
+              className="object-cover"
+            />
+            <AvatarFallback className="text-xl bg-[#FF6B00]/10 text-[#FF6B00]">
+              {userInitials}
+            </AvatarFallback>
+          </Avatar>
 
-        {/* Avatar e informações do perfil */}
-        <div className="relative px-6 pb-6">
-          <motion.div 
-            className="profile-3d-avatar absolute -top-14 left-1/2 transform -translate-x-1/2"
-            whileHover={{ scale: 1.05, y: -5 }}
-          >
-            <Avatar className="w-28 h-28 border-4 border-white dark:border-gray-800 shadow-lg">
-              <AvatarImage src={profile.avatar_url || ""} alt={profile.display_name} />
-              <AvatarFallback className="bg-orange-500 text-white text-3xl">
-                {profile.display_name?.charAt(0) || "U"}
-              </AvatarFallback>
-            </Avatar>
+          <h2 className="text-2xl font-bold text-center mb-1 text-[#0A2540] dark:text-white">
+            {displayName}
+          </h2>
 
-            {/* Círculo de câmera para trocar avatar */}
-            <Button 
-              variant="secondary" 
-              size="icon" 
-              className="absolute -bottom-1 -right-1 rounded-full w-8 h-8 shadow-md"
-            >
-              <Camera className="w-4 h-4" />
-            </Button>
-          </motion.div>
-
-          <div className="mt-16 flex flex-col items-center">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-              {profile.display_name || "Usuário"}
-            </h2>
-
-            {/* ID do usuário com efeito de destaque */}
-            <motion.div 
-              className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5"
-              initial={{ opacity: 0.5 }}
-              whileHover={{ scale: 1.05, opacity: 1 }}
-            >
-              ID: <span className="font-mono bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-md text-orange-600 dark:text-orange-400">{profile.user_id || "—"}</span>
-            </motion.div>
-
-            {/* Badge do plano */}
-            <motion.div 
-              className={`mt-2 px-3 py-1 rounded-full text-xs font-medium text-white flex items-center gap-1.5 ${getPlanBadgeClass()}`}
-              whileHover={{ scale: 1.05 }}
-            >
-              <Award className="w-3.5 h-3.5" />
-              <span className="profile-premium-badge">Plano {profile.plan_type || "Lite"}</span>
-            </motion.div>
-
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-              {profile.full_name || "Estudante de Engenharia de Software"}
-            </p>
-
-            {/* Métricas */}
-            <div className="w-full grid grid-cols-3 gap-2 mt-5 pt-4 border-t border-gray-100 dark:border-gray-700">
-              <div className="flex flex-col items-center">
-                <span className="text-xl font-semibold text-gray-900 dark:text-white">{profile.level || 1}</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">Nível</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="text-xl font-semibold text-gray-900 dark:text-white">8</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">Turmas</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="text-xl font-semibold text-gray-900 dark:text-white">12</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">Conquistas</span>
-              </div>
-            </div>
-
-            {/* Barra de progresso */}
-            <div className="w-full mt-4">
-              <div className="flex items-center justify-between mb-1.5">
-                <p className="text-xs text-gray-500 dark:text-gray-400">Progresso para o próximo nível</p>
-                <p className="text-xs font-medium text-orange-600 dark:text-orange-400">{progressToNextLevel}%</p>
-              </div>
-              <div className="relative w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                <motion.div 
-                  className="absolute h-full bg-gradient-to-r from-orange-500 to-orange-400"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${progressToNextLevel}%` }}
-                  transition={{ duration: 1, ease: "easeOut" }}
-                />
-              </div>
-            </div>
-
-            {/* Botões de ação */}
-            <div className="flex w-full gap-2 mt-6">
-              <Button 
-                variant="default" 
-                className="flex-1 bg-orange-500 hover:bg-orange-600"
-                onClick={onEdit}
-              >
-                <Edit className="w-4 h-4 mr-2" />
-                {isEditing ? "Salvar Perfil" : "Editar Perfil"}
-              </Button>
-              <Button variant="outline" size="icon" className="aspect-square">
-                <Share2 className="w-4 h-4" />
-              </Button>
-            </div>
+          <div className="flex items-center space-x-1 mb-4">
+            <span className="text-[#64748B] dark:text-white/60 text-sm">
+              @{userProfile?.username || displayName.toLowerCase().replace(/\s/g, '')}
+            </span>
           </div>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-};
 
-export default ProfileHeader;
+          <div
+            ref={profileLevelRef}
+            className="relative flex items-center justify-center w-full py-3 px-4 mb-4 bg-gradient-to-br from-[#FF6B00]/10 to-[#FF8A00]/5 rounded-lg dark:from-[#FF6B00]/20 dark:to-[#FF8A00]/10 transition-all duration-300"
+            style={{ transformStyle: "preserve-3d" }}
+          >
+            <div className="flex items-center">
+              <div className="mr-3">
+                <div className="text-xs text-[#64748B] dark:text-white/60 mb-1">
+                  Nível
+                </div>
+                <div className="text-xl font-bold text-[#FF6B00]">
+                  {userProfile?.level || 1}
+                </div>
+              </div>
+              <div className="h-10 border-r border-[#E0E1DD] dark:border-white/10"></div>
+              <div className="mx-3">
+                <div className="text-xs text-[#64748B] dark:text-white/60 mb-1">
+                  Rank
+                </div>
+                <div className="text-xl font-bold text-[#0A2540] dark:text-white flex items-center">
+                  <span>{userProfile?.rank || "Aprendiz"}</span>
+                  <Star className="h-4 w-4 text-[#FFD700] ml-1 fill-[#FFD700]" />
+                </div>
+              </div>
+              <div className="h-10 border-r border-[#E0E1DD] dark:border-white/10"></div>
+              <div className="ml-3">
+                <div className="text-xs text-[#64748B] dark:text-white/60 mb-1">
+                  School Points
+                </div>
+                <div className="text-xl font-bold text-[#0A2540] dark:text-white">
+                  {userProfile?.balance || 0}
+                </div>
+              </div>
+            </div>
+
+            {/* Decoração de fundo */}
+            <div
+              className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-10"
+              style={{
+                backgroundImage:
+                  "radial-gradient(circle at 30% 30%, #FF6B00 0%, transparent 20%), radial-gradient(circle at 70% 60%, #FF8A00 0%, transparent 20%)",
+              }}
+            ></div>
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full border-[#E0E1DD] dark:border-white/10 text-[#64748B] dark:text-white/60 hover:text-[#FF6B00] hover:border-[#FF6B00] transition-all"
+            onClick={onEditClick}
+          >
+            <Edit className="h-4 w-4 mr-2" />
+            Editar Perfil
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}

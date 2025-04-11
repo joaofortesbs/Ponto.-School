@@ -1,26 +1,20 @@
 
 import { supabase } from "@/lib/supabase";
-import type { UserProfile } from "@/types/user-profile";
+import { UserProfile } from "@/types/user-profile";
 
 export const profileService = {
-  async getUserProfile(): Promise<UserProfile | null> {
+  async getCurrentUserProfile() {
     try {
-      // Verificar se temos conexão com Supabase
-      const isConnected = await this.checkConnection();
-      if (!isConnected) {
-        console.warn("Sem conexão com Supabase, retornando perfil mock");
-        return this.getMockProfile();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        console.log("getCurrentUserProfile: Usuário não autenticado");
+        return null;
       }
 
-      // Tentar buscar usuário autenticado
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-      if (authError || !user) {
-        console.warn("Usuário não autenticado ou erro de autenticação:", authError?.message);
-        return this.getMockProfile();
-      }
-
-      // Tentar buscar perfil do usuário
+      console.log("getCurrentUserProfile: Buscando perfil para usuário", user.id);
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -28,98 +22,192 @@ export const profileService = {
         .single();
 
       if (error) {
-        console.error("Erro ao buscar perfil:", error.message);
-        return this.getMockProfile();
+        console.error("getCurrentUserProfile: Erro ao buscar perfil:", error);
+        
+        // Se o perfil não for encontrado, tente criá-lo
+        if (error.code === 'PGRST116') {
+          console.log("getCurrentUserProfile: Perfil não encontrado, tentando criar...");
+          const { data: newProfileData, error: createError } = await this.createProfileIfNotExists();
+          
+          if (createError) {
+            console.error("getCurrentUserProfile: Erro ao criar perfil:", createError);
+            return null;
+          }
+          
+          return newProfileData as UserProfile;
+        }
+        
+        return null;
       }
 
-      if (!data) {
-        console.warn("Perfil não encontrado, retornando mock");
-        return this.getMockProfile();
-      }
-
-      // Retornar perfil com valores padrão para campos ausentes
-      return {
-        id: data.id || crypto.randomUUID(),
-        user_id: data.user_id || `USR${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
-        full_name: data.full_name || "Usuário Demonstração",
-        display_name: data.display_name || "Usuário",
-        email: data.email || "usuario@exemplo.com",
-        avatar_url: data.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=Demo",
-        level: data.level || 1,
-        plan_type: data.plan_type || "lite",
-        website: data.website,
-        bio: data.bio,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        skills: data.skills,
-        interests: data.interests,
-        education: data.education,
-        contact_info: data.contact_info,
-        phone: data.phone,
-        location: data.location,
-        birth_date: data.birth_date
-      };
-    } catch (error) {
-      console.error("Erro inesperado ao buscar perfil:", error);
-      return this.getMockProfile();
+      console.log("getCurrentUserProfile: Perfil encontrado:", data);
+      return data as UserProfile;
+    } catch (err) {
+      console.error("getCurrentUserProfile: Erro inesperado:", err);
+      return null;
     }
   },
 
-  // Verificar conexão com Supabase
-  async checkConnection(): Promise<boolean> {
-    try {
-      const { error } = await supabase.from('profiles').select('count').limit(1);
-      return !error;
-    } catch (error) {
-      console.error("Erro na verificação de conexão com Supabase:", error);
-      return false;
-    }
+  async updateProfile(profile: Partial<UserProfile>) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return { error: "Not authenticated" };
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .update(profile)
+      .eq("id", user.id);
+
+    return { data, error };
   },
 
-  // Perfil padrão para quando não conseguir buscar do banco
-  getMockProfile(): UserProfile {
-    const userId = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    return {
-      id: crypto.randomUUID(),
-      user_id: `USR${userId}`,
-      full_name: "Usuário Demonstração",
-      display_name: "Usuário Demo",
-      email: "usuario@exemplo.com",
-      avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Demo",
-      level: 15,
-      plan_type: "lite",
-      bio: "Este é um perfil de demonstração criado automaticamente. Edite seu perfil para personalizar suas informações.",
-      phone: "(11) 9xxxx-xxxx",
-      location: "São Paulo, Brasil",
-      birth_date: "01/01/2000"
-    };
+  async updateDisplayName(displayName: string) {
+    return this.updateProfile({ display_name: displayName });
   },
 
-  async updateProfile(profile: Partial<UserProfile>): Promise<{ success: boolean; error?: any }> {
+  async createProfileIfNotExists() {
+    console.log("createProfileIfNotExists: Iniciando verificação de perfil");
     try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-      if (authError || !user) {
-        console.error("Erro de autenticação ao atualizar perfil:", authError?.message);
-        return { success: false, error: "Usuário não autenticado" };
+      if (!user) {
+        console.error("createProfileIfNotExists: Usuário não autenticado");
+        return { error: "Not authenticated", data: null };
       }
 
-      const { error } = await supabase
+      console.log("createProfileIfNotExists: Verificando perfil existente para usuário", user.id);
+      
+      // Check if profile exists
+      const { data: existingProfile, error: profileError } = await supabase
         .from("profiles")
-        .update(profile)
-        .eq("id", user.id);
+        .select("*")
+        .eq("id", user.id)
+        .single();
 
-      if (error) {
-        console.error("Erro ao atualizar perfil:", error.message);
-        return { success: false, error };
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error("createProfileIfNotExists: Erro ao verificar perfil existente:", profileError);
+        
+        // Se não for erro de "não encontrado", retorne o erro
+        if (profileError.code !== 'PGRST116') {
+          return { data: null, error: profileError };
+        }
       }
 
-      return { success: true };
-    } catch (error) {
-      console.error("Erro inesperado ao atualizar perfil:", error);
-      return { success: false, error };
+      if (existingProfile) {
+        console.log("createProfileIfNotExists: Perfil já existe:", existingProfile);
+        return { data: existingProfile, error: null };
+      }
+
+      console.log("createProfileIfNotExists: Criando novo perfil para usuário", user.id);
+      
+      // Prepare profile data
+      const profileData = {
+        id: user.id,
+        email: user.email,
+        full_name: user.user_metadata?.full_name || "",
+        username: user.user_metadata?.username || user.email?.split('@')[0] || "",
+        display_name:
+          user.user_metadata?.display_name ||
+          user.user_metadata?.username ||
+          user.user_metadata?.full_name ||
+          user.email?.split('@')[0] ||
+          "Usuário",
+        level: 1,
+        rank: "Aprendiz",
+        balance: 150,
+        expert_balance: 320,
+        bio: "Olá! Sou estudante de Engenharia de Software na Universidade de São Paulo. Apaixonado por tecnologia, programação e matemática.",
+      };
+      
+      console.log("createProfileIfNotExists: Dados do perfil a serem inseridos:", profileData);
+      
+      // Try to create the profile
+      const { data: insertData, error: insertError } = await supabase
+        .from("profiles")
+        .insert([profileData])
+        .select();
+
+      if (insertError) {
+        console.error("createProfileIfNotExists: Erro ao criar perfil:", insertError);
+        
+        // If error is due to unique constraint violation, profile likely exists already
+        if (insertError.code === '23505') { // Unique constraint violation
+          console.log("createProfileIfNotExists: Perfil já existe (chave duplicada), tentando buscar...");
+          const { data: existingData, error: fetchError } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", user.id)
+            .single();
+            
+          if (fetchError) {
+            console.error("createProfileIfNotExists: Erro ao buscar perfil existente:", fetchError);
+            return { data: null, error: fetchError };
+          }
+          
+          return { data: existingData, error: null };
+        }
+        
+        // Try upsert as fallback
+        console.log("createProfileIfNotExists: Tentando upsert como fallback...");
+        const { data: upsertData, error: upsertError } = await supabase
+          .from("profiles")
+          .upsert([profileData], { onConflict: 'id' })
+          .select();
+          
+        if (upsertError) {
+          console.error("createProfileIfNotExists: Erro no upsert:", upsertError);
+          return { data: null, error: upsertError };
+        }
+        
+        return { data: upsertData, error: null };
+      }
+
+      if (insertData && insertData.length > 0) {
+        console.log("createProfileIfNotExists: Perfil criado com sucesso:", insertData[0]);
+        return { data: insertData[0], error: null };
+      } else {
+        console.error("createProfileIfNotExists: Inserção retornou resultado vazio");
+        
+        // Try to fetch the profile as a fallback
+        const { data: checkData, error: checkError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+          
+        if (checkError) {
+          console.error("createProfileIfNotExists: Erro ao verificar perfil após inserção:", checkError);
+          return { data: null, error: checkError };
+        }
+        
+        return { data: checkData, error: null };
+      }
+    } catch (err) {
+      console.error("createProfileIfNotExists: Erro inesperado:", err);
+      return { data: null, error: err as any };
+    }
+  },
+
+  async getUserDisplayName() {
+    try {
+      console.log("getUserDisplayName: Obtendo nome de exibição");
+      const profile = await this.getCurrentUserProfile();
+      
+      if (!profile) {
+        console.log("getUserDisplayName: Perfil não encontrado, usando nome padrão");
+        return "Usuário";
+      }
+      
+      const displayName = profile?.display_name || profile?.username || profile?.full_name || "Usuário";
+      console.log("getUserDisplayName: Nome de exibição obtido:", displayName);
+      return displayName;
+    } catch (err) {
+      console.error("getUserDisplayName: Erro ao obter nome de exibição:", err);
+      return "Usuário";
     }
   }
 };
-
-export default profileService;

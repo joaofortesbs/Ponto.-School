@@ -121,17 +121,6 @@ export default function ConfiguracoesPage() {
               <Button
                 variant="ghost"
                 className="w-full justify-start gap-3 py-2 px-3 text-red-500"
-                onClick={async () => {
-                  try {
-                    await supabase.auth.signOut();
-                    localStorage.removeItem('auth_status');
-                    localStorage.removeItem('auth_checked');
-                    window.dispatchEvent(new Event('logout'));
-                    window.location.href = "/login";
-                  } catch (error) {
-                    console.error("Erro ao realizar logout:", error);
-                  }
-                }}
               >
                 <LogOut className="h-4 w-4" /> Sair
               </Button>
