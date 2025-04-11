@@ -423,148 +423,12 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                     {/* Overlay sofisticado para garantir legibilidade */}
                     <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/80 z-10"></div>
 
-                    {/* Avatar animado e interativo para saudação de usuários */}
-                    <motion.div
-                      initial={{ y: -100, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{
-                        type: "spring",
-                        damping: 12,
-                        stiffness: 100,
-                        delay: 0.2
-                      }}
-                      className="absolute top-8 left-1/2 transform -translate-x-1/2 z-30"
-                    >
-                      <div className="relative">
-                        {/* Efeito de aura em torno do avatar */}
-                        <motion.div
-                          className="absolute inset-0 rounded-full bg-gradient-to-r from-[#FF6B00]/30 to-[#FF8C40]/30"
-                          animate={{ 
-                            scale: [1, 1.2, 1],
-                            opacity: [0.6, 0.8, 0.6]
-                          }}
-                          transition={{
-                            duration: 3,
-                            repeat: Infinity,
-                            ease: "easeInOut"
-                          }}
-                          style={{
-                            filter: "blur(8px)"
-                          }}
-                        />
-                        
-                        {/* Avatar principal */}
-                        <motion.div
-                          className="w-24 h-24 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center shadow-lg relative z-10 overflow-hidden"
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.95 }}
-                          animate={{ 
-                            boxShadow: [
-                              "0 0 15px 2px rgba(255, 107, 0, 0.4)",
-                              "0 0 25px 5px rgba(255, 107, 0, 0.6)",
-                              "0 0 15px 2px rgba(255, 107, 0, 0.4)"
-                            ]
-                          }}
-                          transition={{
-                            boxShadow: {
-                              duration: 3,
-                              repeat: Infinity,
-                              ease: "easeInOut"
-                            }
-                          }}
-                        >
-                          {/* Rostinho personalizado */}
-                          <div className="relative w-full h-full flex items-center justify-center">
-                            {/* Rosto base */}
-                            <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center relative">
-                              {/* Olhos animados */}
-                              <motion.div
-                                className="absolute w-3 h-3 rounded-full bg-[#001427] left-4 top-5"
-                                animate={{
-                                  scaleY: [1, 0.2, 1, 1, 1, 0.2, 1]
-                                }}
-                                transition={{
-                                  duration: 3,
-                                  repeat: Infinity,
-                                  repeatDelay: 2,
-                                  ease: "easeInOut"
-                                }}
-                              />
-                              <motion.div
-                                className="absolute w-3 h-3 rounded-full bg-[#001427] right-4 top-5"
-                                animate={{
-                                  scaleY: [1, 0.2, 1, 1, 1, 0.2, 1]
-                                }}
-                                transition={{
-                                  duration: 3,
-                                  repeat: Infinity,
-                                  repeatDelay: 2,
-                                  ease: "easeInOut",
-                                  delay: 0.1
-                                }}
-                              />
-                              
-                              {/* Boca animada */}
-                              <motion.div
-                                className="absolute bottom-5 w-8 h-1 bg-[#001427] rounded-full"
-                                animate={{
-                                  height: [1, 5, 1],
-                                  width: [8, 12, 8],
-                                  borderRadius: ["9999px", "40%", "9999px"]
-                                }}
-                                transition={{
-                                  duration: 2,
-                                  repeat: Infinity,
-                                  repeatDelay: 1,
-                                  ease: "easeInOut"
-                                }}
-                              />
-                            </div>
-                          </div>
-                        </motion.div>
-                        
-                        {/* Balão de fala */}
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0, y: 10 }}
-                          animate={{ 
-                            opacity: 1, 
-                            scale: [0, 1.1, 1], 
-                            y: 0 
-                          }}
-                          transition={{
-                            delay: 1,
-                            duration: 0.5,
-                            type: "spring",
-                          }}
-                          className="absolute -right-28 top-0 bg-white rounded-xl p-2 shadow-md"
-                          style={{
-                            clipPath: "polygon(0% 0%, 100% 0%, 100% 75%, 75% 75%, 65% 100%, 65% 75%, 0% 75%)"
-                          }}
-                        >
-                          <motion.p 
-                            className="text-[#001427] font-medium text-sm px-1"
-                            animate={{ opacity: [0, 1, 0] }}
-                            transition={{
-                              duration: 5,
-                              repeat: Infinity,
-                              repeatDelay: 2,
-                              delay: 1.5,
-                              ease: "easeInOut",
-                              times: [0, 0.1, 0.9]
-                            }}
-                          >
-                            Bem-vindo!
-                          </motion.p>
-                        </motion.div>
-                      </div>
-                    </motion.div>
-
-                    {/* Conteúdo do título no topo da página */}
-                    <div className="absolute top-36 left-0 right-0 text-center z-20">
+                    {/* Conteúdo com animação ultra-sofisticada */}
+                    <div className="absolute bottom-0 left-0 right-0 p-6 z-20">
                       <motion.div 
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.8, duration: 0.5 }}
+                        transition={{ delay: 0.3, duration: 0.5 }}
                         className="mb-2 relative"
                       >
                         {/* Efeito de celebração com fogos de artifício digitais */}
@@ -623,7 +487,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                         </div>
 
                         {/* Título de sucesso ultra aprimorado */}
-                        <div className="flex items-center justify-center gap-3 mb-4">
+                        <div className="flex items-center gap-3 mb-4">
                           <motion.div 
                             initial={{ scale: 0, rotate: -90 }}
                             animate={{ scale: 1, rotate: 0 }}
@@ -879,10 +743,10 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                           initial={{ y: 10, opacity: 0 }}
                           animate={{ y: 0, opacity: 1 }}
                           transition={{ delay: 0.7, duration: 0.4 }}
-                          className="text-white/90 flex justify-center items-center gap-2 relative"
+                          className="text-white/90 ml-14 relative"
                         >
                           <motion.div
-                            className="w-4 h-[1px] bg-[#FF6B00]"
+                            className="absolute -left-1 top-1/2 w-4 h-[1px] bg-[#FF6B00]"
                             initial={{ width: 0 }}
                             animate={{ width: 4 }}
                             transition={{ delay: 0.9, duration: 0.3 }}
@@ -944,12 +808,6 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                               />
                             </motion.span>!
                           </span>
-                          <motion.div
-                            className="w-4 h-[1px] bg-[#FF6B00]"
-                            initial={{ width: 0 }}
-                            animate={{ width: 4 }}
-                            transition={{ delay: 0.9, duration: 0.3 }}
-                          />
                         </motion.div>
                       </motion.div>
                     </div>
@@ -964,25 +822,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                   </Button>
                 </div>
 
-                <div className="p-6 space-y-6 bg-transparent backdrop-blur-none relative">
-                  {/* Efeito de iluminação por mouse sempre ativo */}
-                  <motion.div 
-                    className="absolute inset-0 pointer-events-none"
-                    animate={{ 
-                      background: [
-                        "radial-gradient(circle at 30% 30%, rgba(255, 107, 0, 0.1), transparent 70%)",
-                        "radial-gradient(circle at 70% 70%, rgba(255, 140, 64, 0.1), transparent 70%)",
-                        "radial-gradient(circle at 30% 70%, rgba(255, 107, 0, 0.1), transparent 70%)",
-                        "radial-gradient(circle at 70% 30%, rgba(255, 140, 64, 0.1), transparent 70%)"
-                      ] 
-                    }}
-                    transition={{ 
-                      duration: 10, 
-                      repeat: Infinity, 
-                      ease: "easeInOut" 
-                    }}
-                  />
-
+                <div className="p-6 space-y-6">
                   <motion.div 
                     initial={{ y: 10, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
@@ -1003,7 +843,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                       variants={cardVariants}
                       initial="hidden"
                       animate="visible"
-                      className="bg-transparent backdrop-blur-sm p-4 rounded-xl border border-white/10 relative overflow-hidden group"
+                      className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-900/60 p-4 rounded-xl border border-white/10 backdrop-blur-sm relative overflow-hidden group"
                       whileHover={{ y: -5, boxShadow: "0 10px 30px -10px rgba(255, 107, 0, 0.3)" }}
                       transition={{ duration: 0.3 }}
                     >
@@ -1032,7 +872,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                       variants={cardVariants}
                       initial="hidden"
                       animate="visible"
-                      className="bg-transparent backdrop-blur-sm p-4 rounded-xl border border-white/10 relative overflow-hidden group"
+                      className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-900/60 p-4 rounded-xl border border-white/10 backdrop-blur-sm relative overflow-hidden group"
                       whileHover={{ y: -5, boxShadow: "0 10px 30px -10px rgba(255, 107, 0, 0.3)" }}
                       transition={{ duration: 0.3 }}
                     >
@@ -1059,7 +899,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                       variants={cardVariants}
                       initial="hidden"
                       animate="visible"
-                      className="bg-transparent backdrop-blur-sm p-4 rounded-xl border border-white/10 relative overflow-hidden group"
+                      className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-900/60 p-4 rounded-xl border border-white/10 backdrop-blur-sm relative overflow-hidden group"
                       whileHover={{ y: -5, boxShadow: "0 10px 30px -10px rgba(255, 107, 0, 0.3)" }}
                       transition={{ duration: 0.3 }}
                     >
