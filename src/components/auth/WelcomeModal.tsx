@@ -371,14 +371,14 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
               stiffness: 300,
               duration: 0.4 
             }}
-            className="bg-gradient-to-b from-gray-900/95 to-[#001427]/98 dark:from-transparent dark:to-transparent rounded-xl p-6 max-w-md w-full shadow-2xl border border-[#FF6B00]/20 relative overflow-hidden"
+            className="bg-transparent backdrop-blur-sm rounded-xl p-6 max-w-md w-full shadow-2xl border border-[#FF6B00]/20 relative overflow-hidden"
             onMouseMove={handleMouseMove}
             onMouseEnter={() => setIsHovering(true)}
             onMouseLeave={() => setIsHovering(false)}
           >
             {/* Efeitos visuais de fundo */}
-            <div className="absolute -top-20 -right-20 w-40 h-40 bg-[#FF6B00]/15 rounded-full blur-3xl"></div>
-            <div className="absolute -bottom-24 -left-20 w-40 h-40 bg-[#FF8C40]/15 rounded-full blur-3xl"></div>
+            <div className="absolute -top-20 -right-20 w-40 h-40 bg-[#FF6B00]/10 rounded-full blur-3xl"></div>
+            <div className="absolute -bottom-24 -left-20 w-40 h-40 bg-[#FF8C40]/10 rounded-full blur-3xl"></div>
 
             {/* Bolhas de efeito */}
             {[...Array(4)].map((_, i) => (
@@ -453,7 +453,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
-                className="text-2xl font-bold text-white mb-1 flex items-center justify-center gap-2"
+                className="text-2xl font-bold text-white mb-1 flex items-center justify-center gap-2 text-shadow-sm"
               >
                 <span>Bem-vindo de volta!</span>
                 <motion.div
@@ -467,7 +467,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.4, duration: 0.5 }}
-                className="text-white/80"
+                className="text-white text-shadow-sm"
               >
                 A Ponto. School está feliz por te ter de volta!
               </motion.p>
