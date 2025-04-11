@@ -186,13 +186,13 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
               setContactInfo={setContactInfo}
               saveContactInfo={saveContactInfo}
             />
-
-            {/* Badges & Achievements */}
-            <Achievements />
           </div>
 
           {/* Right Column - Tabs Content */}
-          <div className="w-full md:w-2/3">
+          <div className="w-full md:w-2/3 space-y-6">
+            {/* Badges & Achievements */}
+            <Achievements />
+            
             <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 overflow-hidden shadow-sm">
               <Tabs
                 value={activeTab}
