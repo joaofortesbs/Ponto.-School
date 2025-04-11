@@ -233,7 +233,7 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
                     value="perfil"
                     className="p-6 focus:outline-none"
                   >
-                    <div className="space-y-6">
+                    <div className="space-y-6 w-full">
                       {/* About Me */}
                       <AboutMe
                         aboutMe={aboutMe}
