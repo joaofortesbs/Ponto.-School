@@ -1,0 +1,61 @@
+[plugin:vite:react-swc] × the name `clsx` is defined multiple times
+   ╭─[/home/runner/workspace/src/lib/utils.ts:1:1]
+ 1 │ import { type ClassValue, clsx } from "clsx"
+   ·                           ──┬─
+   ·                             ╰── previous definition of `clsx` here
+ 2 │ import { twMerge } from "tailwind-merge"
+ 3 │ 
+ 4 │ export function cn(...inputs: ClassValue[]) {
+ 5 │   return twMerge(clsx(inputs))
+ 6 │ }
+ 7 │ import { type ClassValue, clsx } from "clsx";
+   ·                           ──┬─
+   ·                             ╰── `clsx` redefined here
+ 8 │ import { twMerge } from "tailwind-merge";
+ 9 │ import { useEffect, useState } from "react";
+   ╰────
+
+  × the name `twMerge` is defined multiple times
+    ╭─[/home/runner/workspace/src/lib/utils.ts:1:1]
+  1 │ import { type ClassValue, clsx } from "clsx"
+  2 │ import { twMerge } from "tailwind-merge"
+    ·          ───┬───
+    ·             ╰── previous definition of `twMerge` here
+  3 │ 
+  4 │ export function cn(...inputs: ClassValue[]) {
+  5 │   return twMerge(clsx(inputs))
+  6 │ }
+  7 │ import { type ClassValue, clsx } from "clsx";
+  8 │ import { twMerge } from "tailwind-merge";
+    ·          ───┬───
+    ·             ╰── `twMerge` redefined here
+  9 │ import { useEffect, useState } from "react";
+ 10 │ 
+ 11 │ export function cn(...inputs: ClassValue[]) {
+    ╰────
+
+  × the name `cn` is defined multiple times
+    ╭─[/home/runner/workspace/src/lib/utils.ts:1:1]
+  1 │ import { type ClassValue, clsx } from "clsx"
+  2 │ import { twMerge } from "tailwind-merge"
+  3 │ 
+  4 │ export function cn(...inputs: ClassValue[]) {
+    ·                 ─┬
+    ·                  ╰── previous definition of `cn` here
+  5 │   return twMerge(clsx(inputs))
+  6 │ }
+  7 │ import { type ClassValue, clsx } from "clsx";
+  8 │ import { twMerge } from "tailwind-merge";
+  9 │ import { useEffect, useState } from "react";
+ 10 │ 
+ 11 │ export function cn(...inputs: ClassValue[]) {
+    ·                 ─┬
+    ·                  ╰── `cn` redefined here
+ 12 │   return twMerge(clsx(inputs));
+ 13 │ }
+    ╰────
+/home/runner/workspace/src/lib/utils.ts:1:1
+1  |  import { type ClassValue, clsx } from "clsx"
+   |   ^
+2  |  import { twMerge } from "tailwind-merge"
+3  |
