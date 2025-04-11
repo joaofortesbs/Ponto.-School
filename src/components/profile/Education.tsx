@@ -1,8 +1,8 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, GraduationCap, BookOpen, Calendar, Edit, Save, ChevronRight, School } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Plus, Edit, Save, X, Graduation, Calendar } from "lucide-react";
 import type { UserProfile } from "@/types/user-profile";
 
 interface EducationProps {
@@ -10,30 +10,22 @@ interface EducationProps {
   isEditing: boolean;
 }
 
-interface EducationItem {
-  id: string;
-  institution: string;
-  degree: string;
-  period: string;
-  logo?: string;
-}
-
 export default function Education({ userProfile, isEditing }: EducationProps) {
   const [localIsEditing, setLocalIsEditing] = useState(false);
-  const [educationItems, setEducationItems] = useState<EducationItem[]>([
+  const [education, setEducation] = useState([
     {
-      id: '1',
-      institution: 'Universidade de São Paulo',
-      degree: 'Bacharelado em Engenharia de Software',
-      period: '2020 - Presente',
-      logo: '/images/usp-logo.png'
+      institution: "Universidade de São Paulo",
+      degree: "Bacharelado em Engenharia de Software",
+      startYear: "2020",
+      endYear: "Presente",
+      logo: "https://api.dicebear.com/6.x/initials/svg?seed=USP"
     },
     {
-      id: '2',
-      institution: 'Colégio Técnico de São Paulo',
-      degree: 'Técnico em Desenvolvimento de Sistemas',
-      period: '2017 - 2019',
-      logo: '/images/colegio-logo.png'
+      institution: "Colégio Técnico de São Paulo",
+      degree: "Técnico em Desenvolvimento de Sistemas",
+      startYear: "2017",
+      endYear: "2019",
+      logo: "https://api.dicebear.com/6.x/initials/svg?seed=CTSP"
     }
   ]);
 
@@ -56,210 +48,252 @@ export default function Education({ userProfile, isEditing }: EducationProps) {
       y: 0,
       transition: {
         duration: 0.5,
-        ease: [0.6, 0.05, -0.01, 0.9],
-        delay: 0.1
+        ease: [0.6, 0.05, -0.01, 0.9]
+      }
+    }
+  };
+
+  const listVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
       }
     }
   };
 
   const itemVariants = {
     hidden: { opacity: 0, x: -20 },
-    visible: (custom: number) => ({ 
+    visible: { 
       opacity: 1, 
       x: 0,
       transition: {
         duration: 0.4,
-        ease: [0.6, 0.05, -0.01, 0.9],
-        delay: 0.1 * custom
+        ease: "easeOut"
       }
-    })
-  };
-
-  const buttonVariants = {
-    initial: { scale: 1 },
-    hover: { 
-      scale: 1.05,
-      boxShadow: "0 5px 15px rgba(255, 107, 0, 0.3)"
-    },
-    tap: { scale: 0.95 }
-  };
-
-  const timelineLineVariants = {
-    hidden: { height: 0 },
-    visible: (custom: number) => ({ 
-      height: '100%',
-      transition: { 
-        delay: 0.3 * custom,
-        duration: 0.8,
-        ease: [0.6, 0.05, -0.01, 0.9]
-      }
-    })
+    }
   };
 
   return (
-    <motion.div
+    <motion.div 
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl border border-gray-200/50 dark:border-gray-700/50 p-6 shadow-lg mb-6 relative overflow-hidden group"
+      className="mb-6"
     >
-      {/* Decorative elements */}
-      <div className="absolute -right-10 -bottom-10 w-32 h-32 bg-orange-500/5 rounded-full blur-xl group-hover:bg-orange-500/10 transition-all duration-700"></div>
-      <div className="absolute -left-10 top-1/2 transform -translate-y-1/2 w-24 h-24 bg-blue-500/5 rounded-full blur-xl group-hover:bg-blue-500/10 transition-all duration-700"></div>
-      
-      <div className="relative z-10">
-        <div className="flex justify-between items-center mb-6">
-          <motion.h3 
-            className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2"
-            whileHover={{ x: 3 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            <div className="p-1.5 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
-              <GraduationCap className="w-5 h-5 text-orange-500" />
-            </div>
-            Educação
-          </motion.h3>
-          <div className="flex gap-2">
-            {actualIsEditing && (
-              <motion.div
-                variants={buttonVariants}
-                initial="initial"
-                whileHover="hover"
-                whileTap="tap"
-              >
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  <PlusCircle className="h-4 w-4 mr-1" /> Adicionar
-                </Button>
-              </motion.div>
-            )}
-            <motion.div
-              variants={buttonVariants}
-              initial="initial"
-              whileHover="hover"
-              whileTap="tap"
-            >
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-gray-500 dark:text-gray-400 hover:text-orange-500 hover:bg-orange-500/10"
-                onClick={actualIsEditing ? saveEducation : toggleEditing}
-              >
-                {actualIsEditing ? (
-                  <Save className="h-4 w-4" />
-                ) : (
-                  <Edit className="h-4 w-4" />
-                )}
-              </Button>
-            </motion.div>
-          </div>
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-white">Educação</h2>
+          <div className="ml-2 h-px w-16 bg-gradient-to-r from-orange-500 to-transparent"></div>
         </div>
+        
+        {!isEditing && (
+          <motion.button
+            onClick={toggleEditing}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="text-sm text-gray-500 hover:text-orange-500 dark:text-gray-400 dark:hover:text-orange-400 flex items-center gap-1 transition-colors py-1 px-2 rounded-md"
+          >
+            {localIsEditing ? <Save size={16} /> : <Edit size={16} />}
+            <span>{localIsEditing ? "Salvar" : "Editar"}</span>
+          </motion.button>
+        )}
+      </div>
 
-        <AnimatePresence>
-          <div className="relative">
-            {educationItems.map((item, index) => (
-              <motion.div
-                key={item.id}
-                custom={index}
-                variants={itemVariants}
-                initial="hidden"
-                animate="visible"
-                className="relative z-10"
-              >
-                <div className="flex gap-4 mb-6 last:mb-0 relative">
-                  {/* Timeline style vertical line */}
-                  {index < educationItems.length - 1 && (
-                    <motion.div 
-                      className="absolute left-6 top-12 bottom-0 w-0.5 bg-gradient-to-b from-orange-400 to-orange-200 dark:from-orange-500 dark:to-orange-700/30"
-                      custom={index}
-                      variants={timelineLineVariants}
-                      initial="hidden"
-                      animate="visible"
-                    />
-                  )}
-                  
-                  <div className="flex-shrink-0">
-                    <motion.div 
-                      className="w-12 h-12 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center"
-                      whileHover={{ 
-                        scale: 1.1,
-                        boxShadow: "0 0 0 4px rgba(255, 107, 0, 0.15)"
-                      }}
-                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                    >
-                      <School className="w-6 h-6 text-orange-500" />
-                    </motion.div>
-                  </div>
-                  
-                  <motion.div 
-                    className="flex-grow"
-                    whileHover={{ x: 5 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <motion.h4 
-                          className="text-base font-semibold text-gray-900 dark:text-white mb-1"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ duration: 0.3, delay: 0.1 * index + 0.3 }}
-                        >
-                          {item.institution}
-                        </motion.h4>
-                        <motion.p 
-                          className="text-sm text-gray-700 dark:text-gray-300 mb-1"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ duration: 0.3, delay: 0.1 * index + 0.4 }}
-                        >
-                          {item.degree}
-                        </motion.p>
-                      </div>
-                      <motion.div 
-                        className="flex items-center text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full"
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.3, delay: 0.1 * index + 0.5 }}
-                      >
-                        <Calendar className="w-3.5 h-3.5 mr-1" />
-                        {item.period}
-                      </motion.div>
+      <AnimatePresence mode="wait">
+        {actualIsEditing ? (
+          <motion.div
+            key="editing"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl p-5 border border-gray-200/50 dark:border-gray-700/50 shadow-sm"
+          >
+            <p className="text-gray-500 dark:text-gray-400 mb-4">
+              Adicione ou edite suas informações educacionais.
+            </p>
+            
+            <div className="space-y-4">
+              {education.map((edu, index) => (
+                <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                  <div className="grid grid-cols-1 gap-3">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Instituição</label>
+                      <input
+                        type="text"
+                        value={edu.institution}
+                        onChange={(e) => {
+                          const newEducation = [...education];
+                          newEducation[index].institution = e.target.value;
+                          setEducation(newEducation);
+                        }}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      />
                     </div>
                     
-                    {actualIsEditing && (
-                      <motion.div 
-                        className="mt-2 flex gap-2"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: 0.1 * index + 0.6 }}
-                      >
-                        <Button variant="outline" size="sm" className="h-7 text-xs">
-                          <Edit className="h-3 w-3 mr-1" /> Editar
-                        </Button>
-                        <Button variant="outline" size="sm" className="h-7 text-xs text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20">
-                          Remover
-                        </Button>
-                      </motion.div>
-                    )}
-                  </motion.div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Curso/Formação</label>
+                      <input
+                        type="text"
+                        value={edu.degree}
+                        onChange={(e) => {
+                          const newEducation = [...education];
+                          newEducation[index].degree = e.target.value;
+                          setEducation(newEducation);
+                        }}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Ano de Início</label>
+                        <input
+                          type="text"
+                          value={edu.startYear}
+                          onChange={(e) => {
+                            const newEducation = [...education];
+                            newEducation[index].startYear = e.target.value;
+                            setEducation(newEducation);
+                          }}
+                          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Ano de Conclusão</label>
+                        <input
+                          type="text"
+                          value={edu.endYear}
+                          onChange={(e) => {
+                            const newEducation = [...education];
+                            newEducation[index].endYear = e.target.value;
+                            setEducation(newEducation);
+                          }}
+                          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                        />
+                      </div>
+                    </div>
+                  </div>
                   
-                  {!actualIsEditing && (
-                    <motion.div 
-                      className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                      whileHover={{ scale: 1.2, rotate: 10 }}
+                  <div className="mt-3 flex justify-end">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        setEducation(education.filter((_, i) => i !== index));
+                      }}
+                      className="text-xs"
                     >
-                      <ChevronRight className="h-5 w-5 text-orange-500" />
-                    </motion.div>
-                  )}
+                      Remover
+                    </Button>
+                  </div>
                 </div>
-              </motion.div>
-            ))}
-          </div>
-        </AnimatePresence>
-      </div>
+              ))}
+            </div>
+            
+            <div className="mt-4">
+              <Button
+                onClick={() => {
+                  setEducation([...education, {
+                    institution: "Nova Instituição",
+                    degree: "Curso",
+                    startYear: "2023",
+                    endYear: "Presente",
+                    logo: "https://api.dicebear.com/6.x/initials/svg?seed=NEW"
+                  }]);
+                }}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-1"
+              >
+                <Plus size={16} />
+                <span>Adicionar Formação</span>
+              </Button>
+            </div>
+            
+            <div className="flex justify-end gap-2 mt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleEditing}
+                className="flex items-center gap-1"
+              >
+                <X size={16} />
+                <span>Cancelar</span>
+              </Button>
+              
+              <Button
+                size="sm"
+                onClick={saveEducation}
+                className="bg-orange-500 hover:bg-orange-600 text-white flex items-center gap-1"
+              >
+                <Save size={16} />
+                <span>Salvar</span>
+              </Button>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="viewing"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl p-5 border border-gray-200/50 dark:border-gray-700/50 shadow-sm"
+          >
+            <motion.div 
+              variants={listVariants}
+              initial="hidden"
+              animate="visible"
+              className="space-y-4"
+            >
+              {education.map((edu, index) => (
+                <motion.div 
+                  key={index} 
+                  variants={itemVariants}
+                  className="flex items-start gap-4 relative group"
+                >
+                  <div className="flex-shrink-0 mt-1">
+                    <div className="w-10 h-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center overflow-hidden">
+                      <Graduation className="w-5 h-5 text-orange-500" />
+                    </div>
+                  </div>
+                  
+                  <div className="flex-grow">
+                    <h3 className="text-base font-medium text-gray-800 dark:text-white">
+                      {edu.institution}
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-0.5">
+                      {edu.degree}
+                    </p>
+                    <div className="flex items-center mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                      <Calendar size={12} className="mr-1" />
+                      <span>{edu.startYear} - {edu.endYear}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Efeito de decoração */}
+                  {index < education.length - 1 && (
+                    <div className="absolute left-5 top-12 w-0.5 h-12 bg-gray-200 dark:bg-gray-700 z-0"></div>
+                  )}
+                </motion.div>
+              ))}
+            </motion.div>
+            
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="mt-4 flex justify-center"
+            >
+              <button className="text-xs text-orange-500 dark:text-orange-400 hover:text-orange-600 dark:hover:text-orange-300 font-medium">
+                Ver certificações adicionais
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
