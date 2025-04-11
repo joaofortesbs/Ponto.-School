@@ -371,7 +371,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
               stiffness: 300,
               duration: 0.4 
             }}
-            className="bg-gradient-to-b from-gray-900/95 to-[#001427]/98 dark:from-[#001427] dark:to-[#001427]/98 rounded-xl p-6 max-w-md w-full shadow-2xl border border-[#FF6B00]/20 relative overflow-hidden"
+            className="bg-gradient-to-b from-gray-900/95 to-[#001427]/98 dark:from-transparent dark:to-transparent rounded-xl p-6 max-w-md w-full shadow-2xl border border-[#FF6B00]/20 relative overflow-hidden"
             onMouseMove={handleMouseMove}
             onMouseEnter={() => setIsHovering(true)}
             onMouseLeave={() => setIsHovering(false)}
