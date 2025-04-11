@@ -732,3 +732,7 @@ select:hover,
   align-items: center;
   justify-content: center;
 }
+
+@import "./styles/animations.css";
+@import "./styles/hide-scrollbar.css";
+@import "./styles/typewriter-loader.css";

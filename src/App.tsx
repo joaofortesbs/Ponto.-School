@@ -47,6 +47,8 @@ import PlanSelectionPage from "@/pages/plan-selection";
 // User Pages
 import ProfilePage from "@/pages/profile";
 import WelcomeModal from "./components/auth/WelcomeModal"; // Added import
+import { TypewriterLoader } from "./components/ui/typewriter-loader"; // Added import
+
 
 // Componente para proteger rotas
 function ProtectedRoute({ children }) {
@@ -89,9 +91,7 @@ function ProtectedRoute({ children }) {
 
   // Mostrar nada enquanto verifica autenticação
   if (isCheckingAuth) {
-    return <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-    </div>;
+    return <TypewriterLoader />; // Replaced loading spinner
   }
 
   // Se estiver autenticado, renderiza as rotas filhas
@@ -191,16 +191,16 @@ function App() {
     const preventScroll = () => {
       document.body.classList.add('modal-open');
     };
-    
+
     // Função que restaura a rolagem quando o modal é fechado
     const restoreScroll = () => {
       document.body.classList.remove('modal-open');
     };
-    
+
     const checkAuth = async () => {
       try {
         const isAuthenticated = await checkAuthentication();
-        
+
         // Verificar a rota atual
         const isAuthRoute = [
           "/login",
@@ -209,7 +209,7 @@ function App() {
           "/reset-password",
           "/select-plan",
         ].some((route) => location.pathname.startsWith(route));
-        
+
         // Não mostrar o modal nas rotas de autenticação
         if (isAuthRoute) {
           setShowWelcomeModal(false);
@@ -225,15 +225,15 @@ function App() {
           // Obter ID do usuário atual para controle de primeiro login por conta
           const { data: { session } } = await supabase.auth.getSession();
           const currentUserId = session?.user?.id;
-          
+
           if (!currentUserId) return;
-          
+
           // Chave específica para este usuário
           const userLoginKey = `hasLoggedInBefore_${currentUserId}`;
           const sessionKey = `currentSession_${currentUserId}`;
           const userHasLoggedBefore = localStorage.getItem(userLoginKey);
           const currentSession = sessionStorage.getItem(sessionKey);
-          
+
           if (!userHasLoggedBefore) {
             // Primeiro login desta conta específica - mostrar modal de comemoração
             console.log("Primeiro login detectado para esta conta!");
@@ -278,7 +278,7 @@ function App() {
       console.log("Iniciando aplicação e verificando autenticação...");
       checkAuth();
     }, 100);
-    
+
     return () => {
       clearTimeout(timer);
       restoreScroll(); // Garantir que a rolagem seja restaurada ao desmontar
@@ -355,7 +355,7 @@ function App() {
 
             {/* Floating Chat Support */}
             {!isAuthRoute && !isLoading && <FloatingChatSupport />}
-            
+
             {/* Welcome Modal - apenas mostrado em rotas protegidas (não auth) */}
             {!isAuthRoute && 
               <WelcomeModal 
