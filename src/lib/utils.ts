@@ -6,6 +6,14 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export const formatDate = (date: Date): string => {
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  }).format(date);
+};
+
 export function useMediaQuery(query: string): boolean {
   const [matches, setMatches] = useState(false);
 
@@ -14,22 +22,39 @@ export function useMediaQuery(query: string): boolean {
     if (media.matches !== matches) {
       setMatches(media.matches);
     }
-    const listener = () => {
-      setMatches(media.matches);
-    };
+
+    const listener = () => setMatches(media.matches);
     media.addEventListener("change", listener);
+
     return () => media.removeEventListener("change", listener);
   }, [matches, query]);
 
   return matches;
 }
 
-export function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(date);
+// Função para formatar números com sufixo de mil
+export function formatNumberWithSuffix(num: number): string {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1) + 'M';
+  } else if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'k';
+  } else {
+    return num.toString();
+  }
+}
+
+// Função para transformar cores de hex para rgb
+export function hexToRgb(hex: string) {
+  // Remove # se presente
+  hex = hex.replace(/^#/, '');
+
+  // Parse hex para rgb
+  const bigint = parseInt(hex, 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+
+  return { r, g, b };
 }
 
 export function generateRandomId(prefix = 'id_') {
@@ -75,8 +100,4 @@ export function getRandomColor() {
   ];
 
   return colors[Math.floor(Math.random() * colors.length)];
-}
-
-export function generateUniqueId() {
-  return Date.now().toString(36) + Math.random().toString(36).substring(2);
 }

@@ -82,8 +82,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({
           className="md:col-span-2 space-y-6"
         >
           <AboutMe profile={profile} isOwnProfile={isOwnProfile} />
-          <Education profile={profile} isOwnProfile={isOwnProfile} />
-          <Skills profile={profile} isOwnProfile={isOwnProfile} />
+          <Education userProfile={profile} isEditing={false} />
+          <Skills userProfile={profile} isEditing={false} />
         </motion.div>
 
         <motion.div
@@ -92,8 +92,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({
           transition={{ duration: 0.5, delay: 0.2 }}
           className="space-y-6"
         >
-          <ContactInfo profile={profile} isOwnProfile={isOwnProfile} />
-          <Interests profile={profile} isOwnProfile={isOwnProfile} />
+          <ContactInfo userProfile={profile} isEditing={false} />
+          <Interests userProfile={profile} isEditing={false} />
         </motion.div>
       </div>
     </div>

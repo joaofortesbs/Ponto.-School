@@ -1,20 +1,13 @@
 
 /**
- * Interface para a tabela de controle de IDs de usuário
+ * Interface para representar o controle de ID de usuário no banco de dados
  */
 export interface UserIdControl {
-  id: number;
+  id: string;
   email: string;
   user_id: string;
   created_at: string;
-  updated_at?: string;
-}
-
-/**
- * Interface para criação de um novo registro de controle de ID
- */
-export interface CreateUserIdControl {
-  email: string;
-  user_id: string;
-  created_at: string;
+  country_code?: string;
+  plan_type?: number;
+  last_sequence?: number;
 }
