@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/lib/supabase";
-import { profileService } from "@/services/profileService";
 import type { UserProfile } from "@/types/user-profile";
 
 // Import profile components
@@ -42,23 +41,11 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        console.log("Buscando perfil do usuário...");
         const {
           data: { user },
         } = await supabase.auth.getUser();
 
         if (user) {
-          console.log("Usuário autenticado:", user.id);
-          
-          // Primeiro tentar criar o perfil para garantir que ele exista
-          console.log("Verificando/criando perfil do usuário se necessário...");
-          const { data: createdProfileData, error: creationError } = await profileService.createProfileIfNotExists();
-          
-          if (creationError) {
-            console.error("Erro ao verificar/criar perfil:", creationError);
-          }
-          
-          // Tente buscar o perfil novamente
           const { data, error } = await supabase
             .from("profiles")
             .select("*")
@@ -67,46 +54,31 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
 
           if (error) {
             console.error("Error fetching user profile:", error);
-            setLoading(false);
           } else if (data) {
-            console.log("Perfil encontrado com sucesso:", data);
-            handleProfileData(data, user);
-          } else if (createdProfileData) {
-            console.log("Usando perfil recém-criado:", createdProfileData);
-            handleProfileData(createdProfileData, user);
-          } else {
-            console.error("Não foi possível obter dados do perfil");
-            setLoading(false);
+            // Ensure level and rank are set with defaults if not present
+            setUserProfile({
+              ...(data as unknown as UserProfile),
+              level: data.level || 1,
+              rank: data.rank || "Aprendiz",
+            });
+
+            // Set contact info from user data
+            setContactInfo({
+              email: data.email || user.email || "",
+              phone: data.phone || "Adicionar telefone",
+              location: data.location || "Adicionar localização",
+              birthDate: data.birth_date || "Adicionar data de nascimento",
+            });
+
+            if (data.bio) {
+              setAboutMe(data.bio);
+            }
           }
-        } else {
-          console.error("Usuário não autenticado");
-          setLoading(false);
         }
       } catch (error) {
         console.error("Error:", error);
+      } finally {
         setLoading(false);
-      }
-    };
-    
-    const handleProfileData = (data: any, user: any) => {
-      console.log("Dados do perfil obtidos:", data);
-      // Ensure level and rank are set with defaults if not present
-      setUserProfile({
-        ...(data as unknown as UserProfile),
-        level: data.level || 1,
-        rank: data.rank || "Aprendiz",
-      });
-
-      // Set contact info from user data
-      setContactInfo({
-        email: data.email || user.email || "",
-        phone: data.phone || "Adicionar telefone",
-        location: data.location || "Adicionar localização",
-        birthDate: data.birth_date || "Adicionar data de nascimento",
-      });
-
-      if (data.bio) {
-        setAboutMe(data.bio);
       }
     };
 

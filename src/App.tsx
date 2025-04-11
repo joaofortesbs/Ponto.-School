@@ -153,7 +153,7 @@ function App() {
 
             {/* User Profile */}
             <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/perfil" element={<ProfilePage />} />
+            <Route path="profile" element={<ProfilePage />} />
 
             {/* Agenda standalone */}
             <Route path="/agenda-preview" element={<Agenda />} />
