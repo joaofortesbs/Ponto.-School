@@ -1,3 +1,4 @@
+
 import { supabase } from "@/lib/supabase";
 
 /**
@@ -51,11 +52,12 @@ export function generateSimpleUserId(countryCode: string, planType: number): str
   const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
   return `${countryCode}${planType}${timestamp.toString().slice(-6)}${random}`;
 }
-import { supabase } from './supabase';
 
+/**
+ * Gera um ID baseado no tipo de plano usando o Supabase
+ * BR1 para premium, BR2 para lite/básico
+ */
 export const generateUserIdSupabase = async (planType: string): Promise<string> => {
-  // Gerar um ID baseado no tipo de plano
-  // BR1 para premium, BR2 para lite/básico
   const prefix = `BR${planType === 'premium' ? '1' : '2'}`;
   const timestamp = Date.now();
   const randomSuffix = Math.floor(Math.random() * 10000);
@@ -93,9 +95,9 @@ export const generateUserIdSupabase = async (planType: string): Promise<string> 
 
 /**
  * Gera um ID único para usuários baseado em timestamp e valores aleatórios
- * para garantir unicidade mesmo em caso de múltiplos registros simultâneos
+ * Versão alternativa para casos específicos
  */
-export function generateUserId(): string {
+export function generateTimestampUserId(): string {
   // Usar timestamp para garantir sequência crescente
   const timestamp = new Date().getTime();
 
