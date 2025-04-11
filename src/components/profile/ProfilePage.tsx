@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/lib/supabase";
 import type { UserProfile } from "@/types/user-profile";
+import "@/styles/typewriter-loader.css";
 
 // Import profile components
 import ProfileHeader from "./ProfileHeader";
@@ -153,8 +154,14 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
 
   if (loading) {
     return (
-      <div className="w-full h-full flex items-center justify-center">
-        Carregando...
+      <div className="w-full h-full relative">
+        <div className="typewriter-container">
+          <div className="typewriter">
+            <div className="slide"><i></i></div>
+            <div className="paper"></div>
+            <div className="keyboard"></div>
+          </div>
+        </div>
       </div>
     );
   }
