@@ -1,25 +1,32 @@
-import React from "react";
+
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Edit, Save } from "lucide-react";
+import type { UserProfile } from "@/types/user-profile";
 
 interface AboutMeProps {
-  aboutMe: string;
+  userProfile: UserProfile | null;
   isEditing: boolean;
-  setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
-  setAboutMe: React.Dispatch<React.SetStateAction<string>>;
-  saveAboutMe: () => void;
 }
 
-export default function AboutMe({
-  aboutMe,
-  isEditing,
-  setIsEditing,
-  setAboutMe,
-  saveAboutMe,
-}: AboutMeProps) {
+export default function AboutMe({ userProfile, isEditing }: AboutMeProps) {
+  const [localIsEditing, setLocalIsEditing] = useState(false);
+  const [aboutMe, setAboutMe] = useState(userProfile?.bio || "Minha biografia ainda não foi preenchida. Clique em editar para adicionar informações sobre você.");
+
+  const toggleEditing = () => {
+    setLocalIsEditing(!localIsEditing);
+  };
+
+  const saveAboutMe = () => {
+    // Aqui você adicionaria a lógica para salvar no banco de dados
+    setLocalIsEditing(false);
+  };
+
+  const actualIsEditing = isEditing || localIsEditing;
+
   return (
-    <div>
+    <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-6 shadow-sm mb-6">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-bold text-[#29335C] dark:text-white">
           Sobre Mim
@@ -28,9 +35,9 @@ export default function AboutMe({
           variant="ghost"
           size="icon"
           className="h-8 w-8 text-[#64748B] dark:text-white/60 hover:text-[#FF6B00] hover:bg-[#FF6B00]/10"
-          onClick={() => (isEditing ? saveAboutMe() : setIsEditing(true))}
+          onClick={actualIsEditing ? saveAboutMe : toggleEditing}
         >
-          {isEditing ? (
+          {actualIsEditing ? (
             <Save className="h-4 w-4" />
           ) : (
             <Edit className="h-4 w-4" />
@@ -38,7 +45,7 @@ export default function AboutMe({
         </Button>
       </div>
 
-      {isEditing ? (
+      {actualIsEditing ? (
         <Textarea
           className="min-h-[120px] border-[#E0E1DD] dark:border-white/10 focus:border-[#FF6B00] focus:ring-[#FF6B00]/10"
           value={aboutMe}

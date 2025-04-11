@@ -1,37 +1,35 @@
-import React from "react";
+
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Edit, Mail, Phone, MapPin, Calendar } from "lucide-react";
+import { Edit, Mail, Phone, MapPin, Calendar, Save } from "lucide-react";
+import type { UserProfile } from "@/types/user-profile";
 
 interface ContactInfoProps {
-  contactInfo: {
-    email: string;
-    phone: string;
-    location: string;
-    birthDate: string;
-  };
-  expandedSection: string | null;
-  toggleSection: (section: string | null) => void;
-  setContactInfo: React.Dispatch<
-    React.SetStateAction<{
-      email: string;
-      phone: string;
-      location: string;
-      birthDate: string;
-    }>
-  >;
-  saveContactInfo: () => void;
+  userProfile: UserProfile | null;
+  isEditing: boolean;
 }
 
-export default function ContactInfo({
-  contactInfo,
-  expandedSection,
-  toggleSection,
-  setContactInfo,
-  saveContactInfo,
-}: ContactInfoProps) {
+export default function ContactInfo({ userProfile, isEditing }: ContactInfoProps) {
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [contactInfo, setContactInfo] = useState({
+    email: userProfile?.email || "usuario@exemplo.com",
+    phone: userProfile?.phone || "Adicionar telefone",
+    location: userProfile?.location || "Adicionar localização",
+    birthDate: userProfile?.birth_date || "Adicionar data de nascimento"
+  });
+
+  const toggleSection = (section: string | null) => {
+    setExpandedSection(expandedSection === section ? null : section);
+  };
+
+  const saveContactInfo = () => {
+    // Aqui você adicionaria a lógica para salvar no banco de dados
+    setExpandedSection(null);
+  };
+
   return (
-    <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-6 shadow-sm">
+    <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-6 shadow-sm mb-6">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-bold text-[#29335C] dark:text-white">
           Informações de Contato

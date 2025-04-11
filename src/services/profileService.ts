@@ -5,11 +5,18 @@ import type { UserProfile } from "@/types/user-profile";
 export const profileService = {
   async getUserProfile(): Promise<UserProfile | null> {
     try {
-      // Tentar buscar usuário autenticado
-      const { data: { user } } = await supabase.auth.getUser();
+      // Verificar se temos conexão com Supabase
+      const isConnected = await this.checkConnection();
+      if (!isConnected) {
+        console.warn("Sem conexão com Supabase, retornando perfil mock");
+        return this.getMockProfile();
+      }
 
-      if (!user) {
-        console.warn("Usuário não autenticado, retornando perfil mock");
+      // Tentar buscar usuário autenticado
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+      if (authError || !user) {
+        console.warn("Usuário não autenticado ou erro de autenticação:", authError?.message);
         return this.getMockProfile();
       }
 
@@ -21,10 +28,16 @@ export const profileService = {
         .single();
 
       if (error) {
-        console.error("Erro ao buscar perfil:", error);
+        console.error("Erro ao buscar perfil:", error.message);
         return this.getMockProfile();
       }
 
+      if (!data) {
+        console.warn("Perfil não encontrado, retornando mock");
+        return this.getMockProfile();
+      }
+
+      // Retornar perfil com valores padrão para campos ausentes
       return {
         id: data.id || crypto.randomUUID(),
         user_id: data.user_id || `USR${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
@@ -41,11 +54,25 @@ export const profileService = {
         skills: data.skills,
         interests: data.interests,
         education: data.education,
-        contact_info: data.contact_info
+        contact_info: data.contact_info,
+        phone: data.phone,
+        location: data.location,
+        birth_date: data.birth_date
       };
     } catch (error) {
       console.error("Erro inesperado ao buscar perfil:", error);
       return this.getMockProfile();
+    }
+  },
+
+  // Verificar conexão com Supabase
+  async checkConnection(): Promise<boolean> {
+    try {
+      const { error } = await supabase.from('profiles').select('count').limit(1);
+      return !error;
+    } catch (error) {
+      console.error("Erro na verificação de conexão com Supabase:", error);
+      return false;
     }
   },
 
@@ -56,19 +83,24 @@ export const profileService = {
       id: crypto.randomUUID(),
       user_id: `USR${userId}`,
       full_name: "Usuário Demonstração",
-      display_name: "Usuário",
+      display_name: "Usuário Demo",
       email: "usuario@exemplo.com",
       avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Demo",
       level: 15,
-      plan_type: "lite"
+      plan_type: "lite",
+      bio: "Este é um perfil de demonstração criado automaticamente. Edite seu perfil para personalizar suas informações.",
+      phone: "(11) 9xxxx-xxxx",
+      location: "São Paulo, Brasil",
+      birth_date: "01/01/2000"
     };
   },
 
   async updateProfile(profile: Partial<UserProfile>): Promise<{ success: boolean; error?: any }> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-      if (!user) {
+      if (authError || !user) {
+        console.error("Erro de autenticação ao atualizar perfil:", authError?.message);
         return { success: false, error: "Usuário não autenticado" };
       }
 
@@ -77,8 +109,14 @@ export const profileService = {
         .update(profile)
         .eq("id", user.id);
 
-      return { success: !error, error };
+      if (error) {
+        console.error("Erro ao atualizar perfil:", error.message);
+        return { success: false, error };
+      }
+
+      return { success: true };
     } catch (error) {
+      console.error("Erro inesperado ao atualizar perfil:", error);
       return { success: false, error };
     }
   }

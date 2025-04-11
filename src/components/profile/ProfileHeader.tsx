@@ -1,8 +1,9 @@
+
 import React, { useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Edit, Share2, Camera, Check, Award } from "lucide-react";
+import { Edit, Share2, Camera, Award } from "lucide-react";
 import { motion, useAnimate, useMotionValue } from "framer-motion";
 import type { UserProfile } from "@/types/user-profile";
 
@@ -28,7 +29,8 @@ const ProfileHeader = ({ userProfile, isEditing, onEdit }: ProfileHeaderProps) =
     display_name: userProfile.display_name || "Usuário",
     avatar_url: userProfile.avatar_url || "",
     level: userProfile.level || 1,
-    plan_type: userProfile.plan_type || "lite"
+    plan_type: userProfile.plan_type || "lite",
+    email: userProfile.email || "usuario@exemplo.com"
   } : {
     id: "1",
     user_id: `USR${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
@@ -45,12 +47,7 @@ const ProfileHeader = ({ userProfile, isEditing, onEdit }: ProfileHeaderProps) =
   useEffect(() => {
     // Animar ao carregar o componente
     animate(scope.current, { opacity: 1, y: 0 }, { duration: 0.5 });
-
-    // Gerar ID de usuário se não existir
-    if (!profile.user_id) {
-      profile.user_id = "USR" + Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    }
-  }, []);
+  }, [animate, scope]);
 
   // Efeito 3D no cartão
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -78,7 +75,8 @@ const ProfileHeader = ({ userProfile, isEditing, onEdit }: ProfileHeaderProps) =
   };
 
   const getPlanBadgeClass = () => {
-    switch (profile.plan_type?.toLowerCase()) {
+    const planType = profile.plan_type?.toLowerCase() || 'lite';
+    switch (planType) {
       case 'pro':
         return 'bg-gradient-to-r from-purple-500 to-indigo-600';
       case 'premium':
@@ -110,7 +108,7 @@ const ProfileHeader = ({ userProfile, isEditing, onEdit }: ProfileHeaderProps) =
       >
         {/* Gradiente superior */}
         <div className="h-24 bg-gradient-to-r from-blue-600 to-indigo-700 dark:from-blue-800 dark:to-indigo-900 relative overflow-hidden">
-          <div className="absolute inset-0 bg-grid-pattern opacity-20"></div>
+          <div className="absolute inset-0 opacity-20"></div>
           <motion.div 
             className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
             initial={{ x: "-100%" }}
@@ -193,7 +191,7 @@ const ProfileHeader = ({ userProfile, isEditing, onEdit }: ProfileHeaderProps) =
               </div>
               <div className="relative w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                 <motion.div 
-                  className="absolute h-full bg-gradient-to-r from-orange-500 to-orange-400 progress-bar-shine"
+                  className="absolute h-full bg-gradient-to-r from-orange-500 to-orange-400"
                   initial={{ width: 0 }}
                   animate={{ width: `${progressToNextLevel}%` }}
                   transition={{ duration: 1, ease: "easeOut" }}
@@ -209,7 +207,7 @@ const ProfileHeader = ({ userProfile, isEditing, onEdit }: ProfileHeaderProps) =
                 onClick={onEdit}
               >
                 <Edit className="w-4 h-4 mr-2" />
-                Editar Perfil
+                {isEditing ? "Salvar Perfil" : "Editar Perfil"}
               </Button>
               <Button variant="outline" size="icon" className="aspect-square">
                 <Share2 className="w-4 h-4" />
