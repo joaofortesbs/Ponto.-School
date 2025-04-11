@@ -5,7 +5,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Mail, Lock, CheckCircle } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-import "@/styles/typewriter-loader.css";
 
 interface FormData {
   email: string;
@@ -46,9 +45,6 @@ export function LoginForm() {
     setError("");
     setLoading(true);
     setSuccess(false); // Reset success on submit
-    
-    // Registra o tempo inicial para garantir o mínimo de 2.5 segundos
-    const startTime = Date.now();
 
     // Basic field validation
     if (!formData.email || !formData.password) {
@@ -72,58 +68,32 @@ export function LoginForm() {
         } else {
           setError("Erro ao fazer login: " + error.message);
         }
-        
-        // Garantir o tempo mínimo de 2.5 segundos para a animação de carregamento
-        const elapsedTime = Date.now() - startTime;
-        const remainingTime = Math.max(0, 2500 - elapsedTime);
-        
-        setTimeout(() => {
-          setLoading(false);
-        }, remainingTime);
-        
+        setLoading(false);
         return;
       }
 
       if (data?.user) {
-        // Garantir o tempo mínimo de 2.5 segundos para a animação de carregamento
-        const elapsedTime = Date.now() - startTime;
-        const remainingTime = Math.max(0, 2500 - elapsedTime);
+        setSuccess(true);
+        localStorage.setItem('auth_checked', 'true');
+        localStorage.setItem('auth_status', 'authenticated'); //Added to persist login status.
         
+        // Removida a lógica de armazenar timestamp de sessão
+        // para garantir que o modal de boas-vindas sempre apareça
+
+        // Não mostrar o primeiro modal de boas-vindas quando o usuário fizer login aqui
+        // Os modais serão controlados pelo App.tsx quando o usuário chegar nas páginas protegidas
+
         setTimeout(() => {
-          setSuccess(true);
-          localStorage.setItem('auth_checked', 'true');
-          localStorage.setItem('auth_status', 'authenticated'); //Added to persist login status.
-          
-          // Removida a lógica de armazenar timestamp de sessão
-          // para garantir que o modal de boas-vindas sempre apareça
-
-          // Não mostrar o primeiro modal de boas-vindas quando o usuário fizer login aqui
-          // Os modais serão controlados pelo App.tsx quando o usuário chegar nas páginas protegidas
-
-          setTimeout(() => {
-            navigate("/");
-          }, 1000);
-        }, remainingTime);
+          navigate("/");
+        }, 1000);
       } else {
-        // Garantir o tempo mínimo de 2.5 segundos para a animação de carregamento
-        const elapsedTime = Date.now() - startTime;
-        const remainingTime = Math.max(0, 2500 - elapsedTime);
-        
-        setTimeout(() => {
-          setError("Erro ao completar login");
-          setLoading(false);
-        }, remainingTime);
+        setError("Erro ao completar login");
       }
     } catch (err: any) {
-      // Garantir o tempo mínimo de 2.5 segundos para a animação de carregamento
-      const elapsedTime = Date.now() - startTime;
-      const remainingTime = Math.max(0, 2500 - elapsedTime);
-      
-      setTimeout(() => {
-        setError("Erro ao fazer login, tente novamente");
-        console.error("Erro ao logar:", err);
-        setLoading(false);
-      }, remainingTime);
+      setError("Erro ao fazer login, tente novamente");
+      console.error("Erro ao logar:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -241,21 +211,10 @@ export function LoginForm() {
 
         <Button
           type="submit"
-          className="w-full h-11 text-base bg-brand-primary hover:bg-brand-primary/90 text-white relative"
+          className="w-full h-11 text-base bg-brand-primary hover:bg-brand-primary/90 text-white"
           disabled={loading}
         >
-          {loading ? (
-            <div className="flex items-center justify-center">
-              <div className="typewriter mr-2" style={{ transform: "scale(0.6)" }}>
-                <div className="slide"><i></i></div>
-                <div className="paper"></div>
-                <div className="keyboard"></div>
-              </div>
-              <span>Entrando...</span>
-            </div>
-          ) : (
-            "Entrar"
-          )}
+          {loading ? "Entrando..." : "Entrar"}
         </Button>
 
         <div className="relative">

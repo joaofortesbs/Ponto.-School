@@ -7,7 +7,7 @@ function Skeleton({
   ...props
 }: React.HTMLAttributes<HTMLDivElement> & { useTypewriter?: boolean }) {
   if (useTypewriter) {
-    return <div className="relative w-full h-full min-h-[100px]"><TypewriterLoader className={className} /></div>;
+    return <TypewriterLoader className={className} />;
   }
   
   return (
