@@ -1,125 +1,217 @@
 
 import { supabase } from "@/lib/supabase";
-import type { UserProfile } from "@/types/user-profile";
+import { UserProfile } from "@/types/user-profile";
+import { generateUserId } from "@/lib/generate-user-id";
 
-export const profileService = {
-  async getUserProfile(): Promise<UserProfile | null> {
-    try {
-      // Verificar se temos conexão com Supabase
-      const isConnected = await this.checkConnection();
-      if (!isConnected) {
-        console.warn("Sem conexão com Supabase, retornando perfil mock");
-        return this.getMockProfile();
-      }
-
-      // Tentar buscar usuário autenticado
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-      if (authError || !user) {
-        console.warn("Usuário não autenticado ou erro de autenticação:", authError?.message);
-        return this.getMockProfile();
-      }
-
-      // Tentar buscar perfil do usuário
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      if (error) {
-        console.error("Erro ao buscar perfil:", error.message);
-        return this.getMockProfile();
-      }
-
-      if (!data) {
-        console.warn("Perfil não encontrado, retornando mock");
-        return this.getMockProfile();
-      }
-
-      // Retornar perfil com valores padrão para campos ausentes
-      return {
-        id: data.id || crypto.randomUUID(),
-        user_id: data.user_id || `USR${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
-        full_name: data.full_name || "Usuário Demonstração",
-        display_name: data.display_name || "Usuário",
-        email: data.email || "usuario@exemplo.com",
-        avatar_url: data.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=Demo",
-        level: data.level || 1,
-        plan_type: data.plan_type || "lite",
-        website: data.website,
-        bio: data.bio,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        skills: data.skills,
-        interests: data.interests,
-        education: data.education,
-        contact_info: data.contact_info,
-        phone: data.phone,
-        location: data.location,
-        birth_date: data.birth_date
-      };
-    } catch (error) {
-      console.error("Erro inesperado ao buscar perfil:", error);
-      return this.getMockProfile();
+/**
+ * Obtém o perfil do usuário atual
+ */
+export async function getCurrentUserProfile(): Promise<UserProfile | null> {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      console.warn("Usuário não autenticado ao tentar obter perfil");
+      return null;
     }
-  },
-
-  // Verificar conexão com Supabase
-  async checkConnection(): Promise<boolean> {
-    try {
-      const { error } = await supabase.from('profiles').select('count').limit(1);
-      return !error;
-    } catch (error) {
-      console.error("Erro na verificação de conexão com Supabase:", error);
-      return false;
+    
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('email', session.user.email)
+      .single();
+    
+    if (error) {
+      console.error("Erro ao buscar perfil:", error);
+      return null;
     }
-  },
-
-  // Perfil padrão para quando não conseguir buscar do banco
-  getMockProfile(): UserProfile {
-    const userId = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    return {
-      id: crypto.randomUUID(),
-      user_id: `USR${userId}`,
-      full_name: "Usuário Demonstração",
-      display_name: "Usuário Demo",
-      email: "usuario@exemplo.com",
-      avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Demo",
-      level: 15,
-      plan_type: "lite",
-      bio: "Este é um perfil de demonstração criado automaticamente. Edite seu perfil para personalizar suas informações.",
-      phone: "(11) 9xxxx-xxxx",
-      location: "São Paulo, Brasil",
-      birth_date: "01/01/2000"
-    };
-  },
-
-  async updateProfile(profile: Partial<UserProfile>): Promise<{ success: boolean; error?: any }> {
-    try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-      if (authError || !user) {
-        console.error("Erro de autenticação ao atualizar perfil:", authError?.message);
-        return { success: false, error: "Usuário não autenticado" };
-      }
-
-      const { error } = await supabase
-        .from("profiles")
-        .update(profile)
-        .eq("id", user.id);
-
-      if (error) {
-        console.error("Erro ao atualizar perfil:", error.message);
-        return { success: false, error };
-      }
-
-      return { success: true };
-    } catch (error) {
-      console.error("Erro inesperado ao atualizar perfil:", error);
-      return { success: false, error };
-    }
+    
+    console.log("getCurrentUserProfile: Perfil encontrado:", data);
+    return data as UserProfile;
+  } catch (error) {
+    console.error("Erro ao obter perfil do usuário:", error);
+    return null;
   }
-};
+}
 
-export default profileService;
+/**
+ * Obtém o perfil de um usuário específico por ID
+ */
+export async function getUserProfile(userId?: string): Promise<UserProfile | null> {
+  try {
+    // Se não houver userId, obtém o perfil do usuário atual
+    if (!userId) {
+      return getCurrentUserProfile();
+    }
+    
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    
+    if (error) {
+      console.error("Erro ao buscar perfil por ID:", error);
+      return null;
+    }
+    
+    return data as UserProfile;
+  } catch (error) {
+    console.error("Erro ao obter perfil do usuário por ID:", error);
+    return null;
+  }
+}
+
+/**
+ * Obtém o nome de exibição do usuário
+ */
+export async function getUserDisplayName(userId?: string): Promise<string> {
+  try {
+    const profile = await getUserProfile(userId);
+    
+    if (!profile) {
+      console.warn("Perfil não encontrado para obter nome de exibição");
+      return "Usuário";
+    }
+    
+    // Ordem de prioridade: display_name -> full_name -> email -> "Usuário"
+    const displayName = profile.display_name || profile.full_name || profile.email || "Usuário";
+    console.log("getUserDisplayName: Nome de exibição obtido:", displayName);
+    
+    return displayName;
+  } catch (error) {
+    console.error("Erro ao obter nome de exibição:", error);
+    return "Usuário";
+  }
+}
+
+/**
+ * Atualiza um campo específico do perfil do usuário
+ */
+export async function updateUserProfileField(
+  field: string, 
+  value: any
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      return { 
+        success: false, 
+        error: "Usuário não autenticado" 
+      };
+    }
+    
+    const { error } = await supabase
+      .from('profiles')
+      .update({ [field]: value, updated_at: new Date().toISOString() })
+      .eq('email', session.user.email);
+    
+    if (error) {
+      console.error(`Erro ao atualizar campo ${field}:`, error);
+      return { 
+        success: false, 
+        error: error.message 
+      };
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error(`Erro ao atualizar campo ${field}:`, error);
+    return { 
+      success: false, 
+      error: "Erro ao atualizar o perfil" 
+    };
+  }
+}
+
+/**
+ * Atualiza múltiplos campos do perfil do usuário
+ */
+export async function updateUserProfile(
+  profileData: Partial<UserProfile>
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      return { 
+        success: false, 
+        error: "Usuário não autenticado" 
+      };
+    }
+    
+    // Adicionar updated_at automaticamente
+    const dataToUpdate = {
+      ...profileData,
+      updated_at: new Date().toISOString()
+    };
+    
+    const { error } = await supabase
+      .from('profiles')
+      .update(dataToUpdate)
+      .eq('email', session.user.email);
+    
+    if (error) {
+      console.error("Erro ao atualizar perfil:", error);
+      return { 
+        success: false, 
+        error: error.message 
+      };
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Erro ao atualizar perfil:", error);
+    return { 
+      success: false, 
+      error: "Erro ao atualizar o perfil" 
+    };
+  }
+}
+
+/**
+ * Verifica se o usuário tem um ID gerado e cria um se necessário
+ */
+export async function ensureUserIdExists(): Promise<string | null> {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      console.warn("Usuário não autenticado ao tentar verificar ID");
+      return null;
+    }
+    
+    // Verificar se o usuário já tem um ID no controle
+    const { data: existingIdControl } = await supabase
+      .from('user_id_control')
+      .select('user_id')
+      .eq('email', session.user.email)
+      .single();
+    
+    if (existingIdControl?.user_id) {
+      return existingIdControl.user_id;
+    }
+    
+    // Gerar um novo ID e salvar
+    const newUserId = generateUserId();
+    
+    const { error } = await supabase
+      .from('user_id_control')
+      .insert({
+        email: session.user.email,
+        user_id: newUserId,
+        created_at: new Date().toISOString()
+      });
+    
+    if (error) {
+      console.error("Erro ao criar ID para usuário:", error);
+      return null;
+    }
+    
+    return newUserId;
+  } catch (error) {
+    console.error("Erro ao garantir ID de usuário:", error);
+    return null;
+  }
+}

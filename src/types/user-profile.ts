@@ -1,62 +1,89 @@
 
-// Interface para representar o perfil do usuário
+/**
+ * Interface representando um perfil de usuário completo
+ */
 export interface UserProfile {
   id: string;
-  user_id: string;
-  full_name?: string;
-  display_name?: string;
-  username?: string;
-  email?: string;
-  avatar_url?: string;
-  website?: string;
-  bio?: string;
-  created_at?: string;
-  updated_at?: string;
-  institution?: string;
-  birth_date?: string;
-  plan_type?: string;
-  level?: number;
-  rank?: string;
-  balance?: number;
-  expert_balance?: number;
-  skills?: string[] | null;
-  interests?: string[] | null;
-  education?: EducationRecord[] | null;
-  contact_info?: ContactInfo | null;
-  phone?: string;
-  location?: string;
-  achievements?: Achievement[] | null;
+  email: string;
+  full_name: string | null;
+  role: 'student' | 'teacher' | 'admin' | string;
+  avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
+  display_name: string | null;
+  user_id: string | null;
+  
+  // Campos opcionais adicionais
+  about_me?: string;
+  contact_info?: ContactInfo;
+  education?: Education[];
+  skills?: Skill[];
+  interests?: string[];
+  achievements?: Achievement[];
+  experience?: Experience[];
+  preferences?: UserPreferences;
 }
 
-interface EducationRecord {
+export interface ContactInfo {
+  phone?: string;
+  address?: string;
+  website?: string;
+  linkedin?: string;
+  github?: string;
+  twitter?: string;
+  other_social?: Record<string, string>;
+}
+
+export interface Education {
   institution: string;
   degree: string;
-  field_of_study: string;
-  start_date: string;
-  end_date?: string;
-  current?: boolean;
+  field_of_study?: string;
+  start_date?: string;
+  end_date?: string | null;
   description?: string;
+  is_current?: boolean;
 }
 
-interface ContactInfo {
-  email: string;
-  phone?: string;
-  location?: string;
-  website?: string;
-}
-
-interface Achievement {
-  id: string;
+export interface Skill {
   name: string;
-  description: string;
-  date_earned: string;
-  icon?: string;
+  level?: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+  years_experience?: number;
+  endorsements?: number;
 }
 
-// Interface para o controle de IDs de usuário
-export interface UserIdControl {
-  uf: string;
-  ano_mes: string;
-  tipo_conta: number;
-  next_id: number;
+export interface Achievement {
+  title: string;
+  description?: string;
+  date_achieved?: string;
+  icon?: string;
+  link?: string;
 }
+
+export interface Experience {
+  company: string;
+  title: string;
+  description?: string;
+  start_date?: string;
+  end_date?: string | null;
+  is_current?: boolean;
+}
+
+export interface UserPreferences {
+  theme?: 'light' | 'dark' | 'system';
+  notifications?: {
+    email: boolean;
+    push: boolean;
+    updates: boolean;
+    reminders: boolean;
+  };
+  privacy?: {
+    show_profile: boolean;
+    show_achievements: boolean;
+    show_activity: boolean;
+  };
+}
+
+/**
+ * Interface para atualizações parciais de perfil
+ */
+export type UserProfileUpdate = Partial<UserProfile>;

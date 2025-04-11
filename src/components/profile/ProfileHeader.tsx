@@ -1,201 +1,228 @@
+
 import React, { useState } from "react";
-import { motion } from "framer-motion";
-import type { UserProfile } from "@/types/user-profile";
+import { UserProfile } from "@/types/user-profile";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { getInitials } from "@/lib/utils";
-import { Edit, Camera, Share, ChevronUp, ChevronDown } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
-import { useMediaQuery } from "@/lib/utils"; // Added import
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Edit2, Camera, CheckCircle, Award, Star } from "lucide-react";
+import { updateUserProfileField } from "@/services/profileService";
+import { useToast } from "@/components/ui/use-toast";
 
 interface ProfileHeaderProps {
-  userProfile: UserProfile | null;
-  isEditing: boolean;
-  onEdit: () => void;
+  profile: UserProfile | null;
+  isOwnProfile?: boolean;
 }
 
-export default function ProfileHeader({ userProfile, isEditing, onEdit }: ProfileHeaderProps) {
-  const [showDetails, setShowDetails] = useState(false);
+const ProfileHeader: React.FC<ProfileHeaderProps> = ({ 
+  profile, 
+  isOwnProfile = false 
+}) => {
+  const { toast } = useToast();
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Validação de tipo e tamanho
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Tipo de arquivo inválido",
+        description: "Por favor, selecione uma imagem.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "Arquivo muito grande",
+        description: "O tamanho máximo permitido é 2MB.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      setIsUploading(true);
+      
+      // Simular progresso
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 300);
+      
+      // Converter para Base64 para armazenamento
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const base64String = event.target?.result as string;
+        
+        const { success, error } = await updateUserProfileField("avatar_url", base64String);
+        
+        clearInterval(progressInterval);
+        setUploadProgress(100);
+        
+        if (success) {
+          toast({
+            title: "Avatar atualizado",
+            description: "Seu avatar foi atualizado com sucesso.",
+          });
+        } else {
+          toast({
+            title: "Erro ao atualizar avatar",
+            description: error || "Ocorreu um erro ao atualizar seu avatar.",
+            variant: "destructive"
+          });
+        }
+        
+        // Resetar após um breve delay
+        setTimeout(() => {
+          setIsUploading(false);
+          setUploadProgress(0);
+        }, 500);
+      };
+      
+      reader.readAsDataURL(file);
+      
+    } catch (error) {
+      console.error("Erro ao fazer upload de avatar:", error);
+      setIsUploading(false);
+      setUploadProgress(0);
+      
+      toast({
+        title: "Erro ao atualizar avatar",
+        description: "Ocorreu um erro inesperado. Tente novamente mais tarde.",
+        variant: "destructive"
+      });
+    }
+  };
 
-  if (!userProfile) return null;
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
 
-  const userInitials = getInitials(userProfile.display_name || userProfile.full_name || "Usuário");
-  const progress = 72; // Progresso para o próximo nível (exemplo: 72%)
-
+  const displayName = profile?.display_name || profile?.full_name || "Usuário";
+  
   return (
-    <motion.div 
-      className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl overflow-hidden border border-gray-200/50 dark:border-gray-700/50 relative shadow-lg"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      whileHover={{ boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
-    >
-      {/* Banner superior */}
-      <div className="h-24 bg-gradient-to-r from-blue-600 to-orange-500 relative">
-        {isEditing && (
-          <button className="absolute right-3 bottom-3 bg-black/20 hover:bg-black/30 transition-colors p-2 rounded-full text-white">
-            <Camera size={18} />
-          </button>
+    <Card className="bg-white dark:bg-gray-900/70 overflow-hidden relative">
+      {/* Banner de fundo */}
+      <div 
+        className="h-32 md:h-48 bg-gradient-to-r from-[#FF6B00]/90 to-[#FF9500]/90 relative"
+      >
+        {isOwnProfile && (
+          <Button 
+            size="sm"
+            variant="ghost"
+            className="absolute top-3 right-3 text-white bg-black/20 hover:bg-black/30 backdrop-blur-sm"
+          >
+            <Edit2 className="mr-2 h-4 w-4" />
+            Editar Capa
+          </Button>
         )}
       </div>
-
-      {/* Avatar e botão de editar */}
-      <div className="px-6 pb-6 relative">
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex flex-col items-center -mt-10">
-            <div className="relative">
-              {userProfile.avatar_url ? (
-                <motion.img 
-                  src={userProfile.avatar_url} 
-                  alt={userProfile.display_name || "Perfil"} 
-                  className="w-20 h-20 rounded-full border-4 border-white dark:border-gray-800 object-cover"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ duration: 0.2 }}
+      
+      {/* Conteúdo principal */}
+      <div className="p-4 md:p-6 pt-0 md:pt-0 -mt-12 md:-mt-16 relative z-10">
+        <div className="flex flex-col md:flex-row items-start md:items-end gap-4">
+          {/* Avatar */}
+          <div className="relative mb-4 md:mb-0">
+            <Avatar className="h-24 w-24 md:h-32 md:w-32 rounded-lg border-4 border-white dark:border-gray-900 shadow-lg profile-3d-avatar">
+              {profile?.avatar_url ? (
+                <AvatarImage 
+                  src={profile.avatar_url} 
+                  alt={displayName} 
+                  className="object-cover"
                 />
               ) : (
-                <motion.div 
-                  className="w-20 h-20 rounded-full border-4 border-white dark:border-gray-800 bg-orange-500 flex items-center justify-center text-white text-xl font-semibold"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {userInitials}
-                </motion.div>
+                <AvatarFallback className="text-2xl md:text-3xl bg-[#FF6B00]/10 text-[#FF6B00]">
+                  {getInitials(displayName)}
+                </AvatarFallback>
               )}
-
-              {isEditing && (
-                <button className="absolute right-0 bottom-0 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors p-1.5 rounded-full text-gray-600 dark:text-gray-200 shadow-md">
-                  <Camera size={14} />
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div className="pt-4">
-            {!isEditing ? (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={onEdit}
-                className="flex items-center space-x-1 text-sm bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 py-1.5 px-3 rounded-md shadow-sm border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-200"
+            </Avatar>
+            
+            {isOwnProfile && (
+              <label 
+                htmlFor="avatar-upload"
+                className="absolute bottom-0 right-0 h-8 w-8 bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white rounded-full flex items-center justify-center cursor-pointer shadow-md transition-transform hover:scale-105"
               >
-                <Edit size={14} />
-                <span>Editar Perfil</span>
-              </motion.button>
-            ) : (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={onEdit}
-                className="flex items-center space-x-1 text-sm bg-orange-500 hover:bg-orange-600 py-1.5 px-3 rounded-md shadow-sm text-white"
-              >
-                <span>Salvar</span>
-              </motion.button>
+                <Camera size={16} />
+                <input 
+                  id="avatar-upload" 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={handleAvatarUpload}
+                  disabled={isUploading}
+                />
+              </label>
+            )}
+            
+            {isUploading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-lg">
+                <div className="w-4/5 bg-white/20 rounded-full h-2 overflow-hidden backdrop-blur-sm">
+                  <div 
+                    className="bg-white h-full rounded-full transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
+                </div>
+              </div>
             )}
           </div>
-        </div>
-
-        {/* Nome e informações */}
-        <div className="text-center">
-          <motion.h1 
-            className="text-xl font-bold text-gray-800 dark:text-white"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            {userProfile.display_name || "Usuário"}
-          </motion.h1>
-
-          <motion.p 
-            className="text-sm text-gray-500 dark:text-gray-400"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-          >
-            {userProfile.full_name || "Estudante"}
-          </motion.p>
-
-          <motion.div 
-            className="mt-2 inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r from-orange-500 to-amber-500 text-white"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4, type: "spring" }}
-          >
-            <span className="text-xs">Plano {userProfile.plan_type?.charAt(0).toUpperCase() + userProfile.plan_type?.slice(1) || "Lite"}</span>
-          </motion.div>
-
-          <div className="mt-4 text-center">
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              {userProfile.bio || "Estudante de Engenharia de Software"}
-            </p>
-          </div>
-
-          {/* Estatísticas */}
-          <div className="grid grid-cols-3 gap-2 mt-4 text-center">
-            <div className="flex flex-col">
-              <span className="text-lg font-bold text-gray-800 dark:text-white">{userProfile.level || 1}</span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">Nível</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-lg font-bold text-gray-800 dark:text-white">8</span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">Turmas</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-lg font-bold text-gray-800 dark:text-white">12</span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">Conquistas</span>
+          
+          {/* Informações principais */}
+          <div className="flex-1">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-4">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2 profile-3d-text">
+                  {displayName}
+                  {profile?.role === "teacher" && (
+                    <CheckCircle size={20} className="text-blue-500" />
+                  )}
+                </h1>
+                
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {profile?.role && (
+                    <Badge variant="outline" className="capitalize text-[#FF6B00] border-[#FF6B00]/30 bg-[#FF6B00]/5">
+                      {profile.role === "student" ? "Estudante" : 
+                      profile.role === "teacher" ? "Professor" : 
+                      profile.role === "admin" ? "Administrador" : 
+                      profile.role}
+                    </Badge>
+                  )}
+                  
+                  <Badge variant="outline" className="bg-[#4CAF50]/10 text-[#4CAF50] border-[#4CAF50]/20">
+                    <Star size={12} className="mr-1" /> Premium
+                  </Badge>
+                  
+                  <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20">
+                    <Award size={12} className="mr-1" /> 2025
+                  </Badge>
+                </div>
+              </div>
+              
+              {isOwnProfile && (
+                <Button className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white mt-2 md:mt-0">
+                  <Edit2 size={16} className="mr-2" /> Editar Perfil
+                </Button>
+              )}
             </div>
           </div>
-
-          {/* Barra de progresso para o próximo nível */}
-          <div className="mt-4">
-            <div className="flex justify-between items-center text-xs mb-1">
-              <span className="text-gray-500 dark:text-gray-400">Progresso para o próximo nível</span>
-              <span className="text-gray-700 dark:text-gray-300 font-medium">{progress}%</span>
-            </div>
-            <Progress value={progress} className="h-2" />
-          </div>
-
-          {/* Botão de compartilhar perfil */}
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            className="mt-4 w-full py-2 rounded-md bg-gray-50 hover:bg-gray-100 dark:bg-gray-700/50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 text-sm font-medium flex items-center justify-center gap-2 border border-gray-200/50 dark:border-gray-700"
-          >
-            <Share size={14} />
-            <span>Compartilhar Perfil</span>
-          </motion.button>
-
-          {/* Expandir detalhes */}
-          <button 
-            onClick={() => setShowDetails(!showDetails)}
-            className="mt-4 flex items-center justify-center w-full text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-          >
-            {showDetails ? (
-              <>
-                <span>Mostrar menos</span>
-                <ChevronUp size={16} className="ml-1" />
-              </>
-            ) : (
-              <>
-                <span>Mostrar mais</span>
-                <ChevronDown size={16} className="ml-1" />
-              </>
-            )}
-          </button>
-
-          {/* Detalhes extras (expandíveis) */}
-          {showDetails && (
-            <motion.div 
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="mt-4 text-sm text-gray-600 dark:text-gray-300"
-            >
-              <p>Membro desde: Janeiro 2023</p>
-              <p>Pontos de experiência: 1,250 XP</p>
-              <p>Badge atual: Explorador Dedicado</p>
-            </motion.div>
-          )}
         </div>
       </div>
-    </motion.div>
+    </Card>
   );
-}
+};
+
+export default ProfileHeader;

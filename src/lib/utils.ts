@@ -6,7 +6,6 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// Hook personalizado para verificar media queries
 export function useMediaQuery(query: string): boolean {
   const [matches, setMatches] = useState(false);
 
@@ -15,28 +14,26 @@ export function useMediaQuery(query: string): boolean {
     if (media.matches !== matches) {
       setMatches(media.matches);
     }
-
-    const listener = () => setMatches(media.matches);
+    const listener = () => {
+      setMatches(media.matches);
+    };
     media.addEventListener("change", listener);
-
     return () => media.removeEventListener("change", listener);
   }, [matches, query]);
 
   return matches;
 }
 
-// Função para gerar ID aleatório
-export function generateRandomId(prefix = 'id_') {
-  return `${prefix}${Math.random().toString(36).substring(2, 9)}`;
+export function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
 }
 
-// Função para formatar data
-export function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  }).format(date);
+export function generateRandomId(prefix = 'id_') {
+  return `${prefix}${Math.random().toString(36).substring(2, 9)}`;
 }
 
 export function formatDateString(date: string | Date) {

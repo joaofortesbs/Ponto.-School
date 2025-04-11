@@ -1,161 +1,140 @@
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Edit, Save, X } from "lucide-react";
-import type { UserProfile } from "@/types/user-profile";
-import { useMediaQuery } from "@/lib/utils"; // Added import
+import { Button } from "@/components/ui/button";
+import { UserProfile } from "@/types/user-profile";
+import { updateUserProfileField } from "@/services/profileService";
+import { Edit2, Save, X } from "lucide-react";
 
 interface AboutMeProps {
-  userProfile: UserProfile | null;
-  isEditing: boolean;
+  profile: UserProfile | null;
+  isOwnProfile?: boolean;
 }
 
-export default function AboutMe({ userProfile, isEditing }: AboutMeProps) {
-  const [localIsEditing, setLocalIsEditing] = useState(false);
-  const [aboutMe, setAboutMe] = useState(
-    userProfile?.bio || 
-    "Olá! Sou estudante e estou sempre em busca de novos conhecimentos e habilidades. Nas horas vagas, gosto de jogar xadrez, ler livros de ficção científica e praticar esportes."
-  );
+const AboutMe: React.FC<AboutMeProps> = ({ profile, isOwnProfile = false }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [aboutMeText, setAboutMeText] = useState(profile?.about_me || "");
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const toggleEditing = () => {
-    setLocalIsEditing(!localIsEditing);
+  const handleEdit = () => {
+    setAboutMeText(profile?.about_me || "");
+    setIsEditing(true);
+    setError(null);
   };
 
-  const saveAboutMe = () => {
-    // Aqui você adicionaria a lógica para salvar no banco de dados
-    setLocalIsEditing(false);
+  const handleCancel = () => {
+    setIsEditing(false);
+    setError(null);
   };
 
-  const actualIsEditing = isEditing || localIsEditing;
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      setError(null);
 
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: {
-        duration: 0.5,
-        ease: [0.6, 0.05, -0.01, 0.9]
+      const { success, error } = await updateUserProfileField("about_me", aboutMeText);
+
+      if (!success) {
+        setError(error || "Erro ao salvar informações");
+        return;
       }
+
+      setIsEditing(false);
+    } catch (err) {
+      setError("Ocorreu um erro inesperado");
+      console.error("Erro ao salvar sobre mim:", err);
+    } finally {
+      setIsSaving(false);
     }
-  };
-
-  const contentVariants = {
-    hidden: { opacity: 0, height: 0 },
-    visible: { 
-      opacity: 1, 
-      height: "auto",
-      transition: {
-        opacity: { duration: 0.3, delay: 0.2 },
-        height: { duration: 0.4 }
-      }
-    },
-    exit: {
-      opacity: 0,
-      height: 0,
-      transition: {
-        opacity: { duration: 0.2 },
-        height: { duration: 0.3, delay: 0.1 }
-      }
-    }
-  };
-
-  const buttonVariants = {
-    initial: { scale: 1 },
-    hover: { 
-      scale: 1.05,
-      boxShadow: "0 5px 15px rgba(255, 107, 0, 0.3)"
-    },
-    tap: { scale: 0.95 }
   };
 
   return (
-    <motion.div 
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="mb-6"
-    >
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center">
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-white">Sobre Mim</h2>
-          <div className="ml-2 h-px w-16 bg-gradient-to-r from-orange-500 to-transparent"></div>
+    <Card className="transition-all duration-300 hover:shadow-md dark:bg-gray-900/50 profile-3d-element">
+      <CardHeader className="pb-3">
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-xl font-semibold text-gray-800 dark:text-white profile-3d-text">
+            Sobre Mim
+          </CardTitle>
+          {isOwnProfile && !isEditing && (
+            <Button
+              variant="ghost" 
+              size="icon"
+              onClick={handleEdit}
+              className="h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
+            >
+              <Edit2 size={16} className="text-[#FF6B00]" />
+            </Button>
+          )}
         </div>
-
-        {!isEditing && (
-          <motion.button
-            onClick={toggleEditing}
-            variants={buttonVariants}
-            initial="initial"
-            whileHover="hover"
-            whileTap="tap"
-            className="text-sm text-gray-500 hover:text-orange-500 dark:text-gray-400 dark:hover:text-orange-400 flex items-center gap-1 transition-colors py-1 px-2 rounded-md"
-          >
-            {localIsEditing ? <Save size={16} /> : <Edit size={16} />}
-            <span>{localIsEditing ? "Salvar" : "Editar"}</span>
-          </motion.button>
-        )}
-      </div>
-
-      <AnimatePresence mode="wait">
-        {actualIsEditing ? (
-          <motion.div
-            key="editing"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          >
+      </CardHeader>
+      <CardContent>
+        {isEditing ? (
+          <div className="space-y-4">
             <Textarea
-              value={aboutMe}
-              onChange={(e) => setAboutMe(e.target.value)}
-              placeholder="Conte um pouco sobre você, suas habilidades e interesses..."
-              className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 min-h-[120px]"
+              value={aboutMeText}
+              onChange={(e) => setAboutMeText(e.target.value)}
+              placeholder="Conte um pouco sobre você..."
+              className="resize-none min-h-[120px] focus:ring-[#FF6B00] focus:border-[#FF6B00]"
             />
 
-            <div className="flex justify-end gap-2 mt-3">
+            {error && (
+              <p className="text-sm text-red-500 dark:text-red-400">
+                {error}
+              </p>
+            )}
+
+            <div className="flex justify-end space-x-2">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={toggleEditing}
-                className="flex items-center gap-1"
+                onClick={handleCancel}
+                disabled={isSaving}
+                className="h-9"
               >
-                <X size={16} />
-                <span>Cancelar</span>
+                <X size={14} className="mr-1" /> Cancelar
               </Button>
-
               <Button
+                onClick={handleSave}
+                disabled={isSaving}
                 size="sm"
-                onClick={saveAboutMe}
-                className="bg-orange-500 hover:bg-orange-600 text-white flex items-center gap-1"
+                className="h-9 bg-[#FF6B00] hover:bg-[#FF6B00]/90"
               >
-                <Save size={16} />
-                <span>Salvar</span>
+                {isSaving ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Salvando...
+                  </span>
+                ) : (
+                  <span className="flex items-center">
+                    <Save size={14} className="mr-1" /> Salvar
+                  </span>
+                )}
               </Button>
             </div>
-          </motion.div>
+          </div>
         ) : (
-          <motion.div
-            key="viewing"
-            variants={contentVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl p-5 border border-gray-200/50 dark:border-gray-700/50 shadow-sm"
-          >
-            <motion.p 
-              className="text-gray-700 dark:text-gray-300 leading-relaxed"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              {aboutMe}
-            </motion.p>
-          </motion.div>
+          <div className="prose dark:prose-invert max-w-none">
+            {profile?.about_me ? (
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                {profile.about_me}
+              </p>
+            ) : (
+              <p className="text-gray-500 dark:text-gray-400 italic">
+                {isOwnProfile 
+                  ? "Clique em editar para adicionar informações sobre você"
+                  : "Este usuário ainda não adicionou informações sobre si"
+                }
+              </p>
+            )}
+          </div>
         )}
-      </AnimatePresence>
-    </motion.div>
+      </CardContent>
+    </Card>
   );
-}
+};
+
+export default AboutMe;

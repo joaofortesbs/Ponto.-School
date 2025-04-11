@@ -53,33 +53,33 @@ export function generateSimpleUserId(countryCode: string, planType: number): str
 }
 
 /**
- * Gera um ID único para usuários baseado em timestamp e valores aleatórios
+ * Gera um ID único para usuário no formato esperado pela plataforma.
+ * O formato é: UID-XXXX-XXXX-XXXX onde X é um caractere alfanumérico
  */
-export const generateUserId = (planType?: string): string => {
-  // Valores padrão
-  const countryCode = "BR";
-  const timestamp = Date.now();
-  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+export function generateUserId(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 
-  // Determinar o tipo de plano (1 para premium, 2 para lite/básico)
-  const planNumber = planType?.toLowerCase() === 'premium' ? '1' : '2';
+  // Função para gerar um bloco de 4 caracteres aleatórios
+  const generateBlock = () => {
+    let block = '';
+    for (let i = 0; i < 4; i++) {
+      const randomIndex = Math.floor(Math.random() * chars.length);
+      block += chars[randomIndex];
+    }
+    return block;
+  };
 
-  // Formato: BR + tipo de plano + timestamp parcial + número aleatório
-  return `${countryCode}${planNumber}${timestamp.toString().slice(-6)}${random}`;
-};
+  // Criar o ID no formato UID-XXXX-XXXX-XXXX
+  const uid = `UID-${generateBlock()}-${generateBlock()}-${generateBlock()}`;
+
+  return uid;
+}
 
 /**
- * Versão simples para gerar IDs de usuário
+ * Verifica se um ID de usuário está no formato correto
  */
-export const generateSimpleUserId = (prefix: string, planNumber: string): string => {
-  const timestamp = Date.now();
-  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  return `${prefix}${planNumber}${timestamp.toString().slice(-6)}${random}`;
-};
-
-//Removing conflicting functions
-//export const generateUserIdSupabase = async (planType: string): Promise<string> => { ... }
-//export function generateUserId(): string { ... }
-//export function isValidUserId(id: string): boolean { ... }
-//export function generateUserId(seed?: string): string { ... }
-//export function isValidUserId(id: string): boolean { ... }
+export function isValidUserId(userId: string): boolean {
+  // Regex para validar o formato UID-XXXX-XXXX-XXXX onde X é alfanumérico
+  const uidRegex = /^UID-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+  return uidRegex.test(userId);
+}
