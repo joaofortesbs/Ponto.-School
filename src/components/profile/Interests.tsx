@@ -1,9 +1,9 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Edit, Save, Heart, Plus, X, PlusCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { UserProfile } from "@/types/user-profile";
+import { useMediaQuery } from "@/lib/utils"; // Added import
 
 interface InterestsProps {
   userProfile: UserProfile | null;
@@ -106,7 +106,7 @@ export default function Interests({ userProfile, isEditing }: InterestsProps) {
           <h2 className="text-xl font-semibold text-gray-800 dark:text-white">Interesses</h2>
           <div className="ml-2 h-px w-16 bg-gradient-to-r from-orange-500 to-transparent"></div>
         </div>
-        
+
         {!isEditing && (
           <motion.button
             onClick={toggleEditing}
@@ -150,7 +150,7 @@ export default function Interests({ userProfile, isEditing }: InterestsProps) {
                 <Plus size={16} />
               </Button>
             </div>
-            
+
             <div className="flex flex-wrap gap-2">
               {interests.map((interest, index) => (
                 <div 
@@ -167,7 +167,7 @@ export default function Interests({ userProfile, isEditing }: InterestsProps) {
                 </div>
               ))}
             </div>
-            
+
             <div className="flex justify-end gap-2 mt-4">
               <Button
                 variant="outline"
@@ -178,7 +178,7 @@ export default function Interests({ userProfile, isEditing }: InterestsProps) {
                 <X size={16} />
                 <span>Cancelar</span>
               </Button>
-              
+
               <Button
                 size="sm"
                 onClick={saveInterests}
@@ -213,7 +213,7 @@ export default function Interests({ userProfile, isEditing }: InterestsProps) {
                   {interest}
                 </motion.div>
               ))}
-              
+
               <motion.div 
                 variants={itemVariants}
                 whileHover={{ scale: 1.05 }}

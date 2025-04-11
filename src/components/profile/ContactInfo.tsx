@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Phone, MapPin, Calendar, Edit, Save, X, Plus } from "lucide-react";
 import type { UserProfile } from "@/types/user-profile";
+import { useMediaQuery } from "@/lib/utils"; // Added import
 
 interface ContactInfoProps {
   userProfile: UserProfile | null;

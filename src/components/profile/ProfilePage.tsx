@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence, useSpring } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import AboutMe from "@/components/profile/AboutMe";
 import ContactInfo from "@/components/profile/ContactInfo";
@@ -9,7 +9,7 @@ import Skills from "@/components/profile/Skills";
 import Interests from "@/components/profile/Interests";
 import type { UserProfile } from "@/types/user-profile";
 import { profileService } from "@/services/profileService";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMediaQuery } from "@/lib/utils";
 

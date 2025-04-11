@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { getInitials } from "@/lib/utils";
 import { Edit, Camera, Share, ChevronUp, ChevronDown } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { useMediaQuery } from "@/lib/utils"; // Added import
 
 interface ProfileHeaderProps {
   userProfile: UserProfile | null;

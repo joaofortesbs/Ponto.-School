@@ -1,4 +1,3 @@
-
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { useEffect, useState } from "react";
@@ -7,22 +6,37 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// Hook personalizado para verificar media queries
 export function useMediaQuery(query: string): boolean {
   const [matches, setMatches] = useState(false);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia(query);
-    setMatches(mediaQuery.matches);
+    const media = window.matchMedia(query);
+    if (media.matches !== matches) {
+      setMatches(media.matches);
+    }
 
-    const handler = (event: MediaQueryListEvent) => {
-      setMatches(event.matches);
-    };
+    const listener = () => setMatches(media.matches);
+    media.addEventListener("change", listener);
 
-    mediaQuery.addEventListener("change", handler);
-    return () => mediaQuery.removeEventListener("change", handler);
-  }, [query]);
+    return () => media.removeEventListener("change", listener);
+  }, [matches, query]);
 
   return matches;
+}
+
+// Função para gerar ID aleatório
+export function generateRandomId(prefix = 'id_') {
+  return `${prefix}${Math.random().toString(36).substring(2, 9)}`;
+}
+
+// Função para formatar data
+export function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  }).format(date);
 }
 
 export function formatDateString(date: string | Date) {
@@ -62,7 +76,7 @@ export function getRandomColor() {
     'bg-teal-500',
     'bg-cyan-500'
   ];
-  
+
   return colors[Math.floor(Math.random() * colors.length)];
 }
 

@@ -4,7 +4,7 @@ import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import ProfilePage from "@/components/profile/ProfilePage";
 import { motion } from "framer-motion";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 // Componente principal Profile que renderiza a estrutura da página
 const Profile = () => {

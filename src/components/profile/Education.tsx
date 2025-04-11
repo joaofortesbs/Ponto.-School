@@ -1,9 +1,9 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Edit, Save, X, Graduation, Calendar } from "lucide-react";
 import type { UserProfile } from "@/types/user-profile";
+import { useMediaQuery } from "@/lib/utils"; // Added import
 
 interface EducationProps {
   userProfile: UserProfile | null;
@@ -87,7 +87,7 @@ export default function Education({ userProfile, isEditing }: EducationProps) {
           <h2 className="text-xl font-semibold text-gray-800 dark:text-white">Educação</h2>
           <div className="ml-2 h-px w-16 bg-gradient-to-r from-orange-500 to-transparent"></div>
         </div>
-        
+
         {!isEditing && (
           <motion.button
             onClick={toggleEditing}
@@ -114,7 +114,7 @@ export default function Education({ userProfile, isEditing }: EducationProps) {
             <p className="text-gray-500 dark:text-gray-400 mb-4">
               Adicione ou edite suas informações educacionais.
             </p>
-            
+
             <div className="space-y-4">
               {education.map((edu, index) => (
                 <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
@@ -132,7 +132,7 @@ export default function Education({ userProfile, isEditing }: EducationProps) {
                         className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                       />
                     </div>
-                    
+
                     <div>
                       <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Curso/Formação</label>
                       <input
@@ -146,7 +146,7 @@ export default function Education({ userProfile, isEditing }: EducationProps) {
                         className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                       />
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Ano de Início</label>
@@ -161,7 +161,7 @@ export default function Education({ userProfile, isEditing }: EducationProps) {
                           className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                         />
                       </div>
-                      
+
                       <div>
                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Ano de Conclusão</label>
                         <input
@@ -177,7 +177,7 @@ export default function Education({ userProfile, isEditing }: EducationProps) {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="mt-3 flex justify-end">
                     <Button
                       variant="destructive"
@@ -193,7 +193,7 @@ export default function Education({ userProfile, isEditing }: EducationProps) {
                 </div>
               ))}
             </div>
-            
+
             <div className="mt-4">
               <Button
                 onClick={() => {
@@ -213,7 +213,7 @@ export default function Education({ userProfile, isEditing }: EducationProps) {
                 <span>Adicionar Formação</span>
               </Button>
             </div>
-            
+
             <div className="flex justify-end gap-2 mt-4">
               <Button
                 variant="outline"
@@ -224,7 +224,7 @@ export default function Education({ userProfile, isEditing }: EducationProps) {
                 <X size={16} />
                 <span>Cancelar</span>
               </Button>
-              
+
               <Button
                 size="sm"
                 onClick={saveEducation}
@@ -259,7 +259,7 @@ export default function Education({ userProfile, isEditing }: EducationProps) {
                       <Graduation className="w-5 h-5 text-orange-500" />
                     </div>
                   </div>
-                  
+
                   <div className="flex-grow">
                     <h3 className="text-base font-medium text-gray-800 dark:text-white">
                       {edu.institution}
@@ -272,7 +272,7 @@ export default function Education({ userProfile, isEditing }: EducationProps) {
                       <span>{edu.startYear} - {edu.endYear}</span>
                     </div>
                   </div>
-                  
+
                   {/* Efeito de decoração */}
                   {index < education.length - 1 && (
                     <div className="absolute left-5 top-12 w-0.5 h-12 bg-gray-200 dark:bg-gray-700 z-0"></div>
@@ -280,7 +280,7 @@ export default function Education({ userProfile, isEditing }: EducationProps) {
                 </motion.div>
               ))}
             </motion.div>
-            
+
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

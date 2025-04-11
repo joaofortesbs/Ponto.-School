@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Edit, Save, X } from "lucide-react";
 import type { UserProfile } from "@/types/user-profile";
+import { useMediaQuery } from "@/lib/utils"; // Added import
 
 interface AboutMeProps {
   userProfile: UserProfile | null;
