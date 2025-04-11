@@ -193,41 +193,148 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                 <div className="absolute -bottom-20 -left-16 w-48 h-48 bg-[#FF8C40]/10 rounded-full blur-3xl"></div>
 
                 <div className="relative h-48 overflow-hidden">
-                  <motion.img
-                    initial={{ scale: 1.1 }}
-                    animate={{ scale: 1 }}
-                    transition={{ duration: 10, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
-                    src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1200&q=90"
-                    alt="Bem-vindo à Ponto. School"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/90"></div>
-                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                  <div className="relative w-full h-full overflow-hidden">
+                    {/* Fundo dinâmico com várias camadas */}
                     <motion.div 
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.3, duration: 0.5 }}
-                      className="mb-2"
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        <motion.div 
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ 
-                            type: "spring", 
-                            stiffness: 260, 
-                            damping: 20,
-                            delay: 0.5 
+                      className="absolute inset-0 bg-gradient-to-r from-[#001427] via-[#001f3d] to-[#001427]"
+                      animate={{ 
+                        background: [
+                          "linear-gradient(to right, #001427, #001f3d, #001427)",
+                          "linear-gradient(to right, #001f3d, #002a54, #001f3d)",
+                          "linear-gradient(to right, #001427, #001f3d, #001427)"
+                        ] 
+                      }}
+                      transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                    />
+
+                    {/* Elementos gráficos animados */}
+                    <div className="absolute inset-0 overflow-hidden">
+                      {/* Partículas flutuantes */}
+                      {[...Array(20)].map((_, i) => (
+                        <motion.div
+                          key={`particle-${i}`}
+                          className="absolute rounded-full"
+                          style={{
+                            width: Math.random() * 6 + 2,
+                            height: Math.random() * 6 + 2,
+                            background: `rgba(255, ${Math.floor(107 + Math.random() * 100)}, ${Math.floor(Math.random() * 100)}, ${0.3 + Math.random() * 0.5})`,
+                            top: `${Math.random() * 100}%`,
+                            left: `${Math.random() * 100}%`,
                           }}
+                          animate={{
+                            y: [0, -(Math.random() * 100 + 50)],
+                            opacity: [0, 0.8, 0],
+                            scale: [0, 1, 0.5]
+                          }}
+                          transition={{
+                            duration: 3 + Math.random() * 5,
+                            repeat: Infinity,
+                            delay: Math.random() * 5,
+                            ease: "easeInOut"
+                          }}
+                        />
+                      ))}
+                      
+                      {/* Ondas de gradiente */}
+                      <motion.div
+                        className="absolute bottom-0 left-0 right-0 h-32 opacity-30"
+                        style={{
+                          background: "linear-gradient(to top, #FF6B00, transparent)",
+                          clipPath: "url(#wave-path)"
+                        }}
+                        animate={{
+                          y: [0, -10, 0],
+                        }}
+                        transition={{
+                          duration: 5,
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        }}
+                      />
+                      
+                      {/* SVG para ondas */}
+                      <svg width="0" height="0" className="absolute">
+                        <defs>
+                          <clipPath id="wave-path">
+                            <path d="M0,64 C32,32 64,96 96,64 C128,32 160,96 192,64 C224,32 256,96 288,64 C320,32 352,96 384,64 C416,32 448,96 480,64 C512,32 544,96 576,64 C608,32 640,96 672,64 C704,32 736,96 768,64 C800,32 832,96 864,64 C896,32 928,96 960,64 C992,32 1024,96 1056,64 L1056,192 L0,192 Z" />
+                          </clipPath>
+                        </defs>
+                      </svg>
+                    </div>
+
+                    {/* Linhas geométricas hexagonais */}
+                    <div className="absolute inset-0" 
+                         style={{ 
+                           backgroundImage: "url('data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M54.627,22.5 L60,30 L54.627,37.5 L45.373,37.5 L40,30 L45.373,22.5 L54.627,22.5 Z M14.627,22.5 L20,30 L14.627,37.5 L5.373,37.5 L0,30 L5.373,22.5 L14.627,22.5 Z M34.627,0 L40,7.5 L34.627,15 L25.373,15 L20,7.5 L25.373,0 L34.627,0 Z M34.627,45 L40,52.5 L34.627,60 L25.373,60 L20,52.5 L25.373,45 L34.627,45 Z' fill='%23FF6B00' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E')",
+                           backgroundSize: "120px 120px"
+                         }}
+                    />
+                    
+                    {/* Efeito de iluminação lateral */}
+                    <div className="absolute -top-20 -right-20 w-40 h-40 bg-[#FF6B00]/20 rounded-full blur-3xl"></div>
+                    <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-[#FF8C40]/20 rounded-full blur-3xl"></div>
+
+                    {/* Overlay gradiente para garantir legibilidade */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/90"></div>
+
+                    {/* Conteúdo com animação */}
+                    <div className="absolute bottom-0 left-0 right-0 p-6">
+                      <motion.div 
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.3, duration: 0.5 }}
+                        className="mb-2 relative"
+                      >
+                        {/* Círculo de sucesso com animação */}
+                        <div className="flex items-center gap-3 mb-2">
+                          <motion.div 
+                            initial={{ scale: 0, rotate: -90 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{ 
+                              type: "spring", 
+                              stiffness: 260, 
+                              damping: 20,
+                              delay: 0.5 
+                            }}
+                            className="relative"
+                          >
+                            <div className="absolute inset-0 rounded-full bg-[#FF6B00]/30 animate-ping opacity-75"></div>
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center relative z-10 shadow-lg shadow-[#FF6B00]/20">
+                              <CheckCircle className="h-5 w-5 text-white" />
+                            </div>
+                          </motion.div>
+                          
+                          <motion.h3 
+                            initial={{ x: -20, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            transition={{ delay: 0.6, duration: 0.4 }}
+                            className="text-xl font-bold text-white"
+                          >
+                            Conta criada com sucesso!
+                          </motion.h3>
+                        </div>
+                        
+                        <motion.p 
+                          initial={{ y: 10, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          transition={{ delay: 0.7, duration: 0.4 }}
+                          className="text-white/90 ml-12 relative"
                         >
-                          <CheckCircle className="h-5 w-5 text-[#FF6B00]" />
-                        </motion.div>
-                        <h3 className="text-xl font-bold">Conta criada com sucesso!</h3>
-                      </div>
-                      <p className="text-white/80">
-                        Estamos muito felizes em ter você na Ponto. School!
-                      </p>
-                    </motion.div>
+                          <span className="relative">
+                            Estamos muito felizes em ter você na 
+                            <span className="font-semibold text-[#FF8C40] ml-1 relative">
+                              Ponto. School
+                              <motion.span 
+                                className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]"
+                                initial={{ width: 0 }}
+                                animate={{ width: "100%" }}
+                                transition={{ delay: 1, duration: 0.5 }}
+                              />
+                            </span>!
+                          </span>
+                        </motion.p>
+                      </motion.div>
+                    </div>
                   </div>
                   <Button
                     variant="ghost"
