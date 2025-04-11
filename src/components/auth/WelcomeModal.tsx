@@ -484,7 +484,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                 >
                   <Button
                     onClick={handleAgendaClick}
-                    className="flex items-center justify-start w-full bg-gradient-to-r from-white/5 to-white/10 hover:from-white/10 hover:to-white/15 text-white p-4 rounded-lg border border-white/10 relative overflow-hidden group"
+                    className="flex items-center justify-start w-full bg-transparent hover:bg-white/5 text-white p-4 rounded-lg border border-white/10 relative overflow-hidden group"
                   >
                     <div className="h-10 w-10 rounded-full bg-[#FF6B00]/20 flex items-center justify-center mr-4 relative z-10">
                       <Calendar className="h-5 w-5 text-[#FF6B00]" />
@@ -513,7 +513,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                 >
                   <Button
                     onClick={toggleUpdates}
-                    className="flex items-center justify-start w-full bg-gradient-to-r from-white/5 to-white/10 hover:from-white/10 hover:to-white/15 text-white p-4 rounded-lg border border-white/10 relative overflow-hidden group"
+                    className="flex items-center justify-start w-full bg-transparent hover:bg-white/5 text-white p-4 rounded-lg border border-white/10 relative overflow-hidden group"
                   >
                     <div className="h-10 w-10 rounded-full bg-[#FF6B00]/20 flex items-center justify-center mr-4 relative z-10">
                       <Bell className="h-5 w-5 text-[#FF6B00]" />
@@ -542,7 +542,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                 >
                   <Button
                     onClick={() => navigate("/epictus-ia")}
-                    className="flex items-center justify-start w-full bg-gradient-to-r from-white/5 to-white/10 hover:from-white/10 hover:to-white/15 text-white p-4 rounded-lg border border-white/10 relative overflow-hidden group"
+                    className="flex items-center justify-start w-full bg-transparent hover:bg-white/5 text-white p-4 rounded-lg border border-white/10 relative overflow-hidden group"
                   >
                     <div className="h-10 w-10 rounded-full bg-[#FF6B00]/20 flex items-center justify-center mr-4 relative z-10">
                       <Lightbulb className="h-5 w-5 text-[#FF6B00]" />
@@ -626,7 +626,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                         boxShadow: "0 5px 15px -5px rgba(255, 107, 0, 0.3)",
                         x: 3
                       }}
-                      className="bg-gradient-to-r from-white/5 to-white/10 dark:from-[#001427]/70 dark:to-[#001f3b]/70 p-3 rounded-lg border border-white/10 hover:border-[#FF6B00]/30 transition-all duration-300 relative overflow-hidden group"
+                      className="bg-transparent p-3 rounded-lg border border-white/10 hover:border-[#FF6B00]/30 transition-all duration-300 relative overflow-hidden group"
                     >
                       <div className="absolute -right-6 -top-6 w-16 h-16 bg-[#FF6B00]/5 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                       <div className="flex items-start">
