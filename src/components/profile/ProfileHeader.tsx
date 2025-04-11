@@ -1,228 +1,182 @@
-
-import React, { useState } from "react";
-import { UserProfile } from "@/types/user-profile";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import React, { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Edit2, Camera, CheckCircle, Award, Star } from "lucide-react";
-import { updateUserProfileField } from "@/services/profileService";
-import { useToast } from "@/components/ui/use-toast";
+import { Progress } from "@/components/ui/progress";
+import { Edit, Share2, Diamond, Camera } from "lucide-react";
+import type { UserProfile } from "@/types/user-profile";
+import { profileService } from "@/services/profileService";
 
 interface ProfileHeaderProps {
-  profile: UserProfile | null;
-  isOwnProfile?: boolean;
+  userProfile: UserProfile | null;
+  onEditClick: () => void;
 }
 
-const ProfileHeader: React.FC<ProfileHeaderProps> = ({ 
-  profile, 
-  isOwnProfile = false 
-}) => {
-  const { toast } = useToast();
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    // Validação de tipo e tamanho
-    if (!file.type.startsWith('image/')) {
-      toast({
-        title: "Tipo de arquivo inválido",
-        description: "Por favor, selecione uma imagem.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (file.size > 2 * 1024 * 1024) {
-      toast({
-        title: "Arquivo muito grande",
-        description: "O tamanho máximo permitido é 2MB.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    try {
-      setIsUploading(true);
-      
-      // Simular progresso
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
-        });
-      }, 300);
-      
-      // Converter para Base64 para armazenamento
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const base64String = event.target?.result as string;
-        
-        const { success, error } = await updateUserProfileField("avatar_url", base64String);
-        
-        clearInterval(progressInterval);
-        setUploadProgress(100);
-        
-        if (success) {
-          toast({
-            title: "Avatar atualizado",
-            description: "Seu avatar foi atualizado com sucesso.",
-          });
-        } else {
-          toast({
-            title: "Erro ao atualizar avatar",
-            description: error || "Ocorreu um erro ao atualizar seu avatar.",
-            variant: "destructive"
-          });
-        }
-        
-        // Resetar após um breve delay
-        setTimeout(() => {
-          setIsUploading(false);
-          setUploadProgress(0);
-        }, 500);
-      };
-      
-      reader.readAsDataURL(file);
-      
-    } catch (error) {
-      console.error("Erro ao fazer upload de avatar:", error);
-      setIsUploading(false);
-      setUploadProgress(0);
-      
-      toast({
-        title: "Erro ao atualizar avatar",
-        description: "Ocorreu um erro inesperado. Tente novamente mais tarde.",
-        variant: "destructive"
-      });
-    }
-  };
+export default function ProfileHeader({
+  userProfile,
+  onEditClick,
+}: ProfileHeaderProps) {
+  const profileContainerRef = useRef<HTMLDivElement>(null);
+  const profileNameRef = useRef<HTMLHeadingElement>(null);
+  const profileAvatarRef = useRef<HTMLDivElement>(null);
+  const profileLevelRef = useRef<HTMLParagraphElement>(null);
+  const [displayName, setDisplayName] = useState("");
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
-  };
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!profileContainerRef.current) return;
 
-  const displayName = profile?.display_name || profile?.full_name || "Usuário";
-  
+      const container = profileContainerRef.current;
+      const rect = container.getBoundingClientRect();
+
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      const rotateY = ((e.clientX - centerX) / (rect.width / 2)) * 5;
+      const rotateX = ((e.clientY - centerY) / (rect.height / 2)) * -5;
+
+      if (profileNameRef.current) {
+        profileNameRef.current.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+        profileNameRef.current.style.textShadow = `${rotateY * 0.2}px ${rotateX * -0.2}px 1px rgba(0,0,0,0.2)`;
+      }
+
+      if (profileAvatarRef.current) {
+        profileAvatarRef.current.style.transform = `rotateX(${rotateX * 0.7}deg) rotateY(${rotateY * 0.7}deg) translateZ(10px)`;
+        profileAvatarRef.current.style.boxShadow = `${rotateY * 0.5}px ${rotateX * -0.5}px 15px rgba(0,0,0,0.15)`;
+      }
+
+      if (profileLevelRef.current) {
+        profileLevelRef.current.style.transform = `rotateX(${rotateX * 1.2}deg) rotateY(${rotateY * 1.2}deg) translateZ(5px)`;
+      }
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+    };
+  }, []);
+
+  useEffect(() => {
+    const loadDisplayName = async () => {
+      try {
+        const name = await profileService.getUserDisplayName();
+        setDisplayName(name);
+      } catch (error) {
+        console.error("Error loading display name:", error);
+        setDisplayName("Usuário");
+      }
+    };
+
+    if (!userProfile?.display_name) {
+      loadDisplayName();
+    } else {
+      setDisplayName(userProfile.display_name);
+    }
+  }, [userProfile]);
+
+
   return (
-    <Card className="bg-white dark:bg-gray-900/70 overflow-hidden relative">
-      {/* Banner de fundo */}
-      <div 
-        className="h-32 md:h-48 bg-gradient-to-r from-[#FF6B00]/90 to-[#FF9500]/90 relative"
-      >
-        {isOwnProfile && (
-          <Button 
-            size="sm"
-            variant="ghost"
-            className="absolute top-3 right-3 text-white bg-black/20 hover:bg-black/30 backdrop-blur-sm"
-          >
-            <Edit2 className="mr-2 h-4 w-4" />
-            Editar Capa
-          </Button>
-        )}
-      </div>
-      
-      {/* Conteúdo principal */}
-      <div className="p-4 md:p-6 pt-0 md:pt-0 -mt-12 md:-mt-16 relative z-10">
-        <div className="flex flex-col md:flex-row items-start md:items-end gap-4">
-          {/* Avatar */}
-          <div className="relative mb-4 md:mb-0">
-            <Avatar className="h-24 w-24 md:h-32 md:w-32 rounded-lg border-4 border-white dark:border-gray-900 shadow-lg profile-3d-avatar">
-              {profile?.avatar_url ? (
-                <AvatarImage 
-                  src={profile.avatar_url} 
-                  alt={displayName} 
-                  className="object-cover"
-                />
-              ) : (
-                <AvatarFallback className="text-2xl md:text-3xl bg-[#FF6B00]/10 text-[#FF6B00]">
-                  {getInitials(displayName)}
-                </AvatarFallback>
-              )}
-            </Avatar>
-            
-            {isOwnProfile && (
-              <label 
-                htmlFor="avatar-upload"
-                className="absolute bottom-0 right-0 h-8 w-8 bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white rounded-full flex items-center justify-center cursor-pointer shadow-md transition-transform hover:scale-105"
-              >
-                <Camera size={16} />
-                <input 
-                  id="avatar-upload" 
-                  type="file" 
-                  accept="image/*" 
-                  className="hidden" 
-                  onChange={handleAvatarUpload}
-                  disabled={isUploading}
-                />
-              </label>
-            )}
-            
-            {isUploading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-lg">
-                <div className="w-4/5 bg-white/20 rounded-full h-2 overflow-hidden backdrop-blur-sm">
-                  <div 
-                    className="bg-white h-full rounded-full transition-all duration-300"
-                    style={{ width: `${uploadProgress}%` }}
-                  ></div>
-                </div>
-              </div>
-            )}
-          </div>
-          
-          {/* Informações principais */}
-          <div className="flex-1">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-4">
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2 profile-3d-text">
-                  {displayName}
-                  {profile?.role === "teacher" && (
-                    <CheckCircle size={20} className="text-blue-500" />
-                  )}
-                </h1>
-                
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {profile?.role && (
-                    <Badge variant="outline" className="capitalize text-[#FF6B00] border-[#FF6B00]/30 bg-[#FF6B00]/5">
-                      {profile.role === "student" ? "Estudante" : 
-                      profile.role === "teacher" ? "Professor" : 
-                      profile.role === "admin" ? "Administrador" : 
-                      profile.role}
-                    </Badge>
-                  )}
-                  
-                  <Badge variant="outline" className="bg-[#4CAF50]/10 text-[#4CAF50] border-[#4CAF50]/20">
-                    <Star size={12} className="mr-1" /> Premium
-                  </Badge>
-                  
-                  <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20">
-                    <Award size={12} className="mr-1" /> 2025
-                  </Badge>
-                </div>
-              </div>
-              
-              {isOwnProfile && (
-                <Button className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white mt-2 md:mt-0">
-                  <Edit2 size={16} className="mr-2" /> Editar Perfil
-                </Button>
-              )}
+    <div
+      ref={profileContainerRef}
+      className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 overflow-hidden shadow-sm profile-3d-container"
+    >
+      <div className="relative">
+        <div className="h-32 bg-gradient-to-r from-[#29335C] to-[#001427]"></div>
+        <div className="absolute top-20 left-1/2 transform -translate-x-1/2">
+          <div className="relative">
+            <div
+              ref={profileAvatarRef}
+              className="w-24 h-24 rounded-full border-4 border-white dark:border-[#0A2540] overflow-hidden bg-white dark:bg-[#0A2540] profile-3d-element profile-3d-avatar"
+            >
+              <img
+                src="https://api.dicebear.com/7.x/avataaars/svg?seed=John"
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
             </div>
+            <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#FF6B00] text-white flex items-center justify-center hover:bg-[#FF6B00]/90 transition-colors">
+              <Camera className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </div>
-    </Card>
-  );
-};
 
-export default ProfileHeader;
+      <div className="pt-16 pb-6 px-6 text-center">
+        <h2
+          ref={profileNameRef}
+          className="text-xl font-bold text-[#29335C] dark:text-white profile-3d-element profile-3d-text"
+        >
+          {displayName || userProfile?.display_name || userProfile?.username || "Usuário"}
+        </h2>
+        <div className="flex items-center justify-center gap-1 mt-1">
+          <p className="text-xs text-[#64748B] dark:text-white/60">
+            ID: {userProfile?.user_id || "--"}
+          </p>
+        </div>
+        <div className="flex items-center justify-center gap-1 mt-1">
+          <Diamond className="h-4 w-4 text-[#FF6B00]" />
+          <span className="text-sm text-[#FF6B00] font-medium">
+            {userProfile?.plan_type === "premium"
+              ? "Plano Premium"
+              : "Plano Lite"}
+          </span>
+        </div>
+        <p className="text-[#64748B] dark:text-white/60 text-sm mt-2">
+          Estudante de Engenharia de Software
+        </p>
+
+        <div className="flex items-center justify-center gap-4 mt-4">
+          <div className="text-center">
+            <p
+              ref={profileLevelRef}
+              className="text-lg font-bold text-[#29335C] dark:text-white profile-3d-element profile-3d-text"
+            >
+              {userProfile?.level || 1}
+            </p>
+            <p className="text-xs text-[#64748B] dark:text-white/60">Nível</p>
+          </div>
+          <div className="h-10 border-r border-[#E0E1DD] dark:border-white/10"></div>
+          <div className="text-center">
+            <p className="text-lg font-bold text-[#29335C] dark:text-white">
+              8
+            </p>
+            <p className="text-xs text-[#64748B] dark:text-white/60">Turmas</p>
+          </div>
+          <div className="h-10 border-r border-[#E0E1DD] dark:border-white/10"></div>
+          <div className="text-center">
+            <p className="text-lg font-bold text-[#29335C] dark:text-white">
+              12
+            </p>
+            <p className="text-xs text-[#64748B] dark:text-white/60">
+              Conquistas
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-xs text-[#64748B] dark:text-white/60">
+              Progresso para o próximo nível
+            </span>
+            <span className="text-xs font-medium text-[#FF6B00]">72%</span>
+          </div>
+          <Progress value={72} className="h-2" />
+        </div>
+
+        <div className="mt-6 flex gap-2">
+          <Button
+            className="flex-1 bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+            onClick={onEditClick}
+          >
+            <Edit className="h-4 w-4 mr-2" /> Editar Perfil
+          </Button>
+          <Button
+            variant="outline"
+            className="w-10 h-10 p-0 border-[#E0E1DD] dark:border-white/10"
+          >
+            <Share2 className="h-4 w-4 text-[#64748B] dark:text-white/60" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,103 +1,287 @@
-import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useEffect } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@/lib/supabase";
+import type { UserProfile } from "@/types/user-profile";
+
+// Import profile components
 import ProfileHeader from "./ProfileHeader";
+import ContactInfo from "./ContactInfo";
+import Achievements from "./Achievements";
 import AboutMe from "./AboutMe";
+import Education from "./Education";
 import Skills from "./Skills";
 import Interests from "./Interests";
-import Education from "./Education";
-import ContactInfo from "./ContactInfo";
-import { getUserProfile } from "@/services/profileService";
-import { UserProfile } from "@/types/user-profile";
+
+// Import tabs content
+import ActivitiesTab from "../tabs/ActivitiesTab";
+import ClassesTab from "../tabs/ClassesTab";
+import SettingsTab from "../tabs/SettingsTab";
 
 interface ProfilePageProps {
   isOwnProfile?: boolean;
-  userId?: string;
 }
 
-const ProfilePage: React.FC<ProfilePageProps> = ({ 
-  isOwnProfile = true,
-  userId
-}) => {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
+  const [activeTab, setActiveTab] = useState("perfil");
+  const [isEditing, setIsEditing] = useState(false);
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [contactInfo, setContactInfo] = useState({
+    email: "",
+    phone: "Adicionar telefone",
+    location: "Adicionar localização",
+    birthDate: "Adicionar data de nascimento",
+  });
+  const [aboutMe, setAboutMe] = useState(
+    "Olá! Sou estudante de Engenharia de Software na Universidade de São Paulo. Apaixonado por tecnologia, programação e matemática. Busco constantemente novos conhecimentos e desafios para aprimorar minhas habilidades. Nas horas vagas, gosto de jogar xadrez, ler livros de ficção científica e praticar esportes.",
+  );
 
   useEffect(() => {
-    const loadProfile = async () => {
+    const fetchUserProfile = async () => {
       try {
-        setLoading(true);
-        const profileData = await getUserProfile(userId);
-        setProfile(profileData);
-        setError(null);
-      } catch (err) {
-        console.error("Erro ao carregar perfil:", err);
-        setError("Não foi possível carregar os dados do perfil");
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (user) {
+          const { data, error } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", user.id)
+            .single();
+
+          if (error) {
+            console.error("Error fetching user profile:", error);
+          } else if (data) {
+            // Ensure level and rank are set with defaults if not present
+            setUserProfile({
+              ...(data as unknown as UserProfile),
+              level: data.level || 1,
+              rank: data.rank || "Aprendiz",
+            });
+
+            // Set contact info from user data
+            setContactInfo({
+              email: data.email || user.email || "",
+              phone: data.phone || "Adicionar telefone",
+              location: data.location || "Adicionar localização",
+              birthDate: data.birth_date || "Adicionar data de nascimento",
+            });
+
+            if (data.bio) {
+              setAboutMe(data.bio);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    loadProfile();
-  }, [userId]);
+    fetchUserProfile();
+  }, []);
+
+  const toggleSection = (section: string | null) => {
+    if (expandedSection === section) {
+      setExpandedSection(null);
+    } else {
+      setExpandedSection(section);
+    }
+  };
+
+  const saveContactInfo = async () => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        const { error } = await supabase
+          .from("profiles")
+          .update({
+            email: contactInfo.email,
+            phone:
+              contactInfo.phone === "Adicionar telefone"
+                ? null
+                : contactInfo.phone,
+            location:
+              contactInfo.location === "Adicionar localização"
+                ? null
+                : contactInfo.location,
+            birth_date:
+              contactInfo.birthDate === "Adicionar data de nascimento"
+                ? null
+                : contactInfo.birthDate,
+          })
+          .eq("id", user.id);
+
+        if (error) {
+          console.error("Error updating contact info:", error);
+        }
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+    toggleSection(null);
+  };
+
+  const saveAboutMe = async () => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        const { error } = await supabase
+          .from("profiles")
+          .update({
+            bio: aboutMe,
+          })
+          .eq("id", user.id);
+
+        if (error) {
+          console.error("Error updating bio:", error);
+        }
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+    setIsEditing(false);
+  };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin h-10 w-10 border-4 border-[#FF6B00] border-t-transparent rounded-full"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center">
-        <h3 className="text-lg font-medium text-red-800 dark:text-red-200 mb-2">Erro</h3>
-        <p className="text-red-600 dark:text-red-300">{error}</p>
-        <button 
-          onClick={() => window.location.reload()} 
-          className="mt-4 px-4 py-2 bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white rounded-md transition-colors"
-        >
-          Tentar novamente
-        </button>
+      <div className="w-full h-full flex items-center justify-center">
+        Carregando...
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-5xl p-4 space-y-6">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="profile-3d-container"
-      >
-        <ProfileHeader profile={profile} isOwnProfile={isOwnProfile} />
-      </motion.div>
+    <div className="w-full h-full bg-[#f7f9fa] dark:bg-[#001427] p-6 transition-colors duration-300">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Left Column - Profile Info */}
+          <div className="w-full md:w-1/3 space-y-6">
+            {/* Profile Card */}
+            <ProfileHeader
+              userProfile={userProfile}
+              onEditClick={() => setExpandedSection("account")}
+            />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="md:col-span-2 space-y-6"
-        >
-          <AboutMe profile={profile} isOwnProfile={isOwnProfile} />
-          <Education userProfile={profile} isEditing={false} />
-          <Skills userProfile={profile} isEditing={false} />
-        </motion.div>
+            {/* Contact Info */}
+            <ContactInfo
+              contactInfo={contactInfo}
+              expandedSection={expandedSection}
+              toggleSection={toggleSection}
+              setContactInfo={setContactInfo}
+              saveContactInfo={saveContactInfo}
+            />
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="space-y-6"
-        >
-          <ContactInfo userProfile={profile} isEditing={false} />
-          <Interests userProfile={profile} isEditing={false} />
-        </motion.div>
+            {/* Badges & Achievements */}
+            <Achievements />
+          </div>
+
+          {/* Right Column - Tabs Content */}
+          <div className="w-full md:w-2/3">
+            <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 overflow-hidden shadow-sm">
+              <Tabs
+                value={activeTab}
+                onValueChange={setActiveTab}
+                className="w-full"
+              >
+                <div className="border-b border-[#E0E1DD] dark:border-white/10">
+                  <TabsList className="p-0 bg-transparent h-auto">
+                    <TabsTrigger
+                      value="perfil"
+                      className="px-6 py-4 rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#FF6B00] text-[#64748B] dark:text-white/60 data-[state=active]:text-[#FF6B00]"
+                    >
+                      Perfil
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="atividades"
+                      className="px-6 py-4 rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#FF6B00] text-[#64748B] dark:text-white/60 data-[state=active]:text-[#FF6B00]"
+                    >
+                      Atividades
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="turmas"
+                      className="px-6 py-4 rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#FF6B00] text-[#64748B] dark:text-white/60 data-[state=active]:text-[#FF6B00]"
+                    >
+                      Turmas
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="configuracoes"
+                      className="px-6 py-4 rounded-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#FF6B00] text-[#64748B] dark:text-white/60 data-[state=active]:text-[#FF6B00]"
+                    >
+                      Configurações
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+
+                <ScrollArea className="h-[calc(100vh-300px)]">
+                  <TabsContent
+                    value="perfil"
+                    className="p-6 focus:outline-none"
+                  >
+                    <div className="space-y-6">
+                      {/* About Me */}
+                      <AboutMe
+                        aboutMe={aboutMe}
+                        isEditing={isEditing}
+                        setIsEditing={setIsEditing}
+                        setAboutMe={setAboutMe}
+                        saveAboutMe={saveAboutMe}
+                      />
+
+                      {/* Education */}
+                      <Education />
+
+                      {/* Skills */}
+                      <Skills />
+
+                      {/* Interests */}
+                      <Interests />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent
+                    value="atividades"
+                    className="p-6 focus:outline-none"
+                  >
+                    <ActivitiesTab />
+                  </TabsContent>
+
+                  <TabsContent
+                    value="turmas"
+                    className="p-6 focus:outline-none"
+                  >
+                    <ClassesTab />
+                  </TabsContent>
+
+                  <TabsContent
+                    value="configuracoes"
+                    className="p-6 focus:outline-none"
+                  >
+                    <SettingsTab
+                      userProfile={userProfile}
+                      contactInfo={contactInfo}
+                      aboutMe={aboutMe}
+                      expandedSection={expandedSection}
+                      toggleSection={toggleSection}
+                      setContactInfo={setContactInfo}
+                      setAboutMe={setAboutMe}
+                      setUserProfile={setUserProfile}
+                    />
+                  </TabsContent>
+                </ScrollArea>
+              </Tabs>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
-};
-
-export default ProfilePage;
+}

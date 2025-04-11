@@ -1,14 +1,13 @@
-import { supabase } from './supabase';
-import type { UserIdControl } from '@/types/user-id-control';
+import { supabase } from "@/lib/supabase";
 
 /**
- * Gera um ID único para usuário no formato BR + tipo de plano + sequência de 10 dígitos.
- * Exemplo: BR110000000001
- * @param countryCode O código do país (BR, US, etc)
+ * Gera um ID de usuário único com o formato especificado.
+ * 
+ * @param countryCode O código do país (ex: BR, US, etc)
  * @param planType O tipo de plano (1 = Premium, 2 = Standard, etc)
  * @returns Uma string contendo o ID gerado no formato BRXXXXXXXXXXXX
  */
-export async function generateUserIdWithDB(countryCode: string, planType: number): Promise<string> {
+export async function generateUserId(countryCode: string, planType: number): Promise<string> {
   try {
     // Tentar buscar a sequência atual
     const { data, error } = await supabase
@@ -52,38 +51,65 @@ export function generateSimpleUserId(countryCode: string, planType: number): str
   const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
   return `${countryCode}${planType}${timestamp.toString().slice(-6)}${random}`;
 }
+import { supabase } from './supabase';
+
+export const generateUserIdSupabase = async (planType: string): Promise<string> => {
+  // Gerar um ID baseado no tipo de plano
+  // BR1 para premium, BR2 para lite/básico
+  const prefix = `BR${planType === 'premium' ? '1' : '2'}`;
+  const timestamp = Date.now();
+  const randomSuffix = Math.floor(Math.random() * 10000);
+  
+  const generatedId = `${prefix}-${timestamp}-${randomSuffix}`;
+  
+  try {
+    // Verificar se o ID já existe (raro, mas possível)
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .eq('user_id', generatedId)
+      .single();
+    
+    if (error) {
+      console.error("Error checking for existing ID record:", error);
+      // Se houver erro de consulta, retornamos o ID gerado mesmo assim
+      return generatedId;
+    }
+    
+    // Se o ID já existe (extremamente improvável), gere outro
+    if (data) {
+      console.log("ID already exists, generating a new one");
+      // Chamada recursiva com baixíssima probabilidade de execução
+      return generateUserIdSupabase(planType);
+    }
+    
+    return generatedId;
+  } catch (error) {
+    console.error("Error generating user ID:", error);
+    // Em caso de erro, retorne o ID gerado
+    return generatedId;
+  }
+};
 
 /**
- * Gera um ID único para usuário no formato esperado pela plataforma.
- * O formato é: UID-XXXX-XXXX-XXXX onde X é um caractere alfanumérico
+ * Gera um ID único para usuários baseado em timestamp e valores aleatórios
+ * para garantir unicidade mesmo em caso de múltiplos registros simultâneos
  */
 export function generateUserId(): string {
-  const timestamp = Date.now().toString(36).slice(-6);
-  const random1 = Math.random().toString(36).substring(2, 6).toUpperCase();
-  const random2 = Math.random().toString(36).substring(2, 6).toUpperCase();
-  const random3 = Math.random().toString(36).substring(2, 6).toUpperCase();
+  // Usar timestamp para garantir sequência crescente
+  const timestamp = new Date().getTime();
 
-  return `UID-${random1}-${random2}-${random3}`;
+  // Adicionar componente aleatório para evitar colisões
+  const randomComponent = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+
+  // Combinar os componentes em um formato único
+  return `user_${timestamp}_${randomComponent}`;
 }
 
 /**
- * Gera um ID único para usuário baseado no código do país e tipo de plano.
- * @param countryCode O código do país (BR, US, etc)
- * @param planType O tipo de plano (1 = Premium, 2 = Standard, etc)
- * @returns Uma string contendo o ID gerado no formato BRXXXXXXXXXXXX
+ * Valida se um ID de usuário está no formato correto
  */
-export function generateFormattedUserId(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-
-  // Função para gerar um bloco de 4 caracteres aleatórios
-  const generateBlock = () => {
-    let result = '';
-    for (let i = 0; i < 4; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  };
-
-  // Formato UID-XXXX-XXXX-XXXX
-  return `UID-${generateBlock()}-${generateBlock()}-${generateBlock()}`;
+export function isValidUserId(id: string): boolean {
+  // Verificar se corresponde ao padrão esperado
+  return /^user_\d+_\d{4}$/.test(id);
 }
