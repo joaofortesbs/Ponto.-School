@@ -18,10 +18,16 @@ import {
   BellRing,
   Flame,
   Laptop,
-  Lightbulb
+  Lightbulb,
+  Camera,
+  Upload,
+  ImageIcon
 } from "lucide-react";
 import type { UserProfile } from "@/types/user-profile";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/lib/supabase";
+import { profileService } from "@/services/profileService";
+import { toast } from "@/components/ui/use-toast";
 
 interface ProfileHeaderProps {
   userProfile: UserProfile | null;
@@ -33,11 +39,16 @@ export default function ProfileHeader({
   onEditClick,
 }: ProfileHeaderProps) {
   const profileNameRef = useRef<HTMLHeadingElement>(null);
+  const profilePictureRef = useRef<HTMLInputElement>(null);
+  const coverPhotoRef = useRef<HTMLInputElement>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [showTooltip, setShowTooltip] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const [showStatsDetails, setShowStatsDetails] = useState(false);
   const [activeAchievement, setActiveAchievement] = useState(0);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Array de conquistas recentes para animação
   const recentAchievements = [
@@ -52,6 +63,12 @@ export default function ProfileHeader({
       userProfile.display_name.trim() !== ""
     ) {
       setDisplayName(userProfile.display_name);
+    }
+    if (userProfile?.avatar_url) {
+      setAvatarUrl(userProfile.avatar_url);
+    }
+    if (userProfile?.cover_url) {
+      setCoverUrl(userProfile.cover_url);
     }
   }, [userProfile]);
 
@@ -97,6 +114,173 @@ export default function ProfileHeader({
   const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
     const card = e.currentTarget;
     card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)';
+  };
+
+  const uploadProfilePicture = async (file: File) => {
+    if (!file) return;
+    
+    try {
+      setIsUploading(true);
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para fazer upload de imagens",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const user = sessionData.session.user;
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      // Upload para o storage
+      const { error: uploadError } = await supabase.storage
+        .from('profiles')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Obter URL pública
+      const { data: publicUrlData } = supabase.storage
+        .from('profiles')
+        .getPublicUrl(filePath);
+
+      // Atualizar perfil do usuário
+      await profileService.updateUserProfile({
+        avatar_url: publicUrlData.publicUrl
+      });
+
+      setAvatarUrl(publicUrlData.publicUrl);
+      
+      toast({
+        title: "Sucesso",
+        description: "Foto de perfil atualizada com sucesso",
+      });
+    } catch (error) {
+      console.error("Erro ao fazer upload da foto de perfil:", error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao fazer upload da foto",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const uploadCoverPhoto = async (file: File) => {
+    if (!file) return;
+    
+    try {
+      setIsUploading(true);
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para fazer upload de imagens",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const user = sessionData.session.user;
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-cover-${Date.now()}.${fileExt}`;
+      const filePath = `covers/${fileName}`;
+
+      // Upload para o storage
+      const { error: uploadError } = await supabase.storage
+        .from('profiles')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Obter URL pública
+      const { data: publicUrlData } = supabase.storage
+        .from('profiles')
+        .getPublicUrl(filePath);
+
+      // Atualizar perfil do usuário
+      await profileService.updateUserProfile({
+        cover_url: publicUrlData.publicUrl
+      });
+
+      setCoverUrl(publicUrlData.publicUrl);
+      
+      toast({
+        title: "Sucesso",
+        description: "Foto de capa atualizada com sucesso",
+      });
+    } catch (error) {
+      console.error("Erro ao fazer upload da foto de capa:", error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao fazer upload da capa",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleProfilePictureClick = () => {
+    profilePictureRef.current?.click();
+  };
+
+  const handleCoverPhotoClick = () => {
+    coverPhotoRef.current?.click();
+  };
+
+  const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      uploadProfilePicture(e.target.files[0]);
+    }
+  };
+
+  const handleCoverPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      uploadCoverPhoto(e.target.files[0]);
+    }
+  };
+
+  const shareProfile = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: `Perfil de ${displayName || userProfile?.display_name || 'Usuário'}`,
+        text: `Veja o perfil de ${displayName || userProfile?.display_name || 'Usuário'} na plataforma`,
+        url: window.location.href,
+      })
+      .then(() => {
+        toast({
+          title: "Compartilhado",
+          description: "Perfil compartilhado com sucesso",
+        });
+      })
+      .catch((error) => {
+        console.error("Erro ao compartilhar:", error);
+      });
+    } else {
+      // Fallback para copiar URL
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        toast({
+          title: "URL Copiada",
+          description: "Link do perfil copiado para a área de transferência",
+        });
+      });
+    }
   };
 
   return (
@@ -145,20 +329,45 @@ export default function ProfileHeader({
       </AnimatePresence>
 
       {/* Cover Photo com gradiente animado e efeito de movimento - altura reduzida */}
-      <div className="h-32 bg-gradient-to-r from-[#001427] via-[#072e4f] to-[#0A2540] relative overflow-hidden">
-        <motion.div 
-          className="absolute inset-0 bg-[url('/images/pattern-grid.svg')] opacity-20"
-          animate={{ 
-            backgroundPosition: ["0% 0%", "100% 100%"],
-          }}
-          transition={{ 
-            duration: 20,
-            repeat: Infinity,
-            repeatType: "reverse"
-          }}
-        />
+      <div className="h-32 bg-gradient-to-r from-[#001427] via-[#072e4f] to-[#0A2540] relative overflow-hidden group/cover">
+        {coverUrl ? (
+          <img 
+            src={coverUrl} 
+            alt="Cover" 
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        ) : (
+          <motion.div 
+            className="absolute inset-0 bg-[url('/images/pattern-grid.svg')] opacity-20"
+            animate={{ 
+              backgroundPosition: ["0% 0%", "100% 100%"],
+            }}
+            transition={{ 
+              duration: 20,
+              repeat: Infinity,
+              repeatType: "reverse"
+            }}
+          />
+        )}
         
         <div className="absolute inset-0 bg-gradient-to-t from-[#001427]/90 to-transparent"></div>
+
+        {/* Botão de upload da capa (visível no hover) */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/cover:opacity-100 transition-opacity duration-300 z-10">
+          <div 
+            onClick={handleCoverPhotoClick}
+            className="bg-black/50 hover:bg-black/70 p-2 rounded-full cursor-pointer transition-all duration-300 backdrop-blur-sm"
+          >
+            <Camera className="h-5 w-5 text-white" />
+          </div>
+        </div>
+        <input 
+          type="file" 
+          ref={coverPhotoRef}
+          className="hidden" 
+          accept="image/*"
+          onChange={handleCoverPhotoChange}
+        />
 
         {/* Efeitos de luz */}
         <motion.div 
@@ -226,15 +435,16 @@ export default function ProfileHeader({
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3, type: "spring", stiffness: 100 }}
         >
-          <div className="relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] rounded-full opacity-75 group-hover:opacity-100 blur-sm group-hover:blur transition duration-1000"></div>
+          <div className="relative group/avatar">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] rounded-full opacity-75 group-hover/avatar:opacity-100 blur-sm group-hover/avatar:blur transition duration-1000"></div>
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="profile-avatar relative"
+              className="profile-avatar relative cursor-pointer"
+              onClick={handleProfilePictureClick}
             >
-              <Avatar className="w-20 h-20 border-4 border-white dark:border-[#0A2540] shadow-xl group-hover:border-[#FF6B00]/20 transition-all duration-300">
+              <Avatar className="w-20 h-20 border-4 border-white dark:border-[#0A2540] shadow-xl group-hover/avatar:border-[#FF6B00]/20 transition-all duration-300">
                 <AvatarImage
-                  src="https://api.dicebear.com/7.x/avataaars/svg?seed=John"
+                  src={avatarUrl || "https://api.dicebear.com/7.x/avataaars/svg?seed=John"}
                   alt="Avatar"
                   className="object-cover"
                 />
@@ -254,11 +464,23 @@ export default function ProfileHeader({
                   strokeWidth="2"
                   strokeDasharray="308"
                   strokeDashoffset="85"
-                  className="opacity-70 group-hover:opacity-100 transition-opacity"
+                  className="opacity-70 group-hover/avatar:opacity-100 transition-opacity"
                   strokeLinecap="round"
                 />
               </svg>
+
+              {/* Ícone de câmera para upload (visível no hover) */}
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-300">
+                <Camera className="h-6 w-6 text-white" />
+              </div>
             </motion.div>
+            <input 
+              type="file" 
+              ref={profilePictureRef}
+              className="hidden" 
+              accept="image/*"
+              onChange={handleProfilePictureChange}
+            />
 
             {/* Indicador de status premium */}
             <motion.div 
@@ -267,7 +489,7 @@ export default function ProfileHeader({
               animate={{ scale: 1 }}
               transition={{ delay: 1, type: "spring", stiffness: 200 }}
             >
-              <div className="bg-[#FF6B00] text-white p-1 rounded-full w-7 h-7 flex items-center justify-center shadow-lg group-hover:shadow-[#FF6B00]/40 transition-all duration-300">
+              <div className="bg-[#FF6B00] text-white p-1 rounded-full w-7 h-7 flex items-center justify-center shadow-lg group-hover/avatar:shadow-[#FF6B00]/40 transition-all duration-300">
                 <Trophy className="h-4 w-4" />
               </div>
             </motion.div>
@@ -452,16 +674,23 @@ export default function ProfileHeader({
           <Button
             className="flex-1 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] hover:from-[#FF5B00] hover:to-[#FF8B40] text-white text-xs h-8 shadow-sm hover:shadow hover:shadow-[#FF6B00]/20 transition-all duration-300 group flex items-center justify-center relative overflow-hidden"
             onClick={onEditClick}
+            disabled={isUploading}
           >
             {/* Efeito de brilho no hover */}
             <span className="absolute w-32 h-32 -mt-12 -ml-12 bg-white rotate-12 opacity-0 group-hover:opacity-10 transition-opacity duration-1000 transform group-hover:translate-x-40 group-hover:translate-y-10 pointer-events-none"></span>
             
-            <Edit className="h-3 w-3 mr-1.5 group-hover:scale-110 transition-transform" /> 
+            {isUploading ? (
+              <div className="h-3 w-3 rounded-full border-2 border-white border-t-transparent animate-spin mr-1.5"></div>
+            ) : (
+              <Edit className="h-3 w-3 mr-1.5 group-hover:scale-110 transition-transform" />
+            )}
             <span className="relative z-10">Editar Perfil</span>
           </Button>
           <Button
             variant="outline"
             className="w-8 h-8 p-0 border-[#E0E1DD] dark:border-white/10 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 group/share transition-all duration-300 relative overflow-hidden"
+            onClick={shareProfile}
+            disabled={isUploading}
           >
             <Share2 className="h-3.5 w-3.5 text-[#64748B] dark:text-white/60 group-hover/share:text-[#FF6B00] transition-colors duration-300" />
             
