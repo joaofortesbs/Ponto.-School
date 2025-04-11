@@ -213,6 +213,10 @@ function App() {
         // Não mostrar o modal nas rotas de autenticação
         if (isAuthRoute) {
           setShowWelcomeModal(false);
+          // Limpar sessão apenas se estiver deslogando para garantir novo modal ao logar
+          if (location.pathname === "/login") {
+            sessionStorage.removeItem('welcomeModalShown');
+          }
           restoreScroll();
           return;
         }

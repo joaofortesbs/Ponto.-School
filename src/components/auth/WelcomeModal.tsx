@@ -6,6 +6,9 @@ import { Button } from "../ui/button";
 import Confetti from 'react-confetti';
 import { cn } from "@/lib/utils";
 
+// Chave para controle de sessão
+const SESSION_MODAL_KEY = 'welcomeModalShown';
+
 interface WelcomeModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -23,6 +26,9 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
   const [activeBubble, setActiveBubble] = useState(0);
   const controls = useAnimationControls();
   const modalRef = useRef<HTMLDivElement>(null);
+  
+  // Estado para controlar se o modal já foi mostrado nesta sessão
+  const [shouldDisplay, setShouldDisplay] = useState(true);
 
   // Para efeitos de iluminação
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -40,18 +46,30 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Verificar se o modal já foi exibido nesta sessão
   useEffect(() => {
     if (isOpen) {
-      controls.start("visible");
+      const modalShown = sessionStorage.getItem(SESSION_MODAL_KEY);
+      if (modalShown) {
+        setShouldDisplay(false);
+        // Fechar o modal automaticamente se já foi mostrado
+        onClose();
+      } else {
+        setShouldDisplay(true);
+        controls.start("visible");
 
-      // Efeito de rotação das bolhas
-      const interval = setInterval(() => {
-        setActiveBubble((prev) => (prev + 1) % 4);
-      }, 3000);
+        // Marcar que o modal foi exibido nesta sessão
+        sessionStorage.setItem(SESSION_MODAL_KEY, 'true');
+        
+        // Efeito de rotação das bolhas
+        const interval = setInterval(() => {
+          setActiveBubble((prev) => (prev + 1) % 4);
+        }, 3000);
 
-      return () => clearInterval(interval);
+        return () => clearInterval(interval);
+      }
     }
-  }, [isOpen, controls]);
+  }, [isOpen, controls, onClose]);
 
   const handleSettingsClick = () => {
     navigate("/configuracoes");
@@ -110,6 +128,8 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
   const safeCloseModal = (onClose: () => void) => {
     // Remover classe do body
     document.body.classList.remove('modal-open');
+    // Marcar que o modal foi exibido nesta sessão
+    sessionStorage.setItem(SESSION_MODAL_KEY, 'true');
     // Executar callback de fechamento
     onClose();
   };
@@ -133,7 +153,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
   if (isFirstLogin) {
     return (
       <AnimatePresence mode="wait">
-        {isOpen && (
+        {isOpen && shouldDisplay && (
           <>
             <Confetti
               width={dimensions.width}
@@ -332,7 +352,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
   // Login subsequente - Modal redesenhado com efeitos modernos
   return (
     <AnimatePresence mode="wait">
-      {isOpen && (
+      {isOpen && shouldDisplay && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
