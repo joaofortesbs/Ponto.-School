@@ -1,45 +1,16 @@
 
 import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import AboutMe from "@/components/profile/AboutMe";
+import ContactInfo from "@/components/profile/ContactInfo";
+import Education from "@/components/profile/Education";
 import Skills from "@/components/profile/Skills";
 import Interests from "@/components/profile/Interests";
-import Education from "@/components/profile/Education";
-import ContactInfo from "@/components/profile/ContactInfo";
-import Achievements from "@/components/profile/Achievements";
 import type { UserProfile } from "@/types/user-profile";
-import { motion } from "framer-motion";
 import { profileService } from "@/services/profileService";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-
-// Componentes Mock simples para os que podem não estar implementados
-const SkillsMock = ({ userProfile, isEditing }: { userProfile: UserProfile | null, isEditing: boolean }) => (
-  <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-6 shadow-sm mb-6">
-    <h3 className="text-lg font-bold text-[#29335C] dark:text-white mb-4">Habilidades</h3>
-    <p className="text-[#64748B] dark:text-white/80">Programação, Design, Escrita Técnica</p>
-  </div>
-);
-
-const InterestsMock = ({ userProfile, isEditing }: { userProfile: UserProfile | null, isEditing: boolean }) => (
-  <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-6 shadow-sm mb-6">
-    <h3 className="text-lg font-bold text-[#29335C] dark:text-white mb-4">Interesses</h3>
-    <p className="text-[#64748B] dark:text-white/80">Tecnologia, IA, Educação, Desenvolvimento Web</p>
-  </div>
-);
-
-const EducationMock = ({ userProfile, isEditing }: { userProfile: UserProfile | null, isEditing: boolean }) => (
-  <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-6 shadow-sm mb-6">
-    <h3 className="text-lg font-bold text-[#29335C] dark:text-white mb-4">Educação</h3>
-    <p className="text-[#64748B] dark:text-white/80">Universidade de Tecnologia, Engenharia de Software, 2020-2024</p>
-  </div>
-);
-
-const AchievementsMock = ({ userProfile, isEditing }: { userProfile: UserProfile | null, isEditing: boolean }) => (
-  <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-6 shadow-sm mb-6">
-    <h3 className="text-lg font-bold text-[#29335C] dark:text-white mb-4">Conquistas</h3>
-    <p className="text-[#64748B] dark:text-white/80">12 cursos concluídos, 5 projetos entregues</p>
-  </div>
-);
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ProfilePageProps {
   isOwnProfile?: boolean;
@@ -50,6 +21,7 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [activeTab, setActiveTab] = useState("perfil");
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -142,20 +114,79 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
-        className="container mx-auto py-6 px-4"
+        className="container mx-auto py-4 max-w-screen-xl"
       >
-        <ProfileHeader userProfile={userProfile} isEditing={isEditing} onEdit={handleEditProfile} />
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <AboutMe userProfile={userProfile} isEditing={isEditing} />
-            <SkillsMock userProfile={userProfile} isEditing={isEditing} />
-            <InterestsMock userProfile={userProfile} isEditing={isEditing} />
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          {/* Coluna da esquerda - Card de perfil e contato */}
+          <div className="md:col-span-3">
+            <div className="flex flex-col gap-6">
+              <ProfileHeader userProfile={userProfile} isEditing={isEditing} onEdit={handleEditProfile} />
+              <ContactInfo userProfile={userProfile} isEditing={isEditing} />
+            </div>
           </div>
-          <div>
-            <ContactInfo userProfile={userProfile} isEditing={isEditing} />
-            <EducationMock userProfile={userProfile} isEditing={isEditing} />
-            <AchievementsMock userProfile={userProfile} isEditing={isEditing} />
+          
+          {/* Coluna da direita - Informações detalhadas em tabs */}
+          <div className="md:col-span-9">
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <Tabs defaultValue="perfil" className="w-full" onValueChange={setActiveTab}>
+                <TabsList className="w-full bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 py-0 h-14">
+                  <TabsTrigger 
+                    value="perfil"
+                    className="data-[state=active]:border-b-2 data-[state=active]:border-[#FF6B00] data-[state=active]:text-[#FF6B00] h-14 px-4"
+                  >
+                    Perfil
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="atividades"
+                    className="data-[state=active]:border-b-2 data-[state=active]:border-[#FF6B00] data-[state=active]:text-[#FF6B00] h-14 px-4"
+                  >
+                    Atividades
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="turmas"
+                    className="data-[state=active]:border-b-2 data-[state=active]:border-[#FF6B00] data-[state=active]:text-[#FF6B00] h-14 px-4"
+                  >
+                    Turmas
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="configuracoes"
+                    className="data-[state=active]:border-b-2 data-[state=active]:border-[#FF6B00] data-[state=active]:text-[#FF6B00] h-14 px-4"
+                  >
+                    Configurações
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="perfil" className="p-0 m-0">
+                  <div className="p-6">
+                    <AboutMe userProfile={userProfile} isEditing={isEditing} />
+                    <Education userProfile={userProfile} isEditing={isEditing} />
+                    <Skills userProfile={userProfile} isEditing={isEditing} />
+                    <Interests userProfile={userProfile} isEditing={isEditing} />
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="atividades" className="p-6">
+                  <div className="text-center py-10">
+                    <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300">Atividades em breve</h3>
+                    <p className="text-gray-500 dark:text-gray-400">Acompanhe suas atividades recentes nesta aba.</p>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="turmas" className="p-6">
+                  <div className="text-center py-10">
+                    <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300">Suas turmas em breve</h3>
+                    <p className="text-gray-500 dark:text-gray-400">Veja todas as suas turmas e grupos de estudo.</p>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="configuracoes" className="p-6">
+                  <div className="text-center py-10">
+                    <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300">Configurações de perfil</h3>
+                    <p className="text-gray-500 dark:text-gray-400">Personalize suas configurações de perfil.</p>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
           </div>
         </div>
       </motion.div>

@@ -1,5 +1,4 @@
-
-import React, { useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -15,9 +14,7 @@ interface ProfileHeaderProps {
 
 const ProfileHeader = ({ userProfile, isEditing, onEdit }: ProfileHeaderProps) => {
   const [scope, animate] = useAnimate();
-  const cardRef = useRef<HTMLDivElement>(null);
-  const rotateX = useMotionValue(0);
-  const rotateY = useMotionValue(0);
+  const progressToNextLevel = 72; // Porcentagem de progresso para o próximo nível
 
   // Garantir que o perfil sempre tenha valores válidos
   const profile = userProfile ? {
@@ -42,37 +39,10 @@ const ProfileHeader = ({ userProfile, isEditing, onEdit }: ProfileHeaderProps) =
     email: "usuario@exemplo.com"
   };
 
-  const progressToNextLevel = 72; // Porcentagem de progresso para o próximo nível
-
   useEffect(() => {
     // Animar ao carregar o componente
     animate(scope.current, { opacity: 1, y: 0 }, { duration: 0.5 });
   }, [animate, scope]);
-
-  // Efeito 3D no cartão
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current) return;
-
-    const rect = cardRef.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-
-    const mouseX = e.clientX - centerX;
-    const mouseY = e.clientY - centerY;
-
-    // Calcular rotação limitada a +/- 5 graus
-    const rotX = (mouseY / (rect.height / 2)) * -5;
-    const rotY = (mouseX / (rect.width / 2)) * 5;
-
-    rotateX.set(rotX);
-    rotateY.set(rotY);
-  };
-
-  const handleMouseLeave = () => {
-    // Animar de volta à posição inicial
-    animate(rotateX, 0, { duration: 0.5 });
-    animate(rotateY, 0, { duration: 0.5 });
-  };
 
   const getPlanBadgeClass = () => {
     const planType = profile.plan_type?.toLowerCase() || 'lite';
@@ -90,130 +60,127 @@ const ProfileHeader = ({ userProfile, isEditing, onEdit }: ProfileHeaderProps) =
     <motion.div
       ref={scope}
       initial={{ opacity: 0, y: 20 }}
-      className="mx-auto mb-8 max-w-md"
+      className="w-full"
     >
-      <motion.div
-        ref={cardRef}
-        className="profile-3d-container overflow-hidden rounded-xl bg-white dark:bg-gray-800/90 shadow-lg border border-gray-200 dark:border-gray-700"
-        style={{
-          transform: "perspective(1000px)",
-          rotateX: rotateX,
-          rotateY: rotateY,
-          boxShadow: "0 20px 30px -10px rgba(0,0,0,0.15)"
-        }}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        whileHover={{ scale: 1.02 }}
+      <motion.div 
+        className="overflow-hidden rounded-xl bg-gradient-to-b from-navy-800 to-navy-900 dark:from-navy-900 dark:to-[#001427] shadow-lg border border-gray-200 dark:border-gray-700"
+        whileHover={{ scale: 1.01 }}
         transition={{ type: "spring", stiffness: 300 }}
       >
-        {/* Gradiente superior */}
-        <div className="h-24 bg-gradient-to-r from-blue-600 to-indigo-700 dark:from-blue-800 dark:to-indigo-900 relative overflow-hidden">
-          <div className="absolute inset-0 opacity-20"></div>
-          <motion.div 
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-            initial={{ x: "-100%" }}
-            animate={{ x: "100%" }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-          />
-        </div>
-
-        {/* Avatar e informações do perfil */}
-        <div className="relative px-6 pb-6">
-          <motion.div 
-            className="profile-3d-avatar absolute -top-14 left-1/2 transform -translate-x-1/2"
-            whileHover={{ scale: 1.05, y: -5 }}
-          >
-            <Avatar className="w-28 h-28 border-4 border-white dark:border-gray-800 shadow-lg">
-              <AvatarImage src={profile.avatar_url || ""} alt={profile.display_name} />
-              <AvatarFallback className="bg-orange-500 text-white text-3xl">
-                {profile.display_name?.charAt(0) || "U"}
-              </AvatarFallback>
-            </Avatar>
-
-            {/* Círculo de câmera para trocar avatar */}
-            <Button 
-              variant="secondary" 
-              size="icon" 
-              className="absolute -bottom-1 -right-1 rounded-full w-8 h-8 shadow-md"
-            >
-              <Camera className="w-4 h-4" />
-            </Button>
-          </motion.div>
-
-          <div className="mt-16 flex flex-col items-center">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-              {profile.display_name || "Usuário"}
-            </h2>
-
-            {/* ID do usuário com efeito de destaque */}
+        {/* Perfil do usuário */}
+        <div className="px-4 py-6 flex flex-col items-center text-center relative">
+          {/* Avatar com efeito de brilho */}
+          <div className="relative mb-3">
             <motion.div 
-              className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5"
-              initial={{ opacity: 0.5 }}
-              whileHover={{ scale: 1.05, opacity: 1 }}
-            >
-              ID: <span className="font-mono bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-md text-orange-600 dark:text-orange-400">{profile.user_id || "—"}</span>
-            </motion.div>
-
-            {/* Badge do plano */}
-            <motion.div 
-              className={`mt-2 px-3 py-1 rounded-full text-xs font-medium text-white flex items-center gap-1.5 ${getPlanBadgeClass()}`}
-              whileHover={{ scale: 1.05 }}
-            >
-              <Award className="w-3.5 h-3.5" />
-              <span className="profile-premium-badge">Plano {profile.plan_type || "Lite"}</span>
-            </motion.div>
-
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-              {profile.full_name || "Estudante de Engenharia de Software"}
-            </p>
-
-            {/* Métricas */}
-            <div className="w-full grid grid-cols-3 gap-2 mt-5 pt-4 border-t border-gray-100 dark:border-gray-700">
-              <div className="flex flex-col items-center">
-                <span className="text-xl font-semibold text-gray-900 dark:text-white">{profile.level || 1}</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">Nível</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="text-xl font-semibold text-gray-900 dark:text-white">8</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">Turmas</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="text-xl font-semibold text-gray-900 dark:text-white">12</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">Conquistas</span>
-              </div>
-            </div>
-
-            {/* Barra de progresso */}
-            <div className="w-full mt-4">
-              <div className="flex items-center justify-between mb-1.5">
-                <p className="text-xs text-gray-500 dark:text-gray-400">Progresso para o próximo nível</p>
-                <p className="text-xs font-medium text-orange-600 dark:text-orange-400">{progressToNextLevel}%</p>
-              </div>
-              <div className="relative w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                <motion.div 
-                  className="absolute h-full bg-gradient-to-r from-orange-500 to-orange-400"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${progressToNextLevel}%` }}
-                  transition={{ duration: 1, ease: "easeOut" }}
-                />
-              </div>
-            </div>
-
-            {/* Botões de ação */}
-            <div className="flex w-full gap-2 mt-6">
-              <Button 
-                variant="default" 
-                className="flex-1 bg-orange-500 hover:bg-orange-600"
-                onClick={onEdit}
+              className="absolute -inset-1 bg-gradient-to-r from-orange-400 to-orange-500 rounded-full opacity-75 blur-md"
+              animate={{ 
+                rotate: [0, 360],
+                scale: [0.95, 1.05, 0.95]
+              }}
+              transition={{ 
+                rotate: { duration: 10, repeat: Infinity, ease: "linear" },
+                scale: { duration: 3, repeat: Infinity, ease: "easeInOut" }
+              }}
+            />
+            <div className="relative">
+              <Avatar className="w-24 h-24 border-4 border-white dark:border-gray-800 shadow-lg">
+                <AvatarImage src={profile.avatar_url || ""} alt={profile.display_name} />
+                <AvatarFallback className="bg-orange-500 text-white text-3xl">
+                  {profile.display_name?.charAt(0) || "U"}
+                </AvatarFallback>
+              </Avatar>
+              <motion.div 
+                className="absolute -bottom-1 -right-1 rounded-full w-8 h-8 shadow-md bg-white dark:bg-gray-800 flex items-center justify-center"
+                whileHover={{ scale: 1.1, rotate: 5 }}
               >
-                <Edit className="w-4 h-4 mr-2" />
-                {isEditing ? "Salvar Perfil" : "Editar Perfil"}
-              </Button>
-              <Button variant="outline" size="icon" className="aspect-square">
-                <Share2 className="w-4 h-4" />
-              </Button>
+                <Camera className="w-4 h-4 text-orange-500" />
+              </motion.div>
             </div>
           </div>
+
+          {/* Nome do usuário */}
+          <motion.h2 
+            className="text-xl font-bold text-white mb-1"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            {profile.display_name || "Usuário"}
+          </motion.h2>
+
+          {/* Badge do plano */}
+          <motion.div 
+            className={`mb-2 px-3 py-1 rounded-full text-xs font-medium text-white flex items-center gap-1.5 ${getPlanBadgeClass()}`}
+            whileHover={{ scale: 1.05 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Award className="w-3.5 h-3.5" />
+            <span>Plano {profile.plan_type || "Lite"}</span>
+          </motion.div>
+
+          {/* Descrição */}
+          <motion.p 
+            className="text-sm text-gray-300 mb-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
+            Estudante de Engenharia de Software
+          </motion.p>
+
+          {/* Grid de métricas com efeito hover */}
+          <div className="grid grid-cols-3 gap-2 w-full mb-4">
+            <motion.div 
+              className="flex flex-col items-center p-2 rounded-lg bg-white/5 backdrop-blur-sm"
+              whileHover={{ y: -5, backgroundColor: "rgba(255,255,255,0.1)" }}
+            >
+              <span className="text-xl font-semibold text-white">{profile.level || 1}</span>
+              <span className="text-xs text-gray-300">Nível</span>
+            </motion.div>
+            <motion.div 
+              className="flex flex-col items-center p-2 rounded-lg bg-white/5 backdrop-blur-sm"
+              whileHover={{ y: -5, backgroundColor: "rgba(255,255,255,0.1)" }}
+            >
+              <span className="text-xl font-semibold text-white">8</span>
+              <span className="text-xs text-gray-300">Turmas</span>
+            </motion.div>
+            <motion.div 
+              className="flex flex-col items-center p-2 rounded-lg bg-white/5 backdrop-blur-sm"
+              whileHover={{ y: -5, backgroundColor: "rgba(255,255,255,0.1)" }}
+            >
+              <span className="text-xl font-semibold text-white">12</span>
+              <span className="text-xs text-gray-300">Conquistas</span>
+            </motion.div>
+          </div>
+
+          {/* Barra de progresso com animação */}
+          <div className="w-full px-2 mb-4">
+            <div className="flex items-center justify-between mb-1.5">
+              <p className="text-xs text-gray-300">Progresso para o próximo nível</p>
+              <p className="text-xs font-medium text-orange-400">{progressToNextLevel}%</p>
+            </div>
+            <div className="relative h-2.5 bg-gray-700 rounded-full overflow-hidden">
+              <motion.div 
+                className="absolute h-full bg-gradient-to-r from-orange-500 to-orange-400"
+                initial={{ width: 0 }}
+                animate={{ width: `${progressToNextLevel}%` }}
+                transition={{ duration: 1, ease: "easeOut" }}
+              />
+            </div>
+          </div>
+
+          {/* Botão de editar perfil */}
+          <motion.button
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={onEdit}
+          >
+            <Edit className="w-4 h-4" />
+            {isEditing ? "Salvar Perfil" : "Editar Perfil"}
+          </motion.button>
         </div>
       </motion.div>
     </motion.div>

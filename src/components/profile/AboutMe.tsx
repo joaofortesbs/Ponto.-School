@@ -2,7 +2,8 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Edit, Save } from "lucide-react";
+import { Edit, Save, User } from "lucide-react";
+import { motion } from "framer-motion";
 import type { UserProfile } from "@/types/user-profile";
 
 interface AboutMeProps {
@@ -26,15 +27,21 @@ export default function AboutMe({ userProfile, isEditing }: AboutMeProps) {
   const actualIsEditing = isEditing || localIsEditing;
 
   return (
-    <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-6 shadow-sm mb-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm mb-6"
+    >
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-bold text-[#29335C] dark:text-white">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <User className="w-5 h-5 text-orange-500" />
           Sobre Mim
         </h3>
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 text-[#64748B] dark:text-white/60 hover:text-[#FF6B00] hover:bg-[#FF6B00]/10"
+          className="h-8 w-8 text-gray-500 dark:text-gray-400 hover:text-orange-500 hover:bg-orange-500/10"
           onClick={actualIsEditing ? saveAboutMe : toggleEditing}
         >
           {actualIsEditing ? (
@@ -46,14 +53,34 @@ export default function AboutMe({ userProfile, isEditing }: AboutMeProps) {
       </div>
 
       {actualIsEditing ? (
-        <Textarea
-          className="min-h-[120px] border-[#E0E1DD] dark:border-white/10 focus:border-[#FF6B00] focus:ring-[#FF6B00]/10"
-          value={aboutMe}
-          onChange={(e) => setAboutMe(e.target.value)}
-        />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Textarea
+            className="min-h-[120px] border-gray-300 dark:border-gray-600 focus:border-orange-500 focus:ring-orange-500/10 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            value={aboutMe}
+            onChange={(e) => setAboutMe(e.target.value)}
+          />
+          <div className="flex justify-end mt-3">
+            <Button
+              onClick={saveAboutMe}
+              className="bg-orange-500 hover:bg-orange-600 text-white"
+            >
+              <Save className="mr-2 h-4 w-4" /> Salvar
+            </Button>
+          </div>
+        </motion.div>
       ) : (
-        <p className="text-[#64748B] dark:text-white/80">{aboutMe}</p>
+        <motion.p 
+          className="text-gray-700 dark:text-gray-300"
+          whileHover={{ x: 3 }}
+          transition={{ type: "spring", stiffness: 300 }}
+        >
+          {aboutMe}
+        </motion.p>
       )}
-    </div>
+    </motion.div>
   );
 }
