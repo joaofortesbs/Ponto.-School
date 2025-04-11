@@ -2,7 +2,7 @@
 // Serviço para gerenciamento de perfis de usuário
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/types/user-profile';
-import { generateUserId, generateSimpleUserId, generateUserIdSupabase } from '@/lib/generate-user-id';';
+import { generateUserId, generateSimpleUserId, generateUserIdSupabase } from '@/lib/generate-user-id';
 
 class ProfileService {
   /**
