@@ -2,6 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Estilos para efeito de paralaxe */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.layer {
+  transition: transform 0.1s;
+}
+
+.layer-bg {
+  background-image: linear-gradient(to bottom, #001427, #0A2540);
+  z-index: 1;
+}
+
+.layer-fg {
+  background-image: url('/images/pattern-grid.svg');
+  opacity: 0.15;
+  z-index: 2;
+}
+
 :root {
   --primary: #FF6B00;
   --primary-lighter: #FF9B50;
