@@ -642,15 +642,12 @@ export function RegisterForm() {
 
                 <ul className="space-y-2 mb-4">
                   <li className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                    <Check className="h-4 w-4 text-[#FF6B00] mr-2 flex-shrink-0" />
                     <span>Recursos básicos de estudo</span>
                   </li>
                   <li className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                    <Check className="h-4 w-4 text-[#FF6B00] mr-2 flex-shrink-0" />
                     <span>Acesso a materiais didáticos</span>
                   </li>
                   <li className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                    <Check className="h-4 w-4 text-[#FF6B00] mr-2 flex-shrink-0" />
                     <span>Grupos de estudo</span>
                   </li>
                 </ul>
@@ -699,19 +696,15 @@ export function RegisterForm() {
 
                 <ul className="space-y-2 mb-4">
                   <li className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                    <Check className="h-4 w-4 text-[#FF6B00] mr-2 flex-shrink-0" />
                     <span>Todos os recursos do plano LITE</span>
                   </li>
                   <li className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                    <Check className="h-4 w-4 text-[#FF6B00] mr-2 flex-shrink-0" />
                     <span>Mentoria com IA avançada</span>
                   </li>
                   <li className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                    <Check className="h-4 w-4 text-[#FF6B00] mr-2 flex-shrink-0" />
                     <span>Materiais exclusivos</span>
                   </li>
                   <li className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                    <Check className="h-4 w-4 text-[#FF6B00] mr-2 flex-shrink-0" />
                     <span>Suporte prioritário</span>
                   </li>
                 </ul>
@@ -733,7 +726,7 @@ export function RegisterForm() {
           </div>
 
           <div className="text-center text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl">
-            <span className="font-medium">Importante:</span> Esta escolha determinará seu tipo de acesso à plataforma e será utilizada para a geração do seu ID de usuário único.
+            <span className="font-medium">Importante:</span> Esta escolha deve ser verdadeira e de acordo com a instituição que você estuda, ela será utilizada para a geração do seu ID de usuário único.
           </div>
         </div>
       </div>
@@ -777,7 +770,7 @@ export function RegisterForm() {
               <div className="space-y-4">
                 {/* Nome Completo */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-brand-black dark:text-white">
+                  <label className="text-sm fontmedium text-brand-black dark:text-white">
                     Nome Completo
                   </label>
                   <div className="relative">
