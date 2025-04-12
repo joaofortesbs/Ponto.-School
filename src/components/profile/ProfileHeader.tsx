@@ -62,13 +62,18 @@ export default function ProfileHeader({
   // Função para garantir que temos o username correto e consistente com o cabeçalho
   const ensureCorrectUsername = async () => {
     try {
-      // Verificar se temos o username no localStorage (usado no cabeçalho)
+      // Verificar se temos o username e informações de perfil no localStorage (usado no cabeçalho)
       const headerUsername = localStorage.getItem('username');
+      const headerFirstName = localStorage.getItem('userFirstName');
+      const headerDisplayName = localStorage.getItem('userDisplayName');
       
-      console.log("Sincronizando usernames:", {
+      console.log("Sincronizando informações de usuário:", {
         headerUsername,
+        headerFirstName,
+        headerDisplayName,
         profileUsername: userProfile?.username,
-        userProfileFull: userProfile
+        profileDisplayName: userProfile?.display_name,
+        profileFullName: userProfile?.full_name
       });
       
       if (headerUsername) {
@@ -78,15 +83,20 @@ export default function ProfileHeader({
         if (userProfile && (!userProfile.username || userProfile.username !== headerUsername)) {
           console.log("Atualizando username no perfil para corresponder ao cabeçalho:", headerUsername);
           
+          // Determinar qual display_name usar
+          const displayNameToUse = headerDisplayName || headerFirstName || 
+                                  userProfile?.display_name || userProfile?.full_name?.split(' ')[0] || 
+                                  'Usuário';
+          
           // Atualizar o perfil para usar o mesmo username do cabeçalho
           await profileService.updateUserProfile({
             username: headerUsername,
-            display_name: headerUsername, // Também atualizar o display_name
+            display_name: displayNameToUse,
             updated_at: new Date().toISOString()
           });
           
           // Atualizar o estado local
-          setDisplayName(headerUsername);
+          setDisplayName(displayNameToUse);
           
           // Recarregar perfil após atualização
           loadProfile();
@@ -95,11 +105,20 @@ export default function ProfileHeader({
         // Se não temos username no localStorage mas temos no perfil, atualizar o localStorage
         console.log("Sincronizando username do perfil para o cabeçalho:", userProfile.username);
         localStorage.setItem('username', userProfile.username);
+        
+        // Também sincronizar display_name e first_name se disponíveis
+        if (userProfile.display_name) {
+          localStorage.setItem('userDisplayName', userProfile.display_name);
+        }
+        if (userProfile.full_name) {
+          localStorage.setItem('userFirstName', userProfile.full_name.split(' ')[0]);
+        }
       } else {
         // Se não temos em nenhum lugar, usar o valor padrão genérico
         const defaultUsername = 'Usuário';
         console.log("Definindo username padrão:", defaultUsername);
         localStorage.setItem('username', defaultUsername);
+        localStorage.setItem('userDisplayName', defaultUsername);
         
         if (userProfile) {
           // Atualizar o perfil com este username padrão
@@ -999,28 +1018,29 @@ export default function ProfileHeader({
 
             // Buscar o nome de usuário do localStorage (usado no cabeçalho)
             // Obter o nome de usuário do cabeçalho (mesma lógica usada no componente do cabeçalho)
+            // Buscar informações do usuário de todas as fontes possíveis
             const headerUsername = localStorage.getItem('username');
             const userFirstName = localStorage.getItem('userFirstName');
+            const userDisplayName = localStorage.getItem('userDisplayName');
+            
+            console.log("Dados para exibição do perfil:", {
+              localStorage_username: headerUsername,
+              localStorage_userFirstName: userFirstName,
+              localStorage_userDisplayName: userDisplayName,
+              profile_username: userProfile?.username,
+              profile_display_name: userProfile?.display_name,
+              profile_full_name: userProfile?.full_name
+            });
             
             // Usar o nome de usuário do cabeçalho com a mesma prioridade do Header
             const usernameToDisplay = headerUsername || userProfile?.username || storedUsername || 'Usuário';
             
             // Nome de exibição: usar a mesma prioridade que é usada no Header
-            const displayNameToUse = userFirstName || userProfile?.display_name || userProfile?.full_name?.split(' ')[0] || 'Usuário';
+            const displayNameToUse = userFirstName || userDisplayName || userProfile?.display_name || userProfile?.full_name?.split(' ')[0] || 'Usuário';
 
             // Exibir nome de exibição e nome de usuário como dois componentes distintos
             // Nome de exibição: usar display_name ou o primeiro nome do nome completo, ou o fallback
-            let nameDisplay = '';
-            
-            if (userProfile?.display_name) {
-              nameDisplay = userProfile.display_name;
-            } else if (userProfile?.full_name) {
-              // Se tiver nome completo, exibir apenas o primeiro nome
-              nameDisplay = userProfile.full_name.split(' ')[0];
-            } else {
-              nameDisplay = "Usuário";
-            }
-            
+            // Simplificado - usar diretamente o displayNameToUse que já foi calculado
             return (
               <>
                 {displayNameToUse} <span className="text-gray-400 dark:text-gray-400">|</span> <span className="text-[#FF6B00]">@{usernameToDisplay}</span>
