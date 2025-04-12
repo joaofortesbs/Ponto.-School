@@ -65,28 +65,56 @@ export default function ProfileHeader({
       // Verificar se temos o username no localStorage (usado no cabeçalho)
       const headerUsername = localStorage.getItem('username');
       
+      console.log("Sincronizando usernames:", {
+        headerUsername,
+        profileUsername: userProfile?.username,
+        userProfileFull: userProfile
+      });
+      
       if (headerUsername) {
-        console.log("Verificando username no cabeçalho:", headerUsername);
+        // Se temos um username no cabeçalho, usar ele como fonte principal
         
+        // Verificar se o perfil existe e precisa ser atualizado
         if (userProfile && (!userProfile.username || userProfile.username !== headerUsername)) {
           console.log("Atualizando username no perfil para corresponder ao cabeçalho:", headerUsername);
           
           // Atualizar o perfil para usar o mesmo username do cabeçalho
           await profileService.updateUserProfile({
             username: headerUsername,
+            display_name: headerUsername, // Também atualizar o display_name
             updated_at: new Date().toISOString()
           });
           
+          // Atualizar o estado local
+          setDisplayName(headerUsername);
+          
           // Recarregar perfil após atualização
           loadProfile();
-        } else {
-          // Garantir que o username está correto no localStorage para consistência
-          localStorage.setItem('username', headerUsername);
         }
       } else if (userProfile?.username) {
         // Se não temos username no localStorage mas temos no perfil, atualizar o localStorage
         console.log("Sincronizando username do perfil para o cabeçalho:", userProfile.username);
         localStorage.setItem('username', userProfile.username);
+      } else {
+        // Se não temos em nenhum lugar, usar o valor padrão 'joaofortes'
+        const defaultUsername = 'joaofortes';
+        console.log("Definindo username padrão:", defaultUsername);
+        localStorage.setItem('username', defaultUsername);
+        
+        if (userProfile) {
+          // Atualizar o perfil com este username padrão
+          await profileService.updateUserProfile({
+            username: defaultUsername,
+            display_name: defaultUsername,
+            updated_at: new Date().toISOString()
+          });
+          
+          // Atualizar o estado local
+          setDisplayName(defaultUsername);
+          
+          // Recarregar perfil
+          loadProfile();
+        }
       }
     } catch (error) {
       console.error("Erro ao sincronizar username com cabeçalho:", error);
@@ -94,6 +122,13 @@ export default function ProfileHeader({
   };
 
   useEffect(() => {
+    // Verificar se temos um username no cabeçalho e configurar um padrão se não tiver
+    const headerUsername = localStorage.getItem('username');
+    if (!headerUsername) {
+      console.log("Definindo username padrão no localStorage");
+      localStorage.setItem('username', 'joaofortes');
+    }
+    
     // Forçar carregamento do perfil se userProfile for null
     if (!userProfile) {
       loadProfile();
@@ -744,13 +779,16 @@ export default function ProfileHeader({
               profile_full_name: userProfile?.full_name
             });
 
-            // Prioridade: storedUsername > headerUsername > fallback
-            const usernameToDisplay = storedUsername || headerUsername || 'usuário';
+            // Buscar o nome de usuário do localStorage (usado no cabeçalho)
+            const headerUsername = localStorage.getItem('username');
+            
+            // Usar o nome de usuário do cabeçalho (prioridade máxima)
+            const usernameToDisplay = headerUsername || storedUsername || 'joaofortes';
 
             // Exibir o nome do usuário igual ao do cabeçalho junto com a parte @username
             return (
               <>
-                {displayedName} <span className="text-gray-400 dark:text-gray-400">|</span> <span className="text-[#FF6B00]">@{usernameToDisplay}</span>
+                {headerUsername || displayedName} <span className="text-gray-400 dark:text-gray-400">|</span> <span className="text-[#FF6B00]">@{usernameToDisplay}</span>
               </>
             );
           })()}
