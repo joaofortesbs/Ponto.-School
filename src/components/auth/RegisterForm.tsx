@@ -282,13 +282,31 @@ export function RegisterForm() {
         // Determinar o tipo de conta com base no plano
         const tipoConta = confirmedPlan === "full" ? 1 : 2;
         
-        // Garantir que o estado seja válido
-        const uf = formData.state || 'SP';
-        console.log(`Gerando ID com estado (UF): ${uf} e tipo de conta: ${tipoConta}`);
+        // Validar e obter o estado (UF) selecionado
+        if (!formData.state || formData.state.length !== 2) {
+          setError("Por favor, selecione um estado (UF) válido para continuar.");
+          setLoading(false);
+          return;
+        }
         
-        // Tentar usar as funções de geração de ID
+        // Garantir que o estado esteja em maiúsculas
+        const uf = formData.state.toUpperCase();
+        
+        // Verificar se o estado é válido (não pode ser BR)
+        if (uf === 'BR') {
+          setError("O código 'BR' não é um estado válido. Por favor, selecione um estado específico.");
+          setLoading(false);
+          return;
+        }
+        
+        // Salvar o estado selecionado no localStorage para referência futura
+        localStorage.setItem('selectedState', uf);
+        console.log(`Estado selecionado pelo usuário e salvo no localStorage: ${uf}`);
+        
+        console.log(`Gerando ID com estado (UF): ${uf} e tipo de conta: ${tipoConta} (${confirmedPlan})`);
+        
+        // Tentar usar a função principal de geração de ID
         try {
-          // Primeira tentativa: usar a função principal
           userId = await generateUserId(uf, tipoConta);
           console.log(`ID gerado com sucesso usando generateUserId: ${userId}`);
         } catch (generationError) {
@@ -301,19 +319,51 @@ export function RegisterForm() {
           } catch (planError) {
             console.error("Erro ao gerar ID com função de plano:", planError);
             
-            // Último fallback: Gerar manualmente
+            // Último fallback: Gerar manualmente, mas mantendo a padronização
             const dataAtual = new Date();
             const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, "0")}`;
             
-            // Tentar obter o sequencial do banco de dados ou fallback para localStorage
-            let sequencial;
-            let userCount = parseInt(localStorage.getItem("userCount") || "0");
-            userCount++;
-            localStorage.setItem("userCount", userCount.toString());
-            sequencial = userCount.toString().padStart(6, "0");
-            
-            userId = `${uf}${anoMes}${tipoConta}${sequencial}`;
-            console.log(`ID gerado manualmente: ${userId}`);
+            // Tentar buscar o último ID do banco de dados diretamente
+            try {
+              const { data: controlData } = await supabase
+                .from('user_id_control')
+                .select('last_id')
+                .single();
+              
+              let sequencial;
+              if (controlData && controlData.last_id) {
+                // Incrementar o último ID conhecido
+                sequencial = (controlData.last_id + 1).toString().padStart(6, "0");
+                
+                // Atualizar o contador no banco de dados
+                await supabase
+                  .from('user_id_control')
+                  .update({ last_id: controlData.last_id + 1 })
+                  .eq('id', controlData.id);
+              } else {
+                // Se não conseguir obter do banco, usar localStorage como último recurso
+                let userCount = parseInt(localStorage.getItem("userCount") || "0");
+                userCount++;
+                localStorage.setItem("userCount", userCount.toString());
+                sequencial = userCount.toString().padStart(6, "0");
+                
+                // Tentar criar o controle no banco de dados para usos futuros
+                await supabase
+                  .from('user_id_control')
+                  .insert([{ last_id: userCount }]);
+              }
+              
+              userId = `${uf}${anoMes}${tipoConta}${sequencial}`;
+              console.log(`ID gerado manualmente com sequencial controlado: ${userId}`);
+            } catch (fallbackError) {
+              console.error("Erro no fallback final:", fallbackError);
+              
+              // Último recurso: usar timestamp para garantir unicidade
+              const timestamp = new Date().getTime();
+              const sequencial = timestamp.toString().slice(-6);
+              userId = `${uf}${anoMes}${tipoConta}${sequencial}`;
+              console.log(`ID gerado com timestamp como último recurso: ${userId}`);
+            }
           }
         }
         

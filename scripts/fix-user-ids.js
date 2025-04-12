@@ -30,10 +30,13 @@ function isValidUserId(id) {
  * Gera um ID de usuário com o formato correto
  */
 async function generateUserId(uf, tipoConta) {
-  // Validação básica da UF
-  if (!uf || uf.length !== 2 || uf === 'BR') {
-    console.warn('UF inválida fornecida:', uf);
-    uf = 'SP';
+  // Validação rigorosa da UF
+  if (!uf || uf.length !== 2) {
+    console.error('UF inválida fornecida:', uf);
+    throw new Error('UF inválida para geração de ID. A UF é obrigatória.');
+  } else if (uf === 'BR') {
+    console.error('UF "BR" é inválida para geração de ID');
+    throw new Error('UF "BR" é inválida para geração de ID. Escolha um estado brasileiro válido.');
   }
 
   uf = uf.toUpperCase();
@@ -43,14 +46,14 @@ async function generateUserId(uf, tipoConta) {
   const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
 
   try {
-    // Obter o último ID
+    // Obter o último ID da tabela de controle
     const { data, error } = await supabase
       .from('user_id_control')
-      .select('last_id')
+      .select('*')
       .single();
 
-    if (error) {
-      console.error("Erro ao buscar último ID:", error);
+    if (error && error.code !== 'PGRST116') {
+      console.error("Erro ao buscar controle de ID:", error);
       return fallbackGenerateId(uf, tipoConta, anoMes);
     }
 
@@ -59,12 +62,16 @@ async function generateUserId(uf, tipoConta) {
     if (data) {
       // Incrementa o contador
       nextId = data.last_id + 1;
+      console.log(`Incrementando contador de ID para: ${nextId}`);
 
-      // Atualiza o contador no banco de dados
+      // Atualiza o contador no banco de dados de forma atômica
       const { error: updateError } = await supabase
         .from('user_id_control')
-        .update({ last_id: nextId })
-        .eq('id', 1);
+        .update({ 
+          last_id: nextId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', data.id);
 
       if (updateError) {
         console.error("Erro ao atualizar contador:", updateError);
@@ -72,9 +79,14 @@ async function generateUserId(uf, tipoConta) {
       }
     } else {
       // Cria um novo registro de controle
+      console.log("Criando novo controle de ID, começando com 1");
       const { error: insertError } = await supabase
         .from('user_id_control')
-        .insert([{ last_id: 1 }]);
+        .insert([{ 
+          last_id: 1,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }]);
 
       if (insertError) {
         console.error("Erro ao criar contador:", insertError);
@@ -82,8 +94,10 @@ async function generateUserId(uf, tipoConta) {
       }
     }
 
-    // Gera o ID completo
-    return `${uf}${anoMes}${tipoConta}${nextId.toString().padStart(6, '0')}`;
+    // Gera o ID completo com formato garantido
+    const userId = `${uf}${anoMes}${tipoConta}${nextId.toString().padStart(6, '0')}`;
+    console.log(`ID gerado: ${userId} (UF=${uf}, AnoMes=${anoMes}, TipoConta=${tipoConta}, Sequencial=${nextId})`);
+    return userId;
 
   } catch (error) {
     console.error("Erro inesperado:", error);

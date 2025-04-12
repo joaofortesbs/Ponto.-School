@@ -9,7 +9,7 @@ import { supabase } from "@/lib/supabase";
  * @returns Uma string contendo o ID gerado no formato UF+AnoMês+TipoConta+Sequencial(6)
  */
 export async function generateUserId(uf: string, tipoConta: number): Promise<string> {
-  // Validação da UF - garantir que seja uma UF válida
+  // Validação rigorosa da UF - garantir que seja uma UF válida
   if (!uf || uf.length !== 2) {
     console.error('ERRO: UF inválida ou não fornecida:', uf);
     throw new Error('UF inválida ou não fornecida para geração de ID. A UF é obrigatória.');
@@ -26,14 +26,14 @@ export async function generateUserId(uf: string, tipoConta: number): Promise<str
   const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
 
   try {
-    // Obter o último ID da tabela de controle
+    // Obter o último ID da tabela de controle única
     const { data, error: selectError } = await supabase
       .from('user_id_control')
-      .select('last_id')
+      .select('*')
       .single();
 
     if (selectError && selectError.code !== 'PGRST116') {
-      console.error("Erro ao buscar last_id:", selectError);
+      console.error("Erro ao buscar controle de ID:", selectError);
       return generateFallbackUserId(uf, tipoConta, anoMes);
     }
 
@@ -53,24 +53,33 @@ export async function generateUserId(uf: string, tipoConta: number): Promise<str
         return generateFallbackUserId(uf, tipoConta, anoMes);
       }
 
+      console.log("Controle de ID criado com sucesso. Iniciando com ID 1");
       nextId = 1; // Primeiro ID
     } else {
       // Se já existe um registro, incrementa o last_id
       nextId = data.last_id + 1;
 
+      // Atualiza o contador na tabela de controle
       const { error: updateError } = await supabase
         .from('user_id_control')
-        .update({ last_id: nextId })
+        .update({ 
+          last_id: nextId,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', data.id);
 
       if (updateError) {
-        console.error("Erro ao atualizar last_id:", updateError);
+        console.error("Erro ao atualizar contador de ID:", updateError);
         return generateFallbackUserId(uf, tipoConta, anoMes);
       }
+      
+      console.log(`Contador de ID atualizado: ${nextId}`);
     }
 
     // Formata o ID completo: UF (2) + AnoMês (4) + TipoConta (1) + Sequencial (6 dígitos com zeros à esquerda)
-    return `${uf}${anoMes}${tipoConta}${nextId.toString().padStart(6, '0')}`;
+    const userId = `${uf}${anoMes}${tipoConta}${nextId.toString().padStart(6, '0')}`;
+    console.log(`ID de usuário gerado: ${userId} com UF=${uf}, AnoMes=${anoMes}, TipoConta=${tipoConta}, Sequencial=${nextId}`);
+    return userId;
 
   } catch (error) {
     console.error("Erro ao gerar ID de usuário:", error);

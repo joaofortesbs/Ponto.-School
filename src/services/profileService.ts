@@ -266,38 +266,63 @@ class ProfileService {
       
       // Verificar se temos uma UF válida
       let uf = profile.state;
-      if (!uf || uf.length !== 2) {
+      let ufWasUpdated = false;
+      
+      if (!uf || uf.length !== 2 || uf === 'BR') {
         // Se não tiver UF válida, tentar recuperar do localStorage ou prompt do usuário
-        console.error('UF não fornecida ou inválida no perfil do usuário');
+        console.warn(`UF inválida ou não fornecida no perfil: "${uf}"`);
         
         // Tentar obter do localStorage
         try {
           const savedState = localStorage.getItem('selectedState');
-          if (savedState && savedState.length === 2) {
+          if (savedState && savedState.length === 2 && savedState !== 'BR') {
             console.log(`Usando estado encontrado no localStorage: ${savedState}`);
             uf = savedState.toUpperCase();
+            ufWasUpdated = true;
             
             // Atualizar o perfil com o estado correto
             const { error: updateStateError } = await supabase
               .from('profiles')
-              .update({ state: uf })
+              .update({ 
+                state: uf,
+                updated_at: new Date().toISOString() 
+              })
               .eq('id', profile.id);
               
             if (!updateStateError) {
               console.log(`Estado do usuário atualizado para ${uf}`);
+            } else {
+              console.error('Erro ao atualizar estado no perfil:', updateStateError);
             }
           } else {
-            console.error('Não foi possível encontrar um estado válido para o usuário.');
-            throw new Error('Estado/UF inválido para geração de ID. Selecione um estado brasileiro válido.');
+            // Se não encontrou no localStorage, usar um estado padrão (mas não recomendado)
+            console.error('Não foi possível encontrar um estado válido. Usando SP como fallback.');
+            uf = 'SP';
+            ufWasUpdated = true;
+            
+            // Atualizar o perfil com o estado padrão
+            const { error: updateStateError } = await supabase
+              .from('profiles')
+              .update({ 
+                state: uf,
+                updated_at: new Date().toISOString() 
+              })
+              .eq('id', profile.id);
+              
+            if (!updateStateError) {
+              console.log(`Estado do usuário definido para padrão: ${uf}`);
+            }
           }
         } catch (e) {
           console.error('Erro ao recuperar ou atualizar estado do usuário:', e);
-          throw new Error('Não foi possível gerar ID sem um estado brasileiro válido.');
+          // Último recurso: usar SP como estado padrão
+          uf = 'SP';
+          ufWasUpdated = true;
         }
-      } else if (uf === 'BR') {
-        console.error('UF "BR" não é válida para geração de ID');
-        throw new Error('UF "BR" é inválida para geração de ID. Escolha um estado brasileiro válido.');
       }
+      
+      // Registrar a UF que será usada para a geração do ID
+      console.log(`UF que será usada para gerar o ID: ${uf} (Foi atualizada: ${ufWasUpdated})`);
       
       // Determinar o tipo de plano do usuário
       let planType = profile.plan_type || '';
