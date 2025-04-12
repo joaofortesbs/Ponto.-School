@@ -70,6 +70,23 @@ export function SidebarNav({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    // Listener para atualizações de avatar feitas em outros componentes
+    const handleAvatarUpdate = (event: CustomEvent) => {
+      if (event.detail && event.detail.url) {
+        setProfileImage(event.detail.url);
+      }
+    };
+
+    // Adicionar o listener
+    document.addEventListener('userAvatarUpdated', handleAvatarUpdate as EventListener);
+
+    // Remover o listener quando o componente for desmontado
+    return () => {
+      document.removeEventListener('userAvatarUpdated', handleAvatarUpdate as EventListener);
+    };
+  }, []);
+
+  useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         const {
@@ -87,6 +104,12 @@ export function SidebarNav({
             console.error("Error fetching user profile:", error);
           } else if (data) {
             setUserProfile(data as UserProfile);
+            // Se o perfil tiver um avatar_url, usar ele
+            if (data.avatar_url) {
+              setProfileImage(data.avatar_url);
+              // Também salvar no localStorage para uso em outros componentes
+              localStorage.setItem('userAvatarUrl', data.avatar_url);
+            }
           }
         }
       } catch (error) {
@@ -387,7 +410,7 @@ export function SidebarNav({
           <div className="text-[#001427] dark:text-white text-center">
             <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
               <span className="mr-1">👋</span> Olá{" "}
-              {userProfile?.display_name || userProfile?.username || "Usuário"}
+              {userProfile?.first_name || userProfile?.display_name || userProfile?.username || "Usuário"}
             </h3>
             <div className="flex flex-col items-center mt-1">
               <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">

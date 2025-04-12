@@ -283,16 +283,79 @@ export default function ProfileHeader({
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
 
+      // Comprimir a imagem antes do upload (opcional, para melhor performance)
+      let fileToUpload = file;
+      if (file.size > 1000000) { // Se for maior que 1MB
+        const canvas = document.createElement('canvas');
+        const img = new Image();
+        
+        const loadImage = new Promise<File>((resolve) => {
+          img.onload = () => {
+            // Calcular novo tamanho mantendo a proporção
+            let width = img.width;
+            let height = img.height;
+            const maxSize = 800; // Tamanho máximo para qualquer dimensão
+            
+            if (width > height && width > maxSize) {
+              height = (height / width) * maxSize;
+              width = maxSize;
+            } else if (height > maxSize) {
+              width = (width / height) * maxSize;
+              height = maxSize;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx?.drawImage(img, 0, 0, width, height);
+            
+            canvas.toBlob((blob) => {
+              if (blob) {
+                const optimizedFile = new File([blob], file.name, { 
+                  type: 'image/jpeg', 
+                  lastModified: Date.now() 
+                });
+                resolve(optimizedFile);
+              } else {
+                resolve(file); // Fallback para arquivo original
+              }
+            }, 'image/jpeg', 0.85);
+          };
+          img.onerror = () => resolve(file); // Fallback em caso de erro
+        });
+        
+        img.src = URL.createObjectURL(file);
+        fileToUpload = await loadImage;
+      }
+
       // Upload para o storage
       const { error: uploadError } = await supabase.storage
         .from('profiles')
-        .upload(filePath, file, {
+        .upload(filePath, fileToUpload, {
           cacheControl: '3600',
           upsert: true
         });
 
       if (uploadError) {
-        throw uploadError;
+        if (uploadError.message.includes('The resource already exists')) {
+          // Se o arquivo já existe, gerar um novo nome e tentar novamente
+          const newFileName = `${user.id}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+          const newFilePath = `avatars/${newFileName}`;
+          
+          const { error: retryError } = await supabase.storage
+            .from('profiles')
+            .upload(newFilePath, fileToUpload, {
+              cacheControl: '3600',
+              upsert: true
+            });
+            
+          if (retryError) throw retryError;
+          
+          // Atualizar o caminho do arquivo
+          filePath = newFilePath;
+        } else {
+          throw uploadError;
+        }
       }
 
       // Obter URL pública
@@ -300,22 +363,41 @@ export default function ProfileHeader({
         .from('profiles')
         .getPublicUrl(filePath);
 
+      if (!publicUrlData || !publicUrlData.publicUrl) {
+        throw new Error("Não foi possível obter a URL pública da imagem");
+      }
+
       // Atualizar perfil do usuário
-      await profileService.updateUserProfile({
+      const updatedProfile = await profileService.updateUserProfile({
         avatar_url: publicUrlData.publicUrl
       });
 
-      setAvatarUrl(publicUrlData.publicUrl);
+      if (updatedProfile) {
+        setAvatarUrl(publicUrlData.publicUrl);
+        
+        // Salvar também no localStorage para uso em outros componentes
+        try {
+          localStorage.setItem('userAvatarUrl', publicUrlData.publicUrl);
+          // Disparar evento para outros componentes saberem que o avatar foi atualizado
+          document.dispatchEvent(new CustomEvent('userAvatarUpdated', { 
+            detail: { url: publicUrlData.publicUrl } 
+          }));
+        } catch (e) {
+          console.warn("Erro ao salvar avatar no localStorage", e);
+        }
 
-      toast({
-        title: "Sucesso",
-        description: "Foto de perfil atualizada com sucesso",
-      });
+        toast({
+          title: "Sucesso",
+          description: "Foto de perfil atualizada com sucesso",
+        });
+      } else {
+        throw new Error("Não foi possível atualizar o perfil");
+      }
     } catch (error) {
       console.error("Erro ao fazer upload da foto de perfil:", error);
       toast({
         title: "Erro",
-        description: "Ocorreu um erro ao fazer upload da foto",
+        description: "Ocorreu um erro ao fazer upload da foto: " + (error instanceof Error ? error.message : "Erro desconhecido"),
         variant: "destructive"
       });
     } finally {
@@ -343,16 +425,77 @@ export default function ProfileHeader({
       const fileName = `${user.id}-cover-${Date.now()}.${fileExt}`;
       const filePath = `covers/${fileName}`;
 
+      // Comprimir a imagem antes do upload (opcional, para melhor performance)
+      let fileToUpload = file;
+      if (file.size > 1500000) { // Se for maior que 1.5MB
+        const canvas = document.createElement('canvas');
+        const img = new Image();
+        
+        const loadImage = new Promise<File>((resolve) => {
+          img.onload = () => {
+            // Calcular novo tamanho mantendo a proporção
+            let width = img.width;
+            let height = img.height;
+            
+            // Para imagens de capa, manter a largura maior
+            const maxWidth = 1200;
+            if (width > maxWidth) {
+              height = (height / width) * maxWidth;
+              width = maxWidth;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx?.drawImage(img, 0, 0, width, height);
+            
+            canvas.toBlob((blob) => {
+              if (blob) {
+                const optimizedFile = new File([blob], file.name, { 
+                  type: 'image/jpeg', 
+                  lastModified: Date.now() 
+                });
+                resolve(optimizedFile);
+              } else {
+                resolve(file); // Fallback para arquivo original
+              }
+            }, 'image/jpeg', 0.8);
+          };
+          img.onerror = () => resolve(file); // Fallback em caso de erro
+        });
+        
+        img.src = URL.createObjectURL(file);
+        fileToUpload = await loadImage;
+      }
+
       // Upload para o storage
       const { error: uploadError } = await supabase.storage
         .from('profiles')
-        .upload(filePath, file, {
+        .upload(filePath, fileToUpload, {
           cacheControl: '3600',
           upsert: true
         });
 
       if (uploadError) {
-        throw uploadError;
+        if (uploadError.message.includes('The resource already exists')) {
+          // Se o arquivo já existe, gerar um novo nome e tentar novamente
+          const newFileName = `${user.id}-cover-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+          const newFilePath = `covers/${newFileName}`;
+          
+          const { error: retryError } = await supabase.storage
+            .from('profiles')
+            .upload(newFilePath, fileToUpload, {
+              cacheControl: '3600',
+              upsert: true
+            });
+            
+          if (retryError) throw retryError;
+          
+          // Atualizar o caminho do arquivo
+          filePath = newFilePath;
+        } else {
+          throw uploadError;
+        }
       }
 
       // Obter URL pública
@@ -360,22 +503,41 @@ export default function ProfileHeader({
         .from('profiles')
         .getPublicUrl(filePath);
 
+      if (!publicUrlData || !publicUrlData.publicUrl) {
+        throw new Error("Não foi possível obter a URL pública da imagem");
+      }
+
       // Atualizar perfil do usuário
-      await profileService.updateUserProfile({
+      const updatedProfile = await profileService.updateUserProfile({
         cover_url: publicUrlData.publicUrl
       });
 
-      setCoverUrl(publicUrlData.publicUrl);
+      if (updatedProfile) {
+        setCoverUrl(publicUrlData.publicUrl);
+        
+        // Salvar também no localStorage para uso em outros componentes
+        try {
+          localStorage.setItem('userCoverUrl', publicUrlData.publicUrl);
+          // Disparar evento para outros componentes
+          document.dispatchEvent(new CustomEvent('userCoverUpdated', { 
+            detail: { url: publicUrlData.publicUrl } 
+          }));
+        } catch (e) {
+          console.warn("Erro ao salvar capa no localStorage", e);
+        }
 
-      toast({
-        title: "Sucesso",
-        description: "Foto de capa atualizada com sucesso",
-      });
+        toast({
+          title: "Sucesso",
+          description: "Foto de capa atualizada com sucesso",
+        });
+      } else {
+        throw new Error("Não foi possível atualizar o perfil");
+      }
     } catch (error) {
       console.error("Erro ao fazer upload da foto de capa:", error);
       toast({
         title: "Erro",
-        description: "Ocorreu um erro ao fazer upload da capa",
+        description: "Ocorreu um erro ao fazer upload da capa: " + (error instanceof Error ? error.message : "Erro desconhecido"),
         variant: "destructive"
       });
     } finally {
@@ -393,13 +555,49 @@ export default function ProfileHeader({
 
   const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      uploadProfilePicture(e.target.files[0]);
+      const file = e.target.files[0];
+      // Verificar se o arquivo é uma imagem
+      if (file.type.startsWith('image/')) {
+        uploadProfilePicture(file);
+        // Criar uma prévia da imagem para feedback imediato
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (event.target?.result) {
+            setAvatarUrl(event.target.result as string);
+          }
+        };
+        reader.readAsDataURL(file);
+      } else {
+        toast({
+          title: "Formato inválido",
+          description: "Por favor, selecione uma imagem (JPG, PNG, etc.)",
+          variant: "destructive"
+        });
+      }
     }
   };
 
   const handleCoverPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      uploadCoverPhoto(e.target.files[0]);
+      const file = e.target.files[0];
+      // Verificar se o arquivo é uma imagem
+      if (file.type.startsWith('image/')) {
+        uploadCoverPhoto(file);
+        // Criar uma prévia da imagem para feedback imediato
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (event.target?.result) {
+            setCoverUrl(event.target.result as string);
+          }
+        };
+        reader.readAsDataURL(file);
+      } else {
+        toast({
+          title: "Formato inválido",
+          description: "Por favor, selecione uma imagem (JPG, PNG, etc.)",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -565,11 +763,19 @@ export default function ProfileHeader({
       {/* Cover Photo com gradiente animado e efeito de movimento - altura reduzida */}
       <div className="h-32 bg-gradient-to-r from-[#001427] via-[#072e4f] to-[#0A2540] relative overflow-hidden group/cover">
         {coverUrl ? (
-          <img
-            src={coverUrl}
-            alt="Cover"
-            className="absolute inset-0 w-full h-full object-cover"
-          />
+          <div className="absolute inset-0 w-full h-full">
+            <img
+              src={coverUrl}
+              alt="Cover"
+              className="absolute inset-0 w-full h-full object-cover"
+              onError={(e) => {
+                console.error("Erro ao carregar imagem de capa", e);
+                // Fallback para padrão em caso de erro
+                e.currentTarget.src = "/images/pattern-grid.svg";
+                e.currentTarget.className = "absolute inset-0 w-full h-full object-cover opacity-20";
+              }}
+            />
+          </div>
         ) : (
           <motion.div
             className="absolute inset-0 bg-[url('/images/pattern-grid.svg')] opacity-20"
@@ -593,6 +799,7 @@ export default function ProfileHeader({
             className="bg-black/50 hover:bg-black/70 p-2 rounded-full cursor-pointer transition-all duration-300 backdrop-blur-sm"
           >
             <Camera className="h-5 w-5 text-white" />
+            <span className="sr-only">Alterar imagem de capa</span>
           </div>
         </div>
         <input
@@ -601,6 +808,7 @@ export default function ProfileHeader({
           className="hidden"
           accept="image/*"
           onChange={handleCoverPhotoChange}
+          aria-label="Upload de imagem de capa"
         />
 
         {/* Efeitos de luz */}
@@ -676,11 +884,17 @@ export default function ProfileHeader({
               className="profile-avatar relative cursor-pointer"
               onClick={handleProfilePictureClick}
             >
-              <Avatar className="w-20 h-20 border-4 border-white dark:border-[#0A2540] shadow-xl group-hover/avatar:border-[#FF6B00]/20 transition-all duration-300">
+              <Avatar className="w-20 h-20 border-4 border-white dark:border-[#0A2540] shadow-xl group-hover/avatar:border-[#FF6B00]/20 transition-all duration-300 relative overflow-hidden">
                 <AvatarImage
                   src={avatarUrl || "https://api.dicebear.com/7.x/avataaars/svg?seed=John"}
                   alt="Avatar"
-                  className="object-cover"
+                  className="object-cover z-10"
+                  onError={(e) => {
+                    console.error("Erro ao carregar avatar", e);
+                    // Esconder a imagem com erro
+                    e.currentTarget.style.display = 'none';
+                    // Será mostrado o AvatarFallback automaticamente
+                  }}
                 />
                 <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF9B50] text-xl font-bold text-white">
                   {displayName?.charAt(0) || userProfile?.display_name?.charAt(0) || "U"}
@@ -704,10 +918,21 @@ export default function ProfileHeader({
               </svg>
 
               {/* Ícone de câmera para upload (visível no hover) */}
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-300">
-                <Camera className="h-6 w-6 text-white" />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-300 z-20">
+                <div className="flex flex-col items-center">
+                  <Camera className="h-6 w-6 text-white" />
+                  <span className="text-white text-xs mt-1">Alterar</span>
+                </div>
               </div>
             </motion.div>
+            <input
+              type="file"
+              ref={profilePictureRef}
+              className="hidden"
+              accept="image/*"
+              onChange={handleProfilePictureChange}
+              aria-label="Upload de foto de perfil"
+            />
             <input
               type="file"
               ref={profilePictureRef}

@@ -33,7 +33,12 @@ export default function Dashboard() {
     <div className="w-full h-full bg-[#f7f9fa] dark:bg-[#001427] p-6 space-y-6 transition-colors duration-300">
       <PromotionalBanner />
       <h1 className="text-3xl font-bold text-brand-black dark:text-white flex items-center gap-2">
-        <span className="text-2xl">👋</span> Olá, {userProfile?.display_name || userProfile?.username || "Usuário"}!
+        <span className="text-2xl">👋</span> Olá, {(() => {
+                // Obter o primeiro nome do usuário
+                const fullName = userProfile?.display_name || userProfile?.full_name || userProfile?.username || "Usuário";
+                const firstName = fullName.split(' ')[0]; // Extrair o primeiro nome
+                return firstName;
+              })()}!
       </h1>
       <TopMetrics />
       {isMetricsLoading ? (
