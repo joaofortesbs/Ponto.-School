@@ -652,34 +652,32 @@ export default function ProfileHeader({
               profile_username: userProfile?.username
             });
 
-            // Pegar o nome completo do cadastro da pessoa
-            const fullName = displayName || userProfile?.full_name || userProfile?.display_name || '';
-
+            // Obter o nome completo (primeiro nome) do usuário
+            const fullName = userProfile?.full_name || displayName || '';
+            
             // Extrair o primeiro nome
             let firstName = fullName ? fullName.split(' ')[0] : '';
 
             // Se não houver primeiro nome, usar um fallback
             if (!firstName) {
               if (userProfile?.username) {
-                // Caso não tenha nome, usar o username como fallback
                 firstName = userProfile.username;
               } else {
                 firstName = "Usuário";
               }
             }
 
-            // Obter o nome de usuário a partir do userProfile
-            const username = userProfile?.username || userProfile?.display_name || '';
-
-            // Verificar também nos metadados da sessão (se disponível)
-            // Isso garante que usamos a fonte mais confiável
+            // Obter o nome de usuário
+            const username = userProfile?.username || '';
+            
             console.log("Dados do perfil para exibição de username:", {
+              firstName: firstName,
               profile_username: userProfile?.username,
               profile_display_name: userProfile?.display_name,
               user_metadata_username: userProfile?.user_metadata?.username
             });
 
-            // Garantir que sempre exiba o username corretamente
+            // Exibir o primeiro nome do usuário junto com o nome de usuário
             return `${firstName} | @${username || "usuário"}`;
           })()}
         </motion.h2>
