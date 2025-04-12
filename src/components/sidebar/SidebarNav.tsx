@@ -113,7 +113,7 @@ export function SidebarNav({
         } = await supabase.auth.getUser();
 
         if (user) {
-          const { data, error } = await supabase
+          let { data, error } = await supabase
             .from("profiles")
             .select("*")
             .eq("user_id", user.id)
