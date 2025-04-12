@@ -262,13 +262,38 @@ class ProfileService {
         return false; // Retorna falso pois não gerou um novo ID
       }
       
-      // Gerar um ID com base no formato correto
-      const dataAtual = new Date();
-      const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
-      const tipoConta = (profile.plan_type?.toLowerCase() === 'premium') ? '1' : '2';
-      const sequencial = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
-      const uf = profile.state || 'BR';
-      const generatedId = `${uf}${anoMes}${tipoConta}${sequencial}`;
+      // Verificar se temos uma UF válida
+      let uf = profile.state;
+      if (!uf || uf.length !== 2 || uf === 'BR') {
+        // Se não tiver UF válida, usar SP como padrão
+        uf = 'SP';
+        
+        // Tentar atualizar o estado do usuário para SP já que não temos um estado válido
+        try {
+          await supabase
+            .from('profiles')
+            .update({ state: uf })
+            .eq('id', profile.id);
+        } catch (e) {
+          console.error('Erro ao atualizar estado do usuário:', e);
+        }
+      }
+      
+      // Definir o tipo de conta baseado no plano
+      const tipoConta = (profile.plan_type?.toLowerCase() === 'premium' || profile.plan_type?.toLowerCase() === 'full') ? 1 : 2;
+      
+      // Usar a função de geração de ID para garantir sequencial único
+      let generatedId;
+      try {
+        generatedId = await generateUserId(uf, tipoConta);
+      } catch (error) {
+        console.error('Erro ao gerar ID com função principal:', error);
+        // Fallback para geração local
+        const dataAtual = new Date();
+        const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
+        const sequencial = Date.now().toString().slice(-6);
+        generatedId = `${uf}${anoMes}${tipoConta}${sequencial}`;
+      }
       
       // Atualizar o perfil com o novo ID
       const { error } = await supabase

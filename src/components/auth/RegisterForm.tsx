@@ -32,6 +32,7 @@ interface FormData {
   birthDate: string;
   password: string;
   confirmPassword: string;
+  plan: string; // Adiciona campo para o plano escolhido
 }
 
 interface ClassOption {
@@ -73,7 +74,18 @@ export function RegisterForm() {
     birthDate: "",
     password: "",
     confirmPassword: "",
+    plan: "lite", // Plano padrão
   });
+
+  const [showPlanConfirmation, setShowPlanConfirmation] = useState(true); // Modal de confirmação de plano
+  const [confirmedPlan, setConfirmedPlan] = useState("lite"); // Plano confirmado
+  const initialPlan = "lite"; // Plano inicial (padrão)
+
+
+  const handlePlanConfirmation = (plan: string) => {
+    setConfirmedPlan(plan);
+    setShowPlanConfirmation(false);
+  };
 
   // Effect to show class and grade options when institution is entered
   useEffect(() => {
@@ -81,14 +93,6 @@ export function RegisterForm() {
       setShowClassAndGrade(true);
       setLoadingOptions(true);
       setInstitutionFound(true);
-
-      // Incluir plano selecionado nos metadados (mesmo que seja o padrão 'lite')
-      const planMeta = {
-        plan_type: 'lite'
-      };
-
-      // Salvar temporariamente para uso no processo de registro
-      localStorage.setItem('selected_plan', JSON.stringify(planMeta));
 
       // Simulate fetching class options based on institution
       // In a real app, this would be an API call to get classes for the institution
@@ -187,9 +191,6 @@ export function RegisterForm() {
     setStep((prevStep) => prevStep - 1);
   };
 
-  const searchParams = new URLSearchParams(window.location.search);
-  const plan = searchParams.get("plan") || "lite";
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -211,12 +212,22 @@ export function RegisterForm() {
         return;
       }
 
+      // Simulação de contador de usuários (substituir por um sistema de contagem real)
+      let userCount = parseInt(localStorage.getItem("userCount") || "0");
+      userCount++;
+      localStorage.setItem("userCount", userCount.toString());
+      const sequencial = userCount.toString().padStart(6, "0");
+
       // Gerar um ID de usuário único com o formato correto UF + AnoMês + TipoConta + Sequencial
       const dataAtual = new Date();
-      const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
-      const tipoConta = (plan === "premium") ? "1" : "2";
-      const sequencial = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
-      const userId = `${formData.state}${anoMes}${tipoConta}${sequencial}`;
+      const anoMes = `${dataAtual
+        .getFullYear()
+        .toString()
+        .slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, "0")}`;
+      const tipoConta = confirmedPlan === "full" ? "1" : "2"; // Usa o plano confirmado
+      const uf = formData.state;
+      const userId = `${uf}${anoMes}${tipoConta}${sequencial}`;
+
 
       // Primeiro tente registrar o usuário no sistema de autenticação
       let userData = null;
@@ -235,7 +246,7 @@ export function RegisterForm() {
               institution: formData.institution,
               state: formData.state,
               birth_date: formData.birthDate,
-              plan_type: plan,
+              plan_type: confirmedPlan, // Usa o plano confirmado
               display_name: formData.username,
             },
           },
@@ -277,7 +288,7 @@ export function RegisterForm() {
                   institution: formData.institution,
                   state: formData.state,
                   birth_date: formData.birthDate,
-                  plan_type: plan,
+                  plan_type: confirmedPlan, // Usa o plano confirmado
                   level: 1,
                   rank: "Aprendiz",
                   xp: 0,
@@ -296,7 +307,7 @@ export function RegisterForm() {
                     institution: formData.institution,
                     state: formData.state,
                     birth_date: formData.birthDate,
-                    plan_type: plan,
+                    plan_type: confirmedPlan, // Usa o plano confirmado
                     level: 1,
                     rank: "Aprendiz",
                     display_name: formData.username,
@@ -326,7 +337,7 @@ export function RegisterForm() {
               institution: formData.institution,
               state: formData.state,
               birth_date: formData.birthDate,
-              plan_type: plan,
+              plan_type: confirmedPlan, // Usa o plano confirmado
               level: 1,
               rank: "Aprendiz",
               xp: 0,
@@ -403,6 +414,57 @@ export function RegisterForm() {
     }
   };
 
+  // Componente de confirmação de plano
+  const PlanConfirmationModal = () => {
+    if (!showPlanConfirmation) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full">
+          <h3 className="text-xl font-bold mb-4 text-brand-black dark:text-white">Confirme seu plano</h3>
+          <p className="mb-6 text-gray-600 dark:text-gray-300">
+            Por favor, confirme qual plano você deseja utilizar na plataforma:
+          </p>
+
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <button
+              onClick={() => handlePlanConfirmation("lite")}
+              className={`p-4 rounded-lg border-2 ${
+                initialPlan === "lite"
+                  ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                  : "border-gray-200 dark:border-gray-700"
+              } hover:border-blue-500 transition-all duration-200`}
+            >
+              <h4 className="font-bold text-brand-black dark:text-white">PONTO.SCHOOL LITE</h4>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Para instituições públicas
+              </p>
+            </button>
+
+            <button
+              onClick={() => handlePlanConfirmation("full")}
+              className={`p-4 rounded-lg border-2 ${
+                initialPlan === "full" || initialPlan === "premium"
+                  ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
+                  : "border-gray-200 dark:border-gray-700"
+              } hover:border-purple-500 transition-all duration-200`}
+            >
+              <h4 className="font-bold text-brand-black dark:text-white">PONTO.SCHOOL FULL</h4>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Para instituições particulares
+              </p>
+            </button>
+          </div>
+
+          <div className="text-center text-sm text-gray-500 dark:text-gray-400">
+            Esta escolha afetará a geração do seu ID de usuário e os recursos disponíveis.
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+
   return (
     <div className="space-y-6">
       <div className="text-center space-y-2">
@@ -428,6 +490,7 @@ export function RegisterForm() {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
+          {showPlanConfirmation && <PlanConfirmationModal />} {/* Adiciona o modal */}
           <div className="bg-white dark:bg-gray-800/30 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
             <h2 className="text-lg font-semibold mb-4 text-brand-black dark:text-white">
               {renderStepTitle()}
@@ -788,7 +851,7 @@ export function RegisterForm() {
                 type="button"
                 onClick={prevStep}
                 variant="outline"
-                                className="w-full h-11 text-base"
+                className="w-full h-11 text-base"
                 disabled={loading}
               >
                 Voltar

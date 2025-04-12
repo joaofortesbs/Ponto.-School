@@ -9,7 +9,16 @@ import { supabase } from "@/lib/supabase";
  * @param tipoConta O tipo de conta (1 = Full, 2 = Lite)
  * @returns Uma string contendo o ID gerado no formato UF+AnoMês+TipoConta+Sequencial(6)
  */
-export async function generateUserId(uf: string = 'BR', tipoConta: number): Promise<string> {
+export async function generateUserId(uf: string, tipoConta: number): Promise<string> {
+  // Validação da UF - garantir que seja uma UF válida
+  if (!uf || uf.length !== 2 || uf === 'BR') {
+    console.warn('UF inválida fornecida:', uf);
+    uf = 'SP'; // Default para São Paulo se não houver UF válida
+  }
+  
+  // Garantir que a UF esteja em maiúsculas
+  uf = uf.toUpperCase();
+  
   // Obtém o ano/mês atual no formato AAMM (ex: 2407 para julho de 2024)
   const dataAtual = new Date();
   const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
@@ -29,11 +38,11 @@ export async function generateUserId(uf: string = 'BR', tipoConta: number): Prom
     let nextId;
     
     if (!data) {
-      // Se não existe registro, cria um novo começando com 1001
+      // Se não existe registro, cria um novo começando com 1
       const { data: insertData, error: insertError } = await supabase
         .from('user_id_control')
         .insert([
-          { last_id: 1001 } // Já seta para 1001 pois usaremos 1000
+          { last_id: 1 }
         ])
         .select();
 
@@ -42,14 +51,14 @@ export async function generateUserId(uf: string = 'BR', tipoConta: number): Prom
         return generateFallbackUserId(uf, tipoConta, anoMes);
       }
       
-      nextId = 1000; // Primeiro ID
+      nextId = 1; // Primeiro ID
     } else {
       // Se já existe um registro, incrementa o last_id
-      nextId = data.last_id;
+      nextId = data.last_id + 1;
       
       const { error: updateError } = await supabase
         .from('user_id_control')
-        .update({ last_id: nextId + 1 })
+        .update({ last_id: nextId })
         .eq('id', data.id);
 
       if (updateError) {
@@ -72,28 +81,29 @@ export async function generateUserId(uf: string = 'BR', tipoConta: number): Prom
  * Mantém o mesmo formato, mas usa um timestamp para garantir unicidade
  */
 function generateFallbackUserId(uf: string, tipoConta: number, anoMes: string): string {
-  const timestamp = Date.now().toString().slice(-6);
+  // Mesmo no fallback, garantimos que a UF seja válida
+  if (!uf || uf.length !== 2 || uf === 'BR') {
+    uf = 'SP';
+  }
+  
+  uf = uf.toUpperCase();
+  
+  const timestamp = new Date().getTime();
   const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  return `${uf}${anoMes}${tipoConta}${timestamp}${random}`;
-}
-
-/**
- * Versão simplificada que não depende do banco de dados para gerar um ID único
- * Útil para testes ou quando houver problemas de conexão com o Supabase
- */
-export function generateSimpleUserId(uf: string, tipoConta: number): string {
-  const dataAtual = new Date();
-  const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
-  const timestamp = Date.now().toString().slice(-6);
-  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  return `${uf}${anoMes}${tipoConta}${timestamp}${random}`;
+  return `${uf}${anoMes}${tipoConta}${timestamp.toString().slice(-6)}`;
 }
 
 /**
  * Gera um ID baseado no tipo de plano usando o Supabase
- * BR1 para premium/full, BR2 para lite/básico
+ * 1 para premium/full, 2 para lite/básico
  */
-export async function generateUserIdByPlan(planType: string, uf: string = 'BR'): Promise<string> {
+export async function generateUserIdByPlan(planType: string, uf: string): Promise<string> {
+  // Validação da UF - garantir que seja uma UF válida
+  if (!uf || uf.length !== 2 || uf === 'BR') {
+    console.warn('UF inválida fornecida:', uf);
+    uf = 'SP'; // Default para São Paulo se não houver UF válida
+  }
+  
   const tipoConta = planType.toLowerCase() === 'premium' || planType.toLowerCase() === 'full' ? 1 : 2;
   return generateUserId(uf, tipoConta);
 }
