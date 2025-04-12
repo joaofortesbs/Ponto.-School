@@ -4,6 +4,7 @@ import App from "./App.tsx";
 import "./index.css";
 import { BrowserRouter } from "react-router-dom";
 import './lib/username-initializer.ts'
+import { initializeWebPersistence } from './lib/web-persistence'; // Added import
 
 // Configuração de tratamento global de erros
 const handleGlobalError = (event: ErrorEvent) => {
@@ -22,6 +23,9 @@ window.addEventListener('unhandledrejection', (event) => {
 });
 
 console.log("Iniciando aplicação...");
+
+// Inicializa o sistema de persistência visual (placeholder - needs actual implementation)
+initializeWebPersistence();
 
 // Função para inicializar a aplicação com tratamento de erros
 const initializeApp = () => {
