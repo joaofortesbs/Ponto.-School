@@ -140,18 +140,17 @@ export function SidebarNav({
               localStorage.setItem('userAvatarUrl', data.avatar_url);
             }
 
-            // Determinar o melhor nome para exibição com prioridade clara
-            // Prioridade: display_name > primeiro nome do full_name > username > fallback
-            const bestName = data.display_name || 
-                          (data.full_name ? data.full_name.split(' ')[0] : null) || 
-                          data.username || 
-                          "Usuário";
+            // Determinar o primeiro nome com a mesma lógica do Dashboard
+            // Prioridade: primeiro nome do full_name > display_name > username
+            const firstName = data.full_name?.split(' ')[0] || 
+                           data.display_name || 
+                           data.username || 
+                           "";
             
-            setFirstName(bestName);
+            setFirstName(firstName);
 
             // Salvar para manter consistência entre componentes
-            localStorage.setItem('userDisplayName', data.display_name || '');
-            localStorage.setItem('userFirstName', bestName);
+            localStorage.setItem('userFirstName', firstName);
             
             // Disparar evento para outros componentes
             document.dispatchEvent(new CustomEvent('usernameUpdated', { 
@@ -536,7 +535,14 @@ export function SidebarNav({
         {!isCollapsed && (
           <div className="text-[#001427] dark:text-white text-center">
             <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
-              <span className="mr-1">👋</span> Olá, {firstName || localStorage.getItem('userDisplayName') || localStorage.getItem('userFirstName') || "Usuário"}!
+              <span className="mr-1">👋</span> Olá, {(() => {
+                // Obter o primeiro nome com a mesma lógica do Dashboard
+                const firstName = userProfile?.full_name?.split(' ')[0] || 
+                                userProfile?.display_name || 
+                                localStorage.getItem('userFirstName') || 
+                                "";
+                return firstName;
+              })()}!
             </h3>
             <div className="flex flex-col items-center mt-1">
               <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
