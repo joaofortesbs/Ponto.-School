@@ -319,48 +319,80 @@ export function RegisterForm() {
           } catch (planError) {
             console.error("Erro ao gerar ID com função de plano:", planError);
             
-            // Último fallback: Gerar manualmente, mas mantendo a padronização
-            const dataAtual = new Date();
-            const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, "0")}`;
-            
-            // Tentar buscar o último ID do banco de dados diretamente
+            // Tentar usar a função SQL diretamente
             try {
-              const { data: controlData } = await supabase
-                .from('user_id_control')
-                .select('last_id')
-                .single();
+              const { data: sqlData, error: sqlError } = await supabase.rpc('get_next_user_id_for_uf', {
+                p_uf: uf,
+                p_tipo_conta: tipoConta
+              });
               
-              let sequencial;
-              if (controlData && controlData.last_id) {
-                // Incrementar o último ID conhecido
-                sequencial = (controlData.last_id + 1).toString().padStart(6, "0");
-                
-                // Atualizar o contador no banco de dados
-                await supabase
-                  .from('user_id_control')
-                  .update({ last_id: controlData.last_id + 1 })
-                  .eq('id', controlData.id);
-              } else {
-                // Se não conseguir obter do banco, usar localStorage como último recurso
-                let userCount = parseInt(localStorage.getItem("userCount") || "0");
-                userCount++;
-                localStorage.setItem("userCount", userCount.toString());
-                sequencial = userCount.toString().padStart(6, "0");
-                
-                // Tentar criar o controle no banco de dados para usos futuros
-                await supabase
-                  .from('user_id_control')
-                  .insert([{ last_id: userCount }]);
+              if (sqlError) {
+                throw sqlError;
               }
               
-              userId = `${uf}${anoMes}${tipoConta}${sequencial}`;
-              console.log(`ID gerado manualmente com sequencial controlado: ${userId}`);
-            } catch (fallbackError) {
-              console.error("Erro no fallback final:", fallbackError);
+              userId = sqlData;
+              console.log(`ID gerado com função SQL: ${userId}`);
+            } catch (sqlError) {
+              console.error("Erro ao gerar ID com função SQL:", sqlError);
               
-              // Último recurso: usar timestamp para garantir unicidade
-              const timestamp = new Date().getTime();
-              const sequencial = timestamp.toString().slice(-6);
+              // Último fallback: Gerar manualmente, mas mantendo a padronização
+              const dataAtual = new Date();
+              const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, "0")}`;
+              
+              // Tentar buscar o último ID do controle por UF
+              try {
+                const { data: controlData } = await supabase
+                  .from('user_id_control_by_uf')
+                  .select('*')
+                  .eq('uf', uf)
+                  .eq('ano_mes', anoMes)
+                  .eq('tipo_conta', tipoConta)
+                  .single();
+                
+                let sequencial;
+                if (controlData && controlData.last_id) {ntrolData && controlData.last_id) {
+                // Incrementar o último ID conhecido
+                  sequencial = (controlData.last_id + 1).toString().padStart(6, "0");
+                  
+                  // Atualizar o contador no banco de dados
+                  await supabase
+                    .from('user_id_control_by_uf')
+                    .update({ 
+                      last_id: controlData.last_id + 1,
+                      updated_at: new Date().toISOString()
+                    })
+                    .eq('id', controlData.id);
+                } else {
+                  // Se não existe um controle para esta UF, criar um novo
+                  try {
+                    // Iniciar com ID 1
+                    const { data: insertData, error: insertError } = await supabase
+                      .from('user_id_control_by_uf')
+                      .insert([
+                        { uf, ano_mes: anoMes, tipo_conta: tipoConta, last_id: 1 }
+                      ])
+                      .select();
+                    
+                    if (insertError) throw insertError;
+                    
+                    sequencial = "000001"; // Primeiro ID
+                  } catch (insertError) {
+                    console.error("Erro ao criar controle de ID por UF:", insertError);
+                    
+                    // Último recurso: gerar um sequencial baseado em timestamp
+                    const timestamp = new Date().getTime();
+                    sequencial = (timestamp % 1000000).toString().padStart(6, "0");
+                  }
+                }
+                
+                userId = `${uf}${anoMes}${tipoConta}${sequencial}`;
+                console.log(`ID gerado manualmente com sequencial controlado: ${userId}`);
+              } catch (fallbackError) {
+                console.error("Erro no fallback final:", fallbackError);
+                
+                // Último recurso: usar timestamp para garantir unicidade
+                const timestamp = new Date().getTime();
+                const sequencial = timestamp.toString().slice(-6).padStart(6, "0");tamp.toString().slice(-6);
               userId = `${uf}${anoMes}${tipoConta}${sequencial}`;
               console.log(`ID gerado com timestamp como último recurso: ${userId}`);
             }

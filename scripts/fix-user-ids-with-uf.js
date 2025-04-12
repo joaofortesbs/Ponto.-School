@@ -29,9 +29,9 @@ function isValidUserId(id) {
 }
 
 /**
- * Gera um ID de usuário usando o sistema de controle por UF
+ * Gera um ID de usuário usando a função SQL do Supabase para garantir sequencial correto
  */
-async function generateUserIdWithUf(uf, tipoConta) {
+async function generateFixedUserId(uf, tipoConta) {
   // Validação rigorosa da UF
   if (!uf || uf.length !== 2) {
     console.error('Erro: UF inválida ou não fornecida:', uf);
@@ -64,16 +64,73 @@ async function generateUserIdWithUf(uf, tipoConta) {
 }
 
 /**
- * Método de fallback para gerar ID
+ * Método de fallback para gerar ID com sequencial correto
  */
-function generateFallbackId(uf, tipoConta) {
+async function generateFallbackId(uf, tipoConta) {
   console.log('Usando método de fallback para geração de ID');
   
   const dataAtual = new Date();
   const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
-  const timestamp = Date.now();
   
-  return `${uf}${anoMes}${tipoConta}${timestamp.toString().slice(-6)}`;
+  try {
+    // Verificar se existe controle para esta UF, tipo e ano/mês
+    const { data: controlData, error: controlError } = await supabase
+      .from('user_id_control_by_uf')
+      .select('*')
+      .eq('uf', uf)
+      .eq('ano_mes', anoMes)
+      .eq('tipo_conta', tipoConta)
+      .single();
+    
+    let nextId = 1;
+    
+    if (controlError && controlError.code !== 'PGRST116') {
+      console.error('Erro ao buscar controle:', controlError);
+    } else if (controlData) {
+      // Se existe um controle, incrementar o ID
+      nextId = controlData.last_id + 1;
+      
+      // Atualizar o contador
+      const { error: updateError } = await supabase
+        .from('user_id_control_by_uf')
+        .update({ 
+          last_id: nextId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', controlData.id);
+      
+      if (updateError) {
+        console.error('Erro ao atualizar contador:', updateError);
+      }
+    } else {
+      // Se não existe um controle, criar um novo
+      const { data: insertData, error: insertError } = await supabase
+        .from('user_id_control_by_uf')
+        .insert([
+          { uf, ano_mes: anoMes, tipo_conta: tipoConta, last_id: nextId }
+        ])
+        .select();
+      
+      if (insertError) {
+        console.error('Erro ao criar controle:', insertError);
+      }
+    }
+    
+    // Formatar o ID
+    const userId = `${uf}${anoMes}${tipoConta}${nextId.toString().padStart(6, '0')}`;
+    console.log(`ID gerado via fallback: ${userId}`);
+    return userId;
+  } catch (error) {
+    console.error('Erro no processo de fallback:', error);
+    
+    // Último recurso: gerar um ID baseado em timestamp
+    const timestamp = Date.now();
+    const sequencial = (timestamp % 1000000).toString().padStart(6, '0');
+    const userId = `${uf}${anoMes}${tipoConta}${sequencial}`;
+    
+    console.log(`ID gerado com timestamp: ${userId}`);
+    return userId;
+  }
 }
 
 /**
@@ -110,20 +167,40 @@ async function fixUserProfile(profile) {
         console.error('Erro ao chamar função de correção:', sqlError);
       }
       
-      // Se não conseguiu via SQL, usar lógica manual
-      console.log('Usando SP como estado padrão');
-      uf = 'SP';
-      
-      // Atualizar o estado no perfil
-      const { error: updateStateError } = await supabase
-        .from('profiles')
-        .update({ state: uf })
-        .eq('id', profile.id);
-      
-      if (updateStateError) {
-        console.error('Erro ao atualizar estado no perfil:', updateStateError);
-      } else {
-        console.log(`Estado atualizado para: ${uf}`);
+      console.log('Verificando estado do usuário no localStorage...');
+      try {
+        // Verificar se temos um estado salvo no perfil
+        const { data: savedStateData } = await supabase
+          .from('profiles')
+          .select('state')
+          .eq('id', profile.id)
+          .single();
+        
+        if (savedStateData && savedStateData.state && 
+            savedStateData.state.length === 2 && 
+            savedStateData.state !== 'BR') {
+          uf = savedStateData.state;
+          console.log(`Estado encontrado no perfil: ${uf}`);
+        } else {
+          // Sem UF válida, usar SP como padrão
+          console.log('Sem estado válido encontrado, usando SP como padrão');
+          uf = 'SP';
+          
+          // Atualizar o estado no perfil
+          const { error: updateStateError } = await supabase
+            .from('profiles')
+            .update({ state: uf })
+            .eq('id', profile.id);
+          
+          if (updateStateError) {
+            console.error('Erro ao atualizar estado no perfil:', updateStateError);
+          } else {
+            console.log(`Estado atualizado para: ${uf}`);
+          }
+        }
+      } catch (stateError) {
+        console.error('Erro ao verificar estado:', stateError);
+        uf = 'SP';
       }
     }
     
@@ -134,7 +211,7 @@ async function fixUserProfile(profile) {
     console.log(`Gerando ID com UF=${uf}, tipoConta=${tipoConta}`);
     
     // Gerar o novo ID com o sistema correto
-    const newId = await generateUserIdWithUf(uf, tipoConta);
+    const newId = await generateFixedUserId(uf, tipoConta);
     
     // Atualizar o perfil com o novo ID
     const { error: updateError } = await supabase

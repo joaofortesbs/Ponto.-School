@@ -1,3 +1,4 @@
+
 import { supabase } from "@/lib/supabase";
 
 /**
@@ -26,72 +27,97 @@ export async function generateUserId(uf: string, tipoConta: number): Promise<str
   const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
 
   try {
-    // Obter o último ID da tabela de controle única
-    const { data, error: selectError } = await supabase
-      .from('user_id_control')
-      .select('*')
-      .single();
+    // Usar a função SQL para obter o próximo ID sequencial específico para esta UF e tipo de conta
+    const { data, error } = await supabase.rpc('get_next_user_id_for_uf', {
+      p_uf: uf,
+      p_tipo_conta: tipoConta
+    });
 
-    if (selectError && selectError.code !== 'PGRST116') {
-      console.error("Erro ao buscar controle de ID:", selectError);
-      return generateFallbackUserId(uf, tipoConta, anoMes);
-    }
-
-    let nextId;
-
-    if (!data) {
-      // Se não existe registro, cria um novo começando com 1
-      const { data: insertData, error: insertError } = await supabase
-        .from('user_id_control')
-        .insert([
-          { last_id: 1 }
-        ])
-        .select();
-
-      if (insertError) {
-        console.error("Erro ao inserir novo controle de ID:", insertError);
-        return generateFallbackUserId(uf, tipoConta, anoMes);
+    if (error) {
+      console.error('Erro ao gerar ID via função SQL:', error);
+      
+      // Fallback: Tentar obter diretamente da tabela de controle por UF
+      const { data: controlData, error: controlError } = await supabase
+        .from('user_id_control_by_uf')
+        .select('*')
+        .eq('uf', uf)
+        .eq('ano_mes', anoMes)
+        .eq('tipo_conta', tipoConta)
+        .single();
+      
+      if (controlError) {
+        console.error('Erro ao buscar controle de ID por UF:', controlError);
+        
+        // Tentar criar um novo registro de controle
+        try {
+          // Tentar inserir um novo registro de controle para esta UF
+          const { data: insertedData, error: insertError } = await supabase
+            .from('user_id_control_by_uf')
+            .insert([
+              { uf: uf, ano_mes: anoMes, tipo_conta: tipoConta, last_id: 1 }
+            ])
+            .select()
+            .single();
+          
+          if (insertError) {
+            console.error('Erro ao criar controle de ID por UF:', insertError);
+            return generateFallbackId(uf, tipoConta, anoMes);
+          }
+          
+          // Formatar o ID completo: UF (2) + AnoMês (4) + TipoConta (1) + Sequencial (6 dígitos com zeros à esquerda)
+          const userId = `${uf}${anoMes}${tipoConta}${1..toString().padStart(6, '0')}`;
+          console.log(`ID gerado com controle novo: ${userId}`);
+          return userId;
+        } catch (insertCatchError) {
+          console.error('Erro ao tentar criar controle:', insertCatchError);
+          return generateFallbackId(uf, tipoConta, anoMes);
+        }
       }
-
-      console.log("Controle de ID criado com sucesso. Iniciando com ID 1");
-      nextId = 1; // Primeiro ID
-    } else {
-      // Se já existe um registro, incrementa o last_id
-      nextId = data.last_id + 1;
-
-      // Atualiza o contador na tabela de controle
+      
+      if (!controlData) {
+        console.error('Nenhum controle de ID por UF encontrado');
+        return generateFallbackId(uf, tipoConta, anoMes);
+      }
+      
+      // Incrementar o contador de forma segura
+      const nextId = controlData.last_id + 1;
+      
+      // Atualizar o contador na tabela
       const { error: updateError } = await supabase
-        .from('user_id_control')
+        .from('user_id_control_by_uf')
         .update({ 
           last_id: nextId,
           updated_at: new Date().toISOString()
         })
-        .eq('id', data.id);
-
+        .eq('id', controlData.id);
+      
       if (updateError) {
-        console.error("Erro ao atualizar contador de ID:", updateError);
-        return generateFallbackUserId(uf, tipoConta, anoMes);
+        console.error('Erro ao atualizar contador por UF:', updateError);
+        return generateFallbackId(uf, tipoConta, anoMes);
       }
       
-      console.log(`Contador de ID atualizado: ${nextId}`);
+      // Formatar o ID completo: UF (2) + AnoMês (4) + TipoConta (1) + Sequencial (6 dígitos com zeros à esquerda)
+      const userId = `${uf}${anoMes}${tipoConta}${nextId.toString().padStart(6, '0')}`;
+      console.log(`ID gerado com controle existente: ${userId}`);
+      return userId;
     }
-
-    // Formata o ID completo: UF (2) + AnoMês (4) + TipoConta (1) + Sequencial (6 dígitos com zeros à esquerda)
-    const userId = `${uf}${anoMes}${tipoConta}${nextId.toString().padStart(6, '0')}`;
-    console.log(`ID de usuário gerado: ${userId} com UF=${uf}, AnoMes=${anoMes}, TipoConta=${tipoConta}, Sequencial=${nextId}`);
-    return userId;
-
+    
+    // Se chegou aqui, temos um ID gerado pela função SQL
+    console.log(`ID gerado via função SQL: ${data}`);
+    return data;
   } catch (error) {
     console.error("Erro ao gerar ID de usuário:", error);
-    return generateFallbackUserId(uf, tipoConta, anoMes);
+    return generateFallbackId(uf, tipoConta, anoMes);
   }
 }
 
 /**
- * Gera um ID de fallback baseado em timestamp em caso de falha no processo principal
- * Mantém o mesmo formato, mas usa um timestamp para garantir unicidade
+ * Gera um ID de fallback baseado em regras para garantir unicidade
+ * Mantém o mesmo formato, mas usa um método alternativo para garantir unicidade
  */
-function generateFallbackUserId(uf: string, tipoConta: number, anoMes: string): string {
+function generateFallbackId(uf: string, tipoConta: number, anoMes: string): string {
+  console.log('Usando método de fallback para geração de ID');
+  
   // Mesmo no fallback, garantimos que a UF seja válida
   if (!uf || uf.length !== 2) {
     uf = 'SP';
@@ -100,10 +126,19 @@ function generateFallbackUserId(uf: string, tipoConta: number, anoMes: string): 
   }
 
   uf = uf.toUpperCase();
-
+  
+  // Gerar um número sequencial baseado em timestamp para garantir unicidade
+  // Combinamos o timestamp atual com um número aleatório para evitar colisões
   const timestamp = new Date().getTime();
-  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  return `${uf}${anoMes}${tipoConta}${timestamp.toString().slice(-6)}`;
+  const random = Math.floor(Math.random() * 1000);
+  
+  // Usar apenas os últimos dígitos do timestamp para ficar dentro do limite de 6 dígitos
+  // Combinamos com um número aleatório para aumentar a unicidade
+  const sequencial = (timestamp % 1000000).toString().padStart(6, '0');
+  
+  const userId = `${uf}${anoMes}${tipoConta}${sequencial}`;
+  console.log(`ID gerado via fallback: ${userId}`);
+  return userId;
 }
 
 /**

@@ -269,7 +269,7 @@ class ProfileService {
       let ufWasUpdated = false;
       
       if (!uf || uf.length !== 2 || uf === 'BR') {
-        // Se não tiver UF válida, tentar recuperar do localStorage ou prompt do usuário
+        // Se não tiver UF válida, tentar recuperar do localStorage
         console.warn(`UF inválida ou não fornecida no perfil: "${uf}"`);
         
         // Tentar obter do localStorage
@@ -295,12 +295,20 @@ class ProfileService {
               console.error('Erro ao atualizar estado no perfil:', updateStateError);
             }
           } else {
-            // Se não encontrou no localStorage, usar um estado padrão (mas não recomendado)
-            console.error('Não foi possível encontrar um estado válido. Usando SP como fallback.');
-            uf = 'SP';
+            // Se não encontrou no localStorage, tentar ler da sessão ou outras fontes
+            const sessionState = sessionStorage.getItem('userState');
+            if (sessionState && sessionState.length === 2 && sessionState !== 'BR') {
+              uf = sessionState.toUpperCase();
+              console.log(`Usando estado encontrado na sessão: ${uf}`);
+            } else {
+              // Se não encontrou em nenhum lugar, usar um estado padrão (mas não recomendado)
+              console.error('Não foi possível encontrar um estado válido. Usando SP como fallback.');
+              uf = 'SP';
+            }
+            
             ufWasUpdated = true;
             
-            // Atualizar o perfil com o estado padrão
+            // Atualizar o perfil com o estado encontrado ou padrão
             const { error: updateStateError } = await supabase
               .from('profiles')
               .update({ 
@@ -310,7 +318,7 @@ class ProfileService {
               .eq('id', profile.id);
               
             if (!updateStateError) {
-              console.log(`Estado do usuário definido para padrão: ${uf}`);
+              console.log(`Estado do usuário definido para: ${uf}`);
             }
           }
         } catch (e) {
@@ -359,27 +367,92 @@ class ProfileService {
       
       // Usar a função de geração de ID para garantir sequencial único
       let generatedId;
+      
+      // Tentar todas as estratégias disponíveis para geração de ID
       try {
-        // Tentar gerar usando a função principal
-        generatedId = await generateUserId(uf, tipoConta);
-        console.log('ID gerado com sucesso:', generatedId);
-      } catch (error) {
-        console.error('Erro ao gerar ID com função principal:', error);
+        // 1. Tentar usar a função SQL diretamente (mais confiável para sequencial)
+        const { data: sqlData, error: sqlError } = await supabase.rpc('get_next_user_id_for_uf', {
+          p_uf: uf,
+          p_tipo_conta: tipoConta
+        });
         
-        // Fallback para geração local
+        if (!sqlError && sqlData) {
+          generatedId = sqlData;
+          console.log('ID gerado com sucesso via função SQL:', generatedId);
+        } else {
+          throw new Error(`Erro ao gerar ID via SQL: ${sqlError?.message || 'Sem dados retornados'}`);
+        }
+      } catch (sqlFuncError) {
+        console.error('Erro na função SQL de geração de ID:', sqlFuncError);
+        
         try {
-          // Tentar gerar utilizando a função específica de plano
-          generatedId = await generateUserIdByPlan(planType, uf);
-          console.log('ID gerado com função de plano:', generatedId);
-        } catch (planError) {
-          console.error('Erro ao gerar ID com função de plano:', planError);
+          // 2. Tentar gerar usando a função principal
+          generatedId = await generateUserId(uf, tipoConta);
+          console.log('ID gerado com sucesso via generateUserId:', generatedId);
+        } catch (error) {
+          console.error('Erro ao gerar ID com função principal:', error);
           
-          // Último fallback: Gerar manualmente
-          const dataAtual = new Date();
-          const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
-          const sequencial = Date.now().toString().slice(-6);
-          generatedId = `${uf}${anoMes}${tipoConta}${sequencial}`;
-          console.log('ID gerado manualmente:', generatedId);
+          try {
+            // 3. Tentar gerar utilizando a função específica de plano
+            generatedId = await generateUserIdByPlan(planType, uf);
+            console.log('ID gerado com função de plano:', generatedId);
+          } catch (planError) {
+            console.error('Erro ao gerar ID com função de plano:', planError);
+            
+            // 4. Tentar obter o sequencial diretamente da tabela de controle por UF
+            try {
+              const dataAtual = new Date();
+              const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
+              
+              const { data: controlData, error: controlError } = await supabase
+                .from('user_id_control_by_uf')
+                .select('*')
+                .eq('uf', uf)
+                .eq('ano_mes', anoMes)
+                .eq('tipo_conta', tipoConta)
+                .single();
+              
+              let nextId = 1;
+              
+              if (!controlError && controlData) {
+                // Incrementar ID existente
+                nextId = controlData.last_id + 1;
+                
+                // Atualizar o contador
+                await supabase
+                  .from('user_id_control_by_uf')
+                  .update({ 
+                    last_id: nextId,
+                    updated_at: new Date().toISOString()
+                  })
+                  .eq('id', controlData.id);
+              } else {
+                // Criar novo controle para esta UF
+                await supabase
+                  .from('user_id_control_by_uf')
+                  .insert([{ 
+                    uf, 
+                    ano_mes: anoMes, 
+                    tipo_conta: tipoConta, 
+                    last_id: 1
+                  }]);
+              }
+              
+              // Formatar o ID completo
+              generatedId = `${uf}${anoMes}${tipoConta}${nextId.toString().padStart(6, '0')}`;
+              console.log('ID gerado com acesso direto à tabela de controle:', generatedId);
+            } catch (tableError) {
+              console.error('Erro ao acessar tabela de controle:', tableError);
+              
+              // 5. Último fallback: Gerar manualmente com timestamp
+              const dataAtual = new Date();
+              const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
+              const timestamp = Date.now();
+              const sequencial = (timestamp % 1000000).toString().padStart(6, '0');
+              generatedId = `${uf}${anoMes}${tipoConta}${sequencial}`;
+              console.log('ID gerado manualmente com timestamp:', generatedId);
+            }
+          }
         }
       }
       
