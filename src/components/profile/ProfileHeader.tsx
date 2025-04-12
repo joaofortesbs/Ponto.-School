@@ -662,10 +662,10 @@ export default function ProfileHeader({
               }
             }
             
-            // Obter o nome de usuário
+            // Obter o nome de usuário cadastrado
             const username = userProfile?.username || '';
             
-            // Criando o texto de exibição
+            // Criando o texto de exibição com o @username como foi cadastrado na tela de registro
             return `${firstName} | @${username || "usuário"}`;
           })()}
         </motion.h2>
