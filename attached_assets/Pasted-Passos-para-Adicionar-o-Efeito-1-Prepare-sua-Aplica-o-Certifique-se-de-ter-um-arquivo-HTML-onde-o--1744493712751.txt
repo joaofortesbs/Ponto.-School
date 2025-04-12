@@ -1,0 +1,245 @@
+Passos para Adicionar o Efeito
+1. Prepare sua Aplicação
+Certifique-se de ter um arquivo HTML onde o banner será exibido (ex.: index.html).
+Você precisará de uma imagem para o banner e, opcionalmente, um ícone de cursor (um PNG de uma setinha).
+Vamos usar a biblioteca GSAP para animações suaves, pois é leve e comum em efeitos como o da Superix.
+2. Adicione o HTML
+No seu arquivo HTML (ex.: index.html), adicione um <div> para o banner e outro para o cursor. Cole este código dentro do <body>:
+
+html
+
+Recolher
+
+Encapsular
+
+Copiar
+<div class="banner">
+  <img src="sua-imagem.jpg" alt="Banner"> <!-- Substitua pelo caminho da sua imagem -->
+  <div class="cursor"></div>
+</div>
+Nota: Substitua sua-imagem.jpg pelo caminho da sua imagem de banner (ex.: assets/banner.jpg). Se não tiver uma imagem, use um placeholder como <img src="https://via.placeholder.com/800x400">.
+3. Adicione o CSS
+Crie ou edite um arquivo CSS (ex.: styles.css) e cole este código para estilizar o banner e o cursor:
+
+css
+
+Recolher
+
+Encapsular
+
+Copiar
+.banner {
+  position: relative;
+  width: 100%;
+  height: 400px; /* Ajuste a altura conforme necessário */
+}
+
+.banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cursor {
+  width: 30px;
+  height: 30px;
+  background: url('cursor.png') no-repeat center; /* Substitua por sua imagem de cursor */
+  background-size: contain;
+  position: absolute;
+  pointer-events: none; /* Impede que o cursor interfira em cliques */
+}
+Ação:
+Baixe uma imagem de cursor (ex.: procure "cursor icon PNG" no Google) e salve como cursor.png na pasta do projeto.
+Se não tiver uma imagem, use uma bolinha temporária. Substitua o background do .cursor por:
+css
+
+Recolher
+
+Encapsular
+
+Copiar
+background: white;
+border: 2px solid black;
+border-radius: 50%;
+Vincule o CSS: No <head> do seu HTML, adicione:
+html
+
+Recolher
+
+Encapsular
+
+Copiar
+<link rel="stylesheet" href="styles.css">
+4. Adicione o JavaScript com GSAP
+Para animar o cursor, usaremos GSAP. Adicione este código ao seu HTML ou em um arquivo separado (ex.: script.js).
+
+Inclua o GSAP: No final do <body> do seu HTML, antes do </body>, adicione:
+
+html
+
+Recolher
+
+Encapsular
+
+Copiar
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/gsap.min.js"></script>
+Crie a Animação: Abaixo do script do GSAP, ou em um arquivo script.js, cole:
+
+javascript
+
+Recolher
+
+Encapsular
+
+Copiar
+gsap.to(".cursor", {
+  duration: 5, // Dura 5 segundos
+  repeat: -1, // Repete para sempre
+  ease: "power1.inOut", // Movimento suave
+  keyframes: [
+    { x: 100, y: 100, scale: 1 }, // Ponto inicial
+    { x: 300, y: 200, scale: 1.2, duration: 1 }, // Move e "clica"
+    { x: 500, y: 100, scale: 1 }, // Outro ponto
+    { x: 100, y: 100, scale: 1 } // Volta ao início
+  ]
+});
+O que isso faz? Move o cursor em um caminho (de (100,100) a (300,200) e (500,100), voltando ao início), com um leve aumento (scale: 1.2) para simular um clique. Ajuste x e y para o tamanho do seu banner.
+Vincule o JS (se usar arquivo separado): Adicione ao HTML:
+html
+
+Recolher
+
+Encapsular
+
+Copiar
+<script src="script.js"></script>
+5. Estrutura do Projeto
+Sua pasta deve ficar assim:
+
+text
+
+Recolher
+
+Encapsular
+
+Copiar
+sua-aplicacao/
+├── index.html
+├── styles.css
+├── script.js
+├── cursor.png  (imagem do cursor)
+├── sua-imagem.jpg  (imagem do banner)
+6. Teste a Aplicação
+Abra o index.html no navegador (clique duas vezes ou use um servidor local como o Live Server).
+Você verá o banner com o cursor se movendo em um caminho suave, "pulsando" para simular cliques, e repetindo o ciclo.
+7. Ajustes Finais
+Tamanho do Banner: Mude height: 400px no CSS se seu banner tiver outra altura.
+Caminho do Cursor: No script.js, altere os valores de x e y nos keyframes para o cursor se mover onde quiser. Exemplo:
+javascript
+
+Recolher
+
+Encapsular
+
+Copiar
+{ x: 200, y: 300, scale: 1.2 } // Novo ponto
+Velocidade: Ajuste duration: 5 para 3 (mais rápido) ou 7 (mais lento).
+Efeito de Clique: Mude scale: 1.2 para 1.5 (pulsar maior) ou 1.1 (menor).
+Responsividade: Para telas menores, use unidades relativas no JS:
+javascript
+
+Recolher
+
+Encapsular
+
+Copiar
+{ x: "20vw", y: "30vh", scale: 1.2 }
+Código Completo (Caso Queira Copiar Tudo)
+Se preferir um único arquivo para testar, use este index.html:
+
+html
+
+Pré-visualizar
+
+Recolher
+
+Encapsular
+
+Copiar
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Banner com Cursor Animado</title>
+  <style>
+    .banner {
+      position: relative;
+      width: 100%;
+      height: 400px;
+    }
+    .banner img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .cursor {
+      width: 30px;
+      height: 30px;
+      background: white;
+      border: 2px solid black;
+      border-radius: 50%;
+      position: absolute;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    <img src="https://via.placeholder.com/800x400" alt="Banner">
+    <div class="cursor"></div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/gsap.min.js"></script>
+  <script>
+    gsap.to(".cursor", {
+      duration: 5,
+      repeat: -1,
+      ease: "power1.inOut",
+      keyframes: [
+        { x: 100, y: 100, scale: 1 },
+        { x: 300, y: 200, scale: 1.2, duration: 1 },
+        { x: 500, y: 100, scale: 1 },
+        { x: 100, y: 100, scale: 1 }
+      ]
+    });
+  </script>
+</body>
+</html>
+Salve e abra no navegador. Depois, substitua a imagem e o estilo do cursor conforme necessário.
+Se Usar um Framework
+Se sua aplicação é em React, Vue, ou outro, o processo é parecido:
+
+React:
+Crie um componente com o <div class="banner"> e o <img>.
+Use useEffect para rodar o GSAP:
+jsx
+
+Recolher
+
+Encapsular
+
+Copiar
+import { useEffect } from "react";
+import gsap from "gsap";
+
+function Banner() {
+  useEffect(() => {
+    gsap.to(".cursor", { /* mesma animação */ });
+  }, []);
+  return (
+    <div className="banner">
+      <img src="sua-imagem.jpg" alt="Banner" />
+      <div className="cursor"></div>
+    </div>
+  );
+}
+Instale GSAP: npm install gsap.
+Vue: Similar, use o mounted para iniciar o GSAP.
