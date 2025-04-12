@@ -68,10 +68,7 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
               email: data.email || user.email || "",
               phone: data.phone || "Adicionar telefone",
               location: data.location || "Adicionar localização",
-              birthDate: data.birth_date || 
-                (user.user_metadata?.birth_date) || 
-                (user.raw_user_meta_data?.birth_date) || 
-                "Adicionar data de nascimento",
+              birthDate: data.birth_date || "Adicionar data de nascimento",
             });
 
             if (data.bio) {
@@ -189,11 +186,14 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
               setContactInfo={setContactInfo}
               saveContactInfo={saveContactInfo}
             />
+            
+            {/* Badges & Achievements - Full width, separate below */}
+            <Achievements />
           </div>
 
           {/* Right Column - Tabs Content */}
           <div className="w-full md:w-2/3">
-            <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 overflow-hidden shadow-sm mb-6">
+            <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 overflow-hidden shadow-sm">
               <Tabs
                 value={activeTab}
                 onValueChange={setActiveTab}
@@ -285,12 +285,6 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
                   </TabsContent>
                 </ScrollArea>
               </Tabs>
-            </div>
-            
-            {/* Badges & Achievements - Posicionado abaixo do componente de abas, com altura controlada */}
-            <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 overflow-hidden shadow-sm p-6 h-[332px]">
-              <h3 className="text-lg font-semibold text-[#29335C] dark:text-white mb-4">Conquistas</h3>
-              <Achievements />
             </div>
           </div>
         </div>

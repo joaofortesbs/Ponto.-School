@@ -31,18 +31,15 @@ export default function ContactInfo({
   saveContactInfo,
 }: ContactInfoProps) {
   return (
-    <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-6 shadow-sm w-full h-[332px] overflow-hidden backdrop-blur-sm">
-      <div className="flex justify-between items-center mb-5">
-        <div className="flex items-center gap-2">
-          <div className="w-1.5 h-8 bg-gradient-to-b from-[#FF6B00] to-[#FF9D4D] rounded-md"></div>
-          <h3 className="text-lg font-bold text-[#29335C] dark:text-white">
-            Informações de Contato
-          </h3>
-        </div>
+    <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-6 shadow-sm w-full">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-bold text-[#29335C] dark:text-white">
+          Informações de Contato
+        </h3>
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 text-[#64748B] dark:text-white/60 hover:text-[#FF6B00] hover:bg-[#FF6B00]/10 rounded-full"
+          className="h-8 w-8 text-[#64748B] dark:text-white/60 hover:text-[#FF6B00] hover:bg-[#FF6B00]/10"
           onClick={() => toggleSection("contact")}
         >
           <Edit className="h-4 w-4" />
@@ -50,7 +47,7 @@ export default function ContactInfo({
       </div>
 
       {expandedSection === "contact" && (
-        <div className="p-4 bg-white/80 dark:bg-[#0A2540]/90 rounded-lg border border-[#E0E1DD] dark:border-white/10 mb-4 backdrop-blur-lg">
+        <div className="p-4 bg-white dark:bg-[#0A2540] rounded-lg border border-[#E0E1DD] dark:border-white/10 mb-4">
           <h4 className="text-base font-medium text-[#29335C] dark:text-white mb-3">
             Editar Informações de Contato
           </h4>
@@ -163,55 +160,55 @@ export default function ContactInfo({
       )}
 
       <div className="space-y-4">
-        <div className="flex items-center gap-3 bg-gradient-to-r from-white/5 to-transparent dark:from-white/10 p-2 rounded-lg hover:from-[#FF6B00]/5 transition-all duration-300">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF9D4D]/80 flex items-center justify-center flex-shrink-0 shadow-md">
-            <Mail className="h-5 w-5 text-white" />
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-[#FF6B00]/10 flex items-center justify-center flex-shrink-0">
+            <Mail className="h-5 w-5 text-[#FF6B00]" />
           </div>
           <div>
-            <p className="text-xs text-[#64748B] dark:text-white/60 font-medium">Email</p>
-            <p className="text-sm font-semibold text-[#29335C] dark:text-white">
+            <p className="text-xs text-[#64748B] dark:text-white/60">Email</p>
+            <p className="text-sm font-medium text-[#29335C] dark:text-white">
               {contactInfo.email}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 bg-gradient-to-r from-white/5 to-transparent dark:from-white/10 p-2 rounded-lg hover:from-[#FF6B00]/5 transition-all duration-300">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF9D4D]/80 flex items-center justify-center flex-shrink-0 shadow-md">
-            <Phone className="h-5 w-5 text-white" />
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-[#FF6B00]/10 flex items-center justify-center flex-shrink-0">
+            <Phone className="h-5 w-5 text-[#FF6B00]" />
           </div>
           <div>
-            <p className="text-xs text-[#64748B] dark:text-white/60 font-medium">
+            <p className="text-xs text-[#64748B] dark:text-white/60">
               Telefone
             </p>
-            <p className="text-sm font-semibold text-[#29335C] dark:text-white">
+            <p className="text-sm font-medium text-[#29335C] dark:text-white">
               {contactInfo.phone}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 bg-gradient-to-r from-white/5 to-transparent dark:from-white/10 p-2 rounded-lg hover:from-[#FF6B00]/5 transition-all duration-300">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF9D4D]/80 flex items-center justify-center flex-shrink-0 shadow-md">
-            <MapPin className="h-5 w-5 text-white" />
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-[#FF6B00]/10 flex items-center justify-center flex-shrink-0">
+            <MapPin className="h-5 w-5 text-[#FF6B00]" />
           </div>
           <div>
-            <p className="text-xs text-[#64748B] dark:text-white/60 font-medium">
+            <p className="text-xs text-[#64748B] dark:text-white/60">
               Localização
             </p>
-            <p className="text-sm font-semibold text-[#29335C] dark:text-white">
+            <p className="text-sm font-medium text-[#29335C] dark:text-white">
               {contactInfo.location}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 bg-gradient-to-r from-white/5 to-transparent dark:from-white/10 p-2 rounded-lg hover:from-[#FF6B00]/5 transition-all duration-300">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF9D4D]/80 flex items-center justify-center flex-shrink-0 shadow-md">
-            <Calendar className="h-5 w-5 text-white" />
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-[#FF6B00]/10 flex items-center justify-center flex-shrink-0">
+            <Calendar className="h-5 w-5 text-[#FF6B00]" />
           </div>
           <div>
-            <p className="text-xs text-[#64748B] dark:text-white/60 font-medium">
+            <p className="text-xs text-[#64748B] dark:text-white/60">
               Data de Nascimento
             </p>
-            <p className="text-sm font-semibold text-[#29335C] dark:text-white">
+            <p className="text-sm font-medium text-[#29335C] dark:text-white">
               {contactInfo.birthDate}
             </p>
           </div>
