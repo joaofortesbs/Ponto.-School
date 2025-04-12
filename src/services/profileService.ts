@@ -1,4 +1,3 @@
-
 // Serviço para gerenciamento de perfis de usuário
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/types/user-profile';
@@ -11,25 +10,25 @@ export async function createUserProfile(userData: Partial<UserProfile>, uf: stri
   try {
     // Gera um ID de usuário único
     const userId = await generateUserIdByPlan(planType, uf);
-    
+
     // Adiciona o ID ao objeto de dados do usuário
     const userDataWithId = {
       ...userData,
       user_id: userId
     };
-    
+
     // Insere o perfil no banco de dados
     const { data, error } = await supabase
       .from('profiles')
       .insert([userDataWithId])
       .select('*')
       .single();
-      
+
     if (error) {
       console.error('Erro ao criar perfil de usuário:', error);
       return null;
     }
-    
+
     return data;
   } catch (error) {
     console.error('Erro ao criar perfil de usuário:', error);
@@ -45,19 +44,19 @@ export async function getUserProfileById(userId: string): Promise<UserProfile | 
     console.error('ID de usuário inválido:', userId);
     return null;
   }
-  
+
   try {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('user_id', userId)
       .single();
-      
+
     if (error) {
       console.error('Erro ao buscar perfil de usuário:', error);
       return null;
     }
-    
+
     return data;
   } catch (error) {
     console.error('Erro ao buscar perfil de usuário:', error);
@@ -72,7 +71,7 @@ class ProfileService {
   async getCurrentUserProfile(): Promise<UserProfile | null> {
     try {
       const { data: session } = await supabase.auth.getSession();
-      
+
       if (!session.session) {
         console.log('Usuário não autenticado');
         return null;
@@ -91,13 +90,13 @@ class ProfileService {
 
       if (data) {
         console.log('getCurrentUserProfile: Perfil encontrado:', data);
-        
+
         // Verificar se o perfil tem username ou display_name e atualizá-los se necessário
         if (!data.username || !data.display_name) {
           console.log('Perfil não tem username ou display_name completo. Buscando de outras fontes...');
-          
+
           const updateData: Partial<UserProfile> = {};
-          
+
           // Se não tem username, procurar em outras fontes
           if (!data.username) {
             // Verificar se existe no localStorage (salvo durante o registro)
@@ -108,10 +107,10 @@ class ProfileService {
                 if (parsedData.username) {
                   console.log('Username encontrado no localStorage:', parsedData.username);
                   updateData.username = parsedData.username;
-                  
+
                   // Também atualizar o objeto data para a resposta
                   data.username = parsedData.username;
-                  
+
                   // Também definir como display_name se não estiver definido
                   if (!data.display_name) {
                     updateData.display_name = parsedData.username;
@@ -122,15 +121,15 @@ class ProfileService {
             } catch (e) {
               console.error('Erro ao acessar localStorage:', e);
             }
-            
+
             // Verificar nos metadados da sessão (prioridade mais alta)
             if (session.session.user.user_metadata?.username) {
               console.log('Username encontrado nos metadados da sessão:', session.session.user.user_metadata.username);
               updateData.username = session.session.user.user_metadata.username;
-              
+
               // Atualizar o objeto data para a resposta
               data.username = session.session.user.user_metadata.username;
-              
+
               // Também definir como display_name se não estiver definido
               if (!data.display_name) {
                 updateData.display_name = session.session.user.user_metadata.username;
@@ -138,7 +137,7 @@ class ProfileService {
               }
             }
           }
-          
+
           // Se não tem display_name, usar o username encontrado ou o existente
           if (!data.display_name) {
             // Prioridade: username nos metadados > username encontrado > username existente
@@ -152,10 +151,10 @@ class ProfileService {
               updateData.display_name = data.username;
               data.display_name = data.username;
             }
-            
+
             console.log('Display name definido para:', data.display_name);
           }
-          
+
           // Se há dados para atualizar, fazer a atualização
           if (Object.keys(updateData).length > 0) {
             await this.updateUserProfile({
@@ -164,7 +163,7 @@ class ProfileService {
             });
           }
         }
-        
+
         return data as UserProfile;
       }
 
@@ -198,12 +197,12 @@ class ProfileService {
             .eq('id', existingProfile.id)
             .select()
             .single();
-            
+
           if (updateError) {
             console.error('Erro ao atualizar ID do usuário:', updateError);
             return existingProfile as UserProfile;
           }
-          
+
           return updatedProfile as UserProfile;
         }
         return existingProfile as UserProfile;
@@ -211,7 +210,7 @@ class ProfileService {
 
       // Gerar um ID único para o usuário baseado no plano (padrão 'lite')
       const generatedId = await generateUserIdByPlan('lite', 'BR');
-      
+
       // Criar novo perfil
       const newProfile: Partial<UserProfile> = {
         user_id: generatedId,
@@ -245,35 +244,54 @@ class ProfileService {
    */
   async updateUserProfile(profileData: Partial<UserProfile>): Promise<UserProfile | null> {
     try {
-      const { data: currentUser } = await supabase.auth.getUser();
-      
-      if (!currentUser.user) {
-        console.log('Usuário não autenticado');
+      const { data: userData } = await supabase.auth.getUser();
+
+      if (!userData.user) {
+        console.error('Usuário não autenticado');
         return null;
       }
 
-      // Obter o perfil atual para verificar se existe
-      const { data: currentProfile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('email', currentUser.user.email)
-        .single();
-
-      if (!currentProfile) {
-        console.error('Perfil não encontrado para atualização');
-        return null;
+      // Se estamos atualizando o username, também atualizar no localStorage
+      if (profileData.username) {
+        localStorage.setItem('username', profileData.username);
       }
 
-      // Atualizar apenas os campos fornecidos
-      const updateData = {
-        ...profileData,
-        updated_at: new Date().toISOString()
-      };
+      // Se estamos atualizando o nome completo, atualizar o primeiro nome no localStorage
+      if (profileData.full_name) {
+        const firstName = profileData.full_name.split(' ')[0];
+        localStorage.setItem('userFirstName', firstName);
+
+        // Disparar evento para atualizar componentes
+        try {
+          document.dispatchEvent(new CustomEvent('userFirstNameUpdated', { 
+            detail: { firstName } 
+          }));
+        } catch (e) {
+          console.error("Erro ao disparar evento de atualização de nome:", e);
+        }
+      }
+
+      // Se estamos atualizando o display_name e não há nome completo, usá-lo como primeiro nome
+      if (profileData.display_name && !profileData.full_name) {
+        localStorage.setItem('userFirstName', profileData.display_name);
+
+        // Disparar evento para atualizar componentes
+        try {
+          document.dispatchEvent(new CustomEvent('userFirstNameUpdated', { 
+            detail: { firstName: profileData.display_name } 
+          }));
+        } catch (e) {
+          console.error("Erro ao disparar evento de atualização de nome:", e);
+        }
+      }
 
       const { data, error } = await supabase
         .from('profiles')
-        .update(updateData)
-        .eq('id', currentProfile.id)
+        .update({
+          ...profileData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userData.user.id)
         .select()
         .single();
 
@@ -282,9 +300,29 @@ class ProfileService {
         return null;
       }
 
+      // Após atualizar com sucesso, verificar se precisamos atualizar o nome
+      if (data) {
+        const updatedProfile = data as UserProfile;
+        const firstName = updatedProfile.full_name?.split(' ')[0] || 
+                          updatedProfile.display_name || 
+                          updatedProfile.username || 
+                          "Usuário";
+
+        localStorage.setItem('userFirstName', firstName);
+
+        // Disparar evento para atualizar componentes
+        try {
+          document.dispatchEvent(new CustomEvent('userFirstNameUpdated', { 
+            detail: { firstName } 
+          }));
+        } catch (e) {
+          console.error("Erro ao disparar evento de atualização de nome:", e);
+        }
+      }
+
       return data as UserProfile;
     } catch (error) {
-      console.error('Erro ao atualizar perfil de usuário:', error);
+      console.error('Erro ao atualizar perfil do usuário:', error);
       return null;
     }
   }
@@ -295,7 +333,7 @@ class ProfileService {
   async getUserDisplayName(): Promise<string> {
     try {
       const profile = await this.getCurrentUserProfile();
-      
+
       if (!profile) {
         return 'Usuário';
       }
@@ -315,7 +353,7 @@ class ProfileService {
       return 'Usuário';
     }
   }
-  
+
   /**
    * Garantir que o perfil do usuário tenha um ID válido
    * Esta função verifica se o usuário tem um ID e, se não tiver, gera um novo
@@ -324,28 +362,28 @@ class ProfileService {
   async ensureUserHasId(): Promise<boolean> {
     try {
       const profile = await this.getCurrentUserProfile();
-      
+
       if (!profile) {
         console.log('Nenhum perfil encontrado para adicionar ID');
         return false;
       }
-      
+
       // Se já tem ID válido, verificar se está no formato correto
       if (profile.user_id && isValidUserId(profile.user_id)) {
         console.log('Usuário já possui um ID válido:', profile.user_id);
         return false; // Retorna falso pois não gerou um novo ID
       }
-      
+
       console.log('Gerando novo ID para o usuário. ID atual:', profile.user_id);
-      
+
       // Verificar se temos uma UF válida
       let uf = profile.state;
       let ufWasUpdated = false;
-      
+
       if (!uf || uf.length !== 2 || uf === 'BR') {
         // Se não tiver UF válida, tentar recuperar do localStorage
         console.warn(`UF inválida ou não fornecida no perfil: "${uf}"`);
-        
+
         // Tentar obter do localStorage
         try {
           const savedState = localStorage.getItem('selectedState');
@@ -353,7 +391,7 @@ class ProfileService {
             console.log(`Usando estado encontrado no localStorage: ${savedState}`);
             uf = savedState.toUpperCase();
             ufWasUpdated = true;
-            
+
             // Atualizar o perfil com o estado correto
             const { error: updateStateError } = await supabase
               .from('profiles')
@@ -362,7 +400,7 @@ class ProfileService {
                 updated_at: new Date().toISOString() 
               })
               .eq('id', profile.id);
-              
+
             if (!updateStateError) {
               console.log(`Estado do usuário atualizado para ${uf}`);
             } else {
@@ -379,9 +417,9 @@ class ProfileService {
               console.error('Não foi possível encontrar um estado válido. Usando SP como fallback.');
               uf = 'SP';
             }
-            
+
             ufWasUpdated = true;
-            
+
             // Atualizar o perfil com o estado encontrado ou padrão
             const { error: updateStateError } = await supabase
               .from('profiles')
@@ -390,7 +428,7 @@ class ProfileService {
                 updated_at: new Date().toISOString() 
               })
               .eq('id', profile.id);
-              
+
             if (!updateStateError) {
               console.log(`Estado do usuário definido para: ${uf}`);
             }
@@ -402,26 +440,26 @@ class ProfileService {
           ufWasUpdated = true;
         }
       }
-      
+
       // Registrar a UF que será usada para a geração do ID
       console.log(`UF que será usada para gerar o ID: ${uf} (Foi atualizada: ${ufWasUpdated})`);
-      
+
       // Determinar o tipo de plano do usuário
       let planType = profile.plan_type || '';
-      
+
       // Se não tiver plano definido, verificar localStorage
       if (!planType || planType === '') {
         const savedPlan = localStorage.getItem('selectedPlan');
         if (savedPlan) {
           planType = savedPlan;
-          
+
           // Atualizar o plano no perfil
           try {
             const { error: updatePlanError } = await supabase
               .from('profiles')
               .update({ plan_type: planType })
               .eq('id', profile.id);
-              
+
             if (!updatePlanError) {
               console.log(`Plano do usuário atualizado para ${planType}`);
             }
@@ -433,15 +471,15 @@ class ProfileService {
           planType = 'lite';
         }
       }
-      
+
       // Definir o tipo de conta baseado no plano
       const tipoConta = (planType.toLowerCase() === 'premium' || planType.toLowerCase() === 'full') ? 1 : 2;
-      
+
       console.log(`Gerando ID com UF=${uf}, tipoConta=${tipoConta}, plano=${planType}`);
-      
+
       // Usar a função de geração de ID para garantir sequencial único
       let generatedId;
-      
+
       // Tentar todas as estratégias disponíveis para geração de ID
       try {
         // 1. Tentar usar a função SQL diretamente (mais confiável para sequencial)
@@ -449,7 +487,7 @@ class ProfileService {
           p_uf: uf,
           p_tipo_conta: tipoConta
         });
-        
+
         if (!sqlError && sqlData) {
           generatedId = sqlData;
           console.log('ID gerado com sucesso via função SQL:', generatedId);
@@ -458,26 +496,26 @@ class ProfileService {
         }
       } catch (sqlFuncError) {
         console.error('Erro na função SQL de geração de ID:', sqlFuncError);
-        
+
         try {
           // 2. Tentar gerar usando a função principal
           generatedId = await generateUserId(uf, tipoConta);
           console.log('ID gerado com sucesso via generateUserId:', generatedId);
         } catch (error) {
           console.error('Erro ao gerar ID com função principal:', error);
-          
+
           try {
             // 3. Tentar gerar utilizando a função específica de plano
             generatedId = await generateUserIdByPlan(planType, uf);
             console.log('ID gerado com função de plano:', generatedId);
           } catch (planError) {
             console.error('Erro ao gerar ID com função de plano:', planError);
-            
+
             // 4. Tentar obter o sequencial diretamente da tabela de controle por UF
             try {
               const dataAtual = new Date();
               const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
-              
+
               const { data: controlData, error: controlError } = await supabase
                 .from('user_id_control_by_uf')
                 .select('*')
@@ -485,13 +523,13 @@ class ProfileService {
                 .eq('ano_mes', anoMes)
                 .eq('tipo_conta', tipoConta)
                 .single();
-              
+
               let nextId = 1;
-              
+
               if (!controlError && controlData) {
                 // Incrementar ID existente
                 nextId = controlData.last_id + 1;
-                
+
                 // Atualizar o contador
                 await supabase
                   .from('user_id_control_by_uf')
@@ -511,13 +549,13 @@ class ProfileService {
                     last_id: 1
                   }]);
               }
-              
+
               // Formatar o ID completo
               generatedId = `${uf}${anoMes}${tipoConta}${nextId.toString().padStart(6, '0')}`;
               console.log('ID gerado com acesso direto à tabela de controle:', generatedId);
             } catch (tableError) {
               console.error('Erro ao acessar tabela de controle:', tableError);
-              
+
               // 5. Último fallback: Gerar manualmente com timestamp
               const dataAtual = new Date();
               const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
@@ -529,12 +567,12 @@ class ProfileService {
           }
         }
       }
-      
+
       if (!generatedId || !isValidUserId(generatedId)) {
         console.error('ID gerado é inválido:', generatedId);
         return false;
       }
-      
+
       // Atualizar o perfil com o novo ID
       const { error } = await supabase
         .from('profiles')
@@ -543,17 +581,17 @@ class ProfileService {
           updated_at: new Date().toISOString()
         })
         .eq('id', profile.id);
-      
+
       if (error) {
         console.error('Erro ao atualizar perfil com novo ID:', error);
-        
+
         // Tentar um método alternativo de atualização
         try {
           const { error: alternativeError } = await supabase
             .rpc('execute_sql', { 
               sql_query: `UPDATE profiles SET user_id = '${generatedId}', updated_at = NOW() WHERE id = '${profile.id}'` 
             });
-          
+
           if (alternativeError) {
             console.error('Erro também no método alternativo:', alternativeError);
             return false;
@@ -563,9 +601,9 @@ class ProfileService {
           return false;
         }
       }
-      
+
       console.log('ID gerado e atualizado com sucesso:', generatedId);
-      
+
       // Atualizar o localstorage com o novo ID para uso rápido
       try {
         const tempProfile = JSON.parse(localStorage.getItem('tempUserProfile') || '{}');
@@ -574,7 +612,7 @@ class ProfileService {
       } catch (storageError) {
         console.warn('Erro ao atualizar localStorage com novo ID:', storageError);
       }
-      
+
       return true; // Retorna verdadeiro pois gerou um novo ID
     } catch (error) {
       console.error('Erro ao garantir ID do usuário:', error);

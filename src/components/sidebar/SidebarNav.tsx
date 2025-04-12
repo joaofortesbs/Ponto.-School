@@ -78,13 +78,23 @@ export function SidebarNav({
         setProfileImage(event.detail.url);
       }
     };
+    
+    // Listener para atualizações de nome feitas em outros componentes
+    const handleNameUpdate = (event: CustomEvent) => {
+      if (event.detail && event.detail.firstName) {
+        setFirstName(event.detail.firstName);
+        console.log("Nome atualizado via evento:", event.detail.firstName);
+      }
+    };
 
-    // Adicionar o listener
+    // Adicionar os listeners
     document.addEventListener('userAvatarUpdated', handleAvatarUpdate as EventListener);
+    document.addEventListener('userFirstNameUpdated', handleNameUpdate as EventListener);
 
-    // Remover o listener quando o componente for desmontado
+    // Remover os listeners quando o componente for desmontado
     return () => {
       document.removeEventListener('userAvatarUpdated', handleAvatarUpdate as EventListener);
+      document.removeEventListener('userFirstNameUpdated', handleNameUpdate as EventListener);
     };
   }, []);
 
@@ -115,11 +125,20 @@ export function SidebarNav({
             
             // Extrair o primeiro nome do usuário para a saudação
             // Usando a mesma lógica do Dashboard.tsx para consistência
-            const dashboardName = data.full_name?.split(' ')[0] || data.display_name || data.username || "João";
+            const dashboardName = data.full_name?.split(' ')[0] || data.display_name || data.username || "Usuário";
             setFirstName(dashboardName);
             
             // Salvar o nome no localStorage para garantir consistência entre componentes
             localStorage.setItem('userFirstName', dashboardName);
+            
+            // Disparar evento para outros componentes saberem que o nome foi atualizado
+            try {
+              document.dispatchEvent(new CustomEvent('userFirstNameUpdated', { 
+                detail: { firstName: dashboardName } 
+              }));
+            } catch (e) {
+              console.error("Erro ao disparar evento de atualização de nome:", e);
+            }
           }
         }
       } catch (error) {
@@ -499,7 +518,7 @@ export function SidebarNav({
           <div className="text-[#001427] dark:text-white text-center">
             <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
               <span className="mr-1">👋</span> Olá,{" "}
-              {firstName || userProfile?.full_name?.split(' ')[0] || userProfile?.display_name || userProfile?.username || "Usuário"}!
+              {firstName || localStorage.getItem('userFirstName') || userProfile?.full_name?.split(' ')[0] || userProfile?.display_name || userProfile?.username || "Usuário"}!
             </h3>
             <div className="flex flex-col items-center mt-1">
               <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
