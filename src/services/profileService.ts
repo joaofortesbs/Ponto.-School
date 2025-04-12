@@ -63,7 +63,7 @@ export async function getUserProfileById(userId: string): Promise<UserProfile | 
     console.error('Erro ao buscar perfil de usuário:', error);
     return null;
   }
-}';
+}
 
 class ProfileService {
   /**
