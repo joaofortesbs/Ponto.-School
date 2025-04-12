@@ -372,8 +372,8 @@ class ProfileService {
               
             if (updatedProfile) {
               console.log('Perfil atualizado com método alternativo:', updatedProfile);
-              // Continuar o fluxo com o perfil obtido
-              data = updatedProfile;
+              // Substituir a referência pela versão atualizada
+              return updatedProfile as UserProfile;
             } else {
               return null;
             }

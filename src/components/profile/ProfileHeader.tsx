@@ -328,44 +328,70 @@ export default function ProfileHeader({
         fileToUpload = await loadImage;
       }
 
-      // Upload para o storage
-      let { error: uploadError } = await supabase.storage
-        .from('profiles')
-        .upload(filePath, fileToUpload, {
-          cacheControl: '3600',
-          upsert: true
+      // Verificar se o bucket existe e criar se não existir
+      const { error: bucketCheckError } = await supabase.storage.getBucket('profiles');
+      if (bucketCheckError && bucketCheckError.message.includes('not found')) {
+        // Bucket não existe, vamos criar
+        console.log("Bucket 'profiles' não encontrado, criando...");
+        const { error: createBucketError } = await supabase.storage.createBucket('profiles', {
+          public: true,
+          fileSizeLimit: 5242880 // 5MB
         });
-
-      if (uploadError) {
-        if (uploadError.message.includes('The resource already exists')) {
-          // Se o arquivo já existe, gerar um novo nome e tentar novamente
-          const newFileName = `${user.id}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-          const newFilePath = `avatars/${newFileName}`;
-
-          const { error: retryError } = await supabase.storage
-            .from('profiles')
-            .upload(newFilePath, fileToUpload, {
-              cacheControl: '3600',
-              upsert: true
-            });
-
-          if (retryError) throw retryError;
-
-          // Atualizar o caminho do arquivo
-          filePath = newFilePath;
+        
+        if (createBucketError) {
+          console.error("Erro ao criar bucket:", createBucketError);
+          // Continuar mesmo com erro, pois o bucket pode já existir mas com permissões diferentes
         } else {
-          throw uploadError;
+          console.log("Bucket 'profiles' criado com sucesso");
         }
+      }
+
+      // Upload para o storage com retry automatico
+      let uploadAttempts = 0;
+      let uploadSuccess = false;
+      let finalFilePath = filePath;
+      
+      while (!uploadSuccess && uploadAttempts < 3) {
+        uploadAttempts++;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('profiles')
+          .upload(finalFilePath, fileToUpload, {
+            cacheControl: '3600',
+            upsert: true
+          });
+
+        if (!uploadError) {
+          uploadSuccess = true;
+        } else {
+          console.warn(`Tentativa ${uploadAttempts} falhou:`, uploadError.message);
+          
+          if (uploadError.message.includes('The resource already exists') || 
+              uploadError.message.includes('already exists')) {
+            // Gerar um novo nome de arquivo com timestamp e random string
+            const newFileName = `${user.id}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+            finalFilePath = `avatars/${newFileName}`;
+            console.log("Tentando com novo nome de arquivo:", finalFilePath);
+          } else if (uploadAttempts === 3) {
+            throw uploadError;
+          }
+        }
+      }
+
+      if (!uploadSuccess) {
+        throw new Error("Falha ao fazer upload após múltiplas tentativas");
       }
 
       // Obter URL pública
       const { data: publicUrlData } = supabase.storage
         .from('profiles')
-        .getPublicUrl(filePath);
+        .getPublicUrl(finalFilePath);
 
       if (!publicUrlData || !publicUrlData.publicUrl) {
         throw new Error("Não foi possível obter a URL pública da imagem");
       }
+
+      console.log("Upload realizado com sucesso. URL pública:", publicUrlData.publicUrl);
 
       // Primeiro salvar no localStorage para feedback imediato
       try {
@@ -378,54 +404,120 @@ export default function ProfileHeader({
       // Atualizar imediatamente a visualização
       setAvatarUrl(publicUrlData.publicUrl);
 
-      // Depois atualizar no banco de dados
-      const updatedProfile = await profileService.updateUserProfile({
-        avatar_url: publicUrlData.publicUrl
-      });
+      // Disparar evento para outros componentes antes da tentativa de atualizar o banco
+      document.dispatchEvent(new CustomEvent('userAvatarUpdated', { 
+        detail: { url: publicUrlData.publicUrl } 
+      }));
 
-      // Recarregar o perfil atualizado
-      if (updatedProfile) {
-        // Disparar evento para outros componentes saberem que o avatar foi atualizado
-        document.dispatchEvent(new CustomEvent('userAvatarUpdated', { 
-          detail: { url: publicUrlData.publicUrl } 
-        }));
+      // Usar múltiplas estratégias para atualização do perfil
+      let updateSuccess = false;
+      let updatedProfile = null;
+      
+      // Estratégia 1: Usar o serviço de perfil
+      try {
+        updatedProfile = await profileService.updateUserProfile({
+          avatar_url: publicUrlData.publicUrl
+        });
+        
+        if (updatedProfile) {
+          updateSuccess = true;
+          console.log("Perfil atualizado com sucesso via profileService");
+        }
+      } catch (updateError) {
+        console.error("Erro na atualização via profileService:", updateError);
+      }
+      
+      // Estratégia 2: Atualização direta se a primeira falhar
+      if (!updateSuccess) {
+        try {
+          console.log("Tentando atualização direta do perfil");
+          const { data: sessionUser } = await supabase.auth.getUser();
+          
+          if (!sessionUser.user?.email) {
+            throw new Error("Email do usuário não disponível");
+          }
+          
+          const { data: updatedData, error: directUpdateError } = await supabase
+            .from('profiles')
+            .update({ 
+              avatar_url: publicUrlData.publicUrl,
+              updated_at: new Date().toISOString() 
+            })
+            .eq('email', sessionUser.user.email)
+            .select()
+            .single();
 
-        // Atualizar o perfil completo após o upload bem-sucedido
+          if (directUpdateError) {
+            throw directUpdateError;
+          }
+          
+          updatedProfile = updatedData;
+          updateSuccess = true;
+          console.log("Perfil atualizado com sucesso via atualização direta");
+        } catch (directError) {
+          console.error("Erro na atualização direta:", directError);
+        }
+      }
+      
+      // Estratégia 3: Usar RPC para executar SQL diretamente
+      if (!updateSuccess) {
+        try {
+          console.log("Tentando atualização via RPC");
+          const { data: sessionUser } = await supabase.auth.getUser();
+          
+          if (!sessionUser.user?.email) {
+            throw new Error("Email do usuário não disponível");
+          }
+          
+          const query = `
+            UPDATE profiles 
+            SET avatar_url = '${publicUrlData.publicUrl.replace(/'/g, "''")}', 
+                updated_at = NOW() 
+            WHERE email = '${sessionUser.user.email.replace(/'/g, "''")}'
+            RETURNING *;
+          `;
+          
+          const { error: rpcError } = await supabase.rpc('execute_sql', { 
+            sql_query: query
+          });
+          
+          if (rpcError) {
+            throw rpcError;
+          }
+          
+          // Verificar se a atualização foi bem-sucedida buscando o perfil
+          const { data: verifyProfile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('email', sessionUser.user.email)
+            .single();
+            
+          if (verifyProfile && verifyProfile.avatar_url === publicUrlData.publicUrl) {
+            updatedProfile = verifyProfile;
+            updateSuccess = true;
+            console.log("Perfil atualizado com sucesso via RPC");
+          }
+        } catch (rpcError) {
+          console.error("Erro na atualização via RPC:", rpcError);
+        }
+      }
+
+      // Verificar resultado final
+      if (updateSuccess) {
+        // Recarregar o perfil atualizado
         await profileService.getCurrentUserProfile();
-
+        
         toast({
           title: "Sucesso",
           description: "Foto de perfil atualizada com sucesso",
         });
       } else {
-        // Tentar novamente a atualização do perfil
-        console.warn("Primeira tentativa de atualização de perfil falhou, tentando novamente");
-
-        // Segunda tentativa direta no banco de dados
-        const { error: directUpdateError } = await supabase
-          .from('profiles')
-          .update({ 
-            avatar_url: publicUrlData.publicUrl,
-            updated_at: new Date().toISOString() 
-          })
-          .eq('email', user.email);
-
-        if (directUpdateError) {
-          console.error("Erro na segunda tentativa de atualização:", directUpdateError);
-          throw new Error("Não foi possível atualizar o perfil após múltiplas tentativas");
-        } else {
-          console.log("Perfil atualizado com sucesso na segunda tentativa");
-
-          // Disparar evento para outros componentes
-          document.dispatchEvent(new CustomEvent('userAvatarUpdated', { 
-            detail: { url: publicUrlData.publicUrl } 
-          }));
-
-          toast({
-            title: "Sucesso",
-            description: "Foto de perfil atualizada com sucesso (2ª tentativa)",
-          });
-        }
+        console.warn("Não foi possível atualizar o perfil no banco de dados");
+        toast({
+          title: "Atenção",
+          description: "Imagem enviada com sucesso, mas pode haver problemas de sincronização com seu perfil",
+          variant: "warning"
+        });
       }
     } catch (error) {
       console.error("Erro ao fazer upload da foto de perfil:", error);
@@ -471,7 +563,7 @@ export default function ProfileHeader({
             let width = img.width;
             let height = img.height;
 
-            // Para imagens de capa, manter a largura maior
+            // Para imagens de capa, manter a proporção horizontal
             const maxWidth = 1200;
             if (width > maxWidth) {
               height = (height / width) * maxWidth;
@@ -502,44 +594,70 @@ export default function ProfileHeader({
         fileToUpload = await loadImage;
       }
 
-      // Upload para o storage
-      let { error: uploadError } = await supabase.storage
-        .from('profiles')
-        .upload(filePath, fileToUpload, {
-          cacheControl: '3600',
-          upsert: true
+      // Verificar se o bucket existe e criar se não existir
+      const { error: bucketCheckError } = await supabase.storage.getBucket('profiles');
+      if (bucketCheckError && bucketCheckError.message.includes('not found')) {
+        // Bucket não existe, vamos criar
+        console.log("Bucket 'profiles' não encontrado, criando...");
+        const { error: createBucketError } = await supabase.storage.createBucket('profiles', {
+          public: true,
+          fileSizeLimit: 5242880 // 5MB
         });
-
-      if (uploadError) {
-        if (uploadError.message.includes('The resource already exists')) {
-          // Se o arquivo já existe, gerar um novo nome e tentar novamente
-          const newFileName = `${user.id}-cover-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-          const newFilePath = `covers/${newFileName}`;
-
-          const { error: retryError } = await supabase.storage
-            .from('profiles')
-            .upload(newFilePath, fileToUpload, {
-              cacheControl: '3600',
-              upsert: true
-            });
-
-          if (retryError) throw retryError;
-
-          // Atualizar o caminho do arquivo
-          filePath = newFilePath;
+        
+        if (createBucketError) {
+          console.error("Erro ao criar bucket:", createBucketError);
+          // Continuar mesmo com erro, pois o bucket pode já existir mas com permissões diferentes
         } else {
-          throw uploadError;
+          console.log("Bucket 'profiles' criado com sucesso");
         }
+      }
+
+      // Upload para o storage com retry automatico
+      let uploadAttempts = 0;
+      let uploadSuccess = false;
+      let finalFilePath = filePath;
+      
+      while (!uploadSuccess && uploadAttempts < 3) {
+        uploadAttempts++;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('profiles')
+          .upload(finalFilePath, fileToUpload, {
+            cacheControl: '3600',
+            upsert: true
+          });
+
+        if (!uploadError) {
+          uploadSuccess = true;
+        } else {
+          console.warn(`Tentativa ${uploadAttempts} falhou:`, uploadError.message);
+          
+          if (uploadError.message.includes('The resource already exists') || 
+              uploadError.message.includes('already exists')) {
+            // Gerar um novo nome de arquivo com timestamp e random string
+            const newFileName = `${user.id}-cover-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+            finalFilePath = `covers/${newFileName}`;
+            console.log("Tentando com novo nome de arquivo:", finalFilePath);
+          } else if (uploadAttempts === 3) {
+            throw uploadError;
+          }
+        }
+      }
+
+      if (!uploadSuccess) {
+        throw new Error("Falha ao fazer upload após múltiplas tentativas");
       }
 
       // Obter URL pública
       const { data: publicUrlData } = supabase.storage
         .from('profiles')
-        .getPublicUrl(filePath);
+        .getPublicUrl(finalFilePath);
 
       if (!publicUrlData || !publicUrlData.publicUrl) {
         throw new Error("Não foi possível obter a URL pública da imagem");
       }
+
+      console.log("Upload da capa realizado com sucesso. URL pública:", publicUrlData.publicUrl);
 
       // Primeiro salvar no localStorage para feedback imediato
       try {
@@ -552,52 +670,120 @@ export default function ProfileHeader({
       // Atualizar imediatamente a visualização
       setCoverUrl(publicUrlData.publicUrl);
 
-      // Disparar evento para outros componentes
+      // Disparar evento para outros componentes antes da tentativa de atualizar o banco
       document.dispatchEvent(new CustomEvent('userCoverUpdated', { 
         detail: { url: publicUrlData.publicUrl } 
       }));
 
-      // Depois atualizar no banco de dados
-      const updatedProfile = await profileService.updateUserProfile({
-        cover_url: publicUrlData.publicUrl
-      });
+      // Usar múltiplas estratégias para atualização do perfil
+      let updateSuccess = false;
+      let updatedProfile = null;
+      
+      // Estratégia 1: Usar o serviço de perfil
+      try {
+        updatedProfile = await profileService.updateUserProfile({
+          cover_url: publicUrlData.publicUrl
+        });
+        
+        if (updatedProfile) {
+          updateSuccess = true;
+          console.log("Perfil atualizado com sucesso via profileService");
+        }
+      } catch (updateError) {
+        console.error("Erro na atualização via profileService:", updateError);
+      }
+      
+      // Estratégia 2: Atualização direta se a primeira falhar
+      if (!updateSuccess) {
+        try {
+          console.log("Tentando atualização direta do perfil");
+          const { data: sessionUser } = await supabase.auth.getUser();
+          
+          if (!sessionUser.user?.email) {
+            throw new Error("Email do usuário não disponível");
+          }
+          
+          const { data: updatedData, error: directUpdateError } = await supabase
+            .from('profiles')
+            .update({ 
+              cover_url: publicUrlData.publicUrl,
+              updated_at: new Date().toISOString() 
+            })
+            .eq('email', sessionUser.user.email)
+            .select()
+            .single();
 
-      if (updatedProfile) {
-        // Recarregar o perfil atualizado após o upload bem-sucedido
+          if (directUpdateError) {
+            throw directUpdateError;
+          }
+          
+          updatedProfile = updatedData;
+          updateSuccess = true;
+          console.log("Perfil atualizado com sucesso via atualização direta");
+        } catch (directError) {
+          console.error("Erro na atualização direta:", directError);
+        }
+      }
+      
+      // Estratégia 3: Usar RPC para executar SQL diretamente
+      if (!updateSuccess) {
+        try {
+          console.log("Tentando atualização via RPC");
+          const { data: sessionUser } = await supabase.auth.getUser();
+          
+          if (!sessionUser.user?.email) {
+            throw new Error("Email do usuário não disponível");
+          }
+          
+          const query = `
+            UPDATE profiles 
+            SET cover_url = '${publicUrlData.publicUrl.replace(/'/g, "''")}', 
+                updated_at = NOW() 
+            WHERE email = '${sessionUser.user.email.replace(/'/g, "''")}'
+            RETURNING *;
+          `;
+          
+          const { error: rpcError } = await supabase.rpc('execute_sql', { 
+            sql_query: query
+          });
+          
+          if (rpcError) {
+            throw rpcError;
+          }
+          
+          // Verificar se a atualização foi bem-sucedida buscando o perfil
+          const { data: verifyProfile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('email', sessionUser.user.email)
+            .single();
+            
+          if (verifyProfile && verifyProfile.cover_url === publicUrlData.publicUrl) {
+            updatedProfile = verifyProfile;
+            updateSuccess = true;
+            console.log("Perfil atualizado com sucesso via RPC");
+          }
+        } catch (rpcError) {
+          console.error("Erro na atualização via RPC:", rpcError);
+        }
+      }
+
+      // Verificar resultado final
+      if (updateSuccess) {
+        // Recarregar o perfil atualizado
         await profileService.getCurrentUserProfile();
-
+        
         toast({
           title: "Sucesso",
           description: "Foto de capa atualizada com sucesso",
         });
       } else {
-        // Se falhar na primeira tentativa, tentar atualizar diretamente
-        console.warn("Primeira tentativa de atualização de perfil falhou, tentando novamente");
-
-        // Segunda tentativa direta no banco de dados
-        const { error: directUpdateError } = await supabase
-          .from('profiles')
-          .update({ 
-            cover_url: publicUrlData.publicUrl,
-            updated_at: new Date().toISOString() 
-          })
-          .eq('email', user.email);
-
-        if (directUpdateError) {
-          console.error("Erro na segunda tentativa de atualização:", directUpdateError);
-          // Mesmo com erro, manter a URL no localStorage e na UI
-          toast({
-            title: "Alerta",
-            description: "A imagem foi salva localmente, mas pode haver problemas de sincronização com o servidor.",
-            variant: "destructive"
-          });
-        } else {
-          console.log("Perfil atualizado com sucesso na segunda tentativa");
-          toast({
-            title: "Sucesso",
-            description: "Foto de capa atualizada com sucesso (2ª tentativa)",
-          });
-        }
+        console.warn("Não foi possível atualizar o perfil no banco de dados");
+        toast({
+          title: "Atenção",
+          description: "Imagem de capa enviada com sucesso, mas pode haver problemas de sincronização com seu perfil",
+          variant: "warning"
+        });
       }
     } catch (error) {
       console.error("Erro ao fazer upload da foto de capa:", error);
