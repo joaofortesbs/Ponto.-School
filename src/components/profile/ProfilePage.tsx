@@ -171,30 +171,24 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row gap-6">
           {/* Left Column - Profile Info */}
-          <div className="w-full md:w-1/3 flex flex-col">
+          <div className="w-full md:w-1/3 flex flex-col space-y-6">
             {/* Profile Card */}
             <ProfileHeader
               userProfile={userProfile}
               onEditClick={() => setExpandedSection("account")}
-              className="mb-6"
             />
 
-            {/* Contact Info and Achievements in same row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              {/* Contact Info */}
-              <ContactInfo
-                contactInfo={contactInfo}
-                expandedSection={expandedSection}
-                toggleSection={toggleSection}
-                setContactInfo={setContactInfo}
-                saveContactInfo={saveContactInfo}
-              />
-              
-              {/* Badges & Achievements - positioned to the right */}
-              <div className="flex-1">
-                <Achievements />
-              </div>
-            </div>
+            {/* Contact Info - Full width */}
+            <ContactInfo
+              contactInfo={contactInfo}
+              expandedSection={expandedSection}
+              toggleSection={toggleSection}
+              setContactInfo={setContactInfo}
+              saveContactInfo={saveContactInfo}
+            />
+            
+            {/* Badges & Achievements - Full width, separate below */}
+            <Achievements />
           </div>
 
           {/* Right Column - Tabs Content */}
