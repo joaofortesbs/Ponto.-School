@@ -11,4 +11,7 @@ export interface UserProfile {
   expert_balance?: number;
   level?: number;
   user_id?: string;
+  state?: string;
+  institution?: string;
+  birth_date?: string;
 }

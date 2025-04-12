@@ -9,7 +9,7 @@ import { supabase } from "@/lib/supabase";
  * @param tipoConta O tipo de conta (1 = Full, 2 = Lite)
  * @returns Uma string contendo o ID gerado no formato UF+AnoMês+TipoConta+Sequencial(6)
  */
-export async function generateUserId(uf: string, tipoConta: number): Promise<string> {
+export async function generateUserId(uf: string = 'BR', tipoConta: number): Promise<string> {
   // Obtém o ano/mês atual no formato AAMM (ex: 2407 para julho de 2024)
   const dataAtual = new Date();
   const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;

@@ -14,6 +14,7 @@ import {
   CheckCircle,
   Check,
   ArrowRight,
+  Map,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -24,6 +25,7 @@ interface FormData {
   username: string;
   email: string;
   institution: string;
+  state: string; // Campo para o estado (UF)
   classGroup: string;
   customClassGroup: string;
   grade: string;
@@ -64,6 +66,7 @@ export function RegisterForm() {
     username: "",
     email: "",
     institution: "",
+    state: "SP", // Estado padrão
     classGroup: "",
     customClassGroup: "",
     grade: "",
@@ -209,12 +212,12 @@ export function RegisterForm() {
         return;
       }
 
-      // Gerar um ID de usuário único com o formato correto BR + AnoMês + TipoConta + Sequencial
+      // Gerar um ID de usuário único com o formato correto UF + AnoMês + TipoConta + Sequencial
       const dataAtual = new Date();
       const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
       const tipoConta = (plan === "premium") ? "1" : "2";
       const sequencial = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
-      const userId = `BR${anoMes}${tipoConta}${sequencial}`;
+      const userId = `${formData.state}${anoMes}${tipoConta}${sequencial}`;
 
       // Primeiro tente registrar o usuário no sistema de autenticação
       let userData = null;
@@ -231,6 +234,7 @@ export function RegisterForm() {
               full_name: formData.fullName,
               username: formData.username,
               institution: formData.institution,
+              state: formData.state,
               birth_date: formData.birthDate,
               plan_type: plan,
               display_name: formData.username,
@@ -272,6 +276,7 @@ export function RegisterForm() {
                   email: formData.email,
                   display_name: formData.username,
                   institution: formData.institution,
+                  state: formData.state,
                   birth_date: formData.birthDate,
                   plan_type: plan,
                   level: 1,
@@ -290,6 +295,7 @@ export function RegisterForm() {
                     full_name: formData.fullName,
                     username: formData.username,
                     institution: formData.institution,
+                    state: formData.state,
                     birth_date: formData.birthDate,
                     plan_type: plan,
                     level: 1,
@@ -319,6 +325,7 @@ export function RegisterForm() {
               email: formData.email,
               display_name: formData.username,
               institution: formData.institution,
+              state: formData.state,
               birth_date: formData.birthDate,
               plan_type: plan,
               level: 1,
@@ -517,6 +524,53 @@ export function RegisterForm() {
                         <span>Instituição encontrada</span>
                       </div>
                     )}
+                  </div>
+                </div>
+                
+                {/* Estado (UF) */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-brand-black dark:text-white">
+                    Estado (UF)
+                  </label>
+                  <div className="relative rounded-md shadow-sm">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Map className="h-4 w-4 text-brand-muted" />
+                    </div>
+                    <select
+                      name="state"
+                      value={formData.state}
+                      onChange={(e) => handleSelectChange("state", e.target.value)}
+                      className="w-full pl-10 h-11 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary focus-visible:border-brand-primary dark:bg-[#0A2540] dark:border-gray-700 transition-colors"
+                      required
+                    >
+                      <option value="AC">Acre (AC)</option>
+                      <option value="AL">Alagoas (AL)</option>
+                      <option value="AP">Amapá (AP)</option>
+                      <option value="AM">Amazonas (AM)</option>
+                      <option value="BA">Bahia (BA)</option>
+                      <option value="CE">Ceará (CE)</option>
+                      <option value="DF">Distrito Federal (DF)</option>
+                      <option value="ES">Espírito Santo (ES)</option>
+                      <option value="GO">Goiás (GO)</option>
+                      <option value="MA">Maranhão (MA)</option>
+                      <option value="MT">Mato Grosso (MT)</option>
+                      <option value="MS">Mato Grosso do Sul (MS)</option>
+                      <option value="MG">Minas Gerais (MG)</option>
+                      <option value="PA">Pará (PA)</option>
+                      <option value="PB">Paraíba (PB)</option>
+                      <option value="PR">Paraná (PR)</option>
+                      <option value="PE">Pernambuco (PE)</option>
+                      <option value="PI">Piauí (PI)</option>
+                      <option value="RJ">Rio de Janeiro (RJ)</option>
+                      <option value="RN">Rio Grande do Norte (RN)</option>
+                      <option value="RS">Rio Grande do Sul (RS)</option>
+                      <option value="RO">Rondônia (RO)</option>
+                      <option value="RR">Roraima (RR)</option>
+                      <option value="SC">Santa Catarina (SC)</option>
+                      <option value="SP">São Paulo (SP)</option>
+                      <option value="SE">Sergipe (SE)</option>
+                      <option value="TO">Tocantins (TO)</option>
+                    </select>
                   </div>
                 </div>
 
