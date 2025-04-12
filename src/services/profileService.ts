@@ -245,6 +245,7 @@ class ProfileService {
   /**
    * Garantir que o perfil do usuário tenha um ID válido
    * Esta função verifica se o usuário tem um ID e, se não tiver, gera um novo
+   * @returns Boolean indicando se um novo ID foi gerado
    */
   async ensureUserHasId(): Promise<boolean> {
     try {
@@ -258,18 +259,19 @@ class ProfileService {
       // Se já tem ID válido, não faz nada
       if (profile.user_id && profile.user_id.length > 5) {
         console.log('Usuário já possui um ID:', profile.user_id);
-        return true;
+        return false; // Retorna falso pois não gerou um novo ID
       }
       
-      // Gerar um ID simples (sem depender de tabelas de controle)
+      // Gerar um ID com base no formato correto
       const dataAtual = new Date();
       const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
       const tipoConta = (profile.plan_type?.toLowerCase() === 'premium') ? '1' : '2';
       const sequencial = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
-      const generatedId = `BR${anoMes}${tipoConta}${sequencial}`;
+      const uf = profile.state || 'BR';
+      const generatedId = `${uf}${anoMes}${tipoConta}${sequencial}`;
       
       // Atualizar o perfil com o novo ID
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('profiles')
         .update({ 
           user_id: generatedId,
@@ -293,7 +295,7 @@ class ProfileService {
       }
       
       console.log('ID gerado e atualizado com sucesso:', generatedId);
-      return true;
+      return true; // Retorna verdadeiro pois gerou um novo ID
     } catch (error) {
       console.error('Erro ao garantir ID do usuário:', error);
       return false;

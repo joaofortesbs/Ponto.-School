@@ -291,15 +291,25 @@ export default function ProfileHeader({
   async function loadProfile() {
     try {
       // Primeiro garantir que o usuário tenha um ID
-      await profileService.ensureUserHasId();
+      const idGenerated = await profileService.ensureUserHasId();
 
       // Então carregar o perfil atualizado
       const userData = await profileService.getCurrentUserProfile();
-      setProfile(userData);
+      
       if (userData) {
+        // Atualizar a interface com os dados
+        setUserProfile(userData);
         setDisplayName(userData.display_name);
         setAvatarUrl(userData.avatar_url);
         setCoverUrl(userData.cover_url);
+        
+        // Se houve geração de ID, mostrar toast informativo
+        if (idGenerated) {
+          toast({
+            title: "ID gerado com sucesso",
+            description: `Seu ID de usuário: ${userData.user_id}`,
+          });
+        }
       }
     } catch (error) {
       console.error("Erro ao carregar perfil:", error);

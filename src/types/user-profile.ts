@@ -1,17 +1,24 @@
 export interface UserProfile {
   id: string;
-  full_name: string;
-  display_name: string;
-  username?: string;
   email: string;
-  avatar_url?: string;
-  cover_url?: string;
+  full_name?: string | null;
+  username?: string | null;
+  display_name?: string | null;
+  avatar_url?: string | null;
+  cover_url?: string | null;
+  website?: string | null;
+  bio?: string | null;
   role?: string;
-  balance?: number;
-  expert_balance?: number;
   level?: number;
+  rank?: string;
+  birth_date?: string | null;
+  institution?: string | null;
+  course?: string | null;
+  plan_type?: string;
   user_id?: string;
-  state?: string;
-  institution?: string;
-  birth_date?: string;
+  phone?: string | null;
+  location?: string | null;
+  state?: string | null;
+  created_at?: string;
+  updated_at?: string;
 }

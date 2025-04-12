@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,12 +81,12 @@ export function RegisterForm() {
       setShowClassAndGrade(true);
       setLoadingOptions(true);
       setInstitutionFound(true);
-      
+
       // Incluir plano selecionado nos metadados (mesmo que seja o padrão 'lite')
       const planMeta = {
         plan_type: 'lite'
       };
-      
+
       // Salvar temporariamente para uso no processo de registro
       localStorage.setItem('selected_plan', JSON.stringify(planMeta));
 
@@ -166,7 +165,7 @@ export function RegisterForm() {
         setError("Por favor, preencha todos os campos obrigatórios.");
         return;
       }
-      
+
       // Validação de email básica
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email)) {
@@ -179,7 +178,7 @@ export function RegisterForm() {
         return;
       }
     }
-    
+
     setError("");
     setStep((prevStep) => prevStep + 1);
   };
@@ -526,7 +525,7 @@ export function RegisterForm() {
                     )}
                   </div>
                 </div>
-                
+
                 {/* Estado (UF) */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-brand-black dark:text-white">
@@ -789,13 +788,13 @@ export function RegisterForm() {
                 type="button"
                 onClick={prevStep}
                 variant="outline"
-                className="w-full h-11 text-base"
+                                className="w-full h-11 text-base"
                 disabled={loading}
               >
                 Voltar
               </Button>
             )}
-            
+
             {step < 3 ? (
               <Button
                 type="button"
