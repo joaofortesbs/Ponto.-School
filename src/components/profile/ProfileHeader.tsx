@@ -143,9 +143,15 @@ export default function ProfileHeader({
   useEffect(() => {
     // Verificar se temos um username no cabeçalho e configurar um padrão se não tiver
     const headerUsername = localStorage.getItem('username');
-    if (!headerUsername) {
+    if (!headerUsername || headerUsername === 'Usuário') {
       console.log("Definindo username padrão no localStorage");
-      localStorage.setItem('username', 'Usuário');
+      // Usar um valor dinâmico em vez de um valor fixo
+      // Verificar se temos outro nome disponível para usar
+      const userEmail = localStorage.getItem('userEmail') || '';
+      const userNameFromEmail = userEmail.split('@')[0] || '';
+      
+      // Usar o primeiro segmento do email ou um valor genérico
+      localStorage.setItem('username', userNameFromEmail || 'user_' + Math.floor(Math.random() * 1000));
     }
     
     // Forçar carregamento do perfil se userProfile for null
@@ -992,13 +998,28 @@ export default function ProfileHeader({
             const userFirstName = localStorage.getItem('userFirstName');
             const userDisplayName = localStorage.getItem('userDisplayName');
             
+            // Garantir que sempre temos um nome de usuário válido
+            // Prioridade de obtenção: localStorage > perfil > session > fallback
+            const resolvedUsername = headerUsername && headerUsername !== 'Usuário' 
+                                  ? headerUsername 
+                                  : userProfile?.username && userProfile.username !== 'Usuário'
+                                  ? userProfile.username
+                                  : sessionStorage.getItem('username') || 'user_' + Math.floor(Math.random() * 1000);
+            
+            // Se o nome recuperado for válido mas diferente do que está no localStorage,
+            // atualizar o localStorage para manter a consistência
+            if (resolvedUsername && resolvedUsername !== 'Usuário' && headerUsername !== resolvedUsername) {
+              localStorage.setItem('username', resolvedUsername);
+            }
+            
             console.log("Dados para exibição do perfil:", {
               localStorage_username: headerUsername,
               localStorage_userFirstName: userFirstName,
               localStorage_userDisplayName: userDisplayName,
               profile_username: userProfile?.username,
               profile_display_name: userProfile?.display_name,
-              profile_full_name: userProfile?.full_name
+              profile_full_name: userProfile?.full_name,
+              resolved_username: resolvedUsername
             });
             
             // Nome de exibição (Primeiro nome) - usar mesma prioridade do Header
@@ -1008,10 +1029,14 @@ export default function ProfileHeader({
                                     (userProfile?.full_name ? userProfile.full_name.split(' ')[0] : null) || 
                                     'Usuário';
             
-            // Nome de usuário - usar mesma prioridade do Header
-            const usernameToDisplay = headerUsername || 
-                                      userProfile?.username || 
-                                      'Usuário';
+            // Nome de usuário - usar o nome resolvido que nunca será "Usuário"
+            const usernameToDisplay = resolvedUsername !== 'Usuário' 
+                                    ? resolvedUsername 
+                                    : headerUsername !== 'Usuário'
+                                    ? headerUsername
+                                    : userProfile?.username && userProfile.username !== 'Usuário'
+                                    ? userProfile.username
+                                    : 'user_' + Math.floor(Math.random() * 1000);
             
             // Exibir nome e username consistentes com o header
             return (
