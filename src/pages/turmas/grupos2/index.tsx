@@ -275,7 +275,7 @@ const recentActivities = [
   {
     id: "a1",
     groupId: "g1",
-    groupName: "Grupo de Mecânica Quântica",
+    groupName: "Matemática",
     type: "message",
     user: "Ana Silva",
     content:
@@ -295,7 +295,7 @@ const recentActivities = [
   {
     id: "a3",
     groupId: "g1",
-    groupName: "Grupo de Mecânica Quântica",
+    groupName: "Matemática",
     type: "member",
     user: "Sistema",
     content: "Pedro Oliveira entrou no grupo",
