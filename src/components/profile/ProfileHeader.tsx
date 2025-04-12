@@ -329,7 +329,7 @@ export default function ProfileHeader({
       }
 
       // Upload para o storage
-      const { error: uploadError } = await supabase.storage
+      let { error: uploadError } = await supabase.storage
         .from('profiles')
         .upload(filePath, fileToUpload, {
           cacheControl: '3600',
@@ -400,7 +400,7 @@ export default function ProfileHeader({
       } else {
         // Tentar novamente a atualização do perfil
         console.warn("Primeira tentativa de atualização de perfil falhou, tentando novamente");
-        
+
         // Segunda tentativa direta no banco de dados
         const { error: directUpdateError } = await supabase
           .from('profiles')
@@ -409,18 +409,18 @@ export default function ProfileHeader({
             updated_at: new Date().toISOString() 
           })
           .eq('email', user.email);
-        
+
         if (directUpdateError) {
           console.error("Erro na segunda tentativa de atualização:", directUpdateError);
           throw new Error("Não foi possível atualizar o perfil após múltiplas tentativas");
         } else {
           console.log("Perfil atualizado com sucesso na segunda tentativa");
-          
+
           // Disparar evento para outros componentes
           document.dispatchEvent(new CustomEvent('userAvatarUpdated', { 
             detail: { url: publicUrlData.publicUrl } 
           }));
-          
+
           toast({
             title: "Sucesso",
             description: "Foto de perfil atualizada com sucesso (2ª tentativa)",
@@ -503,7 +503,7 @@ export default function ProfileHeader({
       }
 
       // Upload para o storage
-      const { error: uploadError } = await supabase.storage
+      let { error: uploadError } = await supabase.storage
         .from('profiles')
         .upload(filePath, fileToUpload, {
           cacheControl: '3600',
@@ -565,7 +565,7 @@ export default function ProfileHeader({
       if (updatedProfile) {
         // Recarregar o perfil atualizado após o upload bem-sucedido
         await profileService.getCurrentUserProfile();
-        
+
         toast({
           title: "Sucesso",
           description: "Foto de capa atualizada com sucesso",
@@ -573,7 +573,7 @@ export default function ProfileHeader({
       } else {
         // Se falhar na primeira tentativa, tentar atualizar diretamente
         console.warn("Primeira tentativa de atualização de perfil falhou, tentando novamente");
-        
+
         // Segunda tentativa direta no banco de dados
         const { error: directUpdateError } = await supabase
           .from('profiles')
@@ -582,7 +582,7 @@ export default function ProfileHeader({
             updated_at: new Date().toISOString() 
           })
           .eq('email', user.email);
-        
+
         if (directUpdateError) {
           console.error("Erro na segunda tentativa de atualização:", directUpdateError);
           // Mesmo com erro, manter a URL no localStorage e na UI
@@ -774,17 +774,17 @@ export default function ProfileHeader({
           if (retryUserData) {
             console.log("Perfil recuperado na segunda tentativa:", retryUserData);
             setDisplayName(retryUserData.display_name || retryUserData.full_name || retryUserData.username || '');
-            
+
             if (retryUserData.avatar_url) {
               setAvatarUrl(retryUserData.avatar_url);
               localStorage.setItem('userAvatarUrl', retryUserData.avatar_url);
             }
-            
+
             if (retryUserData.cover_url) {
               setCoverUrl(retryUserData.cover_url);
               localStorage.setItem('userCoverUrl', retryUserData.cover_url);
             }
-            
+
             // Disparar evento de perfil carregado
             document.dispatchEvent(new CustomEvent('userProfileLoaded', { 
               detail: { profile: retryUserData } 

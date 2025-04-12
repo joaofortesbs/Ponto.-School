@@ -325,12 +325,14 @@ class ProfileService {
       console.log('Atualizando perfil com dados:', updateData);
 
       // Tentar atualizar o perfil
-      const { data, error } = await supabase
+      let result = await supabase
         .from('profiles')
         .update(updateData)
         .eq('id', currentProfile.id)
         .select()
         .single();
+
+      let { data, error } = result;
 
       if (error) {
         console.error('Erro ao atualizar perfil:', error);
