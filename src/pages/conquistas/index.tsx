@@ -163,10 +163,10 @@ export default function ConquistasPage() {
             ].map((achievement) => (
               <div
                 key={achievement.id}
-                className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-4 hover:shadow-md transition-all duration-300 group"
+                className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-3 hover:shadow-md transition-all duration-300 group"
               >
                 <div className="flex flex-col items-center text-center mb-3">
-                  <div className="w-16 h-16 rounded-full bg-[#FF6B00]/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-12 h-12 rounded-full bg-[#FF6B00]/10 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
                     {achievement.icon}
                   </div>
                   <h3 className="font-medium text-[#29335C] dark:text-white">
@@ -287,10 +287,10 @@ export default function ConquistasPage() {
             ].map((achievement) => (
               <div
                 key={achievement.id}
-                className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-4 hover:shadow-md transition-all duration-300 group"
+                className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-3 hover:shadow-md transition-all duration-300 group"
               >
                 <div className="flex flex-col items-center text-center mb-3">
-                  <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
                     {achievement.icon}
                   </div>
                   <h3 className="font-medium text-[#29335C] dark:text-white">
@@ -402,10 +402,10 @@ export default function ConquistasPage() {
             ].map((category) => (
               <div
                 key={category.id}
-                className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-4 hover:shadow-md transition-all duration-300 group"
+                className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-3 hover:shadow-md transition-all duration-300 group"
               >
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-14 h-14 rounded-full bg-[#FF6B00]/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-12 h-12 rounded-full bg-[#FF6B00]/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                     {category.icon}
                   </div>
                   <div>
