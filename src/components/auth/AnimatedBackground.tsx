@@ -1,78 +1,73 @@
 
 import React, { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
-import { gsap } from "gsap";
+import { motion, useAnimation } from "framer-motion";
 
 export function AnimatedBackground() {
   const cursorRef = useRef(null);
+  const controls = useAnimation();
   
   useEffect(() => {
-    if (!cursorRef.current) return;
+    // Sequência de animação usando framer-motion
+    const animateCursor = async () => {
+      // Simular o caminho do cursor
+      await controls.start({
+        x: "20%",
+        y: "30%",
+        transition: { duration: 2, ease: "easeInOut" }
+      });
+      
+      // Simular clique
+      await controls.start({
+        scale: 1.3,
+        transition: { duration: 0.2, ease: "easeIn" }
+      });
+      
+      await controls.start({
+        scale: 1,
+        transition: { duration: 0.2, ease: "easeOut" }
+      });
+      
+      // Continuar o caminho
+      await controls.start({
+        x: "70%",
+        y: "40%",
+        transition: { duration: 2, ease: "easeInOut", delay: 0.2 }
+      });
+      
+      // Simular outro clique
+      await controls.start({
+        scale: 1.3,
+        transition: { duration: 0.2, ease: "easeIn" }
+      });
+      
+      await controls.start({
+        scale: 1,
+        transition: { duration: 0.2, ease: "easeOut" }
+      });
+      
+      // Continuar o caminho
+      await controls.start({
+        x: "10%",
+        y: "60%",
+        transition: { duration: 2, ease: "easeInOut", delay: 0.2 }
+      });
+      
+      await controls.start({
+        x: "40%",
+        y: "20%",
+        transition: { duration: 1.5, ease: "easeInOut" }
+      });
+      
+      // Repetir a animação
+      animateCursor();
+    };
     
-    // Configurar a animação com GSAP
-    const tl = gsap.timeline({ repeat: -1 });
-    
-    // Caminho de animação que simula navegação
-    tl.to(cursorRef.current, {
-      duration: 2,
-      x: "20%",
-      y: "30%",
-      ease: "power2.inOut"
-    })
-    .to(cursorRef.current, {
-      duration: 0.2,
-      scale: 1.3,
-      ease: "power2.in",
-      onComplete: () => {
-        // Simular um clique visual
-        if (cursorRef.current) {
-          gsap.to(cursorRef.current, {
-            duration: 0.2,
-            scale: 1,
-            ease: "power2.out"
-          });
-        }
-      }
-    })
-    .to(cursorRef.current, {
-      duration: 2,
-      x: "70%",
-      y: "40%",
-      ease: "power2.inOut",
-      delay: 0.2
-    })
-    .to(cursorRef.current, {
-      duration: 0.2,
-      scale: 1.3,
-      ease: "power2.in",
-      onComplete: () => {
-        if (cursorRef.current) {
-          gsap.to(cursorRef.current, {
-            duration: 0.2,
-            scale: 1,
-            ease: "power2.out"
-          });
-        }
-      }
-    })
-    .to(cursorRef.current, {
-      duration: 2,
-      x: "10%",
-      y: "60%",
-      ease: "power2.inOut",
-      delay: 0.2
-    })
-    .to(cursorRef.current, {
-      duration: 1.5,
-      x: "40%",
-      y: "20%",
-      ease: "power2.inOut"
-    });
+    animateCursor();
     
     return () => {
-      tl.kill(); // Limpar a animação ao desmontar
+      controls.stop();
     };
-  }, []);
+  }, [controls]);
   
   return (
     <div className="absolute inset-0 overflow-hidden z-0 pointer-events-none">
@@ -111,10 +106,12 @@ export function AnimatedBackground() {
       <div className="absolute inset-0 bg-[url('/images/pattern-grid.svg')] opacity-5" />
       
       {/* O cursor animado */}
-      <div 
+      <motion.div 
         ref={cursorRef}
         className="absolute w-6 h-6 rounded-full border-2 border-[#FF6B00] bg-white/80 shadow-md transform-gpu z-10"
         style={{ filter: "drop-shadow(0 0 3px rgba(255, 107, 0, 0.5))" }}
+        animate={controls}
+        initial={{ x: "5%", y: "5%" }}
       >
         <motion.div 
           className="absolute inset-0.5 rounded-full bg-[#FF6B00]/30"
@@ -128,7 +125,7 @@ export function AnimatedBackground() {
             ease: "easeInOut"
           }}
         />
-      </div>
+      </motion.div>
     </div>
   );
 }
