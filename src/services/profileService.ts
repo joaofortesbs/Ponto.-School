@@ -115,17 +115,35 @@ class ProfileService {
         .maybeSingle();
 
       if (existingProfile) {
+        // Se o perfil já existe mas não tem um user_id, atualizamos com um novo
+        if (!existingProfile.user_id) {
+          const generatedId = await generateUserIdByPlan('lite', 'BR');
+          const { data: updatedProfile, error: updateError } = await supabase
+            .from('profiles')
+            .update({ user_id: generatedId, updated_at: new Date().toISOString() })
+            .eq('id', existingProfile.id)
+            .select()
+            .single();
+            
+          if (updateError) {
+            console.error('Erro ao atualizar ID do usuário:', updateError);
+            return existingProfile as UserProfile;
+          }
+          
+          return updatedProfile as UserProfile;
+        }
         return existingProfile as UserProfile;
       }
 
-      // Gerar um ID único para o usuário
-      const userIdResult = await generateUserId();
+      // Gerar um ID único para o usuário baseado no plano (padrão 'lite')
+      const generatedId = await generateUserIdByPlan('lite', 'BR');
       
       // Criar novo perfil
       const newProfile: Partial<UserProfile> = {
-        user_id: userIdResult.id,
+        user_id: generatedId,
         email,
         role: 'student',
+        plan_type: 'lite', // Definir o plano padrão
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -221,6 +239,53 @@ class ProfileService {
     } catch (error) {
       console.error('Erro ao obter nome de exibição:', error);
       return 'Usuário';
+    }
+  }
+  
+  /**
+   * Garantir que o perfil do usuário tenha um ID válido
+   * Esta função verifica se o usuário tem um ID e, se não tiver, gera um novo
+   */
+  async ensureUserHasId(): Promise<boolean> {
+    try {
+      const profile = await this.getCurrentUserProfile();
+      
+      if (!profile) {
+        console.log('Nenhum perfil encontrado para adicionar ID');
+        return false;
+      }
+      
+      // Se já tem ID, não faz nada
+      if (profile.user_id && isValidUserId(profile.user_id)) {
+        console.log('Usuário já possui um ID válido:', profile.user_id);
+        return true;
+      }
+      
+      // Gerar um novo ID baseado no plano do usuário
+      const planType = profile.plan_type || 'lite';
+      const generatedId = await generateUserIdByPlan(planType, 'BR');
+      
+      // Atualizar o perfil com o novo ID
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ 
+          user_id: generatedId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', profile.id)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Erro ao atualizar perfil com novo ID:', error);
+        return false;
+      }
+      
+      console.log('ID gerado e atualizado com sucesso:', generatedId);
+      return true;
+    } catch (error) {
+      console.error('Erro ao garantir ID do usuário:', error);
+      return false;
     }
   }
 }

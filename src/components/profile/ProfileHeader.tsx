@@ -70,6 +70,15 @@ export default function ProfileHeader({
     if (userProfile?.cover_url) {
       setCoverUrl(userProfile.cover_url);
     }
+    
+    // Verificar se o usuário tem um ID e, caso não tenha, gerar um
+    if (!userProfile?.user_id) {
+      const checkAndGenerateId = async () => {
+        await profileService.ensureUserHasId();
+      };
+      
+      checkAndGenerateId();
+    }
   }, [userProfile]);
 
   useEffect(() => {

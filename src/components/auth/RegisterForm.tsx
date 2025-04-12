@@ -79,6 +79,14 @@ export function RegisterForm() {
       setShowClassAndGrade(true);
       setLoadingOptions(true);
       setInstitutionFound(true);
+      
+      // Incluir plano selecionado nos metadados (mesmo que seja o padrão 'lite')
+      const planMeta = {
+        plan_type: 'lite'
+      };
+      
+      // Salvar temporariamente para uso no processo de registro
+      localStorage.setItem('selected_plan', JSON.stringify(planMeta));
 
       // Simulate fetching class options based on institution
       // In a real app, this would be an API call to get classes for the institution
