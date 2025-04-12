@@ -350,8 +350,8 @@ export function RegisterForm() {
                   .single();
                 
                 let sequencial;
-                if (controlData && controlData.last_id) {ntrolData && controlData.last_id) {
-                // Incrementar o último ID conhecido
+                if (controlData && controlData.last_id) {
+                  // Incrementar o último ID conhecido
                   sequencial = (controlData.last_id + 1).toString().padStart(6, "0");
                   
                   // Atualizar o contador no banco de dados
@@ -392,7 +392,7 @@ export function RegisterForm() {
                 
                 // Último recurso: usar timestamp para garantir unicidade
                 const timestamp = new Date().getTime();
-                const sequencial = timestamp.toString().slice(-6).padStart(6, "0");tamp.toString().slice(-6);
+                const sequencial = timestamp.toString().slice(-6).padStart(6, "0");
               userId = `${uf}${anoMes}${tipoConta}${sequencial}`;
               console.log(`ID gerado com timestamp como último recurso: ${userId}`);
             }
