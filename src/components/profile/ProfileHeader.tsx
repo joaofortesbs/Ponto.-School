@@ -64,29 +64,56 @@ export default function ProfileHeader({
     try {
       // Verificar se temos o username no localStorage (usado no cabeçalho)
       const headerUsername = localStorage.getItem('username');
+      // Verificar se temos o primeiro nome no localStorage
+      const storedFirstName = localStorage.getItem('userFirstName');
       
-      console.log("Sincronizando usernames:", {
+      console.log("Sincronizando dados de usuário:", {
         headerUsername,
+        storedFirstName,
         profileUsername: userProfile?.username,
+        profileFullName: userProfile?.full_name,
+        profileDisplayName: userProfile?.display_name,
         userProfileFull: userProfile
       });
       
       if (headerUsername) {
-        // Se temos um username no cabeçalho, usar ele como fonte principal
+        // Se temos um username no cabeçalho, usar ele como fonte principal para username
         
         // Verificar se o perfil existe e precisa ser atualizado
         if (userProfile && (!userProfile.username || userProfile.username !== headerUsername)) {
           console.log("Atualizando username no perfil para corresponder ao cabeçalho:", headerUsername);
           
+          // Se não tivermos um display_name diferente do username, usar o primeiro nome disponível
+          let displayNameToUse = userProfile.display_name;
+          
+          // Se não temos display_name ou é igual ao username atual, tentar outras fontes para o display_name
+          if (!displayNameToUse || displayNameToUse === userProfile.username) {
+            if (storedFirstName && storedFirstName !== headerUsername) {
+              displayNameToUse = storedFirstName;
+            } else if (userProfile.full_name) {
+              displayNameToUse = userProfile.full_name.split(' ')[0];
+            } else if (userProfile.email) {
+              displayNameToUse = userProfile.email.split('@')[0];
+            } else {
+              // Se não temos nenhuma outra fonte, usar o username como fallback
+              displayNameToUse = headerUsername;
+            }
+          }
+          
           // Atualizar o perfil para usar o mesmo username do cabeçalho
           await profileService.updateUserProfile({
             username: headerUsername,
-            display_name: headerUsername, // Também atualizar o display_name
+            display_name: displayNameToUse,
             updated_at: new Date().toISOString()
           });
           
           // Atualizar o estado local
-          setDisplayName(headerUsername);
+          setDisplayName(displayNameToUse);
+          
+          // Salvar o primeiro nome no localStorage
+          if (displayNameToUse !== headerUsername) {
+            localStorage.setItem('userFirstName', displayNameToUse);
+          }
           
           // Recarregar perfil após atualização
           loadProfile();
@@ -95,6 +122,14 @@ export default function ProfileHeader({
         // Se não temos username no localStorage mas temos no perfil, atualizar o localStorage
         console.log("Sincronizando username do perfil para o cabeçalho:", userProfile.username);
         localStorage.setItem('username', userProfile.username);
+        
+        // Também garantir que temos o primeiro nome
+        if (!storedFirstName && userProfile.full_name) {
+          const firstName = userProfile.full_name.split(' ')[0];
+          localStorage.setItem('userFirstName', firstName);
+        } else if (!storedFirstName && userProfile.display_name && userProfile.display_name !== userProfile.username) {
+          localStorage.setItem('userFirstName', userProfile.display_name);
+        }
       } else {
         // Se não temos em nenhum lugar, usar o valor padrão 'joaofortes'
         const defaultUsername = 'joaofortes';
@@ -102,15 +137,28 @@ export default function ProfileHeader({
         localStorage.setItem('username', defaultUsername);
         
         if (userProfile) {
-          // Atualizar o perfil com este username padrão
+          // Tentar extrair um nome para exibição diferente do username
+          let displayName = "";
+          if (userProfile.full_name) {
+            displayName = userProfile.full_name.split(' ')[0];
+          } else if (userProfile.email) {
+            displayName = userProfile.email.split('@')[0];
+          } else {
+            displayName = "João";  // Um fallback melhor que o username
+          }
+          
+          // Atualizar o perfil com este username padrão e um display_name diferente
           await profileService.updateUserProfile({
             username: defaultUsername,
-            display_name: defaultUsername,
+            display_name: displayName,
             updated_at: new Date().toISOString()
           });
           
           // Atualizar o estado local
-          setDisplayName(defaultUsername);
+          setDisplayName(displayName);
+          
+          // Salvar o primeiro nome no localStorage
+          localStorage.setItem('userFirstName', displayName);
           
           // Recarregar perfil
           loadProfile();
@@ -1084,56 +1132,71 @@ export default function ProfileHeader({
             // Usar o nome de usuário do cabeçalho (prioridade máxima)
             const usernameToDisplay = headerUsername || storedUsername || 'joaofortes';
 
-            // Exibir nome de exibição e nome de usuário como dois componentes distintos
-            // Nome de exibição: usar primeiro nome do nome completo, display_name, ou fallback
-            let nameDisplay = '';
+            // Exibir primeiro nome e nome de usuário como dois componentes distintos
+            // Primeiro nome: usar primeiro nome do nome completo, display_name, ou outro campo disponível
+            let firstName = '';
             
             // Buscar o primeiro nome do localStorage (prioridade máxima)
             const storedFirstName = localStorage.getItem('userFirstName');
             
-            if (storedFirstName) {
-              nameDisplay = storedFirstName;
+            if (storedFirstName && storedFirstName !== usernameToDisplay) {
+              firstName = storedFirstName;
               console.log("Usando primeiro nome do localStorage:", storedFirstName);
             } else if (userProfile?.full_name) {
               // Se tiver nome completo, exibir apenas o primeiro nome
-              nameDisplay = userProfile.full_name.split(' ')[0];
-              console.log("Usando primeiro nome do nome completo:", nameDisplay);
+              firstName = userProfile.full_name.split(' ')[0];
+              console.log("Usando primeiro nome do nome completo:", firstName);
               
               // Salvar no localStorage para uso futuro
               try {
-                localStorage.setItem('userFirstName', nameDisplay);
+                localStorage.setItem('userFirstName', firstName);
               } catch (e) {
                 console.error("Erro ao salvar primeiro nome no localStorage:", e);
               }
-            } else if (userProfile?.display_name) {
-              nameDisplay = userProfile.display_name;
-              console.log("Usando display_name como nome:", nameDisplay);
+            } else if (userProfile?.display_name && userProfile.display_name !== userProfile?.username) {
+              firstName = userProfile.display_name;
+              console.log("Usando display_name como nome:", firstName);
               
               // Salvar no localStorage para uso futuro
               try {
-                localStorage.setItem('userFirstName', nameDisplay);
+                localStorage.setItem('userFirstName', firstName);
               } catch (e) {
                 console.error("Erro ao salvar display_name no localStorage:", e);
               }
-            } else if (userProfile?.username) {
-              nameDisplay = userProfile.username;
-              console.log("Usando username como nome:", nameDisplay);
+            } else if (userProfile?.email) {
+              // Usar parte antes do @ do email
+              firstName = userProfile.email.split('@')[0];
+              console.log("Usando email como base para nome:", firstName);
               
-              // Salvar no localStorage para uso futuro
               try {
-                localStorage.setItem('userFirstName', nameDisplay);
+                localStorage.setItem('userFirstName', firstName);
               } catch (e) {
-                console.error("Erro ao salvar username no localStorage:", e);
+                console.error("Erro ao salvar email como nome no localStorage:", e);
               }
             } else {
-              nameDisplay = "Usuário";
+              firstName = "Usuário";
+            }
+            
+            // Garantir que o primeiro nome não é igual ao nome de usuário
+            if (firstName.toLowerCase() === usernameToDisplay.toLowerCase()) {
+              // Tenta obter primeiro nome de outro campo
+              if (userProfile?.full_name) {
+                firstName = userProfile.full_name.split(' ')[0];
+              } else if (userProfile?.email) {
+                firstName = userProfile.email.split('@')[0];
+              }
+            }
+            
+            // Formatar o primeiro nome para ter a primeira letra maiúscula
+            if (firstName && firstName !== "Usuário") {
+              firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
             }
             
             // Disparar evento para outros componentes saberem que o nome foi atualizado
-            if (nameDisplay !== "Usuário") {
+            if (firstName !== "Usuário") {
               try {
                 document.dispatchEvent(new CustomEvent('userFirstNameUpdated', { 
-                  detail: { firstName: nameDisplay } 
+                  detail: { firstName: firstName } 
                 }));
               } catch (e) {
                 console.error("Erro ao disparar evento de atualização de nome:", e);
@@ -1142,7 +1205,7 @@ export default function ProfileHeader({
             
             return (
               <>
-                {nameDisplay} <span className="text-gray-400 dark:text-gray-400">|</span> <span className="text-[#FF6B00]">@{usernameToDisplay}</span>
+                {firstName} <span className="text-gray-400 dark:text-gray-400">|</span> <span className="text-[#FF6B00]">@{usernameToDisplay}</span>
               </>
             );
           })()}
