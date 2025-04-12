@@ -76,7 +76,7 @@ export function LoginForm() {
         setSuccess(true);
         localStorage.setItem('auth_checked', 'true');
         localStorage.setItem('auth_status', 'authenticated'); //Added to persist login status.
-
+        
         // Removida a lógica de armazenar timestamp de sessão
         // para garantir que o modal de boas-vindas sempre apareça
 
@@ -132,7 +132,7 @@ export function LoginForm() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <label className="text-sm font-medium text-brand-black dark:text-white drop-shadow-sm">
             Usuário ou E-mail
