@@ -84,16 +84,16 @@ export function RegisterForm() {
   // Estado para a seleção e confirmação do plano
   const [showPlanConfirmation, setShowPlanConfirmation] = useState(true); // Modal de confirmação de plano
   const [confirmedPlan, setConfirmedPlan] = useState(""); // Plano confirmado
-  
+
   // Obtém o plano inicial da URL ou localStorage
   const initialPlan = useState(() => {
     // Verifica se há um plano na URL
     const params = new URLSearchParams(window.location.search);
     const planParam = params.get('plan');
-    
+
     // Verifica se há um plano salvo no localStorage
     const savedPlan = localStorage.getItem('selectedPlan');
-    
+
     // Prioridade: parâmetro URL > localStorage > padrão "lite"
     if (planParam && ['lite', 'full'].includes(planParam)) {
       return planParam;
@@ -109,16 +109,16 @@ export function RegisterForm() {
     setConfirmedPlan(plan);
     localStorage.setItem('selectedPlan', plan); // Salva o plano no localStorage
     setShowPlanConfirmation(false);
-    
+
     // Atualiza o estado do formulário com o plano selecionado
     setFormData(prev => ({
       ...prev,
       plan: plan
     }));
-    
+
     console.log(`Plano ${plan.toUpperCase()} selecionado com sucesso!`);
   };
-  
+
   // Efeito para mostrar o modal de confirmação de plano ao carregar
   useEffect(() => {
     // Se já temos um plano confirmado, não mostramos o modal
@@ -267,7 +267,7 @@ export function RegisterForm() {
         setLoading(false);
         return;
       }
-      
+
       // Verificar se o plano foi selecionado
       if (!confirmedPlan) {
         setError("Selecione um plano antes de continuar");
@@ -275,70 +275,70 @@ export function RegisterForm() {
         setLoading(false);
         return;
       }
-      
+
       // Usar a função de geração de ID para garantir a sequência correta
       let userId;
       try {
         // Determinar o tipo de conta com base no plano
         const tipoConta = confirmedPlan === "full" ? 1 : 2;
-        
+
         // Validar e obter o estado (UF) selecionado
         if (!formData.state || formData.state.length !== 2) {
           setError("Por favor, selecione um estado (UF) válido para continuar.");
           setLoading(false);
           return;
         }
-        
+
         // Garantir que o estado esteja em maiúsculas
         const uf = formData.state.toUpperCase();
-        
+
         // Verificar se o estado é válido (não pode ser BR)
         if (uf === 'BR') {
           setError("O código 'BR' não é um estado válido. Por favor, selecione um estado específico.");
           setLoading(false);
           return;
         }
-        
+
         // Salvar o estado selecionado no localStorage para referência futura
         localStorage.setItem('selectedState', uf);
         console.log(`Estado selecionado pelo usuário e salvo no localStorage: ${uf}`);
-        
+
         console.log(`Gerando ID com estado (UF): ${uf} e tipo de conta: ${tipoConta} (${confirmedPlan})`);
-        
+
         // Tentar usar a função principal de geração de ID
         try {
           userId = await generateUserId(uf, tipoConta);
           console.log(`ID gerado com sucesso usando generateUserId: ${userId}`);
         } catch (generationError) {
           console.error("Erro ao gerar ID com função principal:", generationError);
-          
+
           // Segunda tentativa: usar a função específica de plano
           try {
             userId = await generateUserIdByPlan(confirmedPlan, uf);
             console.log(`ID gerado com função de plano: ${userId}`);
           } catch (planError) {
             console.error("Erro ao gerar ID com função de plano:", planError);
-            
+
             // Tentar usar a função SQL diretamente
             try {
               const { data: sqlData, error: sqlError } = await supabase.rpc('get_next_user_id_for_uf', {
                 p_uf: uf,
                 p_tipo_conta: tipoConta
               });
-              
+
               if (sqlError) {
                 throw sqlError;
               }
-              
+
               userId = sqlData;
               console.log(`ID gerado com função SQL: ${userId}`);
             } catch (sqlError) {
               console.error("Erro ao gerar ID com função SQL:", sqlError);
-              
+
               // Último fallback: Gerar manualmente, mas mantendo a padronização
               const dataAtual = new Date();
               const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, "0")}`;
-              
+
               // Tentar buscar o último ID do controle por UF
               try {
                 const { data: controlData } = await supabase
@@ -348,12 +348,12 @@ export function RegisterForm() {
                   .eq('ano_mes', anoMes)
                   .eq('tipo_conta', tipoConta)
                   .single();
-                
+
                 let sequencial;
                 if (controlData && controlData.last_id) {
                   // Incrementar o último ID conhecido
                   sequencial = (controlData.last_id + 1).toString().padStart(6, "0");
-                  
+
                   // Atualizar o contador no banco de dados
                   await supabase
                     .from('user_id_control_by_uf')
@@ -372,38 +372,34 @@ export function RegisterForm() {
                         { uf, ano_mes: anoMes, tipo_conta: tipoConta, last_id: 1 }
                       ])
                       .select();
-                    
+
                     if (insertError) throw insertError;
-                    
+
                     sequencial = "000001"; // Primeiro ID
                   } catch (insertError) {
                     console.error("Erro ao criar controle de ID por UF:", insertError);
-                    
+
                     // Último recurso: gerar um sequencial baseado em timestamp
                     const timestamp = new Date().getTime();
                     sequencial = (timestamp % 1000000).toString().padStart(6, "0");
                   }
                 }
-                
+
                 userId = `${uf}${anoMes}${tipoConta}${sequencial}`;
                 console.log(`ID gerado manualmente com sequencial controlado: ${userId}`);
               } catch (fallbackError) {
                 console.error("Erro no fallback final:", fallbackError);
-                
+
                 // Último recurso: usar timestamp para garantir unicidade
                 const timestamp = new Date().getTime();
                 const sequencial = timestamp.toString().slice(-6).padStart(6, "0");
-              userId = `${uf}${anoMes}${tipoConta}${sequencial}`;
-              console.log(`ID gerado com timestamp como último recurso: ${userId}`);
+                userId = `${uf}${anoMes}${tipoConta}${sequencial}`;
+                console.log(`ID gerado com timestamp como último recurso: ${userId}`);
+              }
             }
           }
         }
-        
-        // Verificar se o ID gerado é válido
-        if (!userId || !isValidUserId(userId)) {
-          throw new Error(`ID gerado inválido: ${userId}`);
-        }
-        
+
         console.log(`ID de usuário final: ${userId}`);
       } catch (error) {
         console.error("Erro ao gerar ID de usuário:", error);
@@ -608,11 +604,11 @@ export function RegisterForm() {
           {/* Efeito de brilho no background */}
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-[#FF6B00]/20 to-transparent rounded-full blur-3xl"></div>
           <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent rounded-full blur-3xl"></div>
-          
+
           <h3 className="text-2xl font-bold mb-2 text-brand-black dark:text-white flex items-center">
             <span className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-transparent bg-clip-text">Escolha seu plano</span>
           </h3>
-          
+
           <p className="mb-6 text-gray-600 dark:text-gray-300 text-lg">
             Selecione o plano que melhor se adapta às suas necessidades educacionais
           </p>
@@ -632,7 +628,7 @@ export function RegisterForm() {
                   Selecionado
                 </div>
               )}
-              
+
               <div className="p-6">
                 <div className="flex items-center mb-4">
                   <div className="w-12 h-12 rounded-full bg-[#FF6B00]/10 flex items-center justify-center mr-4">
@@ -643,7 +639,7 @@ export function RegisterForm() {
                     <p className="text-sm text-gray-600 dark:text-gray-400">Instituições Públicas</p>
                   </div>
                 </div>
-                
+
                 <ul className="space-y-2 mb-4">
                   <li className="flex items-center text-sm text-gray-600 dark:text-gray-300">
                     <Check className="h-4 w-4 text-[#FF6B00] mr-2 flex-shrink-0" />
@@ -658,7 +654,7 @@ export function RegisterForm() {
                     <span>Grupos de estudo</span>
                   </li>
                 </ul>
-                
+
                 <div className="mt-6 text-center">
                   <button
                     onClick={(e) => {
@@ -672,7 +668,7 @@ export function RegisterForm() {
                 </div>
               </div>
             </div>
-            
+
             {/* Plano FULL */}
             <div 
               onClick={() => handlePlanConfirmation("full")}
@@ -687,9 +683,9 @@ export function RegisterForm() {
                   Selecionado
                 </div>
               )}
-              
+
               <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-[#FF6B00]/20 to-transparent rounded-bl-full"></div>
-              
+
               <div className="p-6">
                 <div className="flex items-center mb-4">
                   <div className="w-12 h-12 rounded-full bg-[#FF6B00]/20 flex items-center justify-center mr-4">
@@ -700,7 +696,7 @@ export function RegisterForm() {
                     <p className="text-sm text-gray-600 dark:text-gray-400">Instituições Particulares</p>
                   </div>
                 </div>
-                
+
                 <ul className="space-y-2 mb-4">
                   <li className="flex items-center text-sm text-gray-600 dark:text-gray-300">
                     <Check className="h-4 w-4 text-[#FF6B00] mr-2 flex-shrink-0" />
@@ -719,7 +715,7 @@ export function RegisterForm() {
                     <span>Suporte prioritário</span>
                   </li>
                 </ul>
-                
+
                 <div className="mt-6 text-center">
                   <button
                     onClick={(e) => {
