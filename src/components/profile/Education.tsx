@@ -18,7 +18,7 @@ export default function Education() {
         </Button>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-4 h-full"> {/* Added h-full here, based on provided changes */}
         <div className="flex gap-4">
           <div className="w-12 h-12 rounded-lg bg-[#FF6B00]/10 flex items-center justify-center flex-shrink-0">
             <GraduationCap className="h-6 w-6 text-[#FF6B00]" />

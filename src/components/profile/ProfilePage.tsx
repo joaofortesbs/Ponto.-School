@@ -176,19 +176,23 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
           {/* Left Column - Profile Info */}
           <div className="w-full md:w-1/3 flex flex-col space-y-6">
             {/* Profile Card */}
-            <ProfileHeader
-              userProfile={userProfile}
-              onEditClick={() => setExpandedSection("account")}
-            />
+            <div className="h-[520px]">
+              <ProfileHeader
+                userProfile={userProfile}
+                onEditClick={() => setExpandedSection("account")}
+              />
+            </div>
 
             {/* Contact Info - Full width */}
-            <ContactInfo
-              contactInfo={contactInfo}
-              expandedSection={expandedSection}
-              toggleSection={toggleSection}
-              setContactInfo={setContactInfo}
-              saveContactInfo={saveContactInfo}
-            />
+            <div className="h-[520px]">
+              <ContactInfo
+                contactInfo={contactInfo}
+                expandedSection={expandedSection}
+                toggleSection={toggleSection}
+                setContactInfo={setContactInfo}
+                saveContactInfo={saveContactInfo}
+              />
+            </div>
           </div>
 
           {/* Right Column - Tabs Content */}
@@ -290,7 +294,9 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
             {/* Badges & Achievements - Posicionado abaixo do componente de abas, com altura controlada */}
             <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 overflow-hidden shadow-sm p-6 h-[520px]">
               <h3 className="text-lg font-semibold text-[#29335C] dark:text-white mb-4">Conquistas</h3>
-              <Achievements />
+              <div className="h-[calc(100%-2rem)]">
+                <Achievements />
+              </div>
             </div>
           </div>
         </div>
