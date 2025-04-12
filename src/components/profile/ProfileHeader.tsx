@@ -646,25 +646,24 @@ export default function ProfileHeader({
               profile_username: userProfile?.username
             });
             
-            // Pegar o nome completo de qualquer lugar disponível
-            const fullName = displayName || userProfile?.display_name || userProfile?.full_name || '';
+            // Pegar o nome completo do cadastro da pessoa
+            const fullName = displayName || userProfile?.full_name || userProfile?.display_name || '';
             
             // Extrair o primeiro nome
             let firstName = fullName ? fullName.split(' ')[0] : '';
             
             // Se não houver primeiro nome, usar um fallback
             if (!firstName) {
-              // Tentar usar email ou qualquer outra referência disponível
-              if (userProfile?.email) {
-                const emailName = userProfile.email.split('@')[0];
-                firstName = emailName.charAt(0).toUpperCase() + emailName.slice(1);
+              if (userProfile?.username) {
+                // Caso não tenha nome, usar o username como fallback
+                firstName = userProfile.username;
               } else {
                 firstName = "Usuário";
               }
             }
             
             // Obter o nome de usuário
-            let username = userProfile?.username || '';
+            const username = userProfile?.username || '';
             
             // Criando o texto de exibição
             return `${firstName} | @${username || "usuário"}`;
