@@ -668,24 +668,28 @@ export default function ProfileHeader({
               }
             }
             
-            // Obter o nome de usuário cadastrado na tela de registro
-            // Verificar em várias fontes possíveis para garantir que pegamos o username correto
-            let username = '';
+            // Obter o display_name do perfil (que deve ser o mesmo que está no Supabase)
+            let displayUsername = '';
             
-            // Prioridade 1: Username no objeto userProfile (vem diretamente do banco)
-            if (userProfile?.username) {
-              username = userProfile.username;
-              console.log("Username encontrado no perfil:", username);
+            // Prioridade 1: Usar o display_name do perfil (campo oficial do Supabase)
+            if (userProfile?.display_name) {
+              displayUsername = userProfile.display_name;
+              console.log("Display name encontrado no perfil:", displayUsername);
+            }
+            // Prioridade 2: Username no objeto userProfile
+            else if (userProfile?.username) {
+              displayUsername = userProfile.username;
+              console.log("Username encontrado no perfil:", displayUsername);
             } 
-            // Prioridade 2: Tentar recuperar do localStorage (se disponível)
+            // Prioridade 3: Tentar recuperar do localStorage (fallback)
             else {
               try {
                 const savedFormData = localStorage.getItem('registrationFormData');
                 if (savedFormData) {
                   const parsedData = JSON.parse(savedFormData);
                   if (parsedData.username) {
-                    username = parsedData.username;
-                    console.log("Username recuperado do localStorage:", username);
+                    displayUsername = parsedData.username;
+                    console.log("Username recuperado do localStorage:", displayUsername);
                   }
                 }
               } catch (e) {
@@ -693,8 +697,8 @@ export default function ProfileHeader({
               }
             }
             
-            // Criando o texto de exibição com o @username como foi cadastrado na tela de registro
-            return `${firstName} | @${username || "usuário"}`;
+            // Criando o texto de exibição com o @username
+            return `${firstName} | @${displayUsername || "usuário"}`;
           })()}
         </motion.h2>
 

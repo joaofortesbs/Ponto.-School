@@ -427,7 +427,7 @@ export function RegisterForm() {
               state: formData.state,
               birth_date: formData.birthDate,
               plan_type: confirmedPlan, // Usa o plano confirmado
-              display_name: formData.username,
+              display_name: formData.username, // Garantir que display_name é o mesmo que username no registro
             },
           },
         });

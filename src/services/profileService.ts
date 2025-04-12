@@ -92,44 +92,64 @@ class ProfileService {
       if (data) {
         console.log('getCurrentUserProfile: Perfil encontrado:', data);
         
-        // Verificar se o perfil tem username. Se não tiver, tentar recuperar de outras fontes
-        if (!data.username) {
-          console.log('Perfil não tem username. Buscando de outras fontes...');
+        // Verificar se o perfil tem username ou display_name e atualizá-los se necessário
+        if (!data.username || !data.display_name) {
+          console.log('Perfil não tem username ou display_name completo. Buscando de outras fontes...');
           
-          // Verificar se existe no localStorage (salvo durante o registro)
-          try {
-            const savedFormData = localStorage.getItem('registrationFormData');
-            if (savedFormData) {
-              const parsedData = JSON.parse(savedFormData);
-              if (parsedData.username) {
-                console.log('Username encontrado no localStorage:', parsedData.username);
-                
-                // Atualizar o perfil com o username encontrado
-                await this.updateUserProfile({
-                  id: data.id,
-                  username: parsedData.username
-                });
-                
-                // Atualizar o objeto data para a resposta
-                data.username = parsedData.username;
+          const updateData: Partial<UserProfile> = {};
+          
+          // Se não tem username, procurar em outras fontes
+          if (!data.username) {
+            // Verificar se existe no localStorage (salvo durante o registro)
+            try {
+              const savedFormData = localStorage.getItem('registrationFormData');
+              if (savedFormData) {
+                const parsedData = JSON.parse(savedFormData);
+                if (parsedData.username) {
+                  console.log('Username encontrado no localStorage:', parsedData.username);
+                  updateData.username = parsedData.username;
+                  
+                  // Também atualizar o objeto data para a resposta
+                  data.username = parsedData.username;
+                }
               }
+            } catch (e) {
+              console.error('Erro ao acessar localStorage:', e);
             }
-          } catch (e) {
-            console.error('Erro ao acessar localStorage:', e);
+            
+            // Verificar nos metadados da sessão
+            if (session.session.user.user_metadata?.username) {
+              console.log('Username encontrado nos metadados da sessão:', session.session.user.user_metadata.username);
+              updateData.username = session.session.user.user_metadata.username;
+              
+              // Atualizar o objeto data para a resposta
+              data.username = session.session.user.user_metadata.username;
+            }
           }
           
-          // Verificar nos metadados da sessão
-          if (session.session.user.user_metadata?.username) {
-            console.log('Username encontrado nos metadados da sessão:', session.session.user.user_metadata.username);
+          // Se não tem display_name, usar o username encontrado ou o existente
+          if (!data.display_name) {
+            // Prioridade: username nos metadados > username encontrado > username existente
+            if (session.session.user.user_metadata?.username) {
+              updateData.display_name = session.session.user.user_metadata.username;
+              data.display_name = session.session.user.user_metadata.username;
+            } else if (updateData.username) {
+              updateData.display_name = updateData.username;
+              data.display_name = updateData.username;
+            } else if (data.username) {
+              updateData.display_name = data.username;
+              data.display_name = data.username;
+            }
             
-            // Atualizar o perfil com o username encontrado
+            console.log('Display name definido para:', data.display_name);
+          }
+          
+          // Se há dados para atualizar, fazer a atualização
+          if (Object.keys(updateData).length > 0) {
             await this.updateUserProfile({
               id: data.id,
-              username: session.session.user.user_metadata.username
+              ...updateData
             });
-            
-            // Atualizar o objeto data para a resposta
-            data.username = session.session.user.user_metadata.username;
           }
         }
         
