@@ -1016,14 +1016,6 @@ export default function ProfileHeader({
               nameDisplay = "Usuário";
             }
             
-            // Obter o primeiro nome do usuário do localStorage
-            const storedFirstName = localStorage.getItem('userFirstName');
-            
-            // Usar primeiro o nome armazenado no localStorage
-            if (storedFirstName && storedFirstName !== "Usuário") {
-              nameDisplay = storedFirstName;
-            }
-            
             return (
               <>
                 {nameDisplay} <span className="text-gray-400 dark:text-gray-400">|</span> <span className="text-[#FF6B00]">@{usernameToDisplay}</span>

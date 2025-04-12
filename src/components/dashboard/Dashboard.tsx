@@ -34,24 +34,10 @@ export default function Dashboard() {
       <PromotionalBanner />
       <h1 className="text-3xl font-bold text-brand-black dark:text-white flex items-center gap-2">
         <span className="text-2xl">👋</span> Olá, {(() => {
-                // Obter o primeiro nome do usuário, com prioridade clara
-                let firstName = "Usuário";
-                
-                if (userProfile?.full_name) {
-                  // Se tivermos nome completo, usar o primeiro nome
-                  firstName = userProfile.full_name.split(' ')[0];
-                } else if (userProfile?.display_name) {
-                  // Senão, usar display_name
-                  firstName = userProfile.display_name;
-                } else if (userProfile?.username) {
-                  // Por último, username
-                  firstName = userProfile.username;
-                }
-                
-                console.log("Dashboard está usando o nome: ", firstName);
-                
+                // Obter o primeiro nome do usuário
+                const firstName = userProfile?.full_name?.split(' ')[0] || userProfile?.display_name || userProfile?.username || "Usuário";
                 // Salvar no localStorage para uso no sidebar e outros componentes
-                if (firstName && firstName !== "Usuário") {
+                if (firstName) {
                   localStorage.setItem('userFirstName', firstName);
                   // Disparar evento para outros componentes saberem que o nome foi atualizado
                   try {
