@@ -38,7 +38,6 @@ export const checkSupabaseConnection = async () => {
         console.log('Conexão com Supabase estabelecida com sucesso!');
         return true;
       }
-      }
 
       // Caso a tabela profiles não exista ainda, tentamos outra operação
       const { error: healthCheckError } = await supabase.rpc('rpc_ping');
@@ -78,6 +77,19 @@ export const setupSupabaseHealthCheck = async () => {
         BEGIN
           RETURN 'pong';
         END;
+        $$ LANGUAGE plpgsql;
+      `
+    });
+
+    if (error) {
+      console.error('Erro ao criar função de ping:', error);
+    } else {
+      console.log('Função de ping criada com sucesso');
+    }
+  } catch (error) {
+    console.error('Erro ao configurar verificação de saúde:', error);
+  }
+};
 
 // Função para verificar se o storage está funcionando corretamente
 export const checkStorageConnection = async () => {
@@ -111,19 +123,5 @@ export const checkStorageConnection = async () => {
   } catch (error) {
     console.error('Erro ao verificar conexão com storage:', error);
     return false;
-  }
-};
-
-        $$ LANGUAGE plpgsql;
-      `
-    });
-
-    if (error) {
-      console.error('Erro ao criar função de ping:', error);
-    } else {
-      console.log('Função de ping criada com sucesso');
-    }
-  } catch (error) {
-    console.error('Erro ao configurar verificação de saúde:', error);
   }
 };
