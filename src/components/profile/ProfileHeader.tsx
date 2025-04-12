@@ -367,31 +367,65 @@ export default function ProfileHeader({
         throw new Error("Não foi possível obter a URL pública da imagem");
       }
 
-      // Atualizar perfil do usuário
+      // Primeiro salvar no localStorage para feedback imediato
+      try {
+        localStorage.setItem('userAvatarUrl', publicUrlData.publicUrl);
+        console.log("URL do avatar salvo no localStorage:", publicUrlData.publicUrl);
+      } catch (e) {
+        console.warn("Erro ao salvar avatar no localStorage", e);
+      }
+
+      // Atualizar imediatamente a visualização
+      setAvatarUrl(publicUrlData.publicUrl);
+
+      // Depois atualizar no banco de dados
       const updatedProfile = await profileService.updateUserProfile({
         avatar_url: publicUrlData.publicUrl
       });
 
+      // Recarregar o perfil atualizado
       if (updatedProfile) {
-        setAvatarUrl(publicUrlData.publicUrl);
+        // Disparar evento para outros componentes saberem que o avatar foi atualizado
+        document.dispatchEvent(new CustomEvent('userAvatarUpdated', { 
+          detail: { url: publicUrlData.publicUrl } 
+        }));
 
-        // Salvar também no localStorage para uso em outros componentes
-        try {
-          localStorage.setItem('userAvatarUrl', publicUrlData.publicUrl);
-          // Disparar evento para outros componentes saberem que o avatar foi atualizado
-          document.dispatchEvent(new CustomEvent('userAvatarUpdated', { 
-            detail: { url: publicUrlData.publicUrl } 
-          }));
-        } catch (e) {
-          console.warn("Erro ao salvar avatar no localStorage", e);
-        }
+        // Atualizar o perfil completo após o upload bem-sucedido
+        await profileService.getCurrentUserProfile();
 
         toast({
           title: "Sucesso",
           description: "Foto de perfil atualizada com sucesso",
         });
       } else {
-        throw new Error("Não foi possível atualizar o perfil");
+        // Tentar novamente a atualização do perfil
+        console.warn("Primeira tentativa de atualização de perfil falhou, tentando novamente");
+        
+        // Segunda tentativa direta no banco de dados
+        const { error: directUpdateError } = await supabase
+          .from('profiles')
+          .update({ 
+            avatar_url: publicUrlData.publicUrl,
+            updated_at: new Date().toISOString() 
+          })
+          .eq('email', user.email);
+        
+        if (directUpdateError) {
+          console.error("Erro na segunda tentativa de atualização:", directUpdateError);
+          throw new Error("Não foi possível atualizar o perfil após múltiplas tentativas");
+        } else {
+          console.log("Perfil atualizado com sucesso na segunda tentativa");
+          
+          // Disparar evento para outros componentes
+          document.dispatchEvent(new CustomEvent('userAvatarUpdated', { 
+            detail: { url: publicUrlData.publicUrl } 
+          }));
+          
+          toast({
+            title: "Sucesso",
+            description: "Foto de perfil atualizada com sucesso (2ª tentativa)",
+          });
+        }
       }
     } catch (error) {
       console.error("Erro ao fazer upload da foto de perfil:", error);
@@ -507,31 +541,63 @@ export default function ProfileHeader({
         throw new Error("Não foi possível obter a URL pública da imagem");
       }
 
-      // Atualizar perfil do usuário
+      // Primeiro salvar no localStorage para feedback imediato
+      try {
+        localStorage.setItem('userCoverUrl', publicUrlData.publicUrl);
+        console.log("URL da capa salva no localStorage:", publicUrlData.publicUrl);
+      } catch (e) {
+        console.warn("Erro ao salvar capa no localStorage", e);
+      }
+
+      // Atualizar imediatamente a visualização
+      setCoverUrl(publicUrlData.publicUrl);
+
+      // Disparar evento para outros componentes
+      document.dispatchEvent(new CustomEvent('userCoverUpdated', { 
+        detail: { url: publicUrlData.publicUrl } 
+      }));
+
+      // Depois atualizar no banco de dados
       const updatedProfile = await profileService.updateUserProfile({
         cover_url: publicUrlData.publicUrl
       });
 
       if (updatedProfile) {
-        setCoverUrl(publicUrlData.publicUrl);
-
-        // Salvar também no localStorage para uso em outros componentes
-        try {
-          localStorage.setItem('userCoverUrl', publicUrlData.publicUrl);
-          // Disparar evento para outros componentes
-          document.dispatchEvent(new CustomEvent('userCoverUpdated', { 
-            detail: { url: publicUrlData.publicUrl } 
-          }));
-        } catch (e) {
-          console.warn("Erro ao salvar capa no localStorage", e);
-        }
-
+        // Recarregar o perfil atualizado após o upload bem-sucedido
+        await profileService.getCurrentUserProfile();
+        
         toast({
           title: "Sucesso",
           description: "Foto de capa atualizada com sucesso",
         });
       } else {
-        throw new Error("Não foi possível atualizar o perfil");
+        // Se falhar na primeira tentativa, tentar atualizar diretamente
+        console.warn("Primeira tentativa de atualização de perfil falhou, tentando novamente");
+        
+        // Segunda tentativa direta no banco de dados
+        const { error: directUpdateError } = await supabase
+          .from('profiles')
+          .update({ 
+            cover_url: publicUrlData.publicUrl,
+            updated_at: new Date().toISOString() 
+          })
+          .eq('email', user.email);
+        
+        if (directUpdateError) {
+          console.error("Erro na segunda tentativa de atualização:", directUpdateError);
+          // Mesmo com erro, manter a URL no localStorage e na UI
+          toast({
+            title: "Alerta",
+            description: "A imagem foi salva localmente, mas pode haver problemas de sincronização com o servidor.",
+            variant: "destructive"
+          });
+        } else {
+          console.log("Perfil atualizado com sucesso na segunda tentativa");
+          toast({
+            title: "Sucesso",
+            description: "Foto de capa atualizada com sucesso (2ª tentativa)",
+          });
+        }
       }
     } catch (error) {
       console.error("Erro ao fazer upload da foto de capa:", error);
@@ -648,9 +714,46 @@ export default function ProfileHeader({
         // Definir nome de exibição (prioridade: display_name, full_name, username)
         setDisplayName(userData.display_name || userData.full_name || userData.username || '');
 
-        // Definir avatar e capa
-        setAvatarUrl(userData.avatar_url || null);
-        setCoverUrl(userData.cover_url || null);
+        // Definir avatar e capa a partir do perfil
+        if (userData.avatar_url) {
+          console.log("Avatar URL encontrado no perfil:", userData.avatar_url);
+          setAvatarUrl(userData.avatar_url);
+          // Salvar também no localStorage
+          localStorage.setItem('userAvatarUrl', userData.avatar_url);
+        } else {
+          // Verificar se há URL no localStorage
+          const savedAvatarUrl = localStorage.getItem('userAvatarUrl');
+          if (savedAvatarUrl) {
+            console.log("Avatar URL encontrado no localStorage:", savedAvatarUrl);
+            setAvatarUrl(savedAvatarUrl);
+            // Atualizar o perfil para incluir o URL do localStorage
+            await profileService.updateUserProfile({
+              avatar_url: savedAvatarUrl
+            });
+          }
+        }
+
+        if (userData.cover_url) {
+          console.log("Cover URL encontrado no perfil:", userData.cover_url);
+          setCoverUrl(userData.cover_url);
+          localStorage.setItem('userCoverUrl', userData.cover_url);
+        } else {
+          // Verificar se há URL no localStorage
+          const savedCoverUrl = localStorage.getItem('userCoverUrl');
+          if (savedCoverUrl) {
+            console.log("Cover URL encontrado no localStorage:", savedCoverUrl);
+            setCoverUrl(savedCoverUrl);
+            // Atualizar o perfil para incluir o URL do localStorage
+            await profileService.updateUserProfile({
+              cover_url: savedCoverUrl
+            });
+          }
+        }
+
+        // Disparar evento de perfil carregado
+        document.dispatchEvent(new CustomEvent('userProfileLoaded', { 
+          detail: { profile: userData } 
+        }));
 
         // Se houve geração de ID, mostrar toast informativo
         if (idGenerated) {
@@ -671,8 +774,21 @@ export default function ProfileHeader({
           if (retryUserData) {
             console.log("Perfil recuperado na segunda tentativa:", retryUserData);
             setDisplayName(retryUserData.display_name || retryUserData.full_name || retryUserData.username || '');
-            setAvatarUrl(retryUserData.avatar_url || null);
-            setCoverUrl(retryUserData.cover_url || null);
+            
+            if (retryUserData.avatar_url) {
+              setAvatarUrl(retryUserData.avatar_url);
+              localStorage.setItem('userAvatarUrl', retryUserData.avatar_url);
+            }
+            
+            if (retryUserData.cover_url) {
+              setCoverUrl(retryUserData.cover_url);
+              localStorage.setItem('userCoverUrl', retryUserData.cover_url);
+            }
+            
+            // Disparar evento de perfil carregado
+            document.dispatchEvent(new CustomEvent('userProfileLoaded', { 
+              detail: { profile: retryUserData } 
+            }));
           }
         }, 1500);
       }

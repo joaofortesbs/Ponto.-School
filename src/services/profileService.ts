@@ -261,7 +261,34 @@ class ProfileService {
 
       if (!currentProfile) {
         console.error('Perfil não encontrado para atualização');
-        return null;
+        
+        // Tentar criar um perfil básico se não existir
+        try {
+          console.log('Tentando criar um perfil básico para o usuário');
+          const basicProfile = {
+            email: currentUser.user.email,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            ...profileData
+          };
+          
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert([basicProfile])
+            .select()
+            .single();
+            
+          if (createError) {
+            console.error('Erro ao criar perfil básico:', createError);
+            return null;
+          }
+          
+          console.log('Perfil básico criado com sucesso:', newProfile);
+          return newProfile as UserProfile;
+        } catch (createError) {
+          console.error('Erro ao criar perfil:', createError);
+          return null;
+        }
       }
 
       // Atualizar apenas os campos fornecidos
@@ -270,8 +297,34 @@ class ProfileService {
         updated_at: new Date().toISOString()
       };
 
+      // Verificar se temos dados de imagens no localStorage que ainda não estão no perfil
+      if (!updateData.avatar_url) {
+        try {
+          const savedAvatarUrl = localStorage.getItem('userAvatarUrl');
+          if (savedAvatarUrl && (!currentProfile.avatar_url || currentProfile.avatar_url !== savedAvatarUrl)) {
+            console.log('Usando avatar do localStorage para atualização:', savedAvatarUrl);
+            updateData.avatar_url = savedAvatarUrl;
+          }
+        } catch (e) {
+          console.warn('Erro ao acessar avatar do localStorage:', e);
+        }
+      }
+
+      if (!updateData.cover_url) {
+        try {
+          const savedCoverUrl = localStorage.getItem('userCoverUrl');
+          if (savedCoverUrl && (!currentProfile.cover_url || currentProfile.cover_url !== savedCoverUrl)) {
+            console.log('Usando capa do localStorage para atualização:', savedCoverUrl);
+            updateData.cover_url = savedCoverUrl;
+          }
+        } catch (e) {
+          console.warn('Erro ao acessar capa do localStorage:', e);
+        }
+      }
+
       console.log('Atualizando perfil com dados:', updateData);
 
+      // Tentar atualizar o perfil
       const { data, error } = await supabase
         .from('profiles')
         .update(updateData)
@@ -281,13 +334,67 @@ class ProfileService {
 
       if (error) {
         console.error('Erro ao atualizar perfil:', error);
-        return null;
+        
+        // Tentar uma segunda abordagem com método alternativo
+        try {
+          const updateFields = Object.entries(updateData)
+            .map(([key, value]) => {
+              if (value === null) return `${key} = NULL`;
+              if (typeof value === 'string') return `${key} = '${value.replace(/'/g, "''")}'`;
+              if (typeof value === 'number') return `${key} = ${value}`;
+              if (typeof value === 'boolean') return `${key} = ${value}`;
+              return null;
+            })
+            .filter(Boolean)
+            .join(', ');
+            
+          if (updateFields) {
+            const query = `UPDATE profiles SET ${updateFields} WHERE id = '${currentProfile.id}' RETURNING *`;
+            console.log('Tentando atualização alternativa com query:', query);
+            
+            const { error: rpcError } = await supabase.rpc('execute_sql', { 
+              sql_query: query
+            });
+            
+            if (rpcError) {
+              console.error('Erro na atualização alternativa:', rpcError);
+              return null;
+            }
+            
+            // Buscar o perfil atualizado
+            const { data: updatedProfile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', currentProfile.id)
+              .single();
+              
+            if (updatedProfile) {
+              console.log('Perfil atualizado com método alternativo:', updatedProfile);
+              // Continuar o fluxo com o perfil obtido
+              data = updatedProfile;
+            } else {
+              return null;
+            }
+          } else {
+            return null;
+          }
+        } catch (alternativeError) {
+          console.error('Erro na atualização alternativa:', alternativeError);
+          return null;
+        }
       }
 
       // Salvar dados importantes no localStorage para persistência entre sessões
       try {
-        if (data.avatar_url) localStorage.setItem('userAvatarUrl', data.avatar_url);
-        if (data.cover_url) localStorage.setItem('userCoverUrl', data.cover_url);
+        if (data.avatar_url) {
+          localStorage.setItem('userAvatarUrl', data.avatar_url);
+          console.log('Avatar URL salva no localStorage:', data.avatar_url);
+        }
+        
+        if (data.cover_url) {
+          localStorage.setItem('userCoverUrl', data.cover_url);
+          console.log('Cover URL salva no localStorage:', data.cover_url);
+        }
         
         // Disparar evento de atualização de perfil para outros componentes
         document.dispatchEvent(new CustomEvent('userProfileUpdated', { 
