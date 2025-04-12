@@ -2,36 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Estilos para efeito de paralaxe */
-.banner {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  perspective: 1000px;
-  z-index: 0;
-}
-
-.layer {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background-size: cover;
-  background-position: center;
-  transition: transform 0.2s ease-out;
-}
-
-.layer-bg {
-  background-image: linear-gradient(to bottom, #001427, #0A2540);
-  z-index: 1;
-}
-
-.layer-fg {
-  background-image: url('/images/pattern-grid.svg');
-  opacity: 0.15;
-  z-index: 2;
-}
-
 :root {
   --primary: #FF6B00;
   --primary-lighter: #FF9B50;
