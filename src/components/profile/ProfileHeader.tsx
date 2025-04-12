@@ -386,17 +386,15 @@ export default function ProfileHeader({
         // Extrair e exibir dados do perfil
         console.log("Perfil recuperado:", userData);
 
-        // Definir nome de exibição (prioridade: display_name, full_name, username)
+        // Usar funções de estado de forma segura (não condicional)
         setDisplayName(userData.display_name || userData.full_name || userData.username || '');
+        setAvatarUrl(userData.avatar_url || null);
+        setCoverUrl(userData.cover_url || null);
 
         // Salvar o username no localStorage para uso em diferentes partes da aplicação
         if (userData.username) {
           localStorage.setItem('username', userData.username);
         }
-
-        // Definir avatar e capa
-        setAvatarUrl(userData.avatar_url || null);
-        setCoverUrl(userData.cover_url || null);
 
         // Se houve geração de ID, mostrar toast informativo
         if (idGenerated) {
@@ -416,24 +414,34 @@ export default function ProfileHeader({
       } else {
         console.warn("Nenhum dado de usuário retornado do profileService");
 
-        // Tentar uma segunda vez após um breve intervalo
-        setTimeout(async () => {
-          const retryUserData = await profileService.getCurrentUserProfile();
-          if (retryUserData) {
-            console.log("Perfil recuperado na segunda tentativa:", retryUserData);
-            setDisplayName(retryUserData.display_name || retryUserData.full_name || retryUserData.username || '');
-            setAvatarUrl(retryUserData.avatar_url || null);
-            setCoverUrl(retryUserData.cover_url || null);
-            
-            // Salvar username no localStorage
-            if (retryUserData.username) {
-              localStorage.setItem('username', retryUserData.username);
-            } else {
-              // Se ainda não tiver username, tentar buscar e atualizar
-              await fetchAndUpdateUsername();
+        // Usar uma abordagem mais segura para retry
+        // em vez de chamar hooks dentro de uma callback de setTimeout
+        const retryLoad = async () => {
+          try {
+            const retryUserData = await profileService.getCurrentUserProfile();
+            if (retryUserData) {
+              console.log("Perfil recuperado na segunda tentativa:", retryUserData);
+              
+              // Atualiza os estados de forma segura
+              setDisplayName(retryUserData.display_name || retryUserData.full_name || retryUserData.username || '');
+              setAvatarUrl(retryUserData.avatar_url || null);
+              setCoverUrl(retryUserData.cover_url || null);
+              
+              // Salvar username no localStorage
+              if (retryUserData.username) {
+                localStorage.setItem('username', retryUserData.username);
+              } else {
+                // Se ainda não tiver username, tentar buscar e atualizar
+                await fetchAndUpdateUsername();
+              }
             }
+          } catch (retryError) {
+            console.error("Erro na segunda tentativa:", retryError);
           }
-        }, 1500);
+        };
+        
+        // Agendar tentativa, não chama hooks diretamente no callback
+        setTimeout(retryLoad, 1500);
       }
     } catch (error) {
       console.error("Erro ao carregar perfil:", error);
@@ -526,7 +534,7 @@ export default function ProfileHeader({
     }
   };
 
-  // Função setUserProfile removida pois causava erro de hooks
+  // Não definimos nenhuma função setUserProfile aqui para evitar erros de hooks
 
   return (
     <div
