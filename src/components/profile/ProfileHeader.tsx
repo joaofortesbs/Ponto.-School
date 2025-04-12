@@ -96,8 +96,8 @@ export default function ProfileHeader({
         console.log("Sincronizando username do perfil para o cabeçalho:", userProfile.username);
         localStorage.setItem('username', userProfile.username);
       } else {
-        // Se não temos em nenhum lugar, usar o valor padrão 'joaofortes'
-        const defaultUsername = 'joaofortes';
+        // Se não temos em nenhum lugar, usar o valor padrão genérico
+        const defaultUsername = 'Usuário';
         console.log("Definindo username padrão:", defaultUsername);
         localStorage.setItem('username', defaultUsername);
         
@@ -126,7 +126,7 @@ export default function ProfileHeader({
     const headerUsername = localStorage.getItem('username');
     if (!headerUsername) {
       console.log("Definindo username padrão no localStorage");
-      localStorage.setItem('username', 'joaofortes');
+      localStorage.setItem('username', 'Usuário');
     }
     
     // Forçar carregamento do perfil se userProfile for null
@@ -1001,7 +1001,7 @@ export default function ProfileHeader({
             const headerUsername = localStorage.getItem('username');
             
             // Usar o nome de usuário do cabeçalho (prioridade máxima)
-            const usernameToDisplay = headerUsername || storedUsername || 'joaofortes';
+            const usernameToDisplay = headerUsername || storedUsername || userProfile?.full_name?.split(' ')[0] || 'Usuário';
 
             // Exibir nome de exibição e nome de usuário como dois componentes distintos
             // Nome de exibição: usar display_name ou o primeiro nome do nome completo, ou o fallback
