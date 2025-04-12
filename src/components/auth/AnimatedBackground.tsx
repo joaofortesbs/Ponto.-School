@@ -21,7 +21,8 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
         setDimensions({ width, height });
         
         // Cria nós baseados no tamanho do container
-        const nodeCount = Math.floor((width * height) / 15000);
+        // Aumentando a densidade das teias diminuindo o divisor
+        const nodeCount = Math.floor((width * height) / 8000);
         const newNodes = [];
         
         for (let i = 0; i < nodeCount; i++) {
@@ -47,9 +48,9 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
                 Math.pow(newNodes[j].y - node.y, 2)
               );
               
-              if (distance < 250) {
+              if (distance < 300) {
                 connections.push(j);
-                if (connections.length >= 3) break; // Limita a 3 conexões por nó
+                if (connections.length >= 5) break; // Aumenta para 5 conexões por nó
               }
             }
           }
@@ -140,63 +141,15 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
       });
     };
 
-    // Atualiza os nós de clique, reduzindo sua idade
-    const updateClickNodes = () => {
-      setClickNodes(prevNodes => {
-        return prevNodes
-          .map(node => ({ ...node, age: node.age - 1 }))
-          .filter(node => node.age > 0);
-      });
-    };
-    
     const animationFrame = requestAnimationFrame(function animate() {
       updateNodePositions();
-      updateClickNodes();
       requestAnimationFrame(animate);
     });
 
-    const handleClick = (e: MouseEvent) => {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        
-        // Criar novos nós ao redor do clique
-        const newClickNodes = [];
-        const numNodes = 5 + Math.floor(Math.random() * 5); // 5-9 nós por clique
-        
-        for (let i = 0; i < numNodes; i++) {
-          const angle = (Math.PI * 2 * i) / numNodes;
-          const distance = 20 + Math.random() * 30;
-          
-          newClickNodes.push({
-            x: x + Math.cos(angle) * distance,
-            y: y + Math.sin(angle) * distance,
-            size: 1 + Math.random() * 1.5,
-            age: 100 + Math.floor(Math.random() * 50), // durará 100-150 frames
-            connections: []
-          });
-        }
-        
-        // Conectar os nós entre si formando um polígono
-        newClickNodes.forEach((_, index) => {
-          const connections = [
-            (index + 1) % numNodes, 
-            (index + 2) % numNodes
-          ];
-          newClickNodes[index].connections = connections;
-        });
-        
-        setClickNodes(prev => [...prev, ...newClickNodes]);
-      }
-    };
-    
     window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("click", handleClick);
     
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("click", handleClick);
       cancelAnimationFrame(animationFrame);
     };
   }, [dimensions]);
@@ -238,36 +191,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
         />
       ))}
 
-      {/* Nós de clique */}
-      {clickNodes.map((node, index) => (
-        <motion.div
-          key={`click-node-${index}-${node.x}-${node.y}`}
-          className="absolute rounded-full bg-orange-400/90 dark:bg-orange-500/90"
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{
-            opacity: [0, 0.8, 0],
-            scale: [0.5, 1.2, 0.8],
-          }}
-          transition={{
-            opacity: {
-              duration: 2,
-              times: [0, 0.2, 1],
-            },
-            scale: {
-              duration: 2,
-              times: [0, 0.3, 1],
-            }
-          }}
-          style={{
-            width: node.size,
-            height: node.size,
-            filter: "blur(0.5px)",
-            left: node.x,
-            top: node.y,
-            opacity: Math.min(node.age / 100, 1)
-          }}
-        />
-      ))}
+      {/* Removidos os nós de clique */}
 
       {/* Conexões para nós regulares */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none">
@@ -320,27 +244,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
           })
         )}
         
-        {/* Linhas entre nós de clique */}
-        {clickNodes.map((node, index) =>
-          node.connections.map((targetIndex) => {
-            const target = clickNodes[targetIndex];
-            if (!target) return null;
-            
-            return (
-              <line
-                key={`click-line-${index}-${targetIndex}-${node.x}`}
-                x1={node.x}
-                y1={node.y}
-                x2={target.x}
-                y2={target.y}
-                stroke="url(#clickLineGradient)"
-                strokeOpacity={Math.min(node.age / 100, 1) * 0.8}
-                strokeWidth={1 + Math.min(node.age / 100, 1)}
-                className="animate-pulse-soft"
-              />
-            );
-          })
-        )}
+        {/* Removidas as linhas entre nós de clique */}
       </svg>
 
       {/* Efeito de glow ao redor do cursor */}
