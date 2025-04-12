@@ -70,8 +70,8 @@ export default function Achievements() {
   };
 
   return (
-    <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-3 shadow-sm w-full overflow-hidden">
-      <div className="flex justify-between items-center mb-4">
+    <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-2 shadow-sm w-full overflow-hidden">
+      <div className="flex justify-between items-center mb-2">
         <h3 className="text-base font-bold text-[#29335C] dark:text-white flex items-center gap-2">
           <Trophy className="h-4 w-4 text-[#FF6B00]" />
           Conquistas
@@ -86,7 +86,7 @@ export default function Achievements() {
       </div>
 
       <motion.div 
-        className="grid grid-cols-2 gap-3"
+        className="grid grid-cols-2 gap-2"
         variants={container}
         initial="hidden"
         animate="show"
@@ -97,13 +97,13 @@ export default function Achievements() {
             className="relative overflow-hidden group"
             variants={item}
           >
-            <div className={`bg-gradient-to-br rounded-lg p-2 border transition-all duration-300 ${
+            <div className={`bg-gradient-to-br rounded-lg p-1.5 border transition-all duration-300 ${
               achievement.unlocked 
                 ? "from-[#FF6B00]/5 to-[#FF6B00]/10 border-[#FF6B00]/20 hover:border-[#FF6B00]/40" 
                 : "from-gray-100 to-gray-200 border-gray-200 dark:from-gray-800/30 dark:to-gray-800/50 dark:border-gray-700"
             }`}>
               <div className="flex items-start gap-3">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center ${
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
                   achievement.unlocked 
                     ? "bg-[#FF6B00]/20 text-[#FF6B00]" 
                     : "bg-gray-200 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
@@ -147,7 +147,7 @@ export default function Achievements() {
                   </div>
                   
                   {achievement.unlocked && (
-                    <div className="mt-1.5 flex justify-between items-center">
+                    <div className="mt-1 flex justify-between items-center">
                       <div className="flex items-center gap-1">
                         <Trophy className="h-3 w-3 text-[#FFD700]" />
                         <span className="text-xs font-semibold text-[#29335C] dark:text-white/70">
