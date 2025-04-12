@@ -64,30 +64,30 @@ export default function ProfileHeader({
     try {
       // Verificar se temos o username no localStorage (usado no cabeçalho)
       const headerUsername = localStorage.getItem('username');
-      
+
       console.log("Sincronizando usernames:", {
         headerUsername,
         profileUsername: userProfile?.username,
         userProfileFull: userProfile
       });
-      
+
       if (headerUsername) {
         // Se temos um username no cabeçalho, usar ele como fonte principal
-        
+
         // Verificar se o perfil existe e precisa ser atualizado
         if (userProfile && (!userProfile.username || userProfile.username !== headerUsername)) {
           console.log("Atualizando username no perfil para corresponder ao cabeçalho:", headerUsername);
-          
+
           // Atualizar o perfil para usar o mesmo username do cabeçalho
           await profileService.updateUserProfile({
             username: headerUsername,
             display_name: headerUsername, // Também atualizar o display_name
             updated_at: new Date().toISOString()
           });
-          
+
           // Atualizar o estado local
           setDisplayName(headerUsername);
-          
+
           // Recarregar perfil após atualização
           loadProfile();
         }
@@ -100,7 +100,7 @@ export default function ProfileHeader({
         const defaultUsername = 'joaofortes';
         console.log("Definindo username padrão:", defaultUsername);
         localStorage.setItem('username', defaultUsername);
-        
+
         if (userProfile) {
           // Atualizar o perfil com este username padrão
           await profileService.updateUserProfile({
@@ -108,10 +108,10 @@ export default function ProfileHeader({
             display_name: defaultUsername,
             updated_at: new Date().toISOString()
           });
-          
+
           // Atualizar o estado local
           setDisplayName(defaultUsername);
-          
+
           // Recarregar perfil
           loadProfile();
         }
@@ -128,22 +128,22 @@ export default function ProfileHeader({
       console.log("Definindo username padrão no localStorage");
       localStorage.setItem('username', 'joaofortes');
     }
-    
+
     // Forçar carregamento do perfil se userProfile for null
     if (!userProfile) {
       loadProfile();
       return;
     }
-    
+
     // Garantir que o username seja consistente com o cabeçalho
     ensureCorrectUsername();
 
     // Obter o username do localStorage (usado pelo cabeçalho)
     const storedUsername = localStorage.getItem('username');
-    
+
     // Definir displayName com ordem de prioridade
     let nameToDisplay = '';
-    
+
     if (userProfile.display_name) {
       nameToDisplay = userProfile.display_name;
     } else if (storedUsername) {
@@ -155,7 +155,7 @@ export default function ProfileHeader({
     } else {
       nameToDisplay = 'Usuário';
     }
-    
+
     setDisplayName(nameToDisplay);
 
     if (userProfile?.avatar_url) {
@@ -189,7 +189,7 @@ export default function ProfileHeader({
         // Se o perfil não tiver um nome de usuário, tentar pegar da sessão ou localStorage
         if (!userProfile.username) {
           const usernameToUse = storedUsername || session.user.user_metadata?.username;
-          
+
           if (usernameToUse) {
             // Atualizar o perfil com esse nome de usuário
             profileService.updateUserProfile({
@@ -286,112 +286,261 @@ export default function ProfileHeader({
       // Comprimir a imagem antes do upload (opcional, para melhor performance)
       let fileToUpload = file;
       if (file.size > 1000000) { // Se for maior que 1MB
-        const canvas = document.createElement('canvas');
-        const img = new Image();
-        
-        const loadImage = new Promise<File>((resolve) => {
-          img.onload = () => {
-            // Calcular novo tamanho mantendo a proporção
-            let width = img.width;
-            let height = img.height;
-            const maxSize = 800; // Tamanho máximo para qualquer dimensão
-            
-            if (width > height && width > maxSize) {
-              height = (height / width) * maxSize;
-              width = maxSize;
-            } else if (height > maxSize) {
-              width = (width / height) * maxSize;
-              height = maxSize;
-            }
-            
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx?.drawImage(img, 0, 0, width, height);
-            
-            canvas.toBlob((blob) => {
-              if (blob) {
-                const optimizedFile = new File([blob], file.name, { 
-                  type: 'image/jpeg', 
-                  lastModified: Date.now() 
-                });
-                resolve(optimizedFile);
-              } else {
-                resolve(file); // Fallback para arquivo original
+        try {
+          const canvas = document.createElement('canvas');
+          const img = new Image();
+
+          const loadImage = new Promise<File>((resolve) => {
+            img.onload = () => {
+              try {
+                // Calcular novo tamanho mantendo a proporção
+                let width = img.width;
+                let height = img.height;
+                const maxSize = 800; // Tamanho máximo para qualquer dimensão
+
+                if (width > height && width > maxSize) {
+                  height = (height / width) * maxSize;
+                  width = maxSize;
+                } else if (height > maxSize) {
+                  width = (width / height) * maxSize;
+                  height = maxSize;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+
+                if (!ctx) {
+                  console.error("Não foi possível obter contexto 2D do canvas");
+                  resolve(file);
+                  return;
+                }
+
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                  if (blob) {
+                    console.log(`Imagem comprimida: ${file.size} -> ${blob.size} bytes`);
+                    const optimizedFile = new File([blob], file.name, { 
+                      type: 'image/jpeg', 
+                      lastModified: Date.now() 
+                    });
+                    resolve(optimizedFile);
+                  } else {
+                    console.warn("Falha ao gerar blob do canvas");
+                    resolve(file); // Fallback para arquivo original
+                  }
+                }, 'image/jpeg', 0.85);
+              } catch (canvasError) {
+                console.error("Erro ao processar imagem no canvas:", canvasError);
+                resolve(file);
               }
-            }, 'image/jpeg', 0.85);
-          };
-          img.onerror = () => resolve(file); // Fallback em caso de erro
-        });
-        
-        img.src = URL.createObjectURL(file);
-        fileToUpload = await loadImage;
+            };
+            img.onerror = (e) => {
+              console.error("Erro ao carregar imagem para compressão:", e);
+              resolve(file); // Fallback em caso de erro
+            };
+          });
+
+          img.src = URL.createObjectURL(file);
+          fileToUpload = await loadImage;
+        } catch (compressionError) {
+          console.error("Erro durante compressão de imagem:", compressionError);
+          // Se houver qualquer erro na compressão, usar arquivo original
+          fileToUpload = file;
+        }
       }
 
-      // Upload para o storage
-      const { error: uploadError } = await supabase.storage
-        .from('profiles')
-        .upload(filePath, fileToUpload, {
-          cacheControl: '3600',
-          upsert: true
+      // Verificar se o bucket existe e criar se não existir
+      const { error: bucketCheckError } = await supabase.storage.getBucket('profiles');
+      if (bucketCheckError && bucketCheckError.message.includes('not found')) {
+        // Bucket não existe, vamos criar
+        console.log("Bucket 'profiles' não encontrado, criando...");
+        const { error: createBucketError } = await supabase.storage.createBucket('profiles', {
+          public: true,
+          fileSizeLimit: 5242880 // 5MB
         });
 
-      if (uploadError) {
-        if (uploadError.message.includes('The resource already exists')) {
-          // Se o arquivo já existe, gerar um novo nome e tentar novamente
-          const newFileName = `${user.id}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-          const newFilePath = `avatars/${newFileName}`;
-          
-          const { error: retryError } = await supabase.storage
-            .from('profiles')
-            .upload(newFilePath, fileToUpload, {
-              cacheControl: '3600',
-              upsert: true
-            });
-            
-          if (retryError) throw retryError;
-          
-          // Atualizar o caminho do arquivo
-          filePath = newFilePath;
+        if (createBucketError) {
+          console.error("Erro ao criar bucket:", createBucketError);
+          // Continuar mesmo com erro, pois o bucket pode já existir mas com permissões diferentes
         } else {
-          throw uploadError;
+          console.log("Bucket 'profiles' criado com sucesso");
         }
+      }
+
+      // Upload para o storage com retry automatico
+      let uploadAttempts = 0;
+      let uploadSuccess = false;
+      let finalFilePath = filePath;
+
+      while (!uploadSuccess && uploadAttempts < 3) {
+        uploadAttempts++;
+
+        const { error: uploadError } = await supabase.storage
+          .from('profiles')
+          .upload(finalFilePath, fileToUpload, {
+            cacheControl: '3600',
+            upsert: true
+          });
+
+        if (!uploadError) {
+          uploadSuccess = true;
+        } else {
+          console.warn(`Tentativa ${uploadAttempts} falhou:`, uploadError.message);
+
+          if (uploadError.message.includes('The resource already exists') || 
+              uploadError.message.includes('already exists')) {
+            // Gerar um novo nome de arquivo com timestamp e random string
+            const newFileName = `${user.id}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+            finalFilePath = `avatars/${newFileName}`;
+            console.log("Tentando com novo nome de arquivo:", finalFilePath);
+          } else if (uploadAttempts === 3) {
+            throw uploadError;
+          }
+        }
+      }
+
+      if (!uploadSuccess) {
+        throw new Error("Falha ao fazer upload após múltiplas tentativas");
       }
 
       // Obter URL pública
       const { data: publicUrlData } = supabase.storage
         .from('profiles')
-        .getPublicUrl(filePath);
+        .getPublicUrl(finalFilePath);
 
       if (!publicUrlData || !publicUrlData.publicUrl) {
         throw new Error("Não foi possível obter a URL pública da imagem");
       }
 
-      // Atualizar perfil do usuário
-      const updatedProfile = await profileService.updateUserProfile({
-        avatar_url: publicUrlData.publicUrl
-      });
+      console.log("Upload realizado com sucesso. URL pública:", publicUrlData.publicUrl);
 
-      if (updatedProfile) {
-        setAvatarUrl(publicUrlData.publicUrl);
-        
-        // Salvar também no localStorage para uso em outros componentes
-        try {
-          localStorage.setItem('userAvatarUrl', publicUrlData.publicUrl);
-          // Disparar evento para outros componentes saberem que o avatar foi atualizado
-          document.dispatchEvent(new CustomEvent('userAvatarUpdated', { 
-            detail: { url: publicUrlData.publicUrl } 
-          }));
-        } catch (e) {
-          console.warn("Erro ao salvar avatar no localStorage", e);
+      // Primeiro salvar no localStorage para feedback imediato
+      try {
+        localStorage.setItem('userAvatarUrl', publicUrlData.publicUrl);
+        console.log("URL do avatar salvo no localStorage:", publicUrlData.publicUrl);
+      } catch (e) {
+        console.warn("Erro ao salvar avatar no localStorage", e);
+      }
+
+      // Atualizar imediatamente a visualização
+      setAvatarUrl(publicUrlData.publicUrl);
+
+      // Disparar evento para outros componentes antes da tentativa de atualizar o banco
+      document.dispatchEvent(new CustomEvent('userAvatarUpdated', { 
+        detail: { url: publicUrlData.publicUrl } 
+      }));
+
+      // Usar múltiplas estratégias para atualização do perfil
+      let updateSuccess = false;
+      let updatedProfile = null;
+
+      // Estratégia 1: Usar o serviço de perfil
+      try {
+        updatedProfile = await profileService.updateUserProfile({
+          avatar_url: publicUrlData.publicUrl
+        });
+
+        if (updatedProfile) {
+          updateSuccess = true;
+          console.log("Perfil atualizado com sucesso via profileService");
         }
+      } catch (updateError) {
+        console.error("Erro na atualização via profileService:", updateError);
+      }
+
+      // Estratégia 2: Atualização direta se a primeira falhar
+      if (!updateSuccess) {
+        try {
+          console.log("Tentando atualização direta do perfil");
+          const { data: sessionUser } = await supabase.auth.getUser();
+
+          if (!sessionUser.user?.email) {
+            throw new Error("Email do usuário não disponível");
+          }
+
+          const { data: updatedData, error: directUpdateError } = await supabase
+            .from('profiles')
+            .update({ 
+              avatar_url: publicUrlData.publicUrl,
+              updated_at: new Date().toISOString() 
+            })
+            .eq('email', sessionUser.user.email)
+            .select()
+            .single();
+
+          if (directUpdateError) {
+            throw directUpdateError;
+          }
+
+          updatedProfile = updatedData;
+          updateSuccess = true;
+          console.log("Perfil atualizado com sucesso via atualização direta");
+        } catch (directError) {
+          console.error("Erro na atualização direta:", directError);
+        }
+      }
+
+      // Estratégia 3: Usar RPC para executar SQL diretamente
+      if (!updateSuccess) {
+        try {
+          console.log("Tentando atualização via RPC");
+          const { data: sessionUser } = await supabase.auth.getUser();
+
+          if (!sessionUser.user?.email) {
+            throw new Error("Email do usuário não disponível");
+          }
+
+          const query = `
+            UPDATE profiles 
+            SET avatar_url = '${publicUrlData.publicUrl.replace(/'/g, "''")}', 
+                updated_at = NOW() 
+            WHERE email = '${sessionUser.user.email.replace(/'/g, "''")}'
+            RETURNING *;
+          `;
+
+          const { error: rpcError } = await supabase.rpc('execute_sql', { 
+            sql_query: query
+          });
+
+          if (rpcError) {
+            throw rpcError;
+          }
+
+          // Verificar se a atualização foi bem-sucedida buscando o perfil
+          const { data: verifyProfile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('email', sessionUser.user.email)
+            .single();
+
+          if (verifyProfile && verifyProfile.avatar_url === publicUrlData.publicUrl) {
+            updatedProfile = verifyProfile;
+            updateSuccess = true;
+            console.log("Perfil atualizado com sucesso via RPC");
+          }
+        } catch (rpcError) {
+          console.error("Erro na atualização via RPC:", rpcError);
+        }
+      }
+
+      // Verificar resultado final
+      if (updateSuccess) {
+        // Recarregar o perfil atualizado
+        await profileService.getCurrentUserProfile();
 
         toast({
           title: "Sucesso",
           description: "Foto de perfil atualizada com sucesso",
         });
       } else {
-        throw new Error("Não foi possível atualizar o perfil");
+        console.warn("Não foi possível atualizar o perfil no banco de dados");
+        toast({
+          title: "Atenção",
+          description: "Imagem enviada com sucesso, mas pode haver problemas de sincronização com seu perfil",
+          variant: "warning"
+        });
       }
     } catch (error) {
       console.error("Erro ao fazer upload da foto de perfil:", error);
@@ -428,110 +577,259 @@ export default function ProfileHeader({
       // Comprimir a imagem antes do upload (opcional, para melhor performance)
       let fileToUpload = file;
       if (file.size > 1500000) { // Se for maior que 1.5MB
-        const canvas = document.createElement('canvas');
-        const img = new Image();
-        
-        const loadImage = new Promise<File>((resolve) => {
-          img.onload = () => {
-            // Calcular novo tamanho mantendo a proporção
-            let width = img.width;
-            let height = img.height;
-            
-            // Para imagens de capa, manter a largura maior
-            const maxWidth = 1200;
-            if (width > maxWidth) {
-              height = (height / width) * maxWidth;
-              width = maxWidth;
-            }
-            
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx?.drawImage(img, 0, 0, width, height);
-            
-            canvas.toBlob((blob) => {
-              if (blob) {
-                const optimizedFile = new File([blob], file.name, { 
-                  type: 'image/jpeg', 
-                  lastModified: Date.now() 
-                });
-                resolve(optimizedFile);
-              } else {
-                resolve(file); // Fallback para arquivo original
+        try {
+          const canvas = document.createElement('canvas');
+          const img = new Image();
+
+          const loadImage = new Promise<File>((resolve) => {
+            img.onload = () => {
+              try {
+                // Calcular novo tamanho mantendo a proporção
+                let width = img.width;
+                let height = img.height;
+
+                // Para imagens de capa, manter a proporção horizontal
+                const maxWidth = 1200;
+                if (width > maxWidth) {
+                  height = (height / width) * maxWidth;
+                  width = maxWidth;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+
+                if (!ctx) {
+                  console.error("Não foi possível obter contexto 2D do canvas");
+                  resolve(file);
+                  return;
+                }
+
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                  if (blob) {
+                    console.log(`Imagem comprimida: ${file.size} -> ${blob.size} bytes`);
+                    const optimizedFile = new File([blob], file.name, { 
+                      type: 'image/jpeg', 
+                      lastModified: Date.now() 
+                    });
+                    resolve(optimizedFile);
+                  } else {
+                    console.warn("Falha ao gerar blob do canvas");
+                    resolve(file); // Fallback para arquivo original
+                  }
+                }, 'image/jpeg', 0.8);
+              } catch (canvasError) {
+                console.error("Erro ao processar imagem no canvas:", canvasError);
+                resolve(file);
               }
-            }, 'image/jpeg', 0.8);
-          };
-          img.onerror = () => resolve(file); // Fallback em caso de erro
-        });
-        
-        img.src = URL.createObjectURL(file);
-        fileToUpload = await loadImage;
+            };
+            img.onerror = (e) => {
+              console.error("Erro ao carregar imagem para compressão:", e);
+              resolve(file); // Fallback em caso de erro
+            };
+          });
+
+          img.src = URL.createObjectURL(file);
+          fileToUpload = await loadImage;
+        } catch (compressionError) {
+          console.error("Erro durante compressão de imagem:", compressionError);
+          // Se houver qualquer erro na compressão, usar arquivo original
+          fileToUpload = file;
+        }
       }
 
-      // Upload para o storage
-      const { error: uploadError } = await supabase.storage
-        .from('profiles')
-        .upload(filePath, fileToUpload, {
-          cacheControl: '3600',
-          upsert: true
+      // Verificar se o bucket existe e criar se não existir
+      const { error: bucketCheckError } = await supabase.storage.getBucket('profiles');
+      if (bucketCheckError && bucketCheckError.message.includes('not found')) {
+        // Bucket não existe, vamos criar
+        console.log("Bucket 'profiles' não encontrado, criando...");
+        const { error: createBucketError } = await supabase.storage.createBucket('profiles', {
+          public: true,
+          fileSizeLimit: 5242880 // 5MB
         });
 
-      if (uploadError) {
-        if (uploadError.message.includes('The resource already exists')) {
-          // Se o arquivo já existe, gerar um novo nome e tentar novamente
-          const newFileName = `${user.id}-cover-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-          const newFilePath = `covers/${newFileName}`;
-          
-          const { error: retryError } = await supabase.storage
-            .from('profiles')
-            .upload(newFilePath, fileToUpload, {
-              cacheControl: '3600',
-              upsert: true
-            });
-            
-          if (retryError) throw retryError;
-          
-          // Atualizar o caminho do arquivo
-          filePath = newFilePath;
+        if (createBucketError) {
+          console.error("Erro ao criar bucket:", createBucketError);
+          // Continuar mesmo com erro, pois o bucket pode já existir mas com permissões diferentes
         } else {
-          throw uploadError;
+          console.log("Bucket 'profiles' criado com sucesso");
         }
+      }
+
+      // Upload para o storage com retry automatico
+      let uploadAttempts = 0;
+      let uploadSuccess = false;
+      let finalFilePath = filePath;
+
+      while (!uploadSuccess && uploadAttempts < 3) {
+        uploadAttempts++;
+
+        const { error: uploadError } = await supabase.storage
+          .from('profiles')
+          .upload(finalFilePath, fileToUpload, {
+            cacheControl: '3600',
+            upsert: true
+          });
+
+        if (!uploadError) {
+          uploadSuccess = true;
+        } else {
+          console.warn(`Tentativa ${uploadAttempts} falhou:`, uploadError.message);
+
+          if (uploadError.message.includes('The resource already exists') || 
+              uploadError.message.includes('already exists')) {
+            // Gerar um novo nome de arquivo com timestamp e random string
+            const newFileName = `${user.id}-cover-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+            finalFilePath = `covers/${newFileName}`;
+            console.log("Tentando com novo nome de arquivo:", finalFilePath);
+          } else if (uploadAttempts === 3) {
+            throw uploadError;
+          }
+        }
+      }
+
+      if (!uploadSuccess) {
+        throw new Error("Falha ao fazer upload após múltiplas tentativas");
       }
 
       // Obter URL pública
       const { data: publicUrlData } = supabase.storage
         .from('profiles')
-        .getPublicUrl(filePath);
+        .getPublicUrl(finalFilePath);
 
       if (!publicUrlData || !publicUrlData.publicUrl) {
         throw new Error("Não foi possível obter a URL pública da imagem");
       }
 
-      // Atualizar perfil do usuário
-      const updatedProfile = await profileService.updateUserProfile({
-        cover_url: publicUrlData.publicUrl
-      });
+      console.log("Upload da capa realizado com sucesso. URL pública:", publicUrlData.publicUrl);
 
-      if (updatedProfile) {
-        setCoverUrl(publicUrlData.publicUrl);
-        
-        // Salvar também no localStorage para uso em outros componentes
-        try {
-          localStorage.setItem('userCoverUrl', publicUrlData.publicUrl);
-          // Disparar evento para outros componentes
-          document.dispatchEvent(new CustomEvent('userCoverUpdated', { 
-            detail: { url: publicUrlData.publicUrl } 
-          }));
-        } catch (e) {
-          console.warn("Erro ao salvar capa no localStorage", e);
+      // Primeiro salvar no localStorage para feedback imediato
+      try {
+        localStorage.setItem('userCoverUrl', publicUrlData.publicUrl);
+        console.log("URL da capa salva no localStorage:", publicUrlData.publicUrl);
+      } catch (e) {
+        console.warn("Erro ao salvar capa no localStorage", e);
+      }
+
+      // Atualizar imediatamente a visualização
+      setCoverUrl(publicUrlData.publicUrl);
+
+      // Disparar evento para outros componentes antes da tentativa de atualizar o banco
+      document.dispatchEvent(new CustomEvent('userCoverUpdated', { 
+        detail: { url: publicUrlData.publicUrl } 
+      }));
+
+      // Usar múltiplas estratégias para atualização do perfil
+      let updateSuccess = false;
+      let updatedProfile = null;
+
+      // Estratégia 1: Usar o serviço de perfil
+      try {
+        updatedProfile = await profileService.updateUserProfile({
+          cover_url: publicUrlData.publicUrl
+        });
+
+        if (updatedProfile) {
+          updateSuccess = true;
+          console.log("Perfil atualizado com sucesso via profileService");
         }
+      } catch (updateError) {
+        console.error("Erro na atualização via profileService:", updateError);
+      }
+
+      // Estratégia 2: Atualização direta se a primeira falhar
+      if (!updateSuccess) {
+        try {
+          console.log("Tentando atualização direta do perfil");
+          const { data: sessionUser } = await supabase.auth.getUser();
+
+          if (!sessionUser.user?.email) {
+            throw new Error("Email do usuário não disponível");
+          }
+
+          const { data: updatedData, error: directUpdateError } = await supabase
+            .from('profiles')
+            .update({ 
+              cover_url: publicUrlData.publicUrl,
+              updated_at: new Date().toISOString() 
+            })
+            .eq('email', sessionUser.user.email)
+            .select()
+            .single();
+
+          if (directUpdateError) {
+            throw directUpdateError;
+          }
+
+          updatedProfile = updatedData;
+          updateSuccess = true;
+          console.log("Perfil atualizado com sucesso via atualização direta");
+        } catch (directError) {
+          console.error("Erro na atualização direta:", directError);
+        }
+      }
+
+      // Estratégia 3: Usar RPC para executar SQL diretamente
+      if (!updateSuccess) {
+        try {
+          console.log("Tentando atualização via RPC");
+          const { data: sessionUser } = await supabase.auth.getUser();
+
+          if (!sessionUser.user?.email) {
+            throw new Error("Email do usuário não disponível");
+          }
+
+          const query = `
+            UPDATE profiles 
+            SET cover_url = '${publicUrlData.publicUrl.replace(/'/g, "''")}', 
+                updated_at = NOW() 
+            WHERE email = '${sessionUser.user.email.replace(/'/g, "''")}'
+            RETURNING *;
+          `;
+
+          const { error: rpcError } = await supabase.rpc('execute_sql', { 
+            sql_query: query
+          });
+
+          if (rpcError) {
+            throw rpcError;
+          }
+
+          // Verificar se a atualização foi bem-sucedida buscando o perfil
+          const { data: verifyProfile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('email', sessionUser.user.email)
+            .single();
+
+          if (verifyProfile && verifyProfile.cover_url === publicUrlData.publicUrl) {
+            updatedProfile = verifyProfile;
+            updateSuccess = true;
+            console.log("Perfil atualizado com sucesso via RPC");
+          }
+        } catch (rpcError) {
+          console.error("Erro na atualização via RPC:", rpcError);
+        }
+      }
+
+      // Verificar resultado final
+      if (updateSuccess) {
+        // Recarregar o perfil atualizado
+        await profileService.getCurrentUserProfile();
 
         toast({
           title: "Sucesso",
           description: "Foto de capa atualizada com sucesso",
         });
       } else {
-        throw new Error("Não foi possível atualizar o perfil");
+        console.warn("Não foi possível atualizar o perfil no banco de dados");
+        toast({
+          title: "Atenção",
+          description: "Imagem de capa enviada com sucesso, mas pode haver problemas de sincronização com seu perfil",
+          variant: "warning"
+        });
       }
     } catch (error) {
       console.error("Erro ao fazer upload da foto de capa:", error);
@@ -648,9 +946,46 @@ export default function ProfileHeader({
         // Definir nome de exibição (prioridade: display_name, full_name, username)
         setDisplayName(userData.display_name || userData.full_name || userData.username || '');
 
-        // Definir avatar e capa
-        setAvatarUrl(userData.avatar_url || null);
-        setCoverUrl(userData.cover_url || null);
+        // Definir avatar e capa a partir do perfil
+        if (userData.avatar_url) {
+          console.log("Avatar URL encontrado no perfil:", userData.avatar_url);
+          setAvatarUrl(userData.avatar_url);
+          // Salvar também no localStorage
+          localStorage.setItem('userAvatarUrl', userData.avatar_url);
+        } else {
+          // Verificar se há URL no localStorage
+          const savedAvatarUrl = localStorage.getItem('userAvatarUrl');
+          if (savedAvatarUrl) {
+            console.log("Avatar URL encontrado no localStorage:", savedAvatarUrl);
+            setAvatarUrl(savedAvatarUrl);
+            // Atualizar o perfil para incluir o URL do localStorage
+            await profileService.updateUserProfile({
+              avatar_url: savedAvatarUrl
+            });
+          }
+        }
+
+        if (userData.cover_url) {
+          console.log("Cover URL encontrado no perfil:", userData.cover_url);
+          setCoverUrl(userData.cover_url);
+          localStorage.setItem('userCoverUrl', userData.cover_url);
+        } else {
+          // Verificar se há URL no localStorage
+          const savedCoverUrl = localStorage.getItem('userCoverUrl');
+          if (savedCoverUrl) {
+            console.log("Cover URL encontrado no localStorage:", savedCoverUrl);
+            setCoverUrl(savedCoverUrl);
+            // Atualizar o perfil para incluir o URL do localStorage
+            await profileService.updateUserProfile({
+              cover_url: savedCoverUrl
+            });
+          }
+        }
+
+        // Disparar evento de perfil carregado
+        document.dispatchEvent(new CustomEvent('userProfileLoaded', { 
+          detail: { profile: userData } 
+        }));
 
         // Se houve geração de ID, mostrar toast informativo
         if (idGenerated) {
@@ -671,8 +1006,21 @@ export default function ProfileHeader({
           if (retryUserData) {
             console.log("Perfil recuperado na segunda tentativa:", retryUserData);
             setDisplayName(retryUserData.display_name || retryUserData.full_name || retryUserData.username || '');
-            setAvatarUrl(retryUserData.avatar_url || null);
-            setCoverUrl(retryUserData.cover_url || null);
+
+            if (retryUserData.avatar_url) {
+              setAvatarUrl(retryUserData.avatar_url);
+              localStorage.setItem('userAvatarUrl', retryUserData.avatar_url);
+            }
+
+            if (retryUserData.cover_url) {
+              setCoverUrl(retryUserData.cover_url);
+              localStorage.setItem('userCoverUrl', retryUserData.cover_url);
+            }
+
+            // Disparar evento de perfil carregado
+            document.dispatchEvent(new CustomEvent('userProfileLoaded', { 
+              detail: { profile: retryUserData } 
+            }));
           }
         }, 1500);
       }
@@ -969,10 +1317,10 @@ export default function ProfileHeader({
 
             // Obter o nome de usuário do perfil
             const profileUsername = userProfile?.username || '';
-            
+
             // Obter o nome para a parte principal da exibição
             let displayedName = '';
-            
+
             // Prioridade de exibição: username > display_name > full_name > fallback
             if (profileUsername) {
               displayedName = profileUsername;
@@ -984,10 +1332,10 @@ export default function ProfileHeader({
             } else {
               displayedName = "Usuário";
             }
-            
+
             // Buscar username do localStorage (mesmo usado no cabeçalho)
             const storedUsername = localStorage.getItem('username');
-            
+
             console.log("Dados do perfil para exibição de username:", {
               profileUsername: profileUsername,
               storedUsername: storedUsername,
@@ -999,14 +1347,14 @@ export default function ProfileHeader({
 
             // Buscar o nome de usuário do localStorage (usado no cabeçalho)
             const headerUsername = localStorage.getItem('username');
-            
+
             // Usar o nome de usuário do cabeçalho (prioridade máxima)
             const usernameToDisplay = headerUsername || storedUsername || 'joaofortes';
 
             // Exibir nome de exibição e nome de usuário como dois componentes distintos
             // Nome de exibição: usar display_name ou o primeiro nome do nome completo, ou o fallback
             let nameDisplay = '';
-            
+
             if (userProfile?.display_name) {
               nameDisplay = userProfile.display_name;
             } else if (userProfile?.full_name) {
@@ -1015,7 +1363,7 @@ export default function ProfileHeader({
             } else {
               nameDisplay = "Usuário";
             }
-            
+
             return (
               <>
                 {nameDisplay} <span className="text-gray-400 dark:text-gray-400">|</span> <span className="text-[#FF6B00]">@{usernameToDisplay}</span>

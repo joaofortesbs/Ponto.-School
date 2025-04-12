@@ -90,3 +90,38 @@ export const setupSupabaseHealthCheck = async () => {
     console.error('Erro ao configurar verificação de saúde:', error);
   }
 };
+
+// Função para verificar se o storage está funcionando corretamente
+export const checkStorageConnection = async () => {
+  try {
+    // Verificar se o bucket profiles existe
+    const { data: bucketData, error: bucketError } = await supabase.storage.getBucket('profiles');
+    
+    if (bucketError) {
+      if (bucketError.message.includes('not found')) {
+        console.warn('Bucket de perfis não encontrado. Pode ser necessário criá-lo.');
+        return false;
+      }
+      console.error('Erro ao verificar bucket de perfis:', bucketError);
+      return false;
+    }
+    
+    console.log('Bucket de perfis verificado:', bucketData);
+    
+    // Tentar listar arquivos (para verificar permissões)
+    const { data: listData, error: listError } = await supabase.storage
+      .from('profiles')
+      .list();
+      
+    if (listError) {
+      console.error('Erro ao listar arquivos do bucket:', listError);
+      return false;
+    }
+    
+    console.log(`Bucket de perfis acessível. Contém ${listData.length} arquivos.`);
+    return true;
+  } catch (error) {
+    console.error('Erro ao verificar conexão com storage:', error);
+    return false;
+  }
+};

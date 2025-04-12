@@ -1,0 +1,61 @@
+[plugin:vite:react-swc] × cannot reassign to a variable declared with `const`
+     ╭─[/home/runner/workspace/src/services/profileService.ts:325:1]
+ 325 │       console.log('Atualizando perfil com dados:', updateData);
+ 326 │ 
+ 327 │       // Tentar atualizar o perfil
+ 328 │       const { data, error } = await supabase
+     ·               ──┬─
+     ·                 ╰── const variable was declared here
+ 329 │         .from('profiles')
+ 330 │         .update(updateData)
+ 331 │         .eq('id', currentProfile.id)
+ 332 │         .select()
+ 333 │         .single();
+ 334 │ 
+ 335 │       if (error) {
+ 336 │         console.error('Erro ao atualizar perfil:', error);
+ 337 │         
+ 338 │         // Tentar uma segunda abordagem com método alternativo
+ 339 │         try {
+ 340 │           const updateFields = Object.entries(updateData)
+ 341 │             .map(([key, value]) => {
+ 342 │               if (value === null) return `${key} = NULL`;
+ 343 │               if (typeof value === 'string') return `${key} = '${value.replace(/'/g, "''")}'`;
+ 344 │               if (typeof value === 'number') return `${key} = ${value}`;
+ 345 │               if (typeof value === 'boolean') return `${key} = ${value}`;
+ 346 │               return null;
+ 347 │             })
+ 348 │             .filter(Boolean)
+ 349 │             .join(', ');
+ 350 │             
+ 351 │           if (updateFields) {
+ 352 │             const query = `UPDATE profiles SET ${updateFields} WHERE id = '${currentProfile.id}' RETURNING *`;
+ 353 │             console.log('Tentando atualização alternativa com query:', query);
+ 354 │             
+ 355 │             const { error: rpcError } = await supabase.rpc('execute_sql', { 
+ 356 │               sql_query: query
+ 357 │             });
+ 358 │             
+ 359 │             if (rpcError) {
+ 360 │               console.error('Erro na atualização alternativa:', rpcError);
+ 361 │               return null;
+ 362 │             }
+ 363 │             
+ 364 │             // Buscar o perfil atualizado
+ 365 │             const { data: updatedProfile } = await supabase
+ 366 │               .from('profiles')
+ 367 │               .select('*')
+ 368 │               .eq('id', currentProfile.id)
+ 369 │               .single();
+ 370 │               
+ 371 │             if (updatedProfile) {
+ 372 │               console.log('Perfil atualizado com método alternativo:', updatedProfile);
+ 373 │               // Continuar o fluxo com o perfil obtido
+ 374 │               data = updatedProfile;
+     ·               ──┬─
+     ·                 ╰── cannot reassign
+ 375 │             } else {
+ 376 │               return null;
+ 377 │             }
+     ╰────
+/home/runner/workspace/src/services/profileService.ts:325:1
