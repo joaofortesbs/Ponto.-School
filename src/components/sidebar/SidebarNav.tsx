@@ -99,6 +99,13 @@ export function SidebarNav({
   }, []);
 
   useEffect(() => {
+    // Verificar imediatamente se já temos o nome no localStorage (para carregamento instantâneo)
+    const storedFirstName = localStorage.getItem('userFirstName');
+    if (storedFirstName) {
+      setFirstName(storedFirstName);
+      console.log("Nome do usuário carregado do localStorage:", storedFirstName);
+    }
+    
     const fetchUserProfile = async () => {
       try {
         const {
@@ -113,9 +120,28 @@ export function SidebarNav({
             .single();
 
           if (error) {
-            console.error("Error fetching user profile:", error);
-          } else if (data) {
+            // Se não encontrar com user_id, tentar com email
+            const { data: profileByEmail, error: emailError } = await supabase
+              .from("profiles")
+              .select("*")
+              .eq("email", user.email)
+              .single();
+            
+            if (emailError) {
+              console.error("Error fetching user profile:", error);
+              return;
+            }
+            
+            if (profileByEmail) {
+              data = profileByEmail;
+            } else {
+              return;
+            }
+          }
+          
+          if (data) {
             setUserProfile(data as UserProfile);
+            
             // Se o perfil tiver um avatar_url, usar ele
             if (data.avatar_url) {
               setProfileImage(data.avatar_url);
@@ -123,21 +149,24 @@ export function SidebarNav({
               localStorage.setItem('userAvatarUrl', data.avatar_url);
             }
             
-            // Extrair o primeiro nome do usuário para a saudação
+            // Extrair o primeiro nome do usuário para a saudação - PRIORIDADE: nome completo > nome de exibição > username
             // Usando a mesma lógica do Dashboard.tsx para consistência
-            const dashboardName = data.full_name?.split(' ')[0] || data.display_name || data.username || "Usuário";
+            const dashboardName = data.full_name?.split(' ')[0] || data.display_name || "Usuário";
             setFirstName(dashboardName);
             
             // Salvar o nome no localStorage para garantir consistência entre componentes
-            localStorage.setItem('userFirstName', dashboardName);
-            
-            // Disparar evento para outros componentes saberem que o nome foi atualizado
-            try {
-              document.dispatchEvent(new CustomEvent('userFirstNameUpdated', { 
-                detail: { firstName: dashboardName } 
-              }));
-            } catch (e) {
-              console.error("Erro ao disparar evento de atualização de nome:", e);
+            if (dashboardName && dashboardName !== "Usuário") {
+              localStorage.setItem('userFirstName', dashboardName);
+              console.log("Nome do usuário atualizado e salvo:", dashboardName);
+              
+              // Disparar evento para outros componentes saberem que o nome foi atualizado
+              try {
+                document.dispatchEvent(new CustomEvent('userFirstNameUpdated', { 
+                  detail: { firstName: dashboardName } 
+                }));
+              } catch (e) {
+                console.error("Erro ao disparar evento de atualização de nome:", e);
+              }
             }
           }
         }
@@ -147,12 +176,6 @@ export function SidebarNav({
         setLoading(false);
       }
     };
-
-    // Verificar se já temos o nome no localStorage primeiro (para carregamento rápido)
-    const storedFirstName = localStorage.getItem('userFirstName');
-    if (storedFirstName) {
-      setFirstName(storedFirstName);
-    }
     
     fetchUserProfile();
   }, []);
@@ -518,7 +541,7 @@ export function SidebarNav({
           <div className="text-[#001427] dark:text-white text-center">
             <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
               <span className="mr-1">👋</span> Olá,{" "}
-              {firstName || localStorage.getItem('userFirstName') || userProfile?.full_name?.split(' ')[0] || userProfile?.display_name || userProfile?.username || "Usuário"}!
+              {localStorage.getItem('userFirstName') || firstName || userProfile?.full_name?.split(' ')[0] || userProfile?.display_name || "Usuário"}!
             </h3>
             <div className="flex flex-col items-center mt-1">
               <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
