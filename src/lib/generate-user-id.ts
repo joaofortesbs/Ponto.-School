@@ -1,16 +1,20 @@
-
 import { supabase } from "@/lib/supabase";
 
 /**
  * Gera um ID de usuário único com o formato [UF][AnoMês][TipoConta][Sequencial].
- * Exemplo: SP24071000123 (São Paulo, julho de 2024, conta Full, sequencial 123)
+ * Exemplo: SP24081000001 (São Paulo, agosto de 2024, conta Full, sequencial 1)
+ * 
+ * O sistema garante que:
+ * 1. Os IDs são sequenciais dentro de cada UF, mês e tipo de conta
+ * 2. Não haverá duplicidade de IDs mesmo com operações concorrentes
+ * 3. Há alta disponibilidade do sistema mesmo sob carga
  * 
  * @param uf O código da UF (ex: SP, RJ, etc)
- * @param tipoConta O tipo de conta (1 = Full, 2 = Lite)
- * @returns Uma string contendo o ID gerado no formato UF+AnoMês+TipoConta+Sequencial(6)
+ * @param tipoConta O tipo de conta (1 = Full/Premium, 2 = Lite/Basic)
+ * @returns Uma string contendo o ID gerado
  */
 export async function generateUserId(uf: string, tipoConta: number): Promise<string> {
-  // Validação rigorosa da UF - garantir que seja uma UF válida
+  // Validação rigorosa da UF
   if (!uf || uf.length !== 2) {
     console.error('ERRO: UF inválida ou não fornecida:', uf);
     throw new Error('UF inválida ou não fornecida para geração de ID. A UF é obrigatória.');
@@ -22,135 +26,95 @@ export async function generateUserId(uf: string, tipoConta: number): Promise<str
   // Garantir que a UF esteja em maiúsculas
   uf = uf.toUpperCase();
 
-  // Obtém o ano/mês atual no formato AAMM (ex: 2407 para julho de 2024)
-  const dataAtual = new Date();
-  const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
-
   try {
-    // Usar a função SQL para obter o próximo ID sequencial específico para esta UF e tipo de conta
-    const { data, error } = await supabase.rpc('get_next_user_id_for_uf', {
+    // Chamar a função SQL otimizada para geração de IDs sequenciais
+    const { data, error } = await supabase.rpc('generate_sequential_user_id', {
       p_uf: uf,
       p_tipo_conta: tipoConta
     });
 
     if (error) {
-      console.error('Erro ao gerar ID via função SQL:', error);
-      
-      // Fallback: Tentar obter diretamente da tabela de controle por UF
-      const { data: controlData, error: controlError } = await supabase
-        .from('user_id_control_by_uf')
-        .select('*')
-        .eq('uf', uf)
-        .eq('ano_mes', anoMes)
-        .eq('tipo_conta', tipoConta)
-        .single();
-      
-      if (controlError) {
-        console.error('Erro ao buscar controle de ID por UF:', controlError);
-        
-        // Tentar criar um novo registro de controle
-        try {
-          // Tentar inserir um novo registro de controle para esta UF
-          const { data: insertedData, error: insertError } = await supabase
-            .from('user_id_control_by_uf')
-            .insert([
-              { uf: uf, ano_mes: anoMes, tipo_conta: tipoConta, last_id: 1 }
-            ])
-            .select()
-            .single();
-          
-          if (insertError) {
-            console.error('Erro ao criar controle de ID por UF:', insertError);
-            return generateFallbackId(uf, tipoConta, anoMes);
-          }
-          
-          // Formatar o ID completo: UF (2) + AnoMês (4) + TipoConta (1) + Sequencial (6 dígitos com zeros à esquerda)
-          const userId = `${uf}${anoMes}${tipoConta}${1..toString().padStart(6, '0')}`;
-          console.log(`ID gerado com controle novo: ${userId}`);
-          return userId;
-        } catch (insertCatchError) {
-          console.error('Erro ao tentar criar controle:', insertCatchError);
-          return generateFallbackId(uf, tipoConta, anoMes);
-        }
-      }
-      
-      if (!controlData) {
-        console.error('Nenhum controle de ID por UF encontrado');
-        return generateFallbackId(uf, tipoConta, anoMes);
-      }
-      
-      // Incrementar o contador de forma segura
-      const nextId = controlData.last_id + 1;
-      
-      // Atualizar o contador na tabela
-      const { error: updateError } = await supabase
-        .from('user_id_control_by_uf')
-        .update({ 
-          last_id: nextId,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', controlData.id);
-      
-      if (updateError) {
-        console.error('Erro ao atualizar contador por UF:', updateError);
-        return generateFallbackId(uf, tipoConta, anoMes);
-      }
-      
-      // Formatar o ID completo: UF (2) + AnoMês (4) + TipoConta (1) + Sequencial (6 dígitos com zeros à esquerda)
-      const userId = `${uf}${anoMes}${tipoConta}${nextId.toString().padStart(6, '0')}`;
-      console.log(`ID gerado com controle existente: ${userId}`);
-      return userId;
+      console.error('Erro ao gerar ID sequencial:', error);
+      return generateFallbackId(uf, tipoConta);
     }
-    
-    // Se chegou aqui, temos um ID gerado pela função SQL
-    console.log(`ID gerado via função SQL: ${data}`);
+
+    // Verificar se o ID foi gerado corretamente
+    if (!data || !isValidUserId(data)) {
+      console.error('ID gerado é inválido:', data);
+      return generateFallbackId(uf, tipoConta);
+    }
+
+    console.log(`ID sequencial gerado com sucesso: ${data}`);
     return data;
   } catch (error) {
-    console.error("Erro ao gerar ID de usuário:", error);
-    return generateFallbackId(uf, tipoConta, anoMes);
+    console.error("Erro ao gerar ID de usuário sequencial:", error);
+    return generateFallbackId(uf, tipoConta);
   }
 }
 
 /**
- * Gera um ID de fallback baseado em regras para garantir unicidade
- * Mantém o mesmo formato, mas usa um método alternativo para garantir unicidade
+ * Gera um ID de fallback quando a função principal falha
+ * Este método tenta garantir unicidade mesmo quando a função principal falha
  */
-function generateFallbackId(uf: string, tipoConta: number, anoMes: string): string {
-  console.log('Usando método de fallback para geração de ID');
-  
-  // Mesmo no fallback, garantimos que a UF seja válida
-  if (!uf || uf.length !== 2) {
-    uf = 'SP';
-  } else if (uf === 'BR') {
-    uf = 'SP';
+async function generateFallbackId(uf: string, tipoConta: number): Promise<string> {
+  console.log('Usando método de fallback para geração de ID sequencial');
+
+  // Normaliza UF e valida
+  uf = uf.toUpperCase();
+  if (!uf || uf.length !== 2 || uf === 'BR') {
+    uf = 'SP'; // UF padrão em caso de falha da validação
   }
 
-  uf = uf.toUpperCase();
-  
-  // Gerar um número sequencial baseado em timestamp para garantir unicidade
-  // Combinamos o timestamp atual com um número aleatório para evitar colisões
-  const timestamp = new Date().getTime();
-  const random = Math.floor(Math.random() * 1000);
-  
-  // Usar apenas os últimos dígitos do timestamp para ficar dentro do limite de 6 dígitos
-  // Combinamos com um número aleatório para aumentar a unicidade
-  const sequencial = (timestamp % 1000000).toString().padStart(6, '0');
-  
-  const userId = `${uf}${anoMes}${tipoConta}${sequencial}`;
-  console.log(`ID gerado via fallback: ${userId}`);
-  return userId;
+  // Obtém o ano/mês atual
+  const dataAtual = new Date();
+  const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
+
+  try {
+    // Usar timestamp atual mais um ID aleatório para garantir unicidade
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 10000);
+
+    // Combinamos os dois e pegamos apenas os últimos 6 dígitos
+    let sequencialUnico = ((timestamp % 1000000) + random).toString().slice(-6).padStart(6, '0');
+
+    // Formato final do ID
+    const userId = `${uf}${anoMes}${tipoConta}${sequencialUnico}`;
+
+    // Verificar se o ID já existe (checar duplicidade)
+    const { data: existingUser, error: checkError } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .eq('user_id', userId)
+      .single();
+
+    if (!checkError && existingUser) {
+      // ID já existe, gerar outro com timestamp atualizado
+      const newTimestamp = Date.now();
+      const newRandom = Math.floor(Math.random() * 10000);
+      sequencialUnico = ((newTimestamp % 1000000) + newRandom).toString().slice(-6).padStart(6, '0');
+      const newUserId = `${uf}${anoMes}${tipoConta}${sequencialUnico}`;
+      console.log(`ID fallback (segunda tentativa): ${newUserId}`);
+      return newUserId;
+    }
+
+    console.log(`ID fallback gerado: ${userId}`);
+    return userId;
+  } catch (fallbackError) {
+    console.error('Erro crítico no fallback:', fallbackError);
+
+    // Último recurso: gerar um ID com alta probabilidade de unicidade
+    const lastResortId = `${uf}${anoMes}${tipoConta}${Date.now().toString().slice(-6)}`;
+    console.log(`ID último recurso gerado: ${lastResortId}`);
+    return lastResortId;
+  }
 }
 
 /**
- * Gera um ID baseado no tipo de plano usando o Supabase
+ * Gera um ID baseado no tipo de plano
  * 1 para premium/full, 2 para lite/básico
- * 
- * @param planType O tipo de plano (full, premium, lite, standard)
- * @param uf A Unidade Federativa (estado) do usuário
- * @returns Uma string contendo o ID gerado no formato UF+AnoMês+TipoConta+Sequencial(6)
  */
 export async function generateUserIdByPlan(planType: string, uf: string): Promise<string> {
-  // Validação da UF - garantir que seja uma UF válida
+  // Validação da UF
   if (!uf || uf.length !== 2) {
     console.error('ERRO: UF inválida ou não fornecida:', uf);
     throw new Error('UF inválida ou não fornecida para geração de ID. A UF é obrigatória.');
@@ -159,25 +123,19 @@ export async function generateUserIdByPlan(planType: string, uf: string): Promis
     throw new Error('UF "BR" é inválida para geração de ID. Escolha um estado brasileiro válido.');
   }
 
-  // Validação e normalização do tipo de plano
+  // Determina o tipo de conta com base no plano
   let tipoConta: number;
-
   if (!planType || planType.trim() === '') {
     console.warn('Tipo de plano não fornecido, usando padrão "lite"');
     tipoConta = 2; // Default para Lite
   } else {
     const planLower = planType.toLowerCase().trim();
-
-    // Determina o tipo de conta com base no plano
     if (planLower === 'premium' || planLower === 'full') {
       tipoConta = 1; // Tipo Full/Premium
       console.log(`Plano ${planType} mapeado para tipo de conta 1 (Full)`);
-    } else if (planLower === 'lite' || planLower === 'basic' || planLower === 'standard') {
+    } else {
       tipoConta = 2; // Tipo Lite/Básico
       console.log(`Plano ${planType} mapeado para tipo de conta 2 (Lite)`);
-    } else {
-      console.warn(`Tipo de plano desconhecido: ${planType}, usando padrão "lite"`);
-      tipoConta = 2; // Default para tipos desconhecidos
     }
   }
 

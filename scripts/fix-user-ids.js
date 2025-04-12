@@ -1,6 +1,6 @@
 /**
  * Script para corrigir IDs de usuários no banco de dados
- * Este script verifica todos os perfis sem um ID válido e gera novos IDs automaticamente
+ * Este script verifica todos os perfis sem um ID válido e gera novos IDs sequenciais
  */
 
 const { createClient } = require('@supabase/supabase-js');
@@ -27,90 +27,49 @@ function isValidUserId(id) {
 }
 
 /**
- * Gera um ID de usuário com o formato correto
+ * Executa a migração de todos os IDs para o novo formato sequencial
  */
-async function generateUserId(uf, tipoConta) {
-  // Validação rigorosa da UF
-  if (!uf || uf.length !== 2) {
-    console.error('UF inválida fornecida:', uf);
-    throw new Error('UF inválida para geração de ID. A UF é obrigatória.');
-  } else if (uf === 'BR') {
-    console.error('UF "BR" é inválida para geração de ID');
-    throw new Error('UF "BR" é inválida para geração de ID. Escolha um estado brasileiro válido.');
-  }
-
-  uf = uf.toUpperCase();
-
-  // Obtém o ano/mês atual
-  const dataAtual = new Date();
-  const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
+async function migrateAllUserIds() {
+  console.log('Iniciando migração de IDs para o novo formato sequencial...');
 
   try {
-    // Obter o último ID da tabela de controle
-    const { data, error } = await supabase
-      .from('user_id_control')
-      .select('*')
-      .single();
+    // Chamar a função SQL que faz a migração completa
+    const { data, error } = await supabase.rpc('migrate_to_sequential_user_ids');
 
-    if (error && error.code !== 'PGRST116') {
-      console.error("Erro ao buscar controle de ID:", error);
-      return fallbackGenerateId(uf, tipoConta, anoMes);
+    if (error) {
+      console.error('Erro ao executar migração de IDs:', error);
+      return;
     }
 
-    let nextId = 1;
+    console.log('Resultado da migração:', data);
 
-    if (data) {
-      // Incrementa o contador
-      nextId = data.last_id + 1;
-      console.log(`Incrementando contador de ID para: ${nextId}`);
+    // Verificar se ainda existem perfis sem ID válido
+    const { data: invalidProfiles, error: checkError } = await supabase
+      .from('profiles')
+      .select('id, user_id, email, state')
+      .filter('user_id', 'is', null)
+      .or('user_id.eq.,user_id.not.match.^[A-Z]{2}\\d{4}[1-2]\\d{6}$');
 
-      // Atualiza o contador no banco de dados de forma atômica
-      const { error: updateError } = await supabase
-        .from('user_id_control')
-        .update({ 
-          last_id: nextId,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', data.id);
+    if (checkError) {
+      console.error('Erro ao verificar perfis inválidos:', checkError);
+      return;
+    }
 
-      if (updateError) {
-        console.error("Erro ao atualizar contador:", updateError);
-        return fallbackGenerateId(uf, tipoConta, anoMes);
+    if (invalidProfiles && invalidProfiles.length > 0) {
+      console.log(`Ainda existem ${invalidProfiles.length} perfis com IDs inválidos ou faltando:`);
+
+      for (const profile of invalidProfiles) {
+        console.log(`- Perfil ID: ${profile.id}, Email: ${profile.email || 'N/A'}, Estado: ${profile.state || 'N/A'}, User ID: ${profile.user_id || 'N/A'}`);
       }
+
+      console.log('Estes perfis precisam ter seus estados (UF) corrigidos manualmente antes de gerar IDs válidos.');
     } else {
-      // Cria um novo registro de controle
-      console.log("Criando novo controle de ID, começando com 1");
-      const { error: insertError } = await supabase
-        .from('user_id_control')
-        .insert([{ 
-          last_id: 1,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }]);
-
-      if (insertError) {
-        console.error("Erro ao criar contador:", insertError);
-        return fallbackGenerateId(uf, tipoConta, anoMes);
-      }
+      console.log('Todos os perfis agora possuem IDs válidos no formato sequencial!');
     }
-
-    // Gera o ID completo com formato garantido
-    const userId = `${uf}${anoMes}${tipoConta}${nextId.toString().padStart(6, '0')}`;
-    console.log(`ID gerado: ${userId} (UF=${uf}, AnoMes=${anoMes}, TipoConta=${tipoConta}, Sequencial=${nextId})`);
-    return userId;
 
   } catch (error) {
-    console.error("Erro inesperado:", error);
-    return fallbackGenerateId(uf, tipoConta, anoMes);
+    console.error('Erro inesperado durante a migração:', error);
   }
-}
-
-/**
- * Método de fallback para gerar ID quando o banco de dados falha
- */
-function fallbackGenerateId(uf, tipoConta, anoMes) {
-  const timestamp = Date.now();
-  return `${uf}${anoMes}${tipoConta}${timestamp.toString().slice(-6)}`;
 }
 
 /**
@@ -128,106 +87,66 @@ async function executeSql(sql) {
 }
 
 /**
- * Função principal para corrigir IDs de usuário
+ * Verifica e cria a nova estrutura de controle de sequencial
  */
-async function fixUserIds() {
-  console.log('Iniciando correção de IDs de usuários...');
+async function setupSequenceControl() {
+  console.log('Verificando estrutura de controle de sequencial...');
 
   try {
-    // Buscar todos os perfis sem ID válido
-    const { data: profiles, error } = await supabase
-      .from('profiles')
-      .select('*');
+    // Verificar se a tabela de controle de sequência existe
+    const tableCheck = `
+      SELECT EXISTS (
+        SELECT FROM pg_tables 
+        WHERE schemaname = 'public' 
+        AND tablename = 'user_id_sequence_control'
+      );
+    `;
 
-    if (error) {
-      console.error('Erro ao buscar perfis:', error);
-      return;
-    }
+    const { data: tableExists, error: tableError } = await supabase.rpc('execute_sql', { 
+      sql_query: tableCheck 
+    });
 
-    console.log(`Encontrados ${profiles.length} perfis para análise.`);
+    if (tableError) {
+      console.error('Erro ao verificar tabela de controle:', tableError);
 
-    // Contador de perfis atualizados
-    let updatedCount = 0;
+      // Tentar criar a estrutura completa via arquivo de migração
+      console.log('Tentando aplicar migração via arquivo...');
 
-    // Processar cada perfil
-    for (const profile of profiles) {
-      // Verifica se o ID atual é válido
-      if (!profile.user_id || !isValidUserId(profile.user_id)) {
-        console.log(`Perfil ${profile.id} (${profile.username || profile.email || 'sem nome'}) não tem ID válido.`);
+      // Esta chamada depende da estrutura real do seu projeto
+      const { error: migrationError } = await supabase.rpc('apply_migration', { 
+        migration_name: '20240815000000_user_id_sequential_control.sql'
+      });
 
-        // Determinar o tipo de conta
-        const tipoConta = profile.plan_type?.toLowerCase() === 'full' || 
-                        profile.plan_type?.toLowerCase() === 'premium' ? 1 : 2;
-
-        // Determinar a UF
-        let uf = profile.state;
-        if (!uf || uf.length !== 2) {
-          console.log(`Perfil ${profile.id} tem UF inválida ou não fornecida`);
-          
-          // Se temos acesso ao email do usuário, podemos notificá-lo para atualizar seu perfil
-          if (profile.email) {
-            console.log(`[AÇÃO NECESSÁRIA] O usuário ${profile.email} precisa atualizar seu estado no perfil`);
-            
-            // Aqui poderíamos adicionar código para enviar um email de notificação ao usuário
-            
-            // Por enquanto, vamos pular este perfil e não gerar um ID
-            console.log(`Pulando geração de ID para perfil ${profile.id} (${profile.email}) - UF inválida`);
-            continue;
-          } else {
-            console.log(`Não foi possível determinar um estado válido para o perfil ${profile.id}`);
-            continue;
-          }
-        } else if (uf === 'BR') {
-          console.log(`Perfil ${profile.id} tem UF "BR" que é inválida`);
-          
-          // Se temos acesso ao email do usuário, podemos notificá-lo para atualizar seu perfil
-          if (profile.email) {
-            console.log(`[AÇÃO NECESSÁRIA] O usuário ${profile.email} precisa atualizar seu estado no perfil`);
-            continue;
-          } else {
-            console.log(`Não foi possível determinar um estado válido para o perfil ${profile.id}`);
-            continue;
-          }
-        } else {
-          uf = uf.toUpperCase(); // Garantir que esteja em maiúsculas
-        }
-        console.log(`Usando UF: ${uf} para perfil ${profile.id}`);
-
-        // Gerar novo ID
-        const newId = await generateUserId(uf, tipoConta);
-
-        // Atualizar o perfil
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ 
-            user_id: newId,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', profile.id);
-
-        if (updateError) {
-          console.error(`Erro ao atualizar perfil ${profile.id}:`, updateError);
-        } else {
-          console.log(`Perfil ${profile.id} atualizado com sucesso. Novo ID: ${newId}`);
-          updatedCount++;
-        }
+      if (migrationError) {
+        console.error('Falha ao aplicar migração automaticamente:', migrationError);
+        console.log('Execute a migração manualmente via painel do Supabase');
+      } else {
+        console.log('Migração aplicada com sucesso!');
       }
+    } else {
+      console.log('Estrutura de controle de sequencial já está configurada.');
     }
-
-    console.log(`Processo finalizado. ${updatedCount} perfis foram atualizados.`);
 
   } catch (error) {
-    console.error('Erro ao executar correção de IDs:', error);
+    console.error('Erro ao configurar controle de sequencial:', error);
   }
 }
 
-// Executar a função principal
-fixUserIds()
-  .then(() => {
+// Executar as funções principais
+async function main() {
+  try {
+    // 1. Verificar e configurar estrutura
+    await setupSequenceControl();
+
+    // 2. Migrar todos os IDs existentes
+    await migrateAllUserIds();
+
     console.log('Script finalizado com sucesso.');
     process.exit(0);
-  })
-  .catch(error => {
+  } catch (error) {
     console.error('Erro inesperado no script:', error);
     process.exit(1);
-  });
+  }
+}
+
+main();
