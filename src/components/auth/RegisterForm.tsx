@@ -420,13 +420,13 @@ export function RegisterForm() {
           .select('username')
           .eq('username', formData.username)
           .single();
-          
+
         if (existingUser) {
           setError("Este nome de usuário já está em uso. Por favor, escolha outro.");
           setLoading(false);
           return;
         }
-        
+
         // Armazenar os dados do formulário no localStorage para recuperação posterior
         try {
           localStorage.setItem('registrationFormData', JSON.stringify({
@@ -437,7 +437,7 @@ export function RegisterForm() {
         } catch (e) {
           console.warn('Erro ao salvar dados no localStorage:', e);
         }
-        
+
         // Tente registrar com o Supabase Auth
         const { data, error } = await supabase.auth.signUp({
           email: formData.email,
@@ -808,15 +808,15 @@ export function RegisterForm() {
                         onChange={(e) => {
                           // Remover espaços e converter para minúsculas
                           const cleanedValue = e.target.value.toLowerCase().replace(/\s+/g, '');
-                          
+
                           // Permitir apenas letras minúsculas, números e sublinhados
                           const validValue = cleanedValue.replace(/[^a-z0-9_]/g, '');
-                          
+
                           setFormData((prev) => ({
                             ...prev,
                             username: validValue,
                           }));
-                          
+
                           // Verificar duplicatas após pausa na digitação
                           if (validValue) {
                             clearTimeout(window.usernameCheckTimeout);
@@ -827,7 +827,7 @@ export function RegisterForm() {
                                   .select('username')
                                   .eq('username', validValue)
                                   .single();
-                                
+
                                 if (data && !error) {
                                   setError("Este nome de usuário já está em uso. Por favor, escolha outro.");
                                 } else {

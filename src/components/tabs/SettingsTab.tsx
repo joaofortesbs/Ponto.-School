@@ -506,9 +506,11 @@ export default function SettingsTab({
                       </div>
                       <div>
                         <h6 className="text-[#29335C] dark:text-white font-medium">
-                          {userProfile?.plan_type === "premium"
-                            ? "Plano Premium"
-                            : "Plano Lite"}
+                          {userProfile?.plan_type === "full" 
+                            ? "Plano Full" 
+                            : userProfile?.plan_type === "premium" 
+                              ? "Plano Premium" 
+                              : "Plano Lite"}
                         </h6>
                         <p className="text-xs text-[#64748B] dark:text-white/60">
                           Renovação em 15/07/2024

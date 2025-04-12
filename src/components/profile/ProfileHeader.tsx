@@ -90,7 +90,7 @@ export default function ProfileHeader({
       let bestUsername = null;
       let bestDisplayName = null;
       let sourceOfUsername = 'nenhuma';
-      
+
       // 1. Priorizar o username do perfil no banco (fonte primária)
       if (isUsernameValid(userProfile?.username)) {
         bestUsername = userProfile.username;
@@ -145,24 +145,24 @@ export default function ProfileHeader({
         // Atualizar localStorage e sessionStorage para garantir consistência
         localStorage.setItem('username', bestUsername);
         try { sessionStorage.setItem('username', bestUsername); } catch(e) {}
-        
+
         // Atualizar estado local para exibição imediata
         setDisplayName(bestDisplayName);
-        
+
         // Verificar se o perfil precisa ser atualizado
         if (userProfile && 
             (userProfile.username !== bestUsername || 
              userProfile.display_name !== bestDisplayName)) {
-          
+
           console.log("Atualizando perfil com username e display_name definidos");
-          
+
           // Atualizar o perfil no Supabase
           const updateResult = await profileService.updateUserProfile({
             username: bestUsername,
             display_name: bestDisplayName,
             updated_at: new Date().toISOString()
           });
-          
+
           if (updateResult) {
             console.log("Perfil atualizado com sucesso:", updateResult);
             // Notificar outros componentes sobre a atualização
@@ -171,7 +171,7 @@ export default function ProfileHeader({
             }));
           }
         }
-        
+
         // Disparar evento global para outros componentes saberem do username
         if (!window.usernameSyncEvent) {
           window.usernameSyncEvent = true;
@@ -185,7 +185,7 @@ export default function ProfileHeader({
       console.error("Erro ao sincronizar username com cabeçalho:", error);
     }
   };
-  
+
   // Declaração global para rastrear se o evento já foi disparado
   declare global {
     interface Window {
@@ -1095,10 +1095,10 @@ export default function ProfileHeader({
             // Busca um nome de usuário válido em todas as fontes disponíveis
             // Primeiro tentar obter do email (primeiro segmento do email como fallback universal)
             const emailUsername = userProfile?.email ? userProfile.email.split('@')[0] : null;
-            
+
             // Nome de usuário com prioridade de fontes e validação
             let usernameToDisplay;
-            
+
             // 1. Verificar username do perfil (fonte definitiva)
             if (isValidUsername(userProfile?.username)) {
               usernameToDisplay = userProfile?.username;
@@ -1106,7 +1106,7 @@ export default function ProfileHeader({
             // 2. Verificar username do localStorage (usado pelo header)
             else if (isValidUsername(headerUsername)) {
               usernameToDisplay = headerUsername;
-              
+
               // Se temos username válido no localStorage mas não no perfil, atualizar o perfil
               if (userProfile && userProfile.id) {
                 setTimeout(() => {
@@ -1124,11 +1124,11 @@ export default function ProfileHeader({
             // 4. Usar email como fonte alternativa (muito confiável)
             else if (isValidUsername(emailUsername)) {
               usernameToDisplay = emailUsername;
-              
+
               // Salvar no localStorage e atualizar perfil
               if (emailUsername) {
                 localStorage.setItem('username', emailUsername);
-                
+
                 if (userProfile && userProfile.id) {
                   setTimeout(() => {
                     profileService.updateUserProfile({
@@ -1143,10 +1143,10 @@ export default function ProfileHeader({
             else if (userProfile?.user_id) {
               const generatedUsername = `user_${userProfile.user_id.substring(userProfile.user_id.length - 6)}`;
               usernameToDisplay = generatedUsername;
-              
+
               // Salvar para uso futuro
               localStorage.setItem('username', generatedUsername);
-              
+
               if (userProfile && userProfile.id) {
                 setTimeout(() => {
                   profileService.updateUserProfile({
@@ -1163,7 +1163,7 @@ export default function ProfileHeader({
               const seedValue = date.getFullYear() + date.getMonth() + date.getDate();
               const generatedUsername = `user_${seedValue}`;
               usernameToDisplay = generatedUsername;
-              
+
               // Salvar para uso futuro
               localStorage.setItem('username', generatedUsername);
             }
@@ -1178,7 +1178,7 @@ export default function ProfileHeader({
                                   userProfile?.display_name || 
                                   localStorage.getItem('userFirstName') || 
                                   ''; 
-                  
+
                   return (
                     <>
                       {firstName} <span className="text-gray-400 dark:text-gray-400">|</span> <span className="text-[#FF6B00]">@{usernameToDisplay}</span>
@@ -1215,7 +1215,11 @@ export default function ProfileHeader({
         >
           <span className="bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white text-xs font-medium px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm hover:shadow hover:shadow-[#FF6B00]/20 transition-all duration-300 cursor-pointer">
             <Diamond className="h-3.5 w-3.5" />
-            {userProfile?.plan_type === "premium" ? "Plano Premium" : "Plano Lite"}
+            {userProfile?.plan_type === "full" 
+                ? "Plano Full" 
+                : userProfile?.plan_type === "premium" 
+                  ? "Plano Premium" 
+                  : "Plano Lite"}
           </span>
         </motion.div>
 
