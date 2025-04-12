@@ -100,6 +100,12 @@ export default function ProfileHeader({
           // Atualizar o perfil com esse nome de usuário
           profileService.updateUserProfile({
             username: session.user.user_metadata.username
+          }).then(updatedProfile => {
+            if (updatedProfile) {
+              console.log("Nome de usuário atualizado com sucesso:", updatedProfile.username);
+              // Recarregar perfil após atualização para garantir que os dados estejam atualizados
+              loadProfile();
+            }
           });
         }
         
@@ -639,7 +645,7 @@ export default function ProfileHeader({
         >
           {(() => {
             // Informações para depuração
-            console.log("Perfil carregado:", {
+            console.log("Perfil carregado para exibição:", {
               displayName,
               profile_display_name: userProfile?.display_name,
               profile_full_name: userProfile?.full_name,
@@ -662,8 +668,30 @@ export default function ProfileHeader({
               }
             }
             
-            // Obter o nome de usuário cadastrado
-            const username = userProfile?.username || '';
+            // Obter o nome de usuário cadastrado na tela de registro
+            // Verificar em várias fontes possíveis para garantir que pegamos o username correto
+            let username = '';
+            
+            // Prioridade 1: Username no objeto userProfile (vem diretamente do banco)
+            if (userProfile?.username) {
+              username = userProfile.username;
+              console.log("Username encontrado no perfil:", username);
+            } 
+            // Prioridade 2: Tentar recuperar do localStorage (se disponível)
+            else {
+              try {
+                const savedFormData = localStorage.getItem('registrationFormData');
+                if (savedFormData) {
+                  const parsedData = JSON.parse(savedFormData);
+                  if (parsedData.username) {
+                    username = parsedData.username;
+                    console.log("Username recuperado do localStorage:", username);
+                  }
+                }
+              } catch (e) {
+                console.error("Erro ao acessar localStorage:", e);
+              }
+            }
             
             // Criando o texto de exibição com o @username como foi cadastrado na tela de registro
             return `${firstName} | @${username || "usuário"}`;

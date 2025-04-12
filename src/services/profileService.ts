@@ -91,6 +91,48 @@ class ProfileService {
 
       if (data) {
         console.log('getCurrentUserProfile: Perfil encontrado:', data);
+        
+        // Verificar se o perfil tem username. Se não tiver, tentar recuperar de outras fontes
+        if (!data.username) {
+          console.log('Perfil não tem username. Buscando de outras fontes...');
+          
+          // Verificar se existe no localStorage (salvo durante o registro)
+          try {
+            const savedFormData = localStorage.getItem('registrationFormData');
+            if (savedFormData) {
+              const parsedData = JSON.parse(savedFormData);
+              if (parsedData.username) {
+                console.log('Username encontrado no localStorage:', parsedData.username);
+                
+                // Atualizar o perfil com o username encontrado
+                await this.updateUserProfile({
+                  id: data.id,
+                  username: parsedData.username
+                });
+                
+                // Atualizar o objeto data para a resposta
+                data.username = parsedData.username;
+              }
+            }
+          } catch (e) {
+            console.error('Erro ao acessar localStorage:', e);
+          }
+          
+          // Verificar nos metadados da sessão
+          if (session.session.user.user_metadata?.username) {
+            console.log('Username encontrado nos metadados da sessão:', session.session.user.user_metadata.username);
+            
+            // Atualizar o perfil com o username encontrado
+            await this.updateUserProfile({
+              id: data.id,
+              username: session.session.user.user_metadata.username
+            });
+            
+            // Atualizar o objeto data para a resposta
+            data.username = session.session.user.user_metadata.username;
+          }
+        }
+        
         return data as UserProfile;
       }
 
