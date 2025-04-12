@@ -67,6 +67,8 @@ export function SidebarNav({
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [firstName, setFirstName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -110,6 +112,15 @@ export function SidebarNav({
               // Também salvar no localStorage para uso em outros componentes
               localStorage.setItem('userAvatarUrl', data.avatar_url);
             }
+            
+            // Extrair o primeiro nome do usuário para a saudação
+            if (data.full_name) {
+              setFirstName(data.full_name.split(' ')[0]);
+            } else if (data.display_name) {
+              setFirstName(data.display_name.split(' ')[0]);
+            } else if (data.username) {
+              setFirstName(data.username);
+            }
           }
         }
       } catch (error) {
@@ -126,14 +137,83 @@ export function SidebarNav({
     fileInputRef.current?.click();
   };
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setProfileImage(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        setIsUploading(true);
+        // Exibir a prévia da imagem imediatamente para feedback
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setProfileImage(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+
+        // Upload da imagem para o Supabase Storage
+        const fileExt = file.name.split('.').pop();
+        const fileName = `avatar-${Date.now()}.${fileExt}`;
+        const filePath = `avatars/${fileName}`;
+
+        // Fazer upload para o storage do Supabase
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('profile-images')
+          .upload(filePath, file);
+
+        if (uploadError) {
+          console.error('Erro ao fazer upload da imagem:', uploadError);
+          throw new Error(uploadError.message);
+        }
+
+        // Obter a URL pública da imagem
+        const { data: publicUrlData } = supabase.storage
+          .from('profile-images')
+          .getPublicUrl(filePath);
+
+        if (!publicUrlData.publicUrl) {
+          throw new Error('Não foi possível obter a URL pública da imagem');
+        }
+
+        // Atualizar o perfil do usuário com a URL da imagem
+        const { data: currentUser } = await supabase.auth.getUser();
+        if (!currentUser.user) {
+          throw new Error('Usuário não autenticado');
+        }
+
+        const { data: updateData, error: updateError } = await supabase
+          .from('profiles')
+          .update({ 
+            avatar_url: publicUrlData.publicUrl,
+            updated_at: new Date().toISOString()
+          })
+          .eq('email', currentUser.user.email)
+          .select()
+          .single();
+
+        if (updateError) {
+          console.error('Erro ao atualizar perfil com avatar:', updateError);
+          throw new Error(updateError.message);
+        }
+
+        // Atualizar o estado
+        setProfileImage(publicUrlData.publicUrl);
+        
+        // Salvar também no localStorage para uso em outros componentes
+        try {
+          localStorage.setItem('userAvatarUrl', publicUrlData.publicUrl);
+          // Disparar evento para outros componentes saberem que o avatar foi atualizado
+          document.dispatchEvent(new CustomEvent('userAvatarUpdated', { 
+            detail: { url: publicUrlData.publicUrl } 
+          }));
+        } catch (e) {
+          console.warn("Erro ao salvar avatar no localStorage", e);
+        }
+
+        console.log('Avatar atualizado com sucesso!');
+      } catch (error) {
+        console.error('Erro ao processar upload de avatar:', error);
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
@@ -391,10 +471,14 @@ export function SidebarNav({
                 className="w-full h-full object-cover rounded-full"
               />
               <div
-                className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                className="absolute inset-0 bg-black/50 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center"
                 onClick={handleImageUploadClick}
               >
-                <Upload className="h-5 w-5 text-white" />
+                {isUploading ? (
+                  <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <Upload className="h-5 w-5 text-white" />
+                )}
               </div>
               <input
                 type="file"
@@ -410,7 +494,7 @@ export function SidebarNav({
           <div className="text-[#001427] dark:text-white text-center">
             <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
               <span className="mr-1">👋</span> Olá{" "}
-              {userProfile?.full_name?.split(' ')[0] || userProfile?.display_name || userProfile?.username || "Usuário"}
+              {firstName || "Usuário"}
             </h3>
             <div className="flex flex-col items-center mt-1">
               <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
