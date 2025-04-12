@@ -749,15 +749,15 @@ export default function ProfileHeader({
               profile_username: userProfile?.username
             });
 
-            // Obter o nome de usuário para exibição - este é o mesmo nome que aparece no cabeçalho
-            const headerUsername = userProfile?.username || '';
+            // Obter o nome de usuário do perfil
+            const profileUsername = userProfile?.username || '';
             
             // Obter o nome para a parte principal da exibição
             let displayedName = '';
             
             // Prioridade de exibição: username > display_name > full_name > fallback
-            if (headerUsername) {
-              displayedName = headerUsername;
+            if (profileUsername) {
+              displayedName = profileUsername;
             } else if (userProfile?.display_name) {
               displayedName = userProfile.display_name;
             } else if (userProfile?.full_name) {
@@ -771,7 +771,7 @@ export default function ProfileHeader({
             const storedUsername = localStorage.getItem('username');
             
             console.log("Dados do perfil para exibição de username:", {
-              headerUsername: headerUsername,
+              profileUsername: profileUsername,
               storedUsername: storedUsername,
               displayedName: displayedName,
               profile_username: userProfile?.username,
