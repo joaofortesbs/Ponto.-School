@@ -53,7 +53,7 @@ export default function ContactInfo({
   }, []);
 
   return (
-    <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-6 shadow-sm w-full h-[332px] overflow-hidden backdrop-blur-sm bg-gradient-to-br from-white to-white/90 dark:from-[#0A2540] dark:to-[#0A2540]/95">
+    <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-6 shadow-sm w-full h-[420px] overflow-hidden backdrop-blur-sm bg-gradient-to-br from-white to-white/90 dark:from-[#0A2540] dark:to-[#0A2540]/95">
       <motion.div 
         className="flex justify-between items-center mb-5"
         initial={{ opacity: 0, y: 5 }}
