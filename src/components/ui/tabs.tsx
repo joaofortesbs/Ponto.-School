@@ -35,8 +35,8 @@ const TabsTrigger = React.forwardRef<
     )}
     {...props}
   >
-    {/* Indicator para abas ativas */}
-    <TabsPrimitive.Indicator className="absolute inset-0 z-10">
+    {/* Indicador para abas ativas */}
+    <div className="absolute inset-0 z-10 data-[state=active]:block hidden">
       <motion.div 
         layoutId="activeTab"
         className="absolute inset-0 bg-gradient-to-r from-[#FF6B00] to-[#FF8736] rounded-md shadow-[0_0_15px_rgba(255,107,0,0.4)]"
@@ -45,7 +45,7 @@ const TabsTrigger = React.forwardRef<
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2, ease: "easeInOut" }}
       />
-    </TabsPrimitive.Indicator>
+    </div>
     
     {/* Efeito de brilho ao passar o mouse */}
     <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out" />
