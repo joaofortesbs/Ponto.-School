@@ -1,0 +1,170 @@
+[plugin:vite:react-swc] × cannot reassign to a variable declared with `const`
+     ╭─[/home/runner/workspace/src/components/profile/ProfileHeader.tsx:281:1]
+ 281 │       const user = sessionData.session.user;
+ 282 │       const fileExt = file.name.split('.').pop();
+ 283 │       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+ 284 │       const filePath = `avatars/${fileName}`;
+     ·             ────┬───
+     ·                 ╰── const variable was declared here
+ 285 │ 
+ 286 │       // Comprimir a imagem antes do upload (opcional, para melhor performance)
+ 287 │       let fileToUpload = file;
+ 288 │       if (file.size > 1000000) { // Se for maior que 1MB
+ 289 │         const canvas = document.createElement('canvas');
+ 290 │         const img = new Image();
+ 291 │         
+ 292 │         const loadImage = new Promise<File>((resolve) => {
+ 293 │           img.onload = () => {
+ 294 │             // Calcular novo tamanho mantendo a proporção
+ 295 │             let width = img.width;
+ 296 │             let height = img.height;
+ 297 │             const maxSize = 800; // Tamanho máximo para qualquer dimensão
+ 298 │             
+ 299 │             if (width > height && width > maxSize) {
+ 300 │               height = (height / width) * maxSize;
+ 301 │               width = maxSize;
+ 302 │             } else if (height > maxSize) {
+ 303 │               width = (width / height) * maxSize;
+ 304 │               height = maxSize;
+ 305 │             }
+ 306 │             
+ 307 │             canvas.width = width;
+ 308 │             canvas.height = height;
+ 309 │             const ctx = canvas.getContext('2d');
+ 310 │             ctx?.drawImage(img, 0, 0, width, height);
+ 311 │             
+ 312 │             canvas.toBlob((blob) => {
+ 313 │               if (blob) {
+ 314 │                 const optimizedFile = new File([blob], file.name, { 
+ 315 │                   type: 'image/jpeg', 
+ 316 │                   lastModified: Date.now() 
+ 317 │                 });
+ 318 │                 resolve(optimizedFile);
+ 319 │               } else {
+ 320 │                 resolve(file); // Fallback para arquivo original
+ 321 │               }
+ 322 │             }, 'image/jpeg', 0.85);
+ 323 │           };
+ 324 │           img.onerror = () => resolve(file); // Fallback em caso de erro
+ 325 │         });
+ 326 │         
+ 327 │         img.src = URL.createObjectURL(file);
+ 328 │         fileToUpload = await loadImage;
+ 329 │       }
+ 330 │ 
+ 331 │       // Upload para o storage
+ 332 │       const { error: uploadError } = await supabase.storage
+ 333 │         .from('profiles')
+ 334 │         .upload(filePath, fileToUpload, {
+ 335 │           cacheControl: '3600',
+ 336 │           upsert: true
+ 337 │         });
+ 338 │ 
+ 339 │       if (uploadError) {
+ 340 │         if (uploadError.message.includes('The resource already exists')) {
+ 341 │           // Se o arquivo já existe, gerar um novo nome e tentar novamente
+ 342 │           const newFileName = `${user.id}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+ 343 │           const newFilePath = `avatars/${newFileName}`;
+ 344 │           
+ 345 │           const { error: retryError } = await supabase.storage
+ 346 │             .from('profiles')
+ 347 │             .upload(newFilePath, fileToUpload, {
+ 348 │               cacheControl: '3600',
+ 349 │               upsert: true
+ 350 │             });
+ 351 │             
+ 352 │           if (retryError) throw retryError;
+ 353 │           
+ 354 │           // Atualizar o caminho do arquivo
+ 355 │           filePath = newFilePath;
+     ·           ────┬───
+     ·               ╰── cannot reassign
+ 356 │         } else {
+ 357 │           throw uploadError;
+ 358 │         }
+     ╰────
+
+  × cannot reassign to a variable declared with `const`
+     ╭─[/home/runner/workspace/src/components/profile/ProfileHeader.tsx:423:1]
+ 423 │       const user = sessionData.session.user;
+ 424 │       const fileExt = file.name.split('.').pop();
+ 425 │       const fileName = `${user.id}-cover-${Date.now()}.${fileExt}`;
+ 426 │       const filePath = `covers/${fileName}`;
+     ·             ────┬───
+     ·                 ╰── const variable was declared here
+ 427 │ 
+ 428 │       // Comprimir a imagem antes do upload (opcional, para melhor performance)
+ 429 │       let fileToUpload = file;
+ 430 │       if (file.size > 1500000) { // Se for maior que 1.5MB
+ 431 │         const canvas = document.createElement('canvas');
+ 432 │         const img = new Image();
+ 433 │         
+ 434 │         const loadImage = new Promise<File>((resolve) => {
+ 435 │           img.onload = () => {
+ 436 │             // Calcular novo tamanho mantendo a proporção
+ 437 │             let width = img.width;
+ 438 │             let height = img.height;
+ 439 │             
+ 440 │             // Para imagens de capa, manter a largura maior
+ 441 │             const maxWidth = 1200;
+ 442 │             if (width > maxWidth) {
+ 443 │               height = (height / width) * maxWidth;
+ 444 │               width = maxWidth;
+ 445 │             }
+ 446 │             
+ 447 │             canvas.width = width;
+ 448 │             canvas.height = height;
+ 449 │             const ctx = canvas.getContext('2d');
+ 450 │             ctx?.drawImage(img, 0, 0, width, height);
+ 451 │             
+ 452 │             canvas.toBlob((blob) => {
+ 453 │               if (blob) {
+ 454 │                 const optimizedFile = new File([blob], file.name, { 
+ 455 │                   type: 'image/jpeg', 
+ 456 │                   lastModified: Date.now() 
+ 457 │                 });
+ 458 │                 resolve(optimizedFile);
+ 459 │               } else {
+ 460 │                 resolve(file); // Fallback para arquivo original
+ 461 │               }
+ 462 │             }, 'image/jpeg', 0.8);
+ 463 │           };
+ 464 │           img.onerror = () => resolve(file); // Fallback em caso de erro
+ 465 │         });
+ 466 │         
+ 467 │         img.src = URL.createObjectURL(file);
+ 468 │         fileToUpload = await loadImage;
+ 469 │       }
+ 470 │ 
+ 471 │       // Upload para o storage
+ 472 │       const { error: uploadError } = await supabase.storage
+ 473 │         .from('profiles')
+ 474 │         .upload(filePath, fileToUpload, {
+ 475 │           cacheControl: '3600',
+ 476 │           upsert: true
+ 477 │         });
+ 478 │ 
+ 479 │       if (uploadError) {
+ 480 │         if (uploadError.message.includes('The resource already exists')) {
+ 481 │           // Se o arquivo já existe, gerar um novo nome e tentar novamente
+ 482 │           const newFileName = `${user.id}-cover-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+ 483 │           const newFilePath = `covers/${newFileName}`;
+ 484 │           
+ 485 │           const { error: retryError } = await supabase.storage
+ 486 │             .from('profiles')
+ 487 │             .upload(newFilePath, fileToUpload, {
+ 488 │               cacheControl: '3600',
+ 489 │               upsert: true
+ 490 │             });
+ 491 │             
+ 492 │           if (retryError) throw retryError;
+ 493 │           
+ 494 │           // Atualizar o caminho do arquivo
+ 495 │           filePath = newFilePath;
+     ·           ────┬───
+     ·               ╰── cannot reassign
+ 496 │         } else {
+ 497 │           throw uploadError;
+ 498 │         }
+     ╰────
+/home/runner/workspace/src/components/profile/ProfileHeader.tsx:281:1
