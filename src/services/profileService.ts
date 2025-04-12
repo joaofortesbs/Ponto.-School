@@ -256,11 +256,13 @@ class ProfileService {
         return false;
       }
       
-      // Se já tem ID válido, não faz nada
-      if (profile.user_id && profile.user_id.length > 5) {
-        console.log('Usuário já possui um ID:', profile.user_id);
+      // Se já tem ID válido, verificar se está no formato correto
+      if (profile.user_id && isValidUserId(profile.user_id)) {
+        console.log('Usuário já possui um ID válido:', profile.user_id);
         return false; // Retorna falso pois não gerou um novo ID
       }
+      
+      console.log('Gerando novo ID para o usuário. ID atual:', profile.user_id);
       
       // Verificar se temos uma UF válida
       let uf = profile.state;
@@ -270,29 +272,83 @@ class ProfileService {
         
         // Tentar atualizar o estado do usuário para SP já que não temos um estado válido
         try {
-          await supabase
+          const { error: updateStateError } = await supabase
             .from('profiles')
             .update({ state: uf })
             .eq('id', profile.id);
+            
+          if (updateStateError) {
+            console.warn('Não foi possível atualizar o estado do usuário:', updateStateError);
+          } else {
+            console.log(`Estado do usuário atualizado para ${uf}`);
+          }
         } catch (e) {
           console.error('Erro ao atualizar estado do usuário:', e);
         }
       }
       
+      // Determinar o tipo de plano do usuário
+      let planType = profile.plan_type || '';
+      
+      // Se não tiver plano definido, verificar localStorage
+      if (!planType || planType === '') {
+        const savedPlan = localStorage.getItem('selectedPlan');
+        if (savedPlan) {
+          planType = savedPlan;
+          
+          // Atualizar o plano no perfil
+          try {
+            const { error: updatePlanError } = await supabase
+              .from('profiles')
+              .update({ plan_type: planType })
+              .eq('id', profile.id);
+              
+            if (!updatePlanError) {
+              console.log(`Plano do usuário atualizado para ${planType}`);
+            }
+          } catch (e) {
+            console.error('Erro ao atualizar plano do usuário:', e);
+          }
+        } else {
+          // Default para lite se não encontrar
+          planType = 'lite';
+        }
+      }
+      
       // Definir o tipo de conta baseado no plano
-      const tipoConta = (profile.plan_type?.toLowerCase() === 'premium' || profile.plan_type?.toLowerCase() === 'full') ? 1 : 2;
+      const tipoConta = (planType.toLowerCase() === 'premium' || planType.toLowerCase() === 'full') ? 1 : 2;
+      
+      console.log(`Gerando ID com UF=${uf}, tipoConta=${tipoConta}, plano=${planType}`);
       
       // Usar a função de geração de ID para garantir sequencial único
       let generatedId;
       try {
+        // Tentar gerar usando a função principal
         generatedId = await generateUserId(uf, tipoConta);
+        console.log('ID gerado com sucesso:', generatedId);
       } catch (error) {
         console.error('Erro ao gerar ID com função principal:', error);
+        
         // Fallback para geração local
-        const dataAtual = new Date();
-        const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
-        const sequencial = Date.now().toString().slice(-6);
-        generatedId = `${uf}${anoMes}${tipoConta}${sequencial}`;
+        try {
+          // Tentar gerar utilizando a função específica de plano
+          generatedId = await generateUserIdByPlan(planType, uf);
+          console.log('ID gerado com função de plano:', generatedId);
+        } catch (planError) {
+          console.error('Erro ao gerar ID com função de plano:', planError);
+          
+          // Último fallback: Gerar manualmente
+          const dataAtual = new Date();
+          const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
+          const sequencial = Date.now().toString().slice(-6);
+          generatedId = `${uf}${anoMes}${tipoConta}${sequencial}`;
+          console.log('ID gerado manualmente:', generatedId);
+        }
+      }
+      
+      if (!generatedId || !isValidUserId(generatedId)) {
+        console.error('ID gerado é inválido:', generatedId);
+        return false;
       }
       
       // Atualizar o perfil com o novo ID
@@ -308,18 +364,33 @@ class ProfileService {
         console.error('Erro ao atualizar perfil com novo ID:', error);
         
         // Tentar um método alternativo de atualização
-        const { error: alternativeError } = await supabase
-          .rpc('execute_sql', { 
-            sql_query: `UPDATE profiles SET user_id = '${generatedId}', updated_at = NOW() WHERE id = '${profile.id}'` 
-          });
-        
-        if (alternativeError) {
-          console.error('Erro também no método alternativo:', alternativeError);
+        try {
+          const { error: alternativeError } = await supabase
+            .rpc('execute_sql', { 
+              sql_query: `UPDATE profiles SET user_id = '${generatedId}', updated_at = NOW() WHERE id = '${profile.id}'` 
+            });
+          
+          if (alternativeError) {
+            console.error('Erro também no método alternativo:', alternativeError);
+            return false;
+          }
+        } catch (rpcError) {
+          console.error('Erro ao executar RPC:', rpcError);
           return false;
         }
       }
       
       console.log('ID gerado e atualizado com sucesso:', generatedId);
+      
+      // Atualizar o localstorage com o novo ID para uso rápido
+      try {
+        const tempProfile = JSON.parse(localStorage.getItem('tempUserProfile') || '{}');
+        tempProfile.user_id = generatedId;
+        localStorage.setItem('tempUserProfile', JSON.stringify(tempProfile));
+      } catch (storageError) {
+        console.warn('Erro ao atualizar localStorage com novo ID:', storageError);
+      }
+      
       return true; // Retorna verdadeiro pois gerou um novo ID
     } catch (error) {
       console.error('Erro ao garantir ID do usuário:', error);

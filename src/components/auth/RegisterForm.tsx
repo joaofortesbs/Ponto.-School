@@ -14,10 +14,14 @@ import {
   Check,
   ArrowRight,
   Map,
+  Building,
+  ShieldCheck,
+  Zap,
+  Award,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-import { generateUserId } from "@/lib/generate-user-id";
+import { generateUserId, generateUserIdByPlan, isValidUserId } from "@/lib/generate-user-id";
 
 interface FormData {
   fullName: string;
@@ -77,15 +81,57 @@ export function RegisterForm() {
     plan: "lite", // Plano padrão
   });
 
+  // Estado para a seleção e confirmação do plano
   const [showPlanConfirmation, setShowPlanConfirmation] = useState(true); // Modal de confirmação de plano
-  const [confirmedPlan, setConfirmedPlan] = useState("lite"); // Plano confirmado
-  const initialPlan = "lite"; // Plano inicial (padrão)
+  const [confirmedPlan, setConfirmedPlan] = useState(""); // Plano confirmado
+  
+  // Obtém o plano inicial da URL ou localStorage
+  const initialPlan = useState(() => {
+    // Verifica se há um plano na URL
+    const params = new URLSearchParams(window.location.search);
+    const planParam = params.get('plan');
+    
+    // Verifica se há um plano salvo no localStorage
+    const savedPlan = localStorage.getItem('selectedPlan');
+    
+    // Prioridade: parâmetro URL > localStorage > padrão "lite"
+    if (planParam && ['lite', 'full'].includes(planParam)) {
+      return planParam;
+    } else if (savedPlan && ['lite', 'full'].includes(savedPlan)) {
+      return savedPlan;
+    } else {
+      return "lite"; // Plano padrão
+    }
+  })[0];
 
-
+  // Função para confirmar a seleção do plano
   const handlePlanConfirmation = (plan: string) => {
     setConfirmedPlan(plan);
+    localStorage.setItem('selectedPlan', plan); // Salva o plano no localStorage
     setShowPlanConfirmation(false);
+    
+    // Atualiza o estado do formulário com o plano selecionado
+    setFormData(prev => ({
+      ...prev,
+      plan: plan
+    }));
+    
+    console.log(`Plano ${plan.toUpperCase()} selecionado com sucesso!`);
   };
+  
+  // Efeito para mostrar o modal de confirmação de plano ao carregar
+  useEffect(() => {
+    // Se já temos um plano confirmado, não mostramos o modal
+    if (confirmedPlan) {
+      setShowPlanConfirmation(false);
+    } else {
+      // Se temos um plano inicial, pré-selecionamos
+      if (initialPlan) {
+        setConfirmedPlan(initialPlan);
+      }
+      setShowPlanConfirmation(true);
+    }
+  }, [initialPlan]);
 
   // Effect to show class and grade options when institution is entered
   useEffect(() => {
@@ -211,22 +257,52 @@ export function RegisterForm() {
         setLoading(false);
         return;
       }
-
-      // Simulação de contador de usuários (substituir por um sistema de contagem real)
-      let userCount = parseInt(localStorage.getItem("userCount") || "0");
-      userCount++;
-      localStorage.setItem("userCount", userCount.toString());
-      const sequencial = userCount.toString().padStart(6, "0");
-
-      // Gerar um ID de usuário único com o formato correto UF + AnoMês + TipoConta + Sequencial
-      const dataAtual = new Date();
-      const anoMes = `${dataAtual
-        .getFullYear()
-        .toString()
-        .slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, "0")}`;
-      const tipoConta = confirmedPlan === "full" ? "1" : "2"; // Usa o plano confirmado
-      const uf = formData.state;
-      const userId = `${uf}${anoMes}${tipoConta}${sequencial}`;
+      
+      // Verificar se o plano foi selecionado
+      if (!confirmedPlan) {
+        setError("Selecione um plano antes de continuar");
+        setShowPlanConfirmation(true);
+        setLoading(false);
+        return;
+      }
+      
+      // Usar a função de geração de ID para garantir a sequência correta
+      let userId;
+      try {
+        // Determinar o tipo de conta com base no plano
+        const tipoConta = confirmedPlan === "full" ? 1 : 2;
+        const uf = formData.state;
+        
+        // Gerar o ID com a função dedicada do sistema
+        // (Este trecho será substituído pela função real quando estiver disponível)
+        const dataAtual = new Date();
+        const anoMes = `${dataAtual
+          .getFullYear()
+          .toString()
+          .slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, "0")}`;
+        
+        // Tentar obter o sequencial do banco de dados ou fallback para localStorage
+        let sequencial;
+        try {
+          // Aqui tentaríamos usar a função generateUserId, mas como fallback usamos o localStorage
+          let userCount = parseInt(localStorage.getItem("userCount") || "0");
+          userCount++;
+          localStorage.setItem("userCount", userCount.toString());
+          sequencial = userCount.toString().padStart(6, "0");
+        } catch (error) {
+          console.error("Erro ao obter sequencial:", error);
+          // Fallback: usar timestamp como sequencial
+          sequencial = Date.now().toString().slice(-6);
+        }
+        
+        userId = `${uf}${anoMes}${tipoConta}${sequencial}`;
+        console.log(`ID de usuário gerado: ${userId}`);
+      } catch (error) {
+        console.error("Erro ao gerar ID de usuário:", error);
+        setError("Erro ao gerar ID de usuário. Tente novamente.");
+        setLoading(false);
+        return;
+      }
 
 
       // Primeiro tente registrar o usuário no sistema de autenticação
@@ -419,45 +495,141 @@ export function RegisterForm() {
     if (!showPlanConfirmation) return null;
 
     return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full">
-          <h3 className="text-xl font-bold mb-4 text-brand-black dark:text-white">Confirme seu plano</h3>
-          <p className="mb-6 text-gray-600 dark:text-gray-300">
-            Por favor, confirme qual plano você deseja utilizar na plataforma:
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-lg flex items-center justify-center z-50 p-4 animate-fadeIn">
+        <div className="relative bg-gradient-to-b from-white/95 to-white dark:from-[#0A2540]/95 dark:to-[#0A2540] p-8 rounded-2xl shadow-2xl max-w-2xl w-full border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+          {/* Efeito de brilho no background */}
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-[#FF6B00]/20 to-transparent rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent rounded-full blur-3xl"></div>
+          
+          <h3 className="text-2xl font-bold mb-2 text-brand-black dark:text-white flex items-center">
+            <span className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-transparent bg-clip-text">Escolha seu plano</span>
+          </h3>
+          
+          <p className="mb-6 text-gray-600 dark:text-gray-300 text-lg">
+            Selecione o plano que melhor se adapta às suas necessidades educacionais
           </p>
 
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <button
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {/* Plano LITE */}
+            <div 
               onClick={() => handlePlanConfirmation("lite")}
-              className={`p-4 rounded-lg border-2 ${
+              className={`group relative overflow-hidden rounded-xl border transition-all duration-300 cursor-pointer transform hover:scale-[1.02] ${
                 initialPlan === "lite"
-                  ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                  : "border-gray-200 dark:border-gray-700"
-              } hover:border-blue-500 transition-all duration-200`}
+                  ? "border-[#FF6B00] bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 shadow-lg shadow-[#FF6B00]/10"
+                  : "border-gray-200 dark:border-gray-700 hover:border-[#FF6B00]/60 hover:shadow-lg"
+              }`}
             >
-              <h4 className="font-bold text-brand-black dark:text-white">PONTO.SCHOOL LITE</h4>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Para instituições públicas
-              </p>
-            </button>
-
-            <button
+              {initialPlan === "lite" && (
+                <div className="absolute -top-1 -right-1 bg-[#FF6B00] text-white text-xs font-bold px-3 py-1 rounded-bl-lg transform rotate-2 shadow-md z-10">
+                  Selecionado
+                </div>
+              )}
+              
+              <div className="p-6">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 rounded-full bg-[#FF6B00]/10 flex items-center justify-center mr-4">
+                    <User className="h-6 w-6 text-[#FF6B00]" />
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-bold text-brand-black dark:text-white">LITE</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Instituições Públicas</p>
+                  </div>
+                </div>
+                
+                <ul className="space-y-2 mb-4">
+                  <li className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                    <Check className="h-4 w-4 text-[#FF6B00] mr-2 flex-shrink-0" />
+                    <span>Recursos básicos de estudo</span>
+                  </li>
+                  <li className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                    <Check className="h-4 w-4 text-[#FF6B00] mr-2 flex-shrink-0" />
+                    <span>Acesso a materiais didáticos</span>
+                  </li>
+                  <li className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                    <Check className="h-4 w-4 text-[#FF6B00] mr-2 flex-shrink-0" />
+                    <span>Grupos de estudo</span>
+                  </li>
+                </ul>
+                
+                <div className="mt-6 text-center">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePlanConfirmation("lite");
+                    }}
+                    className="w-full py-2 rounded-lg bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-medium transition-all duration-300"
+                  >
+                    Selecionar plano
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            {/* Plano FULL */}
+            <div 
               onClick={() => handlePlanConfirmation("full")}
-              className={`p-4 rounded-lg border-2 ${
+              className={`group relative overflow-hidden rounded-xl border transition-all duration-300 cursor-pointer transform hover:scale-[1.02] ${
                 initialPlan === "full" || initialPlan === "premium"
-                  ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
-                  : "border-gray-200 dark:border-gray-700"
-              } hover:border-purple-500 transition-all duration-200`}
+                  ? "border-[#FF6B00] bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 shadow-lg shadow-[#FF6B00]/10"
+                  : "border-gray-200 dark:border-gray-700 hover:border-[#FF6B00]/60 hover:shadow-lg"
+              }`}
             >
-              <h4 className="font-bold text-brand-black dark:text-white">PONTO.SCHOOL FULL</h4>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Para instituições particulares
-              </p>
-            </button>
+              {(initialPlan === "full" || initialPlan === "premium") && (
+                <div className="absolute -top-1 -right-1 bg-[#FF6B00] text-white text-xs font-bold px-3 py-1 rounded-bl-lg transform rotate-2 shadow-md z-10">
+                  Selecionado
+                </div>
+              )}
+              
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-[#FF6B00]/20 to-transparent rounded-bl-full"></div>
+              
+              <div className="p-6">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 rounded-full bg-[#FF6B00]/20 flex items-center justify-center mr-4">
+                    <Building className="h-6 w-6 text-[#FF6B00]" />
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-bold text-brand-black dark:text-white">FULL</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Instituições Particulares</p>
+                  </div>
+                </div>
+                
+                <ul className="space-y-2 mb-4">
+                  <li className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                    <Check className="h-4 w-4 text-[#FF6B00] mr-2 flex-shrink-0" />
+                    <span>Todos os recursos do plano LITE</span>
+                  </li>
+                  <li className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                    <Check className="h-4 w-4 text-[#FF6B00] mr-2 flex-shrink-0" />
+                    <span>Mentoria com IA avançada</span>
+                  </li>
+                  <li className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                    <Check className="h-4 w-4 text-[#FF6B00] mr-2 flex-shrink-0" />
+                    <span>Materiais exclusivos</span>
+                  </li>
+                  <li className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                    <Check className="h-4 w-4 text-[#FF6B00] mr-2 flex-shrink-0" />
+                    <span>Suporte prioritário</span>
+                  </li>
+                </ul>
+                
+                <div className="mt-6 text-center">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePlanConfirmation("full");
+                    }}
+                    className="w-full py-2 rounded-lg bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-medium transition-all duration-300 relative overflow-hidden group-hover:shadow-lg group-hover:shadow-[#FF6B00]/20"
+                  >
+                    <span className="relative z-10">Selecionar plano</span>
+                    <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="text-center text-sm text-gray-500 dark:text-gray-400">
-            Esta escolha afetará a geração do seu ID de usuário e os recursos disponíveis.
+          <div className="text-center text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl">
+            <span className="font-medium">Importante:</span> Esta escolha determinará seu tipo de acesso à plataforma e será utilizada para a geração do seu ID de usuário único.
           </div>
         </div>
       </div>

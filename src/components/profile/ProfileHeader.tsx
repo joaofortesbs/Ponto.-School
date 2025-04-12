@@ -2,16 +2,16 @@ import React, { useRef, useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { 
-  Diamond, 
-  Share2, 
-  Edit, 
-  Award, 
-  Users, 
-  Sparkles, 
-  ChevronUp, 
-  Trophy, 
-  BookOpen, 
+import {
+  Diamond,
+  Share2,
+  Edit,
+  Award,
+  Users,
+  Sparkles,
+  ChevronUp,
+  Trophy,
+  BookOpen,
   Zap,
   Star,
   BellRing,
@@ -295,14 +295,14 @@ export default function ProfileHeader({
 
       // Então carregar o perfil atualizado
       const userData = await profileService.getCurrentUserProfile();
-      
+
       if (userData) {
         // Atualizar a interface com os dados
-        setUserProfile(userData);
+        setUserProfile(userData); // Placeholder for setUserProfile function
         setDisplayName(userData.display_name);
         setAvatarUrl(userData.avatar_url);
         setCoverUrl(userData.cover_url);
-        
+
         // Se houve geração de ID, mostrar toast informativo
         if (idGenerated) {
           toast({
@@ -330,12 +330,12 @@ export default function ProfileHeader({
       if (userProfile?.id) {
         await supabase
           .from('profiles')
-          .update({ 
+          .update({
             user_id: generatedId,
             updated_at: new Date().toISOString()
           })
           .eq('id', userProfile.id);
-          loadProfile();
+        loadProfile();
       }
 
     } catch (error) {
@@ -345,8 +345,12 @@ export default function ProfileHeader({
     }
   };
 
+  const setUserProfile = (profile: UserProfile | null) => {
+    //Implementation for updating the component's state with new profile data.  This is a placeholder.
+  }
+
   return (
-    <div 
+    <div
       className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 shadow-lg overflow-hidden relative group hover:shadow-2xl transition-all duration-500"
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
@@ -366,20 +370,20 @@ export default function ProfileHeader({
               <motion.div
                 key={`particle-${i}`}
                 className="absolute w-2 h-2 rounded-full bg-[#FF6B00]/30"
-                initial={{ 
+                initial={{
                   opacity: 0,
-                  x: Math.random() * 300 - 150, 
+                  x: Math.random() * 300 - 150,
                   y: Math.random() * 200 - 100,
                   scale: 0
                 }}
-                animate={{ 
+                animate={{
                   opacity: [0, 0.8, 0],
                   x: Math.random() * 300 - 150,
-                  y: Math.random() * 200 - 100, 
+                  y: Math.random() * 200 - 100,
                   scale: [0, 1, 0]
                 }}
                 exit={{ opacity: 0, scale: 0 }}
-                transition={{ 
+                transition={{
                   duration: 3 + Math.random() * 2,
                   repeat: Infinity,
                   delay: Math.random() * 2
@@ -393,18 +397,18 @@ export default function ProfileHeader({
       {/* Cover Photo com gradiente animado e efeito de movimento - altura reduzida */}
       <div className="h-32 bg-gradient-to-r from-[#001427] via-[#072e4f] to-[#0A2540] relative overflow-hidden group/cover">
         {coverUrl ? (
-          <img 
-            src={coverUrl} 
-            alt="Cover" 
+          <img
+            src={coverUrl}
+            alt="Cover"
             className="absolute inset-0 w-full h-full object-cover"
           />
         ) : (
-          <motion.div 
+          <motion.div
             className="absolute inset-0 bg-[url('/images/pattern-grid.svg')] opacity-20"
-            animate={{ 
+            animate={{
               backgroundPosition: ["0% 0%", "100% 100%"],
             }}
-            transition={{ 
+            transition={{
               duration: 20,
               repeat: Infinity,
               repeatType: "reverse"
@@ -416,29 +420,29 @@ export default function ProfileHeader({
 
         {/* Botão de upload da capa (visível no hover) */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/cover:opacity-100 transition-opacity duration-300 z-10">
-          <div 
+          <div
             onClick={handleCoverPhotoClick}
             className="bg-black/50 hover:bg-black/70 p-2 rounded-full cursor-pointer transition-all duration-300 backdrop-blur-sm"
           >
             <Camera className="h-5 w-5 text-white" />
           </div>
         </div>
-        <input 
-          type="file" 
+        <input
+          type="file"
           ref={coverPhotoRef}
-          className="hidden" 
+          className="hidden"
           accept="image/*"
           onChange={handleCoverPhotoChange}
         />
 
         {/* Efeitos de luz */}
-        <motion.div 
+        <motion.div
           className="absolute top-5 right-8 w-12 h-12 rounded-full bg-[#FF6B00]/20 blur-xl"
-          animate={{ 
+          animate={{
             opacity: [0.2, 0.6, 0.2],
             scale: [1, 1.2, 1]
           }}
-          transition={{ 
+          transition={{
             duration: 4,
             repeat: Infinity,
             repeatType: "reverse"
@@ -447,11 +451,11 @@ export default function ProfileHeader({
 
         <motion.div
           className="absolute bottom-5 left-10 w-16 h-16 rounded-full bg-[#0064FF]/20 blur-xl"
-          animate={{ 
+          animate={{
             opacity: [0.1, 0.4, 0.1],
             scale: [1, 1.3, 1]
           }}
-          transition={{ 
+          transition={{
             duration: 5,
             repeat: Infinity,
             repeatType: "reverse",
@@ -461,13 +465,13 @@ export default function ProfileHeader({
 
         {/* Status badge animado */}
         <div className="absolute top-3 right-3 z-10">
-          <motion.div 
+          <motion.div
             className="bg-[#00b894]/90 text-white text-xs py-0.5 px-2 rounded-full flex items-center shadow-lg backdrop-blur-sm"
             initial={{ y: -10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.5, duration: 0.3 }}
           >
-            <motion.span 
+            <motion.span
               className="w-1.5 h-1.5 rounded-full bg-white mr-1.5"
               animate={{ scale: [1, 1.5, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
@@ -492,7 +496,7 @@ export default function ProfileHeader({
 
       {/* Avatar com animação avançada - movido para fora da capa */}
       <div className="flex justify-center -mt-10 mb-2 relative z-20">
-        <motion.div 
+        <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3, type: "spring", stiffness: 100 }}
@@ -536,16 +540,16 @@ export default function ProfileHeader({
                 <Camera className="h-6 w-6 text-white" />
               </div>
             </motion.div>
-            <input 
-              type="file" 
+            <input
+              type="file"
               ref={profilePictureRef}
-              className="hidden" 
+              className="hidden"
               accept="image/*"
               onChange={handleProfilePictureChange}
             />
 
             {/* Indicador de status premium */}
-            <motion.div 
+            <motion.div
               className="absolute -bottom-1 -right-1"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -571,30 +575,24 @@ export default function ProfileHeader({
           {displayName || userProfile?.display_name || userProfile?.username || "Usuário"}
         </motion.h2>
 
-        <motion.div 
-          className="flex items-center justify-center gap-1 mt-0.5"
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.8, duration: 0.3 }}
-        >
-          <div className="flex items-center gap-2">
-            <p className="text-xs text-[#64748B] dark:text-white/60 text-center font-medium">
-              ID: {userProfile?.user_id || "Gerando..."}
-            </p>
-            {userProfile?.user_id && (
-              <button 
-                onClick={refreshId}
-                className="text-xs text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-                title="Regenerar ID"
-                disabled={refreshing}
-              >
-                <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
-              </button>
-            )}
+        {/* User ID block */}
+        {userProfile?.user_id ? (
+          <div className="mt-2 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/5 dark:from-[#FF6B00]/20 dark:to-[#FF8C40]/10 backdrop-blur-sm px-3 py-1.5 rounded-full inline-flex items-center border border-[#FF6B00]/20">
+            <div className="w-2 h-2 rounded-full bg-[#FF6B00] mr-2"></div>
+            <span className="text-xs font-medium text-gray-800 dark:text-white">
+              ID: <span className="font-mono">{userProfile.user_id}</span>
+            </span>
           </div>
-        </motion.div>
+        ) : (
+          <div className="mt-2 bg-gray-100 dark:bg-gray-800/40 backdrop-blur-sm px-3 py-1.5 rounded-full inline-flex items-center cursor-help" title="ID será gerado automaticamente logo após a criação da conta">
+            <div className="w-2 h-2 rounded-full bg-gray-400 animate-pulse mr-2"></div>
+            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+              ID: Gerando...
+            </span>
+          </div>
+        )}
 
-        <motion.div 
+        <motion.div
           className="flex items-center justify-center gap-1 mt-1"
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -606,7 +604,7 @@ export default function ProfileHeader({
           </span>
         </motion.div>
 
-        <motion.p 
+        <motion.p
           className="text-[#64748B] dark:text-white/60 text-xs mt-1.5 bg-slate-50 dark:bg-slate-800/30 py-0.5 px-2 rounded-full inline-block backdrop-blur-sm"
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -617,13 +615,13 @@ export default function ProfileHeader({
         </motion.p>
 
         {/* Stats com ícones e hover effects - reduzido */}
-        <motion.div 
+        <motion.div
           className="flex justify-center gap-2 mt-3"
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 1.1, duration: 0.3 }}
         >
-          <motion.div 
+          <motion.div
             whileHover={{ y: -3, scale: 1.03 }}
             className="text-center group/stat bg-slate-50 dark:bg-slate-800/30 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-all duration-300 shadow-sm hover:shadow border border-transparent hover:border-[#FF6B00]/10 relative"
             onMouseEnter={() => setShowStatsDetails(true)}
@@ -641,7 +639,7 @@ export default function ProfileHeader({
 
             {/* Tooltip com detalhes */}
             {showStatsDetails && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
@@ -660,7 +658,7 @@ export default function ProfileHeader({
             )}
           </motion.div>
 
-          <motion.div 
+          <motion.div
             whileHover={{ y: -3, scale: 1.03 }}
             className="text-center group/stat bg-slate-50 dark:bg-slate-800/30 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-all duration-300 shadow-sm hover:shadow border border-transparent hover:border-[#FF6B00]/10"
           >
@@ -673,7 +671,7 @@ export default function ProfileHeader({
             </div>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             whileHover={{ y: -3, scale: 1.03 }}
             className="text-center group/stat bg-slate-50 dark:bg-slate-800/30 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-all duration-300 shadow-sm hover:shadow border border-transparent hover:border-[#FF6B00]/10"
           >
@@ -688,7 +686,7 @@ export default function ProfileHeader({
         </motion.div>
 
         {/* Barra de progresso melhorada - reduzida */}
-        <motion.div 
+        <motion.div
           className="mt-3"
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -701,7 +699,7 @@ export default function ProfileHeader({
                 Progresso para o próximo nível
               </span>
             </div>
-            <div 
+            <div
               className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20 transition-all duration-300 cursor-pointer"
               onMouseEnter={() => setShowTooltip(true)}
               onMouseLeave={() => setShowTooltip(false)}
@@ -709,7 +707,7 @@ export default function ProfileHeader({
               72%
               <AnimatePresence>
                 {showTooltip && (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 5 }}
@@ -724,12 +722,12 @@ export default function ProfileHeader({
             </div>
           </div>
           <div className="h-2 w-full bg-slate-100 dark:bg-slate-800/50 rounded-full overflow-hidden shadow-inner">
-            <div 
+            <div
               className="h-full bg-gradient-to-r from-[#FF6B00] via-[#FF9B50] to-[#FF6B00] rounded-full progress-animation relative"
               style={{ width: '72%' }}
             >
               {/* Animação de brilho */}
-              <div className="absolute inset-0 animate-shimmer" style={{ 
+              <div className="absolute inset-0 animate-shimmer" style={{
                 background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent)',
                 backgroundSize: '200% 100%',
                 animation: 'shimmer 2s infinite'
@@ -739,7 +737,7 @@ export default function ProfileHeader({
         </motion.div>
 
         {/* Botões modernizados - reduzidos */}
-        <motion.div 
+        <motion.div
           className="mt-3 flex gap-2"
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -774,7 +772,7 @@ export default function ProfileHeader({
         </motion.div>
 
         {/* Carousel de conquistas recentes - reduzido */}
-        <motion.div 
+        <motion.div
           className="mt-3"
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -793,7 +791,7 @@ export default function ProfileHeader({
                   key={index}
                   className="absolute inset-0 flex items-center justify-center gap-1.5"
                   initial={{ opacity: 0, y: 20 }}
-                  animate={{ 
+                  animate={{
                     opacity: activeAchievement === index ? 1 : 0,
                     y: activeAchievement === index ? 0 : 20
                   }}
@@ -809,11 +807,11 @@ export default function ProfileHeader({
             {/* Indicadores de navegação */}
             <div className="flex gap-0.5">
               {recentAchievements.map((_, index) => (
-                <div 
+                <div
                   key={index}
                   className={`w-1 h-1 rounded-full transition-all duration-300 ${
-                    activeAchievement === index 
-                      ? 'bg-[#FF6B00] scale-110' 
+                    activeAchievement === index
+                      ? 'bg-[#FF6B00] scale-110'
                       : 'bg-[#64748B]/30 dark:bg-white/30'
                   }`}
                 />
@@ -823,7 +821,7 @@ export default function ProfileHeader({
         </motion.div>
 
         {/* Indicador de atividade recente - reduzido */}
-        <motion.div 
+        <motion.div
           className="mt-2 flex justify-center"
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}

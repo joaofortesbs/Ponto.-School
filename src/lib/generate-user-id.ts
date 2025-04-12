@@ -96,6 +96,10 @@ function generateFallbackUserId(uf: string, tipoConta: number, anoMes: string): 
 /**
  * Gera um ID baseado no tipo de plano usando o Supabase
  * 1 para premium/full, 2 para lite/básico
+ * 
+ * @param planType O tipo de plano (full, premium, lite, standard)
+ * @param uf A Unidade Federativa (estado) do usuário
+ * @returns Uma string contendo o ID gerado no formato UF+AnoMês+TipoConta+Sequencial(6)
  */
 export async function generateUserIdByPlan(planType: string, uf: string): Promise<string> {
   // Validação da UF - garantir que seja uma UF válida
@@ -104,7 +108,28 @@ export async function generateUserIdByPlan(planType: string, uf: string): Promis
     uf = 'SP'; // Default para São Paulo se não houver UF válida
   }
   
-  const tipoConta = planType.toLowerCase() === 'premium' || planType.toLowerCase() === 'full' ? 1 : 2;
+  // Validação e normalização do tipo de plano
+  let tipoConta: number;
+  
+  if (!planType || planType.trim() === '') {
+    console.warn('Tipo de plano não fornecido, usando padrão "lite"');
+    tipoConta = 2; // Default para Lite
+  } else {
+    const planLower = planType.toLowerCase().trim();
+    
+    // Determina o tipo de conta com base no plano
+    if (planLower === 'premium' || planLower === 'full') {
+      tipoConta = 1; // Tipo Full/Premium
+      console.log(`Plano ${planType} mapeado para tipo de conta 1 (Full)`);
+    } else if (planLower === 'lite' || planLower === 'basic' || planLower === 'standard') {
+      tipoConta = 2; // Tipo Lite/Básico
+      console.log(`Plano ${planType} mapeado para tipo de conta 2 (Lite)`);
+    } else {
+      console.warn(`Tipo de plano desconhecido: ${planType}, usando padrão "lite"`);
+      tipoConta = 2; // Default para tipos desconhecidos
+    }
+  }
+  
   return generateUserId(uf, tipoConta);
 }
 
