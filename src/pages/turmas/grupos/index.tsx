@@ -26,7 +26,7 @@ export default function GruposEstudo() {
   const studyGroups = [
     {
       id: "g1",
-      name: "Grupo de Mecânica Quântica",
+      name: "Matemática",
       members: ["Ana", "Pedro", "Você"],
       memberCount: 3,
       nextMeeting: "16/03, 18:00",

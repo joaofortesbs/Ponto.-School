@@ -32,7 +32,7 @@ import {
 const studyGroups = [
   {
     id: "g1",
-    name: "Grupo de Mecânica Quântica",
+    name: "Matemática",
     members: [
       {
         id: "m1",

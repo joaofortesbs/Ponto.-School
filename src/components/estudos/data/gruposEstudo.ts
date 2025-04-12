@@ -20,7 +20,7 @@ export const gruposEstudo: GrupoEstudo[] = [
   // Física - Mecânica Quântica Avançada (Original)
   {
     id: "fis-mecanica-quantica-avancada",
-    nome: "Mecânica Quântica Avançada",
+    nome: "Matemática",
     topico: "Mecânica Quântica",
     disciplina: "Física",
     membros: 8,
