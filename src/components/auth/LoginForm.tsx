@@ -22,7 +22,7 @@ export function LoginForm() {
     password: "",
     rememberMe: false,
   });
-  const [success, setSuccess] = useState(false); 
+  const [success, setSuccess] = useState(false); // Added success state
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -44,8 +44,9 @@ export function LoginForm() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    setSuccess(false); 
+    setSuccess(false); // Reset success on submit
 
+    // Basic field validation
     if (!formData.email || !formData.password) {
       setError("Preencha todos os campos");
       setLoading(false);
@@ -62,7 +63,7 @@ export function LoginForm() {
         if (error.message.includes("Invalid login credentials") ||
             error.message.includes("Email not confirmed")) {
           setError("Email ou senha inválidos");
-        } else if (error.status === 0) { 
+        } else if (error.status === 0) { //Improved network error handling
           setError("Erro de conexão. Verifique sua internet.");
         } else {
           setError("Erro ao fazer login: " + error.message);
@@ -74,7 +75,13 @@ export function LoginForm() {
       if (data?.user) {
         setSuccess(true);
         localStorage.setItem('auth_checked', 'true');
-        localStorage.setItem('auth_status', 'authenticated'); 
+        localStorage.setItem('auth_status', 'authenticated'); //Added to persist login status.
+
+        // Removida a lógica de armazenar timestamp de sessão
+        // para garantir que o modal de boas-vindas sempre apareça
+
+        // Não mostrar o primeiro modal de boas-vindas quando o usuário fizer login aqui
+        // Os modais serão controlados pelo App.tsx quando o usuário chegar nas páginas protegidas
 
         setTimeout(() => {
           navigate("/");
@@ -91,7 +98,7 @@ export function LoginForm() {
   };
 
   return (
-    <div className="space-y-6 relative">
+    <div className="space-y-6">
       {accountCreated && (
         <div className="bg-green-100/80 dark:bg-green-900/30 border border-green-500/70 dark:border-green-600/70 text-green-800 dark:text-green-300 p-6 rounded-lg mb-6 animate-fade-in flex items-center gap-4 shadow-md backdrop-blur-sm">
           <div className="rounded-full bg-green-200 dark:bg-green-800 p-3 flex-shrink-0">
@@ -125,9 +132,9 @@ export function LoginForm() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 relative backdrop-blur-sm border border-gray-200/20 dark:border-gray-800/20 p-6 rounded-lg shadow-md">
-        <div className="space-y-2 group animate-fade-slide-in" style={{ animationDelay: '0.1s' }}>
-          <label className="text-sm font-medium text-brand-black dark:text-white drop-shadow-sm transition-colors duration-200 group-focus-within:text-brand-primary">
+      <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-brand-black dark:text-white drop-shadow-sm">
             Usuário ou E-mail
           </label>
           <div className="relative group">
@@ -138,21 +145,21 @@ export function LoginForm() {
               value={formData.email}
               onChange={handleChange}
               placeholder="Digite seu usuário ou e-mail"
-              className="pl-10 h-11 bg-white/20 dark:bg-white/5 backdrop-blur-sm border-white/20 dark:border-white/10 focus:border-brand-primary/70 dark:focus:border-brand-primary/70 transition-all duration-300 hover:border-brand-primary/50"
+              className="pl-10 h-11 bg-white/50 dark:bg-white/5 backdrop-blur-sm border-white/20 dark:border-white/10 focus:border-brand-primary/70 dark:focus:border-brand-primary/70 transition-all duration-300 hover:border-brand-primary/50"
               required
             />
             <div className="absolute inset-0 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none border border-brand-primary/20 shadow-[0_0_10px_rgba(255,107,0,0.1)]"></div>
           </div>
         </div>
 
-        <div className="space-y-2 group animate-fade-slide-in" style={{ animationDelay: '0.2s' }}>
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-brand-black dark:text-white drop-shadow-sm transition-colors duration-200 group-focus-within:text-brand-primary">
+            <label className="text-sm font-medium text-brand-black dark:text-white drop-shadow-sm">
               Senha
             </label>
             <Button
               variant="link"
-              className="text-xs text-brand-primary hover:text-brand-primary/90 p-0 h-auto drop-shadow-sm transition-all duration-300 interactive-light"
+              className="text-xs text-brand-primary hover:text-brand-primary/90 p-0 h-auto drop-shadow-sm"
             >
               Esqueci minha senha
             </Button>
@@ -165,7 +172,7 @@ export function LoginForm() {
               value={formData.password}
               onChange={handleChange}
               placeholder="Digite sua senha"
-              className="pl-10 pr-10 h-11 bg-white/20 dark:bg-white/5 backdrop-blur-sm border-white/20 dark:border-white/10 focus:border-brand-primary/70 dark:focus:border-brand-primary/70 transition-all duration-300 hover:border-brand-primary/50"
+              className="pl-10 pr-10 h-11 bg-white/50 dark:bg-white/5 backdrop-blur-sm border-white/20 dark:border-white/10 focus:border-brand-primary/70 dark:focus:border-brand-primary/70 transition-all duration-300 hover:border-brand-primary/50"
               required
             />
             <Button
@@ -191,7 +198,7 @@ export function LoginForm() {
             name="rememberMe"
             checked={formData.rememberMe}
             onCheckedChange={(checked) =>
-              setFormData((prev) => ({ ...prev, rememberMe: checked }))
+              setFormData((prev) => ({ ...prev, rememberMe: checked === true }))
             }
           />
           <label
@@ -208,8 +215,7 @@ export function LoginForm() {
 
         <Button
           type="submit"
-          className="w-full h-11 text-base bg-brand-primary hover:bg-brand-primary/90 text-white transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-brand-primary/20 relative overflow-hidden group animate-fade-slide-in"
-          style={{ animationDelay: '0.3s' }}
+          className="w-full h-11 text-base bg-brand-primary hover:bg-brand-primary/90 text-white transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-brand-primary/20 relative overflow-hidden group"
           disabled={loading}
         >
           <span className="relative z-10">{loading ? "Entrando..." : "Entrar"}</span>
@@ -263,6 +269,8 @@ export function LoginForm() {
 }
 
 
+//This is a placeholder for the registration form. A complete implementation would require a separate component.
 export function RegistrationForm(){
+    //Implementation for registration form here.  This would include fields for name, email, password, etc., and a submit handler to create a new user account in Supabase.  Error handling and success messages would also be necessary.
     return <div>Registration Form (Not implemented)</div>
 }
