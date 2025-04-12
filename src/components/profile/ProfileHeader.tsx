@@ -383,11 +383,6 @@ export default function ProfileHeader({
       const userData = await profileService.getCurrentUserProfile();
 
       if (userData) {
-        // Atualizar a interface com os dados
-        if (typeof setUserProfile === 'function') {
-          setUserProfile(userData);
-        }
-
         // Extrair e exibir dados do perfil
         console.log("Perfil recuperado:", userData);
 
@@ -531,9 +526,7 @@ export default function ProfileHeader({
     }
   };
 
-  const setUserProfile = (profile: UserProfile | null) => {
-    //Implementation for updating the component's state with new profile data.  This is a placeholder.
-  }
+  // Função setUserProfile removida pois causava erro de hooks
 
   return (
     <div
