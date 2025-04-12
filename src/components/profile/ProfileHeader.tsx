@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -38,19 +38,25 @@ export default function ProfileHeader({
   userProfile,
   onEditClick,
 }: ProfileHeaderProps) {
+  // Refs
   const profileNameRef = useRef<HTMLHeadingElement>(null);
   const profilePictureRef = useRef<HTMLInputElement>(null);
   const coverPhotoRef = useRef<HTMLInputElement>(null);
-  const [displayName, setDisplayName] = useState<string | null>(null);
+
+  // Estado do perfil
+  const [displayName, setDisplayName] = useState<string>("");
+  const [username, setUsername] = useState<string>("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+
+  // Estados de UI
   const [showTooltip, setShowTooltip] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const [showStatsDetails, setShowStatsDetails] = useState(false);
   const [activeAchievement, setActiveAchievement] = useState(0);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-
+  const [profileLoaded, setProfileLoaded] = useState(false);
 
   // Array de conquistas recentes para animação
   const recentAchievements = [
@@ -59,118 +65,173 @@ export default function ProfileHeader({
     { icon: <Lightbulb className="h-4 w-4" />, name: "Ideia Brilhante", date: "5 dias atrás" },
   ];
 
+  // Função para carregar o perfil - definida fora de efeitos para evitar recriação
+  const loadProfile = useCallback(async () => {
+    try {
+      // Garantir que o usuário tenha um ID
+      const idGenerated = await profileService.ensureUserHasId();
+
+      // Carregar o perfil atualizado
+      const userData = await profileService.getCurrentUserProfile();
+
+      if (userData) {
+        console.log("Perfil recuperado:", userData);
+
+        // Extrair e definir nome de exibição
+        const displayNameValue = userData.display_name || userData.full_name || userData.username || '';
+        setDisplayName(displayNameValue);
+
+        // Extrair e definir avatar e capa
+        setAvatarUrl(userData.avatar_url || null);
+        setCoverUrl(userData.cover_url || null);
+
+        // Salvar o username no localStorage
+        if (userData.username) {
+          localStorage.setItem('username', userData.username);
+          setUsername(userData.username);
+        } else {
+          // Se não tiver username, buscar de outras fontes
+          const updatedUsername = await fetchAndUpdateUsername();
+          if (updatedUsername) {
+            setUsername(updatedUsername);
+          }
+        }
+
+        // Se houve geração de ID, mostrar toast
+        if (idGenerated) {
+          toast({
+            title: "ID gerado com sucesso",
+            description: `Seu ID de usuário: ${userData.user_id}`,
+          });
+        }
+
+        setProfileLoaded(true);
+        return userData;
+      } else {
+        console.warn("Nenhum dado de usuário retornado do profileService");
+      }
+    } catch (error) {
+      console.error("Erro ao carregar perfil:", error);
+    }
+    return null;
+  }, []);
+
+  // Função para buscar e atualizar username separada
+  const fetchAndUpdateUsername = useCallback(async () => {
+    try {
+      console.log("Buscando username de diversas fontes...");
+      let foundUsername = null;
+
+      // 1. Verificar no localStorage
+      try {
+        const directUsername = localStorage.getItem('username');
+        if (directUsername) {
+          console.log("Username encontrado diretamente no localStorage:", directUsername);
+          foundUsername = directUsername;
+        }
+      } catch (e) {
+        console.error('Erro ao acessar localStorage:', e);
+      }
+
+      // 2. Verificar no formData
+      if (!foundUsername) {
+        try {
+          const savedFormData = localStorage.getItem('registrationFormData');
+          if (savedFormData) {
+            const parsedData = JSON.parse(savedFormData);
+            if (parsedData.username) {
+              foundUsername = parsedData.username;
+              console.log("Username encontrado no localStorage (formData):", foundUsername);
+            }
+          }
+        } catch (e) {
+          console.error('Erro ao buscar username do localStorage (formData):', e);
+        }
+      }
+
+      // 3. Verificar na sessão
+      if (!foundUsername) {
+        try {
+          const { data: sessionData } = await supabase.auth.getSession();
+          if (sessionData?.session?.user?.user_metadata?.username) {
+            foundUsername = sessionData.session.user.user_metadata.username;
+            console.log("Username encontrado nos metadados da sessão:", foundUsername);
+          }
+        } catch (e) {
+          console.error('Erro ao buscar username da sessão:', e);
+        }
+      }
+
+      // 4. Verificar na tabela de auth.users
+      if (!foundUsername) {
+        try {
+          const { data: authUserData } = await supabase.auth.getUser();
+          if (authUserData?.user?.user_metadata?.username) {
+            foundUsername = authUserData.user.user_metadata.username;
+            console.log("Username encontrado nos metadados do usuário:", foundUsername);
+          }
+        } catch (e) {
+          console.error('Erro ao buscar username da tabela auth.users:', e);
+        }
+      }
+
+      // Se encontramos um username, atualizar o perfil
+      if (foundUsername) {
+        localStorage.setItem('username', foundUsername);
+
+        try {
+          const updatedProfile = await profileService.updateUserProfile({
+            username: foundUsername
+          });
+
+          if (updatedProfile) {
+            console.log("Perfil atualizado com o username:", foundUsername);
+            return foundUsername;
+          }
+        } catch (e) {
+          console.error('Erro ao atualizar perfil com username:', e);
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao buscar e atualizar username:", error);
+    }
+
+    return null;
+  }, []);
+
+  // Efeito para carregar o perfil inicialmente
   useEffect(() => {
-    // Função para inicializar o perfil quando userProfile muda
     const initializeProfile = async () => {
-      // Forçar carregamento do perfil se userProfile for null
+      // Se não temos dados do perfil, carregar do zero
       if (!userProfile) {
-        loadProfile();
+        await loadProfile();
         return;
       }
 
       // Definir estados para dados básicos do perfil
       setDisplayName(userProfile.display_name || userProfile.full_name || '');
-      
+      setUsername(userProfile.username || '');
+
       if (userProfile?.avatar_url) {
         setAvatarUrl(userProfile.avatar_url);
       }
-      
+
       if (userProfile?.cover_url) {
         setCoverUrl(userProfile.cover_url);
       }
 
-      // Tentar obter nome de usuário de localStorage se não estiver no perfil
-      if (!userProfile.username) {
-        try {
-          // Verificar no localStorage dedicado
-          const savedUsername = localStorage.getItem('username');
-          if (savedUsername) {
-            console.log("Username encontrado no localStorage dedicado:", savedUsername);
-          } else {
-            // Verificar nos dados de registro
-            const savedFormData = localStorage.getItem('registrationFormData');
-            if (savedFormData) {
-              const parsedData = JSON.parse(savedFormData);
-              if (parsedData.username) {
-                console.log("Username encontrado no localStorage (formData):", parsedData.username);
-                // Salvar para uso imediato
-                localStorage.setItem('username', parsedData.username);
-              }
-            }
-          }
-        } catch (e) {
-          console.error('Erro ao acessar localStorage:', e);
-        }
+      // Verificar se tem informações essenciais
+      if (!userProfile.username || !userProfile.user_id) {
+        await loadProfile();
       }
 
-      // Verificar se o usuário tem um ID e, caso não tenha, gerar um
-      if (!userProfile.user_id) {
-        loadProfile();
-      }
-
-      // Log para debug - log detalhado para depuração
-      console.log("Profile data loaded (detalhado):", {
-        display_name: userProfile.display_name,
-        username: userProfile.username,
-        full_name: userProfile.full_name,
-        email: userProfile.email,
-        completo: userProfile
-      });
-
-      // Tentar verificar qualquer outro dado de cadastro que possa existir
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session?.user) {
-          console.log("Dados do usuário na sessão:", session.user);
-
-          // Flag para controlar se precisamos recarregar o perfil
-          let needsReload = false;
-
-          // Se o perfil não tiver um nome de usuário, tentar pegar da sessão
-          if (!userProfile.username && session.user.user_metadata?.username) {
-            try {
-              // Atualizar o perfil com esse nome de usuário
-              const updatedProfile = await profileService.updateUserProfile({
-                username: session.user.user_metadata.username
-              });
-              
-              if (updatedProfile) {
-                console.log("Nome de usuário atualizado com sucesso:", updatedProfile.username);
-                needsReload = true;
-              }
-            } catch (error) {
-              console.error("Erro ao atualizar nome de usuário do perfil:", error);
-            }
-          }
-
-          // Se o perfil não tiver um nome completo, tentar pegar da sessão
-          if (!userProfile.full_name && session.user.user_metadata?.full_name) {
-            try {
-              // Atualizar o perfil com esse nome completo
-              await profileService.updateUserProfile({
-                full_name: session.user.user_metadata.full_name
-              });
-              
-              needsReload = true;
-            } catch (error) {
-              console.error("Erro ao atualizar nome completo do perfil:", error);
-            }
-          }
-
-          // Recarregar perfil se necessário
-          if (needsReload) {
-            loadProfile();
-          }
-        }
-      } catch (error) {
-        console.error("Erro ao obter sessão:", error);
-      }
+      setProfileLoaded(true);
     };
 
     initializeProfile();
-  }, [userProfile]);
+  }, [userProfile, loadProfile]);
 
+  // Efeito para animações
   useEffect(() => {
     // Animação para barra de progresso
     const progressBar = document.querySelector('.progress-animation');
@@ -178,13 +239,13 @@ export default function ProfileHeader({
       progressBar.classList.add('animate-shimmer');
     }
 
-    // Rotação para o avatar quando a página é carregada
+    // Rotação para o avatar
     const avatarElement = document.querySelector('.profile-avatar');
     if (avatarElement) {
       avatarElement.classList.add('animate-avatar-entrance');
     }
 
-    // Intervalo para trocar a conquista ativa na exibição
+    // Intervalo para trocar a conquista ativa
     const achievementInterval = setInterval(() => {
       setActiveAchievement((prev) => (prev + 1) % recentAchievements.length);
     }, 3000);
@@ -194,34 +255,8 @@ export default function ProfileHeader({
     };
   }, []);
 
-  // Efeito para forçar carregamento do nome de usuário ao inicializar
-  useEffect(() => {
-    const loadUsername = async () => {
-      try {
-        // Se já temos userProfile mas não temos username, buscar das outras fontes
-        if (userProfile && !userProfile.username) {
-          await fetchAndUpdateUsername();
-        }
-        
-        // Verificar se o userProfile está inconsistente com os dados salvos
-        const savedUsername = localStorage.getItem('username');
-        if (savedUsername && userProfile?.username && savedUsername !== userProfile.username) {
-          console.log("Inconsistência detectada entre localStorage e perfil do usuário:", {
-            localStorage: savedUsername,
-            profileUsername: userProfile.username
-          });
-          
-          // Priorizar o username do perfil
-          localStorage.setItem('username', userProfile.username);
-        }
-      } catch (error) {
-        console.error("Erro ao carregar username:", error);
-      }
-    };
-    
-    loadUsername();
-  }, [userProfile]);
-  
+  // Handlers seguros
+
   // Efeito de paralaxe no card
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const card = e.currentTarget;
@@ -410,180 +445,6 @@ export default function ProfileHeader({
     }
   };
 
-  async function loadProfile() {
-    try {
-      // Primeiro garantir que o usuário tenha um ID
-      const idGenerated = await profileService.ensureUserHasId();
-
-      // Então carregar o perfil atualizado
-      const userData = await profileService.getCurrentUserProfile();
-
-      if (userData) {
-        // Extrair e exibir dados do perfil
-        console.log("Perfil recuperado:", userData);
-
-        // Usar funções de estado de forma segura (não condicional)
-        setDisplayName(userData.display_name || userData.full_name || userData.username || '');
-        setAvatarUrl(userData.avatar_url || null);
-        setCoverUrl(userData.cover_url || null);
-
-        // Salvar o username no localStorage para uso em diferentes partes da aplicação
-        if (userData.username) {
-          localStorage.setItem('username', userData.username);
-        }
-
-        // Se houve geração de ID, mostrar toast informativo
-        if (idGenerated) {
-          toast({
-            title: "ID gerado com sucesso",
-            description: `Seu ID de usuário: ${userData.user_id}`,
-          });
-        }
-
-        // Se não tiver username definido, buscar de outras fontes e atualizar
-        if (!userData.username) {
-          await fetchAndUpdateUsername();
-        }
-
-        console.log("Perfil carregado com sucesso:", userData);
-        return userData;
-      } else {
-        console.warn("Nenhum dado de usuário retornado do profileService");
-        
-        // Programar uma nova tentativa após um curto período
-        // mas sem usar hooks ou setState dentro da callback
-        setTimeout(() => {
-          // Criar uma função separada para retry para evitar problemas de closure
-          const retryLoadProfile = async () => {
-            try {
-              const retryUserData = await profileService.getCurrentUserProfile();
-              
-              if (retryUserData) {
-                console.log("Perfil recuperado na segunda tentativa:", retryUserData);
-                
-                // Atualizar estados de forma segura
-                setDisplayName(retryUserData.display_name || retryUserData.full_name || retryUserData.username || '');
-                setAvatarUrl(retryUserData.avatar_url || null);
-                setCoverUrl(retryUserData.cover_url || null);
-                
-                // Salvar username no localStorage
-                if (retryUserData.username) {
-                  localStorage.setItem('username', retryUserData.username);
-                }
-              }
-            } catch (error) {
-              console.error("Erro na segunda tentativa de carregamento:", error);
-            }
-          };
-          
-          // Executar a função de retry
-          retryLoadProfile();
-        }, 1500);
-      }
-    } catch (error) {
-      console.error("Erro ao carregar perfil:", error);
-    }
-    return null;
-  }
-
-  // Função para buscar o username de diversas fontes e atualizar o perfil
-  async function fetchAndUpdateUsername() {
-    try {
-      // Verificar se temos username no localStorage (formulário de registro)
-      let username = null;
-      
-      // 1. Verificar primeiro no localStorage dedicado para username
-      try {
-        const directUsername = localStorage.getItem('username');
-        if (directUsername) {
-          console.log("Username encontrado diretamente no localStorage:", directUsername);
-          username = directUsername;
-        }
-      } catch (e) {
-        console.error('Erro ao acessar localStorage para username direto:', e);
-      }
-      
-      // 2. Verificar nos dados de registro se ainda não encontramos
-      if (!username) {
-        try {
-          const savedFormData = localStorage.getItem('registrationFormData');
-          if (savedFormData) {
-            const parsedData = JSON.parse(savedFormData);
-            if (parsedData.username) {
-              username = parsedData.username;
-              console.log("Username encontrado no localStorage (formData):", username);
-            }
-          }
-        } catch (e) {
-          console.error('Erro ao buscar username do localStorage (formData):', e);
-        }
-      }
-
-      // 3. Verificar na sessão do Supabase
-      if (!username) {
-        try {
-          const { data: sessionData } = await supabase.auth.getSession();
-          if (sessionData?.session?.user?.user_metadata?.username) {
-            username = sessionData.session.user.user_metadata.username;
-            console.log("Username encontrado nos metadados da sessão:", username);
-          }
-        } catch (e) {
-          console.error('Erro ao buscar username da sessão:', e);
-        }
-      }
-
-      // 4. Verificar diretamente na tabela de auth.users
-      if (!username) {
-        try {
-          const { data: authUserData } = await supabase.auth.getUser();
-          if (authUserData?.user?.user_metadata?.username) {
-            username = authUserData.user.user_metadata.username;
-            console.log("Username encontrado nos metadados do usuário:", username);
-          }
-        } catch (e) {
-          console.error('Erro ao buscar username da tabela auth.users:', e);
-        }
-      }
-
-      // Se encontramos um username, atualizar o perfil
-      if (username) {
-        // Salvar o username no localStorage para uso em diferentes partes da aplicação
-        try {
-          localStorage.setItem('username', username);
-        } catch (e) {
-          console.error('Erro ao salvar username no localStorage:', e);
-        }
-        
-        // Atualizar o perfil no banco de dados
-        try {
-          const updatedProfile = await profileService.updateUserProfile({
-            username: username
-          });
-          
-          if (updatedProfile) {
-            console.log("Perfil atualizado com o username:", username);
-            
-            // Atualizar estados locais em vez de recarregar a página
-            setDisplayName(prev => {
-              if (!prev || prev === '') {
-                return username;
-              }
-              return prev;
-            });
-            
-            return updatedProfile;
-          }
-        } catch (e) {
-          console.error('Erro ao atualizar perfil com username:', e);
-        }
-      }
-    } catch (error) {
-      console.error("Erro ao buscar e atualizar username:", error);
-    }
-    
-    return null;
-  }
-
   const refreshId = async () => {
     setRefreshing(true);
     try {
@@ -603,9 +464,9 @@ export default function ProfileHeader({
             updated_at: new Date().toISOString()
           })
           .eq('id', userProfile.id);
-        loadProfile();
-      }
 
+        await loadProfile();
+      }
     } catch (error) {
       console.error("Erro ao atualizar ID:", error);
     } finally {
@@ -613,7 +474,43 @@ export default function ProfileHeader({
     }
   };
 
-  // Não definimos nenhuma função setUserProfile aqui para evitar erros de hooks
+  // Calcular o nome de exibição e username fora da renderização
+  const getDisplayInfo = () => {
+    // Obter primeiro nome
+    let firstName = "";
+    const fullName = userProfile?.full_name || displayName || '';
+
+    if (fullName) {
+      firstName = fullName.split(' ')[0];
+    } else if (userProfile?.username) {
+      firstName = userProfile.username;
+    } else if (userProfile?.display_name) {
+      firstName = userProfile.display_name;
+    } else {
+      firstName = "Usuário";
+    }
+
+    // Obter nome de usuário mais confiável
+    let usernameToDisplay = username || userProfile?.username || '';
+
+    if (!usernameToDisplay) {
+      // Verificar outras propriedades
+      if (userProfile?.user_metadata?.username) {
+        usernameToDisplay = userProfile.user_metadata.username;
+      } else {
+        try {
+          usernameToDisplay = localStorage.getItem('username') || 'usuário';
+        } catch (e) {
+          usernameToDisplay = 'usuário';
+        }
+      }
+    }
+
+    return { firstName, username: usernameToDisplay };
+  };
+
+  // Obter informações de exibição de forma estável
+  const { firstName, username: usernameToDisplay } = getDisplayInfo();
 
   return (
     <div
@@ -781,7 +678,7 @@ export default function ProfileHeader({
                   className="object-cover"
                 />
                 <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF9B50] text-xl font-bold text-white">
-                  {displayName?.charAt(0) || userProfile?.display_name?.charAt(0) || "U"}
+                  {firstName.charAt(0) || "U"}
                 </AvatarFallback>
               </Avatar>
 
@@ -838,90 +735,7 @@ export default function ProfileHeader({
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.7, duration: 0.3 }}
         >
-          {(() => {
-            // Informações para depuração
-            console.log("Perfil carregado para exibição:", {
-              displayName,
-              profile_display_name: userProfile?.display_name,
-              profile_full_name: userProfile?.full_name,
-              profile_username: userProfile?.username
-            });
-
-            // Obter o nome completo (primeiro nome) do usuário
-            const fullName = userProfile?.full_name || displayName || '';
-            
-            // Extrair o primeiro nome
-            let firstName = fullName ? fullName.split(' ')[0] : '';
-
-            // Se não houver primeiro nome, usar um fallback
-            if (!firstName) {
-              if (userProfile?.username) {
-                firstName = userProfile.username;
-              } else if (userProfile?.display_name) {
-                firstName = userProfile.display_name;
-              } else {
-                firstName = "Usuário";
-              }
-            }
-
-            // Obter o nome de usuário com mais prioridade
-            // Verificar em várias propriedades possíveis para garantir que temos um nome de usuário válido
-            let username = null;
-            
-            // 1. Verificar primeiro no profile
-            if (userProfile?.username) {
-              username = userProfile.username;
-            } 
-            // 2. Verificar nos metadados
-            else if (userProfile?.user_metadata?.username) {
-              username = userProfile.user_metadata.username;
-            } 
-            // 3. Verificar no localStorage
-            else {
-              try {
-                const localUsername = localStorage.getItem('username');
-                if (localUsername) {
-                  username = localUsername;
-                }
-              } catch (e) {
-                console.error("Erro ao ler username do localStorage:", e);
-              }
-            }
-            
-            // 4. Verificar no sessionStorage
-            if (!username) {
-              try {
-                const sessionUsername = sessionStorage.getItem('username');
-                if (sessionUsername) {
-                  username = sessionUsername;
-                }
-              } catch (e) {
-                console.error("Erro ao ler username do sessionStorage:", e);
-              }
-            }
-            
-            // 5. Usar um fallback se ainda não tiver username
-            if (!username) {
-              username = 'usuário';
-            }
-            
-            console.log("Dados do perfil para exibição de username:", {
-              firstName: firstName,
-              finalUsername: username,
-              profile_username: userProfile?.username,
-              profile_display_name: userProfile?.display_name,
-              user_metadata_username: userProfile?.user_metadata?.username,
-              localStorage_username: localStorage.getItem('username'),
-              sessionStorage_username: sessionStorage.getItem('username')
-            });
-
-            // Exibir o primeiro nome do usuário junto com o nome de usuário no formato solicitado
-            return (
-              <>
-                {firstName} <span className="text-gray-400 dark:text-gray-400">|</span> <span className="text-[#FF6B00]">@{username}</span>
-              </>
-            );
-          })()}
+          {firstName} <span className="text-gray-400 dark:text-gray-400">|</span> <span className="text-[#FF6B00]">@{usernameToDisplay}</span>
         </motion.h2>
 
         {/* User ID block */}
