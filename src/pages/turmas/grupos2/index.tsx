@@ -56,7 +56,7 @@ const studyGroups = [
     nextMeeting: "16/03, 18:00",
     course: "Física Quântica",
     description:
-      "Grupo dedicado ao estudo de Mecânica Quântica, com foco na preparação para o projeto final da disciplina.",
+      "Grupo dedicado ao estudo de Matemática, com foco na preparação para o projeto final da disciplina.",
     hasNewMessages: true,
     lastActivity: "Hoje, 14:30",
     image:
@@ -704,8 +704,7 @@ export default function GruposEstudo2() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-medium text-gray-900 dark:text-white">
-                              {activity.user}
-                            </span>
+                              {activity.user}                            </span>
                             <span className="text-xs text-gray-500 dark:text-gray-400">
                               {activity.time}
                             </span>
