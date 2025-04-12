@@ -515,7 +515,7 @@ export default function ProfileHeader({
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.8, duration: 0.3 }}
         >
-          <p className="text-[10px] text-[#64748B] dark:text-white/60 bg-slate-100 dark:bg-slate-800/50 px-1.5 py-0.5 rounded-full backdrop-blur-sm">
+          <p className="text-xs text-[#64748B] dark:text-white/60 text-center font-medium">
             ID: {userProfile?.user_id || "--"}
           </p>
         </motion.div>
@@ -526,8 +526,8 @@ export default function ProfileHeader({
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.9, duration: 0.3 }}
         >
-          <span className="bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm hover:shadow hover:shadow-[#FF6B00]/20 transition-all duration-300 cursor-pointer">
-            <Diamond className="h-3 w-3" />
+          <span className="bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white text-xs font-medium px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm hover:shadow hover:shadow-[#FF6B00]/20 transition-all duration-300 cursor-pointer">
+            <Diamond className="h-3.5 w-3.5" />
             {userProfile?.plan_type === "premium" ? "Plano Premium" : "Plano Lite"}
           </span>
         </motion.div>
