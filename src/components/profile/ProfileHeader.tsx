@@ -91,27 +91,28 @@ export default function ProfileHeader({
     });
     
     // Tentar verificar qualquer outro dado de cadastro que possa existir
-    const { data: sessionData } = supabase.auth.getSession();
-    sessionData.then((session) => {
-      if (session?.session?.user) {
-        console.log("Dados do usuário na sessão:", session.session.user);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        console.log("Dados do usuário na sessão:", session.user);
         
         // Se o perfil não tiver um nome de usuário, tentar pegar da sessão
-        if (!userProfile.username && session.session.user.user_metadata?.username) {
+        if (!userProfile.username && session.user.user_metadata?.username) {
           // Atualizar o perfil com esse nome de usuário
           profileService.updateUserProfile({
-            username: session.session.user.user_metadata.username
+            username: session.user.user_metadata.username
           });
         }
         
         // Se o perfil não tiver um nome completo, tentar pegar da sessão
-        if (!userProfile.full_name && session.session.user.user_metadata?.full_name) {
+        if (!userProfile.full_name && session.user.user_metadata?.full_name) {
           // Atualizar o perfil com esse nome completo
           profileService.updateUserProfile({
-            full_name: session.session.user.user_metadata.full_name
+            full_name: session.user.user_metadata.full_name
           });
         }
       }
+    }).catch(error => {
+      console.error("Erro ao obter sessão:", error);
     });
   }, [userProfile]);
 
