@@ -939,6 +939,10 @@ select:hover,
   perspective: 1000px;
 }
 
+.perspective-1500 {
+  perspective: 1500px;
+}
+
 .banner {
   position: absolute;
   width: 100%;
@@ -951,32 +955,62 @@ select:hover,
 
 .layer {
   position: absolute;
-  width: 120%; /* Extra tamanho para evitar bordas vazias durante o movimento */
-  height: 120%;
-  top: -10%;
-  left: -10%;
+  width: 130%; /* Extra tamanho para evitar bordas vazias durante o movimento */
+  height: 130%;
+  top: -15%;
+  left: -15%;
   background-size: cover;
   background-position: center;
-  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   will-change: transform;
+  pointer-events: none; /* Evita que as camadas interfiram com interações do mouse */
+  transform-style: preserve-3d; /* Mantém o efeito 3D */
 }
 
+/* Camada de fundo - detalhes e padrões */
 .layer-bg {
   background-image: 
-    linear-gradient(120deg, rgba(0, 20, 39, 0.85), rgba(0, 10, 20, 0.95)), 
+    linear-gradient(120deg, rgba(0, 20, 39, 0.92), rgba(0, 10, 20, 0.98)), 
     url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2393A8C0' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"),
     url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%2393A8C0' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
   background-position: center;
-  background-size: cover, 100px 100px, 200px 200px;
+  background-size: cover, 60px 60px, 200px 200px;
   z-index: 1;
+  transform: translateZ(-20px);
 }
 
+/* Camada do meio - pontos e gradientes */
+.layer-mid {
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(255, 107, 0, 0.07), transparent 70%),
+    radial-gradient(circle at 80% 70%, rgba(255, 107, 0, 0.07), transparent 70%);
+  background-position: center;
+  z-index: 2;
+  transform: translateZ(0);
+  opacity: 0.9;
+}
+
+/* Camada frontal - sutis efeitos de brilho */
 .layer-fg {
   background: 
-    radial-gradient(circle at 30% 50%, rgba(255, 107, 0, 0.08), transparent 70%),
-    radial-gradient(circle at 70% 30%, rgba(255, 107, 0, 0.08), transparent 70%),
-    radial-gradient(circle at 40% 80%, rgba(255, 107, 0, 0.06), transparent 60%),
-    radial-gradient(circle at 80% 60%, rgba(255, 107, 0, 0.06), transparent 60%);
-  z-index: 2;
-  opacity: 0.8;
+    radial-gradient(circle at 30% 20%, rgba(255, 107, 0, 0.04), transparent 50%),
+    radial-gradient(circle at 70% 80%, rgba(255, 107, 0, 0.04), transparent 50%),
+    url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23FF6B00' fill-opacity='0.015'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3Ccircle cx='13' cy='13' r='1'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: cover, cover, 30px 30px;
+  background-position: center;
+  z-index: 3;
+  transform: translateZ(20px);
+  opacity: 0.7;
+}
+
+/* Adiciona uma linha fina decorativa na parte inferior - semelhante à Superix */
+.banner::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(255, 107, 0, 0.3), transparent);
+  z-index: 10;
+  opacity: 0.7;
 }
