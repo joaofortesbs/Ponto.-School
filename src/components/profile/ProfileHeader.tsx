@@ -64,30 +64,30 @@ export default function ProfileHeader({
     try {
       // Verificar se temos o username no localStorage (usado no cabeçalho)
       const headerUsername = localStorage.getItem('username');
-      
+
       console.log("Sincronizando usernames:", {
         headerUsername,
         profileUsername: userProfile?.username,
         userProfileFull: userProfile
       });
-      
+
       if (headerUsername) {
         // Se temos um username no cabeçalho, usar ele como fonte principal
-        
+
         // Verificar se o perfil existe e precisa ser atualizado
         if (userProfile && (!userProfile.username || userProfile.username !== headerUsername)) {
           console.log("Atualizando username no perfil para corresponder ao cabeçalho:", headerUsername);
-          
+
           // Atualizar o perfil para usar o mesmo username do cabeçalho
           await profileService.updateUserProfile({
             username: headerUsername,
             display_name: headerUsername, // Também atualizar o display_name
             updated_at: new Date().toISOString()
           });
-          
+
           // Atualizar o estado local
           setDisplayName(headerUsername);
-          
+
           // Recarregar perfil após atualização
           loadProfile();
         }
@@ -100,7 +100,7 @@ export default function ProfileHeader({
         const defaultUsername = 'joaofortes';
         console.log("Definindo username padrão:", defaultUsername);
         localStorage.setItem('username', defaultUsername);
-        
+
         if (userProfile) {
           // Atualizar o perfil com este username padrão
           await profileService.updateUserProfile({
@@ -108,10 +108,10 @@ export default function ProfileHeader({
             display_name: defaultUsername,
             updated_at: new Date().toISOString()
           });
-          
+
           // Atualizar o estado local
           setDisplayName(defaultUsername);
-          
+
           // Recarregar perfil
           loadProfile();
         }
@@ -128,22 +128,22 @@ export default function ProfileHeader({
       console.log("Definindo username padrão no localStorage");
       localStorage.setItem('username', 'joaofortes');
     }
-    
+
     // Forçar carregamento do perfil se userProfile for null
     if (!userProfile) {
       loadProfile();
       return;
     }
-    
+
     // Garantir que o username seja consistente com o cabeçalho
     ensureCorrectUsername();
 
     // Obter o username do localStorage (usado pelo cabeçalho)
     const storedUsername = localStorage.getItem('username');
-    
+
     // Definir displayName com ordem de prioridade
     let nameToDisplay = '';
-    
+
     if (userProfile.display_name) {
       nameToDisplay = userProfile.display_name;
     } else if (storedUsername) {
@@ -155,7 +155,7 @@ export default function ProfileHeader({
     } else {
       nameToDisplay = 'Usuário';
     }
-    
+
     setDisplayName(nameToDisplay);
 
     if (userProfile?.avatar_url) {
@@ -189,7 +189,7 @@ export default function ProfileHeader({
         // Se o perfil não tiver um nome de usuário, tentar pegar da sessão ou localStorage
         if (!userProfile.username) {
           const usernameToUse = storedUsername || session.user.user_metadata?.username;
-          
+
           if (usernameToUse) {
             // Atualizar o perfil com esse nome de usuário
             profileService.updateUserProfile({
@@ -288,14 +288,14 @@ export default function ProfileHeader({
       if (file.size > 1000000) { // Se for maior que 1MB
         const canvas = document.createElement('canvas');
         const img = new Image();
-        
+
         const loadImage = new Promise<File>((resolve) => {
           img.onload = () => {
             // Calcular novo tamanho mantendo a proporção
             let width = img.width;
             let height = img.height;
             const maxSize = 800; // Tamanho máximo para qualquer dimensão
-            
+
             if (width > height && width > maxSize) {
               height = (height / width) * maxSize;
               width = maxSize;
@@ -303,12 +303,12 @@ export default function ProfileHeader({
               width = (width / height) * maxSize;
               height = maxSize;
             }
-            
+
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx?.drawImage(img, 0, 0, width, height);
-            
+
             canvas.toBlob((blob) => {
               if (blob) {
                 const optimizedFile = new File([blob], file.name, { 
@@ -323,7 +323,7 @@ export default function ProfileHeader({
           };
           img.onerror = () => resolve(file); // Fallback em caso de erro
         });
-        
+
         img.src = URL.createObjectURL(file);
         fileToUpload = await loadImage;
       }
@@ -341,16 +341,16 @@ export default function ProfileHeader({
           // Se o arquivo já existe, gerar um novo nome e tentar novamente
           const newFileName = `${user.id}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
           const newFilePath = `avatars/${newFileName}`;
-          
+
           const { error: retryError } = await supabase.storage
             .from('profiles')
             .upload(newFilePath, fileToUpload, {
               cacheControl: '3600',
               upsert: true
             });
-            
+
           if (retryError) throw retryError;
-          
+
           // Atualizar o caminho do arquivo
           filePath = newFilePath;
         } else {
@@ -374,7 +374,7 @@ export default function ProfileHeader({
 
       if (updatedProfile) {
         setAvatarUrl(publicUrlData.publicUrl);
-        
+
         // Salvar também no localStorage para uso em outros componentes
         try {
           localStorage.setItem('userAvatarUrl', publicUrlData.publicUrl);
@@ -430,25 +430,25 @@ export default function ProfileHeader({
       if (file.size > 1500000) { // Se for maior que 1.5MB
         const canvas = document.createElement('canvas');
         const img = new Image();
-        
+
         const loadImage = new Promise<File>((resolve) => {
           img.onload = () => {
             // Calcular novo tamanho mantendo a proporção
             let width = img.width;
             let height = img.height;
-            
+
             // Para imagens de capa, manter a largura maior
             const maxWidth = 1200;
             if (width > maxWidth) {
               height = (height / width) * maxWidth;
               width = maxWidth;
             }
-            
+
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx?.drawImage(img, 0, 0, width, height);
-            
+
             canvas.toBlob((blob) => {
               if (blob) {
                 const optimizedFile = new File([blob], file.name, { 
@@ -463,7 +463,7 @@ export default function ProfileHeader({
           };
           img.onerror = () => resolve(file); // Fallback em caso de erro
         });
-        
+
         img.src = URL.createObjectURL(file);
         fileToUpload = await loadImage;
       }
@@ -481,16 +481,16 @@ export default function ProfileHeader({
           // Se o arquivo já existe, gerar um novo nome e tentar novamente
           const newFileName = `${user.id}-cover-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
           const newFilePath = `covers/${newFileName}`;
-          
+
           const { error: retryError } = await supabase.storage
             .from('profiles')
             .upload(newFilePath, fileToUpload, {
               cacheControl: '3600',
               upsert: true
             });
-            
+
           if (retryError) throw retryError;
-          
+
           // Atualizar o caminho do arquivo
           filePath = newFilePath;
         } else {
@@ -514,7 +514,7 @@ export default function ProfileHeader({
 
       if (updatedProfile) {
         setCoverUrl(publicUrlData.publicUrl);
-        
+
         // Salvar também no localStorage para uso em outros componentes
         try {
           localStorage.setItem('userCoverUrl', publicUrlData.publicUrl);
@@ -969,10 +969,10 @@ export default function ProfileHeader({
 
             // Obter o nome de usuário do perfil
             const profileUsername = userProfile?.username || '';
-            
+
             // Obter o nome para a parte principal da exibição
             let displayedName = '';
-            
+
             // Prioridade de exibição: username > display_name > full_name > fallback
             if (profileUsername) {
               displayedName = profileUsername;
@@ -984,10 +984,10 @@ export default function ProfileHeader({
             } else {
               displayedName = "Usuário";
             }
-            
+
             // Buscar username do localStorage (mesmo usado no cabeçalho)
             const storedUsername = localStorage.getItem('username');
-            
+
             console.log("Dados do perfil para exibição de username:", {
               profileUsername: profileUsername,
               storedUsername: storedUsername,
@@ -999,14 +999,14 @@ export default function ProfileHeader({
 
             // Buscar o nome de usuário do localStorage (usado no cabeçalho)
             const headerUsername = localStorage.getItem('username');
-            
+
             // Usar o nome de usuário do cabeçalho (prioridade máxima)
             const usernameToDisplay = headerUsername || storedUsername || 'joaofortes';
 
             // Exibir nome de exibição e nome de usuário como dois componentes distintos
             // Nome de exibição: usar display_name ou o primeiro nome do nome completo, ou o fallback
             let nameDisplay = '';
-            
+
             if (userProfile?.display_name) {
               nameDisplay = userProfile.display_name;
             } else if (userProfile?.full_name) {
@@ -1015,7 +1015,7 @@ export default function ProfileHeader({
             } else {
               nameDisplay = "Usuário";
             }
-            
+
             return (
               <>
                 {nameDisplay} <span className="text-gray-400 dark:text-gray-400">|</span> <span className="text-[#FF6B00]">@{usernameToDisplay}</span>

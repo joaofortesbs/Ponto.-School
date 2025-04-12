@@ -270,6 +270,8 @@ class ProfileService {
         updated_at: new Date().toISOString()
       };
 
+      console.log('Atualizando perfil com dados:', updateData);
+
       const { data, error } = await supabase
         .from('profiles')
         .update(updateData)
@@ -280,6 +282,21 @@ class ProfileService {
       if (error) {
         console.error('Erro ao atualizar perfil:', error);
         return null;
+      }
+
+      // Salvar dados importantes no localStorage para persistência entre sessões
+      try {
+        if (data.avatar_url) localStorage.setItem('userAvatarUrl', data.avatar_url);
+        if (data.cover_url) localStorage.setItem('userCoverUrl', data.cover_url);
+        
+        // Disparar evento de atualização de perfil para outros componentes
+        document.dispatchEvent(new CustomEvent('userProfileUpdated', { 
+          detail: { profile: data } 
+        }));
+        
+        console.log('Perfil atualizado com sucesso:', data);
+      } catch (e) {
+        console.warn('Erro ao salvar dados no localStorage:', e);
       }
 
       return data as UserProfile;
