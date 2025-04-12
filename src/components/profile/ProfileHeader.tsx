@@ -59,15 +59,41 @@ export default function ProfileHeader({
     { icon: <Lightbulb className="h-4 w-4" />, name: "Ideia Brilhante", date: "5 dias atrás" },
   ];
 
+  // Função para garantir que temos o username correto e consistente com o cabeçalho
+  const ensureCorrectUsername = async () => {
+    try {
+      // Verificar se temos o username no localStorage (usado no cabeçalho)
+      const headerUsername = localStorage.getItem('username');
+      
+      if (headerUsername && userProfile && (!userProfile.username || userProfile.username !== headerUsername)) {
+        console.log("Atualizando username no perfil para corresponder ao cabeçalho:", headerUsername);
+        
+        // Atualizar o perfil para usar o mesmo username do cabeçalho
+        await profileService.updateUserProfile({
+          username: headerUsername,
+          updated_at: new Date().toISOString()
+        });
+        
+        // Recarregar perfil após atualização
+        loadProfile();
+      }
+    } catch (error) {
+      console.error("Erro ao sincronizar username com cabeçalho:", error);
+    }
+  };
+
   useEffect(() => {
     // Forçar carregamento do perfil se userProfile for null
     if (!userProfile) {
       loadProfile();
       return;
     }
+    
+    // Garantir que o username seja consistente com o cabeçalho
+    ensureCorrectUsername();
 
     // Definir displayName mesmo se estiver vazio, para permitir fallbacks
-    setDisplayName(userProfile.display_name || userProfile.full_name || '');
+    setDisplayName(userProfile.display_name || userProfile.username || userProfile.full_name || '');
 
     if (userProfile?.avatar_url) {
       setAvatarUrl(userProfile.avatar_url);
@@ -652,35 +678,36 @@ export default function ProfileHeader({
               profile_username: userProfile?.username
             });
 
-            // Obter o nome completo (primeiro nome) do usuário
-            const fullName = userProfile?.full_name || displayName || '';
+            // Obter o nome de usuário para exibição - este é o mesmo nome que aparece no cabeçalho
+            const headerUsername = userProfile?.username || '';
             
-            // Extrair o primeiro nome
-            let firstName = fullName ? fullName.split(' ')[0] : '';
-
-            // Se não houver primeiro nome, usar um fallback
-            if (!firstName) {
-              if (userProfile?.username) {
-                firstName = userProfile.username;
-              } else {
-                firstName = "Usuário";
-              }
+            // Obter o nome para a parte principal da exibição
+            let displayedName = '';
+            
+            // Prioridade de exibição: username > display_name > full_name > fallback
+            if (headerUsername) {
+              displayedName = headerUsername;
+            } else if (userProfile?.display_name) {
+              displayedName = userProfile.display_name;
+            } else if (userProfile?.full_name) {
+              // Se tiver nome completo, usar o primeiro nome
+              displayedName = userProfile.full_name.split(' ')[0];
+            } else {
+              displayedName = "Usuário";
             }
-
-            // Obter o nome de usuário
-            const username = userProfile?.username || 'usuário';
             
             console.log("Dados do perfil para exibição de username:", {
-              firstName: firstName,
+              headerUsername: headerUsername,
+              displayedName: displayedName,
               profile_username: userProfile?.username,
               profile_display_name: userProfile?.display_name,
-              user_metadata_username: userProfile?.user_metadata?.username
+              profile_full_name: userProfile?.full_name
             });
 
-            // Exibir o primeiro nome do usuário junto com o nome de usuário no formato solicitado
+            // Exibir o nome do usuário igual ao do cabeçalho junto com a parte @username
             return (
               <>
-                {firstName} <span className="text-gray-400 dark:text-gray-400">|</span> <span className="text-[#FF6B00]">@{username}</span>
+                {displayedName} <span className="text-gray-400 dark:text-gray-400">|</span> <span className="text-[#FF6B00]">@{headerUsername || 'usuário'}</span>
               </>
             );
           })()}
