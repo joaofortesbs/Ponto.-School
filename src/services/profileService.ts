@@ -98,25 +98,24 @@ class ProfileService {
           
           const updateData: Partial<UserProfile> = {};
           
-          // Se não tem username, procurar em todas as fontes possíveis
+          // Se não tem username, procurar em outras fontes
           if (!data.username) {
-            // 1. Verificar no localStorage (salvo durante o registro)
-            let foundUsername = null;
-            
+            // Verificar se existe no localStorage (salvo durante o registro)
             try {
-              // Verificar primeiro no localStorage dedicado para username
-              const directUsername = localStorage.getItem('username');
-              if (directUsername) {
-                console.log('Username encontrado diretamente no localStorage:', directUsername);
-                foundUsername = directUsername;
-              } else {
-                // Verificar nos dados de registro
-                const savedFormData = localStorage.getItem('registrationFormData');
-                if (savedFormData) {
-                  const parsedData = JSON.parse(savedFormData);
-                  if (parsedData.username) {
-                    console.log('Username encontrado no localStorage (formData):', parsedData.username);
-                    foundUsername = parsedData.username;
+              const savedFormData = localStorage.getItem('registrationFormData');
+              if (savedFormData) {
+                const parsedData = JSON.parse(savedFormData);
+                if (parsedData.username) {
+                  console.log('Username encontrado no localStorage:', parsedData.username);
+                  updateData.username = parsedData.username;
+                  
+                  // Também atualizar o objeto data para a resposta
+                  data.username = parsedData.username;
+                  
+                  // Também definir como display_name se não estiver definido
+                  if (!data.display_name) {
+                    updateData.display_name = parsedData.username;
+                    data.display_name = parsedData.username;
                   }
                 }
               }
@@ -124,60 +123,18 @@ class ProfileService {
               console.error('Erro ao acessar localStorage:', e);
             }
             
-            // 2. Verificar em sessionStorage
-            if (!foundUsername) {
-              try {
-                const sessionUsername = sessionStorage.getItem('username');
-                if (sessionUsername) {
-                  console.log('Username encontrado no sessionStorage:', sessionUsername);
-                  foundUsername = sessionUsername;
-                }
-              } catch (e) {
-                console.error('Erro ao acessar sessionStorage:', e);
-              }
-            }
-            
-            // 3. Verificar nos metadados da sessão (prioridade mais alta)
-            if (!foundUsername && session.session.user.user_metadata?.username) {
+            // Verificar nos metadados da sessão (prioridade mais alta)
+            if (session.session.user.user_metadata?.username) {
               console.log('Username encontrado nos metadados da sessão:', session.session.user.user_metadata.username);
-              foundUsername = session.session.user.user_metadata.username;
-            }
-            
-            // 4. Verificar diretamente na tabela auth.users se ainda não encontramos
-            if (!foundUsername) {
-              try {
-                const { data: userData } = await supabase.auth.getUser();
-                if (userData?.user?.user_metadata?.username) {
-                  console.log('Username encontrado na tabela auth.users:', userData.user.user_metadata.username);
-                  foundUsername = userData.user.user_metadata.username;
-                }
-              } catch (authError) {
-                console.error('Erro ao buscar dados do usuário autenticado:', authError);
-              }
-            }
-            
-            // 5. Tentar recuperar do nome completo como último recurso
-            if (!foundUsername && data.full_name) {
-              // Extrair a primeira parte do nome completo para usar como username
-              const nameParts = data.full_name.split(' ');
-              if (nameParts.length > 0) {
-                foundUsername = nameParts[0].toLowerCase() + Math.floor(Math.random() * 1000);
-                console.log('Username gerado a partir do nome completo:', foundUsername);
-              }
-            }
-            
-            // Aplicar o username encontrado ao perfil
-            if (foundUsername) {
-              updateData.username = foundUsername;
-              data.username = foundUsername;
+              updateData.username = session.session.user.user_metadata.username;
               
-              // Salvar no localStorage para uso futuro
-              localStorage.setItem('username', foundUsername);
+              // Atualizar o objeto data para a resposta
+              data.username = session.session.user.user_metadata.username;
               
               // Também definir como display_name se não estiver definido
               if (!data.display_name) {
-                updateData.display_name = foundUsername;
-                data.display_name = foundUsername;
+                updateData.display_name = session.session.user.user_metadata.username;
+                data.display_name = session.session.user.user_metadata.username;
               }
             }
           }
