@@ -1,35 +1,37 @@
-
-/* Animações gerais */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0.5;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0.5;
   }
 }
 
-.fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
+.animate-shimmer {
+  animation: shimmer 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: transform, opacity;
+  overflow: hidden;
+  position: relative;
 }
 
-/* Efeito de pulso */
+/* Novos efeitos para melhorar a experiência visual */
 @keyframes pulse-soft {
   0%, 100% {
     opacity: 1;
     transform: scale(1);
   }
   50% {
-    opacity: 0.8;
+    opacity: 0.9;
     transform: scale(1.02);
   }
 }
 
 .animate-pulse-soft {
-  animation: pulse-soft 3s ease-in-out infinite;
-}
 
 /* Animações para as abas */
 @keyframes tabGlow {
@@ -63,99 +65,21 @@
   animation: tabSlideIn 0.3s ease-out forwards;
 }
 
-/* Animação de progresso */
-@keyframes progressFill {
+  animation: pulse-soft 3s ease-in-out infinite;
+}
+
+/* Efeito de entrada suave para elementos */
+@keyframes fade-slide-in {
   from {
-    width: 0;
+    opacity: 0;
+    transform: translateY(10px);
   }
   to {
-    width: 100%;
-  }
-}
-
-.animate-progress {
-  animation: progressFill 1.5s ease-out forwards;
-}
-
-/* Animações para notificações */
-@keyframes notificationPulse {
-  0% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(255, 107, 0, 0.7);
-  }
-  70% {
-    transform: scale(1.05);
-    box-shadow: 0 0 0 10px rgba(255, 107, 0, 0);
-  }
-  100% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(255, 107, 0, 0);
-  }
-}
-
-.animate-notification {
-  animation: notificationPulse 2s infinite;
-}
-
-/* Animação de carregamento em espera */
-@keyframes shimmerEffect {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-.animate-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  background-size: 200% 100%;
-  animation: shimmerEffect 1.5s infinite linear;
-}
-
-/* Animação de aparecimento para elementos */
-@keyframes scaleIn {
-  0% {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  100% {
     opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.scale-in {
-  animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-/* Animação de hover para cards e botões */
-@keyframes hoverFloat {
-  0% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
-  100% {
     transform: translateY(0);
   }
 }
 
-.hover-float:hover {
-  animation: hoverFloat 0.5s ease-in-out;
-}
-
-/* Animação para bordas */
-@keyframes borderPulse {
-  0%, 100% {
-    border-color: rgba(255, 107, 0, 0.5);
-  }
-  50% {
-    border-color: rgba(255, 107, 0, 0.9);
-  }
-}
-
-.border-pulse {
-  animation: borderPulse 2s ease-in-out infinite;
+.animate-fade-slide-in {
+  animation: fade-slide-in 0.4s ease-out forwards;
 }
