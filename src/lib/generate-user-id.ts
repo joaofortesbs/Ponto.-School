@@ -11,11 +11,11 @@ import { supabase } from "@/lib/supabase";
 export async function generateUserId(uf: string, tipoConta: number): Promise<string> {
   // Validação da UF - garantir que seja uma UF válida
   if (!uf || uf.length !== 2) {
-    console.warn('UF inválida ou não fornecida:', uf);
-    uf = 'SP'; // Default para São Paulo se não houver UF válida
+    console.error('ERRO: UF inválida ou não fornecida:', uf);
+    throw new Error('UF inválida ou não fornecida para geração de ID. A UF é obrigatória.');
   } else if (uf === 'BR') {
-    console.warn('UF "BR" é inválida, substituindo por SP');
-    uf = 'SP'; // Default para São Paulo se for BR
+    console.error('ERRO: UF "BR" é inválida para geração de ID');
+    throw new Error('UF "BR" é inválida para geração de ID. Escolha um estado brasileiro válido.');
   }
 
   // Garantir que a UF esteja em maiúsculas
@@ -108,11 +108,11 @@ function generateFallbackUserId(uf: string, tipoConta: number, anoMes: string): 
 export async function generateUserIdByPlan(planType: string, uf: string): Promise<string> {
   // Validação da UF - garantir que seja uma UF válida
   if (!uf || uf.length !== 2) {
-    console.warn('UF inválida ou não fornecida:', uf);
-    uf = 'SP'; // Default para São Paulo se não houver UF válida
+    console.error('ERRO: UF inválida ou não fornecida:', uf);
+    throw new Error('UF inválida ou não fornecida para geração de ID. A UF é obrigatória.');
   } else if (uf === 'BR') {
-    console.warn('UF "BR" é inválida, substituindo por SP');
-    uf = 'SP'; // Default para São Paulo se for BR
+    console.error('ERRO: UF "BR" é inválida para geração de ID');
+    throw new Error('UF "BR" é inválida para geração de ID. Escolha um estado brasileiro válido.');
   }
 
   // Validação e normalização do tipo de plano

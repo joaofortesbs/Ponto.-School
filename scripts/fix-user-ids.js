@@ -148,11 +148,32 @@ async function fixUserIds() {
         // Determinar a UF
         let uf = profile.state;
         if (!uf || uf.length !== 2) {
-          console.log(`Perfil ${profile.id} tem UF inválida ou não fornecida, usando SP como padrão`);
-          uf = 'SP';
+          console.log(`Perfil ${profile.id} tem UF inválida ou não fornecida`);
+          
+          // Se temos acesso ao email do usuário, podemos notificá-lo para atualizar seu perfil
+          if (profile.email) {
+            console.log(`[AÇÃO NECESSÁRIA] O usuário ${profile.email} precisa atualizar seu estado no perfil`);
+            
+            // Aqui poderíamos adicionar código para enviar um email de notificação ao usuário
+            
+            // Por enquanto, vamos pular este perfil e não gerar um ID
+            console.log(`Pulando geração de ID para perfil ${profile.id} (${profile.email}) - UF inválida`);
+            continue;
+          } else {
+            console.log(`Não foi possível determinar um estado válido para o perfil ${profile.id}`);
+            continue;
+          }
         } else if (uf === 'BR') {
-          console.log(`Perfil ${profile.id} tem UF "BR" que é inválida, substituindo por SP`);
-          uf = 'SP';
+          console.log(`Perfil ${profile.id} tem UF "BR" que é inválida`);
+          
+          // Se temos acesso ao email do usuário, podemos notificá-lo para atualizar seu perfil
+          if (profile.email) {
+            console.log(`[AÇÃO NECESSÁRIA] O usuário ${profile.email} precisa atualizar seu estado no perfil`);
+            continue;
+          } else {
+            console.log(`Não foi possível determinar um estado válido para o perfil ${profile.id}`);
+            continue;
+          }
         } else {
           uf = uf.toUpperCase(); // Garantir que esteja em maiúsculas
         }

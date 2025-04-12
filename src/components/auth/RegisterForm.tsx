@@ -198,6 +198,16 @@ export function RegisterForm() {
       [name]: value,
     }));
 
+    // Salvar o estado no localStorage quando o usuário selecionar
+    if (name === "state" && value) {
+      try {
+        localStorage.setItem('selectedState', value);
+        console.log(`Estado selecionado e salvo: ${value}`);
+      } catch (e) {
+        console.error('Erro ao salvar estado no localStorage:', e);
+      }
+    }
+
     // If this is the class group change and we have a valid institution,
     // we could potentially fetch more specific grade options based on the class
     if (name === "classGroup" && value && formData.institution) {

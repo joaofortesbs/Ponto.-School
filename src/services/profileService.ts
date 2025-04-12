@@ -267,28 +267,36 @@ class ProfileService {
       // Verificar se temos uma UF válida
       let uf = profile.state;
       if (!uf || uf.length !== 2) {
-        // Se não tiver UF válida, usar SP como padrão
-        console.log('UF não fornecida ou inválida, usando SP como padrão');
-        uf = 'SP';
-      } else if (uf === 'BR') {
-        console.log('UF "BR" não é válida, substituindo por SP');
-        uf = 'SP';
+        // Se não tiver UF válida, tentar recuperar do localStorage ou prompt do usuário
+        console.error('UF não fornecida ou inválida no perfil do usuário');
         
-        // Tentar atualizar o estado do usuário para SP já que não temos um estado válido
+        // Tentar obter do localStorage
         try {
-          const { error: updateStateError } = await supabase
-            .from('profiles')
-            .update({ state: uf })
-            .eq('id', profile.id);
+          const savedState = localStorage.getItem('selectedState');
+          if (savedState && savedState.length === 2) {
+            console.log(`Usando estado encontrado no localStorage: ${savedState}`);
+            uf = savedState.toUpperCase();
             
-          if (updateStateError) {
-            console.warn('Não foi possível atualizar o estado do usuário:', updateStateError);
+            // Atualizar o perfil com o estado correto
+            const { error: updateStateError } = await supabase
+              .from('profiles')
+              .update({ state: uf })
+              .eq('id', profile.id);
+              
+            if (!updateStateError) {
+              console.log(`Estado do usuário atualizado para ${uf}`);
+            }
           } else {
-            console.log(`Estado do usuário atualizado para ${uf}`);
+            console.error('Não foi possível encontrar um estado válido para o usuário.');
+            throw new Error('Estado/UF inválido para geração de ID. Selecione um estado brasileiro válido.');
           }
         } catch (e) {
-          console.error('Erro ao atualizar estado do usuário:', e);
+          console.error('Erro ao recuperar ou atualizar estado do usuário:', e);
+          throw new Error('Não foi possível gerar ID sem um estado brasileiro válido.');
         }
+      } else if (uf === 'BR') {
+        console.error('UF "BR" não é válida para geração de ID');
+        throw new Error('UF "BR" é inválida para geração de ID. Escolha um estado brasileiro válido.');
       }
       
       // Determinar o tipo de plano do usuário
