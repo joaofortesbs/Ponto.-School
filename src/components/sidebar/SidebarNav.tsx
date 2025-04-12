@@ -114,13 +114,12 @@ export function SidebarNav({
             }
             
             // Extrair o primeiro nome do usuário para a saudação
-            if (data.full_name) {
-              setFirstName(data.full_name.split(' ')[0]);
-            } else if (data.display_name) {
-              setFirstName(data.display_name.split(' ')[0]);
-            } else if (data.username) {
-              setFirstName(data.username);
-            }
+            // Usando a mesma lógica do Dashboard.tsx para consistência
+            const dashboardName = data.full_name?.split(' ')[0] || data.display_name || data.username || "João";
+            setFirstName(dashboardName);
+            
+            // Salvar o nome no localStorage para garantir consistência entre componentes
+            localStorage.setItem('userFirstName', dashboardName);
           }
         }
       } catch (error) {
@@ -130,6 +129,12 @@ export function SidebarNav({
       }
     };
 
+    // Verificar se já temos o nome no localStorage primeiro (para carregamento rápido)
+    const storedFirstName = localStorage.getItem('userFirstName');
+    if (storedFirstName) {
+      setFirstName(storedFirstName);
+    }
+    
     fetchUserProfile();
   }, []);
 
