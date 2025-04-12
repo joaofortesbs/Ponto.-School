@@ -55,11 +55,8 @@ export default function ContactInfo({
   const [containerHeight, setContainerHeight] = useState("420px");
   
   useEffect(() => {
-    if (expandedSection === "contact") {
-      setContainerHeight("auto");
-    } else {
-      setContainerHeight("420px");
-    }
+    // Mantém a altura fixa mesmo quando está expandido
+    setContainerHeight("420px");
   }, [expandedSection]);
   
   // Função para formatar a data de nascimento
@@ -90,7 +87,7 @@ export default function ContactInfo({
 
   return (
     <div 
-      className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-6 shadow-sm w-full transition-all duration-300 overflow-hidden backdrop-blur-sm bg-gradient-to-br from-white to-white/90 dark:from-[#0A2540] dark:to-[#0A2540]/95"
+      className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-6 shadow-sm w-full transition-all duration-300 overflow-y-auto backdrop-blur-sm bg-gradient-to-br from-white to-white/90 dark:from-[#0A2540] dark:to-[#0A2540]/95"
       style={{ height: containerHeight, minHeight: "420px" }}
     >
       <motion.div 
@@ -120,7 +117,7 @@ export default function ContactInfo({
       </motion.div>
 
       {expandedSection === "contact" && (
-        <div className="p-4 bg-white/80 dark:bg-[#0A2540]/90 rounded-lg border border-[#E0E1DD] dark:border-white/10 mb-4 backdrop-blur-lg">
+        <div className="p-4 bg-white/80 dark:bg-[#0A2540]/90 rounded-lg border border-[#E0E1DD] dark:border-white/10 mb-4 backdrop-blur-lg max-h-[320px] overflow-y-auto">
           <h4 className="text-base font-medium text-[#29335C] dark:text-white mb-3">
             Editar Informações de Contato
           </h4>
@@ -231,7 +228,7 @@ export default function ContactInfo({
         </div>
       )}
 
-      <div className="space-y-4">
+      <div className={`space-y-4 ${expandedSection === "contact" ? "max-h-[100px] overflow-y-auto" : ""}`}>
         <motion.div 
           className="flex items-center gap-3 bg-gradient-to-r from-white/20 to-transparent dark:from-white/5 p-3 rounded-lg hover:from-[#FF6B00]/10 transition-all duration-300 border border-white/10 backdrop-blur-md group"
           initial={{ opacity: 0, x: -10 }}
