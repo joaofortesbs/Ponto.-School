@@ -15,28 +15,25 @@ export async function generateUserId(uf: string, tipoConta: number): Promise<str
   const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
   
   try {
-    // Inicia uma transação para garantir atomicidade
+    // Obter o último ID da tabela de controle
     const { data, error: selectError } = await supabase
       .from('user_id_control')
-      .select('next_id')
-      .eq('uf', uf)
-      .eq('ano_mes', anoMes)
-      .eq('tipo_conta', tipoConta)
+      .select('last_id')
       .single();
 
     if (selectError && selectError.code !== 'PGRST116') {
-      console.error("Erro ao buscar next_id:", selectError);
+      console.error("Erro ao buscar last_id:", selectError);
       return generateFallbackUserId(uf, tipoConta, anoMes);
     }
 
     let nextId;
     
     if (!data) {
-      // Se não existe registro para esta combinação, cria um novo começando com 1
+      // Se não existe registro, cria um novo começando com 1001
       const { data: insertData, error: insertError } = await supabase
         .from('user_id_control')
         .insert([
-          { uf, ano_mes: anoMes, tipo_conta: tipoConta, next_id: 2 } // Já seta para 2 pois usaremos 1
+          { last_id: 1001 } // Já seta para 1001 pois usaremos 1000
         ])
         .select();
 
@@ -45,20 +42,18 @@ export async function generateUserId(uf: string, tipoConta: number): Promise<str
         return generateFallbackUserId(uf, tipoConta, anoMes);
       }
       
-      nextId = 1; // Primeiro ID para esta combinação
+      nextId = 1000; // Primeiro ID
     } else {
-      // Se já existe um registro, incrementa o next_id
-      nextId = data.next_id;
+      // Se já existe um registro, incrementa o last_id
+      nextId = data.last_id;
       
       const { error: updateError } = await supabase
         .from('user_id_control')
-        .update({ next_id: nextId + 1 })
-        .eq('uf', uf)
-        .eq('ano_mes', anoMes)
-        .eq('tipo_conta', tipoConta);
+        .update({ last_id: nextId + 1 })
+        .eq('id', data.id);
 
       if (updateError) {
-        console.error("Erro ao atualizar next_id:", updateError);
+        console.error("Erro ao atualizar last_id:", updateError);
         return generateFallbackUserId(uf, tipoConta, anoMes);
       }
     }

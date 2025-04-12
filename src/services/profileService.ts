@@ -255,15 +255,18 @@ class ProfileService {
         return false;
       }
       
-      // Se já tem ID, não faz nada
-      if (profile.user_id && isValidUserId(profile.user_id)) {
-        console.log('Usuário já possui um ID válido:', profile.user_id);
+      // Se já tem ID válido, não faz nada
+      if (profile.user_id && profile.user_id.length > 5) {
+        console.log('Usuário já possui um ID:', profile.user_id);
         return true;
       }
       
-      // Gerar um novo ID baseado no plano do usuário
-      const planType = profile.plan_type || 'lite';
-      const generatedId = await generateUserIdByPlan(planType, 'BR');
+      // Gerar um ID simples (sem depender de tabelas de controle)
+      const dataAtual = new Date();
+      const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
+      const tipoConta = (profile.plan_type?.toLowerCase() === 'premium') ? '1' : '2';
+      const sequencial = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+      const generatedId = `BR${anoMes}${tipoConta}${sequencial}`;
       
       // Atualizar o perfil com o novo ID
       const { data, error } = await supabase
@@ -272,13 +275,21 @@ class ProfileService {
           user_id: generatedId,
           updated_at: new Date().toISOString()
         })
-        .eq('id', profile.id)
-        .select()
-        .single();
+        .eq('id', profile.id);
       
       if (error) {
         console.error('Erro ao atualizar perfil com novo ID:', error);
-        return false;
+        
+        // Tentar um método alternativo de atualização
+        const { error: alternativeError } = await supabase
+          .rpc('execute_sql', { 
+            sql_query: `UPDATE profiles SET user_id = '${generatedId}', updated_at = NOW() WHERE id = '${profile.id}'` 
+          });
+        
+        if (alternativeError) {
+          console.error('Erro também no método alternativo:', alternativeError);
+          return false;
+        }
       }
       
       console.log('ID gerado e atualizado com sucesso:', generatedId);

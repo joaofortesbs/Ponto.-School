@@ -209,8 +209,12 @@ export function RegisterForm() {
         return;
       }
 
-      // Gerar um ID de usuário único baseado no timestamp e plano
-      const userId = `BR${plan === "premium" ? 1 : 2}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+      // Gerar um ID de usuário único com o formato correto BR + AnoMês + TipoConta + Sequencial
+      const dataAtual = new Date();
+      const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
+      const tipoConta = (plan === "premium") ? "1" : "2";
+      const sequencial = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+      const userId = `BR${anoMes}${tipoConta}${sequencial}`;
 
       // Primeiro tente registrar o usuário no sistema de autenticação
       let userData = null;

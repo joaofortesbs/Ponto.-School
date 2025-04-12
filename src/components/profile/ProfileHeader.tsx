@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
@@ -21,7 +20,8 @@ import {
   Lightbulb,
   Camera,
   Upload,
-  ImageIcon
+  ImageIcon,
+  RefreshCw
 } from "lucide-react";
 import type { UserProfile } from "@/types/user-profile";
 import { motion, AnimatePresence } from "framer-motion";
@@ -49,6 +49,8 @@ export default function ProfileHeader({
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
 
   // Array de conquistas recentes para animação
   const recentAchievements = [
@@ -70,15 +72,9 @@ export default function ProfileHeader({
     if (userProfile?.cover_url) {
       setCoverUrl(userProfile.cover_url);
     }
-    
+
     // Verificar se o usuário tem um ID e, caso não tenha, gerar um
-    if (!userProfile?.user_id) {
-      const checkAndGenerateId = async () => {
-        await profileService.ensureUserHasId();
-      };
-      
-      checkAndGenerateId();
-    }
+    loadProfile();
   }, [userProfile]);
 
   useEffect(() => {
@@ -110,16 +106,16 @@ export default function ProfileHeader({
     const rect = card.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    
+
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
-    
+
     const rotateX = (y - centerY) / 30;
     const rotateY = (centerX - x) / 30;
-    
+
     card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
   };
-  
+
   const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
     const card = e.currentTarget;
     card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)';
@@ -127,7 +123,7 @@ export default function ProfileHeader({
 
   const uploadProfilePicture = async (file: File) => {
     if (!file) return;
-    
+
     try {
       setIsUploading(true);
       const { data: sessionData } = await supabase.auth.getSession();
@@ -168,7 +164,7 @@ export default function ProfileHeader({
       });
 
       setAvatarUrl(publicUrlData.publicUrl);
-      
+
       toast({
         title: "Sucesso",
         description: "Foto de perfil atualizada com sucesso",
@@ -187,7 +183,7 @@ export default function ProfileHeader({
 
   const uploadCoverPhoto = async (file: File) => {
     if (!file) return;
-    
+
     try {
       setIsUploading(true);
       const { data: sessionData } = await supabase.auth.getSession();
@@ -228,7 +224,7 @@ export default function ProfileHeader({
       });
 
       setCoverUrl(publicUrlData.publicUrl);
-      
+
       toast({
         title: "Sucesso",
         description: "Foto de capa atualizada com sucesso",
@@ -292,6 +288,53 @@ export default function ProfileHeader({
     }
   };
 
+  async function loadProfile() {
+    try {
+      // Primeiro garantir que o usuário tenha um ID
+      await profileService.ensureUserHasId();
+
+      // Então carregar o perfil atualizado
+      const userData = await profileService.getCurrentUserProfile();
+      setProfile(userData);
+      if (userData) {
+        setDisplayName(userData.display_name);
+        setAvatarUrl(userData.avatar_url);
+        setCoverUrl(userData.cover_url);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar perfil:", error);
+    }
+  }
+
+  const refreshId = async () => {
+    setRefreshing(true);
+    try {
+      // Gerar um novo ID
+      const dataAtual = new Date();
+      const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
+      const tipoConta = (userProfile?.plan_type?.toLowerCase() === 'premium') ? '1' : '2';
+      const sequencial = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+      const generatedId = `BR${anoMes}${tipoConta}${sequencial}`;
+
+      // Atualizar o perfil
+      if (userProfile?.id) {
+        await supabase
+          .from('profiles')
+          .update({ 
+            user_id: generatedId,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', userProfile.id);
+          loadProfile();
+      }
+
+    } catch (error) {
+      console.error("Erro ao atualizar ID:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   return (
     <div 
       className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 shadow-lg overflow-hidden relative group hover:shadow-2xl transition-all duration-500"
@@ -304,7 +347,7 @@ export default function ProfileHeader({
       {/* Efeitos decorativos */}
       <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-[#FF6B00]/20 to-transparent rounded-bl-full z-0 opacity-60 group-hover:opacity-100 transition-opacity duration-500"></div>
       <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-[#0A2540]/10 to-transparent rounded-tr-full z-0 opacity-60 group-hover:opacity-100 transition-opacity duration-500"></div>
-      
+
       {/* Partículas animadas (visíveis no hover) */}
       <AnimatePresence>
         {isHovering && (
@@ -358,7 +401,7 @@ export default function ProfileHeader({
             }}
           />
         )}
-        
+
         <div className="absolute inset-0 bg-gradient-to-t from-[#001427]/90 to-transparent"></div>
 
         {/* Botão de upload da capa (visível no hover) */}
@@ -391,7 +434,7 @@ export default function ProfileHeader({
             repeatType: "reverse"
           }}
         />
-        
+
         <motion.div
           className="absolute bottom-5 left-10 w-16 h-16 rounded-full bg-[#0064FF]/20 blur-xl"
           animate={{ 
@@ -461,7 +504,7 @@ export default function ProfileHeader({
                   {displayName?.charAt(0) || userProfile?.display_name?.charAt(0) || "U"}
                 </AvatarFallback>
               </Avatar>
-              
+
               {/* Anel de progresso ao redor do avatar */}
               <svg className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] rotate-90">
                 <circle
@@ -524,9 +567,21 @@ export default function ProfileHeader({
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.8, duration: 0.3 }}
         >
-          <p className="text-xs text-[#64748B] dark:text-white/60 text-center font-medium">
-            ID: {userProfile?.user_id || "--"}
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-xs text-[#64748B] dark:text-white/60 text-center font-medium">
+              ID: {userProfile?.user_id || "Gerando..."}
+            </p>
+            {userProfile?.user_id && (
+              <button 
+                onClick={refreshId}
+                className="text-xs text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                title="Regenerar ID"
+                disabled={refreshing}
+              >
+                <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
+              </button>
+            )}
+          </div>
         </motion.div>
 
         <motion.div 
@@ -573,7 +628,7 @@ export default function ProfileHeader({
               </p>
               <p className="text-[10px] text-[#64748B] dark:text-white/60">Nível</p>
             </div>
-            
+
             {/* Tooltip com detalhes */}
             {showStatsDetails && (
               <motion.div 
@@ -648,7 +703,7 @@ export default function ProfileHeader({
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 5 }}
-                    className="absolute right-6 -mt-10 px-2 py-1.5 bg-black/80 text-white text-[10px] rounded-lg shadow-lg backdrop-blur-sm z-50 w-32 text-center"
+                    className="absolute right-6 -mt-10 px-2py-1.5 bg-black/80 text-white text-[10px] rounded-lg shadow-lg backdrop-blur-sm z-50 w-32 text-center"
                   >
                     <div className="font-medium mb-0.5">Progresso</div>
                     <div className="text-white/80">720/1000 XP</div>
@@ -687,7 +742,7 @@ export default function ProfileHeader({
           >
             {/* Efeito de brilho no hover */}
             <span className="absolute w-32 h-32 -mt-12 -ml-12 bg-white rotate-12 opacity-0 group-hover:opacity-10 transition-opacity duration-1000 transform group-hover:translate-x-40 group-hover:translate-y-10 pointer-events-none"></span>
-            
+
             {isUploading ? (
               <div className="h-3 w-3 rounded-full border-2 border-white border-t-transparent animate-spin mr-1.5"></div>
             ) : (
@@ -702,7 +757,7 @@ export default function ProfileHeader({
             disabled={isUploading}
           >
             <Share2 className="h-3.5 w-3.5 text-[#64748B] dark:text-white/60 group-hover/share:text-[#FF6B00] transition-colors duration-300" />
-            
+
             {/* Efeito de onda ao clicar */}
             <span className="absolute w-0 h-0 rounded-full bg-[#FF6B00]/10 opacity-0 group-active/share:w-16 group-active/share:h-16 group-active/share:opacity-100 transition-all duration-500 -z-10"></span>
           </Button>
@@ -720,7 +775,7 @@ export default function ProfileHeader({
               <Sparkles className="h-3 w-3 text-yellow-500" />
               <span className="font-medium">Conquistas Recentes</span>
             </div>
-            
+
             {/* Animação de carrossel para conquistas */}
             <div className="h-5 w-full relative overflow-hidden">
               {recentAchievements.map((achievement, index) => (
@@ -740,7 +795,7 @@ export default function ProfileHeader({
                 </motion.div>
               ))}
             </div>
-            
+
             {/* Indicadores de navegação */}
             <div className="flex gap-0.5">
               {recentAchievements.map((_, index) => (
@@ -756,7 +811,7 @@ export default function ProfileHeader({
             </div>
           </div>
         </motion.div>
-        
+
         {/* Indicador de atividade recente - reduzido */}
         <motion.div 
           className="mt-2 flex justify-center"
