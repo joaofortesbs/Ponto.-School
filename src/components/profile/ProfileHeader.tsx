@@ -59,98 +59,139 @@ export default function ProfileHeader({
     { icon: <Lightbulb className="h-4 w-4" />, name: "Ideia Brilhante", date: "5 dias atrás" },
   ];
 
-  // Função para garantir que temos o username correto e consistente com o cabeçalho
+  // Função aprimorada para garantir que temos o username correto e consistente com o cabeçalho
   const ensureCorrectUsername = async () => {
     try {
       // Verificar se temos o username e informações de perfil no localStorage (usado no cabeçalho)
       const headerUsername = localStorage.getItem('username');
       const headerFirstName = localStorage.getItem('userFirstName');
       const headerDisplayName = localStorage.getItem('userDisplayName');
+      const sessionUsername = sessionStorage.getItem('username');
+      const supabaseUser = await supabase.auth.getUser();
+      const userEmail = supabaseUser.data?.user?.email || localStorage.getItem('userEmail') || '';
 
       console.log("Sincronizando informações de usuário:", {
         headerUsername,
         headerFirstName,
         headerDisplayName,
+        sessionUsername,
+        userEmail,
         profileUsername: userProfile?.username,
         profileDisplayName: userProfile?.display_name,
         profileFullName: userProfile?.full_name
       });
 
-      // Sempre priorizar o username do localStorage (cabeçalho)
-      if (headerUsername && headerUsername !== 'Usuário') {
-        // Se temos um username válido no cabeçalho, usar ele como fonte principal
+      // Avaliar validade dos usernames disponíveis
+      const isUsernameValid = (username: string | null | undefined) => {
+        return username && username !== 'Usuário' && !username.startsWith('user_') && username.length > 2;
+      };
 
-        // Verificar se o perfil existe e precisa ser atualizado
-        if (userProfile && (userProfile.username !== headerUsername)) {
-          console.log("Atualizando username no perfil para corresponder ao cabeçalho:", headerUsername);
-
-          // Determinar qual display_name usar
-          const displayNameToUse = headerDisplayName || headerFirstName || 
-                                  userProfile?.display_name || userProfile?.full_name?.split(' ')[0] || 
-                                  headerUsername;
-
-          // Atualizar o perfil para usar o mesmo username do cabeçalho
-          await profileService.updateUserProfile({
-            username: headerUsername,
-            display_name: displayNameToUse,
-            updated_at: new Date().toISOString()
-          });
-
-          // Atualizar o estado local
-          setDisplayName(displayNameToUse);
-
-          // Recarregar perfil após atualização
-          loadProfile();
+      // Determinar o melhor username baseado em todas as fontes disponíveis
+      let bestUsername = null;
+      let bestDisplayName = null;
+      let sourceOfUsername = 'nenhuma';
+      
+      // 1. Priorizar o username do perfil no banco (fonte primária)
+      if (isUsernameValid(userProfile?.username)) {
+        bestUsername = userProfile.username;
+        sourceOfUsername = 'perfil';
+      }
+      // 2. Verificar username no localStorage (usado pelo header)
+      else if (isUsernameValid(headerUsername)) {
+        bestUsername = headerUsername;
+        sourceOfUsername = 'localStorage';
+      }
+      // 3. Verificar username na sessionStorage
+      else if (isUsernameValid(sessionUsername)) {
+        bestUsername = sessionUsername;
+        sourceOfUsername = 'sessionStorage';
+      }
+      // 4. Usar email como fonte para username (muito confiável)
+      else if (userEmail && userEmail.includes('@')) {
+        const emailUsername = userEmail.split('@')[0];
+        if (isUsernameValid(emailUsername)) {
+          bestUsername = emailUsername;
+          sourceOfUsername = 'email';
         }
-      } else if (userProfile?.username && userProfile.username !== 'Usuário') {
-        // Se não temos username válido no localStorage mas temos no perfil, atualizar o localStorage
-        console.log("Sincronizando username do perfil para o cabeçalho:", userProfile.username);
-        localStorage.setItem('username', userProfile.username);
+      }
+      // 5. Último recurso: gerar um username com timestamp fixo baseado na data
+      else {
+        const today = new Date();
+        const seed = `${today.getFullYear()}${(today.getMonth()+1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
+        bestUsername = `user_${seed}`;
+        sourceOfUsername = 'gerado';
+      }
 
-        // Também sincronizar display_name e first_name se disponíveis
-        if (userProfile.display_name) {
-          localStorage.setItem('userDisplayName', userProfile.display_name);
-        }
-        if (userProfile.full_name) {
-          localStorage.setItem('userFirstName', userProfile.full_name.split(' ')[0]);
-        }
-      } else if (window.sessionStorage?.getItem('username')) {
-        // Tentar obter do sessionStorage como fallback
-        const sessionUsername = window.sessionStorage.getItem('username');
-        localStorage.setItem('username', sessionUsername);
-
-        if (userProfile) {
-          await profileService.updateUserProfile({
-            username: sessionUsername,
-            updated_at: new Date().toISOString()
-          });
-        }
+      // Determinar o melhor display_name
+      if (userProfile?.display_name && userProfile.display_name !== 'Usuário') {
+        bestDisplayName = userProfile.display_name;
+      } else if (headerDisplayName && headerDisplayName !== 'Usuário') {
+        bestDisplayName = headerDisplayName;
+      } else if (headerFirstName && headerFirstName !== 'Usuário') {
+        bestDisplayName = headerFirstName;
+      } else if (userProfile?.full_name) {
+        bestDisplayName = userProfile.full_name.split(' ')[0];
+      } else if (bestUsername && isUsernameValid(bestUsername)) {
+        bestDisplayName = bestUsername;
       } else {
-        // Usar valor dinâmico ao invés de valor fixo
-        const userEmail = localStorage.getItem('userEmail') || '';
-        const dynamicUsername = userEmail.split('@')[0] || ('user_' + Math.floor(Math.random() * 1000));
+        bestDisplayName = 'Usuário';
+      }
 
-        console.log("Definindo username dinâmico:", dynamicUsername);
-        localStorage.setItem('username', dynamicUsername);
+      console.log(`Melhor username encontrado: ${bestUsername} (fonte: ${sourceOfUsername})`);
+      console.log(`Melhor display name encontrado: ${bestDisplayName}`);
 
-        if (userProfile) {
-          // Atualizar o perfil com este username dinâmico
-          await profileService.updateUserProfile({
-            username: dynamicUsername,
+      // Sincronizar em todas as fontes
+      if (bestUsername) {
+        // Atualizar localStorage e sessionStorage para garantir consistência
+        localStorage.setItem('username', bestUsername);
+        try { sessionStorage.setItem('username', bestUsername); } catch(e) {}
+        
+        // Atualizar estado local para exibição imediata
+        setDisplayName(bestDisplayName);
+        
+        // Verificar se o perfil precisa ser atualizado
+        if (userProfile && 
+            (userProfile.username !== bestUsername || 
+             userProfile.display_name !== bestDisplayName)) {
+          
+          console.log("Atualizando perfil com username e display_name definidos");
+          
+          // Atualizar o perfil no Supabase
+          const updateResult = await profileService.updateUserProfile({
+            username: bestUsername,
+            display_name: bestDisplayName,
             updated_at: new Date().toISOString()
           });
-
-          // Atualizar o estado local
-          setDisplayName(userProfile.display_name || dynamicUsername);
-
-          // Recarregar perfil
-          loadProfile();
+          
+          if (updateResult) {
+            console.log("Perfil atualizado com sucesso:", updateResult);
+            // Notificar outros componentes sobre a atualização
+            document.dispatchEvent(new CustomEvent('usernameUpdated', { 
+              detail: { username: bestUsername } 
+            }));
+          }
+        }
+        
+        // Disparar evento global para outros componentes saberem do username
+        if (!window.usernameSyncEvent) {
+          window.usernameSyncEvent = true;
+          console.log("Disparando evento global de sincronização de username");
+          document.dispatchEvent(new CustomEvent('usernameSynchronized', { 
+            detail: { username: bestUsername, displayName: bestDisplayName } 
+          }));
         }
       }
     } catch (error) {
       console.error("Erro ao sincronizar username com cabeçalho:", error);
     }
   };
+  
+  // Declaração global para rastrear se o evento já foi disparado
+  declare global {
+    interface Window {
+      usernameSyncEvent?: boolean;
+    }
+  }
 
   useEffect(() => {
     // Verificar se temos um username no cabeçalho e configurar um padrão se não tiver
@@ -1034,21 +1075,98 @@ export default function ProfileHeader({
               resolved_username: resolvedUsername
             });
 
-            // Nome de exibição (Primeiro nome) - usar mesma prioridade do Header
-            const displayNameToUse = userFirstName || 
-                                    userDisplayName || 
-                                    userProfile?.display_name || 
-                                    (userProfile?.full_name ? userProfile.full_name.split(' ')[0] : null) || 
-                                    'Usuário';
+            // Função auxiliar para verificar se um nome de usuário é válido
+            const isValidUsername = (username: string | null | undefined): boolean => {
+              return !!username && 
+                     username !== 'Usuário' && 
+                     username !== 'user_undefined' && 
+                     !username.includes('user_') && 
+                     username.length > 1;
+            };
 
-            // Nome de usuário - usar o nome resolvido que nunca será "Usuário"
-            const usernameToDisplay = resolvedUsername !== 'Usuário' 
-                                    ? resolvedUsername 
-                                    : headerUsername !== 'Usuário'
-                                    ? headerUsername
-                                    : userProfile?.username && userProfile.username !== 'Usuário'
-                                    ? userProfile.username
-                                    : 'user_' + Math.floor(Math.random() * 1000);
+            // Determinação do nome de exibição com prioridade clara
+            const displayNameToUse = 
+              (userProfile?.display_name && userProfile.display_name !== 'Usuário' ? userProfile.display_name : null) || 
+              userDisplayName || 
+              userFirstName || 
+              (userProfile?.full_name ? userProfile.full_name.split(' ')[0] : null) || 
+              'Usuário';
+
+            // Busca um nome de usuário válido em todas as fontes disponíveis
+            // Primeiro tentar obter do email (primeiro segmento do email como fallback universal)
+            const emailUsername = userProfile?.email ? userProfile.email.split('@')[0] : null;
+            
+            // Nome de usuário com prioridade de fontes e validação
+            let usernameToDisplay;
+            
+            // 1. Verificar username do perfil (fonte definitiva)
+            if (isValidUsername(userProfile?.username)) {
+              usernameToDisplay = userProfile?.username;
+            } 
+            // 2. Verificar username do localStorage (usado pelo header)
+            else if (isValidUsername(headerUsername)) {
+              usernameToDisplay = headerUsername;
+              
+              // Se temos username válido no localStorage mas não no perfil, atualizar o perfil
+              if (userProfile && userProfile.id) {
+                setTimeout(() => {
+                  profileService.updateUserProfile({
+                    id: userProfile.id,
+                    username: headerUsername
+                  }).then(() => console.log("Perfil atualizado com username do localStorage"));
+                }, 500);
+              }
+            } 
+            // 3. Verificar metadados de sessão (via sessionStorage)
+            else if (isValidUsername(sessionStorage.getItem('username'))) {
+              usernameToDisplay = sessionStorage.getItem('username');
+            }
+            // 4. Usar email como fonte alternativa (muito confiável)
+            else if (isValidUsername(emailUsername)) {
+              usernameToDisplay = emailUsername;
+              
+              // Salvar no localStorage e atualizar perfil
+              if (emailUsername) {
+                localStorage.setItem('username', emailUsername);
+                
+                if (userProfile && userProfile.id) {
+                  setTimeout(() => {
+                    profileService.updateUserProfile({
+                      id: userProfile.id,
+                      username: emailUsername
+                    }).then(() => console.log("Perfil atualizado com username do email"));
+                  }, 500);
+                }
+              }
+            }
+            // 5. Gerar um nome de usuário consistente baseado no ID
+            else if (userProfile?.user_id) {
+              const generatedUsername = `user_${userProfile.user_id.substring(userProfile.user_id.length - 6)}`;
+              usernameToDisplay = generatedUsername;
+              
+              // Salvar para uso futuro
+              localStorage.setItem('username', generatedUsername);
+              
+              if (userProfile && userProfile.id) {
+                setTimeout(() => {
+                  profileService.updateUserProfile({
+                    id: userProfile.id,
+                    username: generatedUsername
+                  }).then(() => console.log("Perfil atualizado com username gerado do ID"));
+                }, 500);
+              }
+            }
+            // 6. Último recurso: gerar nome aleatório mas FIXO (usando data)
+            else {
+              // Gerar com base em data para ser constante
+              const date = new Date();
+              const seedValue = date.getFullYear() + date.getMonth() + date.getDate();
+              const generatedUsername = `user_${seedValue}`;
+              usernameToDisplay = generatedUsername;
+              
+              // Salvar para uso futuro
+              localStorage.setItem('username', generatedUsername);
+            }
 
             // Exibir nome e username consistentes com o header
             return (

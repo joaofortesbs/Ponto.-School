@@ -15,6 +15,7 @@ import FloatingChatSupport from "@/components/chat/FloatingChatSupport";
 import { supabase } from "@/lib/supabase";
 import { checkAuthentication } from "@/lib/auth-utils";
 import { StudyGoalProvider } from "@/components/dashboard/StudyGoalContext";
+import UsernameProvider from "./components/UsernameProvider"; // Added import
 
 // Importações diretas
 import Dashboard from "@/pages/dashboard";
@@ -287,87 +288,89 @@ function App() {
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <StudyGoalProvider>
-        <ErrorBoundary>
-          <div className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
-            <Routes>
-              {/* Auth Routes - Públicas */}
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-              <Route path="/reset-password" element={<ResetPasswordPage />} />
-              <Route path="/select-plan" element={<PlanSelectionPage />} />
+      <UsernameProvider>
+        <StudyGoalProvider>
+          <ErrorBoundary>
+            <div className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
+              <Routes>
+                {/* Auth Routes - Públicas */}
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/select-plan" element={<PlanSelectionPage />} />
 
-              {/* Main App Routes - Protegidas */}
-              <Route path="/" element={
-                <ProtectedRoute>
-                  <Home />
-                </ProtectedRoute>
-              }>
-                <Route index element={<Dashboard />} />
-                <Route path="turmas" element={<Turmas />} />
-                <Route path="turmas/:id" element={<TurmaDetail />} />
-                <Route path="turmas/grupos2" element={<GruposEstudo2 />} />
-                <Route path="turmas/grupos" element={<GruposEstudo />} />
-                <Route path="turmas/grupos/:id" element={<GruposEstudo />} />
-                <Route path="comunidades" element={<Comunidades />} />
-                <Route path="pedidos-ajuda" element={<PedidosAjuda />} />
-                <Route path="epictus-ia" element={<EpictusIA />} />
-                <Route path="agenda" element={<Agenda />} />
-                <Route path="biblioteca" element={<Biblioteca />} />
-                <Route path="mercado" element={<Mercado />} />
-                <Route path="conquistas" element={<Conquistas />} />
-                <Route path="carteira" element={<Carteira />} />
-                <Route path="organizacao" element={<Organizacao />} />
-                <Route path="novidades" element={<Novidades />} />
-                <Route path="configuracoes" element={<Configuracoes />} />
-                <Route path="planos-estudo" element={<PlanosEstudo />} />
-                <Route path="portal" element={<Portal />} />
-              </Route>
+                {/* Main App Routes - Protegidas */}
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <Home />
+                  </ProtectedRoute>
+                }>
+                  <Route index element={<Dashboard />} />
+                  <Route path="turmas" element={<Turmas />} />
+                  <Route path="turmas/:id" element={<TurmaDetail />} />
+                  <Route path="turmas/grupos2" element={<GruposEstudo2 />} />
+                  <Route path="turmas/grupos" element={<GruposEstudo />} />
+                  <Route path="turmas/grupos/:id" element={<GruposEstudo />} />
+                  <Route path="comunidades" element={<Comunidades />} />
+                  <Route path="pedidos-ajuda" element={<PedidosAjuda />} />
+                  <Route path="epictus-ia" element={<EpictusIA />} />
+                  <Route path="agenda" element={<Agenda />} />
+                  <Route path="biblioteca" element={<Biblioteca />} />
+                  <Route path="mercado" element={<Mercado />} />
+                  <Route path="conquistas" element={<Conquistas />} />
+                  <Route path="carteira" element={<Carteira />} />
+                  <Route path="organizacao" element={<Organizacao />} />
+                  <Route path="novidades" element={<Novidades />} />
+                  <Route path="configuracoes" element={<Configuracoes />} />
+                  <Route path="planos-estudo" element={<PlanosEstudo />} />
+                  <Route path="portal" element={<Portal />} />
+                </Route>
 
-              {/* User Profile - Protegida */}
-              <Route path="/profile" element={
-                <ProtectedRoute>
-                  <ProfilePage />
-                </ProtectedRoute>
-              } />
-              <Route path="profile" element={
-                <ProtectedRoute>
-                  <ProfilePage />
-                </ProtectedRoute>
-              } />
+                {/* User Profile - Protegida */}
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                } />
+                <Route path="profile" element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                } />
 
-              {/* Agenda standalone - Protegida */}
-              <Route path="/agenda-preview" element={
-                <ProtectedRoute>
-                  <Agenda />
-                </ProtectedRoute>
-              } />
-              <Route path="/agenda-standalone" element={
-                <ProtectedRoute>
-                  <Agenda />
-                </ProtectedRoute>
-              } />
+                {/* Agenda standalone - Protegida */}
+                <Route path="/agenda-preview" element={
+                  <ProtectedRoute>
+                    <Agenda />
+                  </ProtectedRoute>
+                } />
+                <Route path="/agenda-standalone" element={
+                  <ProtectedRoute>
+                    <Agenda />
+                  </ProtectedRoute>
+                } />
 
-              {/* Fallback Route - Redireciona para login */}
-              <Route path="*" element={<Navigate to="/login" />} />
-            </Routes>
+                {/* Fallback Route - Redireciona para login */}
+                <Route path="*" element={<Navigate to="/login" />} />
+              </Routes>
 
-            {/* Floating Chat Support */}
-            {!isAuthRoute && !isLoading && <FloatingChatSupport />}
+              {/* Floating Chat Support */}
+              {!isAuthRoute && !isLoading && <FloatingChatSupport />}
 
-            {/* Welcome Modal - apenas mostrado em rotas protegidas (não auth) */}
-            {!isAuthRoute && 
-              <WelcomeModal 
-                isOpen={showWelcomeModal} 
-                onClose={() => setShowWelcomeModal(false)} 
-                isFirstLogin={isFirstLogin} 
-              />
-            }
-          </div>
-          <Toaster />
-        </ErrorBoundary>
-      </StudyGoalProvider>
+              {/* Welcome Modal - apenas mostrado em rotas protegidas (não auth) */}
+              {!isAuthRoute &&
+                <WelcomeModal
+                  isOpen={showWelcomeModal}
+                  onClose={() => setShowWelcomeModal(false)}
+                  isFirstLogin={isFirstLogin}
+                />
+              }
+            </div>
+            <Toaster />
+          </ErrorBoundary>
+        </StudyGoalProvider>
+      </UsernameProvider>
     </ThemeProvider>
   );
 }

@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { BrowserRouter } from "react-router-dom";
+import './lib/username-initializer.ts'
 
 // Configuração de tratamento global de erros
 const handleGlobalError = (event: ErrorEvent) => {
@@ -26,11 +27,11 @@ console.log("Iniciando aplicação...");
 const initializeApp = () => {
   try {
     const rootElement = document.getElementById("root");
-    
+
     if (!rootElement) {
       throw new Error("Elemento root não encontrado");
     }
-    
+
     ReactDOM.createRoot(rootElement).render(
       <React.StrictMode>
         <BrowserRouter>
@@ -38,11 +39,11 @@ const initializeApp = () => {
         </BrowserRouter>
       </React.StrictMode>,
     );
-    
+
     console.log('Aplicação inicializada com sucesso.');
   } catch (error) {
     console.error("Erro ao inicializar aplicação:", error);
-    
+
     // Tentar renderizar uma versão mínima da aplicação
     const rootElement = document.getElementById("root");
     if (rootElement) {

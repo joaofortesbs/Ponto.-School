@@ -104,6 +104,7 @@ export function SidebarNav({
 
           if (error) {
             console.error("Error fetching user profile:", error);
+            setFirstName("Usuário"); // Fallback if profile fetch fails
           } else if (data) {
             setUserProfile(data as UserProfile);
             // Se o perfil tiver um avatar_url, usar ele
@@ -112,29 +113,26 @@ export function SidebarNav({
               // Também salvar no localStorage para uso em outros componentes
               localStorage.setItem('userAvatarUrl', data.avatar_url);
             }
-            
+
             // Extrair o primeiro nome do usuário para a saudação
             // Garantir consistência priorizando o primeiro nome do campo full_name
             const dashboardName = data.full_name?.split(' ')[0] || data.display_name || "Usuário";
             setFirstName(dashboardName);
-            
+
             // Salvar o nome no localStorage para garantir consistência entre componentes
             localStorage.setItem('userFirstName', dashboardName);
           }
+        } else {
+          setFirstName("Usuário"); // Fallback if user is not authenticated
         }
       } catch (error) {
         console.error("Error:", error);
+        setFirstName("Usuário"); // Fallback for any other error
       } finally {
         setLoading(false);
       }
     };
 
-    // Obter o nome do usuário do localStorage para exibição imediata
-    const storedFirstName = localStorage.getItem('userFirstName');
-    if (storedFirstName) {
-      setFirstName(storedFirstName);
-    }
-    
     fetchUserProfile();
   }, []);
 
@@ -201,7 +199,7 @@ export function SidebarNav({
 
         // Atualizar o estado
         setProfileImage(publicUrlData.publicUrl);
-        
+
         // Salvar também no localStorage para uso em outros componentes
         try {
           localStorage.setItem('userAvatarUrl', publicUrlData.publicUrl);
@@ -498,8 +496,7 @@ export function SidebarNav({
         {!isCollapsed && (
           <div className="text-[#001427] dark:text-white text-center">
             <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
-              <span className="mr-1">👋</span> Olá,{" "}
-              {firstName || localStorage.getItem('userFirstName') || userProfile?.full_name?.split(' ')[0] || userProfile?.display_name || "Usuário"}!
+              <span className="mr-1">👋</span> Olá, {firstName || "Usuário"}!
             </h3>
             <div className="flex flex-col items-center mt-1">
               <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
