@@ -47,12 +47,12 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
     try {
       const storedNodesString = localStorage.getItem(NODES_STORAGE_KEY);
       if (!storedNodesString) return null;
-      
+
       const storedNodes = JSON.parse(storedNodesString);
-      
+
       // Verifica se os nós armazenados são válidos
       if (!Array.isArray(storedNodes) || storedNodes.length === 0) return null;
-      
+
       // Adapta os nós armazenados ao tamanho atual da tela
       const adaptedNodes = storedNodes.map(node => ({
         ...node,
@@ -65,7 +65,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
           y: (Math.random() - 0.5) * 0.5 
         }
       }));
-      
+
       return adaptedNodes;
     } catch (error) {
       console.error('Erro ao carregar nós do localStorage:', error);
@@ -73,11 +73,16 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
     }
   };
 
-  // Inicializa os nós da teia - otimizado para renderização instantânea
+  // Inicializa os nós da teia - otimizado para renderização instantânea como prioridade máxima
   useEffect(() => {
     // Função para criar conexões entre nós
     const createConnections = (nodesList: Node[]) => {
       return nodesList.map((node, index) => {
+        // Se já tiver conexões, preservar para evitar recálculos
+        if (node.connections && node.connections.length > 0) {
+          return node;
+        }
+
         const connections: number[] = [];
         for (let j = 0; j < nodesList.length; j++) {
           if (j !== index) {
@@ -99,10 +104,10 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
     // Função para criar novos nós
     const createNewNodes = (width: number, height: number): Node[] => {
       // Usar um número fixo maior de nós para telas pequenas para garantir visual consistente
-      const minNodeCount = 120;
-      const calculatedNodeCount = Math.floor((width * height) / 8000);
+      const minNodeCount = 150; // Aumentado para 150
+      const calculatedNodeCount = Math.floor((width * height) / 6000); // Densidade aumentada
       const nodeCount = Math.max(minNodeCount, calculatedNodeCount);
-      
+
       const newNodes: Node[] = [];
       for (let i = 0; i < nodeCount; i++) {
         newNodes.push({
@@ -117,81 +122,93 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
           }
         });
       }
-      
+
       return newNodes;
     };
 
-    const handleResize = () => {
-      if (containerRef.current) {
-        const { width, height } = containerRef.current.getBoundingClientRect();
-        setDimensions({ width, height });
-        
-        // Tenta carregar nós do localStorage - acesso direto e rápido
-        try {
-          const storedNodesString = localStorage.getItem(NODES_STORAGE_KEY);
-          
-          if (storedNodesString) {
-            const storedNodes = JSON.parse(storedNodesString);
-            
-            if (Array.isArray(storedNodes) && storedNodes.length > 0) {
-              // Adaptação rápida para o tamanho atual sem recalcular tudo
-              const adaptedNodes = storedNodes.map(node => ({
-                ...node,
-                x: Math.min(Math.max(0, node.x), width),
-                y: Math.min(Math.max(0, node.y), height),
-                connections: [],
-                velocity: { 
-                  x: (Math.random() - 0.5) * 0.5, 
-                  y: (Math.random() - 0.5) * 0.5 
-                }
-              }));
-              
-              // Definir nós imediatamente e calcular conexões depois
-              setNodes(adaptedNodes);
-              
-              // Calcular conexões em um setTimeout para não bloquear a renderização
-              setTimeout(() => {
-                const nodesWithConnections = createConnections(adaptedNodes);
-                setNodes(nodesWithConnections);
-                console.log("Teias geradas e persistidas com sucesso:", nodesWithConnections.length);
-              }, 50);
-              
-              return;
-            }
+    // Prioridade máxima para renderização instantânea
+    const initializeNodesWithHighestPriority = () => {
+      if (!containerRef.current) return;
+
+      const { width, height } = containerRef.current.getBoundingClientRect();
+      setDimensions({ width, height });
+
+      // Carregamento acelerado de nós persistidos
+      try {
+        // Acesso síncrono e direto ao localStorage para máxima velocidade
+        const storedNodesString = localStorage.getItem(NODES_STORAGE_KEY);
+
+        if (storedNodesString) {
+          const storedNodes = JSON.parse(storedNodesString);
+
+          if (Array.isArray(storedNodes) && storedNodes.length > 0) {
+            // Adaptação imediata sem recálculos pesados
+            const adaptedNodes = storedNodes.map(node => ({
+              ...node,
+              x: Math.min(Math.max(0, node.x * width / window.innerWidth), width),
+              y: Math.min(Math.max(0, node.y * height / window.innerHeight), height),
+              // Manter conexões existentes para evitar recálculos
+              connections: node.connections || [],
+              velocity: { 
+                x: (Math.random() - 0.5) * 0.5, 
+                y: (Math.random() - 0.5) * 0.5 
+              }
+            }));
+
+            // Aplicar nós imediatamente
+            setNodes(adaptedNodes);
+
+            // Otimização secundária em segundo plano
+            requestIdleCallback(() => {
+              const nodesWithConnections = createConnections(adaptedNodes);
+              setNodes(nodesWithConnections);
+              saveNodesToStorage(nodesWithConnections);
+              console.log("Teias otimizadas em segundo plano:", nodesWithConnections.length);
+            });
+
+            return;
           }
-          
-          console.log("Criando novas teias...");
-          // Se não conseguiu carregar, cria novos nós imediatamente
-          const newNodes = createNewNodes(width, height);
-          // Definir nós imediatamente sem conexões
-          setNodes(newNodes);
-          
-          // Calcular conexões em um setTimeout
-          setTimeout(() => {
-            const nodesWithConnections = createConnections(newNodes);
-            setNodes(nodesWithConnections);
-            saveNodesToStorage(nodesWithConnections);
-            console.log("Novas teias geradas com sucesso:", nodesWithConnections.length);
-          }, 50);
-          
-        } catch (error) {
-          console.error('Erro ao processar teias:', error);
-          // Fallback instantâneo em caso de erro
-          const newNodes = createNewNodes(width, height);
-          setNodes(newNodes);
         }
+
+        // Fallback para criação rápida
+        console.log("Criando novas teias prioritárias...");
+        const newNodes = createNewNodes(width, height);
+        setNodes(newNodes);
+
+        // Otimizar em segundo plano depois da renderização inicial
+        requestAnimationFrame(() => {
+          const nodesWithConnections = createConnections(newNodes);
+          setNodes(nodesWithConnections);
+          saveNodesToStorage(nodesWithConnections);
+          console.log("Novas teias geradas com sucesso:", nodesWithConnections.length);
+        });
+
+      } catch (error) {
+        console.error('Erro ao processar teias:', error);
+        // Fallback ultra-rápido
+        const newNodes = createNewNodes(width, height);
+        setNodes(newNodes);
       }
     };
 
-    // Executar imediatamente para renderização instantânea
-    handleResize();
-    
+    // Inicialização com prioridade máxima
+    initializeNodesWithHighestPriority();
+
+    // Forçar update quando solicitado (troca de páginas, login, etc)
+    const handleForceUpdate = () => {
+      console.log("Atualizando teias forçadamente");
+      initializeNodesWithHighestPriority();
+    };
+
+    document.addEventListener("ForceWebTeiaUpdate", handleForceUpdate);
+
     // Eventos
-    window.addEventListener("resize", handleResize);
+    window.addEventListener("resize", initializeNodesWithHighestPriority);
     window.addEventListener("beforeunload", () => saveNodesToStorage(nodes));
 
     return () => {
-      window.removeEventListener("resize", handleResize);
+      document.removeEventListener("ForceWebTeiaUpdate", handleForceUpdate);
+      window.removeEventListener("resize", initializeNodesWithHighestPriority);
       window.removeEventListener("beforeunload", () => saveNodesToStorage(nodes));
     };
   }, []);
@@ -203,12 +220,12 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
         const rect = containerRef.current.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
-        
+
         setMousePosition({
           x: mouseX,
           y: mouseY
         });
-        
+
         lastMousePos.current = { x: mouseX, y: mouseY };
         mousePresentRef.current = true;
       }
@@ -228,28 +245,28 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
         const updatedNodes = prevNodes.map(node => {
           let { x, y } = node;
           const { width, height } = dimensions;
-          
+
           // Utiliza a última posição conhecida do mouse
           const mouseX = lastMousePos.current.x;
           const mouseY = lastMousePos.current.y;
-          
+
           // Calcula a distância ao cursor
           const dx = mouseX - x;
           const dy = mouseY - y;
           const distance = Math.sqrt(dx * dx + dy * dy);
-          
+
           let newVelocity = { ...node.velocity };
-          
+
           // Se o mouse estiver presente, as teias são atraídas para ele
           if (mousePresentRef.current) {
             // Atração sempre presente, mas mais forte quanto mais perto do mouse
             const attractionRange = 200;
             const baseFactor = 0.02; // Fator de atração base
-            
+
             if (distance < attractionRange) {
               // Fator de atração aumenta conforme se aproxima do cursor
               const attractFactor = baseFactor + (0.1 * (1 - distance / attractionRange));
-              
+
               // Adiciona velocidade em direção ao cursor
               newVelocity = {
                 x: node.velocity.x + (dx / (distance || 1)) * attractFactor,
@@ -263,24 +280,24 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
               };
             }
           }
-          
+
           // Movimento baseado na velocidade
           x += newVelocity.x;
           y += newVelocity.y;
-          
+
           // Amortecimento da velocidade
           const damping = 0.97; // Levemente reduzido para manter mais movimento
           newVelocity = {
             x: newVelocity.x * damping,
             y: newVelocity.y * damping
           };
-          
+
           // Manter dentro dos limites
           if (x < 0) { x = 0; newVelocity.x *= -0.5; }
           if (x > width) { x = width; newVelocity.x *= -0.5; }
           if (y < 0) { y = 0; newVelocity.y *= -0.5; }
           if (y > height) { y = height; newVelocity.y *= -0.5; }
-          
+
           return {
             ...node,
             x,
@@ -288,12 +305,12 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
             velocity: newVelocity
           };
         });
-        
+
         // Periodicamente salvar os nós no localStorage (a cada 30 frames aproximadamente)
         if (Math.random() < 0.03) {
           saveNodesToStorage(updatedNodes);
         }
-        
+
         return updatedNodes;
       });
     };
