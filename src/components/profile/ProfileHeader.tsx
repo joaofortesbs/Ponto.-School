@@ -1171,7 +1171,20 @@ export default function ProfileHeader({
             // Exibir nome e username consistentes com o header
             return (
               <>
-                {displayNameToUse} <span className="text-gray-400 dark:text-gray-400">|</span> <span className="text-[#FF6B00]">@{usernameToDisplay}</span>
+                {(() => {
+                  // Obter o primeiro nome com prioridade
+                  const firstNameFromFullName = userProfile?.full_name?.split(' ')[0] || '';
+                  const firstName = firstNameFromFullName || 
+                                  userProfile?.display_name || 
+                                  localStorage.getItem('userFirstName') || 
+                                  ''; 
+                  
+                  return (
+                    <>
+                      {firstName} <span className="text-gray-400 dark:text-gray-400">|</span> <span className="text-[#FF6B00]">@{usernameToDisplay}</span>
+                    </>
+                  );
+                })()}
               </>
             );
           })()}
