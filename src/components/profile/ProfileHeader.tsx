@@ -67,7 +67,7 @@ export default function ProfileHeader({
     }
     
     // Definir displayName mesmo se estiver vazio, para permitir fallbacks
-    setDisplayName(userProfile.display_name || '');
+    setDisplayName(userProfile.display_name || userProfile.full_name || '');
     
     if (userProfile?.avatar_url) {
       setAvatarUrl(userProfile.avatar_url);
@@ -81,11 +81,37 @@ export default function ProfileHeader({
       loadProfile();
     }
     
-    // Log para debug
-    console.log("Profile data loaded:", {
+    // Log para debug - log detalhado para depuração
+    console.log("Profile data loaded (detalhado):", {
       display_name: userProfile.display_name,
       username: userProfile.username,
-      full_name: userProfile.full_name
+      full_name: userProfile.full_name,
+      email: userProfile.email,
+      completo: userProfile
+    });
+    
+    // Tentar verificar qualquer outro dado de cadastro que possa existir
+    const { data: sessionData } = supabase.auth.getSession();
+    sessionData.then((session) => {
+      if (session?.session?.user) {
+        console.log("Dados do usuário na sessão:", session.session.user);
+        
+        // Se o perfil não tiver um nome de usuário, tentar pegar da sessão
+        if (!userProfile.username && session.session.user.user_metadata?.username) {
+          // Atualizar o perfil com esse nome de usuário
+          profileService.updateUserProfile({
+            username: session.session.user.user_metadata.username
+          });
+        }
+        
+        // Se o perfil não tiver um nome completo, tentar pegar da sessão
+        if (!userProfile.full_name && session.session.user.user_metadata?.full_name) {
+          // Atualizar o perfil com esse nome completo
+          profileService.updateUserProfile({
+            full_name: session.session.user.user_metadata.full_name
+          });
+        }
+      }
     });
   }, [userProfile]);
 
@@ -611,44 +637,36 @@ export default function ProfileHeader({
           transition={{ delay: 0.7, duration: 0.3 }}
         >
           {(() => {
-            // Obter o primeiro nome da pessoa
-            let fullName = displayName || userProfile?.display_name || userProfile?.full_name || '';
-            let firstName = '';
+            // Informações para depuração
+            console.log("Perfil carregado:", {
+              displayName,
+              profile_display_name: userProfile?.display_name,
+              profile_full_name: userProfile?.full_name,
+              profile_username: userProfile?.username
+            });
+            
+            // Pegar o nome completo de qualquer lugar disponível
+            const fullName = displayName || userProfile?.display_name || userProfile?.full_name || '';
             
             // Extrair o primeiro nome
-            if (fullName) {
-              firstName = fullName.split(' ')[0];
+            let firstName = fullName ? fullName.split(' ')[0] : '';
+            
+            // Se não houver primeiro nome, usar um fallback
+            if (!firstName) {
+              // Tentar usar email ou qualquer outra referência disponível
+              if (userProfile?.email) {
+                const emailName = userProfile.email.split('@')[0];
+                firstName = emailName.charAt(0).toUpperCase() + emailName.slice(1);
+              } else {
+                firstName = "Usuário";
+              }
             }
             
             // Obter o nome de usuário
             let username = userProfile?.username || '';
             
-            // Log para depuração
-            console.log("Perfil completo:", userProfile);
-            console.log("Dados de exibição:", {
-              fullName,
-              firstName,
-              username
-            });
-            
-            // Montar o texto de exibição
-            let displayText = "";
-            
-            if (firstName) {
-              displayText += firstName;
-            } else {
-              displayText += "Usuário";
-            }
-            
-            displayText += " | ";
-            
-            if (username) {
-              displayText += "@" + username;
-            } else {
-              displayText += "@usuário";
-            }
-            
-            return displayText;
+            // Criando o texto de exibição
+            return `${firstName} | @${username || "usuário"}`;
           })()}
         </motion.h2>
 
