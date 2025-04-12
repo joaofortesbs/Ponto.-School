@@ -15,30 +15,22 @@ if (!supabaseUrl || !supabaseAnonKey) {
   process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
 async function checkSupabaseConnection() {
   try {
-    console.log('Verificando conexão com o Supabase...');
+    console.log('Verificando conexão com o banco de dados...');
     
-    // Tentar executar RPC de ping
-    const { data, error } = await supabase.rpc('rpc_ping');
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const { data, error } = await supabase.from('profiles').select('id').limit(1);
     
-    if (error && error.code !== 'PGRST301') {
-      // Tentar outra abordagem - verificar uma tabela que sabemos que existe
-      console.log('Verificação de ping falhou, tentando outra abordagem...');
-      const { error: profilesError } = await supabase.from('profiles').select('count');
-      
-      if (profilesError) {
-        console.error('Falha na conexão com o Supabase:', profilesError);
-        return false;
-      }
+    if (error) {
+      console.error('Erro na conexão com o Supabase:', error.message);
+      return false;
     }
     
     console.log('Conexão com o Supabase estabelecida com sucesso!');
     return true;
   } catch (error) {
-    console.error('Erro ao verificar conexão com o Supabase:', error);
+    console.error('Erro ao tentar conectar com a aplicação:', error);
     return false;
   }
 }
@@ -88,4 +80,17 @@ async function checkApplicationHealth() {
 }
 
 // Executar verificação
-checkApplicationHealth();
+checkApplicationHealth()
+  .then(isHealthy => {
+    if (!isHealthy) {
+      console.log('\nDicas para solução de problemas:');
+      console.log('1. Verifique se as variáveis de ambiente estão configuradas corretamente');
+      console.log('2. Verifique se o Supabase está disponível e acessível');
+      console.log('3. Verifique se a aplicação está rodando na porta correta');
+      console.log('4. Verifique os logs do console para erros específicos');
+    }
+  })
+  .catch(error => {
+    console.error('Erro durante verificação:', error);
+    process.exit(1);
+  });

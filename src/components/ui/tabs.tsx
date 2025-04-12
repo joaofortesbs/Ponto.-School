@@ -36,14 +36,14 @@ const TabsTrigger = React.forwardRef<
     {...props}
   >
     {/* Indicator para abas ativas */}
-    <TabsPrimitive.Indicator className="absolute inset-0 z-10 data-[state=active]:animate-pulse duration-500">
+    <TabsPrimitive.Indicator className="absolute inset-0 z-10">
       <motion.div 
         layoutId="activeTab"
-        className="absolute inset-0 bg-gradient-to-r from-[#FF6B00] to-[#FF8736] rounded-md shadow-[0_0_20px_rgba(255,107,0,0.4)]"
+        className="absolute inset-0 bg-gradient-to-r from-[#FF6B00] to-[#FF8736] rounded-md shadow-[0_0_15px_rgba(255,107,0,0.4)]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.2, ease: "easeInOut" }}
       />
     </TabsPrimitive.Indicator>
     

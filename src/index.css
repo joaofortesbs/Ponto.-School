@@ -1,4 +1,8 @@
 
+@import "./styles/animations.css";
+@import "./styles/hide-scrollbar.css";
+@import "./styles/typewriter-loader.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -159,14 +163,6 @@
 .glowing-border:hover::before {
   opacity: 1;
 }
-
-@import "./styles/animations.css";
-@import "./styles/hide-scrollbar.css";
-@import "./styles/typewriter-loader.css";
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 @keyframes fadeIn {
   from {
@@ -932,7 +928,3 @@ select:hover,
   text-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   transform: translateY(-1px);
 }
-
-@import "./styles/animations.css";
-@import "./styles/hide-scrollbar.css";
-@import "./styles/typewriter-loader.css";
