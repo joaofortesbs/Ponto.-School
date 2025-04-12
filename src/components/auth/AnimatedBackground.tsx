@@ -28,7 +28,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
   // Função para gerar nós iniciais baseados nas dimensões
   const generateInitialNodes = (width: number, height: number): WebNode[] => {
     // Aumenta a densidade para ter mais teias (divisor menor = mais nós)
-    const nodeCount = Math.floor((width * height) / 6000); 
+    const nodeCount = Math.max(50, Math.floor((width * height) / 5000)); // Garantindo pelo menos 50 nós
     const newNodes: WebNode[] = [];
 
     for (let i = 0; i < nodeCount; i++) {
@@ -57,7 +57,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
 
           if (distance < 300) {
             connections.push(j);
-            if (connections.length >= 6) break; // Aumenta para 6 conexões por nó
+            if (connections.length >= 8) break; // Aumenta para 8 conexões por nó
           }
         }
       }
@@ -67,44 +67,45 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
     return newNodes;
   };
 
-  // Inicializa os nós da teia e configura persistência
+  // Inicializa os nós da teia e configura persistência - Forçando inicialização mais agressiva
   useEffect(() => {
-    const handleResize = () => {
-      if (containerRef.current && !initialized.current) {
+    const initializeNodes = () => {
+      if (containerRef.current) {
         const { width, height } = containerRef.current.getBoundingClientRect();
         setDimensions({ width, height });
 
-        // Tenta recuperar nós salvos ou gera novos
+        // Sempre gerar novos nós para garantir consistência visual
+        const newNodes = generateInitialNodes(width, height);
+        setNodes(newNodes);
+        
         try {
-          const savedNodes = localStorage.getItem(NODES_STORAGE_KEY);
-          if (savedNodes) {
-            const parsedNodes = JSON.parse(savedNodes);
-            // Validação e ajuste dos nós salvos às dimensões atuais
-            const validNodes = parsedNodes.map((node: WebNode) => ({
-              ...node,
-              x: node.x > width ? width * Math.random() : node.x,
-              y: node.y > height ? height * Math.random() : node.y
-            }));
-            setNodes(validNodes);
-          } else {
-            const newNodes = generateInitialNodes(width, height);
-            setNodes(newNodes);
-            localStorage.setItem(NODES_STORAGE_KEY, JSON.stringify(newNodes));
-          }
-          initialized.current = true;
+          // Salvar imediatamente no localStorage
+          localStorage.setItem(NODES_STORAGE_KEY, JSON.stringify(newNodes));
+          console.log("Teias geradas e persistidas com sucesso:", newNodes.length);
         } catch (error) {
-          console.error("Erro ao inicializar nós da teia:", error);
-          // Fallback: gera novos nós
-          const newNodes = generateInitialNodes(width, height);
-          setNodes(newNodes);
+          console.error("Erro ao salvar nós da teia:", error);
         }
+        
+        initialized.current = true;
       }
     };
 
-    handleResize();
+    // Inicializa imediatamente e após um pequeno delay para garantir que o container está pronto
+    initializeNodes();
+    const timer = setTimeout(initializeNodes, 100);
+    
+    // Recalcular em caso de redimensionamento
+    const handleResize = () => {
+      if (containerRef.current) {
+        const { width, height } = containerRef.current.getBoundingClientRect();
+        setDimensions({ width, height });
+      }
+    };
+    
     window.addEventListener("resize", handleResize);
 
     return () => {
+      clearTimeout(timer);
       window.removeEventListener("resize", handleResize);
     };
   }, []);
@@ -124,7 +125,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
     }
   }, [nodes]);
 
-  // Atualiza a posição do mouse e dos nós
+  // Atualiza a posição do mouse e dos nós com atração mais forte
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (containerRef.current) {
@@ -141,11 +142,11 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
             const dy = e.clientY - rect.top - node.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
 
-            // Influencia da posição do mouse na velocidade dos nós
-            if (distance < 200) {
-              const factor = 1 - distance / 200;
-              // Aumenta o fator de atração para o cursor
-              const attractionFactor = 1.5; 
+            // Influencia da posição do mouse na velocidade dos nós - Alcance e força aumentados
+            if (distance < 250) { // Maior área de influência
+              const factor = 1 - distance / 250;
+              // Fator de atração muito mais forte
+              const attractionFactor = 2.5; 
 
               // Atrai mais fortemente na direção do cursor
               return {
@@ -215,15 +216,15 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
       ref={containerRef} 
       className="absolute inset-0 overflow-hidden bg-gradient-to-br from-brand-primary/5 to-gray-900/30 dark:from-gray-900/80 dark:to-brand-primary/20"
     >
-      {/* Nós regulares da teia com IDs persistentes */}
+      {/* Nós regulares da teia com IDs persistentes - Aumenta a visibilidade */}
       {nodes.map((node, index) => (
         <motion.div
           key={node.id || `node-${index}`}
-          className="absolute rounded-full bg-white/80 dark:bg-brand-primary/80"
-          initial={{ opacity: 0.3 }}
+          className="absolute rounded-full bg-white/90 dark:bg-brand-primary/90"
+          initial={{ opacity: 0.5 }}
           animate={{
-            opacity: [0.2, 0.5, 0.2],
-            scale: [1, 1.2, 1],
+            opacity: [0.4, 0.8, 0.4],
+            scale: [1, 1.3, 1],
           }}
           transition={{
             opacity: {
@@ -238,25 +239,26 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
             }
           }}
           style={{
-            width: node.size,
-            height: node.size,
-            filter: "blur(0.5px)",
+            width: node.size + 0.5, // Ligeiramente maiores
+            height: node.size + 0.5,
+            filter: "blur(0.3px)",
             left: node.x,
             top: node.y,
+            zIndex: 5
           }}
         />
       ))}
 
-      {/* Conexões para nós regulares */}
-      <svg className="absolute inset-0 w-full h-full pointer-events-none">
+      {/* Conexões para nós regulares - Melhorada */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 4 }}>
         <defs>
           <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="rgba(255, 107, 0, 0.15)" />
-            <stop offset="100%" stopColor="rgba(255, 255, 255, 0.35)" />
+            <stop offset="0%" stopColor="rgba(255, 107, 0, 0.25)" />
+            <stop offset="100%" stopColor="rgba(255, 255, 255, 0.45)" />
           </linearGradient>
         </defs>
 
-        {/* Linhas entre nós regulares */}
+        {/* Linhas entre nós regulares - Mais visíveis */}
         {nodes.map((node, index) =>
           node.connections.map((targetIndex) => {
             const target = nodes[targetIndex];
@@ -274,9 +276,9 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
             );
 
             // Opacidade baseada na proximidade do mouse
-            const maxDistance = 200;
-            const opacityBase = 0.08;
-            const opacityBoost = Math.max(0, 1 - distanceToMouse / maxDistance) * 0.5;
+            const maxDistance = 250; // Aumentado para maior área de efeito
+            const opacityBase = 0.15; // Base mais visível
+            const opacityBoost = Math.max(0, 1 - distanceToMouse / maxDistance) * 0.6;
 
             return (
               <line
@@ -287,7 +289,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
                 y2={target.y}
                 stroke="url(#lineGradient)"
                 strokeOpacity={opacityBase + opacityBoost}
-                strokeWidth={0.5 + (opacityBoost * 2)}
+                strokeWidth={0.7 + (opacityBoost * 2.5)}
                 className="transition-all duration-300"
               />
             );
