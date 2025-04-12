@@ -141,22 +141,49 @@ export default function ProfileHeader({
     // Obter o username do localStorage (usado pelo cabeçalho)
     const storedUsername = localStorage.getItem('username');
     
+    // Verificar se já temos o primeiro nome salvo no localStorage
+    const storedFirstName = localStorage.getItem('userFirstName');
+    
     // Definir displayName com ordem de prioridade
     let nameToDisplay = '';
     
-    if (userProfile.display_name) {
+    if (storedFirstName) {
+      // Usar primeiro nome do localStorage (tem prioridade máxima)
+      nameToDisplay = storedFirstName;
+      console.log("Usando primeiro nome do localStorage:", storedFirstName);
+    } else if (userProfile.full_name) {
+      // Priorizar o primeiro nome do nome completo
+      nameToDisplay = userProfile.full_name.split(' ')[0]; // Primeiro nome
+      
+      // Salvar no localStorage para uso futuro
+      localStorage.setItem('userFirstName', nameToDisplay);
+      console.log("Primeiro nome extraído e salvo:", nameToDisplay);
+    } else if (userProfile.display_name) {
       nameToDisplay = userProfile.display_name;
+      localStorage.setItem('userFirstName', nameToDisplay);
     } else if (storedUsername) {
       nameToDisplay = storedUsername;
+      localStorage.setItem('userFirstName', nameToDisplay);
     } else if (userProfile.username) {
       nameToDisplay = userProfile.username;
-    } else if (userProfile.full_name) {
-      nameToDisplay = userProfile.full_name.split(' ')[0]; // Primeiro nome
+      localStorage.setItem('userFirstName', nameToDisplay);
     } else {
       nameToDisplay = 'Usuário';
     }
     
+    // Atualizar estado
     setDisplayName(nameToDisplay);
+    
+    // Disparar evento para outros componentes
+    if (nameToDisplay !== 'Usuário') {
+      try {
+        document.dispatchEvent(new CustomEvent('userFirstNameUpdated', { 
+          detail: { firstName: nameToDisplay } 
+        }));
+      } catch (e) {
+        console.error("Erro ao disparar evento de atualização de nome:", e);
+      }
+    }
 
     if (userProfile?.avatar_url) {
       setAvatarUrl(userProfile.avatar_url);
@@ -645,8 +672,35 @@ export default function ProfileHeader({
         // Extrair e exibir dados do perfil
         console.log("Perfil recuperado:", userData);
 
-        // Definir nome de exibição (prioridade: display_name, full_name, username)
-        setDisplayName(userData.display_name || userData.full_name || userData.username || '');
+        // Extrair primeiro nome do nome completo se disponível
+        let firstName = '';
+        if (userData.full_name) {
+          firstName = userData.full_name.split(' ')[0];
+        } else if (userData.display_name) {
+          firstName = userData.display_name;
+        } else if (userData.username) {
+          firstName = userData.username;
+        } else {
+          firstName = 'Usuário';
+        }
+
+        // Salvar o primeiro nome no localStorage para uso em toda a plataforma
+        if (firstName !== 'Usuário') {
+          localStorage.setItem('userFirstName', firstName);
+          console.log("Primeiro nome salvo no localStorage:", firstName);
+          
+          // Disparar evento para atualizar componentes
+          try {
+            document.dispatchEvent(new CustomEvent('userFirstNameUpdated', { 
+              detail: { firstName } 
+            }));
+          } catch (e) {
+            console.error("Erro ao disparar evento de atualização de nome:", e);
+          }
+        }
+
+        // Definir nome de exibição no estado
+        setDisplayName(firstName);
 
         // Definir avatar e capa
         setAvatarUrl(userData.avatar_url || null);
@@ -670,7 +724,34 @@ export default function ProfileHeader({
           const retryUserData = await profileService.getCurrentUserProfile();
           if (retryUserData) {
             console.log("Perfil recuperado na segunda tentativa:", retryUserData);
-            setDisplayName(retryUserData.display_name || retryUserData.full_name || retryUserData.username || '');
+            
+            // Extrair primeiro nome
+            let firstName = '';
+            if (retryUserData.full_name) {
+              firstName = retryUserData.full_name.split(' ')[0];
+            } else if (retryUserData.display_name) {
+              firstName = retryUserData.display_name;
+            } else if (retryUserData.username) {
+              firstName = retryUserData.username;
+            } else {
+              firstName = 'Usuário';
+            }
+            
+            // Salvar no localStorage
+            if (firstName !== 'Usuário') {
+              localStorage.setItem('userFirstName', firstName);
+              
+              // Disparar evento
+              try {
+                document.dispatchEvent(new CustomEvent('userFirstNameUpdated', { 
+                  detail: { firstName } 
+                }));
+              } catch (e) {
+                console.error("Erro ao disparar evento de atualização de nome:", e);
+              }
+            }
+            
+            setDisplayName(firstName);
             setAvatarUrl(retryUserData.avatar_url || null);
             setCoverUrl(retryUserData.cover_url || null);
           }
@@ -1004,16 +1085,59 @@ export default function ProfileHeader({
             const usernameToDisplay = headerUsername || storedUsername || 'joaofortes';
 
             // Exibir nome de exibição e nome de usuário como dois componentes distintos
-            // Nome de exibição: usar display_name ou o primeiro nome do nome completo, ou o fallback
+            // Nome de exibição: usar primeiro nome do nome completo, display_name, ou fallback
             let nameDisplay = '';
             
-            if (userProfile?.display_name) {
-              nameDisplay = userProfile.display_name;
+            // Buscar o primeiro nome do localStorage (prioridade máxima)
+            const storedFirstName = localStorage.getItem('userFirstName');
+            
+            if (storedFirstName) {
+              nameDisplay = storedFirstName;
+              console.log("Usando primeiro nome do localStorage:", storedFirstName);
             } else if (userProfile?.full_name) {
               // Se tiver nome completo, exibir apenas o primeiro nome
               nameDisplay = userProfile.full_name.split(' ')[0];
+              console.log("Usando primeiro nome do nome completo:", nameDisplay);
+              
+              // Salvar no localStorage para uso futuro
+              try {
+                localStorage.setItem('userFirstName', nameDisplay);
+              } catch (e) {
+                console.error("Erro ao salvar primeiro nome no localStorage:", e);
+              }
+            } else if (userProfile?.display_name) {
+              nameDisplay = userProfile.display_name;
+              console.log("Usando display_name como nome:", nameDisplay);
+              
+              // Salvar no localStorage para uso futuro
+              try {
+                localStorage.setItem('userFirstName', nameDisplay);
+              } catch (e) {
+                console.error("Erro ao salvar display_name no localStorage:", e);
+              }
+            } else if (userProfile?.username) {
+              nameDisplay = userProfile.username;
+              console.log("Usando username como nome:", nameDisplay);
+              
+              // Salvar no localStorage para uso futuro
+              try {
+                localStorage.setItem('userFirstName', nameDisplay);
+              } catch (e) {
+                console.error("Erro ao salvar username no localStorage:", e);
+              }
             } else {
               nameDisplay = "Usuário";
+            }
+            
+            // Disparar evento para outros componentes saberem que o nome foi atualizado
+            if (nameDisplay !== "Usuário") {
+              try {
+                document.dispatchEvent(new CustomEvent('userFirstNameUpdated', { 
+                  detail: { firstName: nameDisplay } 
+                }));
+              } catch (e) {
+                console.error("Erro ao disparar evento de atualização de nome:", e);
+              }
             }
             
             return (
