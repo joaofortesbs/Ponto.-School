@@ -65,6 +65,27 @@ export const markUserAsLoggedIn = (userId: string): void => {
   localStorage.setItem(key, 'true');
 };
 
+
+/**
+ * Salva o nome de usuário para uso consistente em toda a aplicação
+ * @param displayName Nome a ser exibido (display_name)
+ * @param fullName Nome completo (full_name)
+ * @param username Nome de usuário (username)
+ */
+export const saveUserDisplayName = (displayName?: string | null, fullName?: string | null, username?: string | null): void => {
+  // Ordem de prioridade: display_name > primeiro nome do full_name > username > fallback
+  const firstName = displayName || (fullName ? fullName.split(' ')[0] : null) || username || "Usuário";
+  localStorage.setItem('userFirstName', firstName);
+};
+
+/**
+ * Obtém o nome de exibição do usuário salvo
+ * @returns Nome do usuário para exibição
+ */
+export const getUserDisplayName = (): string => {
+  return localStorage.getItem('userFirstName') || "Usuário";
+};
+
 export const signInWithEmail = async (email: string, password: string) => {
   try {
     const { data, error } = await supabase.auth.signInWithPassword({

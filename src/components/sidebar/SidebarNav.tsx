@@ -114,8 +114,8 @@ export function SidebarNav({
             }
             
             // Extrair o primeiro nome do usuário para a saudação
-            // Usando a mesma lógica do Dashboard.tsx para consistência
-            const dashboardName = data.full_name?.split(' ')[0] || data.display_name || data.username || "João";
+            // Garantir consistência na ordem de prioridade das fontes do nome
+            const dashboardName = data.display_name || data.full_name?.split(' ')[0] || data.username || localStorage.getItem('username') || "Usuário";
             setFirstName(dashboardName);
             
             // Salvar o nome no localStorage para garantir consistência entre componentes
@@ -129,7 +129,7 @@ export function SidebarNav({
       }
     };
 
-    // Verificar se já temos o nome no localStorage primeiro (para carregamento rápido)
+    // Obter o nome do usuário do localStorage para exibição imediata
     const storedFirstName = localStorage.getItem('userFirstName');
     if (storedFirstName) {
       setFirstName(storedFirstName);
@@ -499,7 +499,7 @@ export function SidebarNav({
           <div className="text-[#001427] dark:text-white text-center">
             <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
               <span className="mr-1">👋</span> Olá,{" "}
-              {firstName || userProfile?.full_name?.split(' ')[0] || userProfile?.display_name || userProfile?.username || "Usuário"}!
+              {firstName || localStorage.getItem('userFirstName') || userProfile?.display_name || userProfile?.full_name?.split(' ')[0] || userProfile?.username || localStorage.getItem('username') || "Usuário"}!
             </h3>
             <div className="flex flex-col items-center mt-1">
               <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
