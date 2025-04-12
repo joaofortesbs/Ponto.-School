@@ -6,7 +6,7 @@ import { Plus } from "lucide-react";
 
 export default function Skills() {
   return (
-    <div className="w-full h-full"> {/* Added w-full and h-full classes for consistent sizing */}
+    <div className="w-full"> {/* Added w-full class to match profile card width */}
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-bold text-[#29335C] dark:text-white">
           Habilidades

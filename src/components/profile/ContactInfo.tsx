@@ -36,7 +36,7 @@ export default function ContactInfo({
     const fetchBirthDate = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-
+        
         if (user && user.user_metadata?.birth_date && contactInfo.birthDate === "Adicionar data de nascimento") {
           setContactInfo({
             ...contactInfo,
@@ -48,12 +48,12 @@ export default function ContactInfo({
         console.error("Erro ao buscar data de nascimento:", error);
       }
     };
-
+    
     fetchBirthDate();
   }, []);
 
   const [containerHeight, setContainerHeight] = useState("420px");
-
+  
   useEffect(() => {
     if (expandedSection === "contact") {
       setContainerHeight("auto");
@@ -61,12 +61,12 @@ export default function ContactInfo({
       setContainerHeight("420px");
     }
   }, [expandedSection]);
-
+  
   // Função para formatar a data de nascimento
   const formatBirthDate = (value: string) => {
     // Remove todos os caracteres não-numéricos
     const numbers = value.replace(/\D/g, '');
-
+    
     // Aplica a máscara dd/mm/aaaa
     if (numbers.length <= 2) {
       return numbers;
@@ -75,10 +75,10 @@ export default function ContactInfo({
     } else if (numbers.length <= 8) {
       return `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}/${numbers.slice(4)}`;
     }
-
+    
     return `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}/${numbers.slice(4, 8)}`;
   };
-
+  
   // Manipulador para o campo de data de nascimento
   const handleBirthDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formattedValue = formatBirthDate(e.target.value);
@@ -90,8 +90,8 @@ export default function ContactInfo({
 
   return (
     <div 
-      className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-6 shadow-sm w-full transition-all duration-300 overflow-hidden backdrop-blur-sm bg-gradient-to-br from-white to-white/90 dark:from-[#0A2540] dark:to-[#0A2540]/95 h-full"
-      style={{ minHeight: "420px" }}
+      className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-6 shadow-sm w-full transition-all duration-300 overflow-hidden backdrop-blur-sm bg-gradient-to-br from-white to-white/90 dark:from-[#0A2540] dark:to-[#0A2540]/95"
+      style={{ height: containerHeight, minHeight: "420px" }}
     >
       <motion.div 
         className="flex justify-between items-center mb-5"

@@ -110,7 +110,7 @@ export default function Achievements() {
                 }`}>
                   <div className="scale-75">{achievement.icon}</div>
                 </div>
-
+                
                 <div className="flex-1 min-w-0">
                   <p className={`text-sm font-medium truncate ${
                     achievement.unlocked 
@@ -119,7 +119,7 @@ export default function Achievements() {
                   }`}>
                     {achievement.name}
                   </p>
-
+                  
                   <div className="mt-1">
                     <div className="flex justify-between items-center text-xs mb-1">
                       <Badge variant={achievement.unlocked ? "default" : "outline"} className={`px-1 py-0 text-[10px] ${
@@ -145,7 +145,7 @@ export default function Achievements() {
                       indicatorClassName={achievement.unlocked ? "bg-[#FF6B00]" : "bg-gray-400"}
                     />
                   </div>
-
+                  
                   {achievement.unlocked && (
                     <div className="mt-1 flex justify-between items-center">
                       <div className="flex items-center gap-1">
@@ -162,7 +162,7 @@ export default function Achievements() {
                 </div>
               </div>
             </div>
-
+            
             {/* Efeito de brilho para conquistas desbloqueadas */}
             {achievement.unlocked && (
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-1000">
