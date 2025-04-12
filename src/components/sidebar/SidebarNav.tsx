@@ -80,18 +80,43 @@ export function SidebarNav({
       }
     };
 
-    // Adicionar o listener
-    document.addEventListener('userAvatarUpdated', handleAvatarUpdate as EventListener);
+    // Listener para atualizações de nome de usuário
+    const handleUsernameUpdate = (event: CustomEvent) => {
+      if (event.detail?.displayName) {
+        setFirstName(event.detail.displayName);
+      } else if (event.detail?.firstName) {
+        setFirstName(event.detail.firstName);
+      }
+    };
 
-    // Remover o listener quando o componente for desmontado
+    // Adicionar os listeners
+    document.addEventListener('userAvatarUpdated', handleAvatarUpdate as EventListener);
+    document.addEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
+    document.addEventListener('usernameReady', handleUsernameUpdate as EventListener);
+    document.addEventListener('usernameSynchronized', handleUsernameUpdate as EventListener);
+
+    // Remover os listeners quando o componente for desmontado
     return () => {
       document.removeEventListener('userAvatarUpdated', handleAvatarUpdate as EventListener);
+      document.removeEventListener('usernameUpdated', handleUsernameUpdate as EventListener);
+      document.removeEventListener('usernameReady', handleUsernameUpdate as EventListener);
+      document.removeEventListener('usernameSynchronized', handleUsernameUpdate as EventListener);
     };
   }, []);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
+        // Primeiro tentar obter do localStorage para display rápido
+        const storedFirstName = localStorage.getItem('userFirstName');
+        const storedDisplayName = localStorage.getItem('userDisplayName');
+        if (storedDisplayName) {
+          setFirstName(storedDisplayName);
+        } else if (storedFirstName) {
+          setFirstName(storedFirstName);
+        }
+        
+        // Depois buscar do Supabase para dados atualizados
         const {
           data: { user },
         } = await supabase.auth.getUser();
@@ -105,7 +130,7 @@ export function SidebarNav({
 
           if (error) {
             console.error("Error fetching user profile:", error);
-            setFirstName("Usuário"); // Fallback if profile fetch fails
+            if (!firstName) setFirstName("Usuário"); // Fallback if profile fetch fails
           } else if (data) {
             setUserProfile(data as UserProfile);
             // Se o perfil tiver um avatar_url, usar ele
@@ -115,20 +140,34 @@ export function SidebarNav({
               localStorage.setItem('userAvatarUrl', data.avatar_url);
             }
 
-            // Extrair o primeiro nome do usuário para a saudação
-            // Garantir consistência priorizando o primeiro nome do campo full_name
-            const dashboardName = data.full_name?.split(' ')[0] || data.display_name || "Usuário";
-            setFirstName(dashboardName);
+            // Determinar o melhor nome para exibição com prioridade clara
+            // Prioridade: display_name > primeiro nome do full_name > username > fallback
+            const bestName = data.display_name || 
+                          (data.full_name ? data.full_name.split(' ')[0] : null) || 
+                          data.username || 
+                          "Usuário";
+            
+            setFirstName(bestName);
 
-            // Salvar o nome no localStorage para garantir consistência entre componentes
-            localStorage.setItem('userFirstName', dashboardName);
+            // Salvar para manter consistência entre componentes
+            localStorage.setItem('userDisplayName', data.display_name || '');
+            localStorage.setItem('userFirstName', bestName);
+            
+            // Disparar evento para outros componentes
+            document.dispatchEvent(new CustomEvent('usernameUpdated', { 
+              detail: { 
+                displayName: data.display_name,
+                firstName: bestName,
+                username: data.username
+              } 
+            }));
           }
         } else {
-          setFirstName("Usuário"); // Fallback if user is not authenticated
+          if (!firstName) setFirstName("Usuário"); // Fallback if user is not authenticated
         }
       } catch (error) {
         console.error("Error:", error);
-        setFirstName("Usuário"); // Fallback for any other error
+        if (!firstName) setFirstName("Usuário"); // Fallback for any other error
       } finally {
         setLoading(false);
       }
@@ -497,7 +536,7 @@ export function SidebarNav({
         {!isCollapsed && (
           <div className="text-[#001427] dark:text-white text-center">
             <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
-              <span className="mr-1">👋</span> Olá, {firstName || "Usuário"}!
+              <span className="mr-1">👋</span> Olá, {firstName || localStorage.getItem('userDisplayName') || localStorage.getItem('userFirstName') || "Usuário"}!
             </h3>
             <div className="flex flex-col items-center mt-1">
               <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
