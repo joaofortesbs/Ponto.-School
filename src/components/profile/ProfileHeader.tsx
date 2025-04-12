@@ -785,10 +785,22 @@ export default function ProfileHeader({
             // Usar o nome de usuário do cabeçalho (prioridade máxima)
             const usernameToDisplay = headerUsername || storedUsername || 'joaofortes';
 
-            // Exibir o nome do usuário igual ao do cabeçalho junto com a parte @username
+            // Exibir nome de exibição e nome de usuário como dois componentes distintos
+            // Nome de exibição: usar display_name ou o primeiro nome do nome completo, ou o fallback
+            let nameDisplay = '';
+            
+            if (userProfile?.display_name) {
+              nameDisplay = userProfile.display_name;
+            } else if (userProfile?.full_name) {
+              // Se tiver nome completo, exibir apenas o primeiro nome
+              nameDisplay = userProfile.full_name.split(' ')[0];
+            } else {
+              nameDisplay = "Usuário";
+            }
+            
             return (
               <>
-                {headerUsername || displayedName} <span className="text-gray-400 dark:text-gray-400">|</span> <span className="text-[#FF6B00]">@{usernameToDisplay}</span>
+                {nameDisplay} <span className="text-gray-400 dark:text-gray-400">|</span> <span className="text-[#FF6B00]">@{usernameToDisplay}</span>
               </>
             );
           })()}
