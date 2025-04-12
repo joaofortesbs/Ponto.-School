@@ -1,7 +1,6 @@
-
 import * as React from "react"
 import * as TabsPrimitive from "@radix-ui/react-tabs"
-import { motion } from "framer-motion"
+
 import { cn } from "@/lib/utils"
 
 const Tabs = TabsPrimitive.Root
@@ -13,7 +12,7 @@ const TabsList = React.forwardRef<
   <TabsPrimitive.List
     ref={ref}
     className={cn(
-      "relative flex items-center justify-center rounded-lg bg-gradient-to-r from-[#0A2540]/80 to-[#29335C]/80 p-1 text-muted-foreground backdrop-blur-sm shadow-lg",
+      "inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground",
       className
     )}
     {...props}
@@ -28,33 +27,11 @@ const TabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "group relative inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium transition-all duration-300 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-      "data-[state=inactive]:text-white/70 data-[state=inactive]:hover:text-white data-[state=inactive]:hover:bg-white/10",
-      "overflow-hidden",
+      "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow",
       className
     )}
     {...props}
-  >
-    {/* Indicator para abas ativas */}
-    <TabsPrimitive.Indicator className="absolute inset-0 z-10 data-[state=active]:animate-pulse duration-500">
-      <motion.div 
-        layoutId="activeTab"
-        className="absolute inset-0 bg-gradient-to-r from-[#FF6B00] to-[#FF8736] rounded-md shadow-[0_0_20px_rgba(255,107,0,0.4)]"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-      />
-    </TabsPrimitive.Indicator>
-    
-    {/* Efeito de brilho ao passar o mouse */}
-    <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out" />
-    
-    {/* Conteúdo do trigger */}
-    <span className="relative z-20 data-[state=active]:text-white">
-      {props.children}
-    </span>
-  </TabsPrimitive.Trigger>
+  />
 ))
 TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
 
@@ -65,21 +42,11 @@ const TabsContent = React.forwardRef<
   <TabsPrimitive.Content
     ref={ref}
     className={cn(
-      "mt-4 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+      "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
       className
     )}
     {...props}
-  >
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.3 }}
-      className="w-full"
-    >
-      {props.children}
-    </motion.div>
-  </TabsPrimitive.Content>
+  />
 ))
 TabsContent.displayName = TabsPrimitive.Content.displayName
 
