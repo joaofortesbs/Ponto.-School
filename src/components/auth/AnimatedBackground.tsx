@@ -73,94 +73,126 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
     }
   };
 
-  // Inicializa os nós da teia
+  // Inicializa os nós da teia - otimizado para renderização instantânea
   useEffect(() => {
+    // Função para criar conexões entre nós
+    const createConnections = (nodesList: Node[]) => {
+      return nodesList.map((node, index) => {
+        const connections: number[] = [];
+        for (let j = 0; j < nodesList.length; j++) {
+          if (j !== index) {
+            const distance = Math.sqrt(
+              Math.pow(nodesList[j].x - node.x, 2) + 
+              Math.pow(nodesList[j].y - node.y, 2)
+            );
+
+            if (distance < 300) {
+              connections.push(j);
+              if (connections.length >= 5) break;
+            }
+          }
+        }
+        return { ...node, connections };
+      });
+    };
+
+    // Função para criar novos nós
+    const createNewNodes = (width: number, height: number): Node[] => {
+      // Usar um número fixo maior de nós para telas pequenas para garantir visual consistente
+      const minNodeCount = 120;
+      const calculatedNodeCount = Math.floor((width * height) / 8000);
+      const nodeCount = Math.max(minNodeCount, calculatedNodeCount);
+      
+      const newNodes: Node[] = [];
+      for (let i = 0; i < nodeCount; i++) {
+        newNodes.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          size: Math.random() * 2 + 1,
+          connections: [],
+          id: Math.random().toString(36).substring(2, 15),
+          velocity: { 
+            x: (Math.random() - 0.5) * 0.5, 
+            y: (Math.random() - 0.5) * 0.5 
+          }
+        });
+      }
+      
+      return newNodes;
+    };
+
     const handleResize = () => {
       if (containerRef.current) {
         const { width, height } = containerRef.current.getBoundingClientRect();
         setDimensions({ width, height });
-
-        // Tenta carregar nós do localStorage primeiro
-        const storedNodes = loadNodesFromStorage(width, height);
         
-        if (storedNodes) {
-          // Recalcula as conexões para os nós carregados
-          storedNodes.forEach((node, index) => {
-            const connections: number[] = [];
-            for (let j = 0; j < storedNodes.length; j++) {
-              if (j !== index) {
-                const distance = Math.sqrt(
-                  Math.pow(storedNodes[j].x - node.x, 2) + 
-                  Math.pow(storedNodes[j].y - node.y, 2)
-                );
-
-                if (distance < 300) {
-                  connections.push(j);
-                  if (connections.length >= 5) break;
-                }
-              }
-            }
-            storedNodes[index].connections = connections;
-          });
+        // Tenta carregar nós do localStorage - acesso direto e rápido
+        try {
+          const storedNodesString = localStorage.getItem(NODES_STORAGE_KEY);
           
-          setNodes(storedNodes);
-        } else {
-          // Cria novos nós se não houver nenhum armazenado
-          const nodeCount = Math.floor((width * height) / 8000);
-          const newNodes: Node[] = [];
-
-          for (let i = 0; i < nodeCount; i++) {
-            newNodes.push({
-              x: Math.random() * width,
-              y: Math.random() * height,
-              size: Math.random() * 2 + 1,
-              connections: [],
-              id: Math.random().toString(36).substring(2, 15),
-              velocity: { 
-                x: (Math.random() - 0.5) * 0.5, 
-                y: (Math.random() - 0.5) * 0.5 
-              }
-            });
-          }
-
-          // Determina conexões entre nós
-          newNodes.forEach((node, index) => {
-            const connections: number[] = [];
-            for (let j = 0; j < newNodes.length; j++) {
-              if (j !== index) {
-                const distance = Math.sqrt(
-                  Math.pow(newNodes[j].x - node.x, 2) + 
-                  Math.pow(newNodes[j].y - node.y, 2)
-                );
-
-                if (distance < 300) {
-                  connections.push(j);
-                  if (connections.length >= 5) break; // 5 conexões por nó
+          if (storedNodesString) {
+            const storedNodes = JSON.parse(storedNodesString);
+            
+            if (Array.isArray(storedNodes) && storedNodes.length > 0) {
+              // Adaptação rápida para o tamanho atual sem recalcular tudo
+              const adaptedNodes = storedNodes.map(node => ({
+                ...node,
+                x: Math.min(Math.max(0, node.x), width),
+                y: Math.min(Math.max(0, node.y), height),
+                connections: [],
+                velocity: { 
+                  x: (Math.random() - 0.5) * 0.5, 
+                  y: (Math.random() - 0.5) * 0.5 
                 }
-              }
+              }));
+              
+              // Definir nós imediatamente e calcular conexões depois
+              setNodes(adaptedNodes);
+              
+              // Calcular conexões em um setTimeout para não bloquear a renderização
+              setTimeout(() => {
+                const nodesWithConnections = createConnections(adaptedNodes);
+                setNodes(nodesWithConnections);
+                console.log("Teias geradas e persistidas com sucesso:", nodesWithConnections.length);
+              }, 50);
+              
+              return;
             }
-            newNodes[index].connections = connections;
-          });
-
+          }
+          
+          console.log("Criando novas teias...");
+          // Se não conseguiu carregar, cria novos nós imediatamente
+          const newNodes = createNewNodes(width, height);
+          // Definir nós imediatamente sem conexões
           setNodes(newNodes);
-          saveNodesToStorage(newNodes);
+          
+          // Calcular conexões em um setTimeout
+          setTimeout(() => {
+            const nodesWithConnections = createConnections(newNodes);
+            setNodes(nodesWithConnections);
+            saveNodesToStorage(nodesWithConnections);
+            console.log("Novas teias geradas com sucesso:", nodesWithConnections.length);
+          }, 50);
+          
+        } catch (error) {
+          console.error('Erro ao processar teias:', error);
+          // Fallback instantâneo em caso de erro
+          const newNodes = createNewNodes(width, height);
+          setNodes(newNodes);
         }
       }
     };
 
+    // Executar imediatamente para renderização instantânea
     handleResize();
+    
+    // Eventos
     window.addEventListener("resize", handleResize);
-
-    // Configurar evento de "beforeunload" para salvar os nós antes de fechar/recarregar
-    window.addEventListener("beforeunload", () => {
-      saveNodesToStorage(nodes);
-    });
+    window.addEventListener("beforeunload", () => saveNodesToStorage(nodes));
 
     return () => {
       window.removeEventListener("resize", handleResize);
-      window.removeEventListener("beforeunload", () => {
-        saveNodesToStorage(nodes);
-      });
+      window.removeEventListener("beforeunload", () => saveNodesToStorage(nodes));
     };
   }, []);
 
@@ -288,39 +320,24 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
       ref={containerRef} 
       className="absolute inset-0 overflow-hidden bg-gradient-to-br from-brand-primary/5 to-gray-900/30 dark:from-gray-900/80 dark:to-brand-primary/20"
     >
-      {/* Nós regulares da teia */}
+      {/* Nós regulares da teia - renderização otimizada */}
       {nodes.map((node, index) => (
-        <motion.div
+        <div
           key={`node-${node.id || index}`}
-          className="absolute rounded-full bg-white/80 dark:bg-brand-primary/80"
-          initial={{ opacity: 0.3 }}
-          animate={{
-            opacity: [0.2, 0.5, 0.2],
-            scale: [1, 1.2, 1],
-          }}
-          transition={{
-            opacity: {
-              duration: 2 + Math.random() * 3,
-              repeat: Infinity,
-              repeatType: "reverse"
-            },
-            scale: {
-              duration: 3 + Math.random() * 2,
-              repeat: Infinity,
-              repeatType: "reverse"
-            }
-          }}
+          className="absolute rounded-full bg-white/80 dark:bg-brand-primary/80 animate-pulse-soft"
           style={{
             width: node.size,
             height: node.size,
             filter: "blur(0.5px)",
             left: node.x,
             top: node.y,
+            animationDelay: `${Math.random() * 2}s`,
+            opacity: 0.3 + Math.random() * 0.3
           }}
         />
       ))}
 
-      {/* Conexões para nós regulares */}
+      {/* Conexões para nós regulares - otimizado para performance */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none">
         <defs>
           <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -329,13 +346,14 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
           </linearGradient>
         </defs>
 
-        {/* Linhas entre nós regulares */}
+        {/* Linhas entre nós regulares - renderização mais eficiente */}
         {nodes.map((node, index) =>
-          node.connections.map((targetIndex) => {
+          // Limitar o número de conexões renderizadas para melhor performance
+          node.connections.slice(0, 3).map((targetIndex) => {
             const target = nodes[targetIndex];
             if (!target) return null;
 
-            // Calcula a distância até o mouse
+            // Calcula a distância até o mouse - simplificado
             const lineCenter = {
               x: (node.x + target.x) / 2,
               y: (node.y + target.y) / 2
@@ -346,10 +364,10 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
               Math.pow(lineCenter.y - mousePosition.y, 2)
             );
 
-            // Opacidade baseada na proximidade do mouse - intensificada
+            // Opacidade otimizada para performance
             const maxDistance = 200;
-            const opacityBase = 0.1; // Levemente aumentado
-            const opacityBoost = Math.max(0, 1 - distanceToMouse / maxDistance) * 0.7; // Intensificado
+            const opacityBase = 0.15; 
+            const opacityBoost = Math.max(0, 1 - distanceToMouse / maxDistance) * 0.6;
 
             return (
               <line
@@ -360,8 +378,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
                 y2={target.y}
                 stroke="url(#lineGradient)"
                 strokeOpacity={opacityBase + opacityBoost}
-                strokeWidth={0.5 + (opacityBoost * 2)}
-                className="transition-all duration-300"
+                strokeWidth={0.5 + (opacityBoost * 1.5)}
               />
             );
           })

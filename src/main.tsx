@@ -4,6 +4,10 @@ import App from "./App.tsx";
 import "./index.css";
 import { BrowserRouter } from "react-router-dom";
 import './lib/username-initializer.ts'
+import { preInitializeWebNodes } from './lib/web-persistence.ts'
+
+// Inicializar teias antes do carregamento da aplicação
+preInitializeWebNodes();
 
 // Configuração de tratamento global de erros
 const handleGlobalError = (event: ErrorEvent) => {
