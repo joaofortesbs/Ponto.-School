@@ -572,7 +572,24 @@ export default function ProfileHeader({
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.7, duration: 0.3 }}
         >
-          {displayName || userProfile?.display_name || userProfile?.username || "Usuário"}
+          {(() => {
+            // Obter o primeiro nome da pessoa
+            const fullName = displayName || userProfile?.display_name || userProfile?.full_name || '';
+            const firstName = fullName.split(' ')[0] || '';
+            
+            // Obter o nome de usuário
+            const username = userProfile?.username || '';
+            
+            if (firstName && username) {
+              return `${firstName} | @${username}`;
+            } else if (firstName) {
+              return firstName;
+            } else if (username) {
+              return `@${username}`;
+            } else {
+              return "Usuário";
+            }
+          })()}
         </motion.h2>
 
         {/* User ID block */}
