@@ -2,7 +2,68 @@
 // Serviço para gerenciamento de perfis de usuário
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/types/user-profile';
-import { generateUserId, generateSimpleUserId, generateUserIdSupabase } from '@/lib/generate-user-id';
+import { generateUserId, generateSimpleUserId, generateUserIdByPlan, isValidUserId } from '@/lib/generate-user-id';
+
+/**
+ * Cria um perfil de usuário com ID automático baseado na UF e tipo de plano
+ */
+export async function createUserProfile(userData: Partial<UserProfile>, uf: string = 'BR', planType: string = 'standard'): Promise<UserProfile | null> {
+  try {
+    // Gera um ID de usuário único
+    const userId = await generateUserIdByPlan(planType, uf);
+    
+    // Adiciona o ID ao objeto de dados do usuário
+    const userDataWithId = {
+      ...userData,
+      user_id: userId
+    };
+    
+    // Insere o perfil no banco de dados
+    const { data, error } = await supabase
+      .from('profiles')
+      .insert([userDataWithId])
+      .select('*')
+      .single();
+      
+    if (error) {
+      console.error('Erro ao criar perfil de usuário:', error);
+      return null;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Erro ao criar perfil de usuário:', error);
+    return null;
+  }
+}
+
+/**
+ * Obtém um perfil de usuário pelo ID gerado automaticamente
+ */
+export async function getUserProfileById(userId: string): Promise<UserProfile | null> {
+  if (!isValidUserId(userId)) {
+    console.error('ID de usuário inválido:', userId);
+    return null;
+  }
+  
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+      
+    if (error) {
+      console.error('Erro ao buscar perfil de usuário:', error);
+      return null;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Erro ao buscar perfil de usuário:', error);
+    return null;
+  }
+}';
 
 class ProfileService {
   /**
