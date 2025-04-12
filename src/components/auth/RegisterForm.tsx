@@ -640,17 +640,9 @@ export function RegisterForm() {
                   </div>
                 </div>
 
-                <ul className="space-y-2 mb-4">
-                  <li className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                    <span>Recursos básicos de estudo</span>
-                  </li>
-                  <li className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                    <span>Acesso a materiais didáticos</span>
-                  </li>
-                  <li className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                    <span>Grupos de estudo</span>
-                  </li>
-                </ul>
+                <p className="text-sm text-gray-600 dark:text-gray-300 font-medium mb-2">
+                  Para alunos de escolas e universidades públicas, ETEC, escolas técnicas gratuitas e instituições governamentais.
+                </p>
 
                 <div className="mt-6 text-center">
                   <button
@@ -694,20 +686,9 @@ export function RegisterForm() {
                   </div>
                 </div>
 
-                <ul className="space-y-2 mb-4">
-                  <li className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                    <span>Todos os recursos do plano LITE</span>
-                  </li>
-                  <li className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                    <span>Mentoria com IA avançada</span>
-                  </li>
-                  <li className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                    <span>Materiais exclusivos</span>
-                  </li>
-                  <li className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                    <span>Suporte prioritário</span>
-                  </li>
-                </ul>
+                <p className="text-sm text-gray-600 dark:text-gray-300 font-medium mb-2">
+                  Para alunos de escolas e universidades particulares, cursos pagos, instituições privadas e colégios não-governamentais.
+                </p>
 
                 <div className="mt-6 text-center">
                   <button
