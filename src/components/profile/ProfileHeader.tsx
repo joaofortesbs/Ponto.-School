@@ -281,7 +281,7 @@ export default function ProfileHeader({
       const user = sessionData.session.user;
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      let filePath = `avatars/${fileName}`;
 
       // Comprimir a imagem antes do upload (opcional, para melhor performance)
       let fileToUpload = file;
@@ -423,7 +423,7 @@ export default function ProfileHeader({
       const user = sessionData.session.user;
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}-cover-${Date.now()}.${fileExt}`;
-      const filePath = `covers/${fileName}`;
+      let filePath = `covers/${fileName}`;
 
       // Comprimir a imagem antes do upload (opcional, para melhor performance)
       let fileToUpload = file;
@@ -932,13 +932,6 @@ export default function ProfileHeader({
               accept="image/*"
               onChange={handleProfilePictureChange}
               aria-label="Upload de foto de perfil"
-            />
-            <input
-              type="file"
-              ref={profilePictureRef}
-              className="hidden"
-              accept="image/*"
-              onChange={handleProfilePictureChange}
             />
 
             {/* Indicador de status premium */}

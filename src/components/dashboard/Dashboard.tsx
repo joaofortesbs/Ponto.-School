@@ -35,8 +35,7 @@ export default function Dashboard() {
       <h1 className="text-3xl font-bold text-brand-black dark:text-white flex items-center gap-2">
         <span className="text-2xl">👋</span> Olá, {(() => {
                 // Obter o primeiro nome do usuário
-                const fullName = userProfile?.display_name || userProfile?.full_name || userProfile?.username || "Usuário";
-                const firstName = fullName.split(' ')[0]; // Extrair o primeiro nome
+                const firstName = userProfile?.full_name?.split(' ')[0] || userProfile?.display_name || userProfile?.username || "Usuário";
                 return firstName;
               })()}!
       </h1>

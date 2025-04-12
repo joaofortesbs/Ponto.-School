@@ -410,7 +410,7 @@ export function SidebarNav({
           <div className="text-[#001427] dark:text-white text-center">
             <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
               <span className="mr-1">👋</span> Olá{" "}
-              {userProfile?.first_name || userProfile?.display_name || userProfile?.username || "Usuário"}
+              {userProfile?.full_name?.split(' ')[0] || userProfile?.display_name || userProfile?.username || "Usuário"}
             </h3>
             <div className="flex flex-col items-center mt-1">
               <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
