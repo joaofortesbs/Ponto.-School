@@ -314,8 +314,13 @@ export default function ProfileHeader({
           setUserProfile(userData);
         }
         
-        // Sempre definir displayName, mesmo que seja vazio
-        setDisplayName(userData.display_name || '');
+        // Extrair e exibir dados do perfil
+        console.log("Perfil recuperado:", userData);
+        
+        // Definir nome de exibição (prioridade: display_name, full_name, username)
+        setDisplayName(userData.display_name || userData.full_name || userData.username || '');
+        
+        // Definir avatar e capa
         setAvatarUrl(userData.avatar_url || null);
         setCoverUrl(userData.cover_url || null);
 
@@ -331,6 +336,17 @@ export default function ProfileHeader({
         return userData;
       } else {
         console.warn("Nenhum dado de usuário retornado do profileService");
+        
+        // Tentar uma segunda vez após um breve intervalo
+        setTimeout(async () => {
+          const retryUserData = await profileService.getCurrentUserProfile();
+          if (retryUserData) {
+            console.log("Perfil recuperado na segunda tentativa:", retryUserData);
+            setDisplayName(retryUserData.display_name || retryUserData.full_name || retryUserData.username || '');
+            setAvatarUrl(retryUserData.avatar_url || null);
+            setCoverUrl(retryUserData.cover_url || null);
+          }
+        }, 1500);
       }
     } catch (error) {
       console.error("Erro ao carregar perfil:", error);
@@ -595,32 +611,44 @@ export default function ProfileHeader({
           transition={{ delay: 0.7, duration: 0.3 }}
         >
           {(() => {
-            // Forçar exibição de dados para depuração
-            console.log("Dados do perfil:", {
-              displayName,
-              profile_display_name: userProfile?.display_name,
-              profile_full_name: userProfile?.full_name,
-              profile_username: userProfile?.username
-            });
-            
             // Obter o primeiro nome da pessoa
-            const fullName = displayName || userProfile?.display_name || userProfile?.full_name || '';
-            const firstName = fullName.split(' ')[0] || '';
+            let fullName = displayName || userProfile?.display_name || userProfile?.full_name || '';
+            let firstName = '';
+            
+            // Extrair o primeiro nome
+            if (fullName) {
+              firstName = fullName.split(' ')[0];
+            }
             
             // Obter o nome de usuário
-            const username = userProfile?.username || '';
+            let username = userProfile?.username || '';
             
-            // Garantir que o formato seja aplicado mesmo com dados parciais
-            if (firstName && username) {
-              return `${firstName} | @${username}`;
-            } else if (firstName) {
-              return `${firstName} | @usuário`;
-            } else if (username) {
-              return `Usuário | @${username}`;
+            // Log para depuração
+            console.log("Perfil completo:", userProfile);
+            console.log("Dados de exibição:", {
+              fullName,
+              firstName,
+              username
+            });
+            
+            // Montar o texto de exibição
+            let displayText = "";
+            
+            if (firstName) {
+              displayText += firstName;
             } else {
-              // Se não tiver nenhum dos dados, usar placeholder completo
-              return "Usuário | @usuário";
+              displayText += "Usuário";
             }
+            
+            displayText += " | ";
+            
+            if (username) {
+              displayText += "@" + username;
+            } else {
+              displayText += "@usuário";
+            }
+            
+            return displayText;
           })()}
         </motion.h2>
 
