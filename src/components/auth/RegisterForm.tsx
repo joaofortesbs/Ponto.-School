@@ -600,7 +600,7 @@ export function RegisterForm() {
 
     return (
       <div className="fixed inset-0 bg-black/70 backdrop-blur-lg flex items-center justify-center z-50 p-4 animate-fadeIn">
-        <div className="relative bg-gradient-to-b from-white/95 to-white dark:from-[#0A2540]/95 dark:to-[#0A2540] p-8 rounded-2xl shadow-2xl max-w-2xl w-full border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+        <div className="relative bg-gradient-to-b from-white/95 to-white dark:from-[#0A2540]/95 dark:to-[#0A2540] p-8 rounded-2xl shadow-2xl max-w-4xl w-full border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
           {/* Efeito de brilho no background */}
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-[#FF6B00]/20 to-transparent rounded-full blur-3xl"></div>
           <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-[#FF6B00]/10 to-transparent rounded-full blur-3xl"></div>
@@ -707,7 +707,7 @@ export function RegisterForm() {
           </div>
 
           <div className="text-center text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl">
-            <span className="font-medium">Importante:</span> Esta escolha deve ser verdadeira e de acordo com a instituição que você estuda, ela será utilizada para a geração do seu ID de usuário único.
+            <span className="font-medium">Importante:</span> Esta escolha deve ser verdadeira e de acordo com a instituição que você estuda, ela será utilizada para a geração do seu ID de usuário único, porém a plataforma será exatamente a mesma!
           </div>
         </div>
       </div>

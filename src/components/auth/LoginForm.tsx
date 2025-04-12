@@ -252,7 +252,7 @@ export function LoginForm() {
           <Button
             variant="link"
             className="text-brand-primary hover:text-brand-primary/90 p-0 h-auto"
-            onClick={() => navigate("/select-plan")}
+            onClick={() => navigate("/register")}
           >
             Cadastre-se
           </Button>
