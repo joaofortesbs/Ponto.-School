@@ -202,7 +202,7 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
             {/* Criando um grid com duas células de igual altura */}
             <div className="grid grid-cols-1 gap-6 h-full">
               {/* Componente de Abas - Primeira célula do grid */}
-              <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 overflow-hidden shadow-sm">
+              <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 overflow-hidden shadow-sm flex-grow">
                 <Tabs
                   value={activeTab}
                   onValueChange={setActiveTab}
@@ -237,7 +237,7 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
                     </TabsList>
                   </div>
 
-                  <ScrollArea className="h-[450px]">
+                  <ScrollArea className="h-[calc(100vh-12rem)]">
                     <TabsContent
                       value="perfil"
                       className="p-6 focus:outline-none"
@@ -299,7 +299,7 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
               {/* Badges & Achievements - Segunda célula do grid */}
               <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 overflow-hidden shadow-sm p-6">
                 <h3 className="text-lg font-semibold text-[#29335C] dark:text-white mb-4">Conquistas</h3>
-                <div className="h-[400px] overflow-auto">
+                <div className="h-[calc(100vh-20rem)] overflow-auto">
                   <Achievements />
                 </div>
               </div>
