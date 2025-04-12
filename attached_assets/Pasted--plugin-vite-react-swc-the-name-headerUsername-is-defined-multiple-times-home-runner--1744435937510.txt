@@ -1,0 +1,45 @@
+[plugin:vite:react-swc] × the name `headerUsername` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/profile/ProfileHeader.tsx:750:1]
+ 750 │             });
+ 751 │ 
+ 752 │             // Obter o nome de usuário para exibição - este é o mesmo nome que aparece no cabeçalho
+ 753 │             const headerUsername = userProfile?.username || '';
+     ·                   ───────┬──────
+     ·                          ╰── previous definition of `headerUsername` here
+ 754 │             
+ 755 │             // Obter o nome para a parte principal da exibição
+ 756 │             let displayedName = '';
+ 757 │             
+ 758 │             // Prioridade de exibição: username > display_name > full_name > fallback
+ 759 │             if (headerUsername) {
+ 760 │               displayedName = headerUsername;
+ 761 │             } else if (userProfile?.display_name) {
+ 762 │               displayedName = userProfile.display_name;
+ 763 │             } else if (userProfile?.full_name) {
+ 764 │               // Se tiver nome completo, usar o primeiro nome
+ 765 │               displayedName = userProfile.full_name.split(' ')[0];
+ 766 │             } else {
+ 767 │               displayedName = "Usuário";
+ 768 │             }
+ 769 │             
+ 770 │             // Buscar username do localStorage (mesmo usado no cabeçalho)
+ 771 │             const storedUsername = localStorage.getItem('username');
+ 772 │             
+ 773 │             console.log("Dados do perfil para exibição de username:", {
+ 774 │               headerUsername: headerUsername,
+ 775 │               storedUsername: storedUsername,
+ 776 │               displayedName: displayedName,
+ 777 │               profile_username: userProfile?.username,
+ 778 │               profile_display_name: userProfile?.display_name,
+ 779 │               profile_full_name: userProfile?.full_name
+ 780 │             });
+ 781 │ 
+ 782 │             // Buscar o nome de usuário do localStorage (usado no cabeçalho)
+ 783 │             const headerUsername = localStorage.getItem('username');
+     ·                   ───────┬──────
+     ·                          ╰── `headerUsername` redefined here
+ 784 │             
+ 785 │             // Usar o nome de usuário do cabeçalho (prioridade máxima)
+ 786 │             const usernameToDisplay = headerUsername || storedUsername || 'joaofortes';
+     ╰────
+/home/runner/workspace/src/components/profile/ProfileHeader.tsx:750:1
