@@ -65,10 +65,10 @@ export default function ProfileHeader({
       loadProfile();
       return;
     }
-    
+
     // Definir displayName mesmo se estiver vazio, para permitir fallbacks
     setDisplayName(userProfile.display_name || userProfile.full_name || '');
-    
+
     if (userProfile?.avatar_url) {
       setAvatarUrl(userProfile.avatar_url);
     }
@@ -80,7 +80,7 @@ export default function ProfileHeader({
     if (!userProfile.user_id) {
       loadProfile();
     }
-    
+
     // Log para debug - log detalhado para depuração
     console.log("Profile data loaded (detalhado):", {
       display_name: userProfile.display_name,
@@ -89,12 +89,12 @@ export default function ProfileHeader({
       email: userProfile.email,
       completo: userProfile
     });
-    
+
     // Tentar verificar qualquer outro dado de cadastro que possa existir
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         console.log("Dados do usuário na sessão:", session.user);
-        
+
         // Se o perfil não tiver um nome de usuário, tentar pegar da sessão
         if (!userProfile.username && session.user.user_metadata?.username) {
           // Atualizar o perfil com esse nome de usuário
@@ -108,7 +108,7 @@ export default function ProfileHeader({
             }
           });
         }
-        
+
         // Se o perfil não tiver um nome completo, tentar pegar da sessão
         if (!userProfile.full_name && session.user.user_metadata?.full_name) {
           // Atualizar o perfil com esse nome completo
@@ -346,13 +346,13 @@ export default function ProfileHeader({
         if (typeof setUserProfile === 'function') {
           setUserProfile(userData);
         }
-        
+
         // Extrair e exibir dados do perfil
         console.log("Perfil recuperado:", userData);
-        
+
         // Definir nome de exibição (prioridade: display_name, full_name, username)
         setDisplayName(userData.display_name || userData.full_name || userData.username || '');
-        
+
         // Definir avatar e capa
         setAvatarUrl(userData.avatar_url || null);
         setCoverUrl(userData.cover_url || null);
@@ -364,12 +364,12 @@ export default function ProfileHeader({
             description: `Seu ID de usuário: ${userData.user_id}`,
           });
         }
-        
+
         console.log("Perfil carregado com sucesso:", userData);
         return userData;
       } else {
         console.warn("Nenhum dado de usuário retornado do profileService");
-        
+
         // Tentar uma segunda vez após um breve intervalo
         setTimeout(async () => {
           const retryUserData = await profileService.getCurrentUserProfile();
@@ -651,13 +651,13 @@ export default function ProfileHeader({
               profile_full_name: userProfile?.full_name,
               profile_username: userProfile?.username
             });
-            
+
             // Pegar o nome completo do cadastro da pessoa
             const fullName = displayName || userProfile?.full_name || userProfile?.display_name || '';
-            
+
             // Extrair o primeiro nome
             let firstName = fullName ? fullName.split(' ')[0] : '';
-            
+
             // Se não houver primeiro nome, usar um fallback
             if (!firstName) {
               if (userProfile?.username) {
@@ -667,38 +667,20 @@ export default function ProfileHeader({
                 firstName = "Usuário";
               }
             }
-            
-            // Obter o display_name do perfil (que deve ser o mesmo que está no Supabase)
-            let displayUsername = '';
-            
-            // Prioridade 1: Usar o display_name do perfil (campo oficial do Supabase)
-            if (userProfile?.display_name) {
-              displayUsername = userProfile.display_name;
-              console.log("Display name encontrado no perfil:", displayUsername);
-            }
-            // Prioridade 2: Username no objeto userProfile
-            else if (userProfile?.username) {
-              displayUsername = userProfile.username;
-              console.log("Username encontrado no perfil:", displayUsername);
-            } 
-            // Prioridade 3: Tentar recuperar do localStorage (fallback)
-            else {
-              try {
-                const savedFormData = localStorage.getItem('registrationFormData');
-                if (savedFormData) {
-                  const parsedData = JSON.parse(savedFormData);
-                  if (parsedData.username) {
-                    displayUsername = parsedData.username;
-                    console.log("Username recuperado do localStorage:", displayUsername);
-                  }
-                }
-              } catch (e) {
-                console.error("Erro ao acessar localStorage:", e);
-              }
-            }
-            
-            // Criando o texto de exibição com o @username
-            return `${firstName} | @${displayUsername || "usuário"}`;
+
+            // Obter o nome de usuário a partir do userProfile
+            const username = userProfile?.username || userProfile?.display_name || '';
+
+            // Verificar também nos metadados da sessão (se disponível)
+            // Isso garante que usamos a fonte mais confiável
+            console.log("Dados do perfil para exibição de username:", {
+              profile_username: userProfile?.username,
+              profile_display_name: userProfile?.display_name,
+              user_metadata_username: userProfile?.user_metadata?.username
+            });
+
+            // Garantir que sempre exiba o username corretamente
+            return `${firstName} | @${username || "usuário"}`;
           })()}
         </motion.h2>
 

@@ -111,19 +111,31 @@ class ProfileService {
                   
                   // Também atualizar o objeto data para a resposta
                   data.username = parsedData.username;
+                  
+                  // Também definir como display_name se não estiver definido
+                  if (!data.display_name) {
+                    updateData.display_name = parsedData.username;
+                    data.display_name = parsedData.username;
+                  }
                 }
               }
             } catch (e) {
               console.error('Erro ao acessar localStorage:', e);
             }
             
-            // Verificar nos metadados da sessão
+            // Verificar nos metadados da sessão (prioridade mais alta)
             if (session.session.user.user_metadata?.username) {
               console.log('Username encontrado nos metadados da sessão:', session.session.user.user_metadata.username);
               updateData.username = session.session.user.user_metadata.username;
               
               // Atualizar o objeto data para a resposta
               data.username = session.session.user.user_metadata.username;
+              
+              // Também definir como display_name se não estiver definido
+              if (!data.display_name) {
+                updateData.display_name = session.session.user.user_metadata.username;
+                data.display_name = session.session.user.user_metadata.username;
+              }
             }
           }
           

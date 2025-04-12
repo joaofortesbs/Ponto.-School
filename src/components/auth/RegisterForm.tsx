@@ -414,6 +414,30 @@ export function RegisterForm() {
       let userError = null;
 
       try {
+        // Verificar novamente se o nome de usuário já existe
+        const { data: existingUser } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('username', formData.username)
+          .single();
+          
+        if (existingUser) {
+          setError("Este nome de usuário já está em uso. Por favor, escolha outro.");
+          setLoading(false);
+          return;
+        }
+        
+        // Armazenar os dados do formulário no localStorage para recuperação posterior
+        try {
+          localStorage.setItem('registrationFormData', JSON.stringify({
+            username: formData.username,
+            fullName: formData.fullName,
+            email: formData.email
+          }));
+        } catch (e) {
+          console.warn('Erro ao salvar dados no localStorage:', e);
+        }
+        
         // Tente registrar com o Supabase Auth
         const { data, error } = await supabase.auth.signUp({
           email: formData.email,
@@ -775,16 +799,58 @@ export function RegisterForm() {
                   </label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type="text"
-                      name="username"
-                      value={formData.username}
-                      onChange={handleChange}
-                      placeholder="Digite seu nome de usuário"
-                      className="pl-10 h-11"
-                      required
-                    />
+                    <div className="flex items-center relative">
+                      <span className="absolute left-3 text-muted-foreground">@</span>
+                      <Input
+                        type="text"
+                        name="username"
+                        value={formData.username}
+                        onChange={(e) => {
+                          // Remover espaços e converter para minúsculas
+                          const cleanedValue = e.target.value.toLowerCase().replace(/\s+/g, '');
+                          
+                          // Permitir apenas letras minúsculas, números e sublinhados
+                          const validValue = cleanedValue.replace(/[^a-z0-9_]/g, '');
+                          
+                          setFormData((prev) => ({
+                            ...prev,
+                            username: validValue,
+                          }));
+                          
+                          // Verificar duplicatas após pausa na digitação
+                          if (validValue) {
+                            clearTimeout(window.usernameCheckTimeout);
+                            window.usernameCheckTimeout = setTimeout(async () => {
+                              try {
+                                const { data, error } = await supabase
+                                  .from('profiles')
+                                  .select('username')
+                                  .eq('username', validValue)
+                                  .single();
+                                
+                                if (data && !error) {
+                                  setError("Este nome de usuário já está em uso. Por favor, escolha outro.");
+                                } else {
+                                  // Limpar o erro se não houver duplicata e houver um erro de nome de usuário
+                                  if (error && error.message.includes('username') && formData.username === validValue) {
+                                    setError("");
+                                  }
+                                }
+                              } catch (err) {
+                                console.error("Erro ao verificar nome de usuário:", err);
+                              }
+                            }, 500);
+                          }
+                        }}
+                        placeholder="seunomeusuario"
+                        className="pl-8 h-11"
+                        required
+                      />
+                    </div>
                   </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Apenas letras minúsculas, números e sublinhados. Sem espaços.
+                  </p>
                 </div>
 
                 {/* E-mail */}
