@@ -114,8 +114,8 @@ export function SidebarNav({
             }
             
             // Extrair o primeiro nome do usuário para a saudação
-            // Garantir consistência na ordem de prioridade das fontes do nome
-            const dashboardName = data.display_name || data.full_name?.split(' ')[0] || data.username || localStorage.getItem('username') || "Usuário";
+            // Garantir consistência priorizando o primeiro nome do campo full_name
+            const dashboardName = data.full_name?.split(' ')[0] || data.display_name || "Usuário";
             setFirstName(dashboardName);
             
             // Salvar o nome no localStorage para garantir consistência entre componentes
@@ -499,7 +499,7 @@ export function SidebarNav({
           <div className="text-[#001427] dark:text-white text-center">
             <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
               <span className="mr-1">👋</span> Olá,{" "}
-              {firstName || localStorage.getItem('userFirstName') || userProfile?.display_name || userProfile?.full_name?.split(' ')[0] || userProfile?.username || localStorage.getItem('username') || "Usuário"}!
+              {firstName || localStorage.getItem('userFirstName') || userProfile?.full_name?.split(' ')[0] || userProfile?.display_name || "Usuário"}!
             </h3>
             <div className="flex flex-col items-center mt-1">
               <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
