@@ -94,6 +94,58 @@ function ProtectedRoute({ children }) {
     return <TypewriterLoader />; // Replaced loading spinner
   }
 
+
+  // Função para pré-carregar o username do usuário
+  const preloadUsername = React.useCallback(async () => {
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (session?.session) {
+        // Tentar obter o username dos metadados do usuário
+        if (session.session.user?.user_metadata?.username) {
+          const username = session.session.user.user_metadata.username;
+          console.log("Preload: Username encontrado nos metadados:", username);
+          localStorage.setItem('username', username);
+        } else {
+          // Verificar no banco de dados
+          const { data } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('email', session.session.user.email)
+            .single();
+            
+          if (data?.username) {
+            console.log("Preload: Username encontrado no perfil:", data.username);
+            localStorage.setItem('username', data.username);
+          } else {
+            console.log("Preload: Username não encontrado, buscando em outras fontes...");
+            
+            // Verificar nos dados de registro
+            try {
+              const savedFormData = localStorage.getItem('registrationFormData');
+              if (savedFormData) {
+                const parsedData = JSON.parse(savedFormData);
+                if (parsedData.username) {
+                  console.log("Preload: Username encontrado no localStorage:", parsedData.username);
+                  localStorage.setItem('username', parsedData.username);
+                }
+              }
+            } catch (e) {
+              console.error("Preload: Erro ao acessar localStorage:", e);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao pré-carregar username:", error);
+    }
+  }, []);
+
+  // Adicionar efeito para pré-carregar username
+  React.useEffect(() => {
+    preloadUsername();
+  }, [preloadUsername]);
+
+
   // Se estiver autenticado, renderiza as rotas filhas
   return isAuthenticated ? children : null;
 }

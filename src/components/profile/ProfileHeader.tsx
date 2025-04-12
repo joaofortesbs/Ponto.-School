@@ -76,6 +76,23 @@ export default function ProfileHeader({
       setCoverUrl(userProfile.cover_url);
     }
 
+    // Tentar obter nome de usuário de localStorage se não estiver no perfil
+    if (!userProfile.username) {
+      try {
+        const savedFormData = localStorage.getItem('registrationFormData');
+        if (savedFormData) {
+          const parsedData = JSON.parse(savedFormData);
+          if (parsedData.username) {
+            console.log("Username encontrado no localStorage:", parsedData.username);
+            // Salvar localmente para uso imediato
+            localStorage.setItem('username', parsedData.username);
+          }
+        }
+      } catch (e) {
+        console.error('Erro ao acessar localStorage:', e);
+      }
+    }
+
     // Verificar se o usuário tem um ID e, caso não tenha, gerar um
     if (!userProfile.user_id) {
       loadProfile();
@@ -145,6 +162,30 @@ export default function ProfileHeader({
     };
   }, []);
 
+  // Efeito para forçar carregamento do nome de usuário ao inicializar
+  useEffect(() => {
+    const loadUsername = async () => {
+      // Se já temos userProfile mas não temos username, buscar das outras fontes
+      if (userProfile && !userProfile.username) {
+        await fetchAndUpdateUsername();
+      }
+      
+      // Verificar se o userProfile está inconsistente com os dados salvos
+      const savedUsername = localStorage.getItem('username');
+      if (savedUsername && userProfile?.username && savedUsername !== userProfile.username) {
+        console.log("Inconsistência detectada entre localStorage e perfil do usuário:", {
+          localStorage: savedUsername,
+          profileUsername: userProfile.username
+        });
+        
+        // Priorizar o username do perfil
+        localStorage.setItem('username', userProfile.username);
+      }
+    };
+    
+    loadUsername();
+  }, [userProfile]);
+  
   // Efeito de paralaxe no card
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const card = e.currentTarget;
@@ -353,6 +394,11 @@ export default function ProfileHeader({
         // Definir nome de exibição (prioridade: display_name, full_name, username)
         setDisplayName(userData.display_name || userData.full_name || userData.username || '');
 
+        // Salvar o username no localStorage para uso em diferentes partes da aplicação
+        if (userData.username) {
+          localStorage.setItem('username', userData.username);
+        }
+
         // Definir avatar e capa
         setAvatarUrl(userData.avatar_url || null);
         setCoverUrl(userData.cover_url || null);
@@ -363,6 +409,11 @@ export default function ProfileHeader({
             title: "ID gerado com sucesso",
             description: `Seu ID de usuário: ${userData.user_id}`,
           });
+        }
+
+        // Se não tiver username definido, buscar de outras fontes e atualizar
+        if (!userData.username) {
+          await fetchAndUpdateUsername();
         }
 
         console.log("Perfil carregado com sucesso:", userData);
@@ -378,6 +429,14 @@ export default function ProfileHeader({
             setDisplayName(retryUserData.display_name || retryUserData.full_name || retryUserData.username || '');
             setAvatarUrl(retryUserData.avatar_url || null);
             setCoverUrl(retryUserData.cover_url || null);
+            
+            // Salvar username no localStorage
+            if (retryUserData.username) {
+              localStorage.setItem('username', retryUserData.username);
+            } else {
+              // Se ainda não tiver username, tentar buscar e atualizar
+              await fetchAndUpdateUsername();
+            }
           }
         }, 1500);
       }
@@ -385,6 +444,62 @@ export default function ProfileHeader({
       console.error("Erro ao carregar perfil:", error);
     }
     return null;
+  }
+
+  // Função para buscar o username de diversas fontes e atualizar o perfil
+  async function fetchAndUpdateUsername() {
+    try {
+      // Verificar se temos username no localStorage (formulário de registro)
+      let username = null;
+      try {
+        const savedFormData = localStorage.getItem('registrationFormData');
+        if (savedFormData) {
+          const parsedData = JSON.parse(savedFormData);
+          if (parsedData.username) {
+            username = parsedData.username;
+            console.log("Username encontrado no localStorage:", username);
+          }
+        }
+      } catch (e) {
+        console.error('Erro ao buscar username do localStorage:', e);
+      }
+
+      // Verificar na sessão do Supabase
+      if (!username) {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData?.session?.user?.user_metadata?.username) {
+          username = sessionData.session.user.user_metadata.username;
+          console.log("Username encontrado nos metadados da sessão:", username);
+        }
+      }
+
+      // Verificar diretamente na tabela de auth.users
+      if (!username) {
+        const { data: authUserData } = await supabase.auth.getUser();
+        if (authUserData?.user?.user_metadata?.username) {
+          username = authUserData.user.user_metadata.username;
+          console.log("Username encontrado nos metadados do usuário:", username);
+        }
+      }
+
+      // Se encontramos um username, atualizar o perfil
+      if (username) {
+        localStorage.setItem('username', username);
+        const updatedProfile = await profileService.updateUserProfile({
+          username: username
+        });
+        
+        if (updatedProfile) {
+          console.log("Perfil atualizado com o username:", username);
+          // Força recarregar a página para mostrar o username atualizado
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao buscar e atualizar username:", error);
+    }
   }
 
   const refreshId = async () => {
@@ -667,14 +782,21 @@ export default function ProfileHeader({
               }
             }
 
-            // Obter o nome de usuário
-            const username = userProfile?.username || 'usuário';
+            // Obter o nome de usuário com mais prioridade
+            // Verificar em várias propriedades possíveis para garantir que temos um nome de usuário válido
+            const username = userProfile?.username || 
+                            userProfile?.user_metadata?.username || 
+                            localStorage.getItem('username') || 
+                            sessionStorage.getItem('username') ||
+                            'usuário';
             
             console.log("Dados do perfil para exibição de username:", {
               firstName: firstName,
               profile_username: userProfile?.username,
               profile_display_name: userProfile?.display_name,
-              user_metadata_username: userProfile?.user_metadata?.username
+              user_metadata_username: userProfile?.user_metadata?.username,
+              localStorage_username: localStorage.getItem('username'),
+              sessionStorage_username: sessionStorage.getItem('username')
             });
 
             // Exibir o primeiro nome do usuário junto com o nome de usuário no formato solicitado
