@@ -266,8 +266,12 @@ class ProfileService {
       
       // Verificar se temos uma UF válida
       let uf = profile.state;
-      if (!uf || uf.length !== 2 || uf === 'BR') {
+      if (!uf || uf.length !== 2) {
         // Se não tiver UF válida, usar SP como padrão
+        console.log('UF não fornecida ou inválida, usando SP como padrão');
+        uf = 'SP';
+      } else if (uf === 'BR') {
+        console.log('UF "BR" não é válida, substituindo por SP');
         uf = 'SP';
         
         // Tentar atualizar o estado do usuário para SP já que não temos um estado válido

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 
 /**
@@ -11,18 +10,21 @@ import { supabase } from "@/lib/supabase";
  */
 export async function generateUserId(uf: string, tipoConta: number): Promise<string> {
   // Validação da UF - garantir que seja uma UF válida
-  if (!uf || uf.length !== 2 || uf === 'BR') {
-    console.warn('UF inválida fornecida:', uf);
+  if (!uf || uf.length !== 2) {
+    console.warn('UF inválida ou não fornecida:', uf);
     uf = 'SP'; // Default para São Paulo se não houver UF válida
+  } else if (uf === 'BR') {
+    console.warn('UF "BR" é inválida, substituindo por SP');
+    uf = 'SP'; // Default para São Paulo se for BR
   }
-  
+
   // Garantir que a UF esteja em maiúsculas
   uf = uf.toUpperCase();
-  
+
   // Obtém o ano/mês atual no formato AAMM (ex: 2407 para julho de 2024)
   const dataAtual = new Date();
   const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
-  
+
   try {
     // Obter o último ID da tabela de controle
     const { data, error: selectError } = await supabase
@@ -36,7 +38,7 @@ export async function generateUserId(uf: string, tipoConta: number): Promise<str
     }
 
     let nextId;
-    
+
     if (!data) {
       // Se não existe registro, cria um novo começando com 1
       const { data: insertData, error: insertError } = await supabase
@@ -50,12 +52,12 @@ export async function generateUserId(uf: string, tipoConta: number): Promise<str
         console.error("Erro ao inserir novo controle de ID:", insertError);
         return generateFallbackUserId(uf, tipoConta, anoMes);
       }
-      
+
       nextId = 1; // Primeiro ID
     } else {
       // Se já existe um registro, incrementa o last_id
       nextId = data.last_id + 1;
-      
+
       const { error: updateError } = await supabase
         .from('user_id_control')
         .update({ last_id: nextId })
@@ -82,12 +84,14 @@ export async function generateUserId(uf: string, tipoConta: number): Promise<str
  */
 function generateFallbackUserId(uf: string, tipoConta: number, anoMes: string): string {
   // Mesmo no fallback, garantimos que a UF seja válida
-  if (!uf || uf.length !== 2 || uf === 'BR') {
+  if (!uf || uf.length !== 2) {
+    uf = 'SP';
+  } else if (uf === 'BR') {
     uf = 'SP';
   }
-  
+
   uf = uf.toUpperCase();
-  
+
   const timestamp = new Date().getTime();
   const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
   return `${uf}${anoMes}${tipoConta}${timestamp.toString().slice(-6)}`;
@@ -103,20 +107,23 @@ function generateFallbackUserId(uf: string, tipoConta: number, anoMes: string): 
  */
 export async function generateUserIdByPlan(planType: string, uf: string): Promise<string> {
   // Validação da UF - garantir que seja uma UF válida
-  if (!uf || uf.length !== 2 || uf === 'BR') {
-    console.warn('UF inválida fornecida:', uf);
+  if (!uf || uf.length !== 2) {
+    console.warn('UF inválida ou não fornecida:', uf);
     uf = 'SP'; // Default para São Paulo se não houver UF válida
+  } else if (uf === 'BR') {
+    console.warn('UF "BR" é inválida, substituindo por SP');
+    uf = 'SP'; // Default para São Paulo se for BR
   }
-  
+
   // Validação e normalização do tipo de plano
   let tipoConta: number;
-  
+
   if (!planType || planType.trim() === '') {
     console.warn('Tipo de plano não fornecido, usando padrão "lite"');
     tipoConta = 2; // Default para Lite
   } else {
     const planLower = planType.toLowerCase().trim();
-    
+
     // Determina o tipo de conta com base no plano
     if (planLower === 'premium' || planLower === 'full') {
       tipoConta = 1; // Tipo Full/Premium
@@ -129,7 +136,7 @@ export async function generateUserIdByPlan(planType: string, uf: string): Promis
       tipoConta = 2; // Default para tipos desconhecidos
     }
   }
-  
+
   return generateUserId(uf, tipoConta);
 }
 

@@ -146,7 +146,17 @@ async function fixUserIds() {
                         profile.plan_type?.toLowerCase() === 'premium' ? 1 : 2;
 
         // Determinar a UF
-        const uf = profile.state && profile.state.length === 2 ? profile.state : 'SP';
+        let uf = profile.state;
+        if (!uf || uf.length !== 2) {
+          console.log(`Perfil ${profile.id} tem UF inválida ou não fornecida, usando SP como padrão`);
+          uf = 'SP';
+        } else if (uf === 'BR') {
+          console.log(`Perfil ${profile.id} tem UF "BR" que é inválida, substituindo por SP`);
+          uf = 'SP';
+        } else {
+          uf = uf.toUpperCase(); // Garantir que esteja em maiúsculas
+        }
+        console.log(`Usando UF: ${uf} para perfil ${profile.id}`);
 
         // Gerar novo ID
         const newId = await generateUserId(uf, tipoConta);

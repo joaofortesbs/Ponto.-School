@@ -271,32 +271,48 @@ export function RegisterForm() {
       try {
         // Determinar o tipo de conta com base no plano
         const tipoConta = confirmedPlan === "full" ? 1 : 2;
-        const uf = formData.state;
         
-        // Gerar o ID com a função dedicada do sistema
-        // (Este trecho será substituído pela função real quando estiver disponível)
-        const dataAtual = new Date();
-        const anoMes = `${dataAtual
-          .getFullYear()
-          .toString()
-          .slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, "0")}`;
+        // Garantir que o estado seja válido
+        const uf = formData.state || 'SP';
+        console.log(`Gerando ID com estado (UF): ${uf} e tipo de conta: ${tipoConta}`);
         
-        // Tentar obter o sequencial do banco de dados ou fallback para localStorage
-        let sequencial;
+        // Tentar usar as funções de geração de ID
         try {
-          // Aqui tentaríamos usar a função generateUserId, mas como fallback usamos o localStorage
-          let userCount = parseInt(localStorage.getItem("userCount") || "0");
-          userCount++;
-          localStorage.setItem("userCount", userCount.toString());
-          sequencial = userCount.toString().padStart(6, "0");
-        } catch (error) {
-          console.error("Erro ao obter sequencial:", error);
-          // Fallback: usar timestamp como sequencial
-          sequencial = Date.now().toString().slice(-6);
+          // Primeira tentativa: usar a função principal
+          userId = await generateUserId(uf, tipoConta);
+          console.log(`ID gerado com sucesso usando generateUserId: ${userId}`);
+        } catch (generationError) {
+          console.error("Erro ao gerar ID com função principal:", generationError);
+          
+          // Segunda tentativa: usar a função específica de plano
+          try {
+            userId = await generateUserIdByPlan(confirmedPlan, uf);
+            console.log(`ID gerado com função de plano: ${userId}`);
+          } catch (planError) {
+            console.error("Erro ao gerar ID com função de plano:", planError);
+            
+            // Último fallback: Gerar manualmente
+            const dataAtual = new Date();
+            const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, "0")}`;
+            
+            // Tentar obter o sequencial do banco de dados ou fallback para localStorage
+            let sequencial;
+            let userCount = parseInt(localStorage.getItem("userCount") || "0");
+            userCount++;
+            localStorage.setItem("userCount", userCount.toString());
+            sequencial = userCount.toString().padStart(6, "0");
+            
+            userId = `${uf}${anoMes}${tipoConta}${sequencial}`;
+            console.log(`ID gerado manualmente: ${userId}`);
+          }
         }
         
-        userId = `${uf}${anoMes}${tipoConta}${sequencial}`;
-        console.log(`ID de usuário gerado: ${userId}`);
+        // Verificar se o ID gerado é válido
+        if (!userId || !isValidUserId(userId)) {
+          throw new Error(`ID gerado inválido: ${userId}`);
+        }
+        
+        console.log(`ID de usuário final: ${userId}`);
       } catch (error) {
         console.error("Erro ao gerar ID de usuário:", error);
         setError("Erro ao gerar ID de usuário. Tente novamente.");
