@@ -24,9 +24,9 @@ export function AnimatedBackground() {
   }, []);
 
   return (
-    <div className="banner absolute inset-0 overflow-hidden perspective-1000 -z-10">
-      <div className="layer layer-bg absolute w-full h-full bg-cover bg-center transition-transform z-1"></div>
-      <div className="layer layer-fg absolute w-full h-full bg-cover bg-center transition-transform z-2"></div>
+    <div className="banner absolute inset-0 overflow-hidden z-0">
+      <div className="layer layer-bg absolute w-full h-full bg-cover bg-center"></div>
+      <div className="layer layer-fg absolute w-full h-full bg-cover bg-center"></div>
     </div>
   );
 }
