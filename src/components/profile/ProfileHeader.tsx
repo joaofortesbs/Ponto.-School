@@ -60,12 +60,15 @@ export default function ProfileHeader({
   ];
 
   useEffect(() => {
-    if (
-      userProfile?.display_name &&
-      userProfile.display_name.trim() !== ""
-    ) {
-      setDisplayName(userProfile.display_name);
+    // Forçar carregamento do perfil se userProfile for null
+    if (!userProfile) {
+      loadProfile();
+      return;
     }
+    
+    // Definir displayName mesmo se estiver vazio, para permitir fallbacks
+    setDisplayName(userProfile.display_name || '');
+    
     if (userProfile?.avatar_url) {
       setAvatarUrl(userProfile.avatar_url);
     }
@@ -74,7 +77,16 @@ export default function ProfileHeader({
     }
 
     // Verificar se o usuário tem um ID e, caso não tenha, gerar um
-    loadProfile();
+    if (!userProfile.user_id) {
+      loadProfile();
+    }
+    
+    // Log para debug
+    console.log("Profile data loaded:", {
+      display_name: userProfile.display_name,
+      username: userProfile.username,
+      full_name: userProfile.full_name
+    });
   }, [userProfile]);
 
   useEffect(() => {
@@ -298,10 +310,14 @@ export default function ProfileHeader({
 
       if (userData) {
         // Atualizar a interface com os dados
-        setUserProfile(userData); // Placeholder for setUserProfile function
-        setDisplayName(userData.display_name);
-        setAvatarUrl(userData.avatar_url);
-        setCoverUrl(userData.cover_url);
+        if (typeof setUserProfile === 'function') {
+          setUserProfile(userData);
+        }
+        
+        // Sempre definir displayName, mesmo que seja vazio
+        setDisplayName(userData.display_name || '');
+        setAvatarUrl(userData.avatar_url || null);
+        setCoverUrl(userData.cover_url || null);
 
         // Se houve geração de ID, mostrar toast informativo
         if (idGenerated) {
@@ -310,10 +326,16 @@ export default function ProfileHeader({
             description: `Seu ID de usuário: ${userData.user_id}`,
           });
         }
+        
+        console.log("Perfil carregado com sucesso:", userData);
+        return userData;
+      } else {
+        console.warn("Nenhum dado de usuário retornado do profileService");
       }
     } catch (error) {
       console.error("Erro ao carregar perfil:", error);
     }
+    return null;
   }
 
   const refreshId = async () => {
@@ -573,6 +595,14 @@ export default function ProfileHeader({
           transition={{ delay: 0.7, duration: 0.3 }}
         >
           {(() => {
+            // Forçar exibição de dados para depuração
+            console.log("Dados do perfil:", {
+              displayName,
+              profile_display_name: userProfile?.display_name,
+              profile_full_name: userProfile?.full_name,
+              profile_username: userProfile?.username
+            });
+            
             // Obter o primeiro nome da pessoa
             const fullName = displayName || userProfile?.display_name || userProfile?.full_name || '';
             const firstName = fullName.split(' ')[0] || '';
@@ -580,14 +610,16 @@ export default function ProfileHeader({
             // Obter o nome de usuário
             const username = userProfile?.username || '';
             
+            // Garantir que o formato seja aplicado mesmo com dados parciais
             if (firstName && username) {
               return `${firstName} | @${username}`;
             } else if (firstName) {
-              return firstName;
+              return `${firstName} | @usuário`;
             } else if (username) {
-              return `@${username}`;
+              return `Usuário | @${username}`;
             } else {
-              return "Usuário";
+              // Se não tiver nenhum dos dados, usar placeholder completo
+              return "Usuário | @usuário";
             }
           })()}
         </motion.h2>
