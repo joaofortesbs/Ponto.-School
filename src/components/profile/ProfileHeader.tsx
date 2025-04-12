@@ -998,10 +998,15 @@ export default function ProfileHeader({
             });
 
             // Buscar o nome de usuário do localStorage (usado no cabeçalho)
+            // Obter o nome de usuário do cabeçalho (mesma lógica usada no componente do cabeçalho)
             const headerUsername = localStorage.getItem('username');
+            const userFirstName = localStorage.getItem('userFirstName');
             
-            // Usar o nome de usuário do cabeçalho (prioridade máxima)
-            const usernameToDisplay = headerUsername || storedUsername || userProfile?.full_name?.split(' ')[0] || 'Usuário';
+            // Usar o nome de usuário do cabeçalho com a mesma prioridade do Header
+            const usernameToDisplay = headerUsername || userProfile?.username || storedUsername || 'Usuário';
+            
+            // Nome de exibição: usar a mesma prioridade que é usada no Header
+            const displayNameToUse = userFirstName || userProfile?.display_name || userProfile?.full_name?.split(' ')[0] || 'Usuário';
 
             // Exibir nome de exibição e nome de usuário como dois componentes distintos
             // Nome de exibição: usar display_name ou o primeiro nome do nome completo, ou o fallback
@@ -1018,7 +1023,7 @@ export default function ProfileHeader({
             
             return (
               <>
-                {nameDisplay} <span className="text-gray-400 dark:text-gray-400">|</span> <span className="text-[#FF6B00]">@{usernameToDisplay}</span>
+                {displayNameToUse} <span className="text-gray-400 dark:text-gray-400">|</span> <span className="text-[#FF6B00]">@{usernameToDisplay}</span>
               </>
             );
           })()}
