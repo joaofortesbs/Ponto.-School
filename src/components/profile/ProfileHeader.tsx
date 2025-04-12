@@ -178,18 +178,23 @@ export default function ProfileHeader({
     // Obter o username do localStorage (usado pelo cabeçalho)
     const storedUsername = localStorage.getItem('username');
 
-    // Definir displayName com ordem de prioridade
+    // Definir displayName com ordem de prioridade correta
     let nameToDisplay = '';
 
     if (userProfile.display_name) {
+      // Prioridade 1: display_name do perfil
       nameToDisplay = userProfile.display_name;
-    } else if (storedUsername) {
-      nameToDisplay = storedUsername;
-    } else if (userProfile.username) {
-      nameToDisplay = userProfile.username;
     } else if (userProfile.full_name) {
-      nameToDisplay = userProfile.full_name.split(' ')[0]; // Primeiro nome
+      // Prioridade 2: primeiro nome do full_name
+      nameToDisplay = userProfile.full_name.split(' ')[0];
+    } else if (userProfile.username) {
+      // Prioridade 3: username do perfil 
+      nameToDisplay = userProfile.username;
+    } else if (storedUsername) {
+      // Prioridade 4: username do localStorage
+      nameToDisplay = storedUsername;
     } else {
+      // Fallback
       nameToDisplay = 'Usuário';
     }
 
@@ -874,9 +879,7 @@ export default function ProfileHeader({
             repeatType: "reverse",
             delay: 1
           }}
-        />
-
-        {/* Status badge animado */}
+        />{/* Status badge animado */}
         <div className="absolute top-3 right-3 z-10">
           <motion.div
             className="bg-[#00b894]/90 text-white text-xs py-0.5 px-2 rounded-full flex items-center shadow-lg backdrop-blur-sm"
