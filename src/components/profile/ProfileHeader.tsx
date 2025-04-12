@@ -21,7 +21,9 @@ import {
   Camera,
   Upload,
   ImageIcon,
-  RefreshCw
+  RefreshCw,
+  UserPlus,
+  UserCheck
 } from "lucide-react";
 import type { UserProfile } from "@/types/user-profile";
 import { motion, AnimatePresence } from "framer-motion";
@@ -50,6 +52,8 @@ export default function ProfileHeader({
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [showFollowersTooltip, setShowFollowersTooltip] = useState(false);
+  const [showFollowingTooltip, setShowFollowingTooltip] = useState(false);
 
 
   // Array de conquistas recentes para animação
@@ -1288,6 +1292,106 @@ export default function ProfileHeader({
               <p className="text-base font-bold text-[#29335C] dark:text-white">8</p>
               <p className="text-[10px] text-[#64748B] dark:text-white/60">Turmas</p>
             </div>
+          </motion.div>
+
+          <motion.div
+            whileHover={{ y: -3, scale: 1.03 }}
+            className="text-center group/stat bg-slate-50 dark:bg-slate-800/30 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-all duration-300 shadow-sm hover:shadow border border-transparent hover:border-[#FF6B00]/10 relative"
+            onMouseEnter={() => setShowFollowersTooltip(true)}
+            onMouseLeave={() => setShowFollowersTooltip(false)}
+          >
+            <div className="flex flex-col items-center justify-center">
+              <div className="w-6 h-6 bg-[#FF6B00]/10 rounded-full flex items-center justify-center mb-0.5 group-hover/stat:bg-[#FF6B00]/20 transition-all duration-300">
+                <UserPlus className="h-3.5 w-3.5 text-[#FF6B00] group-hover/stat:scale-110 transition-transform" />
+              </div>
+              <p className="text-base font-bold text-[#29335C] dark:text-white">24</p>
+              <p className="text-[10px] text-[#64748B] dark:text-white/60">Seguidores</p>
+            </div>
+            
+            {/* Tooltip com detalhes dos seguidores */}
+            {showFollowersTooltip && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="absolute -top-24 left-1/2 transform -translate-x-1/2 bg-white dark:bg-[#1E293B] p-2 rounded-lg shadow-lg text-xs z-30 w-48 border border-[#E0E1DD] dark:border-white/10"
+              >
+                <div className="text-center mb-1 font-medium text-[#29335C] dark:text-white">Seguidores</div>
+                <div className="max-h-20 overflow-y-auto">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden">
+                      <span className="text-[9px] font-medium">ML</span>
+                    </div>
+                    <span className="text-[#29335C] dark:text-white">Maria Lima</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center overflow-hidden">
+                      <span className="text-[9px] font-medium">PS</span>
+                    </div>
+                    <span className="text-[#29335C] dark:text-white">Pedro Silva</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <div className="w-5 h-5 rounded-full bg-yellow-100 flex items-center justify-center overflow-hidden">
+                      <span className="text-[9px] font-medium">AS</span>
+                    </div>
+                    <span className="text-[#29335C] dark:text-white">Ana Santos</span>
+                  </div>
+                  <div className="text-center text-[#FF6B00] text-[10px] mt-1 cursor-pointer hover:underline">
+                    Ver todos os 24 seguidores
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </motion.div>
+
+          <motion.div
+            whileHover={{ y: -3, scale: 1.03 }}
+            className="text-center group/stat bg-slate-50 dark:bg-slate-800/30 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-all duration-300 shadow-sm hover:shadow border border-transparent hover:border-[#FF6B00]/10 relative"
+            onMouseEnter={() => setShowFollowingTooltip(true)}
+            onMouseLeave={() => setShowFollowingTooltip(false)}
+          >
+            <div className="flex flex-col items-center justify-center">
+              <div className="w-6 h-6 bg-[#FF6B00]/10 rounded-full flex items-center justify-center mb-0.5 group-hover/stat:bg-[#FF6B00]/20 transition-all duration-300">
+                <UserCheck className="h-3.5 w-3.5 text-[#FF6B00] group-hover/stat:scale-110 transition-transform" />
+              </div>
+              <p className="text-base font-bold text-[#29335C] dark:text-white">18</p>
+              <p className="text-[10px] text-[#64748B] dark:text-white/60">Seguindo</p>
+            </div>
+            
+            {/* Tooltip com detalhes de quem o usuário segue */}
+            {showFollowingTooltip && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="absolute -top-24 left-1/2 transform -translate-x-1/2 bg-white dark:bg-[#1E293B] p-2 rounded-lg shadow-lg text-xs z-30 w-48 border border-[#E0E1DD] dark:border-white/10"
+              >
+                <div className="text-center mb-1 font-medium text-[#29335C] dark:text-white">Seguindo</div>
+                <div className="max-h-20 overflow-y-auto">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center overflow-hidden">
+                      <span className="text-[9px] font-medium">JC</span>
+                    </div>
+                    <span className="text-[#29335C] dark:text-white">João Costa</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center overflow-hidden">
+                      <span className="text-[9px] font-medium">CM</span>
+                    </div>
+                    <span className="text-[#29335C] dark:text-white">Carlos Mendes</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <div className="w-5 h-5 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden">
+                      <span className="text-[9px] font-medium">LC</span>
+                    </div>
+                    <span className="text-[#29335C] dark:text-white">Lucia Campos</span>
+                  </div>
+                  <div className="text-center text-[#FF6B00] text-[10px] mt-1 cursor-pointer hover:underline">
+                    Ver todos os 18 perfis
+                  </div>
+                </div>
+              </motion.div>
+            )}
           </motion.div>
 
           <motion.div
