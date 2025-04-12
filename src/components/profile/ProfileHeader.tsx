@@ -1213,32 +1213,13 @@ export default function ProfileHeader({
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.9, duration: 0.3 }}
         >
-          <span 
-            className="bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white text-xs font-medium px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm hover:shadow hover:shadow-[#FF6B00]/20 transition-all duration-300 cursor-pointer"
-            title="Plano selecionado durante o cadastro"
-          >
+          <span className="bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white text-xs font-medium px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm hover:shadow hover:shadow-[#FF6B00]/20 transition-all duration-300 cursor-pointer">
             <Diamond className="h-3.5 w-3.5" />
-            {(() => {
-              // Verificar se temos informação de plano no perfil
-              if (userProfile?.plan_type) {
-                const planType = userProfile.plan_type.toLowerCase();
-                if (planType === "full") return "Plano Full";
-                if (planType === "premium") return "Plano Premium";
-                return "Plano Lite";
-              }
-              
-              // Verificar no localStorage se temos informação sobre o plano
-              const localStoragePlan = localStorage.getItem('userPlanType');
-              if (localStoragePlan) {
-                const planType = localStoragePlan.toLowerCase();
-                if (planType === "full") return "Plano Full";
-                if (planType === "premium") return "Plano Premium";
-                return "Plano Lite";
-              }
-              
-              // Valor padrão
-              return "Plano Lite";
-            })()}
+            {userProfile?.plan_type === "full" 
+                ? "Plano Full" 
+                : userProfile?.plan_type === "premium" 
+                  ? "Plano Premium" 
+                  : "Plano Lite"}
           </span>
         </motion.div>
 
