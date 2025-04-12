@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 
@@ -18,12 +19,12 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
       if (containerRef.current) {
         const { width, height } = containerRef.current.getBoundingClientRect();
         setDimensions({ width, height });
-
+        
         // Cria nós baseados no tamanho do container
         // Aumentando a densidade das teias diminuindo o divisor
         const nodeCount = Math.floor((width * height) / 8000);
         const newNodes = [];
-
+        
         for (let i = 0; i < nodeCount; i++) {
           newNodes.push({
             x: Math.random() * width,
@@ -36,7 +37,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
             }
           });
         }
-
+        
         // Determina conexões entre nós
         newNodes.forEach((node, index) => {
           const connections: number[] = [];
@@ -46,7 +47,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
                 Math.pow(newNodes[j].x - node.x, 2) + 
                 Math.pow(newNodes[j].y - node.y, 2)
               );
-
+              
               if (distance < 300) {
                 connections.push(j);
                 if (connections.length >= 5) break; // Aumenta para 5 conexões por nó
@@ -55,14 +56,14 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
           }
           newNodes[index].connections = connections;
         });
-
+        
         setNodes(newNodes);
       }
     };
-
+    
     handleResize();
     window.addEventListener("resize", handleResize);
-
+    
     return () => {
       window.removeEventListener("resize", handleResize);
     };
@@ -84,22 +85,22 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
             const dx = e.clientX - rect.left - node.x;
             const dy = e.clientY - rect.top - node.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
-
+            
             // Influencia da posição do mouse na velocidade dos nós
             if (distance < 200) {
               const factor = 1 - distance / 200;
               const pushFactor = 0.8;
-
-              // Atrai levemente na direção do mouse
+              
+              // Afasta levemente da direção do mouse
               return {
                 ...node,
                 velocity: {
-                  x: node.velocity.x + (dx / distance) * factor * pushFactor,
-                  y: node.velocity.y + (dy / distance) * factor * pushFactor
+                  x: node.velocity.x - (dx / distance) * factor * pushFactor,
+                  y: node.velocity.y - (dy / distance) * factor * pushFactor
                 }
               };
             }
-
+            
             return node;
           });
         });
@@ -112,24 +113,24 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
         return prevNodes.map(node => {
           let { x, y } = node;
           const { width, height } = dimensions;
-
+          
           // Movimento baseado na velocidade
           x += node.velocity.x;
           y += node.velocity.y;
-
+          
           // Amortecimento da velocidade
           const damping = 0.98;
           const newVelocity = {
             x: node.velocity.x * damping,
             y: node.velocity.y * damping
           };
-
+          
           // Manter dentro dos limites
           if (x < 0) { x = 0; newVelocity.x *= -0.5; }
           if (x > width) { x = width; newVelocity.x *= -0.5; }
           if (y < 0) { y = 0; newVelocity.y *= -0.5; }
           if (y > height) { y = height; newVelocity.y *= -0.5; }
-
+          
           return {
             ...node,
             x,
@@ -146,7 +147,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
     });
 
     window.addEventListener("mousemove", handleMouseMove);
-
+    
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       cancelAnimationFrame(animationFrame);
@@ -204,29 +205,29 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
             <stop offset="100%" stopColor="rgba(255, 107, 0, 0.6)" />
           </linearGradient>
         </defs>
-
+        
         {/* Linhas entre nós regulares */}
         {nodes.map((node, index) =>
           node.connections.map((targetIndex) => {
             const target = nodes[targetIndex];
             if (!target) return null;
-
+            
             // Calcula a distância até o mouse
             const lineCenter = {
               x: (node.x + target.x) / 2,
               y: (node.y + target.y) / 2
             };
-
+            
             const distanceToMouse = Math.sqrt(
               Math.pow(lineCenter.x - mousePosition.x, 2) + 
               Math.pow(lineCenter.y - mousePosition.y, 2)
             );
-
+            
             // Opacidade baseada na proximidade do mouse
             const maxDistance = 200;
             const opacityBase = 0.08;
             const opacityBoost = Math.max(0, 1 - distanceToMouse / maxDistance) * 0.5;
-
+            
             return (
               <line
                 key={`line-${index}-${targetIndex}`}
@@ -242,13 +243,39 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
             );
           })
         )}
-
+        
         {/* Removidas as linhas entre nós de clique */}
       </svg>
 
-      {/* Efeito de glow ao redor do cursor - REMOVED */}
+      {/* Efeito de glow ao redor do cursor */}
+      <motion.div 
+        className="absolute w-[350px] h-[350px] rounded-full pointer-events-none"
+        style={{
+          background: "radial-gradient(circle, rgba(255,107,0,0.2) 0%, rgba(255,107,0,0) 70%)",
+          left: mousePosition.x - 175,
+          top: mousePosition.y - 175,
+          mixBlendMode: "screen"
+        }}
+        animate={{
+          scale: [1, 1.1, 1],
+        }}
+        transition={{
+          duration: 2,
+          repeat: Infinity,
+          repeatType: "reverse"
+        }}
+      />
 
-      {/* Partículas que seguem o mouse - REMOVED */}
+      {/* Partículas que seguem o mouse */}
+      <motion.div
+        className="absolute w-4 h-4 rounded-full bg-gradient-to-r from-orange-400 to-orange-500 pointer-events-none"
+        style={{
+          left: mousePosition.x - 8,
+          top: mousePosition.y - 8,
+          filter: "blur(4px)",
+          opacity: 0.5,
+        }}
+      />
 
       {/* Conteúdo */}
       <div className="relative z-10 w-full h-full">
