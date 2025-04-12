@@ -73,8 +73,8 @@ export const markUserAsLoggedIn = (userId: string): void => {
  * @param username Nome de usuário (username)
  */
 export const saveUserDisplayName = (displayName?: string | null, fullName?: string | null, username?: string | null): void => {
-  // Ordem de prioridade: display_name > primeiro nome do full_name > username > fallback
-  const firstName = displayName || (fullName ? fullName.split(' ')[0] : null) || username || "Usuário";
+  // Ordem de prioridade: primeiro nome do full_name > display_name > username > fallback
+  const firstName = (fullName ? fullName.split(' ')[0] : null) || displayName || username || "Usuário";
   localStorage.setItem('userFirstName', firstName);
 };
 
