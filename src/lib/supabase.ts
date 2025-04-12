@@ -37,7 +37,7 @@ export const checkSupabaseConnection = async () => {
         // Esta tabela existe, mas não tem dados - a conexão está ok
         console.log('Conexão com Supabase estabelecida com sucesso!');
         return true;
-      }n true;
+      }
       }
 
       // Caso a tabela profiles não exista ainda, tentamos outra operação
