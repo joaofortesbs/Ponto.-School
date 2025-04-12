@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Edit, Mail, Phone, MapPin, Calendar, Check, Star } from "lucide-react";
@@ -52,8 +52,47 @@ export default function ContactInfo({
     fetchBirthDate();
   }, []);
 
+  const [containerHeight, setContainerHeight] = useState("420px");
+  
+  useEffect(() => {
+    if (expandedSection === "contact") {
+      setContainerHeight("auto");
+    } else {
+      setContainerHeight("420px");
+    }
+  }, [expandedSection]);
+  
+  // Função para formatar a data de nascimento
+  const formatBirthDate = (value: string) => {
+    // Remove todos os caracteres não-numéricos
+    const numbers = value.replace(/\D/g, '');
+    
+    // Aplica a máscara dd/mm/aaaa
+    if (numbers.length <= 2) {
+      return numbers;
+    } else if (numbers.length <= 4) {
+      return `${numbers.slice(0, 2)}/${numbers.slice(2)}`;
+    } else if (numbers.length <= 8) {
+      return `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}/${numbers.slice(4)}`;
+    }
+    
+    return `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}/${numbers.slice(4, 8)}`;
+  };
+  
+  // Manipulador para o campo de data de nascimento
+  const handleBirthDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formattedValue = formatBirthDate(e.target.value);
+    setContactInfo({
+      ...contactInfo,
+      birthDate: formattedValue || "Adicionar data de nascimento",
+    });
+  };
+
   return (
-    <div className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-6 shadow-sm w-full h-[420px] overflow-hidden backdrop-blur-sm bg-gradient-to-br from-white to-white/90 dark:from-[#0A2540] dark:to-[#0A2540]/95">
+    <div 
+      className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 p-6 shadow-sm w-full transition-all duration-300 overflow-hidden backdrop-blur-sm bg-gradient-to-br from-white to-white/90 dark:from-[#0A2540] dark:to-[#0A2540]/95"
+      style={{ height: containerHeight, minHeight: "420px" }}
+    >
       <motion.div 
         className="flex justify-between items-center mb-5"
         initial={{ opacity: 0, y: 5 }}
@@ -164,15 +203,14 @@ export default function ContactInfo({
                     ? ""
                     : contactInfo.birthDate
                 }
-                placeholder="Adicionar data de nascimento"
-                onChange={(e) =>
-                  setContactInfo({
-                    ...contactInfo,
-                    birthDate: e.target.value || "Adicionar data de nascimento",
-                  })
-                }
+                placeholder="DD/MM/AAAA"
+                maxLength={10}
+                onChange={handleBirthDateChange}
                 className="border-[#E0E1DD] dark:border-white/10 focus:border-[#FF6B00] focus:ring-[#FF6B00]/10"
               />
+              <p className="text-xs text-[#64748B] dark:text-white/60 mt-1">
+                Digite apenas números, o formato será aplicado automaticamente (DD/MM/AAAA)
+              </p>
             </div>
             <div className="flex justify-end gap-2 mt-4">
               <Button
