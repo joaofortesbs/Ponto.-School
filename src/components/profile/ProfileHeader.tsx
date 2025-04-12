@@ -668,7 +668,7 @@ export default function ProfileHeader({
             }
 
             // Obter o nome de usuário
-            const username = userProfile?.username || '';
+            const username = userProfile?.username || 'usuário';
             
             console.log("Dados do perfil para exibição de username:", {
               firstName: firstName,
@@ -677,8 +677,12 @@ export default function ProfileHeader({
               user_metadata_username: userProfile?.user_metadata?.username
             });
 
-            // Exibir o primeiro nome do usuário junto com o nome de usuário
-            return `${firstName} | @${username || "usuário"}`;
+            // Exibir o primeiro nome do usuário junto com o nome de usuário no formato solicitado
+            return (
+              <>
+                {firstName} <span className="text-gray-400 dark:text-gray-400">|</span> <span className="text-[#FF6B00]">@{username}</span>
+              </>
+            );
           })()}
         </motion.h2>
 
