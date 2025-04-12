@@ -58,6 +58,15 @@ mode = "sequential"
 task = "shell.exec"
 args = "node scripts/setup-supabase.js"
 
+[[workflows.workflow]]
+name = "Configurar Armazenamento"
+author = 41255696
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node scripts/setup-storage.js"
+
 [auth]
 pageEnabled = false
 buttonEnabled = false

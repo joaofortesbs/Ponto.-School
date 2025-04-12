@@ -1,9 +1,11 @@
 
 -- Certifica-se de que o bucket 'profiles' existe
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('profiles', 'profiles', true)
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('profiles', 'profiles', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
 ON CONFLICT (id) DO UPDATE SET
-    public = true;
+    public = true,
+    file_size_limit = 5242880,
+    allowed_mime_types = ARRAY['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
 -- Certifica-se de que as permissões existem para o bucket
 DO $$
@@ -79,3 +81,17 @@ EXECUTE FUNCTION update_profile_images_trigger();
 -- Adiciona índices para melhorar o desempenho de consultas por avatar_url e cover_url
 CREATE INDEX IF NOT EXISTS idx_profiles_avatar_url ON profiles(avatar_url);
 CREATE INDEX IF NOT EXISTS idx_profiles_cover_url ON profiles(cover_url);
+
+-- Função auxiliar para executar SQL direto (necessário para atualizações complexas)
+CREATE OR REPLACE FUNCTION public.execute_sql(sql_query text)
+RETURNS json
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    EXECUTE sql_query;
+    RETURN json_build_object('success', true);
+EXCEPTION WHEN OTHERS THEN
+    RETURN json_build_object('success', false, 'error', SQLERRM);
+END;
+$$;

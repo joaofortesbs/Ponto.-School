@@ -286,46 +286,69 @@ export default function ProfileHeader({
       // Comprimir a imagem antes do upload (opcional, para melhor performance)
       let fileToUpload = file;
       if (file.size > 1000000) { // Se for maior que 1MB
-        const canvas = document.createElement('canvas');
-        const img = new Image();
+        try {
+          const canvas = document.createElement('canvas');
+          const img = new Image();
 
-        const loadImage = new Promise<File>((resolve) => {
-          img.onload = () => {
-            // Calcular novo tamanho mantendo a proporção
-            let width = img.width;
-            let height = img.height;
-            const maxSize = 800; // Tamanho máximo para qualquer dimensão
+          const loadImage = new Promise<File>((resolve) => {
+            img.onload = () => {
+              try {
+                // Calcular novo tamanho mantendo a proporção
+                let width = img.width;
+                let height = img.height;
+                const maxSize = 800; // Tamanho máximo para qualquer dimensão
 
-            if (width > height && width > maxSize) {
-              height = (height / width) * maxSize;
-              width = maxSize;
-            } else if (height > maxSize) {
-              width = (width / height) * maxSize;
-              height = maxSize;
-            }
+                if (width > height && width > maxSize) {
+                  height = (height / width) * maxSize;
+                  width = maxSize;
+                } else if (height > maxSize) {
+                  width = (width / height) * maxSize;
+                  height = maxSize;
+                }
 
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx?.drawImage(img, 0, 0, width, height);
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
 
-            canvas.toBlob((blob) => {
-              if (blob) {
-                const optimizedFile = new File([blob], file.name, { 
-                  type: 'image/jpeg', 
-                  lastModified: Date.now() 
-                });
-                resolve(optimizedFile);
-              } else {
-                resolve(file); // Fallback para arquivo original
+                if (!ctx) {
+                  console.error("Não foi possível obter contexto 2D do canvas");
+                  resolve(file);
+                  return;
+                }
+
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                  if (blob) {
+                    console.log(`Imagem comprimida: ${file.size} -> ${blob.size} bytes`);
+                    const optimizedFile = new File([blob], file.name, { 
+                      type: 'image/jpeg', 
+                      lastModified: Date.now() 
+                    });
+                    resolve(optimizedFile);
+                  } else {
+                    console.warn("Falha ao gerar blob do canvas");
+                    resolve(file); // Fallback para arquivo original
+                  }
+                }, 'image/jpeg', 0.85);
+              } catch (canvasError) {
+                console.error("Erro ao processar imagem no canvas:", canvasError);
+                resolve(file);
               }
-            }, 'image/jpeg', 0.85);
-          };
-          img.onerror = () => resolve(file); // Fallback em caso de erro
-        });
+            };
+            img.onerror = (e) => {
+              console.error("Erro ao carregar imagem para compressão:", e);
+              resolve(file); // Fallback em caso de erro
+            };
+          });
 
-        img.src = URL.createObjectURL(file);
-        fileToUpload = await loadImage;
+          img.src = URL.createObjectURL(file);
+          fileToUpload = await loadImage;
+        } catch (compressionError) {
+          console.error("Erro durante compressão de imagem:", compressionError);
+          // Se houver qualquer erro na compressão, usar arquivo original
+          fileToUpload = file;
+        }
       }
 
       // Verificar se o bucket existe e criar se não existir
@@ -337,7 +360,7 @@ export default function ProfileHeader({
           public: true,
           fileSizeLimit: 5242880 // 5MB
         });
-        
+
         if (createBucketError) {
           console.error("Erro ao criar bucket:", createBucketError);
           // Continuar mesmo com erro, pois o bucket pode já existir mas com permissões diferentes
@@ -350,10 +373,10 @@ export default function ProfileHeader({
       let uploadAttempts = 0;
       let uploadSuccess = false;
       let finalFilePath = filePath;
-      
+
       while (!uploadSuccess && uploadAttempts < 3) {
         uploadAttempts++;
-        
+
         const { error: uploadError } = await supabase.storage
           .from('profiles')
           .upload(finalFilePath, fileToUpload, {
@@ -365,7 +388,7 @@ export default function ProfileHeader({
           uploadSuccess = true;
         } else {
           console.warn(`Tentativa ${uploadAttempts} falhou:`, uploadError.message);
-          
+
           if (uploadError.message.includes('The resource already exists') || 
               uploadError.message.includes('already exists')) {
             // Gerar um novo nome de arquivo com timestamp e random string
@@ -412,13 +435,13 @@ export default function ProfileHeader({
       // Usar múltiplas estratégias para atualização do perfil
       let updateSuccess = false;
       let updatedProfile = null;
-      
+
       // Estratégia 1: Usar o serviço de perfil
       try {
         updatedProfile = await profileService.updateUserProfile({
           avatar_url: publicUrlData.publicUrl
         });
-        
+
         if (updatedProfile) {
           updateSuccess = true;
           console.log("Perfil atualizado com sucesso via profileService");
@@ -426,17 +449,17 @@ export default function ProfileHeader({
       } catch (updateError) {
         console.error("Erro na atualização via profileService:", updateError);
       }
-      
+
       // Estratégia 2: Atualização direta se a primeira falhar
       if (!updateSuccess) {
         try {
           console.log("Tentando atualização direta do perfil");
           const { data: sessionUser } = await supabase.auth.getUser();
-          
+
           if (!sessionUser.user?.email) {
             throw new Error("Email do usuário não disponível");
           }
-          
+
           const { data: updatedData, error: directUpdateError } = await supabase
             .from('profiles')
             .update({ 
@@ -450,7 +473,7 @@ export default function ProfileHeader({
           if (directUpdateError) {
             throw directUpdateError;
           }
-          
+
           updatedProfile = updatedData;
           updateSuccess = true;
           console.log("Perfil atualizado com sucesso via atualização direta");
@@ -458,17 +481,17 @@ export default function ProfileHeader({
           console.error("Erro na atualização direta:", directError);
         }
       }
-      
+
       // Estratégia 3: Usar RPC para executar SQL diretamente
       if (!updateSuccess) {
         try {
           console.log("Tentando atualização via RPC");
           const { data: sessionUser } = await supabase.auth.getUser();
-          
+
           if (!sessionUser.user?.email) {
             throw new Error("Email do usuário não disponível");
           }
-          
+
           const query = `
             UPDATE profiles 
             SET avatar_url = '${publicUrlData.publicUrl.replace(/'/g, "''")}', 
@@ -476,22 +499,22 @@ export default function ProfileHeader({
             WHERE email = '${sessionUser.user.email.replace(/'/g, "''")}'
             RETURNING *;
           `;
-          
+
           const { error: rpcError } = await supabase.rpc('execute_sql', { 
             sql_query: query
           });
-          
+
           if (rpcError) {
             throw rpcError;
           }
-          
+
           // Verificar se a atualização foi bem-sucedida buscando o perfil
           const { data: verifyProfile } = await supabase
             .from('profiles')
             .select('*')
             .eq('email', sessionUser.user.email)
             .single();
-            
+
           if (verifyProfile && verifyProfile.avatar_url === publicUrlData.publicUrl) {
             updatedProfile = verifyProfile;
             updateSuccess = true;
@@ -506,7 +529,7 @@ export default function ProfileHeader({
       if (updateSuccess) {
         // Recarregar o perfil atualizado
         await profileService.getCurrentUserProfile();
-        
+
         toast({
           title: "Sucesso",
           description: "Foto de perfil atualizada com sucesso",
@@ -554,44 +577,67 @@ export default function ProfileHeader({
       // Comprimir a imagem antes do upload (opcional, para melhor performance)
       let fileToUpload = file;
       if (file.size > 1500000) { // Se for maior que 1.5MB
-        const canvas = document.createElement('canvas');
-        const img = new Image();
+        try {
+          const canvas = document.createElement('canvas');
+          const img = new Image();
 
-        const loadImage = new Promise<File>((resolve) => {
-          img.onload = () => {
-            // Calcular novo tamanho mantendo a proporção
-            let width = img.width;
-            let height = img.height;
+          const loadImage = new Promise<File>((resolve) => {
+            img.onload = () => {
+              try {
+                // Calcular novo tamanho mantendo a proporção
+                let width = img.width;
+                let height = img.height;
 
-            // Para imagens de capa, manter a proporção horizontal
-            const maxWidth = 1200;
-            if (width > maxWidth) {
-              height = (height / width) * maxWidth;
-              width = maxWidth;
-            }
+                // Para imagens de capa, manter a proporção horizontal
+                const maxWidth = 1200;
+                if (width > maxWidth) {
+                  height = (height / width) * maxWidth;
+                  width = maxWidth;
+                }
 
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx?.drawImage(img, 0, 0, width, height);
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
 
-            canvas.toBlob((blob) => {
-              if (blob) {
-                const optimizedFile = new File([blob], file.name, { 
-                  type: 'image/jpeg', 
-                  lastModified: Date.now() 
-                });
-                resolve(optimizedFile);
-              } else {
-                resolve(file); // Fallback para arquivo original
+                if (!ctx) {
+                  console.error("Não foi possível obter contexto 2D do canvas");
+                  resolve(file);
+                  return;
+                }
+
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                  if (blob) {
+                    console.log(`Imagem comprimida: ${file.size} -> ${blob.size} bytes`);
+                    const optimizedFile = new File([blob], file.name, { 
+                      type: 'image/jpeg', 
+                      lastModified: Date.now() 
+                    });
+                    resolve(optimizedFile);
+                  } else {
+                    console.warn("Falha ao gerar blob do canvas");
+                    resolve(file); // Fallback para arquivo original
+                  }
+                }, 'image/jpeg', 0.8);
+              } catch (canvasError) {
+                console.error("Erro ao processar imagem no canvas:", canvasError);
+                resolve(file);
               }
-            }, 'image/jpeg', 0.8);
-          };
-          img.onerror = () => resolve(file); // Fallback em caso de erro
-        });
+            };
+            img.onerror = (e) => {
+              console.error("Erro ao carregar imagem para compressão:", e);
+              resolve(file); // Fallback em caso de erro
+            };
+          });
 
-        img.src = URL.createObjectURL(file);
-        fileToUpload = await loadImage;
+          img.src = URL.createObjectURL(file);
+          fileToUpload = await loadImage;
+        } catch (compressionError) {
+          console.error("Erro durante compressão de imagem:", compressionError);
+          // Se houver qualquer erro na compressão, usar arquivo original
+          fileToUpload = file;
+        }
       }
 
       // Verificar se o bucket existe e criar se não existir
@@ -603,7 +649,7 @@ export default function ProfileHeader({
           public: true,
           fileSizeLimit: 5242880 // 5MB
         });
-        
+
         if (createBucketError) {
           console.error("Erro ao criar bucket:", createBucketError);
           // Continuar mesmo com erro, pois o bucket pode já existir mas com permissões diferentes
@@ -616,10 +662,10 @@ export default function ProfileHeader({
       let uploadAttempts = 0;
       let uploadSuccess = false;
       let finalFilePath = filePath;
-      
+
       while (!uploadSuccess && uploadAttempts < 3) {
         uploadAttempts++;
-        
+
         const { error: uploadError } = await supabase.storage
           .from('profiles')
           .upload(finalFilePath, fileToUpload, {
@@ -631,7 +677,7 @@ export default function ProfileHeader({
           uploadSuccess = true;
         } else {
           console.warn(`Tentativa ${uploadAttempts} falhou:`, uploadError.message);
-          
+
           if (uploadError.message.includes('The resource already exists') || 
               uploadError.message.includes('already exists')) {
             // Gerar um novo nome de arquivo com timestamp e random string
@@ -678,13 +724,13 @@ export default function ProfileHeader({
       // Usar múltiplas estratégias para atualização do perfil
       let updateSuccess = false;
       let updatedProfile = null;
-      
+
       // Estratégia 1: Usar o serviço de perfil
       try {
         updatedProfile = await profileService.updateUserProfile({
           cover_url: publicUrlData.publicUrl
         });
-        
+
         if (updatedProfile) {
           updateSuccess = true;
           console.log("Perfil atualizado com sucesso via profileService");
@@ -692,17 +738,17 @@ export default function ProfileHeader({
       } catch (updateError) {
         console.error("Erro na atualização via profileService:", updateError);
       }
-      
+
       // Estratégia 2: Atualização direta se a primeira falhar
       if (!updateSuccess) {
         try {
           console.log("Tentando atualização direta do perfil");
           const { data: sessionUser } = await supabase.auth.getUser();
-          
+
           if (!sessionUser.user?.email) {
             throw new Error("Email do usuário não disponível");
           }
-          
+
           const { data: updatedData, error: directUpdateError } = await supabase
             .from('profiles')
             .update({ 
@@ -716,7 +762,7 @@ export default function ProfileHeader({
           if (directUpdateError) {
             throw directUpdateError;
           }
-          
+
           updatedProfile = updatedData;
           updateSuccess = true;
           console.log("Perfil atualizado com sucesso via atualização direta");
@@ -724,17 +770,17 @@ export default function ProfileHeader({
           console.error("Erro na atualização direta:", directError);
         }
       }
-      
+
       // Estratégia 3: Usar RPC para executar SQL diretamente
       if (!updateSuccess) {
         try {
           console.log("Tentando atualização via RPC");
           const { data: sessionUser } = await supabase.auth.getUser();
-          
+
           if (!sessionUser.user?.email) {
             throw new Error("Email do usuário não disponível");
           }
-          
+
           const query = `
             UPDATE profiles 
             SET cover_url = '${publicUrlData.publicUrl.replace(/'/g, "''")}', 
@@ -742,22 +788,22 @@ export default function ProfileHeader({
             WHERE email = '${sessionUser.user.email.replace(/'/g, "''")}'
             RETURNING *;
           `;
-          
+
           const { error: rpcError } = await supabase.rpc('execute_sql', { 
             sql_query: query
           });
-          
+
           if (rpcError) {
             throw rpcError;
           }
-          
+
           // Verificar se a atualização foi bem-sucedida buscando o perfil
           const { data: verifyProfile } = await supabase
             .from('profiles')
             .select('*')
             .eq('email', sessionUser.user.email)
             .single();
-            
+
           if (verifyProfile && verifyProfile.cover_url === publicUrlData.publicUrl) {
             updatedProfile = verifyProfile;
             updateSuccess = true;
@@ -772,7 +818,7 @@ export default function ProfileHeader({
       if (updateSuccess) {
         // Recarregar o perfil atualizado
         await profileService.getCurrentUserProfile();
-        
+
         toast({
           title: "Sucesso",
           description: "Foto de capa atualizada com sucesso",
