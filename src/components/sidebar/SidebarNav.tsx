@@ -78,34 +78,17 @@ export function SidebarNav({
         setProfileImage(event.detail.url);
       }
     };
-    
-    // Listener para atualizações de nome feitas em outros componentes
-    const handleNameUpdate = (event: CustomEvent) => {
-      if (event.detail && event.detail.firstName) {
-        setFirstName(event.detail.firstName);
-        console.log("Nome atualizado via evento:", event.detail.firstName);
-      }
-    };
 
-    // Adicionar os listeners
+    // Adicionar o listener
     document.addEventListener('userAvatarUpdated', handleAvatarUpdate as EventListener);
-    document.addEventListener('userFirstNameUpdated', handleNameUpdate as EventListener);
 
-    // Remover os listeners quando o componente for desmontado
+    // Remover o listener quando o componente for desmontado
     return () => {
       document.removeEventListener('userAvatarUpdated', handleAvatarUpdate as EventListener);
-      document.removeEventListener('userFirstNameUpdated', handleNameUpdate as EventListener);
     };
   }, []);
 
   useEffect(() => {
-    // Verificar imediatamente se já temos o nome no localStorage (para carregamento instantâneo)
-    const storedFirstName = localStorage.getItem('userFirstName');
-    if (storedFirstName) {
-      setFirstName(storedFirstName);
-      console.log("Nome do usuário carregado do localStorage:", storedFirstName);
-    }
-    
     const fetchUserProfile = async () => {
       try {
         const {
@@ -113,35 +96,16 @@ export function SidebarNav({
         } = await supabase.auth.getUser();
 
         if (user) {
-          let { data, error } = await supabase
+          const { data, error } = await supabase
             .from("profiles")
             .select("*")
             .eq("user_id", user.id)
             .single();
 
           if (error) {
-            // Se não encontrar com user_id, tentar com email
-            const { data: profileByEmail, error: emailError } = await supabase
-              .from("profiles")
-              .select("*")
-              .eq("email", user.email)
-              .single();
-            
-            if (emailError) {
-              console.error("Error fetching user profile:", error);
-              return;
-            }
-            
-            if (profileByEmail) {
-              data = profileByEmail;
-            } else {
-              return;
-            }
-          }
-          
-          if (data) {
+            console.error("Error fetching user profile:", error);
+          } else if (data) {
             setUserProfile(data as UserProfile);
-            
             // Se o perfil tiver um avatar_url, usar ele
             if (data.avatar_url) {
               setProfileImage(data.avatar_url);
@@ -149,25 +113,13 @@ export function SidebarNav({
               localStorage.setItem('userAvatarUrl', data.avatar_url);
             }
             
-            // Extrair o primeiro nome do usuário para a saudação - PRIORIDADE: nome completo > nome de exibição > username
+            // Extrair o primeiro nome do usuário para a saudação
             // Usando a mesma lógica do Dashboard.tsx para consistência
-            const dashboardName = data.full_name?.split(' ')[0] || data.display_name || "Usuário";
+            const dashboardName = data.full_name?.split(' ')[0] || data.display_name || data.username || "João";
             setFirstName(dashboardName);
             
             // Salvar o nome no localStorage para garantir consistência entre componentes
-            if (dashboardName && dashboardName !== "Usuário") {
-              localStorage.setItem('userFirstName', dashboardName);
-              console.log("Nome do usuário atualizado e salvo:", dashboardName);
-              
-              // Disparar evento para outros componentes saberem que o nome foi atualizado
-              try {
-                document.dispatchEvent(new CustomEvent('userFirstNameUpdated', { 
-                  detail: { firstName: dashboardName } 
-                }));
-              } catch (e) {
-                console.error("Erro ao disparar evento de atualização de nome:", e);
-              }
-            }
+            localStorage.setItem('userFirstName', dashboardName);
           }
         }
       } catch (error) {
@@ -176,6 +128,12 @@ export function SidebarNav({
         setLoading(false);
       }
     };
+
+    // Verificar se já temos o nome no localStorage primeiro (para carregamento rápido)
+    const storedFirstName = localStorage.getItem('userFirstName');
+    if (storedFirstName) {
+      setFirstName(storedFirstName);
+    }
     
     fetchUserProfile();
   }, []);
@@ -541,7 +499,7 @@ export function SidebarNav({
           <div className="text-[#001427] dark:text-white text-center">
             <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
               <span className="mr-1">👋</span> Olá,{" "}
-              {localStorage.getItem('userFirstName') || firstName || userProfile?.full_name?.split(' ')[0] || userProfile?.display_name || "Usuário"}!
+              {firstName || userProfile?.full_name?.split(' ')[0] || userProfile?.display_name || userProfile?.username || "Usuário"}!
             </h3>
             <div className="flex flex-col items-center mt-1">
               <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">

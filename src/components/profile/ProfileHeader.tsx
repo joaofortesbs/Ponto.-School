@@ -1,203 +1,1287 @@
-import React, { useEffect, useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import AboutMe from './AboutMe';
-import Skills from './Skills';
-import Education from './Education';
-import { supabase } from '@/lib/supabase';
-import { UserProfile } from '@/types/user-profile';
-import { Edit2, Share2, MessagesSquare, Bell, Mail } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import {
+  Diamond,
+  Share2,
+  Edit,
+  Award,
+  Users,
+  Sparkles,
+  ChevronUp,
+  Trophy,
+  BookOpen,
+  Zap,
+  Star,
+  BellRing,
+  Flame,
+  Laptop,
+  Lightbulb,
+  Camera,
+  Upload,
+  ImageIcon,
+  RefreshCw
+} from "lucide-react";
+import type { UserProfile } from "@/types/user-profile";
+import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/lib/supabase";
+import { profileService } from "@/services/profileService";
+import { toast } from "@/components/ui/use-toast";
+
+interface ProfileHeaderProps {
+  userProfile: UserProfile | null;
+  onEditClick: () => void;
+}
+
+export default function ProfileHeader({
+  userProfile,
+  onEditClick,
+}: ProfileHeaderProps) {
+  const profileNameRef = useRef<HTMLHeadingElement>(null);
+  const profilePictureRef = useRef<HTMLInputElement>(null);
+  const coverPhotoRef = useRef<HTMLInputElement>(null);
+  const [displayName, setDisplayName] = useState<string | null>(null);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
+  const [showStatsDetails, setShowStatsDetails] = useState(false);
+  const [activeAchievement, setActiveAchievement] = useState(0);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
 
-export default function ProfileHeader() {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [firstName, setFirstName] = useState<string>("Usuário");
-  const [username, setUsername] = useState<string>("");
+  // Array de conquistas recentes para animação
+  const recentAchievements = [
+    { icon: <Star className="h-4 w-4" />, name: "Primeiro Login", date: "1 dia atrás" },
+    { icon: <Flame className="h-4 w-4" />, name: "3 dias consecutivos", date: "3 dias atrás" },
+    { icon: <Lightbulb className="h-4 w-4" />, name: "Ideia Brilhante", date: "5 dias atrás" },
+  ];
+
+  // Função para garantir que temos o username correto e consistente com o cabeçalho
+  const ensureCorrectUsername = async () => {
+    try {
+      // Verificar se temos o username no localStorage (usado no cabeçalho)
+      const headerUsername = localStorage.getItem('username');
+      
+      console.log("Sincronizando usernames:", {
+        headerUsername,
+        profileUsername: userProfile?.username,
+        userProfileFull: userProfile
+      });
+      
+      if (headerUsername) {
+        // Se temos um username no cabeçalho, usar ele como fonte principal
+        
+        // Verificar se o perfil existe e precisa ser atualizado
+        if (userProfile && (!userProfile.username || userProfile.username !== headerUsername)) {
+          console.log("Atualizando username no perfil para corresponder ao cabeçalho:", headerUsername);
+          
+          // Atualizar o perfil para usar o mesmo username do cabeçalho
+          await profileService.updateUserProfile({
+            username: headerUsername,
+            display_name: headerUsername, // Também atualizar o display_name
+            updated_at: new Date().toISOString()
+          });
+          
+          // Atualizar o estado local
+          setDisplayName(headerUsername);
+          
+          // Recarregar perfil após atualização
+          loadProfile();
+        }
+      } else if (userProfile?.username) {
+        // Se não temos username no localStorage mas temos no perfil, atualizar o localStorage
+        console.log("Sincronizando username do perfil para o cabeçalho:", userProfile.username);
+        localStorage.setItem('username', userProfile.username);
+      } else {
+        // Se não temos em nenhum lugar, usar o valor padrão 'joaofortes'
+        const defaultUsername = 'joaofortes';
+        console.log("Definindo username padrão:", defaultUsername);
+        localStorage.setItem('username', defaultUsername);
+        
+        if (userProfile) {
+          // Atualizar o perfil com este username padrão
+          await profileService.updateUserProfile({
+            username: defaultUsername,
+            display_name: defaultUsername,
+            updated_at: new Date().toISOString()
+          });
+          
+          // Atualizar o estado local
+          setDisplayName(defaultUsername);
+          
+          // Recarregar perfil
+          loadProfile();
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao sincronizar username com cabeçalho:", error);
+    }
+  };
 
   useEffect(() => {
-    // Função para buscar o perfil do usuário logado
-    const fetchUserProfile = async () => {
-      try {
-        setLoading(true);
+    // Verificar se temos um username no cabeçalho e configurar um padrão se não tiver
+    const headerUsername = localStorage.getItem('username');
+    if (!headerUsername) {
+      console.log("Definindo username padrão no localStorage");
+      localStorage.setItem('username', 'joaofortes');
+    }
+    
+    // Forçar carregamento do perfil se userProfile for null
+    if (!userProfile) {
+      loadProfile();
+      return;
+    }
+    
+    // Garantir que o username seja consistente com o cabeçalho
+    ensureCorrectUsername();
 
-        // Primeiro verificar se há uma sessão ativa
-        const { data: sessionData } = await supabase.auth.getSession();
+    // Obter o username do localStorage (usado pelo cabeçalho)
+    const storedUsername = localStorage.getItem('username');
+    
+    // Definir displayName com ordem de prioridade
+    let nameToDisplay = '';
+    
+    if (userProfile.display_name) {
+      nameToDisplay = userProfile.display_name;
+    } else if (storedUsername) {
+      nameToDisplay = storedUsername;
+    } else if (userProfile.username) {
+      nameToDisplay = userProfile.username;
+    } else if (userProfile.full_name) {
+      nameToDisplay = userProfile.full_name.split(' ')[0]; // Primeiro nome
+    } else {
+      nameToDisplay = 'Usuário';
+    }
+    
+    setDisplayName(nameToDisplay);
 
-        if (!sessionData.session) {
-          console.log('Usuário não autenticado');
-          setLoading(false);
-          return;
-        }
-
-        // Buscar perfil do usuário usando o email da sessão
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('email', sessionData.session.user.email)
-          .single();
-
-        if (error) {
-          console.error('Erro ao buscar perfil:', error);
-          setLoading(false);
-          return;
-        }
-
-        if (data) {
-          setProfile(data);
-
-          // Determinar o primeiro nome a partir do full_name, se disponível
-          if (data.full_name) {
-            const firstName = data.full_name.split(' ')[0];
-            setFirstName(firstName);
-            localStorage.setItem('userFirstName', firstName);
-          } 
-          // Se não tiver full_name, usar display_name como fallback
-          else if (data.display_name) {
-            setFirstName(data.display_name);
-            localStorage.setItem('userFirstName', data.display_name);
-          }
-
-          // Definir o username
-          setUsername(data.username || data.email || "");
-        }
-
-        setLoading(false);
-      } catch (error) {
-        console.error('Erro ao buscar perfil:', error);
-        setLoading(false);
-      }
-    };
-
-    // Verificar no localStorage primeiro (para rápida renderização)
-    const storedFirstName = localStorage.getItem('userFirstName');
-    if (storedFirstName) {
-      setFirstName(storedFirstName);
+    if (userProfile?.avatar_url) {
+      setAvatarUrl(userProfile.avatar_url);
+    }
+    if (userProfile?.cover_url) {
+      setCoverUrl(userProfile.cover_url);
     }
 
-    // Buscar dados atualizados
-    fetchUserProfile();
+    // Verificar se o usuário tem um ID e, caso não tenha, gerar um
+    if (!userProfile.user_id) {
+      loadProfile();
+    }
 
-    // Escutar por mudanças no nome do usuário
-    const handleNameUpdate = (event: CustomEvent) => {
-      if (event.detail?.firstName) {
-        setFirstName(event.detail.firstName);
+    // Log para debug - log detalhado para depuração
+    console.log("Profile data loaded (detalhado):", {
+      display_name: userProfile.display_name,
+      username: userProfile.username,
+      full_name: userProfile.full_name,
+      email: userProfile.email,
+      storedUsername: storedUsername,
+      nameToDisplay: nameToDisplay,
+      completo: userProfile
+    });
+
+    // Tentar verificar qualquer outro dado de cadastro que possa existir
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        console.log("Dados do usuário na sessão:", session.user);
+
+        // Se o perfil não tiver um nome de usuário, tentar pegar da sessão ou localStorage
+        if (!userProfile.username) {
+          const usernameToUse = storedUsername || session.user.user_metadata?.username;
+          
+          if (usernameToUse) {
+            // Atualizar o perfil com esse nome de usuário
+            profileService.updateUserProfile({
+              username: usernameToUse
+            }).then(updatedProfile => {
+              if (updatedProfile) {
+                console.log("Nome de usuário atualizado com sucesso:", updatedProfile.username);
+                // Salvar no localStorage para garantir consistência
+                localStorage.setItem('username', usernameToUse);
+                // Recarregar perfil após atualização
+                loadProfile();
+              }
+            });
+          }
+        }
+
+        // Se o perfil não tiver um nome completo, tentar pegar da sessão
+        if (!userProfile.full_name && session.user.user_metadata?.full_name) {
+          // Atualizar o perfil com esse nome completo
+          profileService.updateUserProfile({
+            full_name: session.user.user_metadata.full_name
+          });
+        }
       }
-    };
+    }).catch(error => {
+      console.error("Erro ao obter sessão:", error);
+    });
+  }, [userProfile]);
 
-    document.addEventListener('userFirstNameUpdated', handleNameUpdate as EventListener);
+  useEffect(() => {
+    // Animação para barra de progresso
+    const progressBar = document.querySelector('.progress-animation');
+    if (progressBar) {
+      progressBar.classList.add('animate-shimmer');
+    }
+
+    // Rotação para o avatar quando a página é carregada
+    const avatarElement = document.querySelector('.profile-avatar');
+    if (avatarElement) {
+      avatarElement.classList.add('animate-avatar-entrance');
+    }
+
+    // Intervalo para trocar a conquista ativa na exibição
+    const achievementInterval = setInterval(() => {
+      setActiveAchievement((prev) => (prev + 1) % recentAchievements.length);
+    }, 3000);
 
     return () => {
-      document.removeEventListener('userFirstNameUpdated', handleNameUpdate as EventListener);
+      clearInterval(achievementInterval);
     };
   }, []);
 
+  // Efeito de paralaxe no card
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    const rotateX = (y - centerY) / 30;
+    const rotateY = (centerX - x) / 30;
+
+    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+  };
+
+  const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+    const card = e.currentTarget;
+    card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)';
+  };
+
+  const uploadProfilePicture = async (file: File) => {
+    if (!file) return;
+
+    try {
+      setIsUploading(true);
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para fazer upload de imagens",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const user = sessionData.session.user;
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      let filePath = `avatars/${fileName}`;
+
+      // Comprimir a imagem antes do upload (opcional, para melhor performance)
+      let fileToUpload = file;
+      if (file.size > 1000000) { // Se for maior que 1MB
+        const canvas = document.createElement('canvas');
+        const img = new Image();
+        
+        const loadImage = new Promise<File>((resolve) => {
+          img.onload = () => {
+            // Calcular novo tamanho mantendo a proporção
+            let width = img.width;
+            let height = img.height;
+            const maxSize = 800; // Tamanho máximo para qualquer dimensão
+            
+            if (width > height && width > maxSize) {
+              height = (height / width) * maxSize;
+              width = maxSize;
+            } else if (height > maxSize) {
+              width = (width / height) * maxSize;
+              height = maxSize;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx?.drawImage(img, 0, 0, width, height);
+            
+            canvas.toBlob((blob) => {
+              if (blob) {
+                const optimizedFile = new File([blob], file.name, { 
+                  type: 'image/jpeg', 
+                  lastModified: Date.now() 
+                });
+                resolve(optimizedFile);
+              } else {
+                resolve(file); // Fallback para arquivo original
+              }
+            }, 'image/jpeg', 0.85);
+          };
+          img.onerror = () => resolve(file); // Fallback em caso de erro
+        });
+        
+        img.src = URL.createObjectURL(file);
+        fileToUpload = await loadImage;
+      }
+
+      // Upload para o storage
+      const { error: uploadError } = await supabase.storage
+        .from('profiles')
+        .upload(filePath, fileToUpload, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) {
+        if (uploadError.message.includes('The resource already exists')) {
+          // Se o arquivo já existe, gerar um novo nome e tentar novamente
+          const newFileName = `${user.id}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+          const newFilePath = `avatars/${newFileName}`;
+          
+          const { error: retryError } = await supabase.storage
+            .from('profiles')
+            .upload(newFilePath, fileToUpload, {
+              cacheControl: '3600',
+              upsert: true
+            });
+            
+          if (retryError) throw retryError;
+          
+          // Atualizar o caminho do arquivo
+          filePath = newFilePath;
+        } else {
+          throw uploadError;
+        }
+      }
+
+      // Obter URL pública
+      const { data: publicUrlData } = supabase.storage
+        .from('profiles')
+        .getPublicUrl(filePath);
+
+      if (!publicUrlData || !publicUrlData.publicUrl) {
+        throw new Error("Não foi possível obter a URL pública da imagem");
+      }
+
+      // Atualizar perfil do usuário
+      const updatedProfile = await profileService.updateUserProfile({
+        avatar_url: publicUrlData.publicUrl
+      });
+
+      if (updatedProfile) {
+        setAvatarUrl(publicUrlData.publicUrl);
+        
+        // Salvar também no localStorage para uso em outros componentes
+        try {
+          localStorage.setItem('userAvatarUrl', publicUrlData.publicUrl);
+          // Disparar evento para outros componentes saberem que o avatar foi atualizado
+          document.dispatchEvent(new CustomEvent('userAvatarUpdated', { 
+            detail: { url: publicUrlData.publicUrl } 
+          }));
+        } catch (e) {
+          console.warn("Erro ao salvar avatar no localStorage", e);
+        }
+
+        toast({
+          title: "Sucesso",
+          description: "Foto de perfil atualizada com sucesso",
+        });
+      } else {
+        throw new Error("Não foi possível atualizar o perfil");
+      }
+    } catch (error) {
+      console.error("Erro ao fazer upload da foto de perfil:", error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao fazer upload da foto: " + (error instanceof Error ? error.message : "Erro desconhecido"),
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const uploadCoverPhoto = async (file: File) => {
+    if (!file) return;
+
+    try {
+      setIsUploading(true);
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para fazer upload de imagens",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const user = sessionData.session.user;
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-cover-${Date.now()}.${fileExt}`;
+      let filePath = `covers/${fileName}`;
+
+      // Comprimir a imagem antes do upload (opcional, para melhor performance)
+      let fileToUpload = file;
+      if (file.size > 1500000) { // Se for maior que 1.5MB
+        const canvas = document.createElement('canvas');
+        const img = new Image();
+        
+        const loadImage = new Promise<File>((resolve) => {
+          img.onload = () => {
+            // Calcular novo tamanho mantendo a proporção
+            let width = img.width;
+            let height = img.height;
+            
+            // Para imagens de capa, manter a largura maior
+            const maxWidth = 1200;
+            if (width > maxWidth) {
+              height = (height / width) * maxWidth;
+              width = maxWidth;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx?.drawImage(img, 0, 0, width, height);
+            
+            canvas.toBlob((blob) => {
+              if (blob) {
+                const optimizedFile = new File([blob], file.name, { 
+                  type: 'image/jpeg', 
+                  lastModified: Date.now() 
+                });
+                resolve(optimizedFile);
+              } else {
+                resolve(file); // Fallback para arquivo original
+              }
+            }, 'image/jpeg', 0.8);
+          };
+          img.onerror = () => resolve(file); // Fallback em caso de erro
+        });
+        
+        img.src = URL.createObjectURL(file);
+        fileToUpload = await loadImage;
+      }
+
+      // Upload para o storage
+      const { error: uploadError } = await supabase.storage
+        .from('profiles')
+        .upload(filePath, fileToUpload, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) {
+        if (uploadError.message.includes('The resource already exists')) {
+          // Se o arquivo já existe, gerar um novo nome e tentar novamente
+          const newFileName = `${user.id}-cover-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+          const newFilePath = `covers/${newFileName}`;
+          
+          const { error: retryError } = await supabase.storage
+            .from('profiles')
+            .upload(newFilePath, fileToUpload, {
+              cacheControl: '3600',
+              upsert: true
+            });
+            
+          if (retryError) throw retryError;
+          
+          // Atualizar o caminho do arquivo
+          filePath = newFilePath;
+        } else {
+          throw uploadError;
+        }
+      }
+
+      // Obter URL pública
+      const { data: publicUrlData } = supabase.storage
+        .from('profiles')
+        .getPublicUrl(filePath);
+
+      if (!publicUrlData || !publicUrlData.publicUrl) {
+        throw new Error("Não foi possível obter a URL pública da imagem");
+      }
+
+      // Atualizar perfil do usuário
+      const updatedProfile = await profileService.updateUserProfile({
+        cover_url: publicUrlData.publicUrl
+      });
+
+      if (updatedProfile) {
+        setCoverUrl(publicUrlData.publicUrl);
+        
+        // Salvar também no localStorage para uso em outros componentes
+        try {
+          localStorage.setItem('userCoverUrl', publicUrlData.publicUrl);
+          // Disparar evento para outros componentes
+          document.dispatchEvent(new CustomEvent('userCoverUpdated', { 
+            detail: { url: publicUrlData.publicUrl } 
+          }));
+        } catch (e) {
+          console.warn("Erro ao salvar capa no localStorage", e);
+        }
+
+        toast({
+          title: "Sucesso",
+          description: "Foto de capa atualizada com sucesso",
+        });
+      } else {
+        throw new Error("Não foi possível atualizar o perfil");
+      }
+    } catch (error) {
+      console.error("Erro ao fazer upload da foto de capa:", error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao fazer upload da capa: " + (error instanceof Error ? error.message : "Erro desconhecido"),
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleProfilePictureClick = () => {
+    profilePictureRef.current?.click();
+  };
+
+  const handleCoverPhotoClick = () => {
+    coverPhotoRef.current?.click();
+  };
+
+  const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      // Verificar se o arquivo é uma imagem
+      if (file.type.startsWith('image/')) {
+        uploadProfilePicture(file);
+        // Criar uma prévia da imagem para feedback imediato
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (event.target?.result) {
+            setAvatarUrl(event.target.result as string);
+          }
+        };
+        reader.readAsDataURL(file);
+      } else {
+        toast({
+          title: "Formato inválido",
+          description: "Por favor, selecione uma imagem (JPG, PNG, etc.)",
+          variant: "destructive"
+        });
+      }
+    }
+  };
+
+  const handleCoverPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      // Verificar se o arquivo é uma imagem
+      if (file.type.startsWith('image/')) {
+        uploadCoverPhoto(file);
+        // Criar uma prévia da imagem para feedback imediato
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (event.target?.result) {
+            setCoverUrl(event.target.result as string);
+          }
+        };
+        reader.readAsDataURL(file);
+      } else {
+        toast({
+          title: "Formato inválido",
+          description: "Por favor, selecione uma imagem (JPG, PNG, etc.)",
+          variant: "destructive"
+        });
+      }
+    }
+  };
+
+  const shareProfile = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: `Perfil de ${displayName || userProfile?.display_name || 'Usuário'}`,
+        text: `Veja o perfil de ${displayName || userProfile?.display_name || 'Usuário'} na plataforma`,
+        url: window.location.href,
+      })
+      .then(() => {
+        toast({
+          title: "Compartilhado",
+          description: "Perfil compartilhado com sucesso",
+        });
+      })
+      .catch((error) => {
+        console.error("Erro ao compartilhar:", error);
+      });
+    } else {
+      // Fallback para copiar URL
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        toast({
+          title: "URL Copiada",
+          description: "Link do perfil copiado para a área de transferência",
+        });
+      });
+    }
+  };
+
+  async function loadProfile() {
+    try {
+      // Primeiro garantir que o usuário tenha um ID
+      const idGenerated = await profileService.ensureUserHasId();
+
+      // Então carregar o perfil atualizado
+      const userData = await profileService.getCurrentUserProfile();
+
+      if (userData) {
+        // Atualizar a interface com os dados
+        if (typeof setUserProfile === 'function') {
+          setUserProfile(userData);
+        }
+
+        // Extrair e exibir dados do perfil
+        console.log("Perfil recuperado:", userData);
+
+        // Definir nome de exibição (prioridade: display_name, full_name, username)
+        setDisplayName(userData.display_name || userData.full_name || userData.username || '');
+
+        // Definir avatar e capa
+        setAvatarUrl(userData.avatar_url || null);
+        setCoverUrl(userData.cover_url || null);
+
+        // Se houve geração de ID, mostrar toast informativo
+        if (idGenerated) {
+          toast({
+            title: "ID gerado com sucesso",
+            description: `Seu ID de usuário: ${userData.user_id}`,
+          });
+        }
+
+        console.log("Perfil carregado com sucesso:", userData);
+        return userData;
+      } else {
+        console.warn("Nenhum dado de usuário retornado do profileService");
+
+        // Tentar uma segunda vez após um breve intervalo
+        setTimeout(async () => {
+          const retryUserData = await profileService.getCurrentUserProfile();
+          if (retryUserData) {
+            console.log("Perfil recuperado na segunda tentativa:", retryUserData);
+            setDisplayName(retryUserData.display_name || retryUserData.full_name || retryUserData.username || '');
+            setAvatarUrl(retryUserData.avatar_url || null);
+            setCoverUrl(retryUserData.cover_url || null);
+          }
+        }, 1500);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar perfil:", error);
+    }
+    return null;
+  }
+
+  const refreshId = async () => {
+    setRefreshing(true);
+    try {
+      // Gerar um novo ID
+      const dataAtual = new Date();
+      const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, '0')}`;
+      const tipoConta = (userProfile?.plan_type?.toLowerCase() === 'premium') ? '1' : '2';
+      const sequencial = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+      const generatedId = `BR${anoMes}${tipoConta}${sequencial}`;
+
+      // Atualizar o perfil
+      if (userProfile?.id) {
+        await supabase
+          .from('profiles')
+          .update({
+            user_id: generatedId,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', userProfile.id);
+        loadProfile();
+      }
+
+    } catch (error) {
+      console.error("Erro ao atualizar ID:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const setUserProfile = (profile: UserProfile | null) => {
+    //Implementation for updating the component's state with new profile data.  This is a placeholder.
+  }
+
   return (
-    <Card className="w-full overflow-hidden border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm mb-6">
-      {/* Background image cover */}
-      <div className="h-40 w-full bg-gradient-to-r from-amber-400 to-orange-500 relative">
-        {profile?.cover_url && (
-          <img 
-            src={profile.cover_url} 
-            alt="Profile cover" 
-            className="w-full h-full object-cover" 
+    <div
+      className="bg-white dark:bg-[#0A2540] rounded-xl border border-[#E0E1DD] dark:border-white/10 shadow-lg overflow-hidden relative group hover:shadow-2xl transition-all duration-500"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseOver={() => setIsHovering(true)}
+      style={{ transition: "all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)" }}
+    >
+      {/* Efeitos decorativos */}
+      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-[#FF6B00]/20 to-transparent rounded-bl-full z-0 opacity-60 group-hover:opacity-100 transition-opacity duration-500"></div>
+      <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-[#0A2540]/10 to-transparent rounded-tr-full z-0 opacity-60 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+      {/* Partículas animadas (visíveis no hover) */}
+      <AnimatePresence>
+        {isHovering && (
+          <>
+            {[...Array(6)].map((_, i) => (
+              <motion.div
+                key={`particle-${i}`}
+                className="absolute w-2 h-2 rounded-full bg-[#FF6B00]/30"
+                initial={{
+                  opacity: 0,
+                  x: Math.random() * 300 - 150,
+                  y: Math.random() * 200 - 100,
+                  scale: 0
+                }}
+                animate={{
+                  opacity: [0, 0.8, 0],
+                  x: Math.random() * 300 - 150,
+                  y: Math.random() * 200 - 100,
+                  scale: [0, 1, 0]
+                }}
+                exit={{ opacity: 0, scale: 0 }}
+                transition={{
+                  duration: 3 + Math.random() * 2,
+                  repeat: Infinity,
+                  delay: Math.random() * 2
+                }}
+              />
+            ))}
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Cover Photo com gradiente animado e efeito de movimento - altura reduzida */}
+      <div className="h-32 bg-gradient-to-r from-[#001427] via-[#072e4f] to-[#0A2540] relative overflow-hidden group/cover">
+        {coverUrl ? (
+          <div className="absolute inset-0 w-full h-full">
+            <img
+              src={coverUrl}
+              alt="Cover"
+              className="absolute inset-0 w-full h-full object-cover"
+              onError={(e) => {
+                console.error("Erro ao carregar imagem de capa", e);
+                // Fallback para padrão em caso de erro
+                e.currentTarget.src = "/images/pattern-grid.svg";
+                e.currentTarget.className = "absolute inset-0 w-full h-full object-cover opacity-20";
+              }}
+            />
+          </div>
+        ) : (
+          <motion.div
+            className="absolute inset-0 bg-[url('/images/pattern-grid.svg')] opacity-20"
+            animate={{
+              backgroundPosition: ["0% 0%", "100% 100%"],
+            }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              repeatType: "reverse"
+            }}
           />
         )}
-        <div className="absolute top-4 right-4 flex space-x-2">
-          <Button variant="outline" size="sm" className="bg-white/30 backdrop-blur-sm border-white/20 text-white hover:bg-white/40">
-            <Edit2 className="h-4 w-4 mr-1" />
-            Editar Perfil
-          </Button>
-          <Button variant="outline" size="sm" className="bg-white/30 backdrop-blur-sm border-white/20 text-white hover:bg-white/40">
-            <Share2 className="h-4 w-4" />
-          </Button>
+
+        <div className="absolute inset-0 bg-gradient-to-t from-[#001427]/90 to-transparent"></div>
+
+        {/* Botão de upload da capa (visível no hover) */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/cover:opacity-100 transition-opacity duration-300 z-10">
+          <div
+            onClick={handleCoverPhotoClick}
+            className="bg-black/50 hover:bg-black/70 p-2 rounded-full cursor-pointer transition-all duration-300 backdrop-blur-sm"
+          >
+            <Camera className="h-5 w-5 text-white" />
+            <span className="sr-only">Alterar imagem de capa</span>
+          </div>
+        </div>
+        <input
+          type="file"
+          ref={coverPhotoRef}
+          className="hidden"
+          accept="image/*"
+          onChange={handleCoverPhotoChange}
+          aria-label="Upload de imagem de capa"
+        />
+
+        {/* Efeitos de luz */}
+        <motion.div
+          className="absolute top-5 right-8 w-12 h-12 rounded-full bg-[#FF6B00]/20 blur-xl"
+          animate={{
+            opacity: [0.2, 0.6, 0.2],
+            scale: [1, 1.2, 1]
+          }}
+          transition={{
+            duration: 4,
+            repeat: Infinity,
+            repeatType: "reverse"
+          }}
+        />
+
+        <motion.div
+          className="absolute bottom-5 left-10 w-16 h-16 rounded-full bg-[#0064FF]/20 blur-xl"
+          animate={{
+            opacity: [0.1, 0.4, 0.1],
+            scale: [1, 1.3, 1]
+          }}
+          transition={{
+            duration: 5,
+            repeat: Infinity,
+            repeatType: "reverse",
+            delay: 1
+          }}
+        />
+
+        {/* Status badge animado */}
+        <div className="absolute top-3 right-3 z-10">
+          <motion.div
+            className="bg-[#00b894]/90 text-white text-xs py-0.5 px-2 rounded-full flex items-center shadow-lg backdrop-blur-sm"
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.3 }}
+          >
+            <motion.span
+              className="w-1.5 h-1.5 rounded-full bg-white mr-1.5"
+              animate={{ scale: [1, 1.5, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+            Online
+          </motion.div>
+        </div>
+
+        {/* Nível destacado */}
+        <div className="absolute top-3 left-3 z-10">
+          <motion.div
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.6, duration: 0.3 }}
+            className="bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white text-xs py-0.5 px-2 rounded-full flex items-center shadow-lg"
+          >
+            <Zap className="h-3 w-3 mr-1" />
+            Nível {userProfile?.level || 1}
+          </motion.div>
         </div>
       </div>
 
-      <CardContent className="p-0">
-        <div className="px-6 pb-6 pt-0 relative">
-          {/* Avatar - positioned to overlay the cover image */}
-          <div className="flex justify-between items-end -mt-12 mb-4">
-            <Avatar className="h-24 w-24 border-4 border-white dark:border-gray-950 shadow-md">
-              <AvatarImage src={profile?.avatar_url || ''} alt="Profile picture" />
-              <AvatarFallback className="text-2xl bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100">
-                {firstName?.charAt(0) || "U"}
-              </AvatarFallback>
-            </Avatar>
+      {/* Avatar com animação avançada - movido para fora da capa */}
+      <div className="flex justify-center -mt-10 mb-2 relative z-20">
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3, type: "spring", stiffness: 100 }}
+        >
+          <div className="relative group/avatar">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] rounded-full opacity-75 group-hover/avatar:opacity-100 blur-sm group-hover/avatar:blur transition duration-1000"></div>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="profile-avatar relative cursor-pointer"
+              onClick={handleProfilePictureClick}
+            >
+              <Avatar className="w-20 h-20 border-4 border-white dark:border-[#0A2540] shadow-xl group-hover/avatar:border-[#FF6B00]/20 transition-all duration-300 relative overflow-hidden">
+                <AvatarImage
+                  src={avatarUrl || "https://api.dicebear.com/7.x/avataaars/svg?seed=John"}
+                  alt="Avatar"
+                  className="object-cover z-10"
+                  onError={(e) => {
+                    console.error("Erro ao carregar avatar", e);
+                    // Esconder a imagem com erro
+                    e.currentTarget.style.display = 'none';
+                    // Será mostrado o AvatarFallback automaticamente
+                  }}
+                />
+                <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF9B50] text-xl font-bold text-white">
+                  {displayName?.charAt(0) || userProfile?.display_name?.charAt(0) || "U"}
+                </AvatarFallback>
+              </Avatar>
 
-            <div className="flex space-x-2">
-              <Button variant="outline" size="sm" className="text-gray-600 dark:text-gray-300">
-                <MessagesSquare className="h-4 w-4 mr-1" />
-                Mensagem
-              </Button>
-              <Button variant="outline" size="sm" className="text-gray-600 dark:text-gray-300">
-                <Bell className="h-4 w-4 mr-1" />
-                Notificar
-              </Button>
-              <Button variant="outline" size="sm" className="text-gray-600 dark:text-gray-300">
-                <Mail className="h-4 w-4 mr-1" />
-                Email
-              </Button>
-            </div>
+              {/* Anel de progresso ao redor do avatar */}
+              <svg className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] rotate-90">
+                <circle
+                  cx="50%"
+                  cy="50%"
+                  r="49%"
+                  fill="none"
+                  stroke="#FF6B00"
+                  strokeWidth="2"
+                  strokeDasharray="308"
+                  strokeDashoffset="85"
+                  className="opacity-70 group-hover/avatar:opacity-100 transition-opacity"
+                  strokeLinecap="round"
+                />
+              </svg>
+
+              {/* Ícone de câmera para upload (visível no hover) */}
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-300 z-20">
+                <div className="flex flex-col items-center">
+                  <Camera className="h-6 w-6 text-white" />
+                  <span className="text-white text-xs mt-1">Alterar</span>
+                </div>
+              </div>
+            </motion.div>
+            <input
+              type="file"
+              ref={profilePictureRef}
+              className="hidden"
+              accept="image/*"
+              onChange={handleProfilePictureChange}
+              aria-label="Upload de foto de perfil"
+            />
+
+            {/* Indicador de status premium */}
+            <motion.div
+              className="absolute -bottom-1 -right-1"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 1, type: "spring", stiffness: 200 }}
+            >
+              <div className="bg-[#FF6B00] text-white p-1 rounded-full w-7 h-7 flex items-center justify-center shadow-lg group-hover/avatar:shadow-[#FF6B00]/40 transition-all duration-300">
+                <Trophy className="h-4 w-4" />
+              </div>
+            </motion.div>
           </div>
+        </motion.div>
+      </div>
 
-          {/* User info */}
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {loading ? "Carregando..." : firstName}
-              </h2>
-              <span className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                {profile?.plan_type === 'premium' ? 'Premium' : profile?.plan_type === 'full' ? 'Full' : 'Lite'}
+      {/* Profile Info - padding reduzido */}
+      <div className="pt-1 pb-4 px-4 text-center relative z-10">
+        <motion.h2
+          ref={profileNameRef}
+          className="text-lg font-bold text-[#29335C] dark:text-white profile-3d-text"
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.7, duration: 0.3 }}
+        >
+          {(() => {
+            // Informações para depuração
+            console.log("Perfil carregado para exibição:", {
+              displayName,
+              profile_display_name: userProfile?.display_name,
+              profile_full_name: userProfile?.full_name,
+              profile_username: userProfile?.username
+            });
+
+            // Obter o nome de usuário do perfil
+            const profileUsername = userProfile?.username || '';
+            
+            // Obter o nome para a parte principal da exibição
+            let displayedName = '';
+            
+            // Prioridade de exibição: username > display_name > full_name > fallback
+            if (profileUsername) {
+              displayedName = profileUsername;
+            } else if (userProfile?.display_name) {
+              displayedName = userProfile.display_name;
+            } else if (userProfile?.full_name) {
+              // Se tiver nome completo, usar o primeiro nome
+              displayedName = userProfile.full_name.split(' ')[0];
+            } else {
+              displayedName = "Usuário";
+            }
+            
+            // Buscar username do localStorage (mesmo usado no cabeçalho)
+            const storedUsername = localStorage.getItem('username');
+            
+            console.log("Dados do perfil para exibição de username:", {
+              profileUsername: profileUsername,
+              storedUsername: storedUsername,
+              displayedName: displayedName,
+              profile_username: userProfile?.username,
+              profile_display_name: userProfile?.display_name,
+              profile_full_name: userProfile?.full_name
+            });
+
+            // Buscar o nome de usuário do localStorage (usado no cabeçalho)
+            const headerUsername = localStorage.getItem('username');
+            
+            // Usar o nome de usuário do cabeçalho (prioridade máxima)
+            const usernameToDisplay = headerUsername || storedUsername || 'joaofortes';
+
+            // Exibir nome de exibição e nome de usuário como dois componentes distintos
+            // Nome de exibição: usar display_name ou o primeiro nome do nome completo, ou o fallback
+            let nameDisplay = '';
+            
+            if (userProfile?.display_name) {
+              nameDisplay = userProfile.display_name;
+            } else if (userProfile?.full_name) {
+              // Se tiver nome completo, exibir apenas o primeiro nome
+              nameDisplay = userProfile.full_name.split(' ')[0];
+            } else {
+              nameDisplay = "Usuário";
+            }
+            
+            return (
+              <>
+                {nameDisplay} <span className="text-gray-400 dark:text-gray-400">|</span> <span className="text-[#FF6B00]">@{usernameToDisplay}</span>
+              </>
+            );
+          })()}
+        </motion.h2>
+
+        {/* User ID block */}
+        {userProfile?.user_id ? (
+          <div className="mt-2 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/5 dark:from-[#FF6B00]/20 dark:to-[#FF8C40]/10 backdrop-blur-sm px-3 py-1.5 rounded-full inline-flex items-center border border-[#FF6B00]/20">
+            <div className="w-2 h-2 rounded-full bg-[#FF6B00] mr-2"></div>
+            <span className="text-xs font-medium text-gray-800 dark:text-white">
+              ID: <span className="font-mono">{userProfile.user_id}</span>
+            </span>
+          </div>
+        ) : (
+          <div className="mt-2 bg-gray-100 dark:bg-gray-800/40 backdrop-blur-sm px-3 py-1.5 rounded-full inline-flex items-center cursor-help" title="ID será gerado automaticamente logo após a criação da conta">
+            <div className="w-2 h-2 rounded-full bg-gray-400 animate-pulse mr-2"></div>
+            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+              ID: Gerando...
+            </span>
+          </div>
+        )}
+
+        <motion.div
+          className="flex items-center justify-center gap-1 mt-1"
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.9, duration: 0.3 }}
+        >
+          <span className="bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white text-xs font-medium px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm hover:shadow hover:shadow-[#FF6B00]/20 transition-all duration-300 cursor-pointer">
+            <Diamond className="h-3.5 w-3.5" />
+            {userProfile?.plan_type === "premium" ? "Plano Premium" : "Plano Lite"}
+          </span>
+        </motion.div>
+
+        <motion.p
+          className="text-[#64748B] dark:text-white/60 text-xs mt-1.5 bg-slate-50 dark:bg-slate-800/30 py-0.5 px-2 rounded-full inline-block backdrop-blur-sm"
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 1, duration: 0.3 }}
+        >
+          <BookOpen className="w-3 h-3 inline-block mr-1 text-[#FF6B00]" />
+          Estudante de Engenharia de Software
+        </motion.p>
+
+        {/* Stats com ícones e hover effects - reduzido */}
+        <motion.div
+          className="flex justify-center gap-2 mt-3"
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 1.1, duration: 0.3 }}
+        >
+          <motion.div
+            whileHover={{ y: -3, scale: 1.03 }}
+            className="text-center group/stat bg-slate-50 dark:bg-slate-800/30 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-all duration-300 shadow-sm hover:shadow border border-transparent hover:border-[#FF6B00]/10 relative"
+            onMouseEnter={() => setShowStatsDetails(true)}
+            onMouseLeave={() => setShowStatsDetails(false)}
+          >
+            <div className="flex flex-col items-center justify-center">
+              <div className="w-6 h-6 bg-[#FF6B00]/10 rounded-full flex items-center justify-center mb-0.5 group-hover/stat:bg-[#FF6B00]/20 transition-all duration-300">
+                <Zap className="h-3.5 w-3.5 text-[#FF6B00] group-hover/stat:scale-110 transition-transform" />
+              </div>
+              <p className="text-base font-bold text-[#29335C] dark:text-white">
+                {userProfile?.level || 1}
+              </p>
+              <p className="text-[10px] text-[#64748B] dark:text-white/60">Nível</p>
+            </div>
+
+            {/* Tooltip com detalhes */}
+            {showStatsDetails && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="absolute -top-20 left-1/2 transform -translate-x-1/2 bg-white dark:bg-[#1E293B] p-2 rounded-lg shadow-lg text-xs z-20 w-40 border border-[#E0E1DD] dark:border-white/10"
+              >
+                <div className="text-center mb-1 font-medium text-[#29335C] dark:text-white">Detalhes do Nível</div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[#64748B] dark:text-white/60">XP Atual:</span>
+                  <span className="font-medium text-[#29335C] dark:text-white">720/1000</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[#64748B] dark:text-white/60">Próximo Nível:</span>
+                  <span className="font-medium text-[#FF6B00]">Nível 2</span>
+                </div>
+              </motion.div>
+            )}
+          </motion.div>
+
+          <motion.div
+            whileHover={{ y: -3, scale: 1.03 }}
+            className="text-center group/stat bg-slate-50 dark:bg-slate-800/30 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-all duration-300 shadow-sm hover:shadow border border-transparent hover:border-[#FF6B00]/10"
+          >
+            <div className="flex flex-col items-center justify-center">
+              <div className="w-6 h-6 bg-[#FF6B00]/10 rounded-full flex items-center justify-center mb-0.5 group-hover/stat:bg-[#FF6B00]/20 transition-all duration-300">
+                <Users className="h-3.5 w-3.5 text-[#FF6B00] group-hover/stat:scale-110 transition-transform" />
+              </div>
+              <p className="text-base font-bold text-[#29335C] dark:text-white">8</p>
+              <p className="text-[10px] text-[#64748B] dark:text-white/60">Turmas</p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            whileHover={{ y: -3, scale: 1.03 }}
+            className="text-center group/stat bg-slate-50 dark:bg-slate-800/30 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-all duration-300 shadow-sm hover:shadow border border-transparent hover:border-[#FF6B00]/10"
+          >
+            <div className="flex flex-col items-center justify-center">
+              <div className="w-6 h-6 bg-[#FF6B00]/10 rounded-full flex items-center justify-center mb-0.5 group-hover/stat:bg-[#FF6B00]/20 transition-all duration-300">
+                <Award className="h-3.5 w-3.5 text-[#FF6B00] group-hover/stat:scale-110 transition-transform" />
+              </div>
+              <p className="text-base font-bold text-[#29335C] dark:text-white">12</p>
+              <p className="text-[10px] text-[#64748B] dark:text-white/60">Conquistas</p>
+            </div>
+          </motion.div>
+        </motion.div>
+
+        {/* Barra de progresso melhorada - reduzida */}
+        <motion.div
+          className="mt-3"
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 1.2, duration: 0.3 }}
+        >
+          <div className="flex justify-between items-center mb-1">
+            <div className="flex items-center">
+              <ChevronUp className="h-2.5 w-2.5 text-[#FF6B00] mr-0.5" />
+              <span className="text-[10px] text-[#64748B] dark:text-white/60">
+                Progresso para o próximo nível
               </span>
             </div>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">
-              @{username || "usuario"}
-            </p>
-            <p className="text-gray-600 dark:text-gray-300 pt-1">
-              {profile?.bio || "Sem informações adicionais"}
-            </p>
-          </div>
-        </div>
-
-        {/* Tabs for different profile sections */}
-        <Tabs defaultValue="about" className="w-full">
-          <TabsList className="grid grid-cols-4 w-full rounded-none border-b border-gray-200 dark:border-gray-800 bg-transparent">
-            <TabsTrigger value="about" className="data-[state=active]:border-b-2 data-[state=active]:border-amber-500 rounded-none">
-              Sobre
-            </TabsTrigger>
-            <TabsTrigger value="skills" className="data-[state=active]:border-b-2 data-[state=active]:border-amber-500 rounded-none">
-              Habilidades
-            </TabsTrigger>
-            <TabsTrigger value="education" className="data-[state=active]:border-b-2 data-[state=active]:border-amber-500 rounded-none">
-              Formação
-            </TabsTrigger>
-            <TabsTrigger value="interests" className="data-[state=active]:border-b-2 data-[state=active]:border-amber-500 rounded-none">
-              Interesses
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="about" className="p-6">
-            <AboutMe profile={profile} />
-          </TabsContent>
-
-          <TabsContent value="skills" className="p-6">
-            <Skills />
-          </TabsContent>
-
-          <TabsContent value="education" className="p-6">
-            <Education profile={profile} />
-          </TabsContent>
-
-          <TabsContent value="interests" className="p-6">
-            <div className="text-gray-500 dark:text-gray-400">
-              Os interesses do usuário serão exibidos aqui.
+            <div
+              className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20 transition-all duration-300 cursor-pointer"
+              onMouseEnter={() => setShowTooltip(true)}
+              onMouseLeave={() => setShowTooltip(false)}
+            >
+              72%
+              <AnimatePresence>
+                {showTooltip && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 5 }}
+                    className="absolute right-6 -mt-10 px-2py-1.5 bg-black/80 text-white text-[10px] rounded-lg shadow-lg backdrop-blur-sm z-50 w-32 text-center"
+                  >
+                    <div className="font-medium mb-0.5">Progresso</div>
+                    <div className="text-white/80">720/1000 XP</div>
+                    <div className="text-white/80">Faltam 280 XP</div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+          </div>
+          <div className="h-2 w-full bg-slate-100 dark:bg-slate-800/50 rounded-full overflow-hidden shadow-inner">
+            <div
+              className="h-full bg-gradient-to-r from-[#FF6B00] via-[#FF9B50] to-[#FF6B00] rounded-full progress-animation relative"
+              style={{ width: '72%' }}
+            >
+              {/* Animação de brilho */}
+              <div className="absolute inset-0 animate-shimmer" style={{
+                background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent)',
+                backgroundSize: '200% 100%',
+                animation: 'shimmer 2s infinite'
+              }}></div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Botões modernizados - reduzidos */}
+        <motion.div
+          className="mt-3 flex gap-2"
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 1.3, duration: 0.3 }}
+        >
+          <Button
+            className="flex-1 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] hover:from-[#FF5B00] hover:to-[#FF8B40] text-white text-xs h-8 shadow-sm hover:shadow hover:shadow-[#FF6B00]/20 transition-all duration-300 group flex items-center justify-center relative overflow-hidden"
+            onClick={onEditClick}
+            disabled={isUploading}
+          >
+            {/* Efeito de brilho no hover */}
+            <span className="absolute w-32 h-32 -mt-12 -ml-12 bg-white rotate-12 opacity-0 group-hover:opacity-10 transition-opacity duration-1000 transform group-hover:translate-x-40 group-hover:translate-y-10 pointer-events-none"></span>
+
+            {isUploading ? (
+              <div className="h-3 w-3 rounded-full border-2 border-white border-t-transparent animate-spin mr-1.5"></div>
+            ) : (
+              <Edit className="h-3 w-3 mr-1.5 group-hover:scale-110 transition-transform" />
+            )}
+            <span className="relative z-10">Editar Perfil</span>
+          </Button>
+          <Button
+            variant="outline"
+            className="w-8 h-8 p-0 border-[#E0E1DD] dark:border-white/10 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 group/share transition-all duration-300 relative overflow-hidden"
+            onClick={shareProfile}
+            disabled={isUploading}
+          >
+            <Share2 className="h-3.5 w-3.5 text-[#64748B] dark:text-white/60 group-hover/share:text-[#FF6B00] transition-colors duration-300" />
+
+            {/* Efeito de onda ao clicar */}
+            <span className="absolute w-0 h-0 rounded-full bg-[#FF6B00]/10 opacity-0 group-active/share:w-16 group-active/share:h-16 group-active/share:opacity-100 transition-all duration-500 -z-10"></span>
+          </Button>
+        </motion.div>
+
+        {/* Carousel de conquistas recentes - reduzido */}
+        <motion.div
+          className="mt-3"
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 1.4, duration: 0.3 }}
+        >
+          <div className="px-2 py-1 bg-slate-50 dark:bg-slate-800/30 rounded-lg text-[10px] text-[#64748B] dark:text-white/60 flex flex-col items-center gap-1 group/achievements relative overflow-hidden border border-transparent hover:border-[#FF6B00]/10 transition-all duration-300 shadow-sm hover:shadow">
+            <div className="flex items-center gap-1 w-full justify-center">
+              <Sparkles className="h-3 w-3 text-yellow-500" />
+              <span className="font-medium">Conquistas Recentes</span>
+            </div>
+
+            {/* Animação de carrossel para conquistas */}
+            <div className="h-5 w-full relative overflow-hidden">
+              {recentAchievements.map((achievement, index) => (
+                <motion.div
+                  key={index}
+                  className="absolute inset-0 flex items-center justify-center gap-1.5"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{
+                    opacity: activeAchievement === index ? 1 : 0,
+                    y: activeAchievement === index ? 0 : 20
+                  }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <span className="text-[#FF6B00]">{achievement.icon}</span>
+                  <span className="text-[#29335C] dark:text-white font-medium">{achievement.name}</span>
+                  <span className="text-[#64748B] dark:text-white/60 text-[9px]">• {achievement.date}</span>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Indicadores de navegação */}
+            <div className="flex gap-0.5">
+              {recentAchievements.map((_, index) => (
+                <div
+                  key={index}
+                  className={`w-1 h-1 rounded-full transition-all duration-300 ${
+                    activeAchievement === index
+                      ? 'bg-[#FF6B00] scale-110'
+                      : 'bg-[#64748B]/30 dark:bg-white/30'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Indicador de atividade recente - reduzido */}
+        <motion.div
+          className="mt-2 flex justify-center"
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 1.5, duration: 0.3 }}
+        >
+          <div className="px-2 py-0.5 bg-slate-50 dark:bg-slate-800/30 rounded-full text-[10px] text-[#64748B] dark:text-white/60 flex items-center gap-1 hover:bg-slate-100 dark:hover:bg-slate-700/30 transition-all duration-300 cursor-pointer group/activity">
+            <BellRing className="h-2.5 w-2.5 text-[#FF6B00] group-hover/activity:animate-ping" />
+            <span>Ativo há 3 horas</span>
+          </div>
+        </motion.div>
+      </div>
+    </div>
   );
 }
