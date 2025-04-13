@@ -183,12 +183,12 @@ export function LoginForm() {
               value={formData.email}
               onChange={handleChange}
               placeholder="Digite seu usuário ou e-mail"
-              className="pl-10 h-11 bg-white/20 dark:bg-white/5 backdrop-blur-lg border-white/20 dark:border-white/10 focus:border-[#FF6B00]/50 dark:focus:border-[#FF6B00]/50 transition-all duration-300 hover:border-[#FF6B00]/30 rounded-lg"
+              className="pl-10 h-11 bg-white/30 dark:bg-white/8 backdrop-blur-md border-[#FF6B00]/10 dark:border-[#FF6B00]/20 focus:border-[#FF6B00]/60 dark:focus:border-[#FF6B00]/60 transition-all duration-300 hover:border-[#FF6B00]/30 rounded-lg"
               required
               style={{
-                backdropFilter: "blur(16px)",
-                WebkitBackdropFilter: "blur(16px)",
-                boxShadow: "inset 0 1px 2px rgba(255, 255, 255, 0.05)"
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+                boxShadow: "inset 0 1px 2px rgba(255, 255, 255, 0.1)"
               }}
             />
             <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none border border-[#FF6B00]/30 shadow-[0_0_15px_rgba(255,107,0,0.15)]" style={{

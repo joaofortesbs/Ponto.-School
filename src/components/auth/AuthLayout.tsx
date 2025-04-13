@@ -50,17 +50,14 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
       {/* Overlay para garantir fundo mínimo mesmo se AnimatedBackground falhar */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#001427] to-[#0A2540] z-0"></div>
 
-      {/* Fundo com efeito de gradiente sofisticado azul escuro (agora renderizado primeiro, debaixo das teias) */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#001427] via-[#0A1A2A] to-[#051830] opacity-85 z-0 animate-gradient"></div>
+      {/* Fundo com efeito de gradiente sofisticado azul escuro e laranja (agora renderizado primeiro, debaixo das teias) */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#001427] via-[#0A1A2A] to-[#0e0500] opacity-85 z-0 animate-gradient"></div>
 
-      {/* Efeitos de luz/brilho no fundo - apenas do lado direito com gradiente melhorado */}
+      {/* Efeitos de luz/brilho no fundo */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-        {/* Gradiente principal saindo do lado direito */}
-        <div className="absolute bottom-0 right-0 w-[45%] h-[100%] rounded-l-full bg-gradient-to-l from-[#FF6B00]/25 via-[#FF8C40]/15 to-transparent blur-3xl transform animate-float-slow"></div>
-        {/* Segundo gradiente para efeito de profundidade */}
-        <div className="absolute top-[20%] right-0 w-[35%] h-[60%] rounded-l-full bg-gradient-to-l from-[#FF6B00]/20 via-[#FF7A20]/10 to-transparent blur-2xl transform animate-pulse-soft"></div>
-        {/* Ponto de luz sutil no canto inferior direito */}
-        <div className="absolute bottom-[5%] right-[5%] w-[20%] h-[20%] rounded-full bg-[#FF6B00]/15 blur-2xl transform animate-glow-subtle"></div>
+        <div className="absolute -top-[40%] -left-[20%] w-[110%] h-[110%] rounded-full bg-gradient-to-r from-[#FF6B00]/15 to-transparent blur-3xl transform rotate-12 animate-pulse-soft"></div>
+        <div className="absolute -bottom-[40%] -right-[20%] w-[110%] h-[110%] rounded-full bg-gradient-to-l from-[#FF6B00]/20 to-transparent blur-3xl transform -rotate-12 animate-pulse-soft"></div>
+        <div className="absolute top-[20%] right-[10%] w-[60%] h-[60%] rounded-full bg-gradient-to-tl from-[#FF8800]/10 to-transparent blur-3xl transform animate-floating-node"></div>
       </div>
       
       {/* AnimatedBackground agora está por cima do fundo gradiente */}
@@ -77,12 +74,12 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
             )}
             style={{ 
               transition: "opacity 0.3s ease-in-out, transform 0.3s ease-out, box-shadow 0.3s ease",
-              backdropFilter: "blur(25px)",
-              WebkitBackdropFilter: "blur(25px)",
-              boxShadow: "0 10px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 107, 0, 0.15)",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-              borderRadius: "22px",
-              background: "linear-gradient(135deg, rgba(0, 20, 39, 0.4) 0%, rgba(0, 12, 27, 0.5) 100%)"
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 107, 0, 0.2)",
+              border: "1px solid rgba(255, 107, 0, 0.15)",
+              borderRadius: "18px",
+              background: "linear-gradient(135deg, rgba(0, 20, 39, 0.5) 0%, rgba(0, 12, 27, 0.7) 100%)"
             }}
           >
             {children}
