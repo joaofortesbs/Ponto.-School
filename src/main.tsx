@@ -113,11 +113,11 @@ const initializeApp = () => {
     // Renderização otimizada usando requestIdleCallback ou fallback
     const renderApp = () => {
       const AppRoot = (
-        <ErrorBoundary>
+        <MainErrorBoundary>
           <BrowserRouter>
             <App />
           </BrowserRouter>
-        </ErrorBoundary>
+        </MainErrorBoundary>
       );
 
       ReactDOM.createRoot(rootElement).render(
@@ -168,8 +168,8 @@ const initializeApp = () => {
   }
 };
 
-// Componente ErrorBoundary para capturar erros durante a renderização
-class ErrorBoundary extends React.Component {
+// Componente MainErrorBoundary para capturar erros durante a renderização
+class MainErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false };
@@ -180,7 +180,7 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error("Erro capturado pelo ErrorBoundary:", error, errorInfo);
+    console.error("Erro capturado pelo MainErrorBoundary:", error, errorInfo);
   }
 
   render() {

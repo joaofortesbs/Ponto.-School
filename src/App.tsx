@@ -204,8 +204,8 @@ function App() {
                   isFirstLogin={isFirstLogin}
                 />
               }
+              <Toaster />
             </div>
-            <Toaster />
           </ErrorBoundary>
         </StudyGoalProvider>
       </UsernameProvider>
