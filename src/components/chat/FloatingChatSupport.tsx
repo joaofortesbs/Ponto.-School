@@ -926,7 +926,7 @@ const FloatingChatSupport: React.FC = () => {
   const filteredSuggestions = suggestions.filter(
     (suggestion) =>
       suggestion.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      suggestion.description.toLowerCase().includes(<searchQuery.toLowerCase()),
+      suggestion.description.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const filteredChatHistory = chatHistory.filter(
