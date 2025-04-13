@@ -387,21 +387,50 @@ const FloatingChatSupport: React.FC = () => {
   useEffect(() => {
     const initializeChat = async () => {
       try {
-        // Tentar obter dados do perfil do usuário
+        // Tentar obter dados do perfil do usuário com mais detalhes
         const profileService = await import('@/services/profileService');
+        const aiChatDatabaseService = await import('@/services/aiChatDatabaseService');
+        
+        // Obter um perfil completo e detalhado do usuário para contexto 
         const userProfile = await profileService.profileService.getCurrentUserProfile();
+        let detailedProfile = null;
+        
+        try {
+          // Tentar obter um perfil mais detalhado usando o serviço avançado
+          detailedProfile = await aiChatDatabaseService.aiChatDatabase.getDetailedUserProfile();
+        } catch (detailError) {
+          console.log('Não foi possível obter perfil detalhado, usando perfil básico:', detailError);
+        }
+        
+        // Usar perfil detalhado se disponível, senão cair para o perfil básico
+        const effectiveProfile = detailedProfile || userProfile;
 
-        // Determinar o melhor nome de usuário a usar
+        // Determinar o melhor nome de usuário a usar com prioridades claras
         let displayName = 'Usuário';
+        let fullName = '';
 
-        if (userProfile) {
+        if (effectiveProfile) {
+          // Armazenar o nome completo para uso no contexto da IA
+          fullName = effectiveProfile.full_name || '';
+          
           // Prioridade: nome completo > displayName > username
-          if (userProfile.full_name) {
-            displayName = userProfile.full_name.split(' ')[0]; // Pegar o primeiro nome
-          } else if (userProfile.display_name) {
-            displayName = userProfile.display_name;
-          } else if (userProfile.username) {
-            displayName = userProfile.username;
+          if (effectiveProfile.full_name) {
+            displayName = effectiveProfile.full_name.split(' ')[0]; // Pegar o primeiro nome
+          } else if (effectiveProfile.display_name) {
+            displayName = effectiveProfile.display_name;
+          } else if (effectiveProfile.username) {
+            displayName = effectiveProfile.username;
+          }
+          
+          // Salvar informações do usuário no localStorage para uso futuro
+          try {
+            localStorage.setItem('userFirstName', displayName);
+            localStorage.setItem('userFullName', fullName);
+            if (effectiveProfile.id) {
+              localStorage.setItem('userId', effectiveProfile.id);
+            }
+          } catch (storageError) {
+            console.log('Erro ao salvar dados do usuário no localStorage:', storageError);
           }
         } else {
           // Fallback para localStorage se não tiver perfil
@@ -411,15 +440,26 @@ const FloatingChatSupport: React.FC = () => {
           if (storedName) {
             displayName = storedName;
           }
+          
+          fullName = localStorage.getItem('userFullName') || displayName;
         }
 
         // Atualizar estado com o nome encontrado
         setUserName(displayName);
 
         // Gerar uma ID de sessão baseada no usuário atual ou usar existente
+        // Incluir um identificador único da máquina se possível
+        const deviceId = localStorage.getItem('deviceId') || 
+                        `device_${Math.random().toString(36).substring(2, 9)}`;
+        
+        if (!localStorage.getItem('deviceId')) {
+          localStorage.setItem('deviceId', deviceId);
+        }
+        
+        const userId = effectiveProfile?.id || localStorage.getItem('userId') || 'anonymous';
         const savedSessionId = localStorage.getItem('chatSessionId');
         const newSessionId = savedSessionId || 
-                            `chat_${displayName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`;
+                            `chat_${userId}_${displayName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`;
         setSessionId(newSessionId);
 
         if (!savedSessionId) {
@@ -430,7 +470,7 @@ const FloatingChatSupport: React.FC = () => {
         try {
           const chatService = await import('@/services/aiChatService');
 
-          // Usar a função getConversationHistory para obter histórico
+          // Usar a função getConversationHistory para obter histórico com todos os detalhes
           const history = await chatService.getConversationHistory(newSessionId);
 
           // Se houver histórico com mensagens de usuário e IA, exibir as mensagens
@@ -443,6 +483,9 @@ const FloatingChatSupport: React.FC = () => {
                 content: msg.content,
                 sender: msg.role === 'user' ? 'user' : 'assistant',
                 timestamp: msg.timestamp instanceof Date ? msg.timestamp : new Date(),
+                // Preservar avaliações anteriores caso existam
+                rating: 'rating' in msg ? msg.rating as 'positive' | 'negative' : undefined,
+                needsImprovement: 'needsImprovement' in msg ? msg.needsImprovement as boolean : undefined,
               }));
 
             if (convertedMessages.length > 0) {
@@ -452,6 +495,28 @@ const FloatingChatSupport: React.FC = () => {
         } catch (error) {
           console.error('Erro ao carregar histórico de mensagens:', error);
         }
+        
+        // Vamos usar o aiIntelligenceLevel do localStorage se disponível
+        try {
+          const storedIntelligenceLevel = localStorage.getItem('aiIntelligenceLevel');
+          if (storedIntelligenceLevel && ['basic', 'normal', 'advanced'].includes(storedIntelligenceLevel)) {
+            setAIIntelligenceLevel(storedIntelligenceLevel as 'basic' | 'normal' | 'advanced');
+          }
+          
+          const storedLanguageStyle = localStorage.getItem('aiLanguageStyle');
+          if (storedLanguageStyle && ['casual', 'formal', 'technical'].includes(storedLanguageStyle)) {
+            setAILanguageStyle(storedLanguageStyle as 'casual' | 'formal' | 'technical');
+          }
+          
+          const storedSoundEnabled = localStorage.getItem('soundEnabled');
+          if (storedSoundEnabled !== null) {
+            setSoundEnabled(storedSoundEnabled === 'true');
+            setEnableNotificationSounds(storedSoundEnabled === 'true');
+          }
+        } catch (prefError) {
+          console.log('Erro ao carregar preferências do usuário:', prefError);
+        }
+        
       } catch (error) {
         console.error('Erro ao inicializar chat:', error);
 
@@ -649,8 +714,9 @@ const FloatingChatSupport: React.FC = () => {
 
     // Gerar sessão única para este chat se ainda não existir
     if (!sessionId) {
-      // Usar um ID baseado no nome de usuário para melhor rastreamento
-      const newSessionId = `chat_${userName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`;
+      // Usar um ID baseado no nome de usuário e timestamp para rastreamento único
+      const userId = localStorage.getItem('userId') || 'anonymous';
+      const newSessionId = `chat_${userId}_${userName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`;
       setSessionId(newSessionId);
       localStorage.setItem('chatSessionId', newSessionId);
     }
@@ -662,19 +728,115 @@ const FloatingChatSupport: React.FC = () => {
     setIsTyping(true);
 
     try {
-      // Importar o serviço AI dinamicamente
+      // Importar os serviços necessários dinamicamente
       const aiService = await import('@/services/aiChatService');
+      const aiChatDatabase = await import('@/services/aiChatDatabaseService');
 
-      // Gerar um ID de sessão valido caso ainda não exista
+      // Gerar um ID de sessão válido caso ainda não exista
       const validSessionId = sessionId || `chat_${userName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`;
+      
+      // Antes de chamar a API, vamos verificar se a mensagem é uma solicitação especial
+      // que podemos tratar localmente com nossos próprios dados
+      const lowerMessage = fullMessage.toLowerCase();
+      
+      // Verificar se é uma solicitação de informações do perfil do usuário
+      const isProfileRequest = lowerMessage.includes('meu perfil') || 
+                             lowerMessage.includes('minhas informações') ||
+                             lowerMessage.includes('meus dados') ||
+                             lowerMessage.includes('minha conta');
+      
+      let customResponse = '';
+      
+      if (isProfileRequest) {
+        try {
+          // Tentar obter o perfil detalhado do usuário
+          const userProfile = await aiChatDatabase.aiChatDatabase.getDetailedUserProfile();
+          
+          if (userProfile) {
+            // Formatar o perfil para exibição
+            const formattedProfile = aiChatDatabase.aiChatDatabase.formatUserProfile(userProfile);
+            
+            // Criar uma resposta personalizada
+            customResponse = `Claro, ${userName}! Aqui estão as informações do seu perfil:
 
-      // Chamar a API para obter resposta com opções personalizadas - já gerencia o histórico internamente
+${formattedProfile}
+
+Você pode atualizar suas informações acessando a [página de perfil](https://pontoschool.com/profile).`;
+          }
+        } catch (profileError) {
+          console.error('Erro ao buscar perfil do usuário:', profileError);
+        }
+      }
+      
+      // Se temos uma resposta personalizada, usá-la
+      if (customResponse) {
+        // Primeiro vamos salvar esta interação no histórico da conversa
+        await aiService.addMessageToHistory(validSessionId, {
+          role: 'user',
+          content: fullMessage
+        });
+        
+        await aiService.addMessageToHistory(validSessionId, {
+          role: 'assistant',
+          content: customResponse
+        });
+        
+        // Formatação visual melhorada para a resposta personalizada
+        const formattedResponse = customResponse
+          .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
+          .replace(/\_(.*?)\_/g, '<em class="italic">$1</em>')
+          .replace(/\~\~(.*?)\~\~/g, '<del class="line-through">$1</del>')
+          .replace(/\`(.*?)\`/g, '<code class="bg-black/10 dark:bg-white/10 rounded px-1">$1</code>')
+          .replace(/\n/g, '<br />')
+          .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-500 hover:underline" target="_blank">$1</a>');
+          
+        // Reproduzir som se estiver ativado
+        if (soundEnabled && enableNotificationSounds) {
+          try {
+            const audioElement = new Audio('/message-sound.mp3');
+            audioElement.volume = 0.5;
+            await audioElement.play();
+          } catch (audioError) {
+            console.log('Não foi possível reproduzir o som:', audioError);
+          }
+        }
+        
+        const assistantMessage = { 
+          id: Date.now(), 
+          content: formattedResponse, 
+          sender: 'assistant', 
+          timestamp: new Date(),
+          showFeedbackOptions: true
+        };
+        
+        setMessages(prevMessages => [...prevMessages, assistantMessage]);
+        setIsTyping(false);
+        return;
+      }
+
+      // Salvar as preferências atuais para uso futuro
+      localStorage.setItem('aiIntelligenceLevel', aiIntelligenceLevel);
+      localStorage.setItem('aiLanguageStyle', aiLanguageStyle);
+      localStorage.setItem('soundEnabled', soundEnabled.toString());
+      
+      // Obter o contexto da página atual para fornecer respostas mais relevantes
+      const pageContext = window.location.pathname;
+      const pageTitle = document.title;
+      
+      // Chamar a API para obter resposta com opções personalizadas e contexto - já gerencia o histórico internamente
       const aiResponse = await aiService.generateAIResponse(
         fullMessage,
         validSessionId,
         {
           intelligenceLevel: aiIntelligenceLevel,
-          languageStyle: aiLanguageStyle
+          languageStyle: aiLanguageStyle,
+          userContext: {
+            currentPage: pageContext,
+            pageTitle: pageTitle,
+            userName: userName,
+            timeOfDay: new Date().getHours() < 12 ? 'manhã' : 
+                      (new Date().getHours() < 18 ? 'tarde' : 'noite')
+          }
         }
       );
 
@@ -693,35 +855,100 @@ const FloatingChatSupport: React.FC = () => {
       // Transformar links em instruções de tutorial e formatação melhorada para respostas da IA
       let processedResponse = aiResponse;
 
-      // Transformar links em instruções de tutorial
+      // Transformar links em instruções de tutorial detalhadas com base na seção
       processedResponse = processedResponse.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
         if (url.includes('pontoschool.com')) {
-          return `"${text}": Para acessar esta seção, siga estas etapas:\n1. Vá para o menu lateral principal\n2. Procure pelo item correspondente (geralmente com ícone semelhante)\n3. Clique no item para acessar a página\n4. A página será carregada com todas as funcionalidades disponíveis`;
+          const section = url.split('/').pop() || '';
+          let tutorialText = '';
+          
+          // Personalizar instruções com base na seção específica
+          switch(section) {
+            case 'portal':
+              tutorialText = `Para acessar o Portal de Estudos, siga estas etapas:
+1. No menu lateral esquerdo da plataforma, localize o ícone "Portal"
+2. Clique no ícone para entrar no Portal de Estudos
+3. Você verá todos os seus materiais didáticos organizados por disciplina
+4. Utilize os filtros disponíveis para encontrar conteúdos específicos
+5. Clique em qualquer material para acessar seu conteúdo completo`;
+              break;
+            case 'agenda':
+              tutorialText = `Para acessar sua Agenda, siga estas etapas:
+1. No menu lateral esquerdo da plataforma, localize o ícone "Agenda"
+2. Clique no ícone para abrir sua Agenda completa
+3. Você verá sua programação em formato de calendário
+4. Use as opções de visualização (dia, semana, mês) para navegar melhor
+5. Clique no botão "+" para adicionar novos eventos ou compromissos`;
+              break;
+            case 'turmas':
+              tutorialText = `Para acessar suas Turmas, siga estas etapas:
+1. No menu lateral esquerdo da plataforma, localize o ícone "Turmas"
+2. Clique no ícone para ver todas as suas turmas e grupos de estudo
+3. Você verá cards com cada turma que participa
+4. Clique em qualquer turma para acessar seu conteúdo, discussões e materiais
+5. Se desejar ingressar em uma nova turma, utilize o botão "Adicionar Turma"`;
+              break;
+            case 'profile':
+              tutorialText = `Para acessar seu Perfil, siga estas etapas:
+1. No menu superior da plataforma, clique no seu avatar ou nome de usuário
+2. Selecione "Meu Perfil" no menu dropdown
+3. Você verá sua página de perfil completa
+4. Aqui você pode editar suas informações pessoais, biografia e preferências
+5. Para alterar sua foto, clique sobre a imagem atual e selecione uma nova`;
+              break;
+            case 'epictus-ia':
+              tutorialText = `Para acessar o Epictus IA, siga estas etapas:
+1. No menu lateral esquerdo da plataforma, localize o ícone "Epictus IA"
+2. Clique no ícone para acessar a interface completa da IA
+3. Você terá acesso a recursos avançados de estudo personalizado
+4. Aqui você pode criar planos de estudo, receber recomendações e analisar seu progresso
+5. Este é diferente do chat de suporte - ele é focado em aprendizado personalizado`;
+              break;
+            default:
+              tutorialText = `Para acessar "${text}", siga estas etapas:
+1. No menu lateral esquerdo da plataforma, procure o item correspondente
+2. Você pode também utilizar a barra de pesquisa superior para encontrar esta seção
+3. Clique no item para acessar a página
+4. Explore as funcionalidades disponíveis nesta seção
+5. Se precisar de mais ajuda com esta área específica, me pergunte!`;
+          }
+          
+          return `"${text}": ${tutorialText}`;
         }
-        return `"${text}": Este recurso está disponível diretamente na plataforma. Não é necessário sair da Ponto.School para acessá-lo.`;
+        
+        // Para links externos, substituir por informação sem link
+        return `"${text}": Este recurso está disponível diretamente na plataforma. Não é necessário acessar links externos, pois todas as funcionalidades estão integradas na Ponto.School.`;
       });
 
-      // Remover URLs diretos
+      // Remover URLs diretos para segurança
       processedResponse = processedResponse.replace(/(https?:\/\/[^\s]+)(?!\))/g, 'este recurso na plataforma');
 
       // Adicionar incentivo para continuar a conversa ao final das respostas longas
-      if (processedResponse.length > 200) {
+      if (processedResponse.length > 200 && !processedResponse.includes('Posso ajudar') && !processedResponse.includes('mais alguma coisa')) {
         processedResponse += '\n\nPosso ajudar com mais alguma coisa? Estou à disposição para qualquer dúvida adicional.';
       }
 
-      // Formatação visual melhorada
+      // Formatação visual melhorada com suporte a elementos HTML para melhor exibição
       const formattedResponse = processedResponse
-        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-orange-500">$1</strong>')
         .replace(/\_(.*?)\_/g, '<em class="italic">$1</em>')
         .replace(/\~\~(.*?)\~\~/g, '<del class="line-through">$1</del>')
-        .replace(/\`(.*?)\`/g, '<code class="bg-black/10 dark:bg-white/10 rounded px-1">$1</code>')
-        .replace(/\n/g, '<br />');
+        .replace(/\`(.*?)\`/g, '<code class="bg-black/10 dark:bg-white/10 rounded px-1 py-0.5 font-mono text-xs">$1</code>')
+        .replace(/\n/g, '<br />')
+        // Detecção de listas não ordenadas
+        .replace(/^\s*-\s+(.*?)$/gm, '<div class="flex items-start mb-1"><span class="text-orange-500 mr-2">•</span><span>$1</span></div>')
+        // Detecção de listas numeradas
+        .replace(/^\s*(\d+)\.\s+(.*?)$/gm, '<div class="flex items-start mb-1"><span class="text-orange-500 mr-2">$1.</span><span>$2</span></div>')
+        // Seções importantes
+        .replace(/\[IMPORTANTE\](.*?)(?:\[\/IMPORTANTE\]|$)/gs, '<div class="p-3 bg-orange-50 dark:bg-orange-900/20 border-l-4 border-orange-500 rounded my-3">$1</div>')
+        // Seções de dicas
+        .replace(/\[DICA\](.*?)(?:\[\/DICA\]|$)/gs, '<div class="p-3 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded my-3">💡 $1</div>');
 
       const assistantMessage = { 
         id: Date.now(), 
         content: formattedResponse, 
         sender: 'assistant', 
-        timestamp: new Date() 
+        timestamp: new Date(),
+        showFeedbackOptions: true  // Habilitar opções de feedback para esta mensagem
       };
 
       setMessages(prevMessages => [...prevMessages, assistantMessage]);
@@ -729,12 +956,15 @@ const FloatingChatSupport: React.FC = () => {
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
 
-      // Resposta de erro mais amigável
+      // Resposta de erro mais amigável e informativa
       setMessages(prevMessages => [
         ...prevMessages,
         { 
           id: Date.now(), 
-          content: `Desculpe ${userName}, estou enfrentando problemas técnicos no momento. Por favor, tente novamente em alguns instantes.`, 
+          content: `<div class="p-3 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded my-3">
+            <strong class="text-red-600 dark:text-red-400">Oops! Encontrei um problema técnico.</strong><br/>
+            Desculpe ${userName}, estou enfrentando dificuldades no momento. Isso pode ocorrer por instabilidade na conexão ou alta demanda. Por favor, tente novamente em alguns instantes.
+          </div>`, 
           sender: 'assistant', 
           timestamp: new Date() 
         }

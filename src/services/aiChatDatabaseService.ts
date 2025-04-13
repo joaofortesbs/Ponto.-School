@@ -9,9 +9,9 @@ interface PlatformInfo {
   path: string;
 }
 
-// Database for AI chat knowledge
+// Database for AI chat knowledge and context enhancement
 export const aiChatDatabase = {
-  // Platform sections information for navigation and explanations
+  // Platform sections information for navigation and explanations with comprehensive knowledge
   platformSections: [
     {
       section: 'general',
@@ -231,6 +231,91 @@ export const aiChatDatabase = {
   },
 
   // Format user profile information for display with enhanced styling
+  // Função melhorada para obter dados completos do perfil para uso avançado do assistente
+  getDetailedUserProfile: async (userId?: string): Promise<UserProfile | null> => {
+    try {
+      // Se não for fornecido ID, pegar da sessão atual
+      if (!userId) {
+        const { data: sessionData } = await supabase.auth.getSession();
+        userId = sessionData?.session?.user?.id;
+        
+        if (!userId) {
+          console.log('Nenhum ID de usuário fornecido ou encontrado na sessão');
+          return null;
+        }
+      }
+      
+      // Buscar perfil completo com todos os campos
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          classes:user_classes(
+            id,
+            class_id,
+            joined_at,
+            status,
+            class:classes(*)
+          ),
+          series:user_series(
+            id,
+            serie_id,
+            progress,
+            status,
+            serie:series(*)
+          ),
+          achievements:user_achievements(
+            id,
+            achievement_id,
+            acquired_at,
+            achievement:achievements(*)
+          ),
+          study_stats:user_study_stats(
+            id,
+            total_minutes,
+            streak_days,
+            last_activity,
+            focus_score
+          )
+        `)
+        .eq('id', userId)
+        .single();
+        
+      if (error) {
+        console.error('Erro ao buscar perfil detalhado:', error);
+        return null;
+      }
+      
+      // Buscar dados de seguidores
+      const { count: followersCount } = await supabase
+        .from('user_followers')
+        .select('id', { count: 'exact' })
+        .eq('followed_id', userId);
+        
+      // Buscar contagem de materiais consumidos
+      const { count: materialsCount } = await supabase
+        .from('user_materials')
+        .select('id', { count: 'exact' })
+        .eq('user_id', userId);
+      
+      // Enriquecer o perfil com dados adicionais
+      const enrichedProfile = {
+        ...profile,
+        followersCount: followersCount || 0,
+        materialsCount: materialsCount || 0,
+        hasRecentActivity: profile?.study_stats?.[0]?.last_activity ? 
+          (new Date().getTime() - new Date(profile.study_stats[0].last_activity).getTime() < 86400000 * 3) : false,
+        totalStudyHours: profile?.study_stats?.[0]?.total_minutes ? 
+          Math.floor(profile.study_stats[0].total_minutes / 60) : 0
+      };
+      
+      return enrichedProfile;
+    } catch (error) {
+      console.error('Erro ao obter perfil detalhado:', error);
+      return null;
+    }
+  },
+
   formatUserProfile: (profileData: any): string => {
     if (!profileData) return 'Informações de perfil não disponíveis.';
 
@@ -258,12 +343,36 @@ export const aiChatDatabase = {
       'standard': '📚 Standard'
     }[profileData.planType?.toLowerCase()] || '📚 ' + planTypeFormatted;
 
+    // Construir informações sobre conquistas
+    let achievementsInfo = '';
+    if (profileData.achievements && profileData.achievements.length > 0) {
+      const achievements = profileData.achievements.map((a: any) => 
+        a.achievement?.name || 'Conquista Desconhecida').join(', ');
+      achievementsInfo = `\n\n**🏆 Conquistas Recentes:** ${achievements}`;
+    } else {
+      achievementsInfo = '\n\n**🏆 Conquistas:** Nenhuma conquista ainda. Continue estudando para desbloquear!';
+    }
+
+    // Construir informações de estatísticas
+    let statsInfo = '';
+    if (profileData.study_stats && profileData.study_stats.length > 0) {
+      const stats = profileData.study_stats[0];
+      statsInfo = `\n\n**📊 Estatísticas de Estudo:**
+- Total de horas estudadas: ${Math.floor((stats.total_minutes || 0) / 60)}h ${(stats.total_minutes || 0) % 60}min
+- Sequência atual: ${stats.streak_days || 0} dias
+- Pontuação de foco: ${stats.focus_score || 0}/100
+- Última atividade: ${formatDate(stats.last_activity) || 'Não disponível'}`;
+    }
+
     // Construir tabela das turmas e séries
     let classesTable = '';
     if (profileData.classes && profileData.classes.length > 0) {
       classesTable = '\n\n**Turmas Atuais:**\n| Nome | Tipo | Status |\n|------|------|--------|\n';
       profileData.classes.forEach((c: any) => {
-        classesTable += `| ${c.name || 'N/A'} | ${c.type || 'Regular'} | ${c.status || 'Ativo'} |\n`;
+        const className = c.class?.name || c.class_id || 'N/A';
+        const classType = c.class?.type || 'Regular';
+        const classStatus = c.status || 'Ativo';
+        classesTable += `| ${className} | ${classType} | ${classStatus} |\n`;
       });
     } else {
       classesTable = '\n\n**Turmas Atuais:** Nenhuma turma inscrita';
@@ -273,7 +382,10 @@ export const aiChatDatabase = {
     if (profileData.series && profileData.series.length > 0) {
       seriesTable = '\n\n**Séries Atuais:**\n| Nome | Progresso | Status |\n|------|-----------|--------|\n';
       profileData.series.forEach((s: any) => {
-        seriesTable += `| ${s.name || 'N/A'} | ${s.progress || '0'}% | ${s.status || 'Em andamento'} |\n`;
+        const serieName = s.serie?.name || s.serie_id || 'N/A';
+        const progress = s.progress || '0';
+        const status = s.status || 'Em andamento';
+        seriesTable += `| ${serieName} | ${progress}% | ${status} |\n`;
       });
     } else {
       seriesTable = '\n\n**Séries Atuais:** Nenhuma série inscrita';
@@ -283,28 +395,72 @@ export const aiChatDatabase = {
 **📊 Perfil do Usuário**
 
 [IMPORTANTE]
-Estas são as informações da sua conta na plataforma Epictus:
-- ID: ${profileData.userId || 'Não disponível'}
+Estas são as informações da sua conta na plataforma Ponto.School:
+- ID: ${profileData.user_id || profileData.id || 'Não disponível'}
 - Email: ${profileData.email || 'Não disponível'}
-- Data de criação: ${formatDate(profileData.createdAt) || 'Não disponível'}
-- Nome completo: ${profileData.fullName || 'Não disponível'}
-- Nome de exibição: ${profileData.displayName || 'Não disponível'}
+- Data de criação: ${formatDate(profileData.created_at || profileData.createdAt) || 'Não disponível'}
+- Nome completo: ${profileData.full_name || profileData.fullName || 'Não disponível'}
+- Nome de exibição: ${profileData.display_name || profileData.displayName || 'Não disponível'}
 - Plano: ${planEmoji}
-- Nível: ${profileData.userLevel || '1'} (${levelProgress}% para o próximo nível)
+- Nível: ${profileData.level || profileData.userLevel || '1'} (${levelProgress}% para o próximo nível)
 - Seguidores: ${profileData.followersCount || '0'}
+- Materiais acessados: ${profileData.materialsCount || '0'}
 [/IMPORTANTE]
 
 **🧠 Sobre mim**
 ${profileData.bio || 'Nenhuma descrição disponível. Você pode adicionar uma bio no seu perfil!'}
-
+${achievementsInfo}
+${statsInfo}
 ${classesTable}
-
 ${seriesTable}
 
 [DICA]
 Você pode atualizar suas informações de perfil na seção "Perfil" do menu lateral.
 [/DICA]
 `;
+  },
+  
+  // Função para verificar permissões do usuário para ações de sistema
+  checkUserPermissions: async (userId: string): Promise<{ 
+    canModifyProfile: boolean, 
+    canAccessAdmin: boolean,
+    canManageUsers: boolean
+  }> => {
+    try {
+      // Buscar informações de perfil do usuário
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select('role, email')
+        .eq('id', userId)
+        .single();
+        
+      if (error) {
+        console.error('Erro ao verificar permissões:', error);
+        return {
+          canModifyProfile: true, // Por padrão pode modificar próprio perfil
+          canAccessAdmin: false,
+          canManageUsers: false
+        };
+      }
+      
+      const isAdmin = profileData?.role === 'admin';
+      const isStaff = profileData?.role === 'staff' || isAdmin;
+      const isPremiumUser = profileData?.role === 'premium' || isStaff;
+      
+      return {
+        canModifyProfile: true, // Todos podem modificar próprio perfil
+        canAccessAdmin: isAdmin,
+        canManageUsers: isStaff
+      };
+      
+    } catch (error) {
+      console.error('Erro ao verificar permissões do usuário:', error);
+      return {
+        canModifyProfile: true,
+        canAccessAdmin: false,
+        canManageUsers: false
+      };
+    }
   }
 };
 
