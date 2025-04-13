@@ -5,7 +5,6 @@ import "./index.css";
 import { BrowserRouter } from "react-router-dom";
 import './lib/username-initializer.ts'
 import { preInitializeWebNodes } from './lib/web-persistence.ts'
-import ErrorBoundary from "./components/ErrorBoundary.tsx";
 
 // PRIORIDADE MÁXIMA: Inicializar teias antes de qualquer outro código
 // Esta função é executada imediatamente, antes mesmo da montagem do React
@@ -113,11 +112,11 @@ const initializeApp = () => {
     // Renderização otimizada usando requestIdleCallback ou fallback
     const renderApp = () => {
       const AppRoot = (
-        <MainErrorBoundary>
+        <ErrorBoundary>
           <BrowserRouter>
             <App />
           </BrowserRouter>
-        </MainErrorBoundary>
+        </ErrorBoundary>
       );
 
       ReactDOM.createRoot(rootElement).render(
@@ -168,8 +167,8 @@ const initializeApp = () => {
   }
 };
 
-// Componente MainErrorBoundary para capturar erros durante a renderização
-class MainErrorBoundary extends React.Component {
+// Componente ErrorBoundary para capturar erros durante a renderização
+class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false };
@@ -180,7 +179,7 @@ class MainErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error("Erro capturado pelo MainErrorBoundary:", error, errorInfo);
+    console.error("Erro capturado pelo ErrorBoundary:", error, errorInfo);
   }
 
   render() {

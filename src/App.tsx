@@ -9,12 +9,10 @@ import {
 import ErrorBoundary from "@/components/ErrorBoundary";
 import routes from "./tempo-routes";
 import Home from "@/components/home";
-import { ThemeProvider } from "@/components/ThemeProvider.tsx";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
 import FloatingChatSupport from "@/components/chat/FloatingChatSupport";
 import { supabase } from "@/lib/supabase";
-import { AccessibilityProvider } from "@/components/AccessibilityProvider";
-import { KeyboardNavigationHelper } from "@/components/keyboard-navigation-helper.tsx";
 import { checkAuthentication } from "@/lib/auth-utils";
 import { StudyGoalProvider } from "@/components/dashboard/StudyGoalContext";
 import UsernameProvider from "./components/UsernameProvider"; // Added import
@@ -119,17 +117,11 @@ function App() {
   } = useWelcomeModal(location.pathname, isAuthRoute);
 
   return (
-    <AccessibilityProvider>
-      <KeyboardNavigationHelper />
-      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-        <UsernameProvider>
-          <StudyGoalProvider>
-            <ErrorBoundary>
-              {/* Skip link para acessibilidade */}
-              <a href="#main-content" className="skip-link">
-                Pular para o conteúdo principal
-              </a>
-            <div id="main-content" className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <UsernameProvider>
+        <StudyGoalProvider>
+          <ErrorBoundary>
+            <div className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
               <Routes>
                 {/* Auth Routes - Públicas */}
                 <Route path="/login" element={<LoginPage />} />
@@ -204,13 +196,12 @@ function App() {
                   isFirstLogin={isFirstLogin}
                 />
               }
-              <Toaster />
             </div>
+            <Toaster />
           </ErrorBoundary>
         </StudyGoalProvider>
       </UsernameProvider>
     </ThemeProvider>
-    </AccessibilityProvider>
   );
 }
 
