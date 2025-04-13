@@ -387,19 +387,37 @@ const FloatingChatSupport: React.FC = () => {
   useEffect(() => {
     const initializeChat = async () => {
       try {
-        // Tentar obter dados do perfil do usuário com mais detalhes
+        // Importar serviços necessários
         const profileService = await import('@/services/profileService');
         const aiChatDatabaseService = await import('@/services/aiChatDatabaseService');
+        const { supabase } = await import('@/lib/supabase');
         
-        // Obter um perfil completo e detalhado do usuário para contexto 
-        const userProfile = await profileService.profileService.getCurrentUserProfile();
+        // Verificar sessão do usuário
+        const { data: sessionData } = await supabase.auth.getSession();
+        const isAuthenticated = !!sessionData?.session?.user;
+        
+        // Obter perfil detalhado com todas as informações associadas
         let detailedProfile = null;
+        let userProfile = null;
         
-        try {
-          // Tentar obter um perfil mais detalhado usando o serviço avançado
-          detailedProfile = await aiChatDatabaseService.aiChatDatabase.getDetailedUserProfile();
-        } catch (detailError) {
-          console.log('Não foi possível obter perfil detalhado, usando perfil básico:', detailError);
+        if (isAuthenticated) {
+          try {
+            // Obter perfil detalhado com todas as informações associadas
+            detailedProfile = await aiChatDatabaseService.aiChatDatabase.getDetailedUserProfile();
+            
+            // Se não conseguir o perfil detalhado, tentar o perfil básico
+            if (!detailedProfile) {
+              userProfile = await profileService.profileService.getCurrentUserProfile();
+            }
+          } catch (detailError) {
+            console.log('Erro ao obter perfil detalhado:', detailError);
+            // Tentar obter o perfil básico como fallback
+            try {
+              userProfile = await profileService.profileService.getCurrentUserProfile();
+            } catch (profileError) {
+              console.error('Erro ao obter perfil básico:', profileError);
+            }
+          }
         }
         
         // Usar perfil detalhado se disponível, senão cair para o perfil básico
@@ -408,12 +426,26 @@ const FloatingChatSupport: React.FC = () => {
         // Determinar o melhor nome de usuário a usar com prioridades claras
         let displayName = 'Usuário';
         let fullName = '';
+        let userId = '';
+        let userEmail = '';
+        let planType = 'lite';
+        let userLevel = 1;
+        let userState = '';
+        let userBio = '';
+        let userAvatar = '';
 
         if (effectiveProfile) {
-          // Armazenar o nome completo para uso no contexto da IA
+          // Extrair todos os dados relevantes para uso no chat
+          userId = effectiveProfile.id || '';
+          userEmail = effectiveProfile.email || '';
           fullName = effectiveProfile.full_name || '';
+          planType = effectiveProfile.plan_type || 'lite';
+          userLevel = effectiveProfile.level || 1;
+          userState = effectiveProfile.state || '';
+          userBio = effectiveProfile.bio || '';
+          userAvatar = effectiveProfile.avatar_url || '';
           
-          // Prioridade: nome completo > displayName > username
+          // Prioridade para nome de exibição: nome completo > displayName > username
           if (effectiveProfile.full_name) {
             displayName = effectiveProfile.full_name.split(' ')[0]; // Pegar o primeiro nome
           } else if (effectiveProfile.display_name) {
@@ -422,13 +454,18 @@ const FloatingChatSupport: React.FC = () => {
             displayName = effectiveProfile.username;
           }
           
-          // Salvar informações do usuário no localStorage para uso futuro
+          // Salvar informações do usuário no localStorage para uso futuro e recuperação offline
           try {
             localStorage.setItem('userFirstName', displayName);
             localStorage.setItem('userFullName', fullName);
-            if (effectiveProfile.id) {
-              localStorage.setItem('userId', effectiveProfile.id);
-            }
+            localStorage.setItem('userEmail', userEmail);
+            localStorage.setItem('userId', userId);
+            localStorage.setItem('userPlan', planType);
+            localStorage.setItem('userLevel', userLevel.toString());
+            localStorage.setItem('userState', userState);
+            
+            // Guardar timestamp da última atualização para verificar frescor dos dados
+            localStorage.setItem('userDataLastUpdated', Date.now().toString());
           } catch (storageError) {
             console.log('Erro ao salvar dados do usuário no localStorage:', storageError);
           }
@@ -442,13 +479,16 @@ const FloatingChatSupport: React.FC = () => {
           }
           
           fullName = localStorage.getItem('userFullName') || displayName;
+          userEmail = localStorage.getItem('userEmail') || '';
+          userId = localStorage.getItem('userId') || '';
+          planType = localStorage.getItem('userPlan') || 'lite';
+          userLevel = Number(localStorage.getItem('userLevel') || '1');
         }
 
-        // Atualizar estado com o nome encontrado
+        // Atualizar estados com as informações do usuário
         setUserName(displayName);
-
-        // Gerar uma ID de sessão baseada no usuário atual ou usar existente
-        // Incluir um identificador único da máquina se possível
+        
+        // Persistir informação da sessão atual para continuidade
         const deviceId = localStorage.getItem('deviceId') || 
                         `device_${Math.random().toString(36).substring(2, 9)}`;
         
@@ -456,14 +496,49 @@ const FloatingChatSupport: React.FC = () => {
           localStorage.setItem('deviceId', deviceId);
         }
         
-        const userId = effectiveProfile?.id || localStorage.getItem('userId') || 'anonymous';
+        // Usar ID definitivo para a sessão de chat
+        const chatUserId = userId || localStorage.getItem('userId') || 'anonymous';
         const savedSessionId = localStorage.getItem('chatSessionId');
+        
+        // Gerar ID de sessão exclusivo e persistente
         const newSessionId = savedSessionId || 
-                            `chat_${userId}_${displayName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`;
+                            `chat_${chatUserId}_${displayName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`;
         setSessionId(newSessionId);
 
         if (!savedSessionId) {
           localStorage.setItem('chatSessionId', newSessionId);
+        }
+        
+        // Registrar início de sessão no banco de dados se autenticado
+        if (isAuthenticated && userId) {
+          try {
+            // Registrar a sessão de chat para rastreamento
+            await supabase.from('chat_sessions').insert({
+              session_id: newSessionId,
+              user_id: userId,
+              created_at: new Date().toISOString(),
+              device_info: {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                deviceId: deviceId
+              }
+            }).select();
+            
+            // Registrar atividade para fins de análise
+            await supabase.from('user_activities').insert({
+              user_id: userId,
+              activity_type: 'chat_session',
+              description: 'Iniciou uma sessão de chat com o assistente',
+              created_at: new Date().toISOString(),
+              metadata: {
+                session_id: newSessionId,
+                page: window.location.pathname
+              }
+            });
+          } catch (dbError) {
+            console.log('Erro ao registrar sessão de chat:', dbError);
+            // Não crítico, apenas log
+          }
         }
 
         // Carregar mensagens salvas para este usuário
@@ -683,7 +758,7 @@ const FloatingChatSupport: React.FC = () => {
 
     // Criar uma mensagem combinada com texto e informações sobre arquivos anexados
     let fullMessage = inputMessage.trim();
-
+    
     // Se houver arquivos selecionados, adicionar informações sobre eles à mensagem
     if (selectedFiles.length > 0) {
       // Incluir informações sobre os arquivos na mensagem para análise da IA
@@ -695,6 +770,48 @@ const FloatingChatSupport: React.FC = () => {
         fullMessage += `\n\nArquivos anexados:\n${fileInfos}`;
       } else {
         fullMessage = `Arquivos anexados:\n${fileInfos}`;
+      }
+      
+      // Tentar fazer upload dos arquivos para o Storage se o usuário estiver autenticado
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        const { data: sessionData } = await supabase.auth.getSession();
+        
+        if (sessionData?.session?.user) {
+          const userId = sessionData.session.user.id;
+          
+          // Fazer upload de cada arquivo para o storage
+          for (const file of selectedFiles) {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+            const filePath = `chat_attachments/${userId}/${fileName}`;
+            
+            const { data, error } = await supabase.storage
+              .from('user_files')
+              .upload(filePath, file);
+              
+            if (error) {
+              console.error('Erro ao fazer upload do arquivo:', error);
+            } else {
+              console.log('Upload bem-sucedido:', data);
+              
+              // Registrar o arquivo no banco de dados para referência futura
+              await supabase.from('user_file_uploads').insert({
+                user_id: userId,
+                file_path: filePath,
+                file_name: file.name,
+                file_type: file.type,
+                file_size: file.size,
+                context: 'chat_support',
+                session_id: sessionId,
+                uploaded_at: new Date().toISOString()
+              });
+            }
+          }
+        }
+      } catch (uploadError) {
+        console.error('Erro durante o upload de arquivos:', uploadError);
+        // Continuar mesmo se o upload falhar - não é crítico
       }
     }
 

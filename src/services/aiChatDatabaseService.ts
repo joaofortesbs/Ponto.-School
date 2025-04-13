@@ -10,6 +10,28 @@ interface PlatformInfo {
 }
 
 // Database for AI chat knowledge and context enhancement
+import { supabase } from '@/lib/supabase';
+import { UserProfile } from '@/types/user-profile';
+
+// Interface para armazenar detalhes completos do usuário
+interface DetailedUserProfile extends UserProfile {
+  achievements?: any[];
+  stats?: {
+    completedCourses: number;
+    completedTasks: number;
+    studyHours: number;
+    participationRate: number;
+  };
+  classes?: any[];
+  series?: any[];
+  followers?: number;
+  following?: number;
+  lastActivity?: string;
+  notifications?: any[];
+  preferences?: Record<string, any>;
+}
+
+// Database for AI chat knowledge and context enhancement
 export const aiChatDatabase = {
   // Platform sections information for navigation and explanations with comprehensive knowledge
   platformSections: [
@@ -188,9 +210,299 @@ export const aiChatDatabase = {
     }
   },
 
+  // Obter perfil detalhado do usuário com todas as informações associadas
+  getDetailedUserProfile: async (): Promise<DetailedUserProfile | null> => {
+    try {
+      // Obter o perfil básico primeiro
+      const profile = await aiChatDatabase.getUserProfile();
+      if (!profile) {
+        console.log('Nenhum perfil encontrado');
+        return null;
+      }
+
+      // Enriquecer com informações adicionais
+      const userId = profile.id;
+      
+      // Obter conquistas do usuário
+      const achievementsPromise = supabase
+        .from('user_achievements')
+        .select('*, achievement:achievements(*)')
+        .eq('user_id', userId);
+      
+      // Obter estatísticas do usuário
+      const statsPromise = supabase
+        .from('user_stats')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      
+      // Obter turmas do usuário
+      const classesPromise = supabase
+        .from('user_classes')
+        .select('*, class:classes(*)')
+        .eq('user_id', userId);
+      
+      // Obter séries do usuário
+      const seriesPromise = supabase
+        .from('user_series')
+        .select('*, serie:series(*)')
+        .eq('user_id', userId);
+      
+      // Obter quantidade de seguidores
+      const followersPromise = supabase
+        .from('user_followers')
+        .select('count')
+        .eq('followed_id', userId)
+        .single();
+      
+      // Obter quantidade de pessoas que o usuário segue
+      const followingPromise = supabase
+        .from('user_followers')
+        .select('count')
+        .eq('follower_id', userId)
+        .single();
+      
+      // Obter últimas atividades
+      const activitiesPromise = supabase
+        .from('user_activities')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      // Obter notificações não lidas
+      const notificationsPromise = supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('read', false)
+        .order('created_at', { ascending: false });
+      
+      // Obter preferências do usuário
+      const preferencesPromise = supabase
+        .from('user_preferences')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      
+      // Executar todas as promessas em paralelo
+      const [
+        achievementsResult,
+        statsResult,
+        classesResult,
+        seriesResult,
+        followersResult,
+        followingResult,
+        activitiesResult,
+        notificationsResult,
+        preferencesResult
+      ] = await Promise.all([
+        achievementsPromise,
+        statsPromise,
+        classesPromise,
+        seriesPromise,
+        followersPromise,
+        followingPromise,
+        activitiesPromise,
+        notificationsPromise,
+        preferencesPromise
+      ]);
+      
+      // Construir o perfil detalhado
+      const detailedProfile: DetailedUserProfile = {
+        ...profile,
+        achievements: achievementsResult.data || [],
+        stats: statsResult.data || {
+          completedCourses: 0,
+          completedTasks: 0,
+          studyHours: 0,
+          participationRate: 0
+        },
+        classes: classesResult.data || [],
+        series: seriesResult.data || [],
+        followers: followersResult.data?.count || 0,
+        following: followingResult.data?.count || 0,
+        lastActivity: activitiesResult.data && activitiesResult.data.length > 0 
+          ? activitiesResult.data[0].description 
+          : 'Nenhuma atividade recente',
+        notifications: notificationsResult.data || [],
+        preferences: preferencesResult.data || {}
+      };
+      
+      return detailedProfile;
+    } catch (error) {
+      console.error('Erro ao obter perfil detalhado do usuário:', error);
+      return null;
+    }
+  },
+  
+  // Formatar informações do usuário para exibição
+  formatUserProfile: (profile: DetailedUserProfile): string => {
+    if (!profile) return 'Informações do perfil não disponíveis.';
+    
+    // Formatar informações básicas
+    let formattedInfo = `Nome completo: ${profile.full_name || 'Não definido'}\n`;
+    formattedInfo += `Nome de exibição: ${profile.display_name || profile.full_name || 'Não definido'}\n`;
+    formattedInfo += `E-mail: ${profile.email || 'Não definido'}\n`;
+    formattedInfo += `ID de usuário: ${profile.user_id || 'Não definido'}\n`;
+    
+    if (profile.created_at) {
+      const createdDate = new Date(profile.created_at);
+      formattedInfo += `Data de criação: ${createdDate.toLocaleDateString('pt-BR')} (${Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24))} dias)\n`;
+    }
+    
+    formattedInfo += `Plano: ${profile.plan_type ? profile.plan_type.toUpperCase() : 'FREE'}\n`;
+    formattedInfo += `Nível: ${profile.level || 1}\n`;
+    
+    if (profile.followers !== undefined) {
+      formattedInfo += `Seguidores: ${profile.followers}\n`;
+    }
+    
+    // Informações complementares
+    if (profile.phone) formattedInfo += `Telefone: ${profile.phone}\n`;
+    if (profile.location) formattedInfo += `Localização: ${profile.location}\n`;
+    if (profile.state) formattedInfo += `Estado: ${profile.state}\n`;
+    if (profile.bio) formattedInfo += `\nBiografia: ${profile.bio}\n`;
+    
+    // Stats do usuário
+    let statsInfo = '';
+    if (profile.stats) {
+      statsInfo = '\n**Estatísticas**:\n';
+      if (profile.stats.completedCourses !== undefined) statsInfo += `- Cursos completados: ${profile.stats.completedCourses}\n`;
+      if (profile.stats.completedTasks !== undefined) statsInfo += `- Tarefas concluídas: ${profile.stats.completedTasks}\n`;
+      if (profile.stats.studyHours !== undefined) statsInfo += `- Horas de estudo: ${profile.stats.studyHours}\n`;
+      if (profile.stats.participationRate !== undefined) statsInfo += `- Taxa de participação: ${profile.stats.participationRate}%\n`;
+    }
+    
+    // Conquistas
+    let achievementsInfo = '';
+    if (profile.achievements && profile.achievements.length > 0) {
+      achievementsInfo = '\n**Conquistas**:\n';
+      profile.achievements.slice(0, 5).forEach(achievement => {
+        achievementsInfo += `- ${achievement.achievement?.name || 'Conquista'}: ${achievement.achievement?.description || 'Sem descrição'}\n`;
+      });
+      
+      if (profile.achievements.length > 5) {
+        achievementsInfo += `- E mais ${profile.achievements.length - 5} outras conquistas\n`;
+      }
+    } else {
+      achievementsInfo = '\n**Conquistas**: Nenhuma conquista ainda.\n';
+    }
+    
+    // Turmas
+    let classesTable = '';
+    if (profile.classes && profile.classes.length > 0) {
+      classesTable = '\n**Turmas**:\n';
+      profile.classes.forEach(cls => {
+        const className = cls.class?.name || 'Turma sem nome';
+        const classStatus = cls.status || 'Ativo';
+        classesTable += `- ${className} (${classStatus})\n`;
+      });
+    }
+    
+    // Séries
+    let seriesTable = '';
+    if (profile.series && profile.series.length > 0) {
+      seriesTable = '\n**Séries**:\n';
+      profile.series.forEach(s => {
+        const serieName = s.serie?.name || 'Série sem nome';
+        const progress = s.progress || '0%';
+        seriesTable += `- ${serieName} (Progresso: ${progress})\n`;
+      });
+    }
+    
+    // Formatar mensagem final
+    return `${formattedInfo}${profile.bio ? '' : '\n[DICA] Você pode adicionar uma bio no seu perfil!'}
+${achievementsInfo}
+${statsInfo}
+${classesTable}
+${seriesTable}
+
+[DICA]
+Você pode atualizar suas informações de perfil na seção "Perfil" do menu lateral.
+[/DICA]
+`;
+  },
+  
+  // Função para verificar permissões do usuário para ações de sistema
+  checkUserPermissions: async (userId: string): Promise<{ 
+    canModifyProfile: boolean, 
+    canAccessAdmin: boolean,
+    canManageUsers: boolean
+  }> => {
+    try {
+      // Buscar informações de perfil do usuário
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select('role, email')
+        .eq('id', userId)
+        .single();
+        
+      if (error) {
+        console.error('Erro ao verificar permissões:', error);
+        return {
+          canModifyProfile: true, // Por padrão pode modificar próprio perfil
+          canAccessAdmin: false,
+          canManageUsers: false
+        };
+      }
+      
+      const isAdmin = profileData?.role === 'admin';
+      const isStaff = profileData?.role === 'staff' || isAdmin;
+      const isPremiumUser = profileData?.role === 'premium' || isStaff;
+      
+      return {
+        canModifyProfile: true, // Todos podem modificar próprio perfil
+        canAccessAdmin: isAdmin,
+        canManageUsers: isStaff
+      };
+      
+    } catch (error) {
+      console.error('Erro ao verificar permissões do usuário:', error);
+      return {
+        canModifyProfile: true,
+        canAccessAdmin: false,
+        canManageUsers: false
+      };
+    }
+  },
+
   // Get complete user context with all required information
   getUserContext: async (): Promise<any> => {
     try {
+      // Tentar obter perfil detalhado completo primeiro
+      const detailedProfile = await aiChatDatabase.getDetailedUserProfile();
+      
+      // Se conseguiu obter perfil detalhado, use-o
+      if (detailedProfile) {
+        return {
+          isAuthenticated: true,
+          id: detailedProfile.id,
+          userId: detailedProfile.user_id,
+          username: detailedProfile.username || detailedProfile.display_name || 'Usuário',
+          email: detailedProfile.email,
+          fullName: detailedProfile.full_name,
+          displayName: detailedProfile.display_name,
+          createdAt: detailedProfile.created_at,
+          planType: detailedProfile.plan_type,
+          userLevel: detailedProfile.level,
+          followersCount: detailedProfile.followers,
+          lastActivity: detailedProfile.lastActivity,
+          bio: detailedProfile.bio,
+          avatar: detailedProfile.avatar_url,
+          phone: detailedProfile.phone,
+          location: detailedProfile.location,
+          state: detailedProfile.state,
+          hasUnreadNotifications: detailedProfile.notifications && detailedProfile.notifications.length > 0,
+          classes: detailedProfile.classes,
+          series: detailedProfile.series,
+          stats: detailedProfile.stats,
+          achievements: detailedProfile.achievements,
+          preferences: detailedProfile.preferences
+        };
+      }
+      
+      // Fallback para perfil básico
       const profile = await aiChatDatabase.getUserProfile();
       if (!profile) {
         return {

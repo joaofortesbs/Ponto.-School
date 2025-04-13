@@ -646,7 +646,7 @@ export async function generateGeminiResponse(
 
               REDIRECIONAMENTO:
               Quando o usuário pedir para ser redirecionado a uma seção da plataforma, SEMPRE inclua o link completo usando a base https://pontoschool.com/. Por exemplo:
-              - Para o Portal: "Aqui está o link para o Portal: https://pontoschool.com/portal"
+              - Para o Portal: "Aqui está olink para o Portal: https://pontoschool.com/portal"
               - Para Agenda: "Você pode acessar sua agenda aqui: https://pontoschool.com/agenda"
               - Para Turmas: "Acesse suas turmas por este link: https://pontoschool.com/turmas"
 
@@ -1302,3 +1302,37 @@ const getResponseForMessage = (message: string): string => {
 
     return message;
   }
+
+// Função para adicionar mensagem ao histórico
+export async function addMessageToHistory(
+  sessionId: string,
+  message: ChatMessage
+): Promise<void> {
+  try {
+    if (!sessionId || !message || !message.content) {
+      console.error('Parâmetros inválidos para adição ao histórico');
+      return;
+    }
+
+    // Adiciona a mensagem ao histórico em memória
+    if (!conversationHistory[sessionId]) {
+      // Se não existe histórico para esta sessão, inicializar
+      await getConversationHistory(sessionId);
+    }
+
+    // Adicionar a mensagem ao histórico
+    if (conversationHistory[sessionId]) {
+      conversationHistory[sessionId].push({
+        ...message,
+        timestamp: new Date()
+      });
+
+      // Salvar no localStorage e sincronizar com Supabase
+      await saveConversationHistory(sessionId, conversationHistory[sessionId]);
+    }
+  } catch (error) {
+    console.error('Erro ao adicionar mensagem ao histórico:', error);
+  }
+}
+
+// Add blur effect to the rest of the page when chat is open
