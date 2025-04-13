@@ -40,18 +40,40 @@ export interface ButtonProps
   asChild?: boolean
 }
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button"
-    return (
-      <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        {...props}
-      />
-    )
+const Button = React.forwardRef<
+  HTMLButtonElement,
+  ButtonProps
+>(({ className, variant, size, asChild = false, ...props }, ref) => {
+  const Comp = asChild ? Slot : "button"
+
+  // Se não houver aria-label e houver apenas um ícone como filho, adiciona uma mensagem de aviso
+  const hasAriaLabel = props["aria-label"] !== undefined;
+  const hasAriaLabelledBy = props["aria-labelledby"] !== undefined;
+  const hasAccessibleLabel = hasAriaLabel || hasAriaLabelledBy || 
+                             (props.children && typeof props.children === 'string');
+
+  // Adicionar garantias de acessibilidade
+  const accessibilityProps: Record<string, any> = {};
+
+  // Se o botão for do tipo ícone (small/icon) e não tiver um label acessível
+  if (size === "icon" && !hasAccessibleLabel) {
+    console.warn('Button with icon needs an aria-label for accessibility');
   }
-)
+
+  // Garantir que botões de submit e reset tenham o tipo correto
+  if (!props.type && (Comp === "button" || !asChild)) {
+    accessibilityProps.type = "button"; // Padrão para button
+  }
+
+  return (
+    <Comp
+      className={cn(buttonVariants({ variant, size, className }))}
+      ref={ref}
+      {...accessibilityProps}
+      {...props}
+    />
+  )
+})
 Button.displayName = "Button"
 
 export { Button, buttonVariants }

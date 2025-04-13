@@ -13,6 +13,8 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
 import FloatingChatSupport from "@/components/chat/FloatingChatSupport";
 import { supabase } from "@/lib/supabase";
+import { AccessibilityProvider } from "@/components/AccessibilityProvider";
+import { KeyboardNavigationHelper } from "@/components/keyboard-navigation-helper";
 import { checkAuthentication } from "@/lib/auth-utils";
 import { StudyGoalProvider } from "@/components/dashboard/StudyGoalContext";
 import UsernameProvider from "./components/UsernameProvider"; // Added import
@@ -117,11 +119,17 @@ function App() {
   } = useWelcomeModal(location.pathname, isAuthRoute);
 
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <UsernameProvider>
-        <StudyGoalProvider>
-          <ErrorBoundary>
-            <div className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
+    <AccessibilityProvider>
+      <KeyboardNavigationHelper />
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <UsernameProvider>
+          <StudyGoalProvider>
+            <ErrorBoundary>
+              {/* Skip link para acessibilidade */}
+              <a href="#main-content" className="skip-link">
+                Pular para o conteúdo principal
+              </a>
+            <div id="main-content" className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
               <Routes>
                 {/* Auth Routes - Públicas */}
                 <Route path="/login" element={<LoginPage />} />
@@ -202,6 +210,7 @@ function App() {
         </StudyGoalProvider>
       </UsernameProvider>
     </ThemeProvider>
+    </AccessibilityProvider>
   );
 }
 
