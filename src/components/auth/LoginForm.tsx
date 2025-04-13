@@ -53,29 +53,46 @@ export function LoginForm() {
       return;
     }
     
-    // Mostrar feedback de carregamento instantâneo
+    // Feedback visual imediato para melhorar a percepção
     setSuccess(true);
     localStorage.setItem('auth_checked', 'pending');
     localStorage.setItem('auth_status', 'authenticating');
     
-    // Timeout para evitar que o usuário fique travado indefinidamente
-    const authTimeout = setTimeout(() => {
-      setLoading(false);
-      if (!localStorage.getItem('auth_status') || localStorage.getItem('auth_status') === 'authenticating') {
-        setSuccess(false);
-        setError("Tempo limite excedido. Por favor, tente novamente.");
-        localStorage.removeItem('auth_checked');
-        localStorage.removeItem('auth_status');
+    // Iniciar redirecionamento antecipado para melhorar percepção de velocidade
+    // Um timeout curto para dar percepção de resposta instantânea
+    const preloadTimeout = setTimeout(() => {
+      if (localStorage.getItem('auth_status') === 'authenticating') {
+        // Pré-carregar a rota de dashboard enquanto aguarda autenticação
+        const preloadLink = document.createElement('link');
+        preloadLink.rel = 'prefetch';
+        preloadLink.href = '/dashboard';
+        document.head.appendChild(preloadLink);
       }
-    }, 7000);
+    }, 300);
+    
+    // Timeout mais curto (5 segundos) para feedback em caso de lentidão
+    const authTimeout = setTimeout(() => {
+      if (localStorage.getItem('auth_status') === 'authenticating') {
+        // Não cancelar o login, apenas mostrar feedback
+        setError("Estamos processando seu login, aguarde um momento...");
+      }
+    }, 5000);
 
     try {
-      // Otimizar a autenticação com tratamento de cache
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
-
+      // Usar Promise.race para limitar o tempo de espera da requisição
+      const authPromise = Promise.race([
+        supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("Tempo limite excedido")), 8000)
+        )
+      ]);
+      
+      const { data, error } = await authPromise;
+      
+      clearTimeout(preloadTimeout);
       clearTimeout(authTimeout);
       
       if (error) {

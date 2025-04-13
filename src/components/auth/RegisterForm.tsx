@@ -160,24 +160,22 @@ export function RegisterForm() {
 
   // Effect to show class and grade options when institution is entered
   useEffect(() => {
+    // Pré-carregar as opções para acesso instantâneo
+    if (!classOptions.length) {
+      setClassOptions(preloadedClassOptions);
+      setGradeOptions(preloadedGradeOptions);
+    }
+    
     if (formData.institution.trim().length > 0) {
       setShowClassAndGrade(true);
       setInstitutionFound(true);
       
-      // Carrega instantaneamente as opções pré-definidas
-      setClassOptions(preloadedClassOptions);
-      setGradeOptions(preloadedGradeOptions);
-      
-      // Breve simulação de carregamento apenas para feedback visual
-      setLoadingOptions(true);
-      setTimeout(() => {
-        setLoadingOptions(false);
-      }, 150); // Reduzido para 150ms apenas para feedback visual
+      // Sem necessidade de simulação de carregamento, mostrar imediatamente
+      setLoadingOptions(false);
     } else {
       setShowClassAndGrade(false);
       setInstitutionFound(false);
-      setClassOptions([]);
-      setGradeOptions([]);
+      
       // Reset the values when institution is cleared
       setFormData((prev) => ({
         ...prev,

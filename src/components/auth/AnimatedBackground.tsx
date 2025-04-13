@@ -158,101 +158,69 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
 
   // Atualiza a posição dos nós com base na posição do cursor
   const updateNodePositions = useCallback(() => {
-    setNodes(prevNodes => {
-      // Margem mínima para garantir que as teias não saiam da tela
-      const margin = 2;
+    if (!canvasRef.current) return;
 
-      const updatedNodes = prevNodes.map(node => {
-        let { x, y, fadeState, fadeTimer, opacity } = node;
+    // Usar uma função de atualização simplificada para melhor performance
+    setNodes((prevNodes) => {
+      const updatedNodes = [];
+      const width = dimensions.width;
+      const height = dimensions.height;
 
-        // Atualizar estado de fade
-        if (fadeState === 'in') {
-          opacity = Math.min(0.5, opacity + 0.002);
-          fadeTimer -= 1;
-          if (fadeTimer <= 0) {
-            fadeState = 'stable';
-            fadeTimer = Math.floor(Math.random() * 500) + 1000;
-          }
-        } else if (fadeState === 'out') {
-          opacity = Math.max(0.05, opacity - 0.002);
-          fadeTimer -= 1;
-          if (fadeTimer <= 0) {
-            fadeState = 'in';
-            fadeTimer = Math.floor(Math.random() * 300) + 200;
-          }
+      // Limitar o número de nós processados por frame para melhorar performance
+      const maxNodesToProcess = Math.min(prevNodes.length, 75);
+
+      for (let i = 0; i < maxNodesToProcess; i++) {
+        const node = prevNodes[i];
+
+        // Cálculos simplificados para maior performance
+        let x = node.x + node.vx;
+        let y = node.y + node.vy;
+        let vx = node.vx;
+        let vy = node.vy;
+
+        // Verificação simplificada de bordas
+        if (x < 0 || x > width) vx = -vx;
+        if (y < 0 || y > height) vy = -vy;
+
+        // Garantir que está dentro dos limites
+        x = x < 0 ? 0 : x > width ? width : x;
+        y = y < 0 ? 0 : y > height ? height : y;
+
+        // Atualização mais eficiente de opacidade
+        let opacity = node.opacity;
+        let fadeState = node.fadeState;
+        let fadeTimer = node.fadeTimer - 1;
+
+        // Lógica simplificada de fade
+        if (fadeTimer <= 0) {
+          fadeState = fadeState === "in" ? "out" : "in";
+          fadeTimer = 150 + Math.floor(Math.random() * 100);
+        }
+
+        // Ajuste de opacidade com menor incremento para suavidade
+        if (fadeState === "in") {
+          opacity = Math.min(0.85, opacity + 0.01);
         } else {
-          // Stable state
-          fadeTimer -= 1;
-          if (fadeTimer <= 0) {
-            fadeState = Math.random() > 0.5 ? 'in' : 'out';
-            fadeTimer = Math.floor(Math.random() * 300) + 200;
-          }
+          opacity = Math.max(0.15, opacity - 0.01);
         }
 
-        // Atualizar posição baseada nos vetores de velocidade
-        x += node.vx;
-        y += node.vy;
-
-        // Verificar limites da tela
-        if (x < margin) {
-          x = margin;
-          node.vx *= -1;
-        } else if (x > dimensions.width - margin) {
-          x = dimensions.width - margin;
-          node.vx *= -1;
-        }
-
-        if (y < margin) {
-          y = margin;
-          node.vy *= -1;
-        } else if (y > dimensions.height - margin) {
-          y = dimensions.height - margin;
-          node.vy *= -1;
-        }
-
-        // Calcular a distância do cursor
-        const dx = mousePosition.x - x;
-        const dy = mousePosition.y - y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-
-        // A força de atração depende da distância (menor atração quando próximo demais)
-        let attractionForce = 0;
-
-        if (distance < 200) {
-          // Atração: mais forte entre 50 e 150 pixels, mais fraca quando muito perto ou muito longe
-          attractionForce = Math.min(0.09, 0.35 / (1 + Math.exp(-(distance - 100) / 20)));
-
-          // Calcular novas velocidades baseadas na força de atração
-          const angle = Math.atan2(dy, dx);
-          node.vx += attractionForce * Math.cos(angle);
-          node.vy += attractionForce * Math.sin(angle);
-
-          // Limitar velocidade máxima
-          const speed = Math.sqrt(node.vx * node.vx + node.vy * node.vy);
-          if (speed > 1.8) {
-            node.vx = (node.vx / speed) * 1.8;
-            node.vy = (node.vy / speed) * 1.8;
-          }
-        }
-
-        // Aplicar atrito natural para evitar aceleração infinita
-        node.vx *= 0.99;
-        node.vy *= 0.99;
-
-        // Retornar nó atualizado
-        return {
+        updatedNodes.push({
           ...node,
-          x,
-          y,
+          x, y, vx, vy,
+          opacity,
           fadeState,
-          fadeTimer,
-          opacity
-        };
-      });
+          fadeTimer
+        });
+      }
+
+      // Manter os outros nós sem alteração
+      for (let i = maxNodesToProcess; i < prevNodes.length; i++) {
+        updatedNodes.push(prevNodes[i]);
+      }
 
       return updatedNodes;
     });
-  }, [dimensions, mousePosition]);
+  }, [dimensions]);
 
   // Desenha os nós e conexões no canvas
   const drawNodesAndConnections = useCallback(() => {

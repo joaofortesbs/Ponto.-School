@@ -6,36 +6,56 @@ import { supabase } from "./supabase";
  */
 export const checkAuthentication = async (): Promise<boolean> => {
   try {
-    // Primeiro verificar localStorage para resposta imediata
+    // Verificar cache local para resposta instantânea
     const cachedStatus = localStorage.getItem('auth_status');
-    
-    // Se temos estado armazenado recente, usar para resposta rápida
     const cacheTime = localStorage.getItem('auth_cache_time');
     const now = Date.now();
     
-    if (cachedStatus === 'authenticated' && cacheTime && (now - parseInt(cacheTime)) < 15 * 60 * 1000) {
-      // Cache válido por 15 minutos, verificar em background
-      setTimeout(async () => {
-        try {
-          const { data } = await supabase.auth.getSession();
-          if (!!data.session !== (cachedStatus === 'authenticated')) {
-            // Atualizar cache se houve mudança
-            localStorage.setItem('auth_status', !!data.session ? 'authenticated' : 'unauthenticated');
+    // Resposta instantânea com base no cache recente (validade de 30 minutos)
+    if (cachedStatus === 'authenticated' && cacheTime && (now - parseInt(cacheTime)) < 30 * 60 * 1000) {
+      // Verificar em background após retornar resposta
+      requestAnimationFrame(() => {
+        // Usar Promise.race para limitar tempo de espera
+        Promise.race([
+          supabase.auth.getSession(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
+        ]).then(({ data }) => {
+          if (!!data?.session !== (cachedStatus === 'authenticated')) {
+            localStorage.setItem('auth_status', !!data?.session ? 'authenticated' : 'unauthenticated');
             localStorage.setItem('auth_cache_time', now.toString());
           }
-        } catch (e) {
-          console.warn("Erro na verificação em background:", e);
-        }
-      }, 100);
+        }).catch(() => {
+          // Ignorar erros silenciosamente na verificação em background
+        });
+      });
       
       return true;
     }
     
-    // Se não temos cache válido, verificar com Supabase
-    const { data } = await supabase.auth.getSession();
-    const isAuthenticated = !!data.session;
+    // Sem cache válido, mas tentar retornar rápido com base em cache antigo
+    if (cachedStatus === 'authenticated') {
+      // Verificar em background, mas já retornar resposta positiva
+      requestAnimationFrame(() => {
+        supabase.auth.getSession().then(({ data }) => {
+          localStorage.setItem('auth_status', !!data?.session ? 'authenticated' : 'unauthenticated');
+          localStorage.setItem('auth_cache_time', now.toString());
+        }).catch(() => {});
+      });
+      
+      return true;
+    }
 
-    // Atualizar o estado no localStorage com timestamp
+    // Timeout para garantir que a verificação não bloqueie a UI
+    const authPromise = Promise.race([
+      supabase.auth.getSession(),
+      new Promise((resolve) => setTimeout(() => 
+        resolve({data: {session: null}}), 2000))
+    ]);
+
+    const { data } = await authPromise;
+    const isAuthenticated = !!data?.session;
+
+    // Atualizar cache
     localStorage.setItem('auth_checked', 'true');
     localStorage.setItem('auth_status', isAuthenticated ? 'authenticated' : 'unauthenticated');
     localStorage.setItem('auth_cache_time', now.toString());
@@ -44,15 +64,12 @@ export const checkAuthentication = async (): Promise<boolean> => {
   } catch (error) {
     console.error("Erro ao verificar autenticação:", error);
     
-    // Em caso de erro de conexão, confiar no cache se existir
+    // Em erro, confiar no cache existente
     const cachedStatus = localStorage.getItem('auth_status');
     if (cachedStatus === 'authenticated') {
       return true;
     }
     
-    // Limpar dados em caso de erro se não temos cache
-    localStorage.removeItem('auth_checked');
-    localStorage.removeItem('auth_status');
     return false;
   }
 };

@@ -10,25 +10,25 @@ import { preInitializeWebNodes } from './lib/web-persistence.ts'
 // Esta função é executada imediatamente, antes mesmo da montagem do React
 function inicializarTeiasComPrioridadeMaxima() {
   console.log("Inicializando sistema de teias com prioridade máxima");
-  
+
   try {
     // Executa sincronamente para garantir disponibilidade imediata
     preInitializeWebNodes();
-    
+
     // Método para garantir disponibilidade em páginas de autenticação
     if (window.location.pathname.includes('/login') || window.location.pathname.includes('/register')) {
       console.log("Página de autenticação detectada, preparando teias prioritárias");
-      
+
       // Adiciona um fundo temporário para melhorar a experiência visual enquanto carrega
       document.body.classList.add('auth-page-loading');
-      
+
       // Adiciona um estilo global temporário para garantir que o container das teias seja visível imediatamente
       const style = document.createElement('style');
       style.textContent = `
         .auth-page-loading {
           background: linear-gradient(135deg, rgba(0,20,39,1) 0%, rgba(41,51,92,1) 100%);
         }
-        
+
         body::before {
           content: '';
           position: fixed;
@@ -41,7 +41,7 @@ function inicializarTeiasComPrioridadeMaxima() {
         }
       `;
       document.head.appendChild(style);
-      
+
       // Remover o estilo quando a aplicação real estiver carregada
       window.addEventListener('load', () => {
         setTimeout(() => {
@@ -49,7 +49,7 @@ function inicializarTeiasComPrioridadeMaxima() {
           style.remove();
         }, 300);
       });
-      
+
       // Disparar evento de teias prontas para garantir renderização dos componentes
       setTimeout(() => {
         document.dispatchEvent(new CustomEvent('WebTeiasProntas'));
@@ -81,7 +81,7 @@ window.addEventListener('unhandledrejection', (event) => {
 
 console.log("Iniciando aplicação...");
 
-// Função para inicializar a aplicação com tratamento de erros
+// Inicializar a aplicação com otimização de renderização
 const initializeApp = () => {
   try {
     const rootElement = document.getElementById("root");
@@ -90,18 +90,67 @@ const initializeApp = () => {
       throw new Error("Elemento root não encontrado");
     }
 
-    // Renderizar a aplicação com tratamento de erros
-    ReactDOM.createRoot(rootElement).render(
-      <React.StrictMode>
+    // Desativar o StrictMode em produção para evitar renderizações duplas
+    const isDevMode = import.meta.env.MODE === 'development';
+
+    // Pré-renderizar um loading state para feedback visual imediato
+    rootElement.innerHTML = `
+      <div id="initial-loader" style="position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #000000 0%, #1a0d00 50%, #0e0500 100%); z-index: 9999;">
+        <div style="display: flex; flex-direction: column; align-items: center;">
+          <div style="width: 50px; height: 50px; border: 3px solid transparent; border-top-color: #FF6B00; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+          <p style="color: white; margin-top: 20px; font-family: system-ui, sans-serif;">Carregando...</p>
+        </div>
+      </div>
+      <style>
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      </style>
+    `;
+
+    // Pré-inicializar dados importantes
+    window.preloadStartTime = Date.now();
+
+    // Renderização otimizada usando requestIdleCallback ou fallback
+    const renderApp = () => {
+      const AppRoot = (
         <ErrorBoundary>
           <BrowserRouter>
             <App />
           </BrowserRouter>
         </ErrorBoundary>
-      </React.StrictMode>,
-    );
+      );
 
-    console.log('Aplicação inicializada com sucesso.');
+      ReactDOM.createRoot(rootElement).render(
+        isDevMode ? <React.StrictMode>{AppRoot}</React.StrictMode> : AppRoot
+      );
+
+      console.log('Aplicação inicializada com sucesso.');
+
+      // Remover o loader inicial após um breve período
+      setTimeout(() => {
+        const loader = document.getElementById('initial-loader');
+        if (loader) {
+          loader.style.opacity = '0';
+          loader.style.transition = 'opacity 0.3s ease-out';
+          setTimeout(() => loader.remove(), 300);
+        }
+      }, 200);
+    };
+
+    // Usar requestIdleCallback se disponível, ou setTimeout como fallback
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(renderApp, { timeout: 2000 });
+    } else {
+      setTimeout(renderApp, 10);
+    }
+
+    // Adicionar timeout para garantir que a UI não fique presa em carregamento
+    setTimeout(() => {
+      if (document.getElementById('initial-loader')) {
+        console.warn("Timeout de carregamento atingido. Forçando renderização.");
+        renderApp();
+      }
+    }, 5000);
+
   } catch (error) {
     console.error("Erro ao inicializar aplicação:", error);
 

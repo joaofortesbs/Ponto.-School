@@ -153,32 +153,71 @@ export function initWebPersistence(): void {
 // Função para a inicialização prioritária antes do React montar
 export function preInitializeWebNodes() {
   try {
-    // Verificar se já existe uma estrutura de teias no localStorage
-    const existingNodes = loadNodes();
-    if (existingNodes && existingNodes.length > 0) {
-      console.log("Estrutura de teias já existe no localStorage");
-    } else {
-      // Criar estrutura inicial com nós básicos
-      const initialNodes = createInitialNodes();
-      saveNodes(initialNodes);
-      console.log("Nova estrutura de teias inicializada");
+    // Verificar se a página atual é de autenticação para otimização
+    const isAuthPage = window.location.pathname.includes('/login') || 
+                      window.location.pathname.includes('/register');
+    
+    if (isAuthPage) {
+      console.log("Página de autenticação detectada, priorizando carregamento das teias");
     }
-
-    // Sinalizar que o sistema está pronto
-    document.dispatchEvent(new CustomEvent('WebTeiasProntas'));
+    
+    // Usar Promise com timeout para não bloquear a renderização
+    Promise.race([
+      new Promise((resolve) => {
+        // Verificar estrutura atual com timeout
+        const existingNodes = loadNodes();
+        if (existingNodes && existingNodes.length > 0) {
+          console.log(isAuthPage ? 
+            "Teias existentes carregadas com sucesso para auth page" : 
+            "Estrutura de teias já existe no localStorage");
+          resolve(existingNodes);
+        } else {
+          console.log(isAuthPage ? 
+            "Criando novas teias prioritárias..." : 
+            "Criando novas teias...");
+          
+          // Criar quantidade adequada de nós com base na página
+          const nodeCount = isAuthPage ? 150 : 120;
+          const initialNodes = createInitialNodes(nodeCount);
+          saveNodes(initialNodes);
+          console.log("Novas teias geradas com sucesso:", nodeCount);
+          resolve(initialNodes);
+        }
+      }),
+      // Timeout para evitar bloqueio da UI
+      new Promise((resolve) => {
+        setTimeout(() => {
+          console.log("Atualizando teias forçadamente");
+          resolve(createInitialNodes(80)); // Menos nós em caso de timeout
+        }, isAuthPage ? 200 : 400);
+      })
+    ]).then(() => {
+      // Sinalizar que o sistema está pronto
+      requestAnimationFrame(() => {
+        document.dispatchEvent(new CustomEvent('WebTeiasProntas'));
+        
+        if (isAuthPage) {
+          // Em páginas de auth, otimizar teias em background
+          setTimeout(() => {
+            try {
+              const existingNodes = loadNodes();
+              if (existingNodes && existingNodes.length > 0) {
+                console.log("Teias otimizadas em segundo plano:", existingNodes.length);
+              }
+            } catch (e) {}
+          }, 1000);
+        }
+      });
+    });
 
     console.log("Sistema de persistência visual inicializado com sucesso");
   } catch (error) {
     console.error("Erro ao inicializar sistema de persistência visual:", error);
 
-    // Em caso de erro, criar nós padrão e tentar novamente
-    try {
-      const fallbackNodes = createInitialNodes();
-      saveNodes(fallbackNodes);
-      document.dispatchEvent(new CustomEvent('WebTeiasProntas'));
-    } catch (fallbackError) {
-      console.error("Erro fatal ao inicializar sistema de persistência visual:", fallbackError);
-    }
+    // Em caso de erro, criar nós padrão básicos 
+    const fallbackNodes = createInitialNodes(50); // Menos nós em fallback
+    saveNodes(fallbackNodes);
+    document.dispatchEvent(new CustomEvent('WebTeiasProntas'));
   }
 }
 
