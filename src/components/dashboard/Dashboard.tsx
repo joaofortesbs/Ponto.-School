@@ -11,29 +11,25 @@ export default function Dashboard() {
   const [isMetricsLoading, setIsMetricsLoading] = useState(false); // Inicializado como false para carregar imediatamente
 
   useEffect(() => {
-    // Utilizando hook customizado ou serviço para carregar o perfil
+    // Carregar perfil do usuário imediatamente, sem simulação de carregamento
     const loadUserProfile = async () => {
       try {
-        // Primeiro tenta recuperar os dados em cache para renderização imediata
-        profileService.getProfileFromCache()
-          .then(cachedProfile => {
-            if (cachedProfile) {
-              setUserProfile(cachedProfile);
-            }
-          })
-          .catch(e => console.error('Erro ao recuperar perfil em cache:', e));
-        
-        // Em segundo plano, atualiza com dados do servidor
-        const { profile, error } = await profileService.getCurrentUserProfile();
-        
-        if (error) {
-          console.error('Erro ao buscar perfil:', error);
-          return;
+        // Tentar buscar do localStorage primeiro para exibição instantânea
+        const cachedProfile = localStorage.getItem('userProfile');
+        if (cachedProfile) {
+          try {
+            setUserProfile(JSON.parse(cachedProfile));
+          } catch (e) {
+            console.error('Erro ao parsear perfil em cache:', e);
+          }
         }
         
+        // Buscar do backend em segundo plano
+        const profile = await profileService.getCurrentUserProfile();
         if (profile) {
           setUserProfile(profile);
-          profileService.saveProfileToCache(profile);
+          // Atualizar cache
+          localStorage.setItem('userProfile', JSON.stringify(profile));
         }
       } catch (error) {
         console.error('Erro ao carregar perfil:', error);
