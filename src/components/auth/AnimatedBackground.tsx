@@ -272,7 +272,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
     ctx.clearRect(0, 0, dimensions.width, dimensions.height);
 
     // Desenhar conexões entre nós próximos
-    ctx.strokeStyle = 'rgba(255, 136, 0, 0.65)';
+    ctx.strokeStyle = 'rgba(255, 107, 0, 0.2)';
 
     for (let i = 0; i < nodes.length; i++) {
       const nodeA = nodes[i];
@@ -286,28 +286,19 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
         // Desenhar linha se os nós estiverem próximos
         // Aumentando a distância máxima para criar mais conexões
         if (distance < 150) {
-          // Opacidade baseada na distância e na opacidade dos nós - mais intensa
-          const opacity = (1 - distance / 150) * 0.6 * (nodeA.opacity + nodeB.opacity) / 1.5;
-          const glow = (1 - distance / 150) * 0.8;
-          
-          // Efeito de brilho (sombra)
-          ctx.shadowBlur = 5 + Math.random() * 3;
-          ctx.shadowColor = `rgba(255, 136, 0, ${glow * 0.7})`;
-          
+          // Opacidade baseada na distância e na opacidade dos nós
+          const opacity = (1 - distance / 150) * 0.2 * (nodeA.opacity + nodeB.opacity) / 2;
           ctx.beginPath();
           ctx.moveTo(nodeA.x, nodeA.y);
           ctx.lineTo(nodeB.x, nodeB.y);
-          ctx.strokeStyle = `rgba(255, 136, 0, ${opacity})`;
-          ctx.lineWidth = 0.8;
+          ctx.strokeStyle = `rgba(255, 107, 0, ${opacity})`;
+          ctx.lineWidth = 0.5;
           ctx.stroke();
-          
-          // Remover sombra após o desenho desta linha
-          ctx.shadowBlur = 0;
         }
       }
     }
 
-    // Efeito especial: mais conexões perto do cursor com brilho intensificado
+    // Efeito especial: mais conexões perto do cursor
     const cursorRange = 200; // Aumentando ainda mais o alcance do cursor
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i];
@@ -316,65 +307,40 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
       const distanceToMouse = Math.sqrt(dx * dx + dy * dy);
 
       if (distanceToMouse < cursorRange) {
-        const opacity = (1 - distanceToMouse / cursorRange) * 0.7; // Opacidade muito mais intensa
-        const glowIntensity = (1 - distanceToMouse / cursorRange) * 0.9;
-        
-        // Efeito de brilho intenso perto do cursor
-        ctx.shadowBlur = 8 + (1 - distanceToMouse / cursorRange) * 7;
-        ctx.shadowColor = `rgba(255, 136, 0, ${glowIntensity})`;
-        
+        const opacity = (1 - distanceToMouse / cursorRange) * 0.18; // Aumentando opacidade
         ctx.beginPath();
         ctx.moveTo(node.x, node.y);
         ctx.lineTo(mousePosition.x, mousePosition.y);
-        ctx.strokeStyle = `rgba(255, 136, 0, ${opacity})`;
-        ctx.lineWidth = 0.9;
+        ctx.strokeStyle = `rgba(255, 107, 0, ${opacity})`;
+        ctx.lineWidth = 0.4;
         ctx.stroke();
-        
-        // Remover sombra após o desenho
-        ctx.shadowBlur = 0;
 
-        // Adicionar conexões extras entre nós próximos ao cursor com efeito pulsante
+        // Adicionar conexões extras entre nós próximos ao cursor
         for (let j = i + 1; j < nodes.length; j++) {
           const nodeB = nodes[j];
           const dxB = nodeB.x - mousePosition.x;
           const dyB = nodeB.y - mousePosition.y;
           const distanceBToMouse = Math.sqrt(dxB * dxB + dyB * dyB);
 
-          if (distanceBToMouse < cursorRange && Math.random() > 0.6) {
-            const opacityB = (1 - Math.max(distanceToMouse, distanceBToMouse) / cursorRange) * 0.55;
-            const glowB = (1 - Math.max(distanceToMouse, distanceBToMouse) / cursorRange) * 0.8;
-            
-            // Efeito de sombra pulsante
-            ctx.shadowBlur = 5 + Math.sin(Date.now() * 0.005) * 3;
-            ctx.shadowColor = `rgba(255, 136, 0, ${glowB})`;
-            
+          if (distanceBToMouse < cursorRange && Math.random() > 0.7) {
+            const opacityB = (1 - Math.max(distanceToMouse, distanceBToMouse) / cursorRange) * 0.12;
             ctx.beginPath();
             ctx.moveTo(node.x, node.y);
             ctx.lineTo(nodeB.x, nodeB.y);
-            ctx.strokeStyle = `rgba(255, 136, 0, ${opacityB})`;
-            ctx.lineWidth = 0.7;
+            ctx.strokeStyle = `rgba(255, 107, 0, ${opacityB})`;
+            ctx.lineWidth = 0.3;
             ctx.stroke();
-            
-            // Remover sombra
-            ctx.shadowBlur = 0;
           }
         }
       }
     }
 
-    // Desenhar nós com efeito de brilho
+    // Desenhar nós
     nodes.forEach(node => {
-      // Adicionar brilho aos nós
-      ctx.shadowBlur = 5 + Math.random() * 3;
-      ctx.shadowColor = `rgba(255, 136, 0, ${node.opacity * 0.8})`;
-      
       ctx.beginPath();
       ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255, 136, 0, ${node.opacity * 1.5})`; // Cor mais intensa
+      ctx.fillStyle = `rgba(255, 107, 0, ${node.opacity})`;
       ctx.fill();
-      
-      // Remover sombra após desenhar o nó
-      ctx.shadowBlur = 0;
     });
   }, [nodes, dimensions, mousePosition]);
 
@@ -455,51 +421,20 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
     };
   }, [updateNodePositions, drawNodesAndConnections]);
 
-  // Adicionar algumas partículas brilhantes fixas para aumentar o efeito visual
-  const particles = [];
-  for (let i = 0; i < 15; i++) {
-    const posX = Math.random() * 100;
-    const posY = Math.random() * 100;
-    const size = 3 + Math.random() * 5;
-    const delay = Math.random() * 5;
-    const duration = 4 + Math.random() * 4;
-    
-    particles.push(
-      <div 
-        key={`particle-${i}`}
-        className="auth-particle animate-web-glow"
-        style={{
-          left: `${posX}%`,
-          top: `${posY}%`,
-          width: `${size}px`,
-          height: `${size}px`,
-          animationDelay: `${delay}s`,
-          animationDuration: `${duration}s`,
-          opacity: 0.2 + Math.random() * 0.6
-        }}
-      />
-    );
-  }
-
   return (
-    <div className="absolute inset-0 overflow-hidden z-5">
-      {/* Partículas decorativas */}
-      {particles}
-      
+    <div className="absolute inset-0 overflow-hidden">
       <canvas
         ref={canvasRef}
         width={dimensions.width}
         height={dimensions.height}
-        className="absolute top-0 left-0 w-full h-full z-10"
+        className="absolute top-0 left-0 w-full h-full z-0"
         style={{ 
-          pointerEvents: 'auto', // Permitir interações com o mouse
+          pointerEvents: 'none',
           touchAction: 'none'
         }}
         onClick={handleCanvasClick}
       />
-      <div className="relative z-20">
-        {children}
-      </div>
+      {children}
     </div>
   );
 }
