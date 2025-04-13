@@ -396,3 +396,46 @@
 .animate-floating-node {
   animation: floating-node 8s ease-in-out infinite;
 }
+
+@keyframes glowPulse {
+  0% {
+    opacity: 0.3;
+    transform: scale(0.98);
+    filter: brightness(0.9);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.03);
+    filter: brightness(1.1);
+  }
+  100% {
+    opacity: 0.3;
+    transform: scale(0.98);
+    filter: brightness(0.9);
+  }
+}
+
+.animate-glow-pulse {
+  animation: glowPulse 12s ease-in-out infinite;
+}
+
+@keyframes ultraGradient {
+  0% {
+    background-position: 0% 50%;
+    background-size: 150% 150%;
+  }
+  50% {
+    background-position: 100% 50%;
+    background-size: 200% 200%;
+  }
+  100% {
+    background-position: 0% 50%;
+    background-size: 150% 150%;
+  }
+}
+
+.animate-ultra-gradient {
+  animation: ultraGradient 25s ease infinite;
+  background-size: 150% 150%;
+  transition: all 1s ease-in-out;
+}
