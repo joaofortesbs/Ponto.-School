@@ -50,8 +50,9 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
       {/* Overlay para garantir fundo mínimo mesmo se AnimatedBackground falhar */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#001427] to-[#0A2540] z-0"></div>
 
-      {/* Fundo com efeito de gradiente sofisticado preto e laranja (agora renderizado primeiro, debaixo das teias) */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#000000] via-[#1a0d00] to-[#0e0500] opacity-85 z-0 animate-gradient"></div>
+      {/* Fundo com efeito de gradiente sofisticado preto do lado esquerdo e laranja no canto inferior direito */}
+      <div className="absolute inset-0 bg-gradient-to-r from-[#000000] via-[#0A0A0A] to-[#1a0d00] opacity-85 z-0 animate-gradient">
+        <div className="absolute bottom-0 right-0 w-1/2 h-1/2 bg-gradient-to-tr from-[#FF6B00]/40 to-transparent rounded-tl-full blur-3xl"></div>dient"></div>
 
       {/* Efeitos de luz/brilho no fundo */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
