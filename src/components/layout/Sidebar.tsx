@@ -24,121 +24,35 @@ export default function Sidebar({
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
-    // Obter a imagem padrão da configuração global ou usar o valor padrão
-    const defaultLogo =
-      window.PONTO_SCHOOL_CONFIG?.defaultLogo ||
-      "/images/ponto-school-logo.png";
-
-    // Definir logo imediatamente para evitar atraso na renderização
-    setCustomLogo(defaultLogo);
-
-    // Função para carregar e configurar a logo
-    const loadAndConfigureLogo = (logoUrl = null) => {
-      try {
-        // Se recebemos uma URL específica do evento, usá-la
-        if (logoUrl) {
-          setCustomLogo(logoUrl);
-          return;
-        }
-
-        // Verificar primeiro a logo específica da Ponto School
-        const pontoSchoolLogo = localStorage.getItem("pontoSchoolLogo");
-        if (
-          pontoSchoolLogo &&
-          pontoSchoolLogo !== "null" &&
-          pontoSchoolLogo !== "undefined"
-        ) {
-          setCustomLogo(pontoSchoolLogo);
-          if (window.PONTO_SCHOOL_CONFIG) {
-            window.PONTO_SCHOOL_CONFIG.logoLoaded = true;
-            window.PONTO_SCHOOL_CONFIG.defaultLogo = pontoSchoolLogo;
-          }
-          return;
-        }
-
-        // Verificar se já existe uma logo personalizada no localStorage
-        const savedLogo = localStorage.getItem("sidebarCustomLogo");
-        if (savedLogo && savedLogo !== "null" && savedLogo !== "undefined") {
-          setCustomLogo(savedLogo);
-          if (window.PONTO_SCHOOL_CONFIG) {
-            window.PONTO_SCHOOL_CONFIG.logoLoaded = true;
-          }
-        } else {
-          // Se não existir, usar a logo padrão e salvar no localStorage
-          setCustomLogo(defaultLogo);
-          localStorage.setItem("sidebarCustomLogo", defaultLogo);
-          localStorage.setItem("pontoSchoolLogo", defaultLogo);
-          localStorage.setItem("logoPreloaded", "true");
-        }
-      } catch (e) {
-        console.warn("Erro ao acessar localStorage no Sidebar", e);
-        // Usar a logo padrão mesmo se não conseguir acessar o localStorage
-        setCustomLogo(defaultLogo);
-      }
-    };
-
-    // Pré-carregar a imagem com alta prioridade para garantir que esteja disponível
+    // Definir o caminho da imagem enviada pelo usuário
+    const fixedLogoPath = "/images/ponto-school-logo.png";
+    
+    // Fazer uma pré-carga da imagem para garantir disponibilidade
     const preloadImg = new Image();
-    preloadImg.src = defaultLogo;
+    preloadImg.src = fixedLogoPath;
     preloadImg.fetchPriority = "high";
     preloadImg.crossOrigin = "anonymous";
-
-    preloadImg.onload = () => {
-      console.log("Logo carregada com sucesso no Sidebar");
-      loadAndConfigureLogo();
-      document.dispatchEvent(
-        new CustomEvent("logoLoaded", { detail: defaultLogo }),
-      );
-    };
-
-    // Garantir que a imagem seja carregada mesmo se houver erro
-    preloadImg.onerror = () => {
-      console.error("Erro ao carregar logo no Sidebar, tentando novamente...");
-
-      // Tentar novamente com um timestamp para evitar cache
-      setTimeout(() => {
-        const retryImg = new Image();
-        retryImg.src = defaultLogo + "?retry=" + Date.now();
-        retryImg.fetchPriority = "high";
-
-        retryImg.onload = () => {
-          console.log("Logo carregada com sucesso após retry no Sidebar");
-          setCustomLogo(retryImg.src);
-          localStorage.setItem("sidebarCustomLogo", retryImg.src);
-          localStorage.setItem("pontoSchoolLogo", retryImg.src);
-          localStorage.setItem("logoPreloaded", "true");
-          document.dispatchEvent(
-            new CustomEvent("logoLoaded", { detail: retryImg.src }),
-          );
-        };
-
-        retryImg.onerror = () => {
-          console.error("Falha definitiva ao carregar logo no Sidebar");
-          // Usar texto como fallback (null indica para usar o texto)
-          setCustomLogo(null);
-          document.dispatchEvent(new CustomEvent("logoLoadFailed"));
-        };
-      }, 1000);
-    };
-
-    // Verificar se a logo já foi carregada por outro componente
-    if (window.PONTO_SCHOOL_CONFIG?.logoLoaded) {
-      loadAndConfigureLogo(window.PONTO_SCHOOL_CONFIG.defaultLogo);
+    
+    // Atualizar a configuração global
+    if (window.PONTO_SCHOOL_CONFIG) {
+      window.PONTO_SCHOOL_CONFIG.defaultLogo = fixedLogoPath;
+      window.PONTO_SCHOOL_CONFIG.logoLoaded = true;
     }
-
-    // Adicionar listeners para eventos de carregamento da logo
-    const handleLogoLoaded = (event) => {
-      console.log("Logo loaded event received in Sidebar", event.detail);
-      loadAndConfigureLogo(event.detail);
-    };
-
-    const handleLogoLoadFailed = () => {
-      console.log("Logo load failed event received in Sidebar");
-      setCustomLogo(null);
-    };
-
-    document.addEventListener("logoLoaded", handleLogoLoaded);
-    document.addEventListener("logoLoadFailed", handleLogoLoadFailed);
+    
+    // Atualizar o localStorage
+    try {
+      localStorage.setItem("sidebarCustomLogo", fixedLogoPath);
+      localStorage.setItem("pontoSchoolLogo", fixedLogoPath);
+      localStorage.setItem("customLogo", fixedLogoPath);
+      localStorage.setItem("logoPreloaded", "true");
+    } catch (e) {
+      console.warn("Erro ao acessar localStorage no Sidebar", e);
+    }
+    
+    // Notificar outros componentes
+    document.dispatchEvent(
+      new CustomEvent("logoLoaded", { detail: fixedLogoPath })
+    );
 
     const handleResize = () => {
       if (window.innerWidth < 1024) {
@@ -215,39 +129,20 @@ export default function Sidebar({
               sidebarCollapsed ? "opacity-0 w-0" : "opacity-100",
             )}
           >
-            {customLogo ? (
-              <div className="h-16 flex items-center justify-center w-full">
-                <img
-                  src={customLogo + "?v=" + Date.now()}
-                  alt="Logo Ponto School"
-                  className="h-12 w-auto object-contain"
-                  loading="eager"
-                  fetchpriority="high"
-                  onError={(e) => {
-                    console.error("Erro ao renderizar logo no Sidebar");
-                    // Tentar carregar a logo diretamente do caminho padrão
-                    e.currentTarget.src = "/images/ponto-school-logo.png?retry=" + Date.now();
-                    
-                    // Se ainda falhar, remover a imagem e mostrar o texto
-                    e.currentTarget.onerror = () => {
-                      // Verificar se o elemento ainda existe antes de acessar style
-                      if (e.currentTarget && e.currentTarget.style) {
-                        e.currentTarget.style.display = "none";
-                      }
-                      setCustomLogo(null);
-                      document.dispatchEvent(new CustomEvent("logoLoadFailed"));
-                    };
-                  }}
-                />
-              </div>
-            ) : (
-              <>
-                <span className="font-bold text-lg text-[#001427] dark:text-white logo-fallback">
-                  Ponto<span className="orange">.</span>
-                  <span className="blue">School</span>
-                </span>
-              </>
-            )}
+            <div className="h-16 flex items-center justify-center w-full">
+              <img
+                src="/images/ponto-school-logo.png"
+                alt="Logo Ponto School"
+                className="h-12 w-auto object-contain"
+                loading="eager"
+                fetchpriority="high"
+                onError={(e) => {
+                  console.error("Erro ao renderizar logo no Sidebar");
+                  // Tentar novamente com um timestamp para evitar cache
+                  e.currentTarget.src = "/images/ponto-school-logo.png?retry=" + Date.now();
+                }}
+              />
+            </div>
           </div>
           <Button
             variant="outline"
