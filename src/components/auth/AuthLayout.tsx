@@ -13,41 +13,33 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
 
   // Efeito para garantir que as teias sejam carregadas antes do conteúdo principal
   useEffect(() => {
-    // Mostrar conteúdo imediatamente para evitar tela em branco
-    setContentReady(true);
-    
-    // Se já estiver marcado como pronto no localStorage, não precisamos fazer nada
-    const hasInitialized = localStorage.getItem('_teiasInitialized');
-    if (hasInitialized === 'true') {
-      window._teiasReady = true;
+    // Verificar se o evento WebTeiasProntas já foi disparado anteriormente
+    if (window._teiasReady === true) {
+      setContentReady(true);
       return;
     }
 
-    // Escuta o evento personalizado que indica que as teias estão prontas
-    const handleTeiasReady = () => {
+    // Força renderização do conteúdo após um curto tempo
+    // mesmo que as teias ainda não estejam prontas (para falha segura)
+    const timer = setTimeout(() => {
       setContentReady(true);
       window._teiasReady = true;
-      localStorage.setItem('_teiasInitialized', 'true');
+    }, 150);
+
+    // Escuta o evento personalizado que indica que as teias estão prontas
+    const handleTeiasReady = () => {
+      clearTimeout(timer);
+      setContentReady(true);
+      window._teiasReady = true;
     };
 
-    // Registrar listener para o evento de teias prontas
     document.addEventListener('WebTeiasProntas', handleTeiasReady);
 
-    // Disparar evento para forçar atualização das teias
+    // Dispara um evento para solicitar atualização imediata das teias
     document.dispatchEvent(new CustomEvent('ForceWebTeiaUpdate'));
 
-    // Garantir que o conteúdo seja renderizado mesmo se as teias não carregarem
-    const backupTimer = setTimeout(() => {
-      if (!window._teiasReady) {
-        setContentReady(true);
-        window._teiasReady = true;
-        localStorage.setItem('_teiasInitialized', 'true');
-        console.warn("Renderização de teias forçada após timeout");
-      }
-    }, 300);
-
     return () => {
-      clearTimeout(backupTimer);
+      clearTimeout(timer);
       document.removeEventListener('WebTeiasProntas', handleTeiasReady);
     };
   }, []);
@@ -58,17 +50,18 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
       {/* Overlay para garantir fundo mínimo mesmo se AnimatedBackground falhar */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#001427] to-[#0A2540] z-0"></div>
 
-      {/* AnimatedBackground como primeiro componente a ser renderizado */}
-      <AnimatedBackground>
-        {/* Fundo com efeito de gradiente sofisticado preto e laranja */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#000000] via-[#1a0d00] to-[#0e0500] opacity-85 z-0 animate-gradient"></div>
+      {/* Fundo com efeito de gradiente sofisticado preto e laranja (agora abaixo do AnimatedBackground) */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#000000] via-[#1a0d00] to-[#0e0500] opacity-95 z-0 animate-gradient"></div>
 
-        {/* Efeitos de luz/brilho no fundo */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-          <div className="absolute -top-[40%] -left-[20%] w-[110%] h-[110%] rounded-full bg-gradient-to-r from-[#FF6B00]/15 to-transparent blur-3xl transform rotate-12 animate-pulse-soft"></div>
-          <div className="absolute -bottom-[40%] -right-[20%] w-[110%] h-[110%] rounded-full bg-gradient-to-l from-[#FF6B00]/20 to-transparent blur-3xl transform -rotate-12 animate-pulse-soft"></div>
-          <div className="absolute top-[20%] right-[10%] w-[60%] h-[60%] rounded-full bg-gradient-to-tl from-[#FF8800]/10 to-transparent blur-3xl transform animate-floating-node"></div>
-        </div>
+      {/* Efeitos de luz/brilho no fundo */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
+        <div className="absolute -top-[40%] -left-[20%] w-[110%] h-[110%] rounded-full bg-gradient-to-r from-[#FF6B00]/15 to-transparent blur-3xl transform rotate-12 animate-pulse-soft"></div>
+        <div className="absolute -bottom-[40%] -right-[20%] w-[110%] h-[110%] rounded-full bg-gradient-to-l from-[#FF6B00]/20 to-transparent blur-3xl transform -rotate-12 animate-pulse-soft"></div>
+        <div className="absolute top-[20%] right-[10%] w-[60%] h-[60%] rounded-full bg-gradient-to-tl from-[#FF8800]/10 to-transparent blur-3xl transform animate-floating-node"></div>
+      </div>
+      
+      {/* AnimatedBackground agora por cima do gradiente */}
+      <AnimatedBackground>
 
         {/* Conteúdo principal centralizado */}
         <div className="flex items-center justify-center w-full h-full z-10 relative">

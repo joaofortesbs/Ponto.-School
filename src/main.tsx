@@ -7,30 +7,26 @@ import './lib/username-initializer.ts'
 import { preInitializeWebNodes } from './lib/web-persistence.ts'
 
 // PRIORIDADE MÁXIMA: Inicializar teias antes de qualquer outro código
-// Esta função é executada imediatamente e de forma confiável
+// Esta função é executada imediatamente, antes mesmo da montagem do React
 function inicializarTeiasComPrioridadeMaxima() {
   console.log("Inicializando sistema de teias com prioridade máxima");
   
   try {
-    // Definir variável global para indicar que a inicialização começou
-    window.__teiasStarted = true;
-    
-    // Executar a pré-inicialização sincronamente
+    // Executa sincronamente para garantir disponibilidade imediata
     preInitializeWebNodes();
     
-    // Verificar se estamos em uma página de autenticação
-    const isAuthPage = window.location.pathname.includes('/login') || window.location.pathname.includes('/register');
-    if (isAuthPage) {
+    // Método para garantir disponibilidade em páginas de autenticação
+    if (window.location.pathname.includes('/login') || window.location.pathname.includes('/register')) {
       console.log("Página de autenticação detectada, preparando teias prioritárias");
       
-      // Adicionar classe ao body para estilização imediata
+      // Adiciona um fundo temporário para melhorar a experiência visual enquanto carrega
       document.body.classList.add('auth-page-loading');
       
-      // Criar e adicionar estilo temporário para garantir fundo visível
+      // Adiciona um estilo global temporário para garantir que o container das teias seja visível imediatamente
       const style = document.createElement('style');
       style.textContent = `
         .auth-page-loading {
-          background: linear-gradient(135deg, rgba(0,0,0,1) 0%, rgba(10,5,0,0.95) 100%);
+          background: linear-gradient(135deg, rgba(0,20,39,1) 0%, rgba(41,51,92,1) 100%);
         }
         
         body::before {
@@ -40,52 +36,31 @@ function inicializarTeiasComPrioridadeMaxima() {
           left: 0;
           width: 100%;
           height: 100%;
-          background: linear-gradient(135deg, rgba(0,0,0,0.98) 0%, rgba(26,13,0,0.95) 100%);
+          background: linear-gradient(135deg, rgba(0,20,39,0.95) 0%, rgba(41,51,92,0.95) 100%);
           z-index: -1;
-        }
-        
-        /* Adicionar fade-in para o corpo da página */
-        body {
-          animation: fadeIn 0.5s ease-in-out;
-        }
-        
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
         }
       `;
       document.head.appendChild(style);
       
-      // Remover o estilo quando a aplicação estiver carregada
+      // Remover o estilo quando a aplicação real estiver carregada
       window.addEventListener('load', () => {
         setTimeout(() => {
           document.body.classList.remove('auth-page-loading');
-          // Manter o estilo por um tempo para garantir transição suave
-          setTimeout(() => {
-            style.remove();
-          }, 500);
+          style.remove();
         }, 300);
       });
       
-      // Garantir que o evento de teias prontas seja disparado
-      requestAnimationFrame(() => {
+      // Disparar evento de teias prontas para garantir renderização dos componentes
+      setTimeout(() => {
         document.dispatchEvent(new CustomEvent('WebTeiasProntas'));
-      });
+      }, 100);
     }
-    
-    // Marcar como inicializado
-    window.__teiasInitialized = true;
   } catch (error) {
     console.error("Erro na inicialização das teias:", error);
-    
-    // Mesmo em caso de erro, garantimos a renderização
-    requestAnimationFrame(() => {
-      document.dispatchEvent(new CustomEvent('WebTeiasProntas'));
-    });
   }
 }
 
-// Executar inicialização prioritária imediatamente
+// Executar inicialização prioritária
 inicializarTeiasComPrioridadeMaxima();
 
 // Configuração de tratamento global de erros

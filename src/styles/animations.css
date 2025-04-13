@@ -397,68 +397,48 @@
   animation: floating-node 8s ease-in-out infinite;
 }
 
-@keyframes floating {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
-}
-
-.animate-floating {
-  animation: floating 3s ease-in-out infinite;
-}
-
-@keyframes fadeInFromBottom {
-  0% { 
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  100% { 
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in-bottom {
-  animation: fadeInFromBottom 0.6s ease-out forwards;
-  will-change: opacity, transform;
-}
-
-@keyframes authFormAppear {
-  0% {
-    opacity: 0;
-    backdrop-filter: blur(0px);
-    transform: scale(0.95);
-  }
-  100% {
-    opacity: 1;
-    backdrop-filter: blur(20px);
-    transform: scale(1);
-  }
-}
-
-.auth-form-appear {
-  animation: authFormAppear 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  will-change: opacity, transform, backdrop-filter;
-}
-
-@keyframes nodePulse {
-  0% {
-    box-shadow: 0 0 5px 1px rgba(255, 107, 0, 0.4), 0 0 8px 3px rgba(255, 107, 0, 0.2);
-    opacity: 0.3;
+/* Efeito de brilho específico para teias na tela de autenticação */
+@keyframes web-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px rgba(255, 107, 0, 0.4));
   }
   50% {
-    box-shadow: 0 0 15px 5px rgba(255, 107, 0, 0.6), 0 0 20px 10px rgba(255, 107, 0, 0.3);
-    opacity: 0.7;
-  }
-  100% {
-    box-shadow: 0 0 5px 1px rgba(255, 107, 0, 0.4), 0 0 8px 3px rgba(255, 107, 0, 0.2);
-    opacity: 0.3;
+    filter: drop-shadow(0 0 12px rgba(255, 107, 0, 0.7));
   }
 }
 
-.animate-node-pulse {
-  animation: nodePulse 3s ease-in-out infinite;
-  animation-fill-mode: both;
-  will-change: opacity, box-shadow;
-  transform: translateZ(0); /* Força aceleração de hardware */
+.animate-web-glow {
+  animation: web-glow 3s ease-in-out infinite;
+}
+
+/* Efeito de partículas brilhantes para a tela de login/cadastro */
+@keyframes particle-float {
+  0%, 100% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+    opacity: 0.6;
+  }
+  25% {
+    transform: translateY(-10px) translateX(5px) rotate(5deg);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-5px) translateX(10px) rotate(10deg);
+    opacity: 0.8;
+  }
+  75% {
+    transform: translateY(5px) translateX(5px) rotate(5deg);
+    opacity: 0.9;
+  }
+}
+
+.auth-particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: rgba(255, 136, 0, 0.5);
+  filter: blur(1px);
+  box-shadow: 0 0 8px rgba(255, 136, 0, 0.7);
+  pointer-events: none;
+  animation: particle-float 6s ease-in-out infinite;
 }

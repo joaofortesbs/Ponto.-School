@@ -1,20 +1,14 @@
-import React, { useEffect, useState, useRef } from "react";
-import { motion } from "framer-motion";
-import { persistWebs, getStoredWebs } from "@/lib/web-persistence";
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import { saveNodes, loadNodes } from "@/lib/web-persistence";
 
-interface WebNode {
-  id: number;
+interface Node {
   x: number;
   y: number;
-  connections: number[];
-  opacity: number;
-  size: number;
-  glow: boolean;
-}
-
-interface WebConnection {
-  id1: number;
-  id2: number;
+  vx: number;
+  vy: number;
+  radius: number;
+  fadeState: 'in' | 'out' | 'stable';
+  fadeTimer: number;
   opacity: number;
 }
 
@@ -23,309 +17,489 @@ interface AnimatedBackgroundProps {
 }
 
 export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
-  const [webNodes, setWebNodes] = useState<WebNode[]>([]);
-  const [webConnections, setWebConnections] = useState<WebConnection[]>([]);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [isClicking, setIsClicking] = useState(false);
-  const canvasRef = useRef<HTMLDivElement>(null);
-  const isAuthPage = window.location.pathname.includes('/login') || window.location.pathname.includes('/register');
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [nodes, setNodes] = useState<Node[]>([]);
+  const [dimensions, setDimensions] = useState({ width: window.innerWidth || 1280, height: window.innerHeight || 800 });
+  const [mousePosition, setMousePosition] = useState({ x: dimensions.width / 2, y: dimensions.height / 2 });
+  const [isReady, setIsReady] = useState(false);
+  const requestRef = useRef<number | null>(null);
+  const previousTimeRef = useRef<number | null>(null);
+  const isInitializedRef = useRef(false);
 
-  // Função principal para inicializar teias, otimizada para carregar rapidamente
-  useEffect(() => {
-    // Criar fallback imediato para garantir renderização
-    const fallbackTimer = setTimeout(() => {
-      if (!isInitialized) {
-        console.log("Página de autenticação detectada, priorizando carregamento das teias");
-        initializeWebsImmediately();
-      }
-    }, 100);
+  // Função para criar novos nós
+  const createNodes = useCallback(() => {
+    console.log("Criando novas teias...");
 
-    // Função para inicialização imediata
-    const initializeWebsImmediately = () => {
-      // Tentar carregar teias do armazenamento local primeiro
-      const storedWebs = getStoredWebs();
+    // Certifique-se de que temos dimensões válidas
+    const { width, height } = dimensions.width === 0 ? { width: window.innerWidth || 1280, height: window.innerHeight || 800 } : dimensions;
 
-      if (storedWebs && storedWebs.nodes.length > 0) {
-        setWebNodes(storedWebs.nodes);
-        setWebConnections(storedWebs.connections);
-        setIsInitialized(true);
+    const minNodeCount = 400; // Aumentando para pelo menos 400 nós
+    const calculatedNodeCount = Math.floor((width * height) / 2500); // Densidade muito mais aumentada
+    const nodeCount = Math.max(minNodeCount, calculatedNodeCount);
 
-        // Disparar evento para indicar que as teias estão prontas
-        document.dispatchEvent(new CustomEvent('WebTeiasProntas'));
-        console.log("Teias carregadas do localStorage:", storedWebs.nodes.length);
-      } else {
-        // Se não houver dados salvos, gerar novas teias
-        console.log("Criando novas teias prioritárias...");
-        generateWebNodes(true);
-      }
-    };
+    // Margem mínima para garantir que as teias não saiam da tela
+    const margin = 2;
 
-    // Iniciar imediatamente se for página de autenticação
-    if (isAuthPage) {
-      initializeWebsImmediately();
-    } else {
-      // Para outras páginas, podemos carregar normalmente
-      const storedWebs = getStoredWebs();
-
-      if (storedWebs && storedWebs.nodes.length > 0) {
-        setWebNodes(storedWebs.nodes);
-        setWebConnections(storedWebs.connections);
-        setIsInitialized(true);
-        document.dispatchEvent(new CustomEvent('WebTeiasProntas'));
-      } else {
-        generateWebNodes(false);
-      }
-    }
-
-    return () => clearTimeout(fallbackTimer);
-  }, [isAuthPage]);
-
-  // Função otimizada para gerar os nós da teia
-  const generateWebNodes = (isPriority = false) => {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    const nodeCount = isPriority ? 150 : 120; // Mais nós para páginas de autenticação
-    const newWebNodes: WebNode[] = [];
-
-    // Garantir que os nós não saiam da tela
-    const margin = Math.min(width, height) * 0.05; // 5% de margem
-
+    const newNodes: Node[] = [];
     for (let i = 0; i < nodeCount; i++) {
-      // Posicionar os nós dentro dos limites, considerando as margens
       const x = margin + Math.random() * (width - 2 * margin);
       const y = margin + Math.random() * (height - 2 * margin);
+      const radius = Math.random() * 1.5 + 0.5;
 
-      newWebNodes.push({
-        id: i,
+      // Fade state aleatório para animação suave de aparecimento/desaparecimento
+      const fadeState = Math.random() > 0.7 ? 'out' : Math.random() > 0.5 ? 'in' : 'stable';
+      const fadeTimer = Math.floor(Math.random() * 500) + 100;
+      const opacity = fadeState === 'in' ? Math.random() * 0.3 : 
+                     fadeState === 'out' ? 0.1 + Math.random() * 0.3 : 
+                     0.2 + Math.random() * 0.3;
+
+      newNodes.push({
         x,
         y,
-        connections: [],
-        opacity: 0.15 + Math.random() * 0.35, // Mais visível
-        size: 1.5 + Math.random() * 2.5, // Tamanho variável maior
-        glow: Math.random() > 0.8, // 20% dos nós têm brilho
+        vx: (Math.random() - 0.5) * 0.2,
+        vy: (Math.random() - 0.5) * 0.2,
+        radius,
+        fadeState,
+        fadeTimer,
+        opacity
       });
     }
 
-    // Criar conexões entre os nós
-    const connections: WebConnection[] = [];
-    const maxDistance = Math.min(width, height) * 0.25; // 25% da menor dimensão
+    // Atualiza o estado e salva os nós no localStorage
+    setNodes(newNodes);
+    console.log(`Novas teias geradas com sucesso:`, newNodes.length);
+    saveNodes(newNodes);
 
-    for (let i = 0; i < nodeCount; i++) {
-      const node1 = newWebNodes[i];
-      // Cada nó se conecta a até 3 outros nós
-      const maxConnections = 2 + Math.floor(Math.random() * 2);
-      let connectionsCount = 0;
+    // Disparar evento indicando que as teias estão prontas
+    document.dispatchEvent(new CustomEvent('WebTeiasProntas'));
 
-      for (let j = 0; j < nodeCount && connectionsCount < maxConnections; j++) {
-        if (i !== j) {
-          const node2 = newWebNodes[j];
-          const dx = node1.x - node2.x;
-          const dy = node1.y - node2.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
+    return newNodes;
+  }, [dimensions]);
 
-          if (distance < maxDistance) {
-            // Não repetir conexões já existentes
-            if (!connections.some(c =>
-              (c.id1 === i && c.id2 === j) ||
-              (c.id1 === j && c.id2 === i)
-            )) {
-              connections.push({
-                id1: i,
-                id2: j,
-                opacity: 0.1 + Math.random() * 0.2, // Ajustado para melhor visibilidade
-              });
+  // Tentar obter nós salvos ou criar novos
+  const initializeNodes = useCallback(() => {
+    if (isInitializedRef.current) return;
 
-              node1.connections.push(j);
-              newWebNodes[j].connections.push(i);
-              connectionsCount++;
-            }
+    // Garantir que temos dimensões válidas
+    const { width, height } = dimensions.width === 0 ? 
+      { width: window.innerWidth || 1280, height: window.innerHeight || 800 } : dimensions;
+
+    try {
+      const storedNodes = loadNodes();
+
+      // Se temos nós salvos, adaptá-los às dimensões atuais
+      if (storedNodes && Array.isArray(storedNodes) && storedNodes.length > 0) {
+        // Margem mínima para garantir que as teias não saiam da tela
+        const margin = 2;
+
+        // Adapta os nós armazenados ao tamanho atual da tela
+        const adaptedNodes = storedNodes.map(node => ({
+          ...node,
+          x: Math.min(Math.max(margin, (node.x / 100) * width), width - margin),
+          y: Math.min(Math.max(margin, (node.y / 100) * height), height - margin),
+        }));
+
+        setNodes(adaptedNodes);
+        console.log("Teias otimizadas em segundo plano:", adaptedNodes.length);
+
+        // Atualizar o salvamento para refletir as novas dimensões
+        saveNodes(adaptedNodes);
+        isInitializedRef.current = true;
+        setIsReady(true);
+
+        // Disparar evento indicando que as teias estão prontas
+        document.dispatchEvent(new CustomEvent('WebTeiasProntas'));
+
+        return;
+      }
+    } catch (error) {
+      console.error("Erro ao carregar teias:", error);
+    }
+
+    // Se não temos nós salvos ou falhou o carregamento, criar novos
+    createNodes();
+    isInitializedRef.current = true;
+    setIsReady(true);
+  }, [dimensions, createNodes]);
+
+  // Inicializar as dimensões do canvas e os nós no carregamento da página
+  useEffect(() => {
+    // Dimensões iniciais
+    const updateDimensions = () => {
+      setDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+
+    // Inicializar as teias imediatamente
+    initializeNodes();
+
+    // Forçar atualização das teias quando solicitado
+    const handleForceUpdate = () => {
+      console.log("Atualizando teias forçadamente");
+      initializeNodes();
+    };
+
+    document.addEventListener('ForceWebTeiaUpdate', handleForceUpdate);
+
+    // Limpar
+    return () => {
+      window.removeEventListener('resize', updateDimensions);
+      document.removeEventListener('ForceWebTeiaUpdate', handleForceUpdate);
+      if (requestRef.current !== null) {
+        cancelAnimationFrame(requestRef.current);
+      }
+    };
+  }, [initializeNodes]);
+
+  // Atualiza a posição dos nós com base na posição do cursor
+  const updateNodePositions = useCallback(() => {
+    setNodes(prevNodes => {
+      // Margem mínima para garantir que as teias não saiam da tela
+      const margin = 2;
+
+      const updatedNodes = prevNodes.map(node => {
+        let { x, y, fadeState, fadeTimer, opacity } = node;
+
+        // Atualizar estado de fade
+        if (fadeState === 'in') {
+          opacity = Math.min(0.5, opacity + 0.002);
+          fadeTimer -= 1;
+          if (fadeTimer <= 0) {
+            fadeState = 'stable';
+            fadeTimer = Math.floor(Math.random() * 500) + 1000;
+          }
+        } else if (fadeState === 'out') {
+          opacity = Math.max(0.05, opacity - 0.002);
+          fadeTimer -= 1;
+          if (fadeTimer <= 0) {
+            fadeState = 'in';
+            fadeTimer = Math.floor(Math.random() * 300) + 200;
+          }
+        } else {
+          // Stable state
+          fadeTimer -= 1;
+          if (fadeTimer <= 0) {
+            fadeState = Math.random() > 0.5 ? 'in' : 'out';
+            fadeTimer = Math.floor(Math.random() * 300) + 200;
+          }
+        }
+
+        // Atualizar posição baseada nos vetores de velocidade
+        x += node.vx;
+        y += node.vy;
+
+        // Verificar limites da tela
+        if (x < margin) {
+          x = margin;
+          node.vx *= -1;
+        } else if (x > dimensions.width - margin) {
+          x = dimensions.width - margin;
+          node.vx *= -1;
+        }
+
+        if (y < margin) {
+          y = margin;
+          node.vy *= -1;
+        } else if (y > dimensions.height - margin) {
+          y = dimensions.height - margin;
+          node.vy *= -1;
+        }
+
+        // Calcular a distância do cursor
+        const dx = mousePosition.x - x;
+        const dy = mousePosition.y - y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // A força de atração depende da distância (menor atração quando próximo demais)
+        let attractionForce = 0;
+
+        if (distance < 200) {
+          // Atração: mais forte entre 50 e 150 pixels, mais fraca quando muito perto ou muito longe
+          attractionForce = Math.min(0.08, 0.3 / (1 + Math.exp(-(distance - 100) / 20)));
+
+          // Calcular novas velocidades baseadas na força de atração
+          const angle = Math.atan2(dy, dx);
+          node.vx += attractionForce * Math.cos(angle);
+          node.vy += attractionForce * Math.sin(angle);
+
+          // Limitar velocidade máxima
+          const speed = Math.sqrt(node.vx * node.vx + node.vy * node.vy);
+          if (speed > 1.5) {
+            node.vx = (node.vx / speed) * 1.5;
+            node.vy = (node.vy / speed) * 1.5;
+          }
+        }
+
+        // Aplicar atrito natural para evitar aceleração infinita
+        node.vx *= 0.99;
+        node.vy *= 0.99;
+
+        // Retornar nó atualizado
+        return {
+          ...node,
+          x,
+          y,
+          fadeState,
+          fadeTimer,
+          opacity
+        };
+      });
+
+      return updatedNodes;
+    });
+  }, [dimensions, mousePosition]);
+
+  // Desenha os nós e conexões no canvas
+  const drawNodesAndConnections = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Garantir que o canvas tem as dimensões corretas
+    if (canvas.width !== dimensions.width || canvas.height !== dimensions.height) {
+      canvas.width = dimensions.width;
+      canvas.height = dimensions.height;
+    }
+
+    // Limpar canvas
+    ctx.clearRect(0, 0, dimensions.width, dimensions.height);
+
+    // Desenhar conexões entre nós próximos
+    ctx.strokeStyle = 'rgba(255, 136, 0, 0.65)';
+
+    for (let i = 0; i < nodes.length; i++) {
+      const nodeA = nodes[i];
+
+      for (let j = i + 1; j < nodes.length; j++) {
+        const nodeB = nodes[j];
+        const dx = nodeA.x - nodeB.x;
+        const dy = nodeA.y - nodeB.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Desenhar linha se os nós estiverem próximos
+        // Aumentando a distância máxima para criar mais conexões
+        if (distance < 150) {
+          // Opacidade baseada na distância e na opacidade dos nós - mais intensa
+          const opacity = (1 - distance / 150) * 0.6 * (nodeA.opacity + nodeB.opacity) / 1.5;
+          const glow = (1 - distance / 150) * 0.8;
+          
+          // Efeito de brilho (sombra)
+          ctx.shadowBlur = 5 + Math.random() * 3;
+          ctx.shadowColor = `rgba(255, 136, 0, ${glow * 0.7})`;
+          
+          ctx.beginPath();
+          ctx.moveTo(nodeA.x, nodeA.y);
+          ctx.lineTo(nodeB.x, nodeB.y);
+          ctx.strokeStyle = `rgba(255, 136, 0, ${opacity})`;
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+          
+          // Remover sombra após o desenho desta linha
+          ctx.shadowBlur = 0;
+        }
+      }
+    }
+
+    // Efeito especial: mais conexões perto do cursor com brilho intensificado
+    const cursorRange = 200; // Aumentando ainda mais o alcance do cursor
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+      const dx = node.x - mousePosition.x;
+      const dy = node.y - mousePosition.y;
+      const distanceToMouse = Math.sqrt(dx * dx + dy * dy);
+
+      if (distanceToMouse < cursorRange) {
+        const opacity = (1 - distanceToMouse / cursorRange) * 0.7; // Opacidade muito mais intensa
+        const glowIntensity = (1 - distanceToMouse / cursorRange) * 0.9;
+        
+        // Efeito de brilho intenso perto do cursor
+        ctx.shadowBlur = 8 + (1 - distanceToMouse / cursorRange) * 7;
+        ctx.shadowColor = `rgba(255, 136, 0, ${glowIntensity})`;
+        
+        ctx.beginPath();
+        ctx.moveTo(node.x, node.y);
+        ctx.lineTo(mousePosition.x, mousePosition.y);
+        ctx.strokeStyle = `rgba(255, 136, 0, ${opacity})`;
+        ctx.lineWidth = 0.9;
+        ctx.stroke();
+        
+        // Remover sombra após o desenho
+        ctx.shadowBlur = 0;
+
+        // Adicionar conexões extras entre nós próximos ao cursor com efeito pulsante
+        for (let j = i + 1; j < nodes.length; j++) {
+          const nodeB = nodes[j];
+          const dxB = nodeB.x - mousePosition.x;
+          const dyB = nodeB.y - mousePosition.y;
+          const distanceBToMouse = Math.sqrt(dxB * dxB + dyB * dyB);
+
+          if (distanceBToMouse < cursorRange && Math.random() > 0.6) {
+            const opacityB = (1 - Math.max(distanceToMouse, distanceBToMouse) / cursorRange) * 0.55;
+            const glowB = (1 - Math.max(distanceToMouse, distanceBToMouse) / cursorRange) * 0.8;
+            
+            // Efeito de sombra pulsante
+            ctx.shadowBlur = 5 + Math.sin(Date.now() * 0.005) * 3;
+            ctx.shadowColor = `rgba(255, 136, 0, ${glowB})`;
+            
+            ctx.beginPath();
+            ctx.moveTo(node.x, node.y);
+            ctx.lineTo(nodeB.x, nodeB.y);
+            ctx.strokeStyle = `rgba(255, 136, 0, ${opacityB})`;
+            ctx.lineWidth = 0.7;
+            ctx.stroke();
+            
+            // Remover sombra
+            ctx.shadowBlur = 0;
           }
         }
       }
     }
 
-    setWebNodes(newWebNodes);
-    setWebConnections(connections);
-    setIsInitialized(true);
+    // Desenhar nós com efeito de brilho
+    nodes.forEach(node => {
+      // Adicionar brilho aos nós
+      ctx.shadowBlur = 5 + Math.random() * 3;
+      ctx.shadowColor = `rgba(255, 136, 0, ${node.opacity * 0.8})`;
+      
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 136, 0, ${node.opacity * 1.5})`; // Cor mais intensa
+      ctx.fill();
+      
+      // Remover sombra após desenhar o nó
+      ctx.shadowBlur = 0;
+    });
+  }, [nodes, dimensions, mousePosition]);
 
-    // Persistir as teias no armazenamento local
-    persistWebs(newWebNodes, connections);
-
-    // Disparar evento para indicar que as teias estão prontas
-    document.dispatchEvent(new CustomEvent('WebTeiasProntas'));
-
-    // Log para depuração
-    if (isPriority) {
-      console.log("Novas teias geradas com sucesso:", nodeCount);
-    } else {
-      // Otimização em segundo plano para páginas não-auth
-      setTimeout(() => {
-        console.log("Teias otimizadas em segundo plano:", nodeCount);
-      }, 500);
-    }
-  };
-
-  // Acompanhar a posição do mouse
+  // Lidar com o movimento do mouse
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
+      setMousePosition({
+        x: e.clientX,
+        y: e.clientY
+      });
     };
 
-    const handleMouseDown = () => {
-      setIsClicking(true);
-    };
-
-    const handleMouseUp = () => {
-      setIsClicking(false);
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mousedown", handleMouseDown);
-    window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener('mousemove', handleMouseMove);
 
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mousedown", handleMouseDown);
-      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener('mousemove', handleMouseMove);
     };
   }, []);
 
-  // Adicionar novos nós ao clicar
-  useEffect(() => {
-    if (!isClicking || !isInitialized) return;
+  // Quando o usuário clica no canvas, adicionar mais nós
+  const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const x = e.clientX;
+    const y = e.clientY;
 
-    const addNewWebAtMousePosition = () => {
-      const newId = webNodes.length;
-      const newNode: WebNode = {
-        id: newId,
-        x: mousePosition.x,
-        y: mousePosition.y,
-        connections: [],
-        opacity: 0.4 + Math.random() * 0.4, // Mais visível
-        size: 2.5 + Math.random() * 3, // Um pouco maior
-        glow: true, // Sempre brilha
+    // Adicionar 60 novos nós ao redor do clique
+    const newNodes = Array.from({ length: 60 }, () => {
+      const radius = Math.random() * 1.8 + 0.5;
+      const angle = Math.random() * Math.PI * 2;
+      const distance = Math.random() * 90;
+
+      return {
+        x: x + Math.cos(angle) * distance,
+        y: y + Math.sin(angle) * distance,
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: (Math.random() - 0.5) * 0.5,
+        radius,
+        fadeState: 'in' as const,
+        fadeTimer: Math.floor(Math.random() * 300) + 200,
+        opacity: 0.1
       };
+    });
 
-      // Conectar a nós próximos
-      const newConnections: WebConnection[] = [];
-      const maxDistance = 200;
-      let connectionsCount = 0;
-      const maxNewConnections = 3;
+    setNodes(prevNodes => {
+      const updatedNodes = [...prevNodes, ...newNodes];
+      saveNodes(updatedNodes);
+      return updatedNodes;
+    });
+  }, []);
 
-      webNodes.forEach((existingNode) => {
-        const dx = newNode.x - existingNode.x;
-        const dy = newNode.y - existingNode.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
+  // Loop de animação
+  useEffect(() => {
+    // Iniciar animação mesmo antes de isReady ser true para garantir que as teias apareçam
+    const animate = (time: number) => {
+      // Atualizar posições dos nós
+      updateNodePositions();
 
-        if (distance < maxDistance && connectionsCount < maxNewConnections) {
-          newConnections.push({
-            id1: newId,
-            id2: existingNode.id,
-            opacity: 0.2 + Math.random() * 0.3, // Mais visível
-          });
+      // Desenhar no canvas
+      drawNodesAndConnections();
 
-          newNode.connections.push(existingNode.id);
-          existingNode.connections.push(newId);
-          connectionsCount++;
-        }
-      });
-
-      // Atualizar o estado
-      setWebNodes(prev => [...prev, newNode]);
-      setWebConnections(prev => [...prev, ...newConnections]);
-
-      // Persistir as teias atualizadas
-      persistWebs([...webNodes, newNode], [...webConnections, ...newConnections]);
+      previousTimeRef.current = time;
+      requestRef.current = requestAnimationFrame(animate);
     };
 
-    addNewWebAtMousePosition();
+    requestRef.current = requestAnimationFrame(animate);
 
-  }, [isClicking, mousePosition, isInitialized, webNodes, webConnections]);
-
-  // Disparar evento de atualização de teias quando solicitado
-  useEffect(() => {
-    const handleForceUpdate = () => {
-      console.log("Atualizando teias forçadamente");
-      if (!isInitialized || webNodes.length === 0) {
-        generateWebNodes(true);
-      } else {
+    // Garantir que teiasWebProntas seja disparado
+    setTimeout(() => {
+      if (!isReady) {
+        setIsReady(true);
         document.dispatchEvent(new CustomEvent('WebTeiasProntas'));
       }
-    };
-
-    document.addEventListener('ForceWebTeiaUpdate', handleForceUpdate);
+    }, 200);
 
     return () => {
-      document.removeEventListener('ForceWebTeiaUpdate', handleForceUpdate);
+      if (requestRef.current !== null) {
+        cancelAnimationFrame(requestRef.current);
+      }
     };
-  }, [isInitialized, webNodes]);
+  }, [updateNodePositions, drawNodesAndConnections]);
+
+  // Adicionar algumas partículas brilhantes fixas para aumentar o efeito visual
+  const particles = [];
+  for (let i = 0; i < 15; i++) {
+    const posX = Math.random() * 100;
+    const posY = Math.random() * 100;
+    const size = 3 + Math.random() * 5;
+    const delay = Math.random() * 5;
+    const duration = 4 + Math.random() * 4;
+    
+    particles.push(
+      <div 
+        key={`particle-${i}`}
+        className="auth-particle animate-web-glow"
+        style={{
+          left: `${posX}%`,
+          top: `${posY}%`,
+          width: `${size}px`,
+          height: `${size}px`,
+          animationDelay: `${delay}s`,
+          animationDuration: `${duration}s`,
+          opacity: 0.2 + Math.random() * 0.6
+        }}
+      />
+    );
+  }
 
   return (
-    <div ref={canvasRef} className="absolute inset-0 overflow-hidden z-0 pointer-events-none">
-      {/* Efeito de gradiente escuro no fundo */}
-      <div className="absolute inset-0 bg-[#001427] opacity-90 z-0"></div>
-
-      {/* Container otimizado para renderização de SVGs */}
-      <div className="absolute inset-0 z-1">
-        {/* Renderizar as conexões */}
-        {isInitialized && webConnections.map((connection) => {
-          const node1 = webNodes.find(n => n.id === connection.id1);
-          const node2 = webNodes.find(n => n.id === connection.id2);
-
-          if (!node1 || !node2) return null;
-
-          return (
-            <svg
-              key={`connection-${connection.id1}-${connection.id2}`}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
-                pointerEvents: "none",
-                opacity: 1,
-              }}
-            >
-              <line
-                x1={node1.x}
-                y1={node1.y}
-                x2={node2.x}
-                y2={node2.y}
-                stroke="#FF6B00"
-                strokeOpacity={connection.opacity}
-                strokeWidth={0.75}
-              />
-            </svg>
-          );
-        })}
+    <div className="absolute inset-0 overflow-hidden z-5">
+      {/* Partículas decorativas */}
+      {particles}
+      
+      <canvas
+        ref={canvasRef}
+        width={dimensions.width}
+        height={dimensions.height}
+        className="absolute top-0 left-0 w-full h-full z-10"
+        style={{ 
+          pointerEvents: 'auto', // Permitir interações com o mouse
+          touchAction: 'none'
+        }}
+        onClick={handleCanvasClick}
+      />
+      <div className="relative z-20">
+        {children}
       </div>
-
-      {/* Renderizar os nós */}
-      {isInitialized && webNodes.map((node) => (
-        <div
-          key={`node-${node.id}`}
-          className={`absolute rounded-full ${node.glow ? 'animate-node-pulse' : ''}`}
-          style={{
-            top: node.y,
-            left: node.x,
-            width: node.size,
-            height: node.size,
-            backgroundColor: "#FF6B00",
-            opacity: node.opacity,
-            transform: "translate(-50%, -50%)",
-            boxShadow: node.glow
-              ? `0 0 6px 3px rgba(255, 107, 0, 0.5), 0 0 12px 8px rgba(255, 107, 0, 0.3)`
-              : "none",
-            pointerEvents: "none",
-            zIndex: 2,
-          }}
-        />
-      ))}
-
-      {/* Renderizar o conteúdo filho */}
-      <div className="relative z-10 pointer-events-auto">{children}</div>
     </div>
   );
 }
