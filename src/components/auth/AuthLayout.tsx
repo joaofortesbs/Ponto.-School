@@ -52,13 +52,13 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
       
       {/* AnimatedBackground como primeiro componente a ser renderizado */}
       <AnimatedBackground>
-        {/* Conteúdo principal */}
-        <div className="flex items-center justify-center w-full z-10 relative">
+        {/* Conteúdo principal centralizado */}
+        <div className="flex items-center justify-center w-full h-full z-10 relative">
           <div
             className={cn(
               "w-full max-w-[480px] rounded-2xl p-8 shadow-xl shadow-brand-primary/15 backdrop-blur-lg transition-all duration-300",
               "hover:shadow-2xl hover:shadow-brand-primary/25 animate-fadeIn",
-              "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2",
+              "relative mx-auto", // Centralização usando margin auto
               !contentReady ? "opacity-0" : "opacity-100", // Controle de visibilidade baseado no estado
               className,
             )}
