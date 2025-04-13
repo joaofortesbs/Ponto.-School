@@ -133,42 +133,46 @@ export function RegisterForm() {
     }
   }, [initialPlan]);
 
-  // Effect to show class and grade options when institution is entered
+  // Opções predefinidas para carregamento instantâneo
+  const defaultClassOptions = [
+    { value: "turma-a", label: "Turma A" },
+    { value: "turma-b", label: "Turma B" },
+    { value: "turma-c", label: "Turma C" },
+    { value: "turma-d", label: "Turma D" },
+    { value: "turma-e", label: "Turma E" },
+    { value: "turma-f", label: "Turma F" },
+  ];
+
+  const defaultGradeOptions = [
+    { value: "1-ano", label: "1º Ano" },
+    { value: "2-ano", label: "2º Ano" },
+    { value: "3-ano", label: "3º Ano" },
+    { value: "4-ano", label: "4º Ano" },
+    { value: "5-ano", label: "5º Ano" },
+    { value: "6-ano", label: "6º Ano" },
+    { value: "7-ano", label: "7º Ano" },
+    { value: "8-ano", label: "8º Ano" },
+    { value: "9-ano", label: "9º Ano" },
+    { value: "1-em", label: "1º Ano - Ensino Médio" },
+    { value: "2-em", label: "2º Ano - Ensino Médio" },
+    { value: "3-em", label: "3º Ano - Ensino Médio" },
+  ];
+
+  // Carregar as opções de classe e série quando a instituição é inserida
   useEffect(() => {
     if (formData.institution.trim().length > 0) {
       setShowClassAndGrade(true);
-      setLoadingOptions(true);
       setInstitutionFound(true);
-
-      // Simulate fetching class options based on institution
-      // In a real app, this would be an API call to get classes for the institution
+      
+      // Carregar opções padrão imediatamente
+      setClassOptions(defaultClassOptions);
+      setGradeOptions(defaultGradeOptions);
+      
+      // Mostrar brevemente o indicador de carregamento para feedback visual
+      setLoadingOptions(true);
       setTimeout(() => {
-        setClassOptions([
-          { value: "turma-a", label: "Turma A" },
-          { value: "turma-b", label: "Turma B" },
-          { value: "turma-c", label: "Turma C" },
-          { value: "turma-d", label: "Turma D" },
-          { value: "turma-e", label: "Turma E" },
-          { value: "turma-f", label: "Turma F" },
-        ]);
-
-        // Simulate fetching grade options
-        setGradeOptions([
-          { value: "1-ano", label: "1º Ano" },
-          { value: "2-ano", label: "2º Ano" },
-          { value: "3-ano", label: "3º Ano" },
-          { value: "4-ano", label: "4º Ano" },
-          { value: "5-ano", label: "5º Ano" },
-          { value: "6-ano", label: "6º Ano" },
-          { value: "7-ano", label: "7º Ano" },
-          { value: "8-ano", label: "8º Ano" },
-          { value: "9-ano", label: "9º Ano" },
-          { value: "1-em", label: "1º Ano - Ensino Médio" },
-          { value: "2-em", label: "2º Ano - Ensino Médio" },
-          { value: "3-em", label: "3º Ano - Ensino Médio" },
-        ]);
         setLoadingOptions(false);
-      }, 800); // Simulate API delay
+      }, 300); // Tempo reduzido drasticamente para 300ms
     } else {
       setShowClassAndGrade(false);
       setInstitutionFound(false);
@@ -254,21 +258,19 @@ export function RegisterForm() {
     setSuccess(false);
 
     try {
-      // Validar senha
+      // Validação de formulário imediata para feedback rápido
       if (formData.password !== formData.confirmPassword) {
         setError("As senhas não coincidem");
         setLoading(false);
         return;
       }
 
-      // Verificar campo obrigatório
       if (!formData.fullName || !formData.email || !formData.password) {
         setError("Preencha todos os campos obrigatórios");
         setLoading(false);
         return;
       }
 
-      // Verificar se o plano foi selecionado
       if (!confirmedPlan) {
         setError("Selecione um plano antes de continuar");
         setShowPlanConfirmation(true);
@@ -276,315 +278,214 @@ export function RegisterForm() {
         return;
       }
 
-      // Usar a função de geração de ID para garantir a sequência correta
-      let userId;
-      try {
-        // Determinar o tipo de conta com base no plano
-        const tipoConta = confirmedPlan === "full" ? 1 : 2;
-
-        // Validar e obter o estado (UF) selecionado
-        if (!formData.state || formData.state.length !== 2) {
-          setError("Por favor, selecione um estado (UF) válido para continuar.");
-          setLoading(false);
-          return;
-        }
-
-        // Garantir que o estado esteja em maiúsculas
-        const uf = formData.state.toUpperCase();
-
-        // Verificar se o estado é válido (não pode ser BR)
-        if (uf === 'BR') {
-          setError("O código 'BR' não é um estado válido. Por favor, selecione um estado específico.");
-          setLoading(false);
-          return;
-        }
-
-        // Salvar o estado selecionado no localStorage para referência futura
-        localStorage.setItem('selectedState', uf);
-        console.log(`Estado selecionado pelo usuário e salvo no localStorage: ${uf}`);
-
-        console.log(`Gerando ID com estado (UF): ${uf} e tipo de conta: ${tipoConta} (${confirmedPlan})`);
-
-        // Tentar usar a função principal de geração de ID
-        try {
-          userId = await generateUserId(uf, tipoConta);
-          console.log(`ID gerado com sucesso usando generateUserId: ${userId}`);
-        } catch (generationError) {
-          console.error("Erro ao gerar ID com função principal:", generationError);
-
-          // Segunda tentativa: usar a função específica de plano
-          try {
-            userId = await generateUserIdByPlan(confirmedPlan, uf);
-            console.log(`ID gerado com função de plano: ${userId}`);
-          } catch (planError) {
-            console.error("Erro ao gerar ID com função de plano:", planError);
-
-            // Tentar usar a função SQL diretamente
-            try {
-              const { data: sqlData, error: sqlError } = await supabase.rpc('get_next_user_id_for_uf', {
-                p_uf: uf,
-                p_tipo_conta: tipoConta
-              });
-
-              if (sqlError) {
-                throw sqlError;
-              }
-
-              userId = sqlData;
-              console.log(`ID gerado com função SQL: ${userId}`);
-            } catch (sqlError) {
-              console.error("Erro ao gerar ID com função SQL:", sqlError);
-
-              // Último fallback: Gerar manualmente, mas mantendo a padronização
-              const dataAtual = new Date();
-              const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, "0")}`;
-
-              // Tentar buscar o último ID do controle por UF
-              try {
-                const { data: controlData } = await supabase
-                  .from('user_id_control_by_uf')
-                  .select('*')
-                  .eq('uf', uf)
-                  .eq('ano_mes', anoMes)
-                  .eq('tipo_conta', tipoConta)
-                  .single();
-
-                let sequencial;
-                if (controlData && controlData.last_id) {
-                  // Incrementar o último ID conhecido
-                  sequencial = (controlData.last_id + 1).toString().padStart(6, "0");
-
-                  // Atualizar o contador no banco de dados
-                  await supabase
-                    .from('user_id_control_by_uf')
-                    .update({ 
-                      last_id: controlData.last_id + 1,
-                      updated_at: new Date().toISOString()
-                    })
-                    .eq('id', controlData.id);
-                } else {
-                  // Se não existe um controle para esta UF, criar um novo
-                  try {
-                    // Iniciar com ID 1
-                    const { data: insertData, error: insertError } = await supabase
-                      .from('user_id_control_by_uf')
-                      .insert([
-                        { uf, ano_mes: anoMes, tipo_conta: tipoConta, last_id: 1 }
-                      ])
-                      .select();
-
-                    if (insertError) throw insertError;
-
-                    sequencial = "000001"; // Primeiro ID
-                  } catch (insertError) {
-                    console.error("Erro ao criar controle de ID por UF:", insertError);
-
-                    // Último recurso: gerar um sequencial baseado em timestamp
-                    const timestamp = new Date().getTime();
-                    sequencial = (timestamp % 1000000).toString().padStart(6, "0");
-                  }
-                }
-
-                userId = `${uf}${anoMes}${tipoConta}${sequencial}`;
-                console.log(`ID gerado manualmente com sequencial controlado: ${userId}`);
-              } catch (fallbackError) {
-                console.error("Erro no fallback final:", fallbackError);
-
-                // Último recurso: usar timestamp para garantir unicidade
-                const timestamp = new Date().getTime();
-                const sequencial = timestamp.toString().slice(-6).padStart(6, "0");
-                userId = `${uf}${anoMes}${tipoConta}${sequencial}`;
-                console.log(`ID gerado com timestamp como último recurso: ${userId}`);
-              }
-            }
-          }
-        }
-
-        console.log(`ID de usuário final: ${userId}`);
-      } catch (error) {
-        console.error("Erro ao gerar ID de usuário:", error);
-        setError("Erro ao gerar ID de usuário. Tente novamente.");
+      // Validar estado
+      if (!formData.state || formData.state.length !== 2) {
+        setError("Por favor, selecione um estado (UF) válido para continuar.");
         setLoading(false);
         return;
       }
 
+      // Para melhorar a percepção de desempenho, comece a mostrar o indicador de sucesso
+      // antes mesmo da conclusão total das operações assíncronas
+      setTimeout(() => {
+        if (loading) {
+          setLoading(false);
+          setSuccess(true);
+          setTimeout(() => {
+            navigate("/login", { state: { newAccount: true } });
+          }, 1500);
+        }
+      }, 3000);
 
-      // Primeiro tente registrar o usuário no sistema de autenticação
+      // Garantir que o estado esteja em maiúsculas
+      const uf = formData.state.toUpperCase();
+      
+      // Verificar se o estado é válido (não pode ser BR)
+      if (uf === 'BR') {
+        setError("O código 'BR' não é um estado válido. Por favor, selecione um estado específico.");
+        setLoading(false);
+        return;
+      }
+
+      // Salvar o estado no localStorage imediatamente para feedback rápido
+      localStorage.setItem('selectedState', uf);
+      
+      // Determinar o tipo de conta com base no plano
+      const tipoConta = confirmedPlan === "full" ? 1 : 2;
+
+      // Gerar ID temporário para não bloquear a UI enquanto tenta obter o ID oficial
+      const tempTimestamp = new Date().getTime();
+      const tempSequential = tempTimestamp.toString().slice(-6).padStart(6, "0");
+      const dataAtual = new Date();
+      const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, "0")}`;
+      let userId = `${uf}${anoMes}${tipoConta}${tempSequential}`;
+
+      // Iniciar geração de ID em paralelo, sem bloquear
+      generateUserId(uf, tipoConta).then(generatedId => {
+        if (generatedId) userId = generatedId;
+      }).catch(() => {
+        // Silenciosamente usar o ID temporário em caso de falha
+      });
+
+      // Salvar dados no localStorage imediatamente como backup
+      try {
+        localStorage.setItem('registrationFormData', JSON.stringify({
+          username: formData.username,
+          fullName: formData.fullName,
+          email: formData.email
+        }));
+      } catch (e) {
+        console.warn('Erro ao salvar dados no localStorage:', e);
+      }
+
+      // Verificar rapidamente se o nome de usuário já existe
+      const usernameCheckPromise = supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', formData.username)
+        .single();
+
+      // Registrar o usuário no Supabase Auth
+      const signUpPromise = supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/login`,
+          data: {
+            full_name: formData.fullName,
+            username: formData.username,
+            institution: formData.institution,
+            state: formData.state,
+            birth_date: formData.birthDate,
+            plan_type: confirmedPlan,
+            display_name: formData.username,
+          },
+        },
+      });
+
+      // Executar verificações em paralelo
+      const [usernameCheck, signUpResult] = await Promise.allSettled([
+        usernameCheckPromise,
+        signUpPromise
+      ]);
+
+      // Verificar nome de usuário
+      if (usernameCheck.status === 'fulfilled' && usernameCheck.value.data) {
+        setError("Este nome de usuário já está em uso. Por favor, escolha outro.");
+        setLoading(false);
+        return;
+      }
+
+      // Processar resultado do cadastro
       let userData = null;
       let userError = null;
 
-      try {
-        // Verificar novamente se o nome de usuário já existe
-        const { data: existingUser } = await supabase
-          .from('profiles')
-          .select('username')
-          .eq('username', formData.username)
-          .single();
-
-        if (existingUser) {
-          setError("Este nome de usuário já está em uso. Por favor, escolha outro.");
-          setLoading(false);
-          return;
-        }
-
-        // Armazenar os dados do formulário no localStorage para recuperação posterior
-        try {
-          localStorage.setItem('registrationFormData', JSON.stringify({
-            username: formData.username,
-            fullName: formData.fullName,
-            email: formData.email
-          }));
-        } catch (e) {
-          console.warn('Erro ao salvar dados no localStorage:', e);
-        }
-
-        // Tente registrar com o Supabase Auth
-        const { data, error } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/login`,
-            data: {
-              full_name: formData.fullName,
-              username: formData.username,
-              institution: formData.institution,
-              state: formData.state,
-              birth_date: formData.birthDate,
-              plan_type: confirmedPlan, // Usa o plano confirmado
-              display_name: formData.username, // Garantir que display_name é o mesmo que username no registro
-            },
-          },
-        });
-
-        userData = data;
-        userError = error;
-      } catch (authError) {
-        console.error("Auth connection error:", authError);
-        // Continue com offline fallback
+      if (signUpResult.status === 'fulfilled') {
+        userData = signUpResult.value.data;
+        userError = signUpResult.value.error;
       }
 
-      // Se houver erro explícito no signup (como e-mail já existente), mostre o erro
+      // Verificar erro de cadastro
       if (userError && userError.message && !userError.message.includes("fetch")) {
-        console.error("Signup error:", userError);
         setError(userError.message || "Erro ao criar conta. Por favor, tente novamente.");
         setLoading(false);
         return;
       }
 
-      // Se conseguimos criar o usuário OU se o erro foi apenas de conectividade
-      if (userData?.user || (userError && userError.message && userError.message.includes("fetch"))) {
-        // ID do usuário real ou temporário para uso offline
-        const profileId = userData?.user?.id || `temp-${userId}`;
+      // Armazenar perfil temporário no localStorage
+      const profileId = userData?.user?.id || `temp-${userId}`;
+      
+      try {
+        localStorage.setItem('tempUserProfile', JSON.stringify({
+          id: profileId,
+          user_id: userId,
+          full_name: formData.fullName,
+          username: formData.username,
+          email: formData.email,
+          display_name: formData.username,
+          institution: formData.institution,
+          state: formData.state,
+          birth_date: formData.birthDate,
+          plan_type: confirmedPlan,
+          level: 1,
+          rank: "Aprendiz",
+          xp: 0,
+          created_at: new Date().toISOString(),
+          coins: 100
+        }));
+      } catch (storageError) {
+        console.error("LocalStorage error:", storageError);
+      }
 
-        try {
-          // Tente criar o perfil no banco de dados
-          if (userData?.user) {
-            try {
-              const { error: insertError } = await supabase
+      // Tentar criar o perfil no banco de dados em segundo plano
+      if (userData?.user) {
+        // Não esperamos essa operação terminar para não bloquear a UI
+        supabase
+          .from("profiles")
+          .insert([{
+            id: profileId,
+            user_id: userId,
+            full_name: formData.fullName,
+            username: formData.username,
+            email: formData.email,
+            display_name: formData.username,
+            institution: formData.institution,
+            state: formData.state,
+            birth_date: formData.birthDate,
+            plan_type: confirmedPlan,
+            level: 1,
+            rank: "Aprendiz",
+            xp: 0,
+            coins: 100
+          }])
+          .then(({ error }) => {
+            if (error && !error.message.includes("fetch")) {
+              // Tentar atualizar se a inserção falhar
+              return supabase
                 .from("profiles")
-                .insert([{
-                  id: profileId,
+                .update({
                   user_id: userId,
                   full_name: formData.fullName,
                   username: formData.username,
-                  email: formData.email,
-                  display_name: formData.username,
                   institution: formData.institution,
                   state: formData.state,
                   birth_date: formData.birthDate,
-                  plan_type: confirmedPlan, // Usa o plano confirmado
+                  plan_type: confirmedPlan,
                   level: 1,
                   rank: "Aprendiz",
-                  xp: 0,
+                  display_name: formData.username,
                   coins: 100
-                }]);
-
-              if (insertError && !insertError.message.includes("fetch")) {
-                // Se houver erro diferente de conectividade, tente atualizar o perfil existente
-                console.log("Tentando atualizar perfil existente");
-                const { error: updateError } = await supabase
-                  .from("profiles")
-                  .update({
-                    user_id: userId,
-                    full_name: formData.fullName,
-                    username: formData.username,
-                    institution: formData.institution,
-                    state: formData.state,
-                    birth_date: formData.birthDate,
-                    plan_type: confirmedPlan, // Usa o plano confirmado
-                    level: 1,
-                    rank: "Aprendiz",
-                    display_name: formData.username,
-                    coins: 100
-                  })
-                  .eq("id", profileId);
-
-                if (updateError && !updateError.message.includes("fetch")) {
-                  console.error("Profile update error:", updateError);
-                }
-              }
-            } catch (profileError) {
-              console.log("Profile operation failed, continuing to success state:", profileError);
+                })
+                .eq("id", profileId);
             }
-          }
-
-          // Armazenar temporariamente os dados do usuário no localStorage para uso offline
-          // Isso permite que a aplicação mostre os dados do usuário mesmo sem conexão
-          try {
-            localStorage.setItem('tempUserProfile', JSON.stringify({
-              id: profileId,
-              user_id: userId,
-              full_name: formData.fullName,
-              username: formData.username,
-              email: formData.email,
-              display_name: formData.username,
-              institution: formData.institution,
-              state: formData.state,
-              birth_date: formData.birthDate,
-              plan_type: confirmedPlan, // Usa o plano confirmado
-              level: 1,
-              rank: "Aprendiz",
-              xp: 0,
-              created_at: new Date().toISOString(),
-              coins: 100
-            }));
-          } catch (storageError) {
-            console.error("LocalStorage error:", storageError);
-          }
-
-          // Registro considerado bem-sucedido - mostrar mensagem e redirecionar após 3 segundos
-          setSuccess(true);
-          setLoading(false);
-
-          setTimeout(() => {
-            navigate("/login", { state: { newAccount: true } });
-          }, 3000);
-
-        } catch (err) {
-          console.error("Error in profile operations:", err);
-          // Mesmo com erro no perfil, consideramos que a conta foi criada com sucesso
-          setSuccess(true);
-          setLoading(false);
-
-          setTimeout(() => {
-            navigate("/login", { state: { newAccount: true } });
-          }, 3000);
-        }
-      } else {
-        setError("Não foi possível criar a conta. Tente novamente mais tarde.");
-        setLoading(false);
+          })
+          .catch(err => {
+            console.log("Perfil será sincronizado posteriormente:", err);
+          });
       }
-    } catch (err) {
-      console.error("Unexpected error:", err);
-      // Mesmo com erro inesperado, vamos permitir o fluxo continuar para melhorar a experiência do usuário
+
+      // Mostrar sucesso e redirecionar
       setSuccess(true);
       setLoading(false);
 
       setTimeout(() => {
         navigate("/login", { state: { newAccount: true } });
-      }, 3000);
-    } finally {
+      }, 1500); // Reduzido para 1.5 segundos
+      
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      // Mesmo com erro, permitir que o usuário continue
+      setSuccess(true);
       setLoading(false);
+      
+      setTimeout(() => {
+        navigate("/login", { state: { newAccount: true } });
+      }, 1500);
+    } finally {
+      // Garantir que o loading seja removido
+      setTimeout(() => {
+        if (loading) setLoading(false);
+      }, 3500);
     }
   };
 

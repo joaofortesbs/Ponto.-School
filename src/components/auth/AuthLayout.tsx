@@ -19,12 +19,12 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
       return;
     }
 
-    // Força renderização do conteúdo após um curto tempo
-    // mesmo que as teias ainda não estejam prontas (para falha segura)
+    // Mostrar conteúdo mais rapidamente para melhorar a percepção de desempenho
+    // mas manter efeito de fade-in para experiência visual
     const timer = setTimeout(() => {
       setContentReady(true);
       window._teiasReady = true;
-    }, 150);
+    }, 100); // Reduzido para 100ms
 
     // Escuta o evento personalizado que indica que as teias estão prontas
     const handleTeiasReady = () => {
@@ -37,6 +37,11 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
 
     // Dispara um evento para solicitar atualização imediata das teias
     document.dispatchEvent(new CustomEvent('ForceWebTeiaUpdate'));
+
+    // Garantir renderização mesmo sem evento
+    requestAnimationFrame(() => {
+      setContentReady(true);
+    });
 
     return () => {
       clearTimeout(timer);
