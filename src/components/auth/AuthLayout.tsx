@@ -52,13 +52,14 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
 
       {/* AnimatedBackground como primeiro componente a ser renderizado */}
       <AnimatedBackground>
-        {/* Fundo com efeito de gradiente */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#3a0329] via-[#0A2540] to-[#1e0035] opacity-75 z-0"></div>
+        {/* Fundo com efeito de gradiente sofisticado preto e laranja */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#000000] via-[#1a0d00] to-[#0e0500] opacity-85 z-0 animate-gradient"></div>
 
         {/* Efeitos de luz/brilho no fundo */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-          <div className="absolute -top-[50%] -left-[25%] w-[100%] h-[100%] rounded-full bg-gradient-to-r from-[#FF6B00]/10 to-transparent blur-3xl transform rotate-12"></div>
-          <div className="absolute -bottom-[50%] -right-[25%] w-[100%] h-[100%] rounded-full bg-gradient-to-l from-[#FF6B00]/15 to-transparent blur-3xl transform -rotate-12"></div>
+          <div className="absolute -top-[40%] -left-[20%] w-[110%] h-[110%] rounded-full bg-gradient-to-r from-[#FF6B00]/15 to-transparent blur-3xl transform rotate-12 animate-pulse-soft"></div>
+          <div className="absolute -bottom-[40%] -right-[20%] w-[110%] h-[110%] rounded-full bg-gradient-to-l from-[#FF6B00]/20 to-transparent blur-3xl transform -rotate-12 animate-pulse-soft"></div>
+          <div className="absolute top-[20%] right-[10%] w-[60%] h-[60%] rounded-full bg-gradient-to-tl from-[#FF8800]/10 to-transparent blur-3xl transform animate-floating-node"></div>
         </div>
 
         {/* Conteúdo principal centralizado */}
@@ -73,12 +74,12 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
             )}
             style={{ 
               transition: "opacity 0.3s ease-in-out, transform 0.3s ease-out, box-shadow 0.3s ease",
-              backdropFilter: "blur(16px)",
-              WebkitBackdropFilter: "blur(16px)",
-              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 107, 0, 0.15)",
-              border: "1px solid rgba(255, 255, 255, 0.12)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 107, 0, 0.2)",
+              border: "1px solid rgba(255, 107, 0, 0.15)",
               borderRadius: "18px",
-              background: "linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%)"
+              background: "linear-gradient(135deg, rgba(20, 20, 20, 0.5) 0%, rgba(10, 10, 10, 0.7) 100%)"
             }}
           >
             {children}
