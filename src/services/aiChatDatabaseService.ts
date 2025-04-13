@@ -10,8 +10,6 @@ interface PlatformInfo {
 }
 
 // Database for AI chat knowledge and context enhancement
-import { supabase } from '@/lib/supabase';
-import { UserProfile } from '@/types/user-profile';
 
 // Interface para armazenar detalhes completos do usuário
 interface DetailedUserProfile extends UserProfile {
