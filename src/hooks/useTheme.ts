@@ -1,10 +1,9 @@
 
-// Este hook foi renomeado para evitar conflitos com o useTheme do ThemeProvider
 import { useState, useEffect } from 'react';
 
 type Theme = 'light' | 'dark';
 
-export function useCustomTheme(): [Theme, (theme: Theme) => void] {
+export function useTheme(): [Theme, (theme: Theme) => void] {
   const [theme, setTheme] = useState<Theme>(() => {
     // Recuperar do localStorage ou usar padrão
     const savedTheme = localStorage.getItem('theme');
@@ -23,5 +22,5 @@ export function useCustomTheme(): [Theme, (theme: Theme) => void] {
     }
   }, [theme]);
 
-  return [theme, setTheme]
+  return [theme, setTheme];
 }

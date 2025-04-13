@@ -9,7 +9,7 @@ import {
 import ErrorBoundary from "@/components/ErrorBoundary";
 import routes from "./tempo-routes";
 import Home from "@/components/home";
-import ThemeProvider, { useTheme } from "@/components/ThemeProvider";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
 import FloatingChatSupport from "@/components/chat/FloatingChatSupport";
 import { supabase } from "@/lib/supabase";
@@ -49,7 +49,6 @@ import PlanSelectionPage from "@/pages/plan-selection";
 import ProfilePage from "@/pages/profile";
 import WelcomeModal from "./components/auth/WelcomeModal"; // Added import
 import { TypewriterLoader } from "./components/ui/typewriter-loader"; // Added import
-import { useToast } from './components/ui/use-toast'; // Added import
 
 
 // Componente para proteger rotas
@@ -105,19 +104,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false); // Added state
   const [isFirstLogin, setIsFirstLogin] = useState(false); // Added state
-  const { toast } = useToast(); // Added toast hook
 
-  // Handler para erros capturados pelo ErrorBoundary
-  const handleError = (error: Error) => {
-    toast({
-      variant: "destructive",
-      title: "Erro na aplicação",
-      description: "Ocorreu um problema inesperado. Detalhes técnicos foram registrados.",
-    });
-
-    // Aqui poderia ser implementado envio para serviço de monitoramento
-    console.error("Erro capturado pelo ErrorBoundary principal:", error);
-  };
 
   useEffect(() => {
     console.log("App carregado com sucesso!");
@@ -303,7 +290,7 @@ function App() {
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <UsernameProvider>
         <StudyGoalProvider>
-          <ErrorBoundary onError={handleError}> {/* Added ErrorBoundary */}
+          <ErrorBoundary>
             <div className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
               <Routes>
                 {/* Auth Routes - Públicas */}
@@ -367,20 +354,21 @@ function App() {
                 {/* Fallback Route - Redireciona para login */}
                 <Route path="*" element={<Navigate to="/login" />} />
               </Routes>
-              </ErrorBoundary> {/* Closed ErrorBoundary */}
-            {/* Floating Chat Support */}
-            {!isAuthRoute && !isLoading && <FloatingChatSupport />}
 
-            {/* Welcome Modal - apenas mostrado em rotas protegidas (não auth) */}
-            {!isAuthRoute &&
-              <WelcomeModal
-                isOpen={showWelcomeModal}
-                onClose={() => setShowWelcomeModal(false)}
-                isFirstLogin={isFirstLogin}
-              />
-            }
+              {/* Floating Chat Support */}
+              {!isAuthRoute && !isLoading && <FloatingChatSupport />}
+
+              {/* Welcome Modal - apenas mostrado em rotas protegidas (não auth) */}
+              {!isAuthRoute &&
+                <WelcomeModal
+                  isOpen={showWelcomeModal}
+                  onClose={() => setShowWelcomeModal(false)}
+                  isFirstLogin={isFirstLogin}
+                />
+              }
+            </div>
             <Toaster />
-          </div>
+          </ErrorBoundary>
         </StudyGoalProvider>
       </UsernameProvider>
     </ThemeProvider>
