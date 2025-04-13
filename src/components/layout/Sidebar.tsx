@@ -72,6 +72,21 @@ export default function Sidebar({
     };
 
     loadUserProfile();
+    
+    // Definir funções de callback para eventos de logo
+    const handleLogoLoaded = (event: any) => {
+      console.log("Logo loaded event received in Sidebar", event.detail);
+      setCustomLogo(event.detail);
+    };
+    
+    const handleLogoLoadFailed = () => {
+      console.log("Logo load failed event received in Sidebar");
+      setCustomLogo(null);
+    };
+    
+    // Adicionar os listeners
+    document.addEventListener("logoLoaded", handleLogoLoaded);
+    document.addEventListener("logoLoadFailed", handleLogoLoadFailed);
 
     return () => {
       document.removeEventListener("logoLoaded", handleLogoLoaded);
