@@ -136,20 +136,17 @@ const initializeApp = () => {
       }, 200);
     };
 
-    // Usar requestIdleCallback se disponível, ou setTimeout como fallback
-    if ('requestIdleCallback' in window) {
-      window.requestIdleCallback(renderApp, { timeout: 2000 });
-    } else {
-      setTimeout(renderApp, 10);
-    }
-
-    // Adicionar timeout para garantir que a UI não fique presa em carregamento
+    // Renderizar imediatamente sem esperar por idle callback
+    // para garantir carregamento rápido
+    renderApp();
+    
+    // Timeout reduzido para garantir que a UI não fique presa em carregamento
     setTimeout(() => {
       if (document.getElementById('initial-loader')) {
         console.warn("Timeout de carregamento atingido. Forçando renderização.");
         renderApp();
       }
-    }, 5000);
+    }, 2000);
 
   } catch (error) {
     console.error("Erro ao inicializar aplicação:", error);

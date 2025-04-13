@@ -8,25 +8,35 @@ import { UserProfile } from "@/types/user-profile";
 export default function Dashboard() {
   const [showBanner, setShowBanner] = useState(true);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [isMetricsLoading, setIsMetricsLoading] = useState(true); // Added state for loading
+  const [isMetricsLoading, setIsMetricsLoading] = useState(false); // Inicializado como false para carregar imediatamente
 
   useEffect(() => {
-    // Simulação de carregamento de dados
-    const timer = setTimeout(() => {
-      setIsMetricsLoading(false);
-    }, 1000);
-
-    // Carregar perfil do usuário
+    // Carregar perfil do usuário imediatamente, sem simulação de carregamento
     const loadUserProfile = async () => {
-      const profile = await profileService.getCurrentUserProfile();
-      if (profile) {
-        setUserProfile(profile);
+      try {
+        // Tentar buscar do localStorage primeiro para exibição instantânea
+        const cachedProfile = localStorage.getItem('userProfile');
+        if (cachedProfile) {
+          try {
+            setUserProfile(JSON.parse(cachedProfile));
+          } catch (e) {
+            console.error('Erro ao parsear perfil em cache:', e);
+          }
+        }
+        
+        // Buscar do backend em segundo plano
+        const profile = await profileService.getCurrentUserProfile();
+        if (profile) {
+          setUserProfile(profile);
+          // Atualizar cache
+          localStorage.setItem('userProfile', JSON.stringify(profile));
+        }
+      } catch (error) {
+        console.error('Erro ao carregar perfil:', error);
       }
     };
 
     loadUserProfile();
-
-    return () => clearTimeout(timer);
   }, []);
 
   return (

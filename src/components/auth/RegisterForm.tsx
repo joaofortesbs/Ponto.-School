@@ -160,18 +160,17 @@ export function RegisterForm() {
 
   // Effect to show class and grade options when institution is entered
   useEffect(() => {
-    // Pré-carregar as opções para acesso instantâneo
-    if (!classOptions.length) {
-      setClassOptions(preloadedClassOptions);
-      setGradeOptions(preloadedGradeOptions);
-    }
+    // Sempre garantir que as opções estejam carregadas, independente do estado anterior
+    setClassOptions(preloadedClassOptions);
+    setGradeOptions(preloadedGradeOptions);
+    
+    // Definir loading como false imediatamente
+    setLoadingOptions(false);
     
     if (formData.institution.trim().length > 0) {
+      // Mostrar seção de turmas e séries imediatamente
       setShowClassAndGrade(true);
       setInstitutionFound(true);
-      
-      // Sem necessidade de simulação de carregamento, mostrar imediatamente
-      setLoadingOptions(false);
     } else {
       setShowClassAndGrade(false);
       setInstitutionFound(false);
@@ -185,6 +184,16 @@ export function RegisterForm() {
         customGrade: "",
       }));
     }
+    
+    // Garantir que componentes sejam mostrados com um timeout de segurança
+    const timer = setTimeout(() => {
+      if (formData.institution.trim().length > 0) {
+        setShowClassAndGrade(true);
+        setInstitutionFound(true);
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [formData.institution]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
