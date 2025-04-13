@@ -49,9 +49,18 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
     <div className="min-h-screen w-full flex items-center justify-center bg-[#f7f9fa] dark:bg-[#001427] p-4 relative overflow-hidden">
       {/* Overlay para garantir fundo mínimo mesmo se AnimatedBackground falhar */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#001427] to-[#0A2540] z-0"></div>
-      
+
       {/* AnimatedBackground como primeiro componente a ser renderizado */}
       <AnimatedBackground>
+        {/* Fundo com efeito de gradiente */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#3a0329] via-[#0A2540] to-[#1e0035] opacity-75 z-0"></div>
+
+        {/* Efeitos de luz/brilho no fundo */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
+          <div className="absolute -top-[50%] -left-[25%] w-[100%] h-[100%] rounded-full bg-gradient-to-r from-[#FF6B00]/10 to-transparent blur-3xl transform rotate-12"></div>
+          <div className="absolute -bottom-[50%] -right-[25%] w-[100%] h-[100%] rounded-full bg-gradient-to-l from-[#FF6B00]/15 to-transparent blur-3xl transform -rotate-12"></div>
+        </div>
+
         {/* Conteúdo principal centralizado */}
         <div className="flex items-center justify-center w-full h-full z-10 relative">
           <div
@@ -67,7 +76,7 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
               backdropFilter: "blur(16px)",
               WebkitBackdropFilter: "blur(16px)",
               boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 107, 0, 0.15)",
-              border: "2px solid rgba(255, 107, 0, 0.3)",
+              border: "1px solid rgba(255, 255, 255, 0.12)",
               borderRadius: "18px",
               background: "linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%)"
             }}
