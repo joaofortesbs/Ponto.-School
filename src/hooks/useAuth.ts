@@ -1,148 +1,182 @@
 
-import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useNavigate } from 'react-router-dom';
+import { User, Session, AuthError } from '@supabase/supabase-js';
 
-export interface AuthUser {
-  id: string;
-  email?: string;
-  username?: string;
-  displayName?: string;
-  avatarUrl?: string;
-  [key: string]: any;
+interface AuthState {
+  user: User | null;
+  session: Session | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  error: AuthError | Error | null;
 }
 
 export function useAuth() {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [authState, setAuthState] = useState<AuthState>({
+    user: null,
+    session: null,
+    isLoading: true,
+    isAuthenticated: false,
+    error: null
+  });
 
-  // Carregar usuário inicial
+  // Função para atualizar o estado de autenticação
+  const setAuth = useCallback((
+    user: User | null, 
+    session: Session | null, 
+    isLoading: boolean = false, 
+    error: AuthError | Error | null = null
+  ) => {
+    setAuthState({
+      user,
+      session,
+      isLoading,
+      isAuthenticated: !!user,
+      error
+    });
+  }, []);
+
+  // Verificar o estado de autenticação atual
   useEffect(() => {
-    const fetchUser = async () => {
+    const checkAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          // Buscar perfil do usuário
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", session.user.id)
-            .single();
-
-          setUser({
-            id: session.user.id,
-            email: session.user.email,
-            displayName: profile?.display_name || session.user.email?.split('@')[0],
-            avatarUrl: profile?.avatar_url,
-            ...profile
-          });
-        }
-      } catch (error) {
-        console.error("Erro ao buscar usuário:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-
-    // Escutar mudanças na autenticação
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === "SIGNED_IN" && session?.user) {
-          // Buscar perfil do usuário
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", session.user.id)
-            .single();
-
-          setUser({
-            id: session.user.id,
-            email: session.user.email,
-            displayName: profile?.display_name || session.user.email?.split('@')[0],
-            avatarUrl: profile?.avatar_url,
-            ...profile
-          });
-        }
+        const { data, error } = await supabase.auth.getSession();
         
-        if (event === "SIGNED_OUT") {
-          setUser(null);
-          navigate("/auth/login");
-        }
+        if (error) throw error;
+        
+        const { session } = data;
+        const user = session?.user || null;
+        
+        setAuth(user, session, false);
+        
+        // Configurar o listener para mudanças na autenticação
+        const { data: authListener } = supabase.auth.onAuthStateChange(
+          async (event, newSession) => {
+            const user = newSession?.user || null;
+            setAuth(user, newSession, false);
+            
+            // Redirecionar com base no evento de autenticação
+            if (event === 'SIGNED_IN' && user) {
+              navigate('/dashboard');
+            } else if (event === 'SIGNED_OUT') {
+              navigate('/login');
+            }
+          }
+        );
+        
+        // Limpar o listener quando o componente for desmontado
+        return () => {
+          authListener.subscription.unsubscribe();
+        };
+      } catch (error) {
+        console.error('Erro na verificação de autenticação:', error);
+        setAuth(null, null, false, error as AuthError);
       }
-    );
-
-    return () => {
-      authListener.subscription.unsubscribe();
     };
-  }, [navigate]);
+    
+    checkAuth();
+  }, [navigate, setAuth]);
 
-  // Login com email/senha
+  // Função de login
   const login = useCallback(async (email: string, password: string) => {
-    setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      setAuth(null, null, true, null);
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       
       if (error) throw error;
-      return { success: true };
-    } catch (error: any) {
-      return { 
-        success: false, 
-        error: error.message || "Falha ao fazer login" 
-      };
-    } finally {
-      setLoading(false);
+      
+      const { user, session } = data;
+      setAuth(user, session, false);
+      return { user, error: null };
+    } catch (error) {
+      console.error('Erro no login:', error);
+      setAuth(null, null, false, error as AuthError);
+      return { user: null, error };
     }
-  }, []);
+  }, [setAuth]);
 
-  // Registro
+  // Função de registro
   const register = useCallback(async (email: string, password: string, userData?: Record<string, any>) => {
-    setLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
+      setAuth(null, null, true, null);
+      const { data, error } = await supabase.auth.signUp({ 
+        email, 
         password,
-        options: {
-          data: userData
+        options: { 
+          data: userData,
+          emailRedirectTo: `${window.location.origin}/auth/callback` 
         }
       });
       
       if (error) throw error;
-      return { success: true };
-    } catch (error: any) {
-      return { 
-        success: false, 
-        error: error.message || "Falha ao registrar usuário" 
-      };
-    } finally {
-      setLoading(false);
+      
+      const { user, session } = data;
+      setAuth(user, session, false);
+      return { user, error: null };
+    } catch (error) {
+      console.error('Erro no registro:', error);
+      setAuth(null, null, false, error as AuthError);
+      return { user: null, error };
     }
-  }, []);
+  }, [setAuth]);
 
-  // Logout
+  // Função de logout
   const logout = useCallback(async () => {
     try {
-      await supabase.auth.signOut();
-      return { success: true };
-    } catch (error: any) {
-      return { 
-        success: false, 
-        error: error.message || "Falha ao fazer logout" 
-      };
+      setAuth(null, null, true, null);
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) throw error;
+      
+      setAuth(null, null, false);
+      return { error: null };
+    } catch (error) {
+      console.error('Erro no logout:', error);
+      setAuth(authState.user, authState.session, false, error as AuthError);
+      return { error };
+    }
+  }, [authState.session, authState.user, setAuth]);
+
+  // Função para resetar senha
+  const resetPassword = useCallback(async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
+      
+      if (error) throw error;
+      
+      return { error: null };
+    } catch (error) {
+      console.error('Erro no reset de senha:', error);
+      return { error };
+    }
+  }, []);
+
+  // Função para atualizar senha
+  const updatePassword = useCallback(async (newPassword: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      
+      if (error) throw error;
+      
+      return { error: null };
+    } catch (error) {
+      console.error('Erro na atualização de senha:', error);
+      return { error };
     }
   }, []);
 
   return {
-    user,
-    loading,
+    ...authState,
     login,
     register,
     logout,
-    isAuthenticated: !!user
+    resetPassword,
+    updatePassword
   };
 }
+
+export default useAuth;
