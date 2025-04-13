@@ -1,6 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
 import { useTheme } from "@/components/ThemeProvider";
-import { useEpictusIA } from "@/contexts/EpictusIAContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -37,15 +36,31 @@ import {
 
 export default function EpictusIAInterface() {
   const { theme } = useTheme();
-  const { 
-    activeTab, 
-    setActiveTab, 
-    inputMessage, 
-    setInputMessage, 
-    showChat, 
-    showMiniChat, 
-    setShowMiniChat 
-  } = useEpictusIA();
+  // Obter o parâmetro de URL 'tab' se existir
+  const urlParams = new URLSearchParams(window.location.search);
+  const tabParam = urlParams.get('tab');
+  const [activeTab, setActiveTab] = useState(tabParam || "conversation");
+  const [inputMessage, setInputMessage] = useState("");
+  const [showChat, setShowChat] = useState(true);
+
+  // Mini-seções - ativar ou desativar
+  const [showMiniChat, setShowMiniChat] = useState(false);
+
+  // Atualizar a URL quando a aba mudar
+  const updateTab = (tab: string) => {
+    setActiveTab(tab);
+    // Verificar se tab é chat-epictus ou conversation para definir showChat
+    if (tab === 'chat-epictus' || tab === 'conversation') {
+      setShowChat(true);
+    } else {
+      setShowChat(false);
+    }
+
+    // Atualizar a URL sem recarregar a página
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', tab);
+    window.history.pushState({}, '', url);
+  };
 
   // Alternar mini-seção de chat
   const toggleMiniChat = () => {

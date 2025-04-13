@@ -1149,7 +1149,7 @@ const TurmasView: React.FC = () => {
   if (selectedGroup) {
     return <GroupDetail group={selectedGroup} onBack={handleBackFromGroup} />;
   }
-  
+
   return (
     <div className="container mx-auto p-6 max-w-[1400px]">
       {/* Page Header */}
