@@ -46,6 +46,7 @@ import {
   Square
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { generateAIResponse } from "@/services/aiChatService";
 
 interface Message {
   id: string;
@@ -308,6 +309,12 @@ const FloatingChatSupport: React.FC = () => {
   const [message, setMessage] = useState('');
   const [sessionId, setSessionId] = useState('');
   const [isMessageEmpty, setIsMessageEmpty] = useState(true);
+  
+  // Configurações da IA
+  const [aiIntelligenceLevel, setAiIntelligenceLevel] = useState('normal'); // basic, normal, advanced
+  const [aiLanguageStyle, setAiLanguageStyle] = useState('casual'); // casual, formal, technical
+  const [enableNotificationSounds, setEnableNotificationSounds] = useState(true);
+  const [isShowingAISettings, setIsShowingAISettings] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -371,12 +378,20 @@ const FloatingChatSupport: React.FC = () => {
     };
 
     setMessages((prev) => [...prev, newMessage]);
+    const userMsg = message;
     setMessage("");
     setIsLoading(true);
+    setIsTyping(true);
 
     try {
-      // Use o serviço AI para gerar a resposta
-      const response = await generateAIResponse(message, sessionId);
+      // Importar dinamicamente o serviço de IA
+      const aiService = await import('@/services/aiChatService');
+      
+      // Use o serviço AI para gerar a resposta com configurações
+      const response = await aiService.generateAIResponse(userMsg, sessionId, {
+        intelligenceLevel: aiIntelligenceLevel,
+        languageStyle: aiLanguageStyle
+      });
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -398,6 +413,7 @@ const FloatingChatSupport: React.FC = () => {
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
+      setIsTyping(false);
     }
   };
 
@@ -448,10 +464,12 @@ const FloatingChatSupport: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Aqui pode-se implementar lógica para processar o arquivo no servidor se necessário
-
+      // Importar dinamicamente o serviço de IA
+      const aiService = await import('@/services/aiChatService');
+      
       // Simular resposta da IA após análise do arquivo
-      const aiResponse = await generateAIResponse(`Analisando o arquivo: ${file.name}`, sessionId);
+      setIsTyping(true);
+      const aiResponse = await aiService.generateAIResponse(`Analisando o arquivo: ${file.name}`, sessionId);
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -515,16 +533,20 @@ const FloatingChatSupport: React.FC = () => {
             setIsLoading(true);
 
             // Gerar resposta da IA
-            generateAIResponse("Analisando áudio enviado", sessionId)
-              .then(response => {
-                const aiMessage: Message = {
-                  id: (Date.now() + 1).toString(),
-                  content: response,
-                  sender: "ai",
-                  timestamp: new Date(),
-                };
-                setMessages((prev) => [...prev, aiMessage]);
-              })
+            // Importar dinamicamente o serviço de IA
+            import('@/services/aiChatService').then(aiService => {
+              setIsTyping(true);
+              aiService.generateAIResponse("Analisando áudio enviado", sessionId)
+                .then(response => {
+                  const aiMessage: Message = {
+                    id: (Date.now() + 1).toString(),
+                    content: response,
+                    sender: "ai",
+                    timestamp: new Date(),
+                  };
+                  setMessages((prev) => [...prev, aiMessage]);
+                })
+            })
               .catch(error => {
                 console.error("Erro ao processar áudio:", error);
                 const errorMessage: Message = {
@@ -1069,33 +1091,116 @@ const FloatingChatSupport: React.FC = () => {
       <div className="p-4 border-t dark:border-gray-800">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1">
-            <Badge variant="outline" className="bg-gradient-to-r from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/40 text-blue-800 dark:text-blue-300 text-xs px-2 py-0 h-5">
+            <Badge 
+              variant="outline" 
+              className="bg-gradient-to-r from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/40 text-blue-800 dark:text-blue-300 text-xs px-2 py-0 h-5 cursor-pointer"
+              onClick={() => setIsShowingAISettings(!isShowingAISettings)}
+            >
               <Sparkles className="h-3 w-3 mr-1" />
               IA Habilitada
+              <Settings className="h-3 w-3 ml-1" />
             </Badge>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 text-xs hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-1"
-            onClick={async () => {
-              // Limpar histórico de mensagens
-              setMessages(defaultMessages);
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 text-xs hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-1"
+              onClick={async () => {
+                // Limpar histórico de mensagens
+                setMessages(defaultMessages);
 
-              // Importar e chamar função para limpar histórico de conversa
-              try {
-                const { clearConversationHistory } = await import('@/services/aiChatService');
-                const sessionId = userName || 'anonymous-' + Date.now().toString();
-                clearConversationHistory(sessionId);
-              } catch (error) {
-                console.error('Erro ao limpar histórico:', error);
-              }
-            }}
-          >
-            <RefreshCw className="h-3 w-3" />
-            Nova conversa
-          </Button>
+                // Importar e chamar função para limpar histórico de conversa
+                try {
+                  const { clearConversationHistory } = await import('@/services/aiChatService');
+                  const sessionId = userName || 'anonymous-' + Date.now().toString();
+                  clearConversationHistory(sessionId);
+                } catch (error) {
+                  console.error('Erro ao limpar histórico:', error);
+                }
+              }}
+            >
+              <RefreshCw className="h-3 w-3" />
+              Nova conversa
+            </Button>
+          </div>
         </div>
+        
+        {isShowingAISettings && (
+          <div className="mb-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
+            <h4 className="text-sm font-medium mb-2 flex items-center">
+              <Settings className="h-3.5 w-3.5 mr-1.5 text-orange-500" />
+              Configurações da IA
+            </h4>
+            
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-medium mb-1 block">Nível de Inteligência</label>
+                <div className="flex gap-1">
+                  {['basic', 'normal', 'advanced'].map((level) => (
+                    <Button
+                      key={level}
+                      size="sm"
+                      variant={aiIntelligenceLevel === level ? "default" : "outline"}
+                      className={`text-xs py-1 px-2 h-auto ${
+                        aiIntelligenceLevel === level 
+                          ? "bg-orange-500 hover:bg-orange-600 text-white" 
+                          : "border-orange-200 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                      }`}
+                      onClick={() => setAiIntelligenceLevel(level)}
+                    >
+                      {level === 'basic' ? 'Básico' : level === 'normal' ? 'Normal' : 'Avançado'}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <label className="text-xs font-medium mb-1 block">Estilo de Linguagem</label>
+                <div className="flex gap-1">
+                  {['casual', 'formal', 'technical'].map((style) => (
+                    <Button
+                      key={style}
+                      size="sm"
+                      variant={aiLanguageStyle === style ? "default" : "outline"}
+                      className={`text-xs py-1 px-2 h-auto ${
+                        aiLanguageStyle === style 
+                          ? "bg-orange-500 hover:bg-orange-600 text-white" 
+                          : "border-orange-200 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                      }`}
+                      onClick={() => setAiLanguageStyle(style)}
+                    >
+                      {style === 'casual' ? 'Casual' : style === 'formal' ? 'Formal' : 'Técnico'}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <label className="text-xs font-medium mb-1 block">Sons de Notificação</label>
+                <div className="flex items-center">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={`text-xs py-1 px-2 h-auto mr-2 ${
+                      enableNotificationSounds 
+                        ? "bg-orange-500 hover:bg-orange-600 text-white" 
+                        : "border-orange-200 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                    }`}
+                    onClick={() => setEnableNotificationSounds(!enableNotificationSounds)}
+                  >
+                    {enableNotificationSounds ? (
+                      <Headphones className="h-3.5 w-3.5 mr-1" />
+                    ) : (
+                      <Bell className="h-3.5 w-3.5 mr-1" />
+                    )}
+                    {enableNotificationSounds ? 'Ativado' : 'Desativado'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="flex items-center gap-2">
           <Input
             value={message}

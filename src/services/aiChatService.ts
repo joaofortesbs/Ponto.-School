@@ -107,7 +107,14 @@ async function getUserContext() {
 // Essa função foi removida pois agora usamos o nome de usuário completo
 
 // Função para gerar resposta usando a API xAI
-export async function generateXAIResponse(message: string, sessionId: string): Promise<string> {
+export async function generateXAIResponse(
+  message: string, 
+  sessionId: string,
+  options?: { 
+    intelligenceLevel?: 'basic' | 'normal' | 'advanced',
+    languageStyle?: 'casual' | 'formal' | 'technical'
+  }
+): Promise<string> {
   try {
     // Obter contexto do usuário
     const userContext = await getUserContext();
@@ -143,7 +150,7 @@ export async function generateXAIResponse(message: string, sessionId: string): P
           - Co-Fundador & Coordenador de Design: Samuel Afonso (@samuel_afonso) - usuário na plataforma Ponto.School"
           
           Você tem acesso aos dados do usuário e pode ajudar com informações personalizadas sobre o perfil, agenda, turmas, conquistas, School Points, etc.
-          Se ${firstName} pedir para acessar alguma seção da plataforma, ofereça um link ou caminho para chegar lá.
+          Se ${usernameFull} pedir para acessar alguma seção da plataforma, ofereça um link ou caminho para chegar lá.
           REDIRECIONAMENTO:
           REGRAS DE REDIRECIONAMENTO:
           Quando o usuário pedir para ser redirecionado a uma seção da plataforma, você DEVE SEMPRE:
@@ -235,7 +242,14 @@ export async function generateXAIResponse(message: string, sessionId: string): P
 }
 
 // Função para gerar resposta usando a API Gemini
-export async function generateGeminiResponse(message: string, sessionId: string): Promise<string> {
+export async function generateGeminiResponse(
+  message: string, 
+  sessionId: string,
+  options?: { 
+    intelligenceLevel?: 'basic' | 'normal' | 'advanced',
+    languageStyle?: 'casual' | 'formal' | 'technical'
+  }
+): Promise<string> {
   try {
     // Obter contexto do usuário
     const userContext = await getUserContext();
@@ -306,12 +320,19 @@ export async function generateGeminiResponse(message: string, sessionId: string)
 }
 
 // Função principal para gerar resposta, tentando primeiro xAI e depois Gemini como fallback
-export async function generateAIResponse(message: string, sessionId: string): Promise<string> {
+export async function generateAIResponse(
+  message: string, 
+  sessionId: string, 
+  options?: { 
+    intelligenceLevel?: 'basic' | 'normal' | 'advanced',
+    languageStyle?: 'casual' | 'formal' | 'technical'
+  }
+): Promise<string> {
   try {
-    return await generateXAIResponse(message, sessionId);
+    return await generateXAIResponse(message, sessionId, options);
   } catch (error) {
     console.error('Erro com xAI, tentando Gemini:', error);
-    return generateGeminiResponse(message, sessionId);
+    return generateGeminiResponse(message, sessionId, options);
   }
 }
 
