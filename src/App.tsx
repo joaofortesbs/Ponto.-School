@@ -9,12 +9,12 @@ import {
 import ErrorBoundary from "@/components/ErrorBoundary";
 import routes from "./tempo-routes";
 import Home from "@/components/home";
-import { ThemeProvider } from "@/components/ThemeProvider";
+import { ThemeProvider } from "@/components/ThemeProvider.tsx";
 import { Toaster } from "@/components/ui/toaster";
 import FloatingChatSupport from "@/components/chat/FloatingChatSupport";
 import { supabase } from "@/lib/supabase";
 import { AccessibilityProvider } from "@/components/AccessibilityProvider";
-import { KeyboardNavigationHelper } from "@/components/keyboard-navigation-helper";
+import { KeyboardNavigationHelper } from "@/components/keyboard-navigation-helper.tsx";
 import { checkAuthentication } from "@/lib/auth-utils";
 import { StudyGoalProvider } from "@/components/dashboard/StudyGoalContext";
 import UsernameProvider from "./components/UsernameProvider"; // Added import

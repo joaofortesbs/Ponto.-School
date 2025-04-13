@@ -5,6 +5,7 @@ import "./index.css";
 import { BrowserRouter } from "react-router-dom";
 import './lib/username-initializer.ts'
 import { preInitializeWebNodes } from './lib/web-persistence.ts'
+import ErrorBoundary from "./components/ErrorBoundary.tsx";
 
 // PRIORIDADE MÁXIMA: Inicializar teias antes de qualquer outro código
 // Esta função é executada imediatamente, antes mesmo da montagem do React
