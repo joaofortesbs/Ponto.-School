@@ -299,7 +299,20 @@ const FloatingChatSupport: React.FC = () => {
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [userName, setUserName] = useState("Usuário");
-
+  
+  // Estados para upload de arquivos e áudio
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  
+  // Refs para upload de arquivos e gravação de áudio
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordingTimerRef = useRef<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -326,23 +339,192 @@ const FloatingChatSupport: React.FC = () => {
       }
     };
   }, [isOpen]);
+  
+  // Obter nome do usuário ao inicializar
+  useEffect(() => {
+    const getUserName = async () => {
+      try {
+        // Tentar obter nome de diversas fontes
+        const storedUserName = localStorage.getItem('username') || 
+                             sessionStorage.getItem('username');
+        
+        if (storedUserName) {
+          // Extrair o primeiro nome
+          const firstName = storedUserName.split(' ')[0];
+          setUserName(firstName || storedUserName);
+        }
+        
+        // Tente importar de forma assíncrona o módulo de utils
+        try {
+          const { getUsernameFromAllSources } = await import('@/lib/username-utils');
+          if (getUsernameFromAllSources) {
+            const username = await getUsernameFromAllSources();
+            if (username) {
+              // Extrair o primeiro nome
+              const firstName = username.split(' ')[0];
+              setUserName(firstName || username);
+            }
+          }
+        } catch (error) {
+          console.log('Não foi possível importar funções de username:', error);
+        }
+      } catch (error) {
+        console.error('Erro ao obter nome do usuário:', error);
+      }
+    };
+    
+    getUserName();
+  }, []);
+
+  // Função para lidar com a seleção de arquivos
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Verificar tamanho (limite de 20MB)
+      if (file.size > 20 * 1024 * 1024) {
+        alert("Arquivo muito grande. O tamanho máximo é 20MB.");
+        return;
+      }
+      setSelectedFile(file);
+    }
+  };
+
+  // Função para iniciar gravação de áudio
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        setAudioBlob(audioBlob);
+        setAudioUrl(audioUrl);
+        
+        // Criar um arquivo a partir do blob
+        const filename = `audio_${Date.now()}.wav`;
+        const audioFile = new File([audioBlob], filename, { type: 'audio/wav' });
+        setAudioFile(audioFile);
+        setSelectedFile(audioFile);
+        
+        // Parar todos os tracks do stream
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+
+      // Iniciar timer
+      let seconds = 0;
+      recordingTimerRef.current = window.setInterval(() => {
+        seconds++;
+        setRecordingTime(seconds);
+        // Limite de 2 minutos
+        if (seconds >= 120) {
+          stopRecording();
+        }
+      }, 1000);
+    } catch (error) {
+      console.error('Erro ao iniciar gravação:', error);
+      alert('Não foi possível acessar o microfone. Verifique as permissões do navegador.');
+    }
+  };
+
+  // Função para parar gravação
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      
+      // Limpar timer
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+      setRecordingTime(0);
+    }
+  };
+
+  // Função para cancelar gravação
+  const cancelRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      
+      // Limpar timer
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+      setRecordingTime(0);
+      
+      // Descartar o áudio
+      setAudioBlob(null);
+      setAudioUrl(null);
+      setAudioFile(null);
+      setSelectedFile(null);
+    }
+  };
+
+  // Limpar recursos quando componente é desmontado
+  useEffect(() => {
+    return () => {
+      // Limpar timer de gravação
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+      }
+      
+      // Limpar URLs de objetos
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
+      
+      // Parar gravação se estiver em andamento
+      if (mediaRecorderRef.current && isRecording) {
+        mediaRecorderRef.current.stop();
+      }
+    };
+  }, [audioUrl, isRecording]);
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
+    if (!inputMessage.trim() && !selectedFile) return;
+
+    // Criar conteúdo baseado no que está sendo enviado
+    let messageText = inputMessage.trim();
+    let fileInfo = "";
+    
+    // Se tiver um arquivo, adicionar informações do arquivo
+    if (selectedFile) {
+      fileInfo = `[Arquivo anexado: ${selectedFile.name} (${(selectedFile.size / 1024).toFixed(1)}KB, tipo: ${selectedFile.type})]`;
+      if (!messageText) {
+        messageText = fileInfo;
+      } else {
+        messageText = `${messageText}\n${fileInfo}`;
+      }
+    }
 
     // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
-      text: inputMessage,
+      text: messageText,
       sender: "user",
       timestamp: new Date(),
     };
 
     // Guardar a mensagem para enviar à API
-    const currentMessage = inputMessage;
+    const currentMessage = messageText;
 
     setMessages((prev) => [...prev, userMessage]);
     setInputMessage("");
+    setSelectedFile(null); // Limpar arquivo após envio
     setIsTyping(true);
 
     try {
@@ -351,6 +533,12 @@ const FloatingChatSupport: React.FC = () => {
 
       // Gerar uma ID de sessão baseada no usuário atual ou criar uma nova
       const sessionId = userName || 'anonymous-' + Date.now().toString();
+
+      // TODO: Aqui seria o lugar para enviar o arquivo para um serviço de análise
+      // Se for imagem, poderia enviar para análise de imagem
+      // Se for documento, poderia extrair texto
+      // Se for áudio, poderia transcrever
+      // Por enquanto, vamos apenas informar à IA que um arquivo foi anexado
 
       // Obter resposta da IA
       const aiResponseText = await generateAIResponse(currentMessage, sessionId);
@@ -844,7 +1032,43 @@ const FloatingChatSupport: React.FC = () => {
               <div
                 className={`max-w-[75%] rounded-lg px-3 py-2 ${message.sender === "user" ? "bg-blue-500 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200"}`}
               >
-                <p className="text-sm">{message.text}</p>
+                <div className="text-sm whitespace-pre-wrap">
+                  {/* Processa URLs para torná-las clicáveis */}
+                  {message.text.split(/(https?:\/\/[^\s]+)/g).map((part, i) => {
+                    if (part.match(/^https?:\/\/[^\s]+$/)) {
+                      return (
+                        <a 
+                          key={i} 
+                          href={part} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className={`underline ${message.sender === "user" ? "text-white" : "text-blue-600 dark:text-blue-400"}`}
+                          onClick={(e) => {
+                            // Se for uma URL interna, impedir navegação padrão
+                            if (part.startsWith("https://pontoschool.com")) {
+                              e.preventDefault();
+                              // Navegar programaticamente ou alterar estado
+                              window.location.href = part;
+                            }
+                          }}
+                        >
+                          {part}
+                        </a>
+                      );
+                    }
+                    return part;
+                  })}
+                  
+                  {/* Se a mensagem contém informações de um arquivo */}
+                  {message.text.includes("[Arquivo anexado:") && (
+                    <div className="mt-2 p-2 bg-gray-200/50 dark:bg-gray-700/50 rounded text-xs">
+                      <div className="flex items-center gap-1">
+                        <Paperclip className="h-3 w-3 text-gray-500 dark:text-gray-400" />
+                        <span>Arquivo anexado</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <div className="text-xs opacity-70 mt-1 text-right">
                   {message.timestamp.toLocaleTimeString([], {
                     hour: "2-digit",
@@ -914,26 +1138,129 @@ const FloatingChatSupport: React.FC = () => {
             Nova conversa
           </Button>
         </div>
-        <div className="flex items-center gap-2">
-          <Input
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            placeholder="Digite sua mensagem..."
-            className="flex-1 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
-            onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-          />
-          <Button
-            size="icon"
-            className="rounded-full bg-[#FF6B00] hover:bg-[#FF6B00]/90"
-            onClick={handleSendMessage}
-            disabled={isTyping || inputMessage.trim() === ''}
-          >
-            {isTyping ? (
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-dashed border-white" />
-            ) : (
-              <Send className="h-4 w-4 text-white" />
-            )}
-          </Button>
+        
+        {/* Área de visualização de arquivo sendo enviado */}
+        {selectedFile && (
+          <div className="mb-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-md">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {selectedFile.type.startsWith('image/') ? (
+                  <div className="w-12 h-12 rounded overflow-hidden">
+                    <img 
+                      src={URL.createObjectURL(selectedFile)} 
+                      alt="Prévia" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-10 h-10 rounded bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                    <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                )}
+                <div className="overflow-hidden">
+                  <p className="text-sm font-medium truncate">{selectedFile.name}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {(selectedFile.size / 1024).toFixed(1)} KB
+                  </p>
+                </div>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 w-6 p-0 rounded-full" 
+                onClick={() => setSelectedFile(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+        
+        {/* Área de gravação de áudio */}
+        {isRecording && (
+          <div className="mb-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+                <p className="text-sm text-red-600 dark:text-red-400">Gravando áudio... {recordingTime}s</p>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-7 w-7 p-0 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30" 
+                  onClick={stopRecording}
+                >
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-7 w-7 p-0 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30" 
+                  onClick={cancelRecording}
+                >
+                  <X className="h-4 w-4 text-red-600" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <Input
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              placeholder="Digite sua mensagem..."
+              className="flex-1 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
+              onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+            />
+            <Button
+              size="icon"
+              className="rounded-full bg-[#FF6B00] hover:bg-[#FF6B00]/90"
+              onClick={handleSendMessage}
+              disabled={isTyping || (inputMessage.trim() === '' && !selectedFile)}
+            >
+              {isTyping ? (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-dashed border-white" />
+              ) : (
+                <Send className="h-4 w-4 text-white" />
+              )}
+            </Button>
+          </div>
+          
+          {/* Botões para anexar arquivos e gravar áudio */}
+          <div className="flex items-center justify-start gap-2 px-1">
+            <input 
+              type="file" 
+              id="file-upload"
+              className="hidden"
+              onChange={handleFileChange}
+              ref={fileInputRef}
+              accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 rounded-md px-2 text-xs flex items-center gap-1 hover:bg-gray-100 dark:hover:bg-gray-800"
+              onClick={() => fileInputRef.current.click()}
+            >
+              <Paperclip className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
+              <span className="text-gray-600 dark:text-gray-300">Arquivo</span>
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`h-8 rounded-md px-2 text-xs flex items-center gap-1 hover:bg-gray-100 dark:hover:bg-gray-800 ${isRecording ? 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400' : ''}`}
+              onClick={isRecording ? stopRecording : startRecording}
+            >
+              <Mic className={`h-3.5 w-3.5 ${isRecording ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}`} />
+              <span className={`${isRecording ? 'text-red-700 dark:text-red-400' : 'text-gray-600 dark:text-gray-300'}`}>
+                {isRecording ? 'Parar' : 'Áudio'}
+              </span>
+            </Button>
+          </div>
         </div>
       </div>
     </div>

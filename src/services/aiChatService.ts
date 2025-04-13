@@ -37,20 +37,33 @@ async function getUserContext() {
       console.log('Perfil não disponível para IA:', error);
     }
     
+    // Obter histórico de interações
+    const userPreferences = JSON.parse(localStorage.getItem('userPreferences') || '{}');
+    const recentSearches = JSON.parse(localStorage.getItem('recentSearches') || '[]');
+    const favoriteContent = JSON.parse(localStorage.getItem('favoriteContent') || '[]');
+    const courseProgress = JSON.parse(localStorage.getItem('courseProgress') || '{}');
+    
     // Obter outras informações contextuais disponíveis
     const userContext = {
       username: username,
+      firstName: username.split(' ')[0],
       email: localStorage.getItem('userEmail') || sessionStorage.getItem('userEmail') || 'email@exemplo.com',
       profile: profileData,
       currentPage: window.location.pathname,
       lastActivity: localStorage.getItem('lastActivity') || 'Nenhuma atividade recente',
-      // Adicionar mais contextos conforme disponíveis
+      preferences: userPreferences,
+      recentSearches: recentSearches,
+      favoriteContent: favoriteContent,
+      courseProgress: courseProgress,
+      achievements: JSON.parse(localStorage.getItem('achievements') || '[]'),
+      schoolPoints: localStorage.getItem('schoolPoints') || '0',
+      notifications: JSON.parse(localStorage.getItem('notifications') || '[]')
     };
     
     return userContext;
   } catch (error) {
     console.error('Erro ao obter contexto do usuário:', error);
-    return { username: 'Usuário' };
+    return { username: 'Usuário', firstName: 'Usuário' };
   }
 }
 
@@ -68,17 +81,47 @@ export async function generateXAIResponse(message: string, sessionId: string): P
           content: `Você é o Epictus IA, o assistente inteligente da Ponto.School, uma plataforma educacional. 
           
           Contexto do usuário:
+          - Nome: ${userContext.firstName}
           - Username: ${userContext.username}
           - Email: ${userContext.email}
           - Localização atual na plataforma: ${userContext.currentPage}
           - Última atividade: ${userContext.lastActivity}
+          - School Points: ${userContext.schoolPoints}
           
-          Forneça respostas úteis, precisas e personalizadas para este usuário específico.
-          Quando perguntado sobre sua identidade, responda que você é o Epictus IA, assistente da Ponto.School.
-          Você tem acesso aos dados do usuário e pode ajudar com informações sobre o perfil, agenda, turmas, conquistas, School Points, etc.
-          Se o usuário pedir para acessar alguma seção da plataforma, ofereça um link ou caminho para chegar lá.
-          Priorize clareza e objetividade nas suas respostas.
-          Personalize sua resposta para o usuário ${userContext.username}.`
+          INFORMAÇÕES SOBRE A PLATAFORMA:
+          
+          A Ponto.School é uma plataforma educacional criada e desenvolvida por uma equipe de quatro administradores principais:
+          - Fundador & CEO: João Fortes (username: @joaofortes na plataforma)
+          - Co-Fundador & CMO: Felipe Brito (username: @felipe_rico na plataforma) 
+          - Co-Fundador & COO: Adriel Borges (username: @adriel_borges na plataforma)
+          - Co-Fundador & Coordenador de Design: Samuel Afonso (username: @samuel_afonso na plataforma)
+          
+          Além destes, a plataforma conta com equipes de suporte, marketing, TI e outras áreas.
+          
+          INSTRUÇÕES PARA VOCÊ:
+          
+          1. Sempre se refira ao usuário pelo primeiro nome: ${userContext.firstName}
+          2. Use uma linguagem informal e descontraída, mas profissional
+          3. Quando o usuário perguntar sobre quem criou, desenvolveu ou sobre a equipe da plataforma, compartilhe as informações dos 4 administradores mencionados acima
+          4. Se o usuário solicitar acesso a alguma seção da plataforma, envie o link direto utilizando https://pontoschool.com/ como base
+          5. Você tem acesso ao perfil completo, histórico, conquistas, School Points, e todas as informações do usuário na plataforma
+          6. Para personalizar as respostas, utilize o contexto atual do usuário
+          7. Demonstre entusiasmo e seja prestativo
+          
+          LINKS IMPORTANTES DA PLATAFORMA:
+          - Dashboard: https://pontoschool.com/dashboard
+          - Biblioteca: https://pontoschool.com/biblioteca
+          - Turmas: https://pontoschool.com/turmas
+          - Portal: https://pontoschool.com/portal
+          - Perfil: https://pontoschool.com/profile
+          - Organização: https://pontoschool.com/organizacao
+          - School Points: https://pontoschool.com/carteira
+          - Conquistas: https://pontoschool.com/conquistas
+          - Conexão Expert: https://pontoschool.com/pedidos-ajuda
+          - Comunidades: https://pontoschool.com/comunidades
+          - Mercado: https://pontoschool.com/mercado
+          
+          Sempre referir-se ao usuário como ${userContext.firstName} e personalizar as respostas com base no contexto acima.`
         }
       ];
     }
