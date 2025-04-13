@@ -43,134 +43,54 @@ try {
 // Função para obter dados do usuário atual com acesso expandido e completo
 async function getUserContext() {
   try {
-    // Obter dados do localStorage e sessionStorage
-    const usernameSources = {
-      localStorage: localStorage.getItem('username'),
-      sessionStorage: sessionStorage.getItem('username'),
-      profile: null,
-      metadata: null,
-      email: localStorage.getItem('userEmail') || sessionStorage.getItem('userEmail')
-    };
-
-    // Importar serviços e utilitários necessários
-    let profileService;
-    let supabase;
-    let completeUserProfile = null;
-    let userClasses = [];
-    let userSeries = [];
-    let followersCount = 0;
-
-    try {
-      // Importar o serviço de perfil e o cliente Supabase
-      profileService = (await import('@/services/profileService')).profileService;
-      supabase = (await import('@/lib/supabase')).supabase;
-
-      // Obter perfil completo do usuário com todos os detalhes
-      completeUserProfile = await profileService.getCurrentUserProfile();
-
-      // Obter session para determinar o ID do usuário atual
-      const { data: sessionData } = await supabase.auth.getSession();
-      const currentUserId = sessionData?.session?.user?.id;
-
-      if (currentUserId && completeUserProfile) {
-        // Obter turmas do usuário
-        const { data: classesData } = await supabase
-          .from('user_classes')
-          .select('*, class:classes(*)')
-          .eq('user_id', currentUserId);
-
-        if (classesData) {
-          userClasses = classesData;
-        }
-
-        // Obter séries do usuário
-        const { data: seriesData } = await supabase
-          .from('user_series')
-          .select('*, serie:series(*)')
-          .eq('user_id', currentUserId);
-
-        if (seriesData) {
-          userSeries = seriesData;
-        }
-
-        // Obter contagem de seguidores
-        const { count } = await supabase
-          .from('user_followers')
-          .select('*', { count: 'exact' })
-          .eq('followed_id', currentUserId);
-
-        if (count !== null) {
-          followersCount = count;
-        }
-      }
-    } catch (error) {
-      console.error('Erro ao obter dados completos do perfil:', error);
+    // Importar o aiChatDatabase para acesso a dados do usuário
+    const aiChatDatabase = (await import('./aiChatDatabaseService')).aiChatDatabase;
+    
+    // Obter o contexto completo do usuário através do serviço especializado
+    const userContext = await aiChatDatabase.getUserContext();
+    
+    // Se não conseguiu obter dados, usar fallback básico
+    if (!userContext.isAuthenticated) {
+      // Obter dados do localStorage e sessionStorage como fallback
+      const usernameSources = {
+        localStorage: localStorage.getItem('username'),
+        sessionStorage: sessionStorage.getItem('username'),
+        email: localStorage.getItem('userEmail') || sessionStorage.getItem('userEmail')
+      };
+      
+      const bestUsername = usernameSources.localStorage || 
+                           usernameSources.sessionStorage || 
+                           'Usuário';
+      
+      return {
+        username: bestUsername,
+        email: usernameSources.email || 'email@exemplo.com',
+        userId: 'ID não disponível',
+        fullName: 'Nome não disponível',
+        displayName: bestUsername,
+        createdAt: 'Data não disponível',
+        planType: 'lite',
+        userLevel: 1,
+        followersCount: 0,
+        currentPage: window.location.pathname,
+        classes: [],
+        series: []
+      };
     }
-
-    // Tentar obter dados expandidos do perfil via username-utils (fallback)
-    let basicProfileData = {};
-    let metadataUsername = null;
-
-    try {
-      const usernameUtils = await import('@/lib/username-utils');
-      if (usernameUtils && usernameUtils.getUserProfile) {
-        basicProfileData = await usernameUtils.getUserProfile();
-
-        if (usernameUtils.getCurrentUsername) {
-          metadataUsername = await usernameUtils.getCurrentUsername();
-          usernameSources.metadata = metadataUsername;
-        }
-
-        if (basicProfileData && basicProfileData.username) {
-          usernameSources.profile = basicProfileData.username;
-        }
-      }
-    } catch (error) {
-      console.log('Erro ao obter perfil via username-utils:', error);
-    }
-
-    // Determinar o melhor username para usar (prioridade: perfil completo > metadata > localStorage > sessionStorage)
-    const bestUsername = 
-      (completeUserProfile?.username || completeUserProfile?.display_name) || 
-      metadataUsername || 
-      usernameSources.localStorage || 
-      usernameSources.sessionStorage || 
-      usernameSources.profile || 
-      'Usuário';
-
-    // Construir contexto completo do usuário
-    const userContext = {
-      // Dados básicos
-      username: bestUsername,
-      email: completeUserProfile?.email || usernameSources.email || 'email@exemplo.com',
-
-      // Dados completos do perfil
-      profile: completeUserProfile || basicProfileData,
-
-      // Dados específicos para fácil acesso
-      userId: completeUserProfile?.user_id || 'ID não disponível',
-      fullName: completeUserProfile?.full_name || 'Nome não disponível',
-      displayName: completeUserProfile?.display_name || bestUsername,
-      createdAt: completeUserProfile?.created_at || 'Data não disponível',
-      planType: completeUserProfile?.plan_type || 'lite',
-      userLevel: completeUserProfile?.level || 1,
-      followersCount: followersCount,
-
-      // Dados de contexto de uso
+    
+    // Adicionar dados extras relevantes ao contexto
+    return {
+      ...userContext,
       currentPage: window.location.pathname,
       lastActivity: localStorage.getItem('lastActivity') || 'Nenhuma atividade recente',
-
-      // Dados das turmas e séries
-      classes: userClasses,
-      series: userSeries,
-
+      
       // Dados do dispositivo e ambiente
       userAgent: navigator.userAgent,
       platform: navigator.platform,
       screenSize: `${window.innerWidth}x${window.innerHeight}`,
       darkMode: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches,
-
-      // Dados do localStorage
+      
+      // Dados do localStorage relevantes
       localStorageData: Object.keys(localStorage).filter(key => 
         key.startsWith('user_') || 
         key.startsWith('ponto_') || 
@@ -180,18 +100,6 @@ async function getUserContext() {
         return acc;
       }, {})
     };
-
-    // Obter atividades recentes
-    try {
-      const recentActivities = JSON.parse(localStorage.getItem('user_recent_activities') || '[]');
-      if (Array.isArray(recentActivities) && recentActivities.length > 0) {
-        userContext.recentActivities = recentActivities;
-      }
-    } catch (e) {
-      console.log('Erro ao obter atividades recentes:', e);
-    }
-
-    return userContext;
   } catch (error) {
     console.error('Erro ao obter contexto do usuário:', error);
     return { username: 'Usuário' };

@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import {
   MessageSquare,
   Send,
@@ -68,6 +69,9 @@ interface ChatMessage {
   files?: MessageFile[];
   rating?: 'positive' | 'negative';
   needsImprovement?: boolean;
+  evaluation?: 'good' | 'bad';
+  showFeedbackOptions?: boolean;
+  feedbackText?: string;
 }
 
 interface Ticket {
@@ -386,10 +390,10 @@ const FloatingChatSupport: React.FC = () => {
         // Tentar obter dados do perfil do usuário
         const profileService = await import('@/services/profileService');
         const userProfile = await profileService.profileService.getCurrentUserProfile();
-        
+
         // Determinar o melhor nome de usuário a usar
         let displayName = 'Usuário';
-        
+
         if (userProfile) {
           // Prioridade: nome completo > displayName > username
           if (userProfile.full_name) {
@@ -408,16 +412,16 @@ const FloatingChatSupport: React.FC = () => {
             displayName = storedName;
           }
         }
-        
+
         // Atualizar estado com o nome encontrado
         setUserName(displayName);
-        
+
         // Gerar uma ID de sessão baseada no usuário atual ou usar existente
         const savedSessionId = localStorage.getItem('chatSessionId');
         const newSessionId = savedSessionId || 
                             `chat_${displayName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`;
         setSessionId(newSessionId);
-        
+
         if (!savedSessionId) {
           localStorage.setItem('chatSessionId', newSessionId);
         }
@@ -450,15 +454,15 @@ const FloatingChatSupport: React.FC = () => {
         }
       } catch (error) {
         console.error('Erro ao inicializar chat:', error);
-        
+
         // Usar valores padrão em caso de erro
         const displayName = 'Usuário';
         setUserName(displayName);
-        
+
         const savedSessionId = localStorage.getItem('chatSessionId');
         const newSessionId = savedSessionId || `chat_default_${Date.now()}`;
         setSessionId(newSessionId);
-        
+
         if (!savedSessionId) {
           localStorage.setItem('chatSessionId', newSessionId);
         }
@@ -485,10 +489,10 @@ const FloatingChatSupport: React.FC = () => {
     // Encontrar a mensagem original e o seu índice
     const messageIndex = messages.findIndex(msg => msg.id === editingMessageId);
     if (messageIndex === -1) return;
-    
+
     const originalMessage = messages[messageIndex];
     const nextMessageIndex = messageIndex + 1;
-    
+
     // Atualizar a mensagem editada
     const updatedMessages = [...messages];
     updatedMessages[messageIndex] = {
@@ -496,24 +500,24 @@ const FloatingChatSupport: React.FC = () => {
       content: editMessageContent,
       timestamp: new Date() // Atualizar o timestamp
     };
-    
+
     // Se há uma resposta da IA logo após esta mensagem, vamos removê-la
     // e gerar uma nova resposta baseada na mensagem editada
     if (nextMessageIndex < messages.length && messages[nextMessageIndex].sender === 'assistant') {
       // Remover a resposta antiga
       updatedMessages.splice(nextMessageIndex, 1);
     }
-    
+
     // Atualizar o estado de mensagens
     setMessages(updatedMessages);
-    
+
     // Cancelar o modo de edição
     setEditingMessageId(null);
     setEditMessageContent("");
-    
+
     // Sinalizar que a IA está digitando
     setIsTyping(true);
-    
+
     try {
       // Gerar uma nova resposta para a mensagem editada
       const aiService = await import('@/services/aiChatService');
@@ -525,7 +529,7 @@ const FloatingChatSupport: React.FC = () => {
           languageStyle: aiLanguageStyle
         }
       );
-      
+
       // Adicionar a nova resposta da IA
       setMessages(prevMessages => [
         ...prevMessages,
@@ -561,14 +565,14 @@ const FloatingChatSupport: React.FC = () => {
   // Função para melhorar o prompt com IA
   const improvePrompt = async () => {
     if (!inputMessage.trim()) return;
-    
+
     setPromptImprovementLoading(true);
     setIsImprovingPrompt(true);
-    
+
     try {
       // Importando o serviço dinamicamente
       const aiService = await import('@/services/aiChatService');
-      
+
       // Chamar a API para melhorar o prompt
       const improvedPromptText = await aiService.generateAIResponse(
         `Melhore o seguinte prompt para obter uma resposta mais detalhada e completa. 
@@ -580,13 +584,13 @@ const FloatingChatSupport: React.FC = () => {
           languageStyle: aiLanguageStyle || 'casual'
         }
       );
-      
+
       // Limpar qualquer formatação que possa ter vindo da resposta
       const cleanedImprovedPrompt = improvedPromptText
         .replace(/^(Prompt melhorado:|Aqui está uma versão melhorada:|Versão melhorada:|Reescrita:|Pergunta melhorada:)/i, '')
         .replace(/^["']|["']$/g, '')
         .trim();
-      
+
       setImprovedPrompt(cleanedImprovedPrompt);
     } catch (error) {
       console.error('Erro ao melhorar o prompt:', error);
@@ -663,7 +667,7 @@ const FloatingChatSupport: React.FC = () => {
 
       // Gerar um ID de sessão valido caso ainda não exista
       const validSessionId = sessionId || `chat_${userName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`;
-      
+
       // Chamar a API para obter resposta com opções personalizadas - já gerencia o histórico internamente
       const aiResponse = await aiService.generateAIResponse(
         fullMessage,
@@ -701,12 +705,12 @@ const FloatingChatSupport: React.FC = () => {
         sender: 'assistant', 
         timestamp: new Date() 
       };
-      
+
       setMessages(prevMessages => [...prevMessages, assistantMessage]);
-      
+
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
-      
+
       // Resposta de erro mais amigável
       setMessages(prevMessages => [
         ...prevMessages,
@@ -737,28 +741,28 @@ const FloatingChatSupport: React.FC = () => {
       e.target.value = '';
     }
   };
-  
+
   // Função para abrir o seletor de arquivos
   const openFileSelector = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
-  
+
   // Função para lidar com a seleção de arquivos
   const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
-    
+
     // Adicionar os arquivos selecionados à lista
     const newFiles = Array.from(e.target.files);
     setSelectedFiles(prev => [...prev, ...newFiles]);
-    
+
     // Limpar o input para permitir selecionar os mesmos arquivos novamente
     if (e.target) {
       e.target.value = '';
     }
   };
-  
+
   // Função para remover um arquivo da lista
   const removeFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
@@ -922,7 +926,7 @@ const FloatingChatSupport: React.FC = () => {
   const filteredSuggestions = suggestions.filter(
     (suggestion) =>
       suggestion.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      suggestion.description.toLowerCase().includes(searchQuery.toLowerCase()),
+      suggestion.description.toLowerCase().includes(<searchQuery.toLowerCase()),
   );
 
   const filteredChatHistory = chatHistory.filter(
@@ -1308,7 +1312,7 @@ const FloatingChatSupport: React.FC = () => {
                   </Avatar>
                 </div>
               )}
-              
+
               {editingMessageId === message.id && message.sender === "user" ? (
                 <div className="max-w-[75%] bg-blue-600 text-white p-2 rounded-lg">
                   <textarea
@@ -1488,18 +1492,18 @@ const FloatingChatSupport: React.FC = () => {
                                 setIsTyping(true);
                                 const updatedMessages = [...messages];
                                 const index = updatedMessages.findIndex(m => m.id === message.id);
-                                
+
                                 if (index !== -1) {
                                   updatedMessages[index] = {
                                     ...updatedMessages[index],
                                     needsImprovement: false
                                   };
                                   setMessages(updatedMessages);
-                                  
+
                                   try {
                                     // Importar o serviço AI dinamicamente
                                     const aiService = await import('@/services/aiChatService');
-                                    
+
                                     // Solicitar uma resposta melhorada
                                     const improvedResponse = await aiService.generateAIResponse(
                                       `Por favor, reformule sua resposta anterior para torná-la mais clara, precisa e útil: "${message.content.replace(/<[^>]*>/g, '')}"`,
@@ -1509,7 +1513,7 @@ const FloatingChatSupport: React.FC = () => {
                                         languageStyle: aiLanguageStyle
                                       }
                                     );
-                                    
+
                                     // Adicionar a resposta melhorada como uma nova mensagem
                                     setMessages(prev => [
                                       ...prev,
@@ -1521,7 +1525,7 @@ const FloatingChatSupport: React.FC = () => {
                                       }
                                     ]);
                                   } catch (error) {
-                                    console.error('Erro ao reformular resposta:', error);
+                                    console.error('Erroao reformular resposta:', error);
                                     setMessages(prev => [
                                       ...prev,
                                       { 
@@ -1546,11 +1550,11 @@ const FloatingChatSupport: React.FC = () => {
                               onClick={() => {
                                 const updatedMessages = [...messages];
                                 const index = updatedMessages.findIndex(m => m.id === message.id);
-                                
+
                                 if (index !== -1) {
                                   // Definir estado temporário para entrada de sugestão
                                   setInputMessage(`Quero uma resposta melhor para: "${message.content.replace(/<[^>]*>/g, '').substring(0, 50)}...". Preciso que você melhore em: `);
-                                  
+
                                   // Atualizar o estado da mensagem
                                   updatedMessages[index] = {
                                     ...updatedMessages[index],
@@ -1575,7 +1579,7 @@ const FloatingChatSupport: React.FC = () => {
                   </div>
                 </div>
               )}
-              
+
               {message.sender === "user" && (
                 <div className="w-8 h-8 rounded-full overflow-hidden ml-2 flex-shrink-0">
                   <Avatar>
@@ -1604,9 +1608,9 @@ const FloatingChatSupport: React.FC = () => {
                     <div className="w-2 h-2 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] animate-pulse"></div>
                     <div className="w-2 h-2 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] animate-pulse delay-150"></div>
                     <div className="w-2 h-2 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] animate-pulse delay-300"></div>
-                    <div className="ml-2 text-sm font-medium text-gray-600 dark:text-gray-300">
+                    <span className="ml-2 text-sm font-medium text-gray-600 dark:text-gray-300">
                       Epictus IA está elaborando uma resposta...
-                    </div>
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1754,7 +1758,7 @@ const FloatingChatSupport: React.FC = () => {
                 </Button>
               </div>
             </div>
-            
+
             {promptImprovementLoading ? (
               <div className="flex items-center justify-center py-4">
                 <div className="flex items-center space-x-2">
@@ -2523,31 +2527,31 @@ const FloatingChatSupport: React.FC = () => {
         .animate-bounce-subtle {
           animation: bounce-subtle 2s ease-in-out infinite;
         }
-        
+
         .message-content strong {
           font-weight: 600;
         }
-        
+
         .message-content em {
           font-style: italic;
           opacity: 0.9;
         }
-        
+
         .message-content code {
           font-family: monospace;
           padding: 0.1rem 0.3rem;
           border-radius: 3px;
         }
-        
+
         .message-content ul, .message-content ol {
           padding-left: 1.5rem;
           margin: 0.5rem 0;
         }
-        
+
         .message-content ul li {
           list-style-type: disc;
         }
-        
+
         .message-content ol li {
           list-style-type: decimal;
         }
