@@ -321,7 +321,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
           const dxB = nodeB.x - mousePosition.x;
           const dyB = nodeB.y - mousePosition.y;
           const distanceBToMouse = Math.sqrt(dxB * dxB + dyB * dyB);
-          
+
           if (distanceBToMouse < cursorRange && Math.random() > 0.7) {
             const opacityB = (1 - Math.max(distanceToMouse, distanceBToMouse) / cursorRange) * 0.12;
             ctx.beginPath();
@@ -365,11 +365,11 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
     const x = e.clientX;
     const y = e.clientY;
 
-    // Adicionar 25 novos nós ao redor do clique
-    const newNodes = Array.from({ length: 25 }, () => {
-      const radius = Math.random() * 1.5 + 0.5;
+    // Adicionar 40 novos nós ao redor do clique
+    const newNodes = Array.from({ length: 40 }, () => {
+      const radius = Math.random() * 1.8 + 0.5;
       const angle = Math.random() * Math.PI * 2;
-      const distance = Math.random() * 50;
+      const distance = Math.random() * 70;
 
       return {
         x: x + Math.cos(angle) * distance,
