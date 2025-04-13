@@ -52,14 +52,34 @@ export function LoginForm() {
       setLoading(false);
       return;
     }
+    
+    // Mostrar feedback de carregamento instantâneo
+    setSuccess(true);
+    localStorage.setItem('auth_checked', 'pending');
+    localStorage.setItem('auth_status', 'authenticating');
+    
+    // Timeout para evitar que o usuário fique travado indefinidamente
+    const authTimeout = setTimeout(() => {
+      setLoading(false);
+      if (!localStorage.getItem('auth_status') || localStorage.getItem('auth_status') === 'authenticating') {
+        setSuccess(false);
+        setError("Tempo limite excedido. Por favor, tente novamente.");
+        localStorage.removeItem('auth_checked');
+        localStorage.removeItem('auth_status');
+      }
+    }, 7000);
 
     try {
+      // Otimizar a autenticação com tratamento de cache
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
 
+      clearTimeout(authTimeout);
+      
       if (error) {
+        setSuccess(false);
         if (error.message.includes("Invalid login credentials") ||
             error.message.includes("Email not confirmed")) {
           setError("Email ou senha inválidos");
@@ -68,30 +88,31 @@ export function LoginForm() {
         } else {
           setError("Erro ao fazer login: " + error.message);
         }
+        localStorage.removeItem('auth_checked');
+        localStorage.removeItem('auth_status');
         setLoading(false);
         return;
       }
 
       if (data?.user) {
-        setSuccess(true);
         localStorage.setItem('auth_checked', 'true');
-        localStorage.setItem('auth_status', 'authenticated'); //Added to persist login status.
+        localStorage.setItem('auth_status', 'authenticated');
 
-        // Removida a lógica de armazenar timestamp de sessão
-        // para garantir que o modal de boas-vindas sempre apareça
-
-        // Não mostrar o primeiro modal de boas-vindas quando o usuário fizer login aqui
-        // Os modais serão controlados pelo App.tsx quando o usuário chegar nas páginas protegidas
-
-        setTimeout(() => {
-          navigate("/");
-        }, 1000);
+        // Redirecionar rapidamente para melhorar percepção de velocidade
+        navigate("/");
       } else {
+        setSuccess(false);
         setError("Erro ao completar login");
+        localStorage.removeItem('auth_checked');
+        localStorage.removeItem('auth_status');
       }
     } catch (err: any) {
+      clearTimeout(authTimeout);
+      setSuccess(false);
       setError("Erro ao fazer login, tente novamente");
       console.error("Erro ao logar:", err);
+      localStorage.removeItem('auth_checked');
+      localStorage.removeItem('auth_status');
     } finally {
       setLoading(false);
     }

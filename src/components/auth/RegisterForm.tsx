@@ -133,42 +133,46 @@ export function RegisterForm() {
     }
   }, [initialPlan]);
 
+  // Dados pré-carregados para turmas e séries
+  const preloadedClassOptions = [
+    { value: "turma-a", label: "Turma A" },
+    { value: "turma-b", label: "Turma B" },
+    { value: "turma-c", label: "Turma C" },
+    { value: "turma-d", label: "Turma D" },
+    { value: "turma-e", label: "Turma E" },
+    { value: "turma-f", label: "Turma F" },
+  ];
+
+  const preloadedGradeOptions = [
+    { value: "1-ano", label: "1º Ano" },
+    { value: "2-ano", label: "2º Ano" },
+    { value: "3-ano", label: "3º Ano" },
+    { value: "4-ano", label: "4º Ano" },
+    { value: "5-ano", label: "5º Ano" },
+    { value: "6-ano", label: "6º Ano" },
+    { value: "7-ano", label: "7º Ano" },
+    { value: "8-ano", label: "8º Ano" },
+    { value: "9-ano", label: "9º Ano" },
+    { value: "1-em", label: "1º Ano - Ensino Médio" },
+    { value: "2-em", label: "2º Ano - Ensino Médio" },
+    { value: "3-em", label: "3º Ano - Ensino Médio" },
+  ];
+
   // Effect to show class and grade options when institution is entered
   useEffect(() => {
     if (formData.institution.trim().length > 0) {
       setShowClassAndGrade(true);
-      setLoadingOptions(true);
       setInstitutionFound(true);
-
-      // Simulate fetching class options based on institution
-      // In a real app, this would be an API call to get classes for the institution
+      
+      // Carrega instantaneamente as opções pré-definidas
+      setClassOptions(preloadedClassOptions);
+      setGradeOptions(preloadedGradeOptions);
+      
+      // Breve simulação de carregamento apenas para feedback visual
+      setLoadingOptions(true);
       setTimeout(() => {
-        setClassOptions([
-          { value: "turma-a", label: "Turma A" },
-          { value: "turma-b", label: "Turma B" },
-          { value: "turma-c", label: "Turma C" },
-          { value: "turma-d", label: "Turma D" },
-          { value: "turma-e", label: "Turma E" },
-          { value: "turma-f", label: "Turma F" },
-        ]);
-
-        // Simulate fetching grade options
-        setGradeOptions([
-          { value: "1-ano", label: "1º Ano" },
-          { value: "2-ano", label: "2º Ano" },
-          { value: "3-ano", label: "3º Ano" },
-          { value: "4-ano", label: "4º Ano" },
-          { value: "5-ano", label: "5º Ano" },
-          { value: "6-ano", label: "6º Ano" },
-          { value: "7-ano", label: "7º Ano" },
-          { value: "8-ano", label: "8º Ano" },
-          { value: "9-ano", label: "9º Ano" },
-          { value: "1-em", label: "1º Ano - Ensino Médio" },
-          { value: "2-em", label: "2º Ano - Ensino Médio" },
-          { value: "3-em", label: "3º Ano - Ensino Médio" },
-        ]);
         setLoadingOptions(false);
-      }, 800); // Simulate API delay
+      }, 150); // Reduzido para 150ms apenas para feedback visual
     } else {
       setShowClassAndGrade(false);
       setInstitutionFound(false);

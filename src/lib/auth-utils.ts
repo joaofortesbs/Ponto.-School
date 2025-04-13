@@ -6,18 +6,51 @@ import { supabase } from "./supabase";
  */
 export const checkAuthentication = async (): Promise<boolean> => {
   try {
-    // Sempre consultar o Supabase para garantir estado atualizado
+    // Primeiro verificar localStorage para resposta imediata
+    const cachedStatus = localStorage.getItem('auth_status');
+    
+    // Se temos estado armazenado recente, usar para resposta rápida
+    const cacheTime = localStorage.getItem('auth_cache_time');
+    const now = Date.now();
+    
+    if (cachedStatus === 'authenticated' && cacheTime && (now - parseInt(cacheTime)) < 15 * 60 * 1000) {
+      // Cache válido por 15 minutos, verificar em background
+      setTimeout(async () => {
+        try {
+          const { data } = await supabase.auth.getSession();
+          if (!!data.session !== (cachedStatus === 'authenticated')) {
+            // Atualizar cache se houve mudança
+            localStorage.setItem('auth_status', !!data.session ? 'authenticated' : 'unauthenticated');
+            localStorage.setItem('auth_cache_time', now.toString());
+          }
+        } catch (e) {
+          console.warn("Erro na verificação em background:", e);
+        }
+      }, 100);
+      
+      return true;
+    }
+    
+    // Se não temos cache válido, verificar com Supabase
     const { data } = await supabase.auth.getSession();
     const isAuthenticated = !!data.session;
 
-    // Atualizar o estado no localStorage
+    // Atualizar o estado no localStorage com timestamp
     localStorage.setItem('auth_checked', 'true');
     localStorage.setItem('auth_status', isAuthenticated ? 'authenticated' : 'unauthenticated');
+    localStorage.setItem('auth_cache_time', now.toString());
 
     return isAuthenticated;
   } catch (error) {
     console.error("Erro ao verificar autenticação:", error);
-    // Limpar dados em caso de erro
+    
+    // Em caso de erro de conexão, confiar no cache se existir
+    const cachedStatus = localStorage.getItem('auth_status');
+    if (cachedStatus === 'authenticated') {
+      return true;
+    }
+    
+    // Limpar dados em caso de erro se não temos cache
     localStorage.removeItem('auth_checked');
     localStorage.removeItem('auth_status');
     return false;

@@ -268,3 +268,24 @@ export function loadNodes() {
     return createInitialNodes();
   }
 }
+
+// Função para carregar dados visuais de animação do localStorage
+export const loadWebsFromLocalStorage = () => {
+  try {
+    const nodes = localStorage.getItem('webNodesData');
+    if (nodes) {
+      console.log('Estrutura de teias já existe no localStorage, carregando instantaneamente');
+      // Disparar evento para informar que as teias foram carregadas
+      setTimeout(() => {
+        document.dispatchEvent(new CustomEvent('WebTeiasProntas'));
+      }, 10);
+      return JSON.parse(nodes);
+    }
+
+    console.log('Criando novas teias...');
+    return null;
+  } catch (e) {
+    console.error('Erro ao carregar teias do localStorage:', e);
+    return null;
+  }
+};
