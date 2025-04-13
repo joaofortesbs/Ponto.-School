@@ -563,13 +563,31 @@ export function RegisterForm() {
             console.error("LocalStorage error:", storageError);
           }
 
-          // Registro considerado bem-sucedido - mostrar mensagem e redirecionar após 3 segundos
+          // Registro considerado bem-sucedido - mostrar mensagem e redirecionar após 2 segundos
           setSuccess(true);
           setLoading(false);
 
-          setTimeout(() => {
+          // Garantir redirecionamento mesmo se houver erro
+          const redirectTimer = setTimeout(() => {
             navigate("/login", { state: { newAccount: true } });
-          }, 3000);
+          }, 2000);
+
+          // Armazenar o timer no localStorage para garantir que ele persista
+          try {
+            localStorage.setItem('redirectTimer', 'active');
+            // Armazenar também o nome de usuário para exibir na tela de login
+            localStorage.setItem('lastRegisteredUsername', formData.username);
+          } catch (e) {
+            console.error("Erro ao salvar dados no localStorage:", e);
+          }
+
+          // Garantir redireção mesmo se o componente desmontar
+          window.onbeforeunload = () => {
+            if (localStorage.getItem('redirectTimer') === 'active') {
+              window.location.href = '/login?newAccount=true';
+              return null;
+            }
+          };
 
         } catch (err) {
           console.error("Error in profile operations:", err);

@@ -27,11 +27,33 @@ export function LoginForm() {
   const location = useLocation();
 
   useEffect(() => {
+    // Verificar se veio da tela de registro
     if (location.state && location.state.newAccount) {
       setAccountCreated(true);
       setTimeout(() => {
         setAccountCreated(false);
       }, 5000);
+      
+      // Limpar flag de redirecionamento
+      localStorage.removeItem('redirectTimer');
+      
+      // Preencher o campo de email com o último username registrado
+      const lastUsername = localStorage.getItem('lastRegisteredUsername');
+      if (lastUsername) {
+        setFormData(prev => ({ ...prev, email: lastUsername }));
+      }
+    }
+    
+    // Verificar o parâmetro na URL também
+    const params = new URLSearchParams(location.search);
+    if (params.get('newAccount') === 'true') {
+      setAccountCreated(true);
+      setTimeout(() => {
+        setAccountCreated(false);
+      }, 5000);
+      
+      // Limpar flag de redirecionamento
+      localStorage.removeItem('redirectTimer');
     }
   }, [location]);
 
@@ -79,18 +101,54 @@ export function LoginForm() {
     }, 5000);
 
     try {
-      // Usar Promise.race para limitar o tempo de espera da requisição
-      const authPromise = Promise.race([
-        supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password,
-        }),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error("Tempo limite excedido")), 8000)
-        )
-      ]);
+      let authResult;
+      const inputValue = formData.email;
+      const isEmail = inputValue.includes('@');
 
-      const { data, error } = await authPromise;
+      if (isEmail) {
+        // Login com email
+        authResult = await Promise.race([
+          supabase.auth.signInWithPassword({
+            email: inputValue,
+            password: formData.password,
+          }),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error("Tempo limite excedido")), 8000)
+          )
+        ]);
+      } else {
+        // Login com nome de usuário
+        // Primeiro, buscar o email associado ao nome de usuário
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('username', inputValue)
+          .single();
+
+        if (profileError || !profileData?.email) {
+          setSuccess(false);
+          setError("Nome de usuário não encontrado");
+          setLoading(false);
+          clearTimeout(preloadTimeout);
+          clearTimeout(authTimeout);
+          localStorage.removeItem('auth_checked');
+          localStorage.removeItem('auth_status');
+          return;
+        }
+
+        // Agora fazer login com o email encontrado
+        authResult = await Promise.race([
+          supabase.auth.signInWithPassword({
+            email: profileData.email,
+            password: formData.password,
+          }),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error("Tempo limite excedido")), 8000)
+          )
+        ]);
+      }
+
+      const { data, error } = authResult;
 
       clearTimeout(preloadTimeout);
       clearTimeout(authTimeout);
@@ -173,7 +231,7 @@ export function LoginForm() {
       <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
         <div className="space-y-2">
           <label className="text-sm font-medium text-brand-black dark:text-white drop-shadow-sm">
-            Usuário ou E-mail
+            Nome de Usuário ou E-mail
           </label>
           <div className="relative group">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-brand-primary transition-colors duration-200 z-10" />
@@ -182,7 +240,7 @@ export function LoginForm() {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="Digite seu usuário ou e-mail"
+              placeholder="Digite seu nome de usuário ou e-mail"
               className="pl-10 h-11 bg-white/30 dark:bg-white/8 backdrop-blur-md border-[#FF6B00]/10 dark:border-[#FF6B00]/20 focus:border-[#FF6B00]/60 dark:focus:border-[#FF6B00]/60 transition-all duration-300 hover:border-[#FF6B00]/30 rounded-lg"
               required
               style={{

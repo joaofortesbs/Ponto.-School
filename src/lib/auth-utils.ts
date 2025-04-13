@@ -258,3 +258,32 @@ export const signInWithEmail = async (email: string, password: string) => {
     return { success: false, error };
   }
 };
+
+/**
+ * Função para login com nome de usuário
+ * Primeiro busca o email associado ao username e depois faz login
+ */
+export const signInWithUsername = async (username: string, password: string) => {
+  try {
+    // Primeiro, buscar o email associado ao nome de usuário
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('username', username)
+      .single();
+
+    if (profileError || !profileData?.email) {
+      return { 
+        success: false, 
+        error: new Error("Nome de usuário não encontrado")
+      };
+    }
+
+    // Usar o email encontrado para fazer login
+    return signInWithEmail(profileData.email, password);
+    
+  } catch (error) {
+    console.error("Erro ao fazer login com nome de usuário:", error);
+    return { success: false, error };
+  }
+};
