@@ -1,5 +1,5 @@
 
-/* Animação de digitação */
+/* Animação de digitação aprimorada */
 .typing-animation {
   display: flex;
   align-items: center;
@@ -9,33 +9,53 @@
 .typing-animation span {
   height: 8px;
   width: 8px;
-  background-color: #FF6B00;
+  background: linear-gradient(135deg, #FF6B00, #FF8C40);
   border-radius: 50%;
   display: block;
   opacity: 0.6;
+  filter: drop-shadow(0 0 2px rgba(255, 107, 0, 0.4));
 }
 
 .typing-animation span:nth-child(1) {
-  animation: bounce 1s infinite;
+  animation: typingBounce 1.2s infinite ease-in-out;
 }
 
 .typing-animation span:nth-child(2) {
-  animation: bounce 1s infinite 0.2s;
+  animation: typingBounce 1.2s infinite ease-in-out 0.2s;
 }
 
 .typing-animation span:nth-child(3) {
-  animation: bounce 1s infinite 0.4s;
+  animation: typingBounce 1.2s infinite ease-in-out 0.4s;
 }
 
-@keyframes bounce {
+@keyframes typingBounce {
   0%, 100% {
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
     opacity: 0.6;
   }
   50% {
-    transform: translateY(-5px);
+    transform: translateY(-5px) scale(1.2);
+    opacity: 1;
+    box-shadow: 0 2px 4px rgba(255, 107, 0, 0.3);
+  }
+}
+
+/* Animação para os pontos pulsantes */
+@keyframes pulseGradient {
+  0%, 100% {
+    background-position: 0% 50%;
+    opacity: 0.6;
+  }
+  50% {
+    background-position: 100% 50%;
     opacity: 1;
   }
+}
+
+.animate-pulse-gradient {
+  background: linear-gradient(90deg, #FF6B00, #FF8C40, #FF6B00);
+  background-size: 200% 200%;
+  animation: pulseGradient 1.5s ease-in-out infinite;
 }
 
 

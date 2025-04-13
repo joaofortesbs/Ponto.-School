@@ -1335,14 +1335,18 @@ const FloatingChatSupport: React.FC = () => {
                 </div>
               ) : (
                 <div
-                  className={`max-w-[75%] rounded-lg px-3 py-2 ${message.sender === "user" ? "bg-blue-500 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200"}`}
+                  className={`max-w-[75%] rounded-xl shadow-sm px-4 py-3 ${
+                    message.sender === "user" 
+                      ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white backdrop-blur-sm" 
+                      : "bg-gray-100 dark:bg-gray-800/90 text-gray-800 dark:text-gray-200 dark:backdrop-blur-sm"
+                  }`}
                 >
                   {message.sender === "user" && (
-                    <div className="flex justify-end mb-1 opacity-0 hover:opacity-100 transition-opacity">
+                    <div className="flex justify-end mb-1 group">
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-5 w-5 p-0 text-blue-100 hover:text-white hover:bg-blue-600 rounded-full"
+                        className="h-5 w-5 p-0 text-blue-100 opacity-0 group-hover:opacity-100 transition-opacity hover:text-white hover:bg-blue-600/50 rounded-full"
                         onClick={() => startEditingMessage(message.id, message.content)}
                       >
                         <svg
@@ -1358,23 +1362,30 @@ const FloatingChatSupport: React.FC = () => {
                     </div>
                   )}
                   <div 
-                    className="message-content whitespace-pre-wrap" 
+                    className="message-content whitespace-pre-wrap leading-relaxed" 
                     dangerouslySetInnerHTML={{ 
                       __html: message.content
-                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                        .replace(/\_(.*?)\_/g, '<em>$1</em>')
-                        .replace(/\~\~(.*?)\~\~/g, '<del>$1</del>')
-                        .replace(/\`(.*?)\`/g, '<code class="bg-black/10 dark:bg-white/10 rounded px-1">$1</code>')
+                        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
+                        .replace(/\_(.*?)\_/g, '<em class="italic">$1</em>')
+                        .replace(/\~\~(.*?)\~\~/g, '<del class="line-through">$1</del>')
+                        .replace(/\`(.*?)\`/g, '<code class="bg-black/10 dark:bg-white/10 rounded px-1 py-0.5 font-mono text-xs">$1</code>')
                         .replace(/\n/g, '<br />')
-                        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>')
-                        .replace(/(https?:\/\/[^\s]+)(?!\))/g, '<a href="$1" class="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>')
+                        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-200 hover:text-blue-100 hover:underline inline-flex items-center" target="_blank" rel="noopener noreferrer">$1<svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>')
+                        .replace(/(https?:\/\/[^\s]+)(?!\))/g, '<a href="$1" class="text-blue-200 hover:text-blue-100 hover:underline inline-flex items-center" target="_blank" rel="noopener noreferrer">$1<svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>')
                     }} 
                   />
                   {message.files && message.files.length > 0 && (
-                    <div className="mt-2 space-y-2">
+                    <div className="mt-3 space-y-2">
                       {message.files.map((file, index) => (
-                        <div key={`${file.name}-${index}`} className="flex items-center bg-opacity-20 bg-black rounded p-2 hover:bg-opacity-30 transition-all">
-                          <div className="mr-2 flex-shrink-0">
+                        <div 
+                          key={`${file.name}-${index}`} 
+                          className={`flex items-center rounded-lg p-2.5 transition-all ${
+                            message.sender === "user" 
+                              ? "bg-blue-600/30 hover:bg-blue-700/40" 
+                              : "bg-gray-200/70 dark:bg-gray-700/50 hover:bg-gray-300/80 dark:hover:bg-gray-700/70"
+                          }`}
+                        >
+                          <div className="mr-3 flex-shrink-0 bg-white/20 p-2 rounded-md">
                             {file.type.startsWith('image/') && <Image className="h-4 w-4" />}
                             {file.type.startsWith('video/') && <Video className="h-4 w-4" />}
                             {file.type.startsWith('audio/') && <Music className="h-4 w-4" />}
@@ -1384,21 +1395,34 @@ const FloatingChatSupport: React.FC = () => {
                             <a 
                               href={file.url} 
                               download={file.name} 
-                              className={`hover:underline font-medium truncate block ${message.sender === "user" ? "text-white" : "text-blue-500"}`}
+                              className={`hover:underline font-medium truncate block ${
+                                message.sender === "user" ? "text-white" : "text-blue-500"
+                              }`}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
                               {file.name.length > 20 ? file.name.substring(0, 17) + '...' : file.name}
                             </a>
-                            <span className="text-xs opacity-70">
+                            <span className="text-xs opacity-80">
                               {(file.size / 1024).toFixed(1)} KB
                             </span>
                           </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={`h-6 w-6 p-0 ml-auto rounded-full ${
+                              message.sender === "user"
+                                ? "text-blue-100 hover:bg-blue-700/50"
+                                : "text-gray-500 hover:bg-gray-300/50 dark:hover:bg-gray-600/50"
+                            }`}
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                          </Button>
                         </div>
                       ))}
                     </div>
                   )}
-                  <div className="text-xs opacity-70 mt-1 text-right">
+                  <div className="text-xs opacity-80 mt-2 text-right font-medium">
                     {message.timestamp.toLocaleTimeString([], {
                       hour: "2-digit",
                       minute: "2-digit",
@@ -1429,13 +1453,15 @@ const FloatingChatSupport: React.FC = () => {
                   </AvatarFallback>
                 </Avatar>
               </div>
-              <div className="max-w-[75%] rounded-lg px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow-sm">
+              <div className="max-w-[75%] rounded-xl px-4 py-3 bg-gray-100 dark:bg-gray-800/90 text-gray-800 dark:text-gray-200 shadow-sm backdrop-blur-sm">
                 <div className="flex items-center">
-                  <div className="mr-2 text-xs text-gray-500 dark:text-gray-400">Epictus IA está digitando</div>
-                  <div className="typing-animation">
-                    <span></span>
-                    <span></span>
-                    <span></span>
+                  <div className="relative flex space-x-1 items-center pl-0.5">
+                    <div className="w-2 h-2 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] animate-pulse"></div>
+                    <div className="w-2 h-2 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] animate-pulse delay-150"></div>
+                    <div className="w-2 h-2 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] animate-pulse delay-300"></div>
+                    <div className="ml-2 text-sm font-medium text-gray-600 dark:text-gray-300">
+                      Epictus IA está elaborando uma resposta...
+                    </div>
                   </div>
                 </div>
               </div>

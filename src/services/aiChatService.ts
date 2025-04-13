@@ -226,17 +226,17 @@ export async function generateXAIResponse(
 
     // Obter contexto do usuário - fazer isso logo no início
     const userContext = await getUserContext();
-    
+
     // Extrair o primeiro nome do usuário para uso personalizado nas respostas
     const firstName = userContext.fullName ? 
       userContext.fullName.split(' ')[0] : 
       (userContext.displayName || userContext.username || 'Usuário');
-    
+
     // Inicializar o histórico se não existir
     if (!conversationHistory[sessionId]) {
       initializeConversationHistory(sessionId, userContext);
     }
-    
+
     // Adiciona a mensagem do usuário ao histórico
     conversationHistory[sessionId].push({ 
       role: 'user', 
@@ -266,7 +266,7 @@ Posso te ajudar a atualizar algumas dessas informações diretamente por aqui, c
             content: response,
             timestamp: new Date()
           });
-          
+
           await saveConversationHistory(sessionId, conversationHistory[sessionId]);
           return response;
         }
@@ -383,14 +383,14 @@ Lá você poderá atualizar seu telefone, localização e outras informações d
         'Pedidos de Ajuda': 'https://pontoschool.com/pedidos-ajuda',
         'Estudos': 'https://pontoschool.com/estudos'
       };
-      
+
       // Regex mais preciso para extrair a seção desejada
       const sectionRegex = /(me\s+(redirecione|encaminhe|leve|direcione|mande|envie)\s+(para|ao|à|a|até)|quero\s+(ir|acessar|entrar|ver)|me\s+(mostre|mostra)|abrir?|abra|acesse|acessar|ver|veja)\s+(a\s+)?(página\s+(de|do|da)\s+)?([a-zà-ú\s]+)/i;
       const match = message.match(sectionRegex);
-      
+
       if (match && match[9]) {
         const requestedSection = match[9].trim().toLowerCase();
-        
+
         // Encontra a melhor correspondência entre as seções disponíveis
         const sections = Object.keys(platformLinks);
         const bestMatch = sections.find(section => 
@@ -398,12 +398,12 @@ Lá você poderá atualizar seu telefone, localização e outras informações d
           section.toLowerCase().includes(requestedSection) ||
           requestedSection.includes(section.toLowerCase())
         );
-        
+
         if (bestMatch) {
           const response = `Claro, ${firstName}! Aqui está o link direto para ${bestMatch}: [${bestMatch}](${platformLinks[bestMatch]})
 
 Clique no link acima para ser redirecionado. Posso ajudar com mais alguma coisa?`;
-          
+
           conversationHistory[sessionId].push({ 
             role: 'assistant', 
             content: response,
@@ -450,7 +450,7 @@ Clique no link acima para ser redirecionado. Posso ajudar com mais alguma coisa?
 
       // Extrai a resposta
       let aiResponse = '';
-      
+
       if (response.data && 
           response.data.choices && 
           response.data.choices.length > 0 && 
@@ -463,37 +463,80 @@ Clique no link acima para ser redirecionado. Posso ajudar com mais alguma coisa?
       // Verificar e corrigir links de redirecionamento
       aiResponse = fixPlatformLinks(aiResponse);
 
+      // Adicionar a resposta da IA à interface com formatação melhorada e corrigida
+      const formattedResponse = aiResponse
+        // Formatação de texto básica
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
+        .replace(/\_(.*?)\_/g, '<em class="italic">$1</em>')
+        .replace(/\~\~(.*?)\~\~/g, '<del class="line-through">$1</del>')
+        .replace(/\`(.*?)\`/g, '<code class="bg-black/10 dark:bg-white/10 rounded px-1 py-0.5 font-mono text-xs">$1</code>')
+
+        // Formatação de parágrafos e listas
+        .replace(/\n\n/g, '</p><p class="mt-3">')
+        .replace(/\n/g, '<br />')
+
+        // Formatação de títulos
+        .replace(/^# (.*?)$/gm, '<h3 class="text-lg font-bold my-2">$1</h3>')
+        .replace(/^## (.*?)$/gm, '<h4 class="text-md font-bold my-2">$1</h4>')
+
+        // Formatação de listas
+        .replace(/^\* (.*?)$/gm, '<li class="ml-4 list-disc">$1</li>')
+        .replace(/^\d\. (.*?)$/gm, '<li class="ml-4 list-decimal">$1</li>')
+
+        // Formatação de links com ícone
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-500 hover:text-blue-600 hover:underline font-medium inline-flex items-center" target="_blank" rel="noopener noreferrer">$1<svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>')
+        .replace(/(https?:\/\/[^\s]+)(?!\))/g, '<a href="$1" class="text-blue-500 hover:text-blue-600 hover:underline font-medium inline-flex items-center" target="_blank" rel="noopener noreferrer">$1<svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>')
+
+        // Formatação especial para dicas e destaques
+        .replace(/💡 (.*?)$/gm, '<div class="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 p-2 rounded-md my-2 flex items-start"><span class="mr-2">💡</span><span>$1</span></div>')
+        .replace(/⚠️ (.*?)$/gm, '<div class="bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 p-2 rounded-md my-2 flex items-start"><span class="mr-2">⚠️</span><span>$1</span></div>')
+
+        // Garantir que o conteúdo esteja envolto em um parágrafo
+        .replace(/^(.+?)$/gm, function(match) {
+          if (!match.startsWith('<') && !match.endsWith('>')) {
+            return '<p>' + match + '</p>';
+          }
+          return match;
+        });
+
+      // Garantir que não existam múltiplos <br> consecutivos
+      const cleanedResponse = formattedResponse
+        .replace(/<br\s*\/?><br\s*\/?>/g, '<br />')
+        .replace(/<p><\/p>/g, '')
+        .replace(/<p><br \/><\/p>/g, '<p>&nbsp;</p>');
+
+
       // Adiciona a resposta da IA ao histórico
       conversationHistory[sessionId].push({ 
         role: 'assistant', 
-        content: aiResponse,
+        content: cleanedResponse,
         timestamp: new Date()
       });
 
       // Salvar histórico atualizado no localStorage
       await saveConversationHistory(sessionId, conversationHistory[sessionId]);
 
-      return aiResponse;
+      return cleanedResponse;
     } catch (apiError) {
       console.error('Erro na API xAI:', apiError);
-      
+
       // Resposta padrão em caso de erro
       const fallbackResponse = `Desculpe ${firstName}, estou enfrentando dificuldades técnicas no momento. 
-      
+
 Vou tentar responder sua pergunta mesmo assim. ${message.length < 50 ? "Você me perguntou sobre " + message : ""}
-      
+
 O que mais posso ajudar você hoje?`;
-      
+
       // Adicionar a resposta alternativa ao histórico
       conversationHistory[sessionId].push({ 
         role: 'assistant', 
         content: fallbackResponse,
         timestamp: new Date()
       });
-      
+
       // Salvar histórico atualizado
       await saveConversationHistory(sessionId, conversationHistory[sessionId]);
-      
+
       // Tenta resposta fallback via Gemini
       try {
         return await generateGeminiResponse(message, sessionId, options);
@@ -719,7 +762,7 @@ export function clearConversationHistory(sessionId: string): void {
     // Mantém apenas a mensagem do sistema
     const systemMessage = conversationHistory[sessionId][0];
     conversationHistory[sessionId] = [systemMessage];
-    
+
     // Limpar do localStorage também
     try {
       localStorage.removeItem(`conversationHistory_${sessionId}`);
@@ -736,19 +779,19 @@ export async function getConversationHistory(sessionId: string): Promise<ChatMes
     if (conversationHistory[sessionId] && Array.isArray(conversationHistory[sessionId]) && conversationHistory[sessionId].length > 0) {
       // Verifica se há ao menos uma mensagem do sistema
       const hasSystemMessage = conversationHistory[sessionId].some(msg => msg.role === 'system');
-      
+
       if (hasSystemMessage) {
         return conversationHistory[sessionId];
       }
     }
-    
+
     // Caso contrário, tenta recuperar do localStorage
     try {
       const savedHistory = localStorage.getItem(`conversationHistory_${sessionId}`);
       if (savedHistory) {
         try {
           const parsedHistory = JSON.parse(savedHistory);
-          
+
           // Verificar se é um array válido
           if (Array.isArray(parsedHistory) && parsedHistory.length > 0) {
             // Converter timestamps de string para Date se necessário
@@ -757,15 +800,15 @@ export async function getConversationHistory(sessionId: string): Promise<ChatMes
               content: msg.content || '',
               timestamp: msg.timestamp ? (typeof msg.timestamp === 'string' ? new Date(msg.timestamp) : msg.timestamp) : new Date()
             }));
-            
+
             // Verificar se há mensagem do sistema
             const hasSystemMessage = processedHistory.some(msg => msg.role === 'system');
-            
+
             if (!hasSystemMessage) {
               // Se não tiver mensagem do sistema, inicializar com uma nova
               const userContext = await getUserContext();
               initializeConversationHistory(sessionId, userContext);
-              
+
               // Adicionar as mensagens existentes
               conversationHistory[sessionId] = [
                 ...conversationHistory[sessionId],
@@ -774,19 +817,19 @@ export async function getConversationHistory(sessionId: string): Promise<ChatMes
             } else {
               conversationHistory[sessionId] = processedHistory;
             }
-            
+
             return conversationHistory[sessionId];
           }
         } catch (parseError) {
           console.error("Erro ao analisar histórico do localStorage:", parseError);
         }
       }
-      
+
       // Se não encontrou no localStorage ou houve erro, tenta recuperar do Supabase
       const supabase = (await import('@/lib/supabase')).supabase;
       const { data: sessionData } = await supabase.auth.getSession();
       const userId = sessionData?.session?.user?.id;
-      
+
       if (userId) {
         try {
           const { data, error } = await supabase
@@ -795,7 +838,7 @@ export async function getConversationHistory(sessionId: string): Promise<ChatMes
             .eq('user_id', userId)
             .eq('session_id', sessionId)
             .single();
-            
+
           if (!error && data?.messages && Array.isArray(data.messages) && data.messages.length > 0) {
             // Converter timestamps de string para Date
             const processedHistory = data.messages.map(msg => ({
@@ -803,15 +846,15 @@ export async function getConversationHistory(sessionId: string): Promise<ChatMes
               content: msg.content || '',
               timestamp: msg.timestamp ? (typeof msg.timestamp === 'string' ? new Date(msg.timestamp) : msg.timestamp) : new Date()
             }));
-            
+
             // Verificar se há mensagem do sistema
             const hasSystemMessage = processedHistory.some(msg => msg.role === 'system');
-            
+
             if (!hasSystemMessage) {
               // Se não tiver mensagem do sistema, inicializar com uma nova
               const userContext = await getUserContext();
               initializeConversationHistory(sessionId, userContext);
-              
+
               // Adicionar as mensagens existentes
               conversationHistory[sessionId] = [
                 ...conversationHistory[sessionId],
@@ -820,14 +863,14 @@ export async function getConversationHistory(sessionId: string): Promise<ChatMes
             } else {
               conversationHistory[sessionId] = processedHistory;
             }
-            
+
             // Atualizar localStorage
             try {
               localStorage.setItem(`conversationHistory_${sessionId}`, JSON.stringify(conversationHistory[sessionId]));
             } catch (localStorageError) {
               console.log("Erro ao atualizar localStorage:", localStorageError);
             }
-            
+
             return conversationHistory[sessionId];
           }
         } catch (supabaseError) {
@@ -837,7 +880,7 @@ export async function getConversationHistory(sessionId: string): Promise<ChatMes
     } catch (error) {
       console.error("Erro ao recuperar histórico:", error);
     }
-    
+
     // Se chegou aqui, não foi possível recuperar o histórico
     // Inicializar com novo histórico
     const userContext = await getUserContext();
@@ -845,7 +888,7 @@ export async function getConversationHistory(sessionId: string): Promise<ChatMes
     return conversationHistory[sessionId];
   } catch (generalError) {
     console.error("Erro geral ao obter histórico de conversa:", generalError);
-    
+
     // Retornar um histórico vazio em último caso
     return [{
       role: 'system',
@@ -913,17 +956,17 @@ function fixPlatformLinks(text: string): string {
 
   // Depois, substitui todas as menções das seções por links formatados
   const linkPatterns = {};
-  
+
   // Criar regex específica para cada palavra-chave, considerando espaços antes e depois
   for (const key in platformLinks) {
     // Evita conflitos com palavras já substituídas em Markdown
     const escapedKey = key.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
     linkPatterns[key] = new RegExp(`(?<![\\[\\(])\\b(${escapedKey})\\b(?!\\]\\()`, 'gi');
   }
-  
+
   // Aplicar substituições de forma ordenada (das mais longas para as mais curtas)
   const orderedKeys = Object.keys(platformLinks).sort((a, b) => b.length - a.length);
-  
+
   let newText = text;
   for (const key of orderedKeys) {
     if (linkPatterns[key]) {
@@ -946,10 +989,10 @@ async function saveConversationHistory(sessionId: string, history: ChatMessage[]
       console.error("Erro ao salvar histórico: sessionId ou history inválidos");
       return;
     }
-    
+
     // Salvar localmente
     conversationHistory[sessionId] = history;
-    
+
     // Preparar o histórico para armazenamento (garantir que todos os objetos são serializáveis)
     const serializableHistory = history.map(msg => ({
       role: msg.role,
@@ -957,12 +1000,12 @@ async function saveConversationHistory(sessionId: string, history: ChatMessage[]
       timestamp: msg.timestamp instanceof Date ? msg.timestamp.toISOString() : 
                 (typeof msg.timestamp === 'string' ? msg.timestamp : new Date().toISOString())
     }));
-    
+
     try {
       // Salvar todas as sessões em um único item no localStorage com limite de tamanho
       // Para evitar exceder o limite do localStorage, limitamos o histórico
       const allSessions = {};
-      
+
       // Só armazenar as últimas 20 sessões
       const sessionIds = Object.keys(conversationHistory).slice(-20);
       for (const id of sessionIds) {
@@ -977,9 +1020,9 @@ async function saveConversationHistory(sessionId: string, history: ChatMessage[]
           }));
         }
       }
-      
+
       localStorage.setItem('aiChatSessions', JSON.stringify(allSessions));
-      
+
       // Também salvar individualmente a sessão atual
       localStorage.setItem(`conversationHistory_${sessionId}`, JSON.stringify(serializableHistory));
     } catch (localStorageError) {
@@ -993,13 +1036,13 @@ async function saveConversationHistory(sessionId: string, history: ChatMessage[]
         console.error("Falha na segunda tentativa de salvar no localStorage:", retryError);
       }
     }
-    
+
     // Sincronizar com Supabase se disponível
     try {
       const supabase = (await import('@/lib/supabase')).supabase;
       const { data: sessionData } = await supabase.auth.getSession();
       const userId = sessionData?.session?.user?.id;
-      
+
       if (userId) {
         try {
           // Upsert do histórico da conversa - versão simplificada para evitar erros
@@ -1013,7 +1056,7 @@ async function saveConversationHistory(sessionId: string, history: ChatMessage[]
             }, {
               onConflict: 'user_id,session_id'
             });
-            
+
           if (error) {
             console.error("Erro ao sincronizar histórico com Supabase:", error);
           }
