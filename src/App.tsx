@@ -9,7 +9,7 @@ import {
 import ErrorBoundary from "@/components/ErrorBoundary";
 import routes from "./tempo-routes";
 import Home from "@/components/home";
-import { ThemeProvider } from "@/components/ThemeProvider";
+import ThemeProvider from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
 import FloatingChatSupport from "@/components/chat/FloatingChatSupport";
 import { supabase } from "@/lib/supabase";
