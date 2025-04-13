@@ -98,7 +98,7 @@ export function LoginForm() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 rounded-2xl">
       {accountCreated && (
         <div className="bg-green-100/80 dark:bg-green-900/30 border border-green-500/70 dark:border-green-600/70 text-green-800 dark:text-green-300 p-6 rounded-lg mb-6 animate-fade-in flex items-center gap-4 shadow-md backdrop-blur-sm">
           <div className="rounded-full bg-green-200 dark:bg-green-800 p-3 flex-shrink-0">

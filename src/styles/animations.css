@@ -154,33 +154,77 @@
 
 /* Efeito de vidro ultra moderno */
 .ultra-glass {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.03) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-radius: 16px;
-  border: 1px solid rgba(255, 107, 0, 0.15);
+  border: 1px solid rgba(255, 135, 0, 0.25);
   box-shadow: 
-    0 4px 24px rgba(0, 0, 0, 0.1),
-    0 1px 2px rgba(255, 255, 255, 0.2);
+    0 8px 32px rgba(0, 0, 0, 0.15),
+    0 1px 2px rgba(255, 255, 255, 0.2),
+    inset 0 1px 1px rgba(255, 255, 255, 0.1),
+    0 0 0 1px rgba(255, 107, 0, 0.2);
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.ultra-glass::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  right: -1px;
+  bottom: -1px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  background: linear-gradient(135deg, 
+    rgba(255, 107, 0, 0.5) 0%, 
+    rgba(255, 135, 0, 0.2) 50%,
+    rgba(255, 163, 0, 0.3) 100%);
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.7;
+  animation: border-glow-premium 3s ease-in-out infinite;
 }
 
 .ultra-glass:hover {
-  border: 1px solid rgba(255, 107, 0, 0.3);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.04) 100%);
+  border: 1px solid rgba(255, 135, 0, 0.35);
   box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.15),
-    0 0 0 1px rgba(255, 107, 0, 0.2),
-    0 4px 8px rgba(255, 107, 0, 0.1);
+    0 12px 36px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 107, 0, 0.25),
+    inset 0 1px 2px rgba(255, 255, 255, 0.15),
+    0 4px 8px rgba(255, 107, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.ultra-glass:hover::before {
+  opacity: 1;
+  animation: border-glow-premium 2s ease-in-out infinite;
 }
 
 .dark .ultra-glass {
-  background: linear-gradient(135deg, rgba(10, 37, 64, 0.15) 0%, rgba(10, 37, 64, 0.1) 100%);
-  border: 1px solid rgba(255, 107, 0, 0.15);
+  background: linear-gradient(135deg, rgba(10, 37, 64, 0.12) 0%, rgba(10, 37, 64, 0.08) 100%);
+  border: 1px solid rgba(255, 107, 0, 0.25);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.25),
+    0 1px 2px rgba(255, 107, 0, 0.2),
+    inset 0 1px 1px rgba(255, 107, 0, 0.05);
 }
 
 .dark .ultra-glass:hover {
-  border: 1px solid rgba(255, 107, 0, 0.3);
-  background: linear-gradient(135deg, rgba(10, 37, 64, 0.2) 0%, rgba(10, 37, 64, 0.15) 100%);
+  border: 1px solid rgba(255, 107, 0, 0.35);
+  background: linear-gradient(135deg, rgba(10, 37, 64, 0.18) 0%, rgba(10, 37, 64, 0.12) 100%);
+  box-shadow: 
+    0 12px 36px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 107, 0, 0.3),
+    inset 0 1px 2px rgba(255, 107, 0, 0.1),
+    0 4px 8px rgba(255, 107, 0, 0.2);
 }
 
 /* Efeito de borda brilhante em hover */
