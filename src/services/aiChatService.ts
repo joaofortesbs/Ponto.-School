@@ -145,12 +145,22 @@ export async function generateXAIResponse(message: string, sessionId: string): P
           Você tem acesso aos dados do usuário e pode ajudar com informações personalizadas sobre o perfil, agenda, turmas, conquistas, School Points, etc.
           Se ${firstName} pedir para acessar alguma seção da plataforma, ofereça um link ou caminho para chegar lá.
           REDIRECIONAMENTO:
-          Quando o usuário pedir para ser redirecionado a uma seção da plataforma, SEMPRE inclua o link completo usando a base https://pontoschool.com/. Por exemplo:
-          - Para o Portal: "Aqui está o link para o Portal: https://pontoschool.com/portal"
-          - Para Agenda: "Você pode acessar sua agenda aqui: https://pontoschool.com/agenda"
-          - Para Turmas: "Acesse suas turmas por este link: https://pontoschool.com/turmas"
+          REGRAS DE REDIRECIONAMENTO:
+          Quando o usuário pedir para ser redirecionado a uma seção da plataforma, você DEVE SEMPRE:
+          1. Incluir o link completo usando a base https://pontoschool.com/
+          2. Formatá-lo como um link clicável com texto descritivo
+          3. Ser direto e proativo com o redirecionamento
+
+          Exemplos de redirecionamento correto:
+          - "Aqui está o [Portal de Estudos](https://pontoschool.com/portal). Clique para acessar."
+          - "Você pode acessar sua [Agenda](https://pontoschool.com/agenda) imediatamente."
+          - "Sua [página de Turmas](https://pontoschool.com/turmas) está pronta para acesso."
+          - "Acesse a [Biblioteca](https://pontoschool.com/biblioteca) para encontrar materiais."
           
-          IMPORTANTE: Tenha em mente as seguintes URLs da plataforma:
+          NUNCA responda apenas com "você pode encontrar isso no menu lateral" ou sugestões vagas.
+          SEMPRE forneça o link direto e clicável para onde o usuário deseja ir.
+          
+          URLS DA PLATAFORMA (memorize todas estas URLs para redirecionamento):
           - Portal de Estudos: https://pontoschool.com/portal
           - Agenda: https://pontoschool.com/agenda
           - Turmas: https://pontoschool.com/turmas
@@ -161,6 +171,19 @@ export async function generateXAIResponse(message: string, sessionId: string): P
           - Epictus IA: https://pontoschool.com/epictus-ia
           - Mentor IA: https://pontoschool.com/mentor-ia
           - Planos de Estudo: https://pontoschool.com/planos-estudo
+          - Conquistas: https://pontoschool.com/conquistas
+          - Carteira: https://pontoschool.com/carteira
+          - Mercado: https://pontoschool.com/mercado
+          - Organização: https://pontoschool.com/organizacao
+          - Comunidades: https://pontoschool.com/comunidades
+          - Chat IA: https://pontoschool.com/chat-ia
+          - School IA: https://pontoschool.com/school-ia
+          - Novidades: https://pontoschool.com/novidades
+          - Lembretes: https://pontoschool.com/lembretes
+          - Pedidos de Ajuda: https://pontoschool.com/pedidos-ajuda
+          - Estudos: https://pontoschool.com/estudos
+          
+          REGRA IMPORTANTE: Sempre que o usuário pedir para ir a qualquer uma dessas seções, VOCÊ DEVE FORNECER O LINK COMPLETO em formato clicável.
           
           Personalize suas respostas para criar uma experiência única e amigável para ${usernameFull}.`
         }

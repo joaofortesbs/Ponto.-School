@@ -40,14 +40,19 @@ import {
   Star,
   History,
   RefreshCw,
+  Image,
+  Video,
+  Mic,
+  Square
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Message {
   id: string;
-  text: string;
+  content: string;
   sender: "user" | "ai";
   timestamp: Date;
+  hasHtml?: boolean;
 }
 
 interface Ticket {
@@ -102,7 +107,7 @@ interface CommonQuestion {
 const defaultMessages: Message[] = [
   {
     id: "1",
-    text: "Oi! Sou o Epictus IA, seu assistente descolado aqui na Ponto.School! 😊 Tô pronto pra te ajudar com o que precisar, é só mandar! Como posso facilitar sua vida hoje?",
+    content: "Oi! Sou o Epictus IA, seu assistente descolado aqui na Ponto.School! 😊 Tô pronto pra te ajudar com o que precisar, é só mandar! Como posso facilitar sua vida hoje?",
     sender: "ai",
     timestamp: new Date(),
   },
@@ -299,9 +304,23 @@ const FloatingChatSupport: React.FC = () => {
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [userName, setUserName] = useState("Usuário");
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [sessionId, setSessionId] = useState('');
+  const [isMessageEmpty, setIsMessageEmpty] = useState(true);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Estado para gravar áudio
+  const [isRecordingAudio, setIsRecordingAudio] = useState(false);
+  const [audioRecorder, setAudioRecorder] = useState<MediaRecorder | null>(null);
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
+
+  // Estado para abrir/fechar o menu de anexos
+  const [showAttachmentOptions, setShowAttachmentOptions] = useState(false);
+
 
   // Scroll to bottom of messages
   useEffect(() => {
@@ -327,61 +346,220 @@ const FloatingChatSupport: React.FC = () => {
     };
   }, [isOpen]);
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
+  useEffect(() => {
+    // Gerar uma ID de sessão baseada no usuário atual ou criar uma nova
+    const newSessionId = userName || 'anonymous-' + Date.now().toString();
+    setSessionId(newSessionId);
+  }, [userName]);
 
-    // Add user message
-    const userMessage: Message = {
+  useEffect(() => {
+    setIsMessageEmpty(message.trim() === '');
+  }, [message]);
+
+  const handleSendMessage = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+
+    if (!message.trim() || isLoading) return;
+
+    const newMessage: Message = {
       id: Date.now().toString(),
-      text: inputMessage,
+      content: message,
       sender: "user",
       timestamp: new Date(),
     };
 
-    // Guardar a mensagem para enviar à API
-    const currentMessage = inputMessage;
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInputMessage("");
-    setIsTyping(true);
+    setMessages((prev) => [...prev, newMessage]);
+    setMessage("");
+    setIsLoading(true);
 
     try {
-      // Importar dinamicamente para evitar problemas de circular dependency
-      const { generateAIResponse } = await import('@/services/aiChatService');
-
-      // Gerar uma ID de sessão baseada no usuário atual ou criar uma nova
-      const sessionId = userName || 'anonymous-' + Date.now().toString();
-
-      // Obter resposta da IA
-      const aiResponseText = await generateAIResponse(currentMessage, sessionId);
+      // Use o serviço AI para gerar a resposta
+      const response = await generateAIResponse(message, sessionId);
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: aiResponseText,
+        content: response,
         sender: "ai",
         timestamp: new Date(),
       };
 
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
-      console.error('Erro ao processar resposta IA:', error);
-
-      // Mensagem de fallback em caso de erro
+      console.error("Erro ao processar mensagem:", error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: "Desculpe, estou enfrentando dificuldades técnicas no momento. Por favor, tente novamente mais tarde.",
+        content:
+          "Desculpe, encontrei um problema ao processar sua mensagem. Por favor, tente novamente mais tarde.",
+        sender: "ai",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Função para lidar com upload de arquivos
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+
+    const file = e.target.files[0];
+    setShowAttachmentOptions(false);
+
+    // Criar um objeto URL para o arquivo
+    const fileUrl = URL.createObjectURL(file);
+
+    // Determinar o tipo de arquivo
+    const fileType = file.type.split('/')[0]; // image, video, audio, application, etc.
+
+    // Criar um componente JSX baseado no tipo de arquivo
+    let filePreview = null;
+    let fileDescription = `Arquivo: ${file.name}`;
+
+    if (fileType === 'image') {
+      filePreview = `<div class="mt-2 max-w-[200px]"><img src="${fileUrl}" alt="${file.name}" class="rounded-md max-w-full" /></div>`;
+      fileDescription = `Imagem: ${file.name}`;
+    } else if (fileType === 'video') {
+      filePreview = `<div class="mt-2 max-w-[300px]"><video src="${fileUrl}" controls class="rounded-md max-w-full"></video></div>`;
+      fileDescription = `Vídeo: ${file.name}`;
+    } else if (fileType === 'audio') {
+      filePreview = `<div class="mt-2 w-full"><audio src="${fileUrl}" controls class="w-full"></audio></div>`;
+      fileDescription = `Áudio: ${file.name}`;
+    } else {
+      filePreview = `<div class="mt-2 p-3 bg-gray-100 dark:bg-gray-800 rounded-md flex items-center gap-2">
+        <FileText class="h-5 w-5 text-[#FF6B00]" />
+        <span class="text-sm font-medium">${file.name}</span>
+        <span class="text-xs text-gray-500">(${(file.size / 1024).toFixed(1)} KB)</span>
+      </div>`;
+    }
+
+    // Mensagem com o arquivo anexado
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      content: `${fileDescription}\n${filePreview}`,
+      sender: "user",
+      timestamp: new Date(),
+      hasHtml: true,
+    };
+
+    setMessages((prev) => [...prev, newMessage]);
+    setIsLoading(true);
+
+    try {
+      // Aqui pode-se implementar lógica para processar o arquivo no servidor se necessário
+
+      // Simular resposta da IA após análise do arquivo
+      const aiResponse = await generateAIResponse(`Analisando o arquivo: ${file.name}`, sessionId);
+
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: aiResponse,
         sender: "ai",
         timestamp: new Date(),
       };
 
+      setMessages((prev) => [...prev, aiMessage]);
+    } catch (error) {
+      console.error("Erro ao processar arquivo:", error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: "Desculpe, encontrei um problema ao processar seu arquivo. Por favor, tente novamente mais tarde.",
+        sender: "ai",
+        timestamp: new Date(),
+      };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
-      setIsTyping(false);
+      setIsLoading(false);
 
-      // Scroll to bottom
-      if (messagesEndRef.current) {
-        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      // Limpar o input de arquivo
+      if (e.target) {
+        e.target.value = '';
       }
+    }
+  };
+
+  // Função para iniciar gravação de áudio
+  const startVoiceRecording = () => {
+    setShowAttachmentOptions(false);
+
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+          const recorder = new MediaRecorder(stream);
+          setAudioRecorder(recorder);
+          setAudioChunks([]);
+
+          recorder.ondataavailable = (e) => {
+            if (e.data.size > 0) {
+              setAudioChunks(prev => [...prev, e.data]);
+            }
+          };
+
+          recorder.onstop = () => {
+            // Processar áudio quando parar a gravação
+            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+            const audioUrl = URL.createObjectURL(audioBlob);
+
+            // Adicionar mensagem com áudio
+            const newMessage: Message = {
+              id: Date.now().toString(),
+              content: `Áudio gravado\n<div class="mt-2 w-full"><audio src="${audioUrl}" controls class="w-full"></audio></div>`,
+              sender: "user",
+              timestamp: new Date(),
+              hasHtml: true,
+            };
+
+            setMessages((prev) => [...prev, newMessage]);
+            setIsLoading(true);
+
+            // Gerar resposta da IA
+            generateAIResponse("Analisando áudio enviado", sessionId)
+              .then(response => {
+                const aiMessage: Message = {
+                  id: (Date.now() + 1).toString(),
+                  content: response,
+                  sender: "ai",
+                  timestamp: new Date(),
+                };
+                setMessages((prev) => [...prev, aiMessage]);
+              })
+              .catch(error => {
+                console.error("Erro ao processar áudio:", error);
+                const errorMessage: Message = {
+                  id: (Date.now() + 1).toString(),
+                  content: "Desculpe, encontrei um problema ao processar seu áudio. Por favor, tente novamente mais tarde.",
+                  sender: "ai",
+                  timestamp: new Date(),
+                };
+                setMessages((prev) => [...prev, errorMessage]);
+              })
+              .finally(() => {
+                setIsLoading(false);
+              });
+
+            // Parar todos os tracks da stream
+            stream.getTracks().forEach(track => track.stop());
+          };
+
+          recorder.start();
+          setIsRecordingAudio(true);
+        })
+        .catch(err => {
+          console.error("Erro ao acessar microfone:", err);
+          alert("Não foi possível acessar o microfone. Verifique as permissões do navegador.");
+        });
+    } else {
+      alert("Seu navegador não suporta gravação de áudio. Por favor, use um navegador mais recente.");
+    }
+  };
+
+  // Função para parar gravação de áudio
+  const stopVoiceRecording = () => {
+    if (audioRecorder && audioRecorder.state !== 'inactive') {
+      audioRecorder.stop();
+      setIsRecordingAudio(false);
     }
   };
 
@@ -844,7 +1022,11 @@ const FloatingChatSupport: React.FC = () => {
               <div
                 className={`max-w-[75%] rounded-lg px-3 py-2 ${message.sender === "user" ? "bg-blue-500 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200"}`}
               >
-                <p className="text-sm">{message.text}</p>
+                {message.hasHtml ? (
+                  <div dangerouslySetInnerHTML={{ __html: message.content }} />
+                ) : (
+                  <div className="whitespace-pre-wrap">{message.content}</div>
+                )}
                 <div className="text-xs opacity-70 mt-1 text-right">
                   {message.timestamp.toLocaleTimeString([], {
                     hour: "2-digit",
@@ -916,24 +1098,104 @@ const FloatingChatSupport: React.FC = () => {
         </div>
         <div className="flex items-center gap-2">
           <Input
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
             placeholder="Digite sua mensagem..."
             className="flex-1 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
             onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
           />
-          <Button
-            size="icon"
-            className="rounded-full bg-[#FF6B00] hover:bg-[#FF6B00]/90"
-            onClick={handleSendMessage}
-            disabled={isTyping || inputMessage.trim() === ''}
-          >
-            {isTyping ? (
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-dashed border-white" />
-            ) : (
-              <Send className="h-4 w-4 text-white" />
-            )}
-          </Button>
+          <div className="flex items-center gap-1.5">
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => setShowAttachmentOptions(!showAttachmentOptions)}
+              >
+                <Paperclip className="h-5 w-5" />
+              </Button>
+
+              {showAttachmentOptions && (
+                <div className="absolute bottom-full right-0 mb-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg z-50 overflow-hidden">
+                  <div className="py-1">
+                    <label htmlFor="image-upload" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer w-full">
+                      <Image className="h-4 w-4 text-[#FF6B00]" />
+                      Imagem
+                    </label>
+                    <input
+                      type="file"
+                      id="image-upload"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileUpload}
+                    />
+
+                    <label htmlFor="document-upload" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer w-full">
+                      <FileText className="h-4 w-4 text-[#FF6B00]" />
+                      Documento
+                    </label>
+                    <input
+                      type="file"
+                      id="document-upload"
+                      accept=".pdf,.doc,.docx,.txt,.xlsx,.ppt,.pptx"
+                      className="hidden"
+                      onChange={handleFileUpload}
+                    />
+
+                    <label htmlFor="video-upload" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer w-full">
+                      <Video className="h-4 w-4 text-[#FF6B00]" />
+                      Vídeo
+                    </label>
+                    <input
+                      type="file"
+                      id="video-upload"
+                      accept="video/*"
+                      className="hidden"
+                      onChange={handleFileUpload}
+                    />
+
+                    <button
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left"
+                      onClick={startVoiceRecording}
+                    >
+                      <Mic className="h-4 w-4 text-[#FF6B00]" />
+                      Áudio
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {isRecordingAudio && (
+                <div className="absolute bottom-full right-0 mb-2 p-3 bg-white dark:bg-gray-800 rounded-md shadow-lg z-50">
+                  <div className="flex items-center gap-2">
+                    <div className="animate-pulse">
+                      <Mic className="h-5 w-5 text-red-500" />
+                    </div>
+                    <span className="text-sm">Gravando áudio...</span>
+                    <Button size="sm" variant="ghost" onClick={stopVoiceRecording}>
+                      <Square className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+            <Button
+              type="submit"
+              size="icon"
+              disabled={isMessageEmpty || isLoading}
+              className={cn(
+                "bg-[#FF6B00] text-white hover:bg-[#FF6B00]/90",
+                isMessageEmpty && "opacity-50 cursor-not-allowed"
+              )}
+              onClick={handleSendMessage}
+            >
+              {isTyping ? (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-dashed border-white" />
+              ) : (
+                <Send className="h-4 w-4 text-white" />
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
