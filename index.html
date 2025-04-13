@@ -35,73 +35,91 @@
   <body>
     <div id="root"></div>
     <script>
-      // Configuração global da logo
+      // Configuração global da logo com uma versão e timestamp para evitar cache
+      var currentTime = new Date().getTime();
+      var logoPath = "/images/ponto-school-logo.png";
+      var logoUrl = logoPath + "?v=1&t=" + currentTime;
+      
       window.PONTO_SCHOOL_CONFIG = {
-        defaultLogo: "/images/ponto-school-logo.png",
+        defaultLogo: logoUrl,
         logoLoaded: false,
+        logoVersion: 1
       };
 
       // Inline script para pré-carregar e garantir que a logo esteja disponível
       (function () {
-        // Função para salvar a logo no localStorage
+        // Função para salvar a logo no localStorage com garantia
         function saveLogo(logoPath) {
           try {
             localStorage.setItem("customLogo", logoPath);
             localStorage.setItem("sidebarCustomLogo", logoPath);
             localStorage.setItem("pontoSchoolLogo", logoPath);
             localStorage.setItem("logoPreloaded", "true");
+            localStorage.setItem("logoVersion", "1");
             window.PONTO_SCHOOL_CONFIG.logoLoaded = true;
             console.log("Logo salva no localStorage com sucesso");
+            
+            // Notificar imediatamente que a logo está disponível
+            document.dispatchEvent(new CustomEvent("logoLoaded", { detail: logoPath }));
           } catch (e) {
             console.warn("Não foi possível salvar a logo no localStorage", e);
           }
         }
 
-        // Pré-carregar a logo com alta prioridade
+        // Salvar a logo imediatamente para garantir disponibilidade
+        saveLogo(logoUrl);
+
+        // Pré-carregar a logo com alta prioridade para garantir cache no navegador
         var img = new Image();
-        img.src = window.PONTO_SCHOOL_CONFIG.defaultLogo;
+        img.src = logoUrl;
         img.fetchPriority = "high";
         img.crossOrigin = "anonymous";
+        
+        // Definir atributos para melhorar carregamento
+        var linkPreload = document.createElement("link");
+        linkPreload.rel = "preload";
+        linkPreload.href = logoUrl;
+        linkPreload.as = "image";
+        linkPreload.fetchPriority = "high";
+        linkPreload.crossOrigin = "anonymous";
+        document.head.appendChild(linkPreload);
 
-        // Quando a imagem carregar, salvar no localStorage
+        // Quando a imagem carregar, apenas logar o sucesso
         img.onload = function () {
-          saveLogo(window.PONTO_SCHOOL_CONFIG.defaultLogo);
-          document.dispatchEvent(new CustomEvent("logoLoaded", { detail: window.PONTO_SCHOOL_CONFIG.defaultLogo }));
+          console.log("Logo carregada com sucesso no script inicial", logoUrl);
         };
 
-        // Se houver erro, tentar novamente com um fallback
+        // Se houver erro, tentar novamente com um novo timestamp
         img.onerror = function () {
           console.warn("Erro ao carregar a logo, tentando novamente...");
+          var newTimestamp = new Date().getTime();
+          var retryUrl = logoPath + "?retry=true&t=" + newTimestamp;
+          
           setTimeout(function () {
             var retryImg = new Image();
-            retryImg.src =
-              window.PONTO_SCHOOL_CONFIG.defaultLogo +
-              "?retry=" +
-              new Date().getTime();
+            retryImg.src = retryUrl;
+            retryImg.fetchPriority = "high";
+            
+            // Já salvar a logo de retry
+            saveLogo(retryUrl);
+            
             retryImg.onload = function () {
-              saveLogo(retryImg.src);
-              document.dispatchEvent(new CustomEvent("logoLoaded"));
+              console.log("Logo carregada com sucesso após retry", retryUrl);
             };
+            
             retryImg.onerror = function () {
-              console.error("Falha definitiva ao carregar a logo");
-              // Usar texto como fallback
-              saveLogo(null);
-              document.dispatchEvent(new CustomEvent("logoLoadFailed"));
+              console.error("Falha definitiva ao carregar a logo, usando fallback alternativo");
+              
+              // Usar um caminho alternativo extremamente simples
+              var absoluteFallback = "/images/ponto-school-logo.png?absolute=true&t=" + new Date().getTime();
+              saveLogo(absoluteFallback);
+              
+              var finalImg = new Image();
+              finalImg.src = absoluteFallback;
+              finalImg.fetchPriority = "high";
             };
-          }, 1000);
+          }, 300);
         };
-
-        // Verificar se já existe no localStorage
-        try {
-          var savedLogo = localStorage.getItem("customLogo");
-          if (savedLogo && savedLogo !== "null" && savedLogo !== "undefined") {
-            window.PONTO_SCHOOL_CONFIG.logoLoaded = true;
-          } else {
-            saveLogo(window.PONTO_SCHOOL_CONFIG.defaultLogo);
-          }
-        } catch (e) {
-          console.warn("Erro ao acessar localStorage", e);
-        }
       })();
     </script>
     <script type="module" src="/src/main.tsx"></script>

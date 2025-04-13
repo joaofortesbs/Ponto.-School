@@ -145,35 +145,19 @@ export default function Sidebar({
             )}
           >
             <div className="h-16 flex items-center justify-center w-full">
-              {customLogo ? (
-                <img
-                  src={customLogo}
-                  alt="Logo Ponto School"
-                  className="h-12 w-auto object-contain"
-                  loading="eager"
-                  fetchpriority="high"
-                  onError={(e) => {
-                    console.error("Erro ao renderizar logo no Sidebar");
-                    // Tentar novamente com um timestamp para evitar cache
-                    const fallbackSrc = "/images/ponto-school-logo.png?retry=" + Date.now();
-                    e.currentTarget.src = fallbackSrc;
-                    setCustomLogo(fallbackSrc);
-                  }}
-                />
-              ) : (
-                <img
-                  src="/images/ponto-school-logo.png"
-                  alt="Logo Ponto School"
-                  className="h-12 w-auto object-contain"
-                  loading="eager"
-                  fetchpriority="high"
-                  onError={(e) => {
-                    console.error("Erro ao renderizar logo no Sidebar");
-                    // Tentar novamente com um timestamp para evitar cache
-                    e.currentTarget.src = "/images/ponto-school-logo.png?retry=" + Date.now();
-                  }}
-                />
-              )}
+              <img
+                src="/images/ponto-school-logo.png?v=1&t=" + Date.now()
+                alt="Logo Ponto School"
+                className="h-12 w-auto object-contain"
+                loading="eager"
+                fetchpriority="high"
+                onError={(e) => {
+                  console.error("Erro ao renderizar logo no Sidebar");
+                  // Tentar novamente com um timestamp para evitar cache
+                  const fallbackSrc = "/images/ponto-school-logo.png?fallback=true&t=" + Date.now();
+                  e.currentTarget.src = fallbackSrc;
+                }}
+              />
             </div>
           </div>
           <Button

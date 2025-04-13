@@ -124,10 +124,21 @@ export function preloadLogo(
 ): void {
   // Verificar se a URL é válida ou usar o padrão
   const targetLogoUrl = logoUrl || DEFAULT_LOGO;
-  const versionedUrl = getVersionedLogoUrl(targetLogoUrl, version);
+  // Adicionar timestamp para evitar cache
+  const timestamp = Date.now();
+  const versionedUrl = getVersionedLogoUrl(targetLogoUrl, version) + "&t=" + timestamp;
   
   console.log("Preloading logo:", versionedUrl);
 
+  // Salvar no localStorage imediatamente para garantir disponibilidade
+  saveLogoToLocalStorage(targetLogoUrl, version);
+  
+  // Notificar outros componentes que a logo está disponível
+  document.dispatchEvent(
+    new CustomEvent("logoLoaded", { detail: versionedUrl })
+  );
+  
+  // Também fazemos o preload via Image para garantir
   const preloadImage = new Image();
   preloadImage.src = versionedUrl;
   preloadImage.fetchPriority = "high";
@@ -135,16 +146,23 @@ export function preloadLogo(
 
   preloadImage.onload = () => {
     console.log("Logo preloaded successfully:", versionedUrl);
-    saveLogoToLocalStorage(targetLogoUrl, version);
     if (onSuccess) onSuccess(versionedUrl);
   };
 
   preloadImage.onerror = () => {
     console.error(`Failed to preload logo with version ${version}`);
     
-    // Em caso de erro, tentar com o caminho absoluto da logo padrão
+    // Em caso de erro, tentar com o caminho absoluto da logo padrão com um novo timestamp
     const fallbackUrl = DEFAULT_LOGO + "?fallback=true&t=" + Date.now();
     console.log("Trying fallback logo:", fallbackUrl);
+    
+    // Salvar o fallback no localStorage
+    saveLogoToLocalStorage(fallbackUrl, version);
+    
+    // Notificar que estamos usando o fallback
+    document.dispatchEvent(
+      new CustomEvent("logoLoaded", { detail: fallbackUrl })
+    );
     
     const fallbackImage = new Image();
     fallbackImage.src = fallbackUrl;
@@ -152,7 +170,6 @@ export function preloadLogo(
     
     fallbackImage.onload = () => {
       console.log("Fallback logo loaded successfully");
-      saveLogoToLocalStorage(fallbackUrl, version);
       if (onSuccess) onSuccess(fallbackUrl);
     };
     
