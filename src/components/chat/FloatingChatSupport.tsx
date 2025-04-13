@@ -357,6 +357,41 @@ const FloatingChatSupport: React.FC = () => {
     // Gerar uma ID de sessão baseada no usuário atual ou criar uma nova
     const newSessionId = userName || 'anonymous-' + Date.now().toString();
     setSessionId(newSessionId);
+    
+    // Tentar carregar mensagens salvas para este usuário
+    const loadSavedMessages = async () => {
+      try {
+        const chatService = await import('@/services/aiChatService');
+        
+        // Usar a nova função getConversationHistory para obter histórico
+        const history = chatService.getConversationHistory(newSessionId);
+        
+        // Se houver histórico com mensagens de usuário e IA, exibir as últimas mensagens
+        if (history && history.length > 1) {
+          // Converter de ChatMessage para o formato Message do componente
+          const convertedMessages: Message[] = history
+            .filter(msg => msg.role !== 'system') // Excluir mensagens do sistema
+            .slice(-6) // Pegar apenas as últimas 6 mensagens para não sobrecarregar
+            .map(msg => ({
+              id: Date.now() + Math.random().toString(),
+              content: msg.content,
+              sender: msg.role === 'user' ? 'user' : 'ai',
+              timestamp: new Date(),
+            }));
+          
+          if (convertedMessages.length > 0) {
+            setMessages(prev => {
+              // Manter a primeira mensagem (boas-vindas) e adicionar o histórico
+              return [prev[0], ...convertedMessages];
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao carregar histórico de mensagens:', error);
+      }
+    };
+    
+    loadSavedMessages();
   }, [userName]);
 
   useEffect(() => {
@@ -417,6 +452,13 @@ const FloatingChatSupport: React.FC = () => {
     }
   };
 
+  // Estado para armazenar o arquivo selecionado
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
+  const [fileType, setFileType] = useState<string | null>(null);
+  const [additionalFileMessage, setAdditionalFileMessage] = useState('');
+  const [showFileMessageDialog, setShowFileMessageDialog] = useState(false);
+
   // Função para lidar com upload de arquivos
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
@@ -424,37 +466,65 @@ const FloatingChatSupport: React.FC = () => {
     const file = e.target.files[0];
     setShowAttachmentOptions(false);
 
+    // Armazenar o arquivo selecionado
+    setSelectedFile(file);
+    
     // Criar um objeto URL para o arquivo
     const fileUrl = URL.createObjectURL(file);
+    setFilePreviewUrl(fileUrl);
 
     // Determinar o tipo de arquivo
-    const fileType = file.type.split('/')[0]; // image, video, audio, application, etc.
+    const type = file.type.split('/')[0]; // image, video, audio, application, etc.
+    setFileType(type);
+
+    // Mostrar diálogo para adicionar mensagem
+    setShowFileMessageDialog(true);
+
+    // Limpar o input de arquivo para permitir selecionar o mesmo arquivo novamente
+    if (e.target) {
+      e.target.value = '';
+    }
+  };
+
+  // Função para enviar arquivo com mensagem adicional
+  const handleSendFileWithMessage = async () => {
+    if (!selectedFile || !filePreviewUrl) return;
 
     // Criar um componente JSX baseado no tipo de arquivo
     let filePreview = null;
-    let fileDescription = `Arquivo: ${file.name}`;
+    let fileDescription = `Arquivo: ${selectedFile.name}`;
 
     if (fileType === 'image') {
-      filePreview = `<div class="mt-2 max-w-[200px]"><img src="${fileUrl}" alt="${file.name}" class="rounded-md max-w-full" /></div>`;
-      fileDescription = `Imagem: ${file.name}`;
+      filePreview = `<div class="mt-2 max-w-[200px]"><img src="${filePreviewUrl}" alt="${selectedFile.name}" class="rounded-md max-w-full" /></div>`;
+      fileDescription = `Imagem: ${selectedFile.name}`;
     } else if (fileType === 'video') {
-      filePreview = `<div class="mt-2 max-w-[300px]"><video src="${fileUrl}" controls class="rounded-md max-w-full"></video></div>`;
-      fileDescription = `Vídeo: ${file.name}`;
+      filePreview = `<div class="mt-2 max-w-[300px]"><video src="${filePreviewUrl}" controls class="rounded-md max-w-full"></video></div>`;
+      fileDescription = `Vídeo: ${selectedFile.name}`;
     } else if (fileType === 'audio') {
-      filePreview = `<div class="mt-2 w-full"><audio src="${fileUrl}" controls class="w-full"></audio></div>`;
-      fileDescription = `Áudio: ${file.name}`;
+      filePreview = `<div class="mt-2 w-full"><audio src="${filePreviewUrl}" controls class="w-full"></audio></div>`;
+      fileDescription = `Áudio: ${selectedFile.name}`;
     } else {
       filePreview = `<div class="mt-2 p-3 bg-gray-100 dark:bg-gray-800 rounded-md flex items-center gap-2">
         <FileText class="h-5 w-5 text-[#FF6B00]" />
-        <span class="text-sm font-medium">${file.name}</span>
-        <span class="text-xs text-gray-500">(${(file.size / 1024).toFixed(1)} KB)</span>
+        <span class="text-sm font-medium">${selectedFile.name}</span>
+        <span class="text-xs text-gray-500">(${(selectedFile.size / 1024).toFixed(1)} KB)</span>
       </div>`;
+    }
+
+    // Conteúdo da mensagem com o arquivo
+    let messageContent = '';
+    
+    // Se houver mensagem adicional, incluí-la
+    if (additionalFileMessage.trim()) {
+      messageContent = `${additionalFileMessage}\n\n${fileDescription}\n${filePreview}`;
+    } else {
+      messageContent = `${fileDescription}\n${filePreview}`;
     }
 
     // Mensagem com o arquivo anexado
     const newMessage: Message = {
       id: Date.now().toString(),
-      content: `${fileDescription}\n${filePreview}`,
+      content: messageContent,
       sender: "user",
       timestamp: new Date(),
       hasHtml: true,
@@ -467,9 +537,15 @@ const FloatingChatSupport: React.FC = () => {
       // Importar dinamicamente o serviço de IA
       const aiService = await import('@/services/aiChatService');
       
-      // Simular resposta da IA após análise do arquivo
+      // Preparar mensagem para a IA com contexto do arquivo e mensagem adicional
+      let aiContext = `Analisando o arquivo: ${selectedFile.name}`;
+      if (additionalFileMessage.trim()) {
+        aiContext += `. Mensagem do usuário: "${additionalFileMessage}"`;
+      }
+      
+      // Gerar resposta da IA
       setIsTyping(true);
-      const aiResponse = await aiService.generateAIResponse(`Analisando o arquivo: ${file.name}`, sessionId);
+      const aiResponse = await aiService.generateAIResponse(aiContext, sessionId);
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -490,11 +566,13 @@ const FloatingChatSupport: React.FC = () => {
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
-
-      // Limpar o input de arquivo
-      if (e.target) {
-        e.target.value = '';
-      }
+      
+      // Limpar o estado relacionado ao arquivo
+      setSelectedFile(null);
+      setFilePreviewUrl(null);
+      setFileType(null);
+      setAdditionalFileMessage('');
+      setShowFileMessageDialog(false);
     }
   };
 
@@ -1280,6 +1358,64 @@ const FloatingChatSupport: React.FC = () => {
                     <Button size="sm" variant="ghost" onClick={stopVoiceRecording}>
                       <Square className="h-4 w-4" />
                     </Button>
+                  </div>
+                </div>
+              )}
+              
+              {/* Diálogo para adicionar mensagem ao arquivo antes de enviar */}
+              {showFileMessageDialog && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+                    <h3 className="text-lg font-medium mb-4 dark:text-white">Adicionar mensagem ao arquivo</h3>
+                    
+                    {/* Preview do arquivo */}
+                    <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
+                      {fileType === 'image' && filePreviewUrl && (
+                        <div className="mb-2 max-h-48 overflow-hidden rounded flex justify-center">
+                          <img src={filePreviewUrl} alt="Preview" className="max-h-full object-contain" />
+                        </div>
+                      )}
+                      {fileType === 'video' && filePreviewUrl && (
+                        <div className="mb-2">
+                          <video src={filePreviewUrl} controls className="max-h-48 w-full" />
+                        </div>
+                      )}
+                      <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                        <FileText className="h-4 w-4 mr-2 text-[#FF6B00]" />
+                        <span>{selectedFile?.name} ({(selectedFile?.size || 0) / 1024 < 1000 ? 
+                          `${((selectedFile?.size || 0) / 1024).toFixed(1)} KB` : 
+                          `${((selectedFile?.size || 0) / 1024 / 1024).toFixed(2)} MB`})</span>
+                      </div>
+                    </div>
+                    
+                    <textarea
+                      className="w-full p-3 border rounded-md mb-4 h-20 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      placeholder="Adicione uma mensagem para enviar com o arquivo (opcional)"
+                      value={additionalFileMessage}
+                      onChange={(e) => setAdditionalFileMessage(e.target.value)}
+                    />
+                    
+                    <div className="flex justify-end gap-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          setSelectedFile(null);
+                          setFilePreviewUrl(null);
+                          setFileType(null);
+                          setAdditionalFileMessage('');
+                          setShowFileMessageDialog(false);
+                        }}
+                        className="dark:border-gray-600 dark:text-gray-200"
+                      >
+                        Cancelar
+                      </Button>
+                      <Button 
+                        className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+                        onClick={handleSendFileWithMessage}
+                      >
+                        Enviar
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}

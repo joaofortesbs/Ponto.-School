@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 
 // Chaves de API
@@ -29,9 +28,9 @@ async function getUserContext() {
       metadata: null,
       email: localStorage.getItem('userEmail') || sessionStorage.getItem('userEmail')
     };
-    
+
     console.log("Fontes de username coletadas:", usernameSources);
-    
+
     // Tentar obter dados expandidos do perfil
     let profileData = {};
     let metadataUsername = null;
@@ -40,13 +39,13 @@ async function getUserContext() {
       const usernameUtils = await import('@/lib/username-utils');
       if (usernameUtils && usernameUtils.getUserProfile) {
         profileData = await usernameUtils.getUserProfile();
-        
+
         // Tentar obter username dos metadados do usuário se disponível
         if (usernameUtils.getCurrentUsername) {
           metadataUsername = await usernameUtils.getCurrentUsername();
           usernameSources.metadata = metadataUsername;
         }
-        
+
         // Verificar se temos username no perfil
         if (profileData && profileData.username) {
           usernameSources.profile = profileData.username;
@@ -55,16 +54,16 @@ async function getUserContext() {
     } catch (error) {
       console.log('Erro ao obter perfil expandido:', error);
     }
-    
+
     // Determinar o melhor username para usar (prioridade: metadata > localStorage > sessionStorage > profile)
     const bestUsername = metadataUsername || 
                         usernameSources.localStorage || 
                         usernameSources.sessionStorage || 
                         usernameSources.profile || 
                         'Usuário';
-    
+
     console.log("Melhor username encontrado:", bestUsername);
-    
+
     // Coletar dados avançados do contexto
     const userContext = {
       username: bestUsername,
@@ -86,7 +85,7 @@ async function getUserContext() {
         return acc;
       }, {})
     };
-    
+
     // Tenta obter dados de atividade do usuário
     try {
       const recentActivities = JSON.parse(localStorage.getItem('user_recent_activities') || '[]');
@@ -96,7 +95,7 @@ async function getUserContext() {
     } catch (e) {
       console.log('Erro ao obter atividades recentes:', e);
     }
-    
+
     return userContext;
   } catch (error) {
     console.error('Erro ao obter contexto do usuário:', error);
@@ -104,7 +103,6 @@ async function getUserContext() {
   }
 }
 
-// Essa função foi removida pois agora usamos o nome de usuário completo
 
 // Função para gerar resposta usando a API xAI
 export async function generateXAIResponse(
@@ -118,29 +116,29 @@ export async function generateXAIResponse(
   try {
     // Obter contexto do usuário
     const userContext = await getUserContext();
-    
+
     // Manter o nome de usuário completo para uso nas respostas
     const usernameFull = userContext.username;
-    
+
     // Inicializa o histórico se não existir
     if (!conversationHistory[sessionId]) {
       conversationHistory[sessionId] = [
         { 
           role: 'system', 
           content: `Você é o Epictus IA, o assistente inteligente da Ponto.School, uma plataforma educacional.
-          
+
           Contexto do usuário:
           - Username completo: ${usernameFull}
           - Email: ${userContext.email}
           - Localização atual na plataforma: ${userContext.currentPage}
           - Última atividade: ${userContext.lastActivity}
-          
+
           DIRETRIZES DE COMUNICAÇÃO:
           1. Sempre se refira ao usuário pelo nome de usuário completo: "${usernameFull}". Use frases como "E aí, ${usernameFull}!", "Opa ${usernameFull}!", etc.
           2. Use uma linguagem mais informal e descontraída, como se estivesse conversando com um amigo.
           3. Seja amigável, use emojis ocasionalmente e mantenha um tom leve e positivo.
           4. Use gírias leves e expressões coloquiais quando apropriado.
-          
+
           CONTEÚDO INSTITUCIONAL:
           Quando perguntado sobre os criadores, fundadores, donos, desenvolvedores, equipe administrativa ou qualquer pergunta relacionada à gestão da Ponto.School, responda:
           "A Ponto.School tem 4 administradores principais, além de equipes dedicadas de suporte, marketing, TI e outras áreas. São eles:
@@ -148,7 +146,7 @@ export async function generateXAIResponse(
           - Co-Fundador & CMO: Felipe Brito (@felipe_rico) - usuário na plataforma Ponto.School
           - Co-Fundador & COO: Adriel Borges (@adriel_borges) - usuário na plataforma Ponto.School
           - Co-Fundador & Coordenador de Design: Samuel Afonso (@samuel_afonso) - usuário na plataforma Ponto.School"
-          
+
           Você tem acesso aos dados do usuário e pode ajudar com informações personalizadas sobre o perfil, agenda, turmas, conquistas, School Points, etc.
           Se ${usernameFull} pedir para acessar alguma seção da plataforma, ofereça um link ou caminho para chegar lá.
           REDIRECIONAMENTO:
@@ -163,10 +161,10 @@ export async function generateXAIResponse(
           - "Você pode acessar sua [Agenda](https://pontoschool.com/agenda) imediatamente."
           - "Sua [página de Turmas](https://pontoschool.com/turmas) está pronta para acesso."
           - "Acesse a [Biblioteca](https://pontoschool.com/biblioteca) para encontrar materiais."
-          
+
           NUNCA responda apenas com "você pode encontrar isso no menu lateral" ou sugestões vagas.
           SEMPRE forneça o link direto e clicável para onde o usuário deseja ir.
-          
+
           URLS DA PLATAFORMA (memorize todas estas URLs para redirecionamento):
           - Portal de Estudos: https://pontoschool.com/portal
           - Agenda: https://pontoschool.com/agenda
@@ -189,17 +187,17 @@ export async function generateXAIResponse(
           - Lembretes: https://pontoschool.com/lembretes
           - Pedidos de Ajuda: https://pontoschool.com/pedidos-ajuda
           - Estudos: https://pontoschool.com/estudos
-          
+
           REGRA IMPORTANTE: Sempre que o usuário pedir para ir a qualquer uma dessas seções, VOCÊ DEVE FORNECER O LINK COMPLETO em formato clicável.
-          
+
           Personalize suas respostas para criar uma experiência única e amigável para ${usernameFull}.`
         }
       ];
     }
-    
+
     // Adiciona a mensagem do usuário ao histórico
     conversationHistory[sessionId].push({ role: 'user', content: message });
-    
+
     // Limita o histórico para evitar exceder os limites da API
     if (conversationHistory[sessionId].length > 10) {
       // Mantém a mensagem do sistema e as últimas 9 mensagens
@@ -209,7 +207,7 @@ export async function generateXAIResponse(
         ...conversationHistory[sessionId].slice(-9)
       ];
     }
-    
+
     // Configuração da solicitação para a API xAI
     const response = await axios.post(
       XAI_BASE_URL,
@@ -226,13 +224,19 @@ export async function generateXAIResponse(
         }
       }
     );
-    
+
     // Extrai a resposta
-    const aiResponse = response.data.choices[0].message.content;
-    
+    let aiResponse = response.data.choices[0].message.content;
+
+    // Verificar e corrigir links de redirecionamento
+    aiResponse = fixPlatformLinks(aiResponse);
+
     // Adiciona a resposta da IA ao histórico
     conversationHistory[sessionId].push({ role: 'assistant', content: aiResponse });
-    
+
+    // Salvar histórico atualizado no localStorage
+    saveConversationHistory(sessionId, conversationHistory[sessionId]);
+
     return aiResponse;
   } catch (error) {
     console.error('Erro ao gerar resposta com xAI:', error);
@@ -253,10 +257,10 @@ export async function generateGeminiResponse(
   try {
     // Obter contexto do usuário
     const userContext = await getUserContext();
-    
+
     // Usar o nome de usuário completo para respostas
     const usernameFull = userContext.username;
-    
+
     // Configuração da solicitação para a API Gemini
     const response = await axios.post(
       `${GEMINI_BASE_URL}?key=${GEMINI_API_KEY}`,
@@ -265,19 +269,19 @@ export async function generateGeminiResponse(
           parts: [
             {
               text: `Você é o Epictus IA, o assistente inteligente da Ponto.School, uma plataforma educacional.
-              
+
               Contexto do usuário:
               - Username completo: ${usernameFull}
               - Email: ${userContext.email}
               - Localização atual na plataforma: ${userContext.currentPage}
               - Última atividade: ${userContext.lastActivity}
-              
+
               DIRETRIZES DE COMUNICAÇÃO:
               1. Sempre se refira ao usuário pelo nome de usuário completo: "${usernameFull}". Use frases como "E aí, ${usernameFull}!", "Opa ${usernameFull}!", etc.
               2. Use uma linguagem mais informal e descontraída, como se estivesse conversando com um amigo.
               3. Seja amigável, use emojis ocasionalmente e mantenha um tom leve e positivo.
               4. Use gírias leves e expressões coloquiais quando apropriado.
-              
+
               CONTEÚDO INSTITUCIONAL:
               Quando perguntado sobre os criadores, fundadores, donos, desenvolvedores, equipe administrativa ou qualquer pergunta relacionada à gestão da Ponto.School, responda:
               "A Ponto.School tem 4 administradores principais, além de equipes dedicadas de suporte, marketing, TI e outras áreas. São eles:
@@ -285,13 +289,13 @@ export async function generateGeminiResponse(
               - Co-Fundador & CMO: Felipe Brito (@felipe_rico) - usuário na plataforma Ponto.School
               - Co-Fundador & COO: Adriel Borges (@adriel_borges) - usuário na plataforma Ponto.School
               - Co-Fundador & Coordenador de Design: Samuel Afonso (@samuel_afonso) - usuário na plataforma Ponto.School"
-              
+
               REDIRECIONAMENTO:
               Quando o usuário pedir para ser redirecionado a uma seção da plataforma, SEMPRE inclua o link completo usando a base https://pontoschool.com/. Por exemplo:
               - Para o Portal: "Aqui está o link para o Portal: https://pontoschool.com/portal"
               - Para Agenda: "Você pode acessar sua agenda aqui: https://pontoschool.com/agenda"
               - Para Turmas: "Acesse suas turmas por este link: https://pontoschool.com/turmas"
-              
+
               Responda à seguinte pergunta do usuário ${usernameFull}: ${message}`
             }
           ]
@@ -308,10 +312,13 @@ export async function generateGeminiResponse(
         }
       }
     );
-    
+
     // Extrai a resposta
-    const aiResponse = response.data.candidates[0].content.parts[0].text;
-    
+    let aiResponse = response.data.candidates[0].content.parts[0].text;
+
+    // Verificar e corrigir links de redirecionamento
+    aiResponse = fixPlatformLinks(aiResponse);
+
     return aiResponse;
   } catch (error) {
     console.error('Erro ao gerar resposta com Gemini:', error);
@@ -342,5 +349,50 @@ export function clearConversationHistory(sessionId: string): void {
     // Mantém apenas a mensagem do sistema
     const systemMessage = conversationHistory[sessionId][0];
     conversationHistory[sessionId] = [systemMessage];
+  }
+}
+
+// Função para corrigir links da plataforma
+function fixPlatformLinks(text: string): string {
+  const platformLinks = {
+    'Portal de Estudos': 'https://pontoschool.com/portal',
+    'Agenda': 'https://pontoschool.com/agenda',
+    'Turmas': 'https://pontoschool.com/turmas',
+    'Biblioteca': 'https://pontoschool.com/biblioteca',
+    'Perfil': 'https://pontoschool.com/profile',
+    'Configurações': 'https://pontoschool.com/configuracoes',
+    'Dashboard': 'https://pontoschool.com/dashboard',
+    'Epictus IA': 'https://pontoschool.com/epictus-ia',
+    'Mentor IA': 'https://pontoschool.com/mentor-ia',
+    'Planos de Estudo': 'https://pontoschool.com/planos-estudo',
+    'Conquistas': 'https://pontoschool.com/conquistas',
+    'Carteira': 'https://pontoschool.com/carteira',
+    'Mercado': 'https://pontoschool.com/mercado',
+    'Organização': 'https://pontoschool.com/organizacao',
+    'Comunidades': 'https://pontoschool.com/comunidades',
+    'Chat IA': 'https://pontoschool.com/chat-ia',
+    'School IA': 'https://pontoschool.com/school-ia',
+    'Novidades': 'https://pontoschool.com/novidades',
+    'Lembretes': 'https://pontoschool.com/lembretes',
+    'Pedidos de Ajuda': 'https://pontoschool.com/pedidos-ajuda',
+    'Estudos': 'https://pontoschool.com/estudos'
+  };
+
+  let newText = text;
+  for (const key in platformLinks) {
+    const regex = new RegExp(`\\b(${key})\\b`, 'gi'); // Busca palavras inteiras
+    newText = newText.replace(regex, `[$1](${platformLinks[key]})`);
+  }
+
+  return newText;
+}
+
+
+// Função para salvar o histórico da conversa no localStorage
+function saveConversationHistory(sessionId: string, history: ChatMessage[]): void {
+  try {
+    localStorage.setItem(`conversationHistory_${sessionId}`, JSON.stringify(history));
+  } catch (error) {
+    console.error("Erro ao salvar o histórico da conversa:", error);
   }
 }
