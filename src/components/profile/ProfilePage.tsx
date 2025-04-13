@@ -40,32 +40,61 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
   );
 
   useEffect(() => {
-    // Utiliza o hook personalizado para buscar o perfil do usuário
-    const loadProfile = async () => {
-      setLoading(true);
+    // Função para buscar o perfil do usuário
+    const fetchProfile = async () => {
       try {
-        const { profileData, error } = await useProfileData();
+        const { data: { user } } = await supabase.auth.getUser();
         
-        if (error) {
-          console.error("Error loading profile:", error);
+        if (!user) {
+          setLoading(false);
           return;
         }
         
-        if (profileData) {
-          setUserProfile(profileData.userProfile);
-          setContactInfo(profileData.contactInfo);
-          if (profileData.aboutMe) {
-            setAboutMe(profileData.aboutMe);
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+          
+        if (error) {
+          console.error("Error fetching user profile:", error);
+          setLoading(false);
+          return;
+        }
+        
+        if (data) {
+          // Ensure level and rank are set with defaults if not present
+          const profile = {
+            ...data,
+            level: data.level || 1,
+            rank: data.rank || "Aprendiz",
+          };
+          
+          setUserProfile(profile);
+          
+          // Set contact info from user data
+          setContactInfo({
+            email: data.email || user.email || "",
+            phone: data.phone || "Adicionar telefone",
+            location: data.location || "Adicionar localização",
+            birthDate: data.birth_date || 
+              (user.user_metadata?.birth_date) || 
+              (user.raw_user_meta_data?.birth_date) || 
+              "Adicionar data de nascimento",
+          });
+          
+          if (data.bio) {
+            setAboutMe(data.bio);
           }
         }
       } catch (error) {
-        console.error("Error in profile loading:", error);
+        console.error("Error fetching profile:", error);
       } finally {
         setLoading(false);
       }
     };
-    
-    loadProfile();
+
+    fetchProfile();
   }, []);
 
   const toggleSection = (section: string | null) => {
