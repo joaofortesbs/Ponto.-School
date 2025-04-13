@@ -122,60 +122,21 @@ export function preloadLogo(
   onSuccess?: (url: string) => void,
   onError?: () => void,
 ): void {
-  // Verificar se a URL é válida ou usar o padrão
-  const targetLogoUrl = logoUrl || DEFAULT_LOGO;
-  // Adicionar timestamp para evitar cache
-  const timestamp = Date.now();
-  const versionedUrl = getVersionedLogoUrl(targetLogoUrl, version) + "&t=" + timestamp;
-  
-  console.log("Preloading logo:", versionedUrl);
+  const versionedUrl = getVersionedLogoUrl(logoUrl, version);
 
-  // Salvar no localStorage imediatamente para garantir disponibilidade
-  saveLogoToLocalStorage(targetLogoUrl, version);
-  
-  // Notificar outros componentes que a logo está disponível
-  document.dispatchEvent(
-    new CustomEvent("logoLoaded", { detail: versionedUrl })
-  );
-  
-  // Também fazemos o preload via Image para garantir
   const preloadImage = new Image();
   preloadImage.src = versionedUrl;
   preloadImage.fetchPriority = "high";
   preloadImage.crossOrigin = "anonymous";
 
   preloadImage.onload = () => {
-    console.log("Logo preloaded successfully:", versionedUrl);
+    console.log("Logo preloaded successfully");
+    saveLogoToLocalStorage(logoUrl, version);
     if (onSuccess) onSuccess(versionedUrl);
   };
 
   preloadImage.onerror = () => {
     console.error(`Failed to preload logo with version ${version}`);
-    
-    // Em caso de erro, tentar com o caminho absoluto da logo padrão com um novo timestamp
-    const fallbackUrl = DEFAULT_LOGO + "?fallback=true&t=" + Date.now();
-    console.log("Trying fallback logo:", fallbackUrl);
-    
-    // Salvar o fallback no localStorage
-    saveLogoToLocalStorage(fallbackUrl, version);
-    
-    // Notificar que estamos usando o fallback
-    document.dispatchEvent(
-      new CustomEvent("logoLoaded", { detail: fallbackUrl })
-    );
-    
-    const fallbackImage = new Image();
-    fallbackImage.src = fallbackUrl;
-    fallbackImage.fetchPriority = "high";
-    
-    fallbackImage.onload = () => {
-      console.log("Fallback logo loaded successfully");
-      if (onSuccess) onSuccess(fallbackUrl);
-    };
-    
-    fallbackImage.onerror = () => {
-      console.error("Even fallback logo failed to load");
-      if (onError) onError();
-    };
+    if (onError) onError();
   };
 }
