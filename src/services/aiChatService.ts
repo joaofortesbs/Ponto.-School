@@ -1,4 +1,5 @@
 import axios from 'axios';
+import * as aiChatDatabase from "./aiChatDatabaseService";
 
 // Chaves de API
 const XAI_API_KEY = 'xai-PGLSB6snVtQm82k7xEmfCSo3RjkO41ICX4dUagAp5bz2GY02NTVqO6XWEXuNK5HCYWpYBYuz7WP2ENFP';
@@ -580,7 +581,7 @@ function initializeConversationHistory(sessionId: string, userContext?: any) {
       3. Responder dúvidas sobre conteúdos educacionais
       4. Servir como um tutorial interativo para novos usuários
       5. Resolver problemas técnicos básicos
-      
+
       CONTEXTO DO USUÁRIO (COMPLETO):
       - Nome: ${userContext?.fullName || 'Não disponível'}
       - Username: ${username}
@@ -668,7 +669,7 @@ function initializeConversationHistory(sessionId: string, userContext?: any) {
       - School IA: https://pontoschool.com/school-ia
       - Novidades: https://pontoschool.com/novidades
       - Lembretes: https://pontoschool.com/lembretes
-      - Pedidos de Ajuda: https://pontoschool.com/pedidos-ajuda
+      - Pedidos deAjuda: https://pontoschool.com/pedidos-ajuda
       - Estudos: https://pontoschool.com/estudos
 
       QUANDO REMETER AO EPICTUS IA DO MENU LATERAL:
@@ -717,7 +718,7 @@ export async function generateGeminiResponse(
               2. Use uma linguagem mais informal e descontraída, como se estivesse conversando com um amigo.
               3. Seja amigável, use emojis ocasionalmente e mantenha um tom leve e positivo.
               4. Use gírias leves e expressões coloquiais quando apropriado.
-              
+
               LEMBRE-SE: Seu objetivo é servir como suporte para a plataforma, ajudando com navegação, tutoriais e respondendo dúvidas sobre todas as funcionalidades. Você NÃO é o assistente de estudos personalizados (que fica no menu lateral).
 
               CONTEÚDO INSTITUCIONAL:
@@ -944,7 +945,7 @@ export async function getConversationHistory(sessionId: string): Promise<ChatMes
             // Atualizar localStorage para sincronização
             try {
               localStorage.setItem(`conversationHistory_${sessionId}`, JSON.stringify(conversationHistory[sessionId]));
-              
+
               // Se temos o userId, também armazenar com chave mais específica
               if (userId) {
                 localStorage.setItem(`conversationHistory_${userId}_${sessionId}`, 
@@ -969,12 +970,12 @@ export async function getConversationHistory(sessionId: string): Promise<ChatMes
     console.log("Criando novo histórico de conversa para a sessão:", sessionId);
     const userContext = await getUserContext();
     initializeConversationHistory(sessionId, userContext);
-    
+
     // Salvar o histórico inicial
     try {
       localStorage.setItem(`conversationHistory_${sessionId}`, 
         JSON.stringify(conversationHistory[sessionId]));
-        
+
       // Se temos userIdForStorage, também armazenar com chave mais específica
       if (userIdForStorage) {
         localStorage.setItem(`conversationHistory_${userIdForStorage}_${sessionId}`, 
@@ -983,7 +984,7 @@ export async function getConversationHistory(sessionId: string): Promise<ChatMes
     } catch (e) {
       console.error("Erro ao salvar histórico inicial:", e);
     }
-    
+
     return conversationHistory[sessionId];
   } catch (generalError) {
     console.error("Erro geral ao obter histórico de conversa:", generalError);
@@ -1041,7 +1042,7 @@ function fixPlatformLinks(text: string): string {
   for (const pattern of redirectPatterns) {
     text = text.replace(pattern, (match, sectionName) => {
       if (!sectionName) return match;
-      
+
       const normalizedName = sectionName.trim();
       // Verificar se o nome normalizado corresponde a alguma chave do objeto platformLinks
       for (const key in platformLinks) {
@@ -1060,7 +1061,7 @@ function fixPlatformLinks(text: string): string {
   const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
   const existingLinks = [];
   let match;
-  
+
   while ((match = markdownLinkRegex.exec(text)) !== null) {
     existingLinks.push({
       text: match[1],
@@ -1071,23 +1072,23 @@ function fixPlatformLinks(text: string): string {
 
   // Depois, procurar menções a seções e converter para links (só se não forem já parte de um link)
   let newText = text;
-  
+
   // Aplicar substituições de forma ordenada (das mais longas para as mais curtas)
   const orderedKeys = Object.keys(platformLinks).sort((a, b) => b.length - a.length);
 
   for (const key of orderedKeys) {
     // Criar regex segura que não captura dentro de links existentes
     const safeRegex = new RegExp(`(?<![\\[\\w])\\b(${escapeRegExp(key)})\\b(?![\\]\\w])`, 'g');
-    
+
     // Verificar cada ocorrência para garantir que não está dentro de um link existente
     let lastIndex = 0;
     let result = '';
     let regexMatch;
-    
+
     while ((regexMatch = safeRegex.exec(newText)) !== null) {
       const matchStart = regexMatch.index;
       const matchEnd = matchStart + regexMatch[0].length;
-      
+
       // Verificar se esta ocorrência está dentro de algum link existente
       let isInsideExistingLink = false;
       for (const link of existingLinks) {
@@ -1097,18 +1098,18 @@ function fixPlatformLinks(text: string): string {
           break;
         }
       }
-      
+
       if (!isInsideExistingLink) {
         result += newText.substring(lastIndex, matchStart);
         result += `[${regexMatch[1]}](${platformLinks[key]})`;
         lastIndex = matchEnd;
       }
     }
-    
+
     if (lastIndex > 0) {
       result += newText.substring(lastIndex);
       newText = result;
-      
+
       // Atualizar a lista de links existentes
       existingLinks.length = 0;
       while ((match = markdownLinkRegex.exec(newText)) !== null) {
@@ -1165,7 +1166,7 @@ async function saveConversationHistory(sessionId: string, history: ChatMessage[]
       // Salvar para o usuário atual com uma estrutura mais persistente
       // Usar formato conversationHistory_USER_ID_sessionId quando possível
       let storageKey = `conversationHistory_${sessionId}`;
-      
+
       // Tentar obter dados de identificação do usuário para melhor rastreamento
       try {
         const { data: sessionData } = await (await import('@/lib/supabase')).supabase.auth.getSession();
@@ -1176,10 +1177,10 @@ async function saveConversationHistory(sessionId: string, history: ChatMessage[]
       } catch (e) {
         console.log('Erro ao obter ID do usuário, usando chave padrão:', e);
       }
-      
+
       // Salvar com uma chave mais específica para melhor identificação
       localStorage.setItem(storageKey, JSON.stringify(serializableHistory));
-      
+
       // Para compatibilidade, também salvar com a chave antiga
       localStorage.setItem(`conversationHistory_${sessionId}`, JSON.stringify(serializableHistory));
 
@@ -1187,12 +1188,12 @@ async function saveConversationHistory(sessionId: string, history: ChatMessage[]
       try {
         const userConversationsKey = 'userConversationsIndex';
         let conversationsIndex = {};
-        
+
         const savedIndex = localStorage.getItem(userConversationsKey);
         if (savedIndex) {
           conversationsIndex = JSON.parse(savedIndex);
         }
-        
+
         conversationsIndex[sessionId] = {
           lastUpdated: new Date().toISOString(),
           messageCount: serializableHistory.length,
@@ -1200,17 +1201,17 @@ async function saveConversationHistory(sessionId: string, history: ChatMessage[]
             serializableHistory[1].content.substring(0, 30) + "..." : 
             "Nova conversa"
         };
-        
+
         // Limitar o índice a 50 conversas mais recentes
         const sortedEntries = Object.entries(conversationsIndex)
           .sort((a, b) => new Date(b[1].lastUpdated).getTime() - new Date(a[1].lastUpdated).getTime())
           .slice(0, 50);
-        
+
         const trimmedIndex = {};
         sortedEntries.forEach(([key, value]) => {
           trimmedIndex[key] = value;
         });
-        
+
         localStorage.setItem(userConversationsKey, JSON.stringify(trimmedIndex));
       } catch (indexError) {
         console.error("Erro ao atualizar índice de conversas:", indexError);
@@ -1221,7 +1222,7 @@ async function saveConversationHistory(sessionId: string, history: ChatMessage[]
         const allSessions = {};
         // Só armazenar as últimas 20 sessões
         const sessionIds = Object.keys(conversationHistory).slice(-20);
-        
+
         for (const id of sessionIds) {
           const sessionHistory = conversationHistory[id];
           if (sessionHistory && sessionHistory.length > 0) {
@@ -1234,7 +1235,7 @@ async function saveConversationHistory(sessionId: string, history: ChatMessage[]
             }));
           }
         }
-        
+
         localStorage.setItem('aiChatSessions', JSON.stringify(allSessions));
       } catch (batchSaveError) {
         console.error("Erro ao salvar todas as sessões:", batchSaveError);
@@ -1265,7 +1266,7 @@ async function saveConversationHistory(sessionId: string, history: ChatMessage[]
             .select('table_name')
             .eq('table_schema', 'public')
             .eq('table_name', 'ai_chat_history');
-            
+
           if (!tablesData || tablesData.length === 0) {
             // Tabela não existe, tentar criar usando rpc
             try {
@@ -1280,7 +1281,7 @@ async function saveConversationHistory(sessionId: string, history: ChatMessage[]
                     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                     UNIQUE (user_id, session_id)
                   );
-                  
+
                   CREATE INDEX IF NOT EXISTS ai_chat_history_user_id_idx ON public.ai_chat_history(user_id);
                   CREATE INDEX IF NOT EXISTS ai_chat_history_session_id_idx ON public.ai_chat_history(session_id);
                 `
@@ -1332,3 +1333,593 @@ const getResponseForMessage = (message: string): string => {
     return "Desculpe, não entendi sua pergunta. Pode reformulá-la?";
   }
 };
+
+import { supabase } from "@/lib/supabase";
+import * as aiChatDatabase from "./aiChatDatabaseService";
+
+interface ChatMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+// Armazenamento temporário de histórico de chat no navegador
+const conversationHistory: Record<string, ChatMessage[]> = {};
+
+// Limpar histórico de conversa específica
+export const clearConversationHistory = (sessionId: string) => {
+  if (conversationHistory[sessionId]) {
+    delete conversationHistory[sessionId];
+    // Também limpar do localStorage se existir
+    try {
+      localStorage.removeItem(`conversationHistory_${sessionId}`);
+    } catch (error) {
+      console.error('Erro ao limpar histórico do localStorage:', error);
+    }
+  }
+};
+
+// Função para gerar um prompt de sistema informativo para a IA
+const generateSystemPrompt = async (
+  userName: string, 
+  userId: string | null, 
+  options: {
+    intelligenceLevel: 'basic' | 'normal' | 'advanced',
+    languageStyle: 'casual' | 'formal' | 'technical',
+    includeLinks: boolean
+  }
+) => {
+  let systemPrompt = `Você é o Epictus IA de Suporte, um assistente virtual amigável dentro da plataforma educacional Ponto.School. 
+  Seu papel é fornecer suporte para navegação, responder dúvidas sobre funcionalidades e dar dicas para o melhor aproveitamento da plataforma.
+  Você deve ser gentil, educado e paciente. Você tem acesso às informações da conta do usuário quando solicitado.
+
+  Diretrizes:
+  1. Seja conciso, direto e útil - respostas entre 2-3 parágrafos são ideais
+  2. Seja amigável e use um tom conversacional
+  3. Use formatação para organizar suas respostas: negrito para títulos, listas numeradas ou com marcadores para passos
+  4. Quando mencionar um recurso da plataforma, explique brevemente como acessá-lo
+  5. Se o usuário parecer confuso, ofereça opções para ajudá-lo
+  6. Se a pergunta for sobre um tópico educacional específico, direcione-o para usar o Epictus IA na seção específica para isso
+  7. Se a pergunta for sobre um problema técnico sem solução simples, sugira abrir um ticket de suporte ou entrar em contato por e-mail: suporte@pontoschool.com
+
+  IMPORTANTE: Você está conversando com ${userName} (utilize apenas o primeiro nome ao se referir ao usuário) e deve se referir a ele pelo primeiro nome em suas respostas.`;
+
+  // Adicionar informações da plataforma para referência
+  systemPrompt += `\n\nInformações da plataforma para referência:`;
+
+  // Adicionar seções da plataforma
+  const platformSections = aiChatDatabase.getPlatformNavigationInfo();
+  systemPrompt += `\n\nSeções principais:`;
+  platformSections.forEach(section => {
+    systemPrompt += `\n- ${section.section}: ${section.description}`;
+  });
+
+  // Adicionar categorias de FAQs para informar a IA sobre o conhecimento disponível
+  const faqs = aiChatDatabase.getFAQDatabase();
+  const categories = [...new Set(faqs.map(faq => faq.category))];
+
+  systemPrompt += `\n\nCategorias de perguntas frequentes:`;
+  categories.forEach(category => {
+    systemPrompt += `\n- ${category}`;
+  });
+
+  // Adicionar informações do usuário se disponíveis
+  if (userId) {
+    try {
+      const userInfo = await aiChatDatabase.formatUserInfoForAI(userId);
+      if (typeof userInfo === 'object') {
+        systemPrompt += `\n\nInformações do usuário:
+- Nome: ${userInfo.full_name}
+- Nome de exibição: ${userInfo.display_name}
+- Email: ${userInfo.email}
+- ID: ${userInfo.id}
+- Nível: ${userInfo.level}
+- Plano: ${userInfo.plan_type}
+- Instituição: ${userInfo.institution}
+- Criado em: ${userInfo.created_at}
+- Bio: ${userInfo.bio}
+- Número de turmas: ${userInfo.classes ? userInfo.classes.length : 0}`;
+      }
+    } catch (error) {
+      console.error("Erro ao obter informações do usuário:", error);
+    }
+  }
+
+  // Ajustar nível de inteligência
+  if (options.intelligenceLevel === 'basic') {
+    systemPrompt += '\nResponda de forma simples e direta, com explicações básicas.';
+  } else if (options.intelligenceLevel === 'advanced') {
+    systemPrompt += '\nResponda de forma detalhada e abrangente, com explicações avançadas quando aplicável.';
+  }
+
+  // Ajustar estilo de linguagem
+  if (options.languageStyle === 'formal') {
+    systemPrompt += '\nUtilize linguagem formal e profissional, evitando gírias e expressões coloquiais.';
+  } else if (options.languageStyle === 'technical') {
+    systemPrompt += '\nUtilize linguagem técnica e específica quando apropriado, mas garantindo que as explicações sejam claras.';
+  }
+
+  // Ajustar uso de links
+  if (!options.includeLinks) {
+    systemPrompt += '\nEvite incluir links nas suas respostas. Forneça instruções detalhadas em vez de links.';
+  }
+
+  return systemPrompt;
+};
+
+// Função para enriquecer a mensagem do usuário com contexto relevante
+const enrichUserMessage = async (message: string, userId: string | null) => {
+  let enrichedMessage = message;
+  let contextAdded = false;
+
+  // Verificar se a mensagem parece solicitar informações pessoais
+  const askingForPersonalInfo = /meu (perfil|conta|usuário|saldo|turmas|nivel)/i.test(message) || 
+    /minha (s)? (informaç[õo]es|dados|conta)/i.test(message) ||
+    /me (mostre|diga|informe) (sobre )?m(eu|inha)/i.test(message);
+
+  if (askingForPersonalInfo && userId) {
+    try {
+      const userInfo = await aiChatDatabase.formatUserInfoForAI(userId);
+      if (typeof userInfo === 'object') {
+        enrichedMessage += `\n\nContexto adicional (não visível para o usuário): 
+Informações atualizadas da conta do usuário:
+- Nome completo: ${userInfo.full_name}
+- Nome de usuário: ${userInfo.display_name}
+- Email: ${userInfo.email}
+- ID: ${userInfo.id}
+- Nível: ${userInfo.level}
+- Plano: ${userInfo.plan_type}
+- Criado em: ${userInfo.created_at}
+- Instituição: ${userInfo.institution}
+- Bio: ${userInfo.bio}`;
+
+        if (userInfo.classes && userInfo.classes.length > 0) {
+          enrichedMessage += `\n- Turmas: ${userInfo.classes.map((c: any) => c.name).join(', ')}`;
+        } else {
+          enrichedMessage += `\n- Turmas: Nenhuma turma encontrada`;
+        }
+
+        contextAdded = true;
+      }
+    } catch (error) {
+      console.error("Erro ao enriquecer mensagem do usuário:", error);
+    }
+  }
+
+  // Verificar se a mensagem está pedindo ajuda sobre navegação/localização
+  const askingForNavigation = /(onde|como) (encontr[oa]|ach[oa]|acess[oa])/i.test(message) || 
+    /onde (fica|está)/i.test(message);
+
+  if (askingForNavigation) {
+    // Buscar informações relevantes no banco de dados de navegação
+    const navigationResults = aiChatDatabase.searchPlatformInfo(message);
+    if (navigationResults.length > 0) {
+      enrichedMessage += `\n\nContexto adicional (não visível para o usuário): 
+Informações de navegação relevantes:`;
+      navigationResults.slice(0, 3).forEach(item => {
+        enrichedMessage += `\n- ${item.section}: ${item.description} (Caminho: ${item.path})`;
+      });
+      contextAdded = true;
+    }
+  }
+
+  // Verificar se é uma pergunta sobre funcionalidades ou ajuda
+  const askingForHelp = /como (faço|funciona|crio|acesso|uso|utilizo)/i.test(message) || 
+    /(o que é|para que serve)/i.test(message) ||
+    /(ajuda|dúvida|problema|dificuldade)/i.test(message);
+
+  if (askingForHelp) {
+    // Buscar FAQs relevantes
+    const faqResults = aiChatDatabase.searchFAQs(message);
+    if (faqResults.length > 0) {
+      enrichedMessage += `\n\nContexto adicional (não visível para o usuário): 
+FAQs relevantes:`;
+      faqResults.slice(0, 3).forEach(item => {
+        enrichedMessage += `\n- P: ${item.question}\n  R: ${item.answer}`;
+      });
+      contextAdded = true;
+    }
+  }
+
+  // Se nenhum contexto foi adicionado, mas parece uma pergunta específica
+  if (!contextAdded && 
+    (message.includes("?") || 
+     /^(o que|como|onde|quando|quem|qual|quais|por que|pra que)/i.test(message))) {
+
+    // Buscar todas as informações potencialmente relevantes
+    const keywords = message.split(/\s+/).filter(word => word.length > 3);
+    const relevantFaqs: any[] = [];
+
+    for (const keyword of keywords) {
+      const results = aiChatDatabase.searchFAQs(keyword);
+      results.forEach(result => {
+        if (!relevantFaqs.some(faq => faq.id === result.id)) {
+          relevantFaqs.push(result);
+        }
+      });
+      if (relevantFaqs.length >= 2) break;
+    }
+
+    if (relevantFaqs.length > 0) {
+      enrichedMessage += `\n\nContexto adicional (não visível para o usuário): 
+FAQs potencialmente relevantes:`;
+      relevantFaqs.slice(0, 2).forEach(item => {
+        enrichedMessage += `\n- P: ${item.question}\n  R: ${item.answer}`;
+      });
+    }
+  }
+
+  return enrichedMessage;
+};
+
+// Função principal para gerar resposta da IA
+export const generateAIResponse = async (
+  message: string,
+  sessionId: string,
+  userName: string = "Usuário",
+  options = {
+    intelligenceLevel: 'normal' as 'basic' | 'normal' | 'advanced',
+    languageStyle: 'casual' as 'casual' | 'formal' | 'technical',
+    includeLinks: true
+  }
+): Promise<string> => {
+  try {
+    // Buscar ID do usuário atual se estiver logado
+    let userId: string | null = null;
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      userId = sessionData?.session?.user?.id || null;
+    } catch (error) {
+      console.error("Erro ao obter sessão do usuário:", error);
+    }
+
+    // Inicializar histórico se não existir para essa sessão
+    if (!conversationHistory[sessionId]) {
+      // Tentar recuperar do localStorage
+      try {
+        const savedHistory = localStorage.getItem(`conversationHistory_${sessionId}`);
+        if (savedHistory) {
+          conversationHistory[sessionId] = JSON.parse(savedHistory);
+
+          // Atualizar o prompt do sistema com as informações mais recentes
+          const systemPrompt = await generateSystemPrompt(userName, userId, options);
+          conversationHistory[sessionId][0] = {
+            role: 'system',
+            content: systemPrompt
+          };
+        } else {
+          // Criar novo histórico com prompt do sistema
+          const systemPrompt = await generateSystemPrompt(userName, userId, options);
+          conversationHistory[sessionId] = [
+            {
+              role: 'system',
+              content: systemPrompt
+            }
+          ];
+        }
+      } catch (error) {
+        console.error('Erro ao recuperar histórico do localStorage:', error);
+        // Criar novo histórico com prompt do sistema
+        const systemPrompt = await generateSystemPrompt(userName, userId, options);
+        conversationHistory[sessionId] = [
+          {
+            role: 'system',
+            content: systemPrompt
+          }
+        ];
+      }
+    } else {
+      // Atualizar o prompt do sistema com as informações mais recentes
+      const systemPrompt = await generateSystemPrompt(userName, userId, options);
+      conversationHistory[sessionId][0] = {
+        role: 'system',
+        content: systemPrompt
+      };
+    }
+
+    // Enriquecer a mensagem do usuário com contexto relevante
+    const enrichedMessage = await enrichUserMessage(message, userId);
+
+    // Adicionar mensagem do usuário ao histórico
+    conversationHistory[sessionId].push({
+      role: 'user',
+      content: enrichedMessage
+    });
+
+    // Preparar histórico para a API (max 10 mensagens mais recentes para evitar token excessivo)
+    const recentHistory = [
+      conversationHistory[sessionId][0], // Sempre incluir o prompt do sistema
+      ...conversationHistory[sessionId].slice(-10) // Incluir até 10 mensagens mais recentes
+    ];
+
+    const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
+    const API_KEY = await fetchOpenAIKey(); // Função para buscar a chave de forma segura
+
+    if (!API_KEY) {
+      return "Desculpe, não foi possível conectar ao serviço de IA no momento. Por favor, tente novamente mais tarde.";
+    }
+
+    // Fazer requisição para a API da OpenAI
+    const response = await fetch(OPENAI_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: recentHistory,
+        temperature: 0.7,
+        max_tokens: 1000
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Erro na resposta da API:", errorData);
+      throw new Error("Falha ao comunicar com a API da OpenAI");
+    }
+
+    const data = await response.json();
+    const aiResponse = data.choices[0].message.content;
+
+    // Adicionar resposta da IA ao histórico (só a resposta original, sem o contexto)
+    conversationHistory[sessionId].push({
+      role: 'assistant',
+      content: aiResponse
+    });
+
+    // Remover mensagem enriquecida e substituir pela original para manter o histórico limpo
+    const lastUserMessageIndex = conversationHistory[sessionId].findIndex(
+      msg => msg.role === 'user' && msg.content === enrichedMessage
+    );
+
+    if (lastUserMessageIndex !== -1) {
+      conversationHistory[sessionId][lastUserMessageIndex] = {
+        role: 'user',
+        content: message // Mensagem original sem o enriquecimento
+      };
+    }
+
+    // Salvar histórico atualizado no localStorage
+    try {
+      // Criar uma versão serializável do histórico (para evitar problemas com estruturas circulares)
+      const serializableHistory = conversationHistory[sessionId].map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+
+      // Verificar e limitar o tamanho total para caber no localStorage
+      const historyString = JSON.stringify(serializableHistory);
+      if (historyString.length < 5 * 1024 * 1024) { // 5MB é um limite seguro para a maioria dos navegadores
+        localStorage.setItem(`conversationHistory_${sessionId}`, historyString);
+      } else {
+        // Se for muito grande, salvar apenas as últimas 20 mensagens
+        const reducedHistory = [
+          serializableHistory[0], // Manter o prompt do sistema
+          ...serializableHistory.slice(-20) // Manter as 20 últimas mensagens
+        ];
+        localStorage.setItem(`conversationHistory_${sessionId}`, JSON.stringify(reducedHistory));
+      }
+    } catch (error) {
+      console.error("Erro ao salvar histórico no localStorage:", error);
+
+      // Tentar novamente com um histórico menor em caso de erro
+      try {
+        const serializableHistory = conversationHistory[sessionId].map(msg => ({
+          role: msg.role,
+          content: msg.content
+        }));
+        localStorage.setItem('aiChatSessions');
+        localStorage.setItem(`conversationHistory_${sessionId}`, 
+          JSON.stringify(serializableHistory.slice(-50))); // Salvar só as últimas 50 mensagens
+      } catch (retryError) {
+        console.error("Falha na segunda tentativa de salvar no localStorage:", retryError);
+      }
+    }
+
+    // Sincronizar com Supabase se disponível
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+
+      if (userId) {
+        try {
+          // Criar tabela ai_chat_history se não existir (verificar primeiro)
+          const { data: tablesData } = await supabase
+            .from('information_schema.tables')
+            .select('table_name')
+            .eq('table_schema', 'public')
+            .eq('table_name', 'ai_chat_history');
+
+          if (!tablesData || tablesData.length === 0) {
+            // Tabela não existe, tentar criar usando rpc
+            try {
+              await supabase.rpc('execute_sql', {
+                sql_statement: `
+                  CREATE TABLE IF NOT EXISTS public.ai_chat_history (
+                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+                    session_id TEXT NOT NULL,
+                    messages JSONB NOT NULL DEFAULT '[]'::jsonb,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+                  );
+                `
+              });
+            } catch (createTableError) {
+              console.error("Erro ao criar tabela ai_chat_history:", createTableError);
+            }
+          }
+
+          // Verificar se já existe um registro para esta sessão
+          const { data: existingHistory } = await supabase
+            .from('ai_chat_history')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('session_id', sessionId)
+            .single();
+
+          if (existingHistory) {
+            // Atualizar registro existente
+            await supabase
+              .from('ai_chat_history')
+              .update({
+                messages: conversationHistory[sessionId],
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', existingHistory.id);
+          } else {
+            // Criar novo registro
+            await supabase
+              .from('ai_chat_history')
+              .insert({
+                user_id: userId,
+                session_id: sessionId,
+                messages: conversationHistory[sessionId]
+              });
+          }
+        } catch (dbError) {
+          console.error("Erro ao salvar histórico no banco de dados:", dbError);
+        }
+      }
+    } catch (supabaseError) {
+      console.error("Erro ao sincronizar com Supabase:", supabaseError);
+    }
+
+    return aiResponse;
+  } catch (error) {
+    console.error("Erro ao gerar resposta da IA:", error);
+    return "Desculpe, ocorreu um erro ao processar sua pergunta. Por favor, tente novamente mais tarde.";
+  }
+};
+
+// Função auxiliar para buscar a chave da API de forma segura
+const fetchOpenAIKey = async (): Promise<string | null> => {
+  try {
+    // Em produção, recomenda-se buscar a chave do servidor/backend
+    // Para este exemplo, usaremos uma variável de ambiente ou um valor padrão
+    const API_KEY = process.env.REACT_APP_OPENAI_KEY || 'sk-demo-key-replace-with-real-key';
+    return API_KEY;
+  } catch (error) {
+    console.error("Erro ao obter chave da API:", error);
+    return null;
+  }
+};
+
+// Função para melhorar o prompt do usuário usando a IA
+export async function improveUserPrompt(originalPrompt: string): Promise<string> {
+  try {
+    const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
+    const API_KEY = await fetchOpenAIKey();
+
+    if (!API_KEY) {
+      throw new Error("Não foi possível obter a chave da API");
+    }
+
+    const systemPrompt = `Você é um assistente especializado em melhorar prompts. 
+    Sua tarefa é melhorar o prompt que o usuário escreveu, tornando-o mais detalhado, 
+    específico e capaz de gerar uma resposta mais precisa.
+
+    Diretrizes:
+    1. Mantenha a intenção original do usuário
+    2. Adicione detalhes e especificações relevantes
+    3. Organize o prompt em uma estrutura clara
+    4. Remova ambiguidades
+    5. Formule como se o próprio usuário estivesse escrevendo
+    6. Não adicione indicações artificiais como "Atenciosamente" ou saudações
+
+    Responda apenas com o prompt melhorado, sem nenhum texto adicional.`;
+
+    const response = await fetch(OPENAI_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Melhore o seguinte prompt: "${originalPrompt}"` }
+        ],
+        temperature: 0.7,
+        max_tokens: 500
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Erro na resposta da API:", errorData);
+      throw new Error("Falha ao comunicar com a API da OpenAI");
+    }
+
+    const data = await response.json();
+    const improvedPrompt = data.choices[0].message.content.trim();
+
+    return improvedPrompt;
+  } catch (error) {
+    console.error("Erro ao melhorar prompt:", error);
+    return originalPrompt; // Em caso de erro, retorna o prompt original
+  }
+}
+
+// Função para gerar uma resposta melhorada
+export async function generateImprovedResponse(userMessage: string, aiResponse: string, improvementFeedback?: string): Promise<string> {
+  try {
+    const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
+    const API_KEY = await fetchOpenAIKey();
+
+    if (!API_KEY) {
+      throw new Error("Não foi possível obter a chave da API");
+    }
+
+    let systemPrompt = `Você é um assistente especializado em melhorar respostas. 
+    Sua tarefa é reformular e aprimorar a resposta original para torná-la mais 
+    clara, completa, bem estruturada e útil para o usuário.
+
+    Diretrizes:
+    1. Mantenha o mesmo conteúdo e informações da resposta original
+    2. Melhore a organização e estrutura
+    3. Use formatação de texto para melhorar a legibilidade (negrito para títulos, listas numeradas para passos)
+    4. Torne as explicações mais claras e diretas
+    5. Mantenha um tom amigável e conversacional
+    6. Adicione detalhes relevantes, se necessário`;
+
+    if (improvementFeedback) {
+      systemPrompt += `\n\nO usuário solicitou especificamente as seguintes melhorias: "${improvementFeedback}"`;
+    }
+
+    systemPrompt += `\n\nResponda apenas com a resposta melhorada, sem nenhum texto adicional.`;
+
+    const response = await fetch(OPENAI_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Pergunta do usuário: "${userMessage}"\n\nResposta original: "${aiResponse}"` }
+        ],
+        temperature: 0.7,
+        max_tokens: 1000
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Erro na resposta da API:", errorData);
+      throw new Error("Falha ao comunicar com a API da OpenAI");
+    }
+
+    const data = await response.json();
+    const improvedResponse = data.choices[0].message.content.trim();
+
+    return improvedResponse;
+  } catch (error) {
+    console.error("Erro ao melhorar resposta:", error);
+    return aiResponse; // Em caso de erro, retorna a resposta original
+  }
+}
