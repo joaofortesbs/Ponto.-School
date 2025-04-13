@@ -1,4 +1,44 @@
 
+/* Animação de digitação */
+.typing-animation {
+  display: flex;
+  align-items: center;
+  column-gap: 4px;
+}
+
+.typing-animation span {
+  height: 8px;
+  width: 8px;
+  background-color: #FF6B00;
+  border-radius: 50%;
+  display: block;
+  opacity: 0.6;
+}
+
+.typing-animation span:nth-child(1) {
+  animation: bounce 1s infinite;
+}
+
+.typing-animation span:nth-child(2) {
+  animation: bounce 1s infinite 0.2s;
+}
+
+.typing-animation span:nth-child(3) {
+  animation: bounce 1s infinite 0.4s;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-5px);
+    opacity: 1;
+  }
+}
+
+
 /* From Uiverse.io by Nawsome */ 
 .typewriter {
   --blue: #FF8736;

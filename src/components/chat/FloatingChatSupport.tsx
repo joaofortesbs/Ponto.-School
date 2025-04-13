@@ -379,62 +379,92 @@ const FloatingChatSupport: React.FC = () => {
   }, [isOpen]);
 
   useEffect(() => {
-    // Obter o primeiro nome do usuário
-    const getFirstName = () => {
-      // Verifica se tem um nome completo e extrai o primeiro nome
-      if (userName && userName.includes(' ')) {
-        return userName.split(' ')[0];
-      }
-      return userName || 'Usuário';
-    };
-    
-    const firstName = getFirstName();
-    setUserName(firstName);
-    
-    // Gerar uma ID de sessão baseada no usuário atual ou criar uma nova
-    const savedSessionId = localStorage.getItem('chatSessionId');
-    const newSessionId = savedSessionId || `chat_${firstName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`;
-    setSessionId(newSessionId);
-    
-    if (!savedSessionId) {
-      localStorage.setItem('chatSessionId', newSessionId);
-    }
-
-    // Tentar carregar mensagens salvas para este usuário
-    const loadSavedMessages = async () => {
+    const initializeChat = async () => {
       try {
-        const chatService = await import('@/services/aiChatService');
-
-        // Usar a função getConversationHistory para obter histórico
-        const history = await chatService.getConversationHistory(newSessionId);
-
-        // Se houver histórico com mensagens de usuário e IA, exibir as mensagens
-        if (history && history.length > 1) {
-          // Converter de ChatMessage do serviço para o formato ChatMessage do componente
-          const convertedMessages: ChatMessage[] = history
-            .filter(msg => msg.role !== 'system') // Excluir mensagens do sistema
-            .map((msg, index) => ({
-              id: Date.now() + index,
-              content: msg.content,
-              sender: msg.role === 'user' ? 'user' : 'assistant',
-              timestamp: msg.timestamp instanceof Date ? msg.timestamp : new Date(),
-            }));
-
-          if (convertedMessages.length > 0) {
-            setMessages(prev => {
-              // Se não houver mensagens convertidas, manter a mensagem de boas-vindas padrão
-              // Caso contrário, usar apenas as mensagens convertidas
-              return convertedMessages.length > 0 ? convertedMessages : prev;
-            });
+        // Tentar obter dados do perfil do usuário
+        const profileService = await import('@/services/profileService');
+        const userProfile = await profileService.profileService.getCurrentUserProfile();
+        
+        // Determinar o melhor nome de usuário a usar
+        let displayName = 'Usuário';
+        
+        if (userProfile) {
+          // Prioridade: nome completo > displayName > username
+          if (userProfile.full_name) {
+            displayName = userProfile.full_name.split(' ')[0]; // Pegar o primeiro nome
+          } else if (userProfile.display_name) {
+            displayName = userProfile.display_name;
+          } else if (userProfile.username) {
+            displayName = userProfile.username;
+          }
+        } else {
+          // Fallback para localStorage se não tiver perfil
+          const storedName = localStorage.getItem('userFirstName') || 
+                            localStorage.getItem('userName') || 
+                            localStorage.getItem('userDisplayName');
+          if (storedName) {
+            displayName = storedName;
           }
         }
+        
+        // Atualizar estado com o nome encontrado
+        setUserName(displayName);
+        
+        // Gerar uma ID de sessão baseada no usuário atual ou usar existente
+        const savedSessionId = localStorage.getItem('chatSessionId');
+        const newSessionId = savedSessionId || 
+                            `chat_${displayName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`;
+        setSessionId(newSessionId);
+        
+        if (!savedSessionId) {
+          localStorage.setItem('chatSessionId', newSessionId);
+        }
+
+        // Carregar mensagens salvas para este usuário
+        try {
+          const chatService = await import('@/services/aiChatService');
+
+          // Usar a função getConversationHistory para obter histórico
+          const history = await chatService.getConversationHistory(newSessionId);
+
+          // Se houver histórico com mensagens de usuário e IA, exibir as mensagens
+          if (history && history.length > 1) {
+            // Converter de ChatMessage do serviço para o formato ChatMessage do componente
+            const convertedMessages: ChatMessage[] = history
+              .filter(msg => msg.role !== 'system') // Excluir mensagens do sistema
+              .map((msg, index) => ({
+                id: Date.now() + index,
+                content: msg.content,
+                sender: msg.role === 'user' ? 'user' : 'assistant',
+                timestamp: msg.timestamp instanceof Date ? msg.timestamp : new Date(),
+              }));
+
+            if (convertedMessages.length > 0) {
+              setMessages(convertedMessages);
+            }
+          }
+        } catch (error) {
+          console.error('Erro ao carregar histórico de mensagens:', error);
+        }
       } catch (error) {
-        console.error('Erro ao carregar histórico de mensagens:', error);
+        console.error('Erro ao inicializar chat:', error);
+        
+        // Usar valores padrão em caso de erro
+        const displayName = 'Usuário';
+        setUserName(displayName);
+        
+        const savedSessionId = localStorage.getItem('chatSessionId');
+        const newSessionId = savedSessionId || `chat_default_${Date.now()}`;
+        setSessionId(newSessionId);
+        
+        if (!savedSessionId) {
+          localStorage.setItem('chatSessionId', newSessionId);
+        }
       }
     };
 
-    loadSavedMessages();
-  }, [userName]);
+    initializeChat();
+  }, []);
 
   useEffect(() => {
     setIsMessageEmpty(message.trim() === '');
@@ -619,7 +649,7 @@ const FloatingChatSupport: React.FC = () => {
       localStorage.setItem('chatSessionId', newSessionId);
     }
 
-    // Atualizar a interface com a mensagem do usuário
+    // Atualizar a interface com a mensagem do usuário imediatamente
     setMessages(prevMessages => [...prevMessages, userMessage]);
     setInputMessage('');
     setSelectedFiles([]);
@@ -628,23 +658,14 @@ const FloatingChatSupport: React.FC = () => {
     try {
       // Importar o serviço AI dinamicamente
       const aiService = await import('@/services/aiChatService');
+
+      // Gerar um ID de sessão valido caso ainda não exista
+      const validSessionId = sessionId || `chat_${userName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`;
       
-      // Armazenar o histórico da conversa no serviço
-      const currentHistory = await aiService.getConversationHistory(sessionId || 'default_session');
-      
-      // Adicionar a mensagem do usuário ao histórico
-      currentHistory.push({ 
-        role: 'user', 
-        content: fullMessage 
-      });
-      
-      // Persistir o histórico atualizado
-      await aiService.saveConversationHistory(sessionId || 'default_session', currentHistory);
-      
-      // Chamar a API para obter resposta com opções personalizadas
+      // Chamar a API para obter resposta com opções personalizadas - já gerencia o histórico internamente
       const aiResponse = await aiService.generateAIResponse(
         fullMessage,
-        sessionId || 'default_session',
+        validSessionId,
         {
           intelligenceLevel: aiIntelligenceLevel,
           languageStyle: aiLanguageStyle
@@ -652,7 +673,7 @@ const FloatingChatSupport: React.FC = () => {
       );
 
       // Reproduzir som se estiver ativado
-      if (soundEnabled) {
+      if (soundEnabled && enableNotificationSounds) {
         try {
           const audioElement = new Audio('/message-sound.mp3');
           audioElement.volume = 0.5;
@@ -662,32 +683,34 @@ const FloatingChatSupport: React.FC = () => {
         }
       }
 
-      // Adicionar a resposta da IA à interface
+      // Adicionar a resposta da IA à interface com formatação melhorada
+      const formattedResponse = aiResponse
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\_(.*?)\_/g, '<em>$1</em>')
+        .replace(/\~\~(.*?)\~\~/g, '<del>$1</del>')
+        .replace(/\`(.*?)\`/g, '<code class="bg-black/10 dark:bg-white/10 rounded px-1">$1</code>')
+        .replace(/\n/g, '<br />')
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>')
+        .replace(/(https?:\/\/[^\s]+)(?!\))/g, '<a href="$1" class="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>');
+
       const assistantMessage = { 
         id: Date.now(), 
-        content: aiResponse, 
+        content: formattedResponse, 
         sender: 'assistant', 
         timestamp: new Date() 
       };
       
       setMessages(prevMessages => [...prevMessages, assistantMessage]);
       
-      // Atualizar o histórico com a resposta da IA
-      currentHistory.push({ 
-        role: 'assistant', 
-        content: aiResponse 
-      });
-      
-      // Persistir o histórico completo
-      await aiService.saveConversationHistory(sessionId || 'default_session', currentHistory);
-      
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
+      
+      // Resposta de erro mais amigável
       setMessages(prevMessages => [
         ...prevMessages,
         { 
           id: Date.now(), 
-          content: 'Desculpe, estou enfrentando problemas no momento. Por favor, tente novamente mais tarde.', 
+          content: `Desculpe ${userName}, estou enfrentando problemas técnicos no momento. Por favor, tente novamente em alguns instantes.`, 
           sender: 'assistant', 
           timestamp: new Date() 
         }
@@ -1409,10 +1432,10 @@ const FloatingChatSupport: React.FC = () => {
               <div className="max-w-[75%] rounded-lg px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow-sm">
                 <div className="flex items-center">
                   <div className="mr-2 text-xs text-gray-500 dark:text-gray-400">Epictus IA está digitando</div>
-                  <div className="flex items-center space-x-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
-                    <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse delay-150" />
-                    <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse delay-300" />
+                  <div className="typing-animation">
+                    <span></span>
+                    <span></span>
+                    <span></span>
                   </div>
                 </div>
               </div>

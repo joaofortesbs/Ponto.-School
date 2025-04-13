@@ -212,6 +212,7 @@ export async function generateXAIResponse(
     // Verificar se a mensagem contém comando para acessar ou modificar o perfil
     const isProfileInfoRequest = /qual (é|e) (o )?meu (ID|id)|me (mostre|mostra|diga|informe) (o )?meu (ID|id)|informações da minha conta|dados da minha conta|meu perfil completo/i.test(message);
     const isProfileUpdateRequest = /atualiz(e|ar) (minha|a) (bio|biografia)|mudar (minha|a) (bio|biografia)|modificar (minha|a) bio|mudar (meu|o) nome de exibição|atualizar (meu|o) nome de exibição|mudar (meu|o) telefone/i.test(message);
+    const isRedirectRequest = /(me\s+(redirecione|encaminhe|leve|direcione|mande|envie)\s+(para|ao|à|a|até)|quero\s+(ir|acessar|entrar|ver)|me\s+(mostre|mostra)|abrir?|abra|acesse|acessar|ver|veja)\s+(a\s+)?(página\s+(de|do|da)\s+)?([a-zà-ú\s]+)/i.test(message);
 
     // Importar o serviço de modificação de perfil se necessário
     let ProfileModificationService;
@@ -223,6 +224,26 @@ export async function generateXAIResponse(
       }
     }
 
+    // Obter contexto do usuário - fazer isso logo no início
+    const userContext = await getUserContext();
+    
+    // Extrair o primeiro nome do usuário para uso personalizado nas respostas
+    const firstName = userContext.fullName ? 
+      userContext.fullName.split(' ')[0] : 
+      (userContext.displayName || userContext.username || 'Usuário');
+    
+    // Inicializar o histórico se não existir
+    if (!conversationHistory[sessionId]) {
+      initializeConversationHistory(sessionId, userContext);
+    }
+    
+    // Adiciona a mensagem do usuário ao histórico
+    conversationHistory[sessionId].push({ 
+      role: 'user', 
+      content: message,
+      timestamp: new Date() 
+    });
+
     // Processar solicitação de informações do perfil
     if (isProfileInfoRequest && ProfileModificationService) {
       try {
@@ -230,14 +251,8 @@ export async function generateXAIResponse(
 
         // Se conseguiu obter as informações, criar uma resposta personalizada
         if (profile) {
-          // Adicionar a mensagem do usuário ao histórico
-          if (!conversationHistory[sessionId]) {
-            initializeConversationHistory(sessionId);
-          }
-          conversationHistory[sessionId].push({ role: 'user', content: message });
-
           // Criar resposta amigável com as informações
-          const response = `Claro, aqui estão as informações da sua conta:
+          const response = `Claro, ${firstName}! Aqui estão as informações da sua conta:
 
 ${formattedInfo}
 
@@ -246,9 +261,13 @@ Você pode visualizar e editar seu perfil completo acessando [sua página de per
 Posso te ajudar a atualizar algumas dessas informações diretamente por aqui, como sua biografia ou nome de exibição. É só me pedir!`;
 
           // Adicionar a resposta ao histórico
-          conversationHistory[sessionId].push({ role: 'assistant', content: response });
-          saveConversationHistory(sessionId, conversationHistory[sessionId]);
-
+          conversationHistory[sessionId].push({ 
+            role: 'assistant', 
+            content: response,
+            timestamp: new Date()
+          });
+          
+          await saveConversationHistory(sessionId, conversationHistory[sessionId]);
           return response;
         }
       } catch (e) {
@@ -265,12 +284,6 @@ Posso te ajudar a atualizar algumas dessas informações diretamente por aqui, c
 
       // Extrair o conteúdo a ser atualizado
       try {
-        // Adicionar a mensagem do usuário ao histórico
-        if (!conversationHistory[sessionId]) {
-          initializeConversationHistory(sessionId);
-        }
-        conversationHistory[sessionId].push({ role: 'user', content: message });
-
         // Determinar qual atualização fazer e responder apropriadamente
         let response = '';
 
@@ -284,14 +297,14 @@ Posso te ajudar a atualizar algumas dessas informações diretamente por aqui, c
             const result = await ProfileModificationService.updateUserBio(newBio);
 
             if (result.success) {
-              response = `Ótimo! Sua biografia foi atualizada com sucesso para: "${newBio}". 
+              response = `Ótimo, ${firstName}! Sua biografia foi atualizada com sucesso para: "${newBio}". 
 
 As alterações já estão disponíveis no seu perfil. Você pode conferir em [sua página de perfil](https://pontoschool.com/profile).`;
             } else {
-              response = `Desculpe, não consegui atualizar sua biografia. ${result.message}`;
+              response = `Desculpe ${firstName}, não consegui atualizar sua biografia. ${result.message}`;
             }
           } else {
-            response = `Parece que você quer atualizar sua biografia, mas não entendi qual seria o novo texto. Pode me fornecer a nova biografia entre aspas? 
+            response = `Parece que você quer atualizar sua biografia, ${firstName}, mas não entendi qual seria o novo texto. Pode me fornecer a nova biografia entre aspas? 
 
 Por exemplo: "Atualizar minha biografia para 'Estudante de engenharia apaixonado por tecnologia'"`;
           }
@@ -305,19 +318,19 @@ Por exemplo: "Atualizar minha biografia para 'Estudante de engenharia apaixonado
             const result = await ProfileModificationService.updateDisplayName(newName);
 
             if (result.success) {
-              response = `Perfeito! Seu nome de exibição foi atualizado com sucesso para: "${newName}".
+              response = `Perfeito, ${firstName}! Seu nome de exibição foi atualizado com sucesso para: "${newName}".
 
 A alteração já está disponível em seu perfil. Você pode conferir em [sua página de perfil](https://pontoschool.com/profile).`;
             } else {
-              response = `Desculpe, não consegui atualizar seu nome de exibição. ${result.message}`;
+              response = `Desculpe ${firstName}, não consegui atualizar seu nome de exibição. ${result.message}`;
             }
           } else {
-            response = `Parece que você quer atualizar seu nome de exibição, mas não entendi qual seria o novo nome. Pode me fornecer o novo nome entre aspas?
+            response = `Parece que você quer atualizar seu nome de exibição, ${firstName}, mas não entendi qual seria o novo nome. Pode me fornecer o novo nome entre aspas?
 
 Por exemplo: "Atualizar meu nome de exibição para 'João Silva'"`;
           }
         } else if (isContactInfoUpdate) {
-          response = `Para atualizar suas informações de contato, é melhor acessar diretamente a página de configurações:
+          response = `${firstName}, para atualizar suas informações de contato, é melhor acessar diretamente a página de configurações:
 
 [Acesse as configurações do seu perfil](https://pontoschool.com/configuracoes)
 
@@ -326,8 +339,12 @@ Lá você poderá atualizar seu telefone, localização e outras informações d
 
         // Adicionar a resposta ao histórico
         if (response) {
-          conversationHistory[sessionId].push({ role: 'assistant', content: response });
-          saveConversationHistory(sessionId, conversationHistory[sessionId]);
+          conversationHistory[sessionId].push({ 
+            role: 'assistant', 
+            content: response,
+            timestamp: new Date()
+          });
+          await saveConversationHistory(sessionId, conversationHistory[sessionId]);
           return response;
         }
       } catch (e) {
@@ -335,64 +352,165 @@ Lá você poderá atualizar seu telefone, localização e outras informações d
       }
     }
 
-    // Obter contexto do usuário
-    const userContext = await getUserContext();
+    // Verificar se é um pedido de redirecionamento para área da plataforma
+    if (isRedirectRequest) {
+      const platformLinks = {
+        'Portal de Estudos': 'https://pontoschool.com/portal',
+        'Portal': 'https://pontoschool.com/portal',
+        'Agenda': 'https://pontoschool.com/agenda',
+        'Turmas': 'https://pontoschool.com/turmas',
+        'Biblioteca': 'https://pontoschool.com/biblioteca',
+        'Perfil': 'https://pontoschool.com/profile',
+        'Meu Perfil': 'https://pontoschool.com/profile',
+        'Configurações': 'https://pontoschool.com/configuracoes',
+        'Minhas Configurações': 'https://pontoschool.com/configuracoes',
+        'Dashboard': 'https://pontoschool.com/dashboard',
+        'Epictus IA': 'https://pontoschool.com/epictus-ia',
+        'Mentor IA': 'https://pontoschool.com/mentor-ia',
+        'Planos de Estudo': 'https://pontoschool.com/planos-estudo',
+        'Plano de Estudos': 'https://pontoschool.com/planos-estudo',
+        'Conquistas': 'https://pontoschool.com/conquistas',
+        'Minhas Conquistas': 'https://pontoschool.com/conquistas',
+        'Carteira': 'https://pontoschool.com/carteira',
+        'Minha Carteira': 'https://pontoschool.com/carteira',
+        'Mercado': 'https://pontoschool.com/mercado',
+        'Organização': 'https://pontoschool.com/organizacao',
+        'Comunidades': 'https://pontoschool.com/comunidades',
+        'Chat IA': 'https://pontoschool.com/chat-ia',
+        'School IA': 'https://pontoschool.com/school-ia',
+        'Novidades': 'https://pontoschool.com/novidades',
+        'Lembretes': 'https://pontoschool.com/lembretes',
+        'Pedidos de Ajuda': 'https://pontoschool.com/pedidos-ajuda',
+        'Estudos': 'https://pontoschool.com/estudos'
+      };
+      
+      // Regex mais preciso para extrair a seção desejada
+      const sectionRegex = /(me\s+(redirecione|encaminhe|leve|direcione|mande|envie)\s+(para|ao|à|a|até)|quero\s+(ir|acessar|entrar|ver)|me\s+(mostre|mostra)|abrir?|abra|acesse|acessar|ver|veja)\s+(a\s+)?(página\s+(de|do|da)\s+)?([a-zà-ú\s]+)/i;
+      const match = message.match(sectionRegex);
+      
+      if (match && match[9]) {
+        const requestedSection = match[9].trim().toLowerCase();
+        
+        // Encontra a melhor correspondência entre as seções disponíveis
+        const sections = Object.keys(platformLinks);
+        const bestMatch = sections.find(section => 
+          section.toLowerCase() === requestedSection || 
+          section.toLowerCase().includes(requestedSection) ||
+          requestedSection.includes(section.toLowerCase())
+        );
+        
+        if (bestMatch) {
+          const response = `Claro, ${firstName}! Aqui está o link direto para ${bestMatch}: [${bestMatch}](${platformLinks[bestMatch]})
 
-    // Manter o nome de usuário completo para uso nas respostas
-    const usernameFull = userContext.username;
-
-    // Inicializar o histórico se não existir
-    if (!conversationHistory[sessionId]) {
-      initializeConversationHistory(sessionId, userContext);
+Clique no link acima para ser redirecionado. Posso ajudar com mais alguma coisa?`;
+          
+          conversationHistory[sessionId].push({ 
+            role: 'assistant', 
+            content: response,
+            timestamp: new Date()
+          });
+          await saveConversationHistory(sessionId, conversationHistory[sessionId]);
+          return response;
+        }
+      }
     }
 
-    // Adiciona a mensagem do usuário ao histórico
-    conversationHistory[sessionId].push({ role: 'user', content: message });
-
     // Limita o histórico para evitar exceder os limites da API
-    if (conversationHistory[sessionId].length > 10) {
-      // Mantém a mensagem do sistema e as últimas 9 mensagens
+    if (conversationHistory[sessionId].length > 20) {
+      // Mantém a mensagem do sistema e as últimas 19 mensagens
       const systemMessage = conversationHistory[sessionId][0];
       conversationHistory[sessionId] = [
         systemMessage,
-        ...conversationHistory[sessionId].slice(-9)
+        ...conversationHistory[sessionId].slice(-19)
       ];
     }
 
-    // Configuração da solicitação para a API xAI
-    const response = await axios.post(
-      XAI_BASE_URL,
-      {
-        messages: conversationHistory[sessionId],
-        model: 'grok-3-latest',
-        stream: false,
-        temperature: 0.7
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${XAI_API_KEY}`
+    try {
+      // Configuração da solicitação para a API xAI
+      const response = await axios.post(
+        XAI_BASE_URL,
+        {
+          messages: conversationHistory[sessionId].map(msg => ({
+            role: msg.role,
+            content: msg.content
+          })),
+          model: 'grok-3-latest',
+          stream: false,
+          temperature: 0.7,
+          max_tokens: 1000
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${XAI_API_KEY}`
+          },
+          timeout: 15000 // 15 segundos de timeout
         }
+      );
+
+      // Extrai a resposta
+      let aiResponse = '';
+      
+      if (response.data && 
+          response.data.choices && 
+          response.data.choices.length > 0 && 
+          response.data.choices[0].message) {
+        aiResponse = response.data.choices[0].message.content;
+      } else {
+        throw new Error('Formato de resposta inválido da API xAI');
       }
-    );
 
-    // Extrai a resposta
-    let aiResponse = response.data.choices[0].message.content;
+      // Verificar e corrigir links de redirecionamento
+      aiResponse = fixPlatformLinks(aiResponse);
 
-    // Verificar e corrigir links de redirecionamento
-    aiResponse = fixPlatformLinks(aiResponse);
+      // Adiciona a resposta da IA ao histórico
+      conversationHistory[sessionId].push({ 
+        role: 'assistant', 
+        content: aiResponse,
+        timestamp: new Date()
+      });
 
-    // Adiciona a resposta da IA ao histórico
-    conversationHistory[sessionId].push({ role: 'assistant', content: aiResponse });
+      // Salvar histórico atualizado no localStorage
+      await saveConversationHistory(sessionId, conversationHistory[sessionId]);
 
-    // Salvar histórico atualizado no localStorage
-    saveConversationHistory(sessionId, conversationHistory[sessionId]);
-
-    return aiResponse;
+      return aiResponse;
+    } catch (apiError) {
+      console.error('Erro na API xAI:', apiError);
+      
+      // Resposta padrão em caso de erro
+      const fallbackResponse = `Desculpe ${firstName}, estou enfrentando dificuldades técnicas no momento. 
+      
+Vou tentar responder sua pergunta mesmo assim. ${message.length < 50 ? "Você me perguntou sobre " + message : ""}
+      
+O que mais posso ajudar você hoje?`;
+      
+      // Adicionar a resposta alternativa ao histórico
+      conversationHistory[sessionId].push({ 
+        role: 'assistant', 
+        content: fallbackResponse,
+        timestamp: new Date()
+      });
+      
+      // Salvar histórico atualizado
+      await saveConversationHistory(sessionId, conversationHistory[sessionId]);
+      
+      // Tenta resposta fallback via Gemini
+      try {
+        return await generateGeminiResponse(message, sessionId, options);
+      } catch (geminiError) {
+        console.error('Erro também no Gemini:', geminiError);
+        return fallbackResponse;
+      }
+    }
   } catch (error) {
     console.error('Erro ao gerar resposta com xAI:', error);
     // Fallback para Gemini em caso de erro
-    return generateGeminiResponse(message, sessionId);
+    try {
+      return await generateGeminiResponse(message, sessionId, options);
+    } catch (geminiError) {
+      console.error('Erro também no Gemini:', geminiError);
+      return `Desculpe, estou enfrentando dificuldades técnicas no momento. Por favor, tente novamente mais tarde.`;
+    }
   }
 }
 
@@ -400,6 +518,7 @@ Lá você poderá atualizar seu telefone, localização e outras informações d
 function initializeConversationHistory(sessionId: string, userContext?: any) {
   // Se não tiver contexto do usuário, use valores padrão
   const username = userContext?.username || 'Usuário';
+  const firstName = userContext?.fullName ? userContext.fullName.split(' ')[0] : username;
   const email = userContext?.email || 'email@exemplo.com';
   const userId = userContext?.userId || 'ID não disponível';
   const currentPage = userContext?.currentPage || window.location.pathname;
@@ -412,7 +531,9 @@ function initializeConversationHistory(sessionId: string, userContext?: any) {
       content: `Você é o Epictus IA, o assistente inteligente da Ponto.School, uma plataforma educacional.
 
       CONTEXTO DO USUÁRIO (COMPLETO):
+      - Nome: ${userContext?.fullName || 'Não disponível'}
       - Username: ${username}
+      - Primeiro nome: ${firstName}
       - Email: ${email}
       - ID do usuário: ${userId}
       - Plano atual: ${planType}
@@ -420,10 +541,13 @@ function initializeConversationHistory(sessionId: string, userContext?: any) {
       - Localização atual na plataforma: ${currentPage}
 
       DIRETRIZES DE COMUNICAÇÃO:
-      1. Sempre se refira ao usuário pelo nome: "${username}". Use frases como "E aí, ${username}!", "Opa ${username}!", etc.
+      1. MUITO IMPORTANTE: Sempre se refira ao usuário pelo primeiro nome: "${firstName}". Use frases como "E aí, ${firstName}!", "Opa ${firstName}!", etc.
       2. Use uma linguagem mais informal e descontraída, como se estivesse conversando com um amigo.
       3. Seja amigável, use emojis ocasionalmente e mantenha um tom leve e positivo.
       4. Use gírias leves e expressões coloquiais quando apropriado.
+      5. Mantenha respostas diretas e objetivas, evitando textos muito longos.
+      6. Organize suas respostas em parágrafos curtos para fácil leitura.
+      7. Use negrito **assim** para destacar informações importantes.
 
       CONTEÚDO INSTITUCIONAL:
       Quando perguntado sobre os criadores, fundadores, donos, desenvolvedores, equipe administrativa ou qualquer pergunta relacionada à gestão da Ponto.School, responda:
@@ -435,14 +559,14 @@ function initializeConversationHistory(sessionId: string, userContext?: any) {
 
       RECURSOS DE PERFIL:
       Quando o usuário perguntar sobre o ID da conta ou informações do perfil, você tem acesso completo a:
-      1. ID do usuário (user_id)
-      2. Data de criação da conta
-      3. Nome completo e nome de usuário
-      4. Plano atual (lite, premium, etc.)
-      5. Nível e classificação
-      6. Informações de contato
+      1. ID do usuário (user_id): ${userId}
+      2. Data de criação da conta: ${userContext?.createdAt || 'Não disponível'}
+      3. Nome completo: ${userContext?.fullName || 'Não disponível'}
+      4. Plano atual: ${planType}
+      5. Nível: ${userLevel}
+      6. Seguidores: ${userContext?.followersCount || '0'}
 
-      Você pode ajudar o usuário a atualizar algumas informações do perfil como:
+      Você pode ajudar o usuário a atualizar informações do perfil como:
       1. Biografia/bio
       2. Nome de exibição
       3. Para outras alterações, redirecione para a página de configurações
@@ -485,7 +609,8 @@ function initializeConversationHistory(sessionId: string, userContext?: any) {
       - Pedidos de Ajuda: https://pontoschool.com/pedidos-ajuda
       - Estudos: https://pontoschool.com/estudos
 
-      Personalize suas respostas para criar uma experiência única e amigável para ${username}.`
+      Personalize suas respostas para criar uma experiência única e amigável para ${firstName}.`,
+      timestamp: new Date()
     }
   ];
 }
@@ -606,63 +731,128 @@ export function clearConversationHistory(sessionId: string): void {
 
 // Obter histórico da conversa
 export async function getConversationHistory(sessionId: string): Promise<ChatMessage[]> {
-  // Primeiro verifica se já está carregado na memória
-  if (conversationHistory[sessionId]) {
-    return conversationHistory[sessionId];
-  }
-  
-  // Caso contrário, tenta recuperar do localStorage
   try {
-    const savedHistory = localStorage.getItem(`conversationHistory_${sessionId}`);
-    if (savedHistory) {
-      const parsedHistory = JSON.parse(savedHistory) as ChatMessage[];
-      // Converter timestamps de string para Date se necessário
-      const processedHistory = parsedHistory.map(msg => ({
-        ...msg,
-        timestamp: msg.timestamp ? (typeof msg.timestamp === 'string' ? new Date(msg.timestamp) : msg.timestamp) : new Date()
-      }));
-      conversationHistory[sessionId] = processedHistory;
-      return processedHistory;
+    // Primeiro verifica se já está carregado na memória e é válido
+    if (conversationHistory[sessionId] && Array.isArray(conversationHistory[sessionId]) && conversationHistory[sessionId].length > 0) {
+      // Verifica se há ao menos uma mensagem do sistema
+      const hasSystemMessage = conversationHistory[sessionId].some(msg => msg.role === 'system');
+      
+      if (hasSystemMessage) {
+        return conversationHistory[sessionId];
+      }
     }
     
-    // Se não encontrou no localStorage, tenta recuperar do Supabase
+    // Caso contrário, tenta recuperar do localStorage
     try {
+      const savedHistory = localStorage.getItem(`conversationHistory_${sessionId}`);
+      if (savedHistory) {
+        try {
+          const parsedHistory = JSON.parse(savedHistory);
+          
+          // Verificar se é um array válido
+          if (Array.isArray(parsedHistory) && parsedHistory.length > 0) {
+            // Converter timestamps de string para Date se necessário
+            const processedHistory = parsedHistory.map(msg => ({
+              role: msg.role || 'user',
+              content: msg.content || '',
+              timestamp: msg.timestamp ? (typeof msg.timestamp === 'string' ? new Date(msg.timestamp) : msg.timestamp) : new Date()
+            }));
+            
+            // Verificar se há mensagem do sistema
+            const hasSystemMessage = processedHistory.some(msg => msg.role === 'system');
+            
+            if (!hasSystemMessage) {
+              // Se não tiver mensagem do sistema, inicializar com uma nova
+              const userContext = await getUserContext();
+              initializeConversationHistory(sessionId, userContext);
+              
+              // Adicionar as mensagens existentes
+              conversationHistory[sessionId] = [
+                ...conversationHistory[sessionId],
+                ...processedHistory.filter(msg => msg.role !== 'system')
+              ];
+            } else {
+              conversationHistory[sessionId] = processedHistory;
+            }
+            
+            return conversationHistory[sessionId];
+          }
+        } catch (parseError) {
+          console.error("Erro ao analisar histórico do localStorage:", parseError);
+        }
+      }
+      
+      // Se não encontrou no localStorage ou houve erro, tenta recuperar do Supabase
       const supabase = (await import('@/lib/supabase')).supabase;
       const { data: sessionData } = await supabase.auth.getSession();
       const userId = sessionData?.session?.user?.id;
       
       if (userId) {
-        const { data, error } = await supabase
-          .from('ai_chat_history')
-          .select('messages')
-          .eq('user_id', userId)
-          .eq('session_id', sessionId)
-          .single();
-          
-        if (!error && data?.messages) {
-          const supabaseHistory = data.messages as ChatMessage[];
-          // Converter timestamps de string para Date
-          const processedHistory = supabaseHistory.map(msg => ({
-            ...msg,
-            timestamp: msg.timestamp ? (typeof msg.timestamp === 'string' ? new Date(msg.timestamp) : msg.timestamp) : new Date()
-          }));
-          
-          conversationHistory[sessionId] = processedHistory;
-          
-          // Atualizar também o localStorage
-          localStorage.setItem(`conversationHistory_${sessionId}`, JSON.stringify(processedHistory));
-          
-          return processedHistory;
+        try {
+          const { data, error } = await supabase
+            .from('ai_chat_history')
+            .select('messages')
+            .eq('user_id', userId)
+            .eq('session_id', sessionId)
+            .single();
+            
+          if (!error && data?.messages && Array.isArray(data.messages) && data.messages.length > 0) {
+            // Converter timestamps de string para Date
+            const processedHistory = data.messages.map(msg => ({
+              role: msg.role || 'user',
+              content: msg.content || '',
+              timestamp: msg.timestamp ? (typeof msg.timestamp === 'string' ? new Date(msg.timestamp) : msg.timestamp) : new Date()
+            }));
+            
+            // Verificar se há mensagem do sistema
+            const hasSystemMessage = processedHistory.some(msg => msg.role === 'system');
+            
+            if (!hasSystemMessage) {
+              // Se não tiver mensagem do sistema, inicializar com uma nova
+              const userContext = await getUserContext();
+              initializeConversationHistory(sessionId, userContext);
+              
+              // Adicionar as mensagens existentes
+              conversationHistory[sessionId] = [
+                ...conversationHistory[sessionId],
+                ...processedHistory.filter(msg => msg.role !== 'system')
+              ];
+            } else {
+              conversationHistory[sessionId] = processedHistory;
+            }
+            
+            // Atualizar localStorage
+            try {
+              localStorage.setItem(`conversationHistory_${sessionId}`, JSON.stringify(conversationHistory[sessionId]));
+            } catch (localStorageError) {
+              console.log("Erro ao atualizar localStorage:", localStorageError);
+            }
+            
+            return conversationHistory[sessionId];
+          }
+        } catch (supabaseError) {
+          console.error("Erro ao recuperar histórico do Supabase:", supabaseError);
         }
       }
-    } catch (supabaseError) {
-      console.log("Erro ao recuperar histórico do Supabase:", supabaseError);
+    } catch (error) {
+      console.error("Erro ao recuperar histórico:", error);
     }
-  } catch (error) {
-    console.error("Erro ao recuperar histórico do localStorage:", error);
+    
+    // Se chegou aqui, não foi possível recuperar o histórico
+    // Inicializar com novo histórico
+    const userContext = await getUserContext();
+    initializeConversationHistory(sessionId, userContext);
+    return conversationHistory[sessionId];
+  } catch (generalError) {
+    console.error("Erro geral ao obter histórico de conversa:", generalError);
+    
+    // Retornar um histórico vazio em último caso
+    return [{
+      role: 'system',
+      content: 'Você é o Epictus IA, o assistente inteligente da Ponto.School.',
+      timestamp: new Date()
+    }];
   }
-  
-  return [];
 }
 
 // Função para corrigir links da plataforma
@@ -752,15 +942,57 @@ function fixPlatformLinks(text: string): string {
 // Função para salvar o histórico da conversa no localStorage e sincronizar com Supabase
 async function saveConversationHistory(sessionId: string, history: ChatMessage[]): Promise<void> {
   try {
+    if (!sessionId || !history) {
+      console.error("Erro ao salvar histórico: sessionId ou history inválidos");
+      return;
+    }
+    
     // Salvar localmente
     conversationHistory[sessionId] = history;
     
-    // Salvar todas as sessões em um único item no localStorage
-    const allSessions = { ...conversationHistory };
-    localStorage.setItem('aiChatSessions', JSON.stringify(allSessions));
+    // Preparar o histórico para armazenamento (garantir que todos os objetos são serializáveis)
+    const serializableHistory = history.map(msg => ({
+      role: msg.role,
+      content: msg.content,
+      timestamp: msg.timestamp instanceof Date ? msg.timestamp.toISOString() : 
+                (typeof msg.timestamp === 'string' ? msg.timestamp : new Date().toISOString())
+    }));
     
-    // Também salvar individualmente para compatibilidade com código existente
-    localStorage.setItem(`conversationHistory_${sessionId}`, JSON.stringify(history));
+    try {
+      // Salvar todas as sessões em um único item no localStorage com limite de tamanho
+      // Para evitar exceder o limite do localStorage, limitamos o histórico
+      const allSessions = {};
+      
+      // Só armazenar as últimas 20 sessões
+      const sessionIds = Object.keys(conversationHistory).slice(-20);
+      for (const id of sessionIds) {
+        const sessionHistory = conversationHistory[id];
+        if (sessionHistory && sessionHistory.length > 0) {
+          // Limitar cada sessão a 50 mensagens (1 sistema + 49 de conversa)
+          allSessions[id] = sessionHistory.slice(-50).map(msg => ({
+            role: msg.role,
+            content: msg.content,
+            timestamp: msg.timestamp instanceof Date ? msg.timestamp.toISOString() : 
+                      (typeof msg.timestamp === 'string' ? msg.timestamp : new Date().toISOString())
+          }));
+        }
+      }
+      
+      localStorage.setItem('aiChatSessions', JSON.stringify(allSessions));
+      
+      // Também salvar individualmente a sessão atual
+      localStorage.setItem(`conversationHistory_${sessionId}`, JSON.stringify(serializableHistory));
+    } catch (localStorageError) {
+      console.error("Erro ao salvar no localStorage:", localStorageError);
+      // Se falhar por exceder o limite, limpar o localStorage e tentar novamente só com a sessão atual
+      try {
+        localStorage.removeItem('aiChatSessions');
+        localStorage.setItem(`conversationHistory_${sessionId}`, 
+          JSON.stringify(serializableHistory.slice(-30))); // Salvar só as últimas 30 mensagens
+      } catch (retryError) {
+        console.error("Falha na segunda tentativa de salvar no localStorage:", retryError);
+      }
+    }
     
     // Sincronizar com Supabase se disponível
     try {
@@ -769,51 +1001,24 @@ async function saveConversationHistory(sessionId: string, history: ChatMessage[]
       const userId = sessionData?.session?.user?.id;
       
       if (userId) {
-        // Verificar se a tabela existe
-        const { error: tableCheckError } = await supabase.rpc(
-          'execute_sql',
-          { 
-            sql_query: `SELECT to_regclass('public.ai_chat_history') IS NOT NULL as exists` 
-          }
-        );
-        
-        if (!tableCheckError) {
-          // Criar tabela se não existir
-          await supabase.rpc(
-            'execute_sql',
-            { 
-              sql_query: `
-                CREATE TABLE IF NOT EXISTS public.ai_chat_history (
-                  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-                  session_id TEXT NOT NULL,
-                  messages JSONB NOT NULL,
-                  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                  UNIQUE(user_id, session_id)
-                );
-                CREATE INDEX IF NOT EXISTS idx_ai_chat_history_user_id ON public.ai_chat_history(user_id);
-                CREATE INDEX IF NOT EXISTS idx_ai_chat_history_session_id ON public.ai_chat_history(session_id);
-              `
-            }
-          );
-          
-          // Upsert do histórico da conversa
+        try {
+          // Upsert do histórico da conversa - versão simplificada para evitar erros
           const { error } = await supabase
             .from('ai_chat_history')
             .upsert({
               user_id: userId,
               session_id: sessionId,
-              messages: history,
+              messages: serializableHistory.slice(-50), // Limitar a 50 mensagens
               updated_at: new Date().toISOString()
             }, {
-              onConflict: 'user_id,session_id',
-              ignoreDuplicates: false
+              onConflict: 'user_id,session_id'
             });
             
           if (error) {
             console.error("Erro ao sincronizar histórico com Supabase:", error);
           }
+        } catch (upsertError) {
+          console.error("Erro no upsert do histórico:", upsertError);
         }
       }
     } catch (syncError) {
