@@ -49,6 +49,7 @@ import PlanSelectionPage from "@/pages/plan-selection";
 import ProfilePage from "@/pages/profile";
 import WelcomeModal from "./components/auth/WelcomeModal"; // Added import
 import { TypewriterLoader } from "./components/ui/typewriter-loader"; // Added import
+import { useToast } from './components/ui/use-toast'; // Added import
 
 
 // Componente para proteger rotas
@@ -104,7 +105,19 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false); // Added state
   const [isFirstLogin, setIsFirstLogin] = useState(false); // Added state
+  const { toast } = useToast(); // Added toast hook
 
+  // Handler para erros capturados pelo ErrorBoundary
+  const handleError = (error: Error) => {
+    toast({
+      variant: "destructive",
+      title: "Erro na aplicação",
+      description: "Ocorreu um problema inesperado. Detalhes técnicos foram registrados.",
+    });
+
+    // Aqui poderia ser implementado envio para serviço de monitoramento
+    console.error("Erro capturado pelo ErrorBoundary principal:", error);
+  };
 
   useEffect(() => {
     console.log("App carregado com sucesso!");
@@ -290,7 +303,7 @@ function App() {
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <UsernameProvider>
         <StudyGoalProvider>
-          <ErrorBoundary>
+          <ErrorBoundary onError={handleError}> {/* Added ErrorBoundary */}
             <div className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
               <Routes>
                 {/* Auth Routes - Públicas */}
@@ -354,7 +367,7 @@ function App() {
                 {/* Fallback Route - Redireciona para login */}
                 <Route path="*" element={<Navigate to="/login" />} />
               </Routes>
-
+              </ErrorBoundary> {/* Closed ErrorBoundary */}
               {/* Floating Chat Support */}
               {!isAuthRoute && !isLoading && <FloatingChatSupport />}
 
@@ -366,9 +379,8 @@ function App() {
                   isFirstLogin={isFirstLogin}
                 />
               }
+              <Toaster />
             </div>
-            <Toaster />
-          </ErrorBoundary>
         </StudyGoalProvider>
       </UsernameProvider>
     </ThemeProvider>
