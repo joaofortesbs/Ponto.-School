@@ -669,7 +669,7 @@ function initializeConversationHistory(sessionId: string, userContext?: any) {
       - School IA: https://pontoschool.com/school-ia
       - Novidades: https://pontoschool.com/novidades
       - Lembretes: https://pontoschool.com/lembretes
-      - Pedidos deAjuda: https://pontoschool.com/pedidos-ajuda
+- Pedidos deAjuda: https://pontoschool.com/pedidos-ajuda
       - Estudos: https://pontoschool.com/estudos
 
       QUANDO REMETER AO EPICTUS IA DO MENU LATERAL:
@@ -1335,7 +1335,7 @@ const getResponseForMessage = (message: string): string => {
 };
 
 import { supabase } from "@/lib/supabase";
-import * as aiChatDatabase from "./aiChatDatabaseService";
+import * as aiChatDB from "./aiChatDatabaseService";
 
 interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
@@ -1387,14 +1387,14 @@ const generateSystemPrompt = async (
   systemPrompt += `\n\nInformações da plataforma para referência:`;
 
   // Adicionar seções da plataforma
-  const platformSections = aiChatDatabase.getPlatformNavigationInfo();
+  const platformSections = aiChatDB.getPlatformNavigationInfo();
   systemPrompt += `\n\nSeções principais:`;
   platformSections.forEach(section => {
     systemPrompt += `\n- ${section.section}: ${section.description}`;
   });
 
   // Adicionar categorias de FAQs para informar a IA sobre o conhecimento disponível
-  const faqs = aiChatDatabase.getFAQDatabase();
+  const faqs = aiChatDB.getFAQDatabase();
   const categories = [...new Set(faqs.map(faq => faq.category))];
 
   systemPrompt += `\n\nCategorias de perguntas frequentes:`;
@@ -1405,7 +1405,7 @@ const generateSystemPrompt = async (
   // Adicionar informações do usuário se disponíveis
   if (userId) {
     try {
-      const userInfo = await aiChatDatabase.formatUserInfoForAI(userId);
+      const userInfo = await aiChatDB.formatUserInfoForAI(userId);
       if (typeof userInfo === 'object') {
         systemPrompt += `\n\nInformações do usuário:
 - Nome: ${userInfo.full_name}
@@ -1458,7 +1458,7 @@ const enrichUserMessage = async (message: string, userId: string | null) => {
 
   if (askingForPersonalInfo && userId) {
     try {
-      const userInfo = await aiChatDatabase.formatUserInfoForAI(userId);
+      const userInfo = await aiChatDB.formatUserInfoForAI(userId);
       if (typeof userInfo === 'object') {
         enrichedMessage += `\n\nContexto adicional (não visível para o usuário): 
 Informações atualizadas da conta do usuário:
@@ -1491,7 +1491,7 @@ Informações atualizadas da conta do usuário:
 
   if (askingForNavigation) {
     // Buscar informações relevantes no banco de dados de navegação
-    const navigationResults = aiChatDatabase.searchPlatformInfo(message);
+    const navigationResults = aiChatDB.searchPlatformInfo(message);
     if (navigationResults.length > 0) {
       enrichedMessage += `\n\nContexto adicional (não visível para o usuário): 
 Informações de navegação relevantes:`;
@@ -1509,7 +1509,7 @@ Informações de navegação relevantes:`;
 
   if (askingForHelp) {
     // Buscar FAQs relevantes
-    const faqResults = aiChatDatabase.searchFAQs(message);
+    const faqResults = aiChatDB.searchFAQs(message);
     if (faqResults.length > 0) {
       enrichedMessage += `\n\nContexto adicional (não visível para o usuário): 
 FAQs relevantes:`;
@@ -1530,7 +1530,7 @@ FAQs relevantes:`;
     const relevantFaqs: any[] = [];
 
     for (const keyword of keywords) {
-      const results = aiChatDatabase.searchFAQs(keyword);
+      const results = aiChatDB.searchFAQs(keyword);
       results.forEach(result => {
         if (!relevantFaqs.some(faq => faq.id === result.id)) {
           relevantFaqs.push(result);
