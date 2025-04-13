@@ -50,13 +50,8 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
       {/* Overlay para garantir fundo mínimo mesmo se AnimatedBackground falhar */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#001427] to-[#0A2540] z-0"></div>
 
-      {/* Fundo com efeito de gradiente sofisticado ultramoderno - preto e laranja */}
-      <div className="absolute inset-0 bg-gradient-to-l from-[#0A0A0A] to-[#000000] opacity-90 z-0 animate-gradient">
-        {/* Efeito laranja sofisticado vindo do canto inferior direito */}
-        <div className="absolute bottom-0 right-0 w-2/3 h-2/3 bg-gradient-to-tl from-[#FF6B00]/50 via-[#FF8800]/30 to-transparent rounded-tl-full blur-3xl animate-glow-pulse"></div>
-        {/* Camada adicional para profundidade */}
-        <div className="absolute bottom-5 right-5 w-1/2 h-1/2 bg-gradient-to-tl from-[#FF5500]/40 via-[#FF7700]/20 to-transparent rounded-tl-full blur-2xl animate-floating-node"></div>
-      </div>
+      {/* Fundo com efeito de gradiente sofisticado preto e laranja (agora renderizado primeiro, debaixo das teias) */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#000000] via-[#1a0d00] to-[#0e0500] opacity-85 z-0 animate-gradient"></div>
 
       {/* Efeitos de luz/brilho no fundo */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
@@ -64,7 +59,7 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
         <div className="absolute -bottom-[40%] -right-[20%] w-[110%] h-[110%] rounded-full bg-gradient-to-l from-[#FF6B00]/20 to-transparent blur-3xl transform -rotate-12 animate-pulse-soft"></div>
         <div className="absolute top-[20%] right-[10%] w-[60%] h-[60%] rounded-full bg-gradient-to-tl from-[#FF8800]/10 to-transparent blur-3xl transform animate-floating-node"></div>
       </div>
-
+      
       {/* AnimatedBackground agora está por cima do fundo gradiente */}
       <AnimatedBackground>
         {/* Conteúdo principal centralizado */}
@@ -77,7 +72,7 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
               !contentReady ? "opacity-0" : "opacity-100", // Controle de visibilidade baseado no estado
               className,
             )}
-            style={{
+            style={{ 
               transition: "opacity 0.3s ease-in-out, transform 0.3s ease-out, box-shadow 0.3s ease",
               backdropFilter: "blur(20px)",
               WebkitBackdropFilter: "blur(20px)",
