@@ -55,23 +55,46 @@ import {
 // Type definitions
 type MaterialType = "video" | "pdf" | "audio" | "link" | "exercise" | "mindmap";
 
+// Importando o tipo MaterialType definido globalmente
+// ou definindo-o aqui se não estiver disponível globalmente
+type MaterialType = 
+  | 'pdf'
+  | 'video'
+  | 'audio'
+  | 'image'
+  | 'document'
+  | 'presentation'
+  | 'spreadsheet'
+  | 'link'
+  | 'quiz'
+  | 'exercise'
+  | 'other';
+
+type MaterialStatus = "new" | "recommended" | "saved" | "inProgress";
+
 interface Material {
   id: string;
   title: string;
   type: MaterialType;
   turma: string;
   disciplina: string;
-  date: string;
+  date: string; // Considerar usar Date em vez de string
   author?: string;
-  fileSize?: string;
-  duration?: string;
-  rating?: number;
+  fileSize?: string; // Considerar usar number (bytes) em vez de string formatada
+  duration?: string; // Considerar usar number (segundos) em vez de string formatada
+  rating?: number; // Assumindo uma escala, como 0-5
   views?: number;
-  status?: "new" | "recommended" | "saved";
+  status?: MaterialStatus;
   isFavorite: boolean;
   isRead: boolean;
   thumbnail?: string;
   description?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  tags?: string[];
+  downloadUrl?: string;
+  accessCount?: number;
+  lastAccessedAt?: Date;
 }
 
 interface Turma {

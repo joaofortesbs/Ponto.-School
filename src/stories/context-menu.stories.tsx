@@ -15,7 +15,9 @@ import {
   ContextMenuTrigger,
 } from "../components/ui/context-menu";
 
-const meta = {
+import { Meta, StoryObj } from "@storybook/react";
+
+const meta: Meta<typeof ContextMenu> = {
   title: "ui/ContextMenu",
   component: ContextMenu,
   tags: ["autodocs"],
@@ -23,7 +25,9 @@ const meta = {
 };
 export default meta;
 
-export const Base = {
+type Story = StoryObj<typeof ContextMenu>;
+
+export const Base: Story = {
   render: () => (
     <ContextMenu>
       <ContextMenuTrigger className="flex h-[150px] w-[300px] items-center justify-center rounded-md border border-dashed border-slate-200 text-sm dark:border-slate-700">

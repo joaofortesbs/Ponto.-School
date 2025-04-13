@@ -1,4 +1,3 @@
-
 /**
  * Utilitários para manipulação de estilos e classes CSS
  */
@@ -27,7 +26,7 @@ export function getTypeColor(type: string): string {
     "prova": "text-red-500",
     "laboratório": "text-pink-500",
   };
-  
+
   return typeMap[type.toLowerCase()] || "text-gray-500";
 }
 
@@ -86,3 +85,79 @@ export function formatDueDate(dateString: string): string {
     );
   }
 }
+
+/**
+ * Utilitários para manipulação de estilos
+ */
+
+// Tipo para representar classes condicionais
+type ConditionalClasses = Record<string, boolean>;
+
+/**
+ * Combina várias classes CSS, ignorando as falsas/nulas
+ * @param classes - Array de strings ou objetos de classes condicionais
+ * @returns String de classes CSS combinadas
+ */
+export function classNames(...classes: (string | ConditionalClasses | undefined | null | false)[]): string {
+  const result: string[] = [];
+
+  classes.forEach((item) => {
+    if (!item) return;
+
+    if (typeof item === 'string') {
+      result.push(item);
+    } else if (typeof item === 'object') {
+      Object.entries(item).forEach(([className, condition]) => {
+        if (condition) {
+          result.push(className);
+        }
+      });
+    }
+  });
+
+  return result.join(' ');
+}
+
+/**
+ * Tipos de variantes para componentes
+ */
+export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'link' | 'destructive';
+export type Size = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+export type ColorScheme = 'blue' | 'green' | 'red' | 'yellow' | 'purple' | 'gray';
+
+/**
+ * Gera classes CSS para um botão com base na variante
+ * @param variant - Variante do botão
+ * @returns Classes CSS correspondentes
+ */
+export function getButtonClasses(variant: ButtonVariant = 'primary', size: Size = 'md'): string {
+  const baseClasses = "font-medium rounded focus:outline-none transition-colors";
+
+  const variantClasses: Record<ButtonVariant, string> = {
+    primary: "bg-primary text-primary-foreground hover:bg-primary/90",
+    secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+    outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+    ghost: "hover:bg-accent hover:text-accent-foreground",
+    link: "text-primary underline-offset-4 hover:underline",
+    destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+  };
+
+  const sizeClasses: Record<Size, string> = {
+    xs: "text-xs px-2 py-1",
+    sm: "text-sm px-3 py-1.5",
+    md: "text-base px-4 py-2",
+    lg: "text-lg px-5 py-2.5",
+    xl: "text-xl px-6 py-3"
+  };
+
+  return `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]}`;
+}
+
+export default {
+  cn,
+  getTypeColor,
+  getPriorityColor,
+  formatDueDate,
+  classNames,
+  getButtonClasses
+};

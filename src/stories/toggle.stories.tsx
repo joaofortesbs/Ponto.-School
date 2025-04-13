@@ -1,14 +1,31 @@
 // [build] library: 'shadcn'
 import { FontItalicIcon, FontBoldIcon } from "@radix-ui/react-icons";
 import { Toggle } from "../components/ui/toggle";
+import { Meta, StoryObj } from "@storybook/react";
 
-const meta = {
+type ToggleProps = React.ComponentProps<typeof Toggle>;
+
+const meta: Meta<ToggleProps> = {
   title: "ui/Toggle",
   component: Toggle,
   tags: ["autodocs"],
-  argTypes: {},
+  argTypes: {
+    variant: {
+      options: ['default', 'outline', 'destructive'],
+      control: { type: 'select' }
+    },
+    size: {
+      options: ['default', 'sm', 'lg'],
+      control: { type: 'select' }
+    },
+    disabled: {
+      control: { type: 'boolean' }
+    }
+  },
 };
 export default meta;
+
+type Story = StoryObj<ToggleProps>;
 
 export const Default = {
   render: () => (

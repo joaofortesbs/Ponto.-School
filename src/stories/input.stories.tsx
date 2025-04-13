@@ -11,8 +11,16 @@ const meta = {
 };
 export default meta;
 
+interface InputProps {
+  type: string;
+  placeholder: string;
+  id?: string;
+  disabled?: boolean;
+  [key: string]: any; // Para props adicionais que possam ser passadas
+}
+
 export const Default = {
-  render: (args: any) => <Input {...args} />,
+  render: (args: InputProps) => <Input {...args} />,
   args: {
     type: "email",
     placeholder: "Email",
@@ -23,7 +31,7 @@ export const Disabled = {
   args: { ...Default.args },
 };
 export const WithLabel = {
-  render: (args: any) => (
+  render: (args: InputProps) => (
     <div className="grid w-full max-w-sm items-center gap-1.5">
       <Label htmlFor="email">{args.placeholder}</Label>
       <Input {...args} id="email" />
