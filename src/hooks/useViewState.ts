@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 // Definindo o enum para os tipos de visualização
 export enum ViewType {
@@ -18,73 +18,70 @@ interface UseViewStateOptions {
 }
 
 // Interface para o retorno do hook
-interface ViewStateReturn {
+interface UseViewStateReturn {
   view: ViewType;
   setView: (view: ViewType) => void;
-  toggleView: () => void;
-  isListView: boolean;
-  isGridView: boolean;
-  isCalendarView: boolean;
-  isKanbanView: boolean;
-  isTimelineView: boolean;
+  toggleView: (view1: ViewType, view2: ViewType) => void;
+  isViewActive: (view: ViewType) => boolean;
 }
 
-/**
- * Hook personalizado para gerenciar o estado de visualização
- * (lista, grade, calendário, etc.)
- */
+// Hook personalizado para gerenciar o estado de visualização
 export function useViewState({
   defaultView = ViewType.LIST,
-  localStorageKey,
+  localStorageKey = 'app_view_preference',
   onViewChange
-}: UseViewStateOptions = {}): ViewStateReturn {
-  // Recupera o estado salvo do localStorage, se disponível
-  const getInitialState = (): ViewType => {
-    if (!localStorageKey || typeof window === 'undefined') {
-      return defaultView;
-    }
+}: UseViewStateOptions = {}): UseViewStateReturn {
+  // Inicializar estado com preferência do localStorage ou valor padrão
+  const [view, setViewState] = useState<ViewType>(() => {
+    if (typeof window === 'undefined') return defaultView;
     
-    const savedView = localStorage.getItem(localStorageKey);
-    
-    // Verifica se o valor salvo é um ViewType válido
-    if (savedView && Object.values(ViewType).includes(savedView as ViewType)) {
-      return savedView as ViewType;
+    try {
+      const savedView = localStorage.getItem(localStorageKey);
+      // Verificar se o valor salvo é válido (está no enum)
+      if (savedView && Object.values(ViewType).includes(savedView as ViewType)) {
+        return savedView as ViewType;
+      }
+    } catch (error) {
+      console.error('Erro ao acessar localStorage:', error);
     }
     
     return defaultView;
-  };
+  });
 
-  const [view, setViewInternal] = useState<ViewType>(getInitialState);
-
-  // Função para alterar a visualização
-  const setView = (newView: ViewType): void => {
-    setViewInternal(newView);
-    
-    // Salva no localStorage se uma chave foi fornecida
-    if (localStorageKey && typeof window !== 'undefined') {
-      localStorage.setItem(localStorageKey, newView);
+  // Persistir a mudança de visualização no localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(localStorageKey, view);
+    } catch (error) {
+      console.error('Erro ao salvar visualização no localStorage:', error);
     }
     
-    // Chama o callback, se fornecido
+    // Chamar callback de mudança, se fornecido
     if (onViewChange) {
-      onViewChange(newView);
+      onViewChange(view);
     }
-  };
+  }, [view, localStorageKey, onViewChange]);
 
-  // Função para alternar entre visualizações (lista/grade ou outras combinações)
-  const toggleView = (): void => {
-    setView(view === ViewType.LIST ? ViewType.GRID : ViewType.LIST);
-  };
+  // Função para atualizar a visualização
+  const setView = useCallback((newView: ViewType) => {
+    setViewState(newView);
+  }, []);
+
+  // Função para alternar entre duas visualizações
+  const toggleView = useCallback((view1: ViewType, view2: ViewType) => {
+    setViewState(current => current === view1 ? view2 : view1);
+  }, []);
+
+  // Função para verificar se uma visualização específica está ativa
+  const isViewActive = useCallback((viewToCheck: ViewType): boolean => {
+    return view === viewToCheck;
+  }, [view]);
 
   return {
     view,
     setView,
     toggleView,
-    isListView: view === ViewType.LIST,
-    isGridView: view === ViewType.GRID,
-    isCalendarView: view === ViewType.CALENDAR,
-    isKanbanView: view === ViewType.KANBAN,
-    isTimelineView: view === ViewType.TIMELINE
+    isViewActive
   };
 }
 
