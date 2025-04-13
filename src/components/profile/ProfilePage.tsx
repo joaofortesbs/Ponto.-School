@@ -23,20 +23,12 @@ interface ProfilePageProps {
   isOwnProfile?: boolean;
 }
 
-import ErrorBoundary from '../ErrorBoundary';
-import { ApiErrorAlert } from '@/components/ui/api-error-alert';
-import { useErrorHandler } from '@/hooks/useErrorHandler';
-import { useToast } from '@/components/ui/use-toast';
-
 export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
   const [activeTab, setActiveTab] = useState("perfil");
   const [isEditing, setIsEditing] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const { handleError } = useErrorHandler();
-  const { toast } = useToast();
   const [contactInfo, setContactInfo] = useState({
     email: "",
     phone: "Adicionar telefone",
@@ -47,149 +39,33 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
     "Olá! Sou estudante de Engenharia de Software na Universidade de São Paulo. Apaixonado por tecnologia, programação e matemática. Busco constantemente novos conhecimentos e desafios para aprimorar minhas habilidades. Nas horas vagas, gosto de jogar xadrez, ler livros de ficção científica e praticar esportes.",
   );
 
-  // Função para buscar o perfil do usuário
-  const fetchProfile = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-      
-      if (authError) {
-        throw new Error(`Erro de autenticação: ${authError.message}`);
-      }
-      
-      if (!authData.user) {
-        setLoading(false);
-        return;
-      }
-      
-      const user = authData.user;
-      
-      // Verificar cache primeiro para resposta rápida
+  useEffect(() => {
+    // Utiliza o hook personalizado para buscar o perfil do usuário
+    const loadProfile = async () => {
+      setLoading(true);
       try {
-        const cachedData = localStorage.getItem('userProfile');
-        const cacheTime = localStorage.getItem('userProfileCacheTime');
+        const { profileData, error } = await useProfileData();
         
-        if (cachedData && cacheTime && (Date.now() - parseInt(cacheTime) < 2 * 60 * 1000)) {
-          const cachedProfile = JSON.parse(cachedData);
-          
-          // Usar dados do cache enquanto carrega do servidor
-          setUserProfile({
-            ...cachedProfile,
-            level: cachedProfile.level || 1,
-            rank: cachedProfile.rank || "Aprendiz",
-          });
-          
-          setContactInfo({
-            email: cachedProfile.email || user.email || "",
-            phone: cachedProfile.phone || "Adicionar telefone",
-            location: cachedProfile.location || "Adicionar localização",
-            birthDate: cachedProfile.birth_date || 
-              (user.user_metadata?.birth_date) || 
-              (user.raw_user_meta_data?.birth_date) || 
-              "Adicionar data de nascimento",
-          });
-          
-          if (cachedProfile.bio) {
-            setAboutMe(cachedProfile.bio);
-          }
-        }
-      } catch (cacheError) {
-        console.warn("Erro ao acessar cache do perfil:", cacheError);
-      }
-      
-      // Buscar do servidor
-      const { data, error: fetchError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-        
-      if (fetchError) {
-        // Verificar se ainda temos dados do cache em uso
-        if (userProfile) {
-          toast({
-            title: "Aviso",
-            description: "Não foi possível atualizar seu perfil. Mostrando informações salvas anteriormente.",
-            variant: "default"
-          });
-          setLoading(false);
+        if (error) {
+          console.error("Error loading profile:", error);
           return;
         }
         
-        throw new Error(`Erro ao buscar perfil: ${fetchError.message}`);
-      }
-      
-      if (!data) {
-        setLoading(false);
-        return;
-      }
-      
-      // Atualizar cache
-      try {
-        localStorage.setItem('userProfile', JSON.stringify(data));
-        localStorage.setItem('userProfileCacheTime', Date.now().toString());
-      } catch (storageError) {
-        console.warn("Erro ao salvar cache do perfil:", storageError);
-      }
-      
-      // Ensure level and rank are set with defaults if not present
-      const profile = {
-        ...data,
-        level: data.level || 1,
-        rank: data.rank || "Aprendiz",
-      };
-      
-      setUserProfile(profile);
-      
-      // Set contact info from user data
-      setContactInfo({
-        email: data.email || user.email || "",
-        phone: data.phone || "Adicionar telefone",
-        location: data.location || "Adicionar localização",
-        birthDate: data.birth_date || 
-          (user.user_metadata?.birth_date) || 
-          (user.raw_user_meta_data?.birth_date) || 
-          "Adicionar data de nascimento",
-      });
-      
-      if (data.bio) {
-        setAboutMe(data.bio);
-      }
-    } catch (error) {
-      const handledError = await handleError(error, "Falha ao carregar seu perfil", {
-        retry: fetchProfile
-      });
-      setError(handledError);
-      
-      // Tentar usar cache como último recurso
-      try {
-        const cachedData = localStorage.getItem('userProfile');
-        if (cachedData && !userProfile) {
-          const cachedProfile = JSON.parse(cachedData);
-          setUserProfile({
-            ...cachedProfile,
-            level: cachedProfile.level || 1,
-            rank: cachedProfile.rank || "Aprendiz",
-          });
-          
-          toast({
-            title: "Modo offline",
-            description: "Mostrando informações salvas anteriormente devido a problemas de conexão.",
-            variant: "default"
-          });
+        if (profileData) {
+          setUserProfile(profileData.userProfile);
+          setContactInfo(profileData.contactInfo);
+          if (profileData.aboutMe) {
+            setAboutMe(profileData.aboutMe);
+          }
         }
-      } catch (fallbackError) {
-        console.error("Falha ao usar dados em cache:", fallbackError);
+      } catch (error) {
+        console.error("Error in profile loading:", error);
+      } finally {
+        setLoading(false);
       }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchProfile();
+    };
+    
+    loadProfile();
   }, []);
 
   const toggleSection = (section: string | null) => {
@@ -267,21 +143,6 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
             <div className="paper"></div>
             <div className="keyboard"></div>
           </div>
-        </div>
-      </div>
-    );
-  }
-  
-  if (error && !userProfile) {
-    return (
-      <div className="w-full h-full flex items-center justify-center p-6">
-        <div className="max-w-md w-full">
-          <ApiErrorAlert
-            title="Erro ao carregar perfil"
-            description="Não foi possível carregar os dados do seu perfil. Verifique sua conexão e tente novamente."
-            error={error}
-            onRetry={fetchProfile}
-          />
         </div>
       </div>
     );
