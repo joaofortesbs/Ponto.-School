@@ -1,101 +1,147 @@
 
-import { useState, useEffect } from "react";
-import { supabase } from "../lib/supabase";
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/lib/supabase";
 import { useNavigate } from "react-router-dom";
 
-/**
- * Custom hook for authentication and user management
- */
+export interface AuthUser {
+  id: string;
+  email?: string;
+  username?: string;
+  displayName?: string;
+  avatarUrl?: string;
+  [key: string]: any;
+}
+
 export function useAuth() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [username, setUsername] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Initialize authentication state
+  // Carregar usuário inicial
   useEffect(() => {
-    const initAuth = async () => {
+    const fetchUser = async () => {
       try {
-        console.log("Iniciando aplicação e verificando autenticação...");
-        
-        // Get current session
-        const { data } = await supabase.auth.getSession();
-        
-        if (data.session) {
-          const { user: authUser } = data.session;
-          setUser(authUser);
-          
-          // Get profile data
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', authUser.id)
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          // Buscar perfil do usuário
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", session.user.id)
             .single();
-          
-          // Determine best username
-          let bestUsername = null;
-          
-          // Try localStorage
-          const localUsername = localStorage.getItem('username');
-          
-          // Try sessionStorage 
-          let sessionUsername = null;
-          try { 
-            sessionUsername = sessionStorage.getItem('username');
-          } catch (e) {}
-          
-          // Determine best username
-          if (profileData?.username && profileData.username !== 'Usuário') {
-            bestUsername = profileData.username;
-          } else if (localUsername && localUsername !== 'Usuário') {
-            bestUsername = localUsername;
-          } else if (sessionUsername && sessionUsername !== 'Usuário') {
-            bestUsername = sessionUsername;
-          } else if (authUser.email) {
-            bestUsername = authUser.email.split('@')[0];
-          }
-          
-          if (bestUsername) {
-            setUsername(bestUsername);
-            localStorage.setItem('username', bestUsername);
-            try { sessionStorage.setItem('username', bestUsername); } catch (e) {}
-            
-            // Update profile if needed
-            if (profileData && (!profileData.username || profileData.username === 'Usuário')) {
-              await supabase
-                .from('profiles')
-                .update({ 
-                  username: bestUsername,
-                  updated_at: new Date().toISOString()
-                })
-                .eq('id', profileData.id);
-            }
-          }
-        } else {
-          console.log("Usuário não autenticado, redirecionando para login");
-          setUser(null);
-          navigate("/auth/login");
+
+          setUser({
+            id: session.user.id,
+            email: session.user.email,
+            displayName: profile?.display_name || session.user.email?.split('@')[0],
+            avatarUrl: profile?.avatar_url,
+            ...profile
+          });
         }
       } catch (error) {
-        console.error("Erro ao verificar autenticação:", error);
+        console.error("Erro ao buscar usuário:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    initAuth();
+    fetchUser();
+
+    // Escutar mudanças na autenticação
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === "SIGNED_IN" && session?.user) {
+          // Buscar perfil do usuário
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", session.user.id)
+            .single();
+
+          setUser({
+            id: session.user.id,
+            email: session.user.email,
+            displayName: profile?.display_name || session.user.email?.split('@')[0],
+            avatarUrl: profile?.avatar_url,
+            ...profile
+          });
+        }
+        
+        if (event === "SIGNED_OUT") {
+          setUser(null);
+          navigate("/auth/login");
+        }
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, [navigate]);
 
-  const logout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    navigate("/auth/login");
-  };
+  // Login com email/senha
+  const login = useCallback(async (email: string, password: string) => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) throw error;
+      return { success: true };
+    } catch (error: any) {
+      return { 
+        success: false, 
+        error: error.message || "Falha ao fazer login" 
+      };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Registro
+  const register = useCallback(async (email: string, password: string, userData?: Record<string, any>) => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: userData
+        }
+      });
+      
+      if (error) throw error;
+      return { success: true };
+    } catch (error: any) {
+      return { 
+        success: false, 
+        error: error.message || "Falha ao registrar usuário" 
+      };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Logout
+  const logout = useCallback(async () => {
+    try {
+      await supabase.auth.signOut();
+      return { success: true };
+    } catch (error: any) {
+      return { 
+        success: false, 
+        error: error.message || "Falha ao fazer logout" 
+      };
+    }
+  }, []);
 
   return {
     user,
-    username,
     loading,
+    login,
+    register,
     logout,
     isAuthenticated: !!user
   };

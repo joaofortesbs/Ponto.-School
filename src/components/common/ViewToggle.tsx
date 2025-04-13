@@ -1,39 +1,64 @@
 
-import { List, LayoutGrid } from "lucide-react";
-import { Button } from "../ui/button";
+import React from "react";
+import { Toggle } from "@/components/ui/toggle";
+import { Button } from "@/components/ui/button";
+import { LayoutGrid, List } from "lucide-react";
+import { cn } from "@/lib/style-utils";
 
 interface ViewToggleProps {
-  viewMode: "grid" | "list";
-  onChange: (mode: "grid" | "list") => void;
-  highlightColor?: string;
+  view: "grid" | "list";
+  onToggle: () => void;
+  className?: string;
+  gridIcon?: React.ReactNode;
+  listIcon?: React.ReactNode;
+  showLabels?: boolean;
 }
 
 /**
- * Reusable component for toggling between grid and list views
+ * Componente para alternar entre visualizações em grade e lista
  */
-export function ViewToggle({ 
-  viewMode, 
-  onChange, 
-  highlightColor = "bg-[#FF6B00] text-white" 
+export function ViewToggle({
+  view,
+  onToggle,
+  className,
+  gridIcon = <LayoutGrid className="h-4 w-4" />,
+  listIcon = <List className="h-4 w-4" />,
+  showLabels = false,
 }: ViewToggleProps) {
   return (
-    <div className="flex items-center border rounded-md overflow-hidden">
-      <Button
-        variant={viewMode === "list" ? "default" : "ghost"}
-        size="icon"
-        className={`h-8 w-8 rounded-none ${viewMode === "list" ? highlightColor : ""}`}
-        onClick={() => onChange("list")}
-      >
-        <List className="h-4 w-4" />
-      </Button>
-      <Button
-        variant={viewMode === "grid" ? "default" : "ghost"}
-        size="icon"
-        className={`h-8 w-8 rounded-none ${viewMode === "grid" ? highlightColor : ""}`}
-        onClick={() => onChange("grid")}
-      >
-        <LayoutGrid className="h-4 w-4" />
-      </Button>
+    <div className={cn("flex items-center gap-2", className)}>
+      {showLabels && (
+        <span className="text-sm text-muted-foreground mr-2">
+          Visualização:
+        </span>
+      )}
+      <div className="border rounded-md flex">
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "px-2.5 rounded-r-none border-r",
+            view === "grid" ? "bg-muted" : "hover:bg-transparent"
+          )}
+          onClick={() => view !== "grid" && onToggle()}
+        >
+          {gridIcon}
+          {showLabels && <span className="ml-1.5">Grade</span>}
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "px-2.5 rounded-l-none",
+            view === "list" ? "bg-muted" : "hover:bg-transparent"
+          )}
+          onClick={() => view !== "list" && onToggle()}
+        >
+          {listIcon}
+          {showLabels && <span className="ml-1.5">Lista</span>}
+        </Button>
+      </div>
     </div>
   );
 }

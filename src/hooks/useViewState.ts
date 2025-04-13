@@ -1,56 +1,47 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-interface ViewStateOptions<T extends string, S extends string> {
-  defaultViewMode?: T;
-  defaultSortOption?: S;
+interface ViewStateOptions {
+  defaultView?: "grid" | "list";
+  storageKey?: string;
+  onChange?: (view: "grid" | "list") => void;
 }
 
 /**
- * Custom hook for managing view mode, sorting, and filtering states
+ * Hook para gerenciar estado de visualização (grade ou lista)
  */
-export function useViewState<
-  T extends string = "grid" | "list", 
-  S extends string = "relevance" | "date" | "alphabetical" | "type" | "popular"
->(options?: ViewStateOptions<T, S>) {
-  const [viewMode, setViewMode] = useState<T>(
-    (options?.defaultViewMode || "grid") as T
-  );
+export function useViewState({
+  defaultView = "grid",
+  storageKey = "view_preference",
+  onChange,
+}: ViewStateOptions = {}) {
+  // Tenta recuperar a preferência do localStorage
+  const getSavedView = (): "grid" | "list" => {
+    if (typeof window === "undefined") return defaultView;
+    const saved = localStorage.getItem(storageKey);
+    return (saved === "grid" || saved === "list") ? saved : defaultView;
+  };
+
+  const [view, setView] = useState<"grid" | "list">(defaultView);
   
-  const [sortOption, setSortOption] = useState<S>(
-    (options?.defaultSortOption || "relevance") as S
-  );
-  
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterOptions, setFilterOptions] = useState<Record<string, boolean>>({});
+  // Carrega preferência do usuário no carregamento inicial
+  useEffect(() => {
+    setView(getSavedView());
+  }, []);
 
-  const handleViewModeChange = (mode: T) => {
-    setViewMode(mode);
+  // Salva mudanças no localStorage
+  const toggleView = () => {
+    const newView = view === "grid" ? "list" : "grid";
+    setView(newView);
+    
+    if (typeof window !== "undefined") {
+      localStorage.setItem(storageKey, newView);
+    }
+    
+    if (onChange) {
+      onChange(newView);
+    }
   };
 
-  const handleSortChange = (option: S) => {
-    setSortOption(option);
-  };
-
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-  };
-
-  const handleFilterChange = (key: string, value: boolean) => {
-    setFilterOptions(prev => ({
-      ...prev,
-      [key]: value
-    }));
-  };
-
-  return {
-    viewMode,
-    sortOption,
-    searchQuery,
-    filterOptions,
-    handleViewModeChange,
-    handleSortChange,
-    handleSearch,
-    handleFilterChange
-  };
+  return { view, toggleView };
 }

@@ -1,69 +1,88 @@
 
 /**
- * Utility functions for styling and visual formatting
+ * Utilitários para manipulação de estilos e classes CSS
  */
+import { ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 /**
- * Get CSS class for priority level
+ * Combina classes utilizando clsx e tailwind-merge
  */
-export const getPriorityColor = (priority?: string) => {
-  switch (priority?.toLowerCase()) {
+export function cn(...inputs: ClassValue[]): string {
+  return twMerge(clsx(inputs));
+}
+
+/**
+ * Obtém a cor específica para um determinado tipo de tarefa
+ */
+export function getTypeColor(type: string): string {
+  const typeMap: Record<string, string> = {
+    "exercício": "text-blue-500",
+    "relatório": "text-amber-500",
+    "estudo": "text-purple-500",
+    "apresentação": "text-green-500",
+    "leitura": "text-teal-500",
+    "projeto": "text-yellow-500",
+    "resumo": "text-indigo-500",
+    "prova": "text-red-500",
+    "laboratório": "text-pink-500",
+  };
+  
+  return typeMap[type.toLowerCase()] || "text-gray-500";
+}
+
+/**
+ * Obtém a cor de prioridade para tarefas
+ */
+export function getPriorityColor(priority: string): string {
+  switch (priority.toLowerCase()) {
     case "alta":
-      return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
-    case "media":
+      return "border-l-red-500";
     case "média":
-      return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300";
+      return "border-l-yellow-500";
     case "baixa":
-      return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
+      return "border-l-green-500";
     default:
-      return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300";
+      return "border-l-gray-500";
   }
-};
+}
 
 /**
- * Get comparative icon class/type
+ * Formata uma data para exibição amigável
  */
-export const getComparativeStatus = (status: string) => {
-  switch (status.toLowerCase()) {
-    case "acima":
-      return { 
-        class: "text-green-500 rotate-[-45deg]",
-        direction: "up"
-      };
-    case "abaixo":
-      return { 
-        class: "text-red-500 rotate-45",
-        direction: "down"
-      };
-    case "na media":
-      return { 
-        class: "text-amber-500 rotate-0",
-        direction: "same"
-      };
-    default:
-      return { 
-        class: "text-gray-500",
-        direction: "neutral"
-      };
-  }
-};
+export function formatDueDate(dateString: string): string {
+  const dueDate = new Date(dateString);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-/**
- * Get event type icon name
- */
-export const getEventTypeIcon = (type: string) => {
-  switch (type.toLowerCase()) {
-    case "aula":
-      return "Video";
-    case "tarefa":
-      return "FileText";
-    case "discussao":
-    case "discussão":
-      return "MessageCircle";
-    case "avaliacao":
-    case "avaliação":
-      return "FileQuestion";
-    default:
-      return "Calendar";
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const isToday =
+    dueDate.getDate() === today.getDate() &&
+    dueDate.getMonth() === today.getMonth() &&
+    dueDate.getFullYear() === today.getFullYear();
+
+  const isTomorrow =
+    dueDate.getDate() === tomorrow.getDate() &&
+    dueDate.getMonth() === tomorrow.getMonth() &&
+    dueDate.getFullYear() === tomorrow.getFullYear();
+
+  if (isToday) {
+    return `Hoje, ${dueDate.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`;
+  } else if (isTomorrow) {
+    return `Amanhã, ${dueDate.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`;
+  } else {
+    return (
+      dueDate.toLocaleDateString() +
+      ", " +
+      dueDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    );
   }
-};
+}

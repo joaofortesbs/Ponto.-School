@@ -1,49 +1,81 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from "react";
 
 interface Task {
   id: string;
-  completed: boolean;
+  title: string;
+  completed?: boolean;
   [key: string]: any;
 }
 
+interface UseTaskCompletionOptions {
+  onCompleteTask?: (taskId: string) => void;
+  onUncompleteTask?: (taskId: string) => void;
+}
+
 /**
- * Custom hook for managing task completion state
+ * Hook para gerenciar a conclusão de tarefas
  */
-export function useTaskCompletion<T extends Task>(initialTasks: T[]) {
+export function useTaskCompletion<T extends Task>(
+  initialTasks: T[] = [],
+  options: UseTaskCompletionOptions = {}
+) {
   const [tasks, setTasks] = useState<T[]>(initialTasks);
-
-  const toggleTaskCompletion = (taskId: string) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task,
-      ),
+  
+  // Marca uma tarefa como concluída
+  const completeTask = useCallback((taskId: string) => {
+    setTasks((currentTasks) =>
+      currentTasks.map((task) =>
+        task.id === taskId ? { ...task, completed: true } : task
+      )
     );
-  };
-
-  const addTask = (task: T) => {
-    setTasks([...tasks, task]);
-  };
-
-  const removeTask = (taskId: string) => {
-    setTasks(tasks.filter(task => task.id !== taskId));
-  };
-
-  const updateTask = (taskId: string, updates: Partial<T>) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === taskId ? { ...task, ...updates } : task,
-      ),
+    
+    if (options.onCompleteTask) {
+      options.onCompleteTask(taskId);
+    }
+  }, [options.onCompleteTask]);
+  
+  // Desmarca uma tarefa como concluída
+  const uncompleteTask = useCallback((taskId: string) => {
+    setTasks((currentTasks) =>
+      currentTasks.map((task) =>
+        task.id === taskId ? { ...task, completed: false } : task
+      )
     );
-  };
-
+    
+    if (options.onUncompleteTask) {
+      options.onUncompleteTask(taskId);
+    }
+  }, [options.onUncompleteTask]);
+  
+  // Alterna o estado de conclusão de uma tarefa
+  const toggleTaskCompletion = useCallback((taskId: string) => {
+    setTasks((currentTasks) => {
+      const updatedTasks = currentTasks.map((task) => {
+        if (task.id === taskId) {
+          const newCompletedState = !task.completed;
+          
+          // Chama o callback apropriado
+          if (newCompletedState && options.onCompleteTask) {
+            options.onCompleteTask(taskId);
+          } else if (!newCompletedState && options.onUncompleteTask) {
+            options.onUncompleteTask(taskId);
+          }
+          
+          return { ...task, completed: newCompletedState };
+        }
+        return task;
+      });
+      
+      return updatedTasks;
+    });
+  }, [options.onCompleteTask, options.onUncompleteTask]);
+  
   return {
     tasks,
+    setTasks,
+    completeTask,
+    uncompleteTask,
     toggleTaskCompletion,
-    addTask,
-    removeTask,
-    updateTask,
-    completedTasks: tasks.filter(task => task.completed),
-    pendingTasks: tasks.filter(task => !task.completed),
   };
 }
