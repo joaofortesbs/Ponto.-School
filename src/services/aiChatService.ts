@@ -1337,16 +1337,7 @@ const getResponseForMessage = (message: string): string => {
 import { supabase } from "@/lib/supabase";
 import * as aiChatDB from "./aiChatDatabaseService";
 
-interface ChatMessage {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
-}
-
-// Armazenamento temporário de histórico de chat no navegador
-const conversationHistory: Record<string, ChatMessage[]> = {};
-
-// Limpar histórico de conversa específica
-export const clearConversationHistory = (sessionId: string) => {
+// Usamos os mesmos tipos já definidos anteriormente
   if (conversationHistory[sessionId]) {
     delete conversationHistory[sessionId];
     // Também limpar do localStorage se existir
