@@ -43,17 +43,29 @@ import {
   Image,
   Video,
   Mic,
-  Square
+  Square,
+  Download,
+  File,
+  Music
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { generateAIResponse } from "@/services/aiChatService";
 
-interface Message {
-  id: string;
+// Interface para arquivos em mensagens
+interface MessageFile {
+  name: string;
+  size: number;
+  type: string;
+  url: string;
+}
+
+// Interface para mensagens
+interface ChatMessage {
+  id: number;
   content: string;
-  sender: "user" | "ai";
+  sender: 'user' | 'assistant';
   timestamp: Date;
-  hasHtml?: boolean;
+  files?: MessageFile[];
 }
 
 interface Ticket {
@@ -105,11 +117,11 @@ interface CommonQuestion {
   icon: React.ReactNode;
 }
 
-const defaultMessages: Message[] = [
+const defaultMessages: ChatMessage[] = [
   {
-    id: "1",
+    id: 1,
     content: "Oi! Sou o Epictus IA, seu assistente descolado aqui na Ponto.School! 😊 Tô pronto pra te ajudar com o que precisar, é só mandar! Como posso facilitar sua vida hoje?",
-    sender: "ai",
+    sender: "assistant",
     timestamp: new Date(),
   },
 ];
@@ -282,7 +294,7 @@ const FloatingChatSupport: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState("home");
-  const [messages, setMessages] = useState<Message[]>(defaultMessages);
+  const [messages, setMessages] = useState<ChatMessage[]>(defaultMessages);
   const [inputMessage, setInputMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [tickets, setTickets] = useState(defaultTickets);
@@ -309,12 +321,18 @@ const FloatingChatSupport: React.FC = () => {
   const [message, setMessage] = useState('');
   const [sessionId, setSessionId] = useState('');
   const [isMessageEmpty, setIsMessageEmpty] = useState(true);
-  
+  const [soundEnabled, setSoundEnabled] = useState(true); // Adicione o estado para habilitar/desabilitar sons
+
+
   // Configurações da IA
-  const [aiIntelligenceLevel, setAiIntelligenceLevel] = useState('normal'); // basic, normal, advanced
-  const [aiLanguageStyle, setAiLanguageStyle] = useState('casual'); // casual, formal, technical
+  const [aiIntelligenceLevel, setAIIntelligenceLevel] = useState<'basic' | 'normal' | 'advanced'>('normal');
+  const [aiLanguageStyle, setAILanguageStyle] = useState<'casual' | 'formal' | 'technical'>('casual');
   const [enableNotificationSounds, setEnableNotificationSounds] = useState(true);
   const [isShowingAISettings, setIsShowingAISettings] = useState(false);
+  const [showAISettings, setShowAISettings] = useState(false);
+
+  // Estado para armazenar arquivos selecionados
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -357,28 +375,28 @@ const FloatingChatSupport: React.FC = () => {
     // Gerar uma ID de sessão baseada no usuário atual ou criar uma nova
     const newSessionId = userName || 'anonymous-' + Date.now().toString();
     setSessionId(newSessionId);
-    
+
     // Tentar carregar mensagens salvas para este usuário
     const loadSavedMessages = async () => {
       try {
         const chatService = await import('@/services/aiChatService');
-        
+
         // Usar a nova função getConversationHistory para obter histórico
         const history = chatService.getConversationHistory(newSessionId);
-        
+
         // Se houver histórico com mensagens de usuário e IA, exibir as últimas mensagens
         if (history && history.length > 1) {
           // Converter de ChatMessage para o formato Message do componente
-          const convertedMessages: Message[] = history
+          const convertedMessages: ChatMessage[] = history
             .filter(msg => msg.role !== 'system') // Excluir mensagens do sistema
             .slice(-6) // Pegar apenas as últimas 6 mensagens para não sobrecarregar
             .map(msg => ({
               id: Date.now() + Math.random().toString(),
               content: msg.content,
-              sender: msg.role === 'user' ? 'user' : 'ai',
+              sender: msg.role === 'user' ? 'user' : 'assistant',
               timestamp: new Date(),
             }));
-          
+
           if (convertedMessages.length > 0) {
             setMessages(prev => {
               // Manter a primeira mensagem (boas-vindas) e adicionar o histórico
@@ -390,7 +408,7 @@ const FloatingChatSupport: React.FC = () => {
         console.error('Erro ao carregar histórico de mensagens:', error);
       }
     };
-    
+
     loadSavedMessages();
   }, [userName]);
 
@@ -398,66 +416,93 @@ const FloatingChatSupport: React.FC = () => {
     setIsMessageEmpty(message.trim() === '');
   }, [message]);
 
-  const handleSendMessage = async (e?: React.FormEvent) => {
-    if (e) {
-      e.preventDefault();
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim() && selectedFiles.length === 0) return;
+
+    // Criar uma mensagem combinada com texto e informações sobre arquivos anexados
+    let fullMessage = inputMessage.trim();
+
+    // Se houver arquivos selecionados, adicionar informações sobre eles à mensagem
+    if (selectedFiles.length > 0) {
+      // Incluir informações sobre os arquivos na mensagem para análise da IA
+      const fileInfos = selectedFiles.map(file => 
+        `- ${file.name} (${(file.size / 1024).toFixed(2)} KB, tipo: ${file.type})`
+      ).join('\n');
+
+      if (fullMessage) {
+        fullMessage += `\n\nArquivos anexados:\n${fileInfos}`;
+      } else {
+        fullMessage = `Arquivos anexados:\n${fileInfos}`;
+      }
     }
 
-    if (!message.trim() || isLoading) return;
-
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      content: message,
-      sender: "user",
+    // Criar um objeto para a mensagem do usuário que inclui arquivos
+    const userMessage: ChatMessage = {
+      id: Date.now(),
+      content: inputMessage.trim(),
+      sender: 'user',
       timestamp: new Date(),
+      files: selectedFiles.map(file => ({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        url: URL.createObjectURL(file)
+      }))
     };
 
-    setMessages((prev) => [...prev, newMessage]);
-    const userMsg = message;
-    setMessage("");
-    setIsLoading(true);
+    setMessages(prevMessages => [...prevMessages, userMessage]);
+    setInputMessage('');
+    setSelectedFiles([]);
     setIsTyping(true);
 
     try {
-      // Importar dinamicamente o serviço de IA
-      const aiService = await import('@/services/aiChatService');
-      
-      // Use o serviço AI para gerar a resposta com configurações
-      const response = await aiService.generateAIResponse(userMsg, sessionId, {
-        intelligenceLevel: aiIntelligenceLevel,
-        languageStyle: aiLanguageStyle
-      });
+      // Gerar sessão única para este chat
+      if (!sessionId) {
+        const newSessionId = `chat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        setSessionId(newSessionId);
+        localStorage.setItem('chatSessionId', newSessionId);
+      }
 
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: response,
-        sender: "ai",
-        timestamp: new Date(),
-      };
+      // Chamar a API para obter resposta com opções personalizadas
+      const aiResponse = await generateAIResponse(
+        fullMessage,
+        sessionId || 'default_session',
+        {
+          intelligenceLevel: aiIntelligenceLevel,
+          languageStyle: aiLanguageStyle
+        }
+      );
 
-      setMessages((prev) => [...prev, aiMessage]);
+      // Reproduzir som se estiver ativado
+      if (soundEnabled) {
+        // playMessageSound(); // Função playMessageSound ainda não implementada
+        console.log('Sound would play here if implemented')
+      }
+
+      setMessages(prevMessages => [
+        ...prevMessages,
+        { 
+          id: Date.now(), 
+          content: aiResponse, 
+          sender: 'assistant', 
+          timestamp: new Date() 
+        }
+      ]);
     } catch (error) {
-      console.error("Erro ao processar mensagem:", error);
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content:
-          "Desculpe, encontrei um problema ao processar sua mensagem. Por favor, tente novamente mais tarde.",
-        sender: "ai",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+      console.error('Erro ao enviar mensagem:', error);
+      setMessages(prevMessages => [
+        ...prevMessages,
+        { 
+          id: Date.now(), 
+          content: 'Desculpe, estou enfrentando problemas no momento. Por favor, tente novamente mais tarde.', 
+          sender: 'assistant', 
+          timestamp: new Date() 
+        }
+      ]);
     } finally {
-      setIsLoading(false);
       setIsTyping(false);
     }
   };
-
-  // Estado para armazenar o arquivo selecionado
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
-  const [fileType, setFileType] = useState<string | null>(null);
-  const [additionalFileMessage, setAdditionalFileMessage] = useState('');
-  const [showFileMessageDialog, setShowFileMessageDialog] = useState(false);
 
   // Função para lidar com upload de arquivos
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -467,112 +512,11 @@ const FloatingChatSupport: React.FC = () => {
     setShowAttachmentOptions(false);
 
     // Armazenar o arquivo selecionado
-    setSelectedFile(file);
-    
-    // Criar um objeto URL para o arquivo
-    const fileUrl = URL.createObjectURL(file);
-    setFilePreviewUrl(fileUrl);
-
-    // Determinar o tipo de arquivo
-    const type = file.type.split('/')[0]; // image, video, audio, application, etc.
-    setFileType(type);
-
-    // Mostrar diálogo para adicionar mensagem
-    setShowFileMessageDialog(true);
+    setSelectedFiles(prev => [...prev, file]);
 
     // Limpar o input de arquivo para permitir selecionar o mesmo arquivo novamente
     if (e.target) {
       e.target.value = '';
-    }
-  };
-
-  // Função para enviar arquivo com mensagem adicional
-  const handleSendFileWithMessage = async () => {
-    if (!selectedFile || !filePreviewUrl) return;
-
-    // Criar um componente JSX baseado no tipo de arquivo
-    let filePreview = null;
-    let fileDescription = `Arquivo: ${selectedFile.name}`;
-
-    if (fileType === 'image') {
-      filePreview = `<div class="mt-2 max-w-[200px]"><img src="${filePreviewUrl}" alt="${selectedFile.name}" class="rounded-md max-w-full" /></div>`;
-      fileDescription = `Imagem: ${selectedFile.name}`;
-    } else if (fileType === 'video') {
-      filePreview = `<div class="mt-2 max-w-[300px]"><video src="${filePreviewUrl}" controls class="rounded-md max-w-full"></video></div>`;
-      fileDescription = `Vídeo: ${selectedFile.name}`;
-    } else if (fileType === 'audio') {
-      filePreview = `<div class="mt-2 w-full"><audio src="${filePreviewUrl}" controls class="w-full"></audio></div>`;
-      fileDescription = `Áudio: ${selectedFile.name}`;
-    } else {
-      filePreview = `<div class="mt-2 p-3 bg-gray-100 dark:bg-gray-800 rounded-md flex items-center gap-2">
-        <FileText class="h-5 w-5 text-[#FF6B00]" />
-        <span class="text-sm font-medium">${selectedFile.name}</span>
-        <span class="text-xs text-gray-500">(${(selectedFile.size / 1024).toFixed(1)} KB)</span>
-      </div>`;
-    }
-
-    // Conteúdo da mensagem com o arquivo
-    let messageContent = '';
-    
-    // Se houver mensagem adicional, incluí-la
-    if (additionalFileMessage.trim()) {
-      messageContent = `${additionalFileMessage}\n\n${fileDescription}\n${filePreview}`;
-    } else {
-      messageContent = `${fileDescription}\n${filePreview}`;
-    }
-
-    // Mensagem com o arquivo anexado
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      content: messageContent,
-      sender: "user",
-      timestamp: new Date(),
-      hasHtml: true,
-    };
-
-    setMessages((prev) => [...prev, newMessage]);
-    setIsLoading(true);
-
-    try {
-      // Importar dinamicamente o serviço de IA
-      const aiService = await import('@/services/aiChatService');
-      
-      // Preparar mensagem para a IA com contexto do arquivo e mensagem adicional
-      let aiContext = `Analisando o arquivo: ${selectedFile.name}`;
-      if (additionalFileMessage.trim()) {
-        aiContext += `. Mensagem do usuário: "${additionalFileMessage}"`;
-      }
-      
-      // Gerar resposta da IA
-      setIsTyping(true);
-      const aiResponse = await aiService.generateAIResponse(aiContext, sessionId);
-
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: aiResponse,
-        sender: "ai",
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, aiMessage]);
-    } catch (error) {
-      console.error("Erro ao processar arquivo:", error);
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: "Desculpe, encontrei um problema ao processar seu arquivo. Por favor, tente novamente mais tarde.",
-        sender: "ai",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
-      
-      // Limpar o estado relacionado ao arquivo
-      setSelectedFile(null);
-      setFilePreviewUrl(null);
-      setFileType(null);
-      setAdditionalFileMessage('');
-      setShowFileMessageDialog(false);
     }
   };
 
@@ -599,12 +543,12 @@ const FloatingChatSupport: React.FC = () => {
             const audioUrl = URL.createObjectURL(audioBlob);
 
             // Adicionar mensagem com áudio
-            const newMessage: Message = {
-              id: Date.now().toString(),
-              content: `Áudio gravado\n<div class="mt-2 w-full"><audio src="${audioUrl}" controls class="w-full"></audio></div>`,
+            const newMessage: ChatMessage = {
+              id: Date.now(),
+              content: `Áudio gravado\n<audio src="${audioUrl}" controls></audio>`,
               sender: "user",
               timestamp: new Date(),
-              hasHtml: true,
+              files: [{name: 'audio.wav', size: audioBlob.size, type: 'audio/wav', url: audioUrl}]
             };
 
             setMessages((prev) => [...prev, newMessage]);
@@ -616,10 +560,10 @@ const FloatingChatSupport: React.FC = () => {
               setIsTyping(true);
               aiService.generateAIResponse("Analisando áudio enviado", sessionId)
                 .then(response => {
-                  const aiMessage: Message = {
-                    id: (Date.now() + 1).toString(),
+                  const aiMessage: ChatMessage = {
+                    id: Date.now() + 1,
                     content: response,
-                    sender: "ai",
+                    sender: "assistant",
                     timestamp: new Date(),
                   };
                   setMessages((prev) => [...prev, aiMessage]);
@@ -627,10 +571,10 @@ const FloatingChatSupport: React.FC = () => {
             })
               .catch(error => {
                 console.error("Erro ao processar áudio:", error);
-                const errorMessage: Message = {
-                  id: (Date.now() + 1).toString(),
+                const errorMessage: ChatMessage = {
+                  id: Date.now() + 1,
                   content: "Desculpe, encontrei um problema ao processar seu áudio. Por favor, tente novamente mais tarde.",
-                  sender: "ai",
+                  sender: "assistant",
                   timestamp: new Date(),
                 };
                 setMessages((prev) => [...prev, errorMessage]);
@@ -1107,7 +1051,7 @@ const FloatingChatSupport: React.FC = () => {
               key={message.id}
               className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
             >
-              {message.sender === "ai" && (
+              {message.sender === "assistant" && (
                 <div className="w-8 h-8 rounded-full overflow-hidden mr-2 flex-shrink-0">
                   <Avatar>
                     <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] text-white">
@@ -1122,11 +1066,20 @@ const FloatingChatSupport: React.FC = () => {
               <div
                 className={`max-w-[75%] rounded-lg px-3 py-2 ${message.sender === "user" ? "bg-blue-500 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200"}`}
               >
-                {message.hasHtml ? (
-                  <div dangerouslySetInnerHTML={{ __html: message.content }} />
-                ) : (
-                  <div className="whitespace-pre-wrap">{message.content}</div>
-                )}
+                <div dangerouslySetInnerHTML={{ __html: message.content }} />
+                {message.files && message.files.map((file) => (
+                  <div key={file.name} className="mt-2 flex items-center">
+                    <div className="mr-2">
+                      {file.type.startsWith('image/') && <Image className="h-4 w-4" />}
+                      {file.type.startsWith('video/') && <Video className="h-4 w-4" />}
+                      {file.type.startsWith('audio/') && <Music className="h-4 w-4" />}
+                      {file.type.startsWith('application/') && <File className="h-4 w-4" />}
+                    </div>
+                    <a href={file.url} download={file.name} className="text-blue-500 hover:underline">
+                      {file.name} ({(file.size / 1024).toFixed(2)} KB)
+                    </a>
+                  </div>
+                ))}
                 <div className="text-xs opacity-70 mt-1 text-right">
                   {message.timestamp.toLocaleTimeString([], {
                     hour: "2-digit",
@@ -1203,14 +1156,14 @@ const FloatingChatSupport: React.FC = () => {
             </Button>
           </div>
         </div>
-        
+
         {isShowingAISettings && (
           <div className="mb-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
             <h4 className="text-sm font-medium mb-2 flex items-center">
               <Settings className="h-3.5 w-3.5 mr-1.5 text-orange-500" />
               Configurações da IA
             </h4>
-            
+
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-medium mb-1 block">Nível de Inteligência</label>
@@ -1225,14 +1178,14 @@ const FloatingChatSupport: React.FC = () => {
                           ? "bg-orange-500 hover:bg-orange-600 text-white" 
                           : "border-orange-200 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                       }`}
-                      onClick={() => setAiIntelligenceLevel(level)}
+                      onClick={() => setAIIntelligenceLevel(level)}
                     >
                       {level === 'basic' ? 'Básico' : level === 'normal' ? 'Normal' : 'Avançado'}
                     </Button>
                   ))}
                 </div>
               </div>
-              
+
               <div>
                 <label className="text-xs font-medium mb-1 block">Estilo de Linguagem</label>
                 <div className="flex gap-1">
@@ -1246,14 +1199,14 @@ const FloatingChatSupport: React.FC = () => {
                           ? "bg-orange-500 hover:bg-orange-600 text-white" 
                           : "border-orange-200 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                       }`}
-                      onClick={() => setAiLanguageStyle(style)}
+                      onClick={() => setAILanguageStyle(style)}
                     >
                       {style === 'casual' ? 'Casual' : style === 'formal' ? 'Formal' : 'Técnico'}
                     </Button>
                   ))}
                 </div>
               </div>
-              
+
               <div>
                 <label className="text-xs font-medium mb-1 block">Sons de Notificação</label>
                 <div className="flex items-center">
@@ -1281,11 +1234,11 @@ const FloatingChatSupport: React.FC = () => {
         )}
         <div className="flex items-center gap-2">
           <Input
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
             placeholder="Digite sua mensagem..."
             className="flex-1 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
-            onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+            onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
           />
           <div className="flex items-center gap-1.5">
             <div className="relative">
@@ -1361,81 +1314,116 @@ const FloatingChatSupport: React.FC = () => {
                   </div>
                 </div>
               )}
-              
-              {/* Diálogo para adicionar mensagem ao arquivo antes de enviar */}
-              {showFileMessageDialog && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
-                    <h3 className="text-lg font-medium mb-4 dark:text-white">Adicionar mensagem ao arquivo</h3>
-                    
-                    {/* Preview do arquivo */}
-                    <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
-                      {fileType === 'image' && filePreviewUrl && (
-                        <div className="mb-2 max-h-48 overflow-hidden rounded flex justify-center">
-                          <img src={filePreviewUrl} alt="Preview" className="max-h-full object-contain" />
-                        </div>
-                      )}
-                      {fileType === 'video' && filePreviewUrl && (
-                        <div className="mb-2">
-                          <video src={filePreviewUrl} controls className="max-h-48 w-full" />
-                        </div>
-                      )}
-                      <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                        <FileText className="h-4 w-4 mr-2 text-[#FF6B00]" />
-                        <span>{selectedFile?.name} ({(selectedFile?.size || 0) / 1024 < 1000 ? 
-                          `${((selectedFile?.size || 0) / 1024).toFixed(1)} KB` : 
-                          `${((selectedFile?.size || 0) / 1024 / 1024).toFixed(2)} MB`})</span>
-                      </div>
-                    </div>
-                    
-                    <textarea
-                      className="w-full p-3 border rounded-md mb-4 h-20 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                      placeholder="Adicione uma mensagem para enviar com o arquivo (opcional)"
-                      value={additionalFileMessage}
-                      onChange={(e) => setAdditionalFileMessage(e.target.value)}
-                    />
-                    
-                    <div className="flex justify-end gap-2">
-                      <Button 
-                        variant="outline" 
-                        onClick={() => {
-                          setSelectedFile(null);
-                          setFilePreviewUrl(null);
-                          setFileType(null);
-                          setAdditionalFileMessage('');
-                          setShowFileMessageDialog(false);
-                        }}
-                        className="dark:border-gray-600 dark:text-gray-200"
+
+
+            </div>
+            {/* Área de arquivos selecionados */}
+            {selectedFiles.length > 0 && (
+              <div className="p-2 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-2">
+                {selectedFiles.map((file, index) => (
+                  <div 
+                    key={index} 
+                    className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-full px-3 py-1"
+                  >
+                    <span className="text-xs truncate max-w-[120px]">{file.name}</span>
+                    <button 
+                      className="ml-1 text-gray-500 hover:text-red-500"
+                      onClick={() => removeFile(index)}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Configurações da IA */}
+            {showAISettings && (
+              <div className="p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                <h4 className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Configurações da IA</h4>
+
+                <div className="mb-2">
+                  <label className="text-xs text-gray-600 dark:text-gray-400 block mb-1">Nível de inteligência</label>
+                  <div className="flex gap-2">
+                    {(['basic', 'normal', 'advanced'] as const).map((level) => (
+                      <button
+                        key={level}
+                        className={`px-2 py-1 text-xs rounded ${
+                          aiIntelligenceLevel === level 
+                            ? 'bg-orange-500 text-white' 
+                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                        }`}
+                        onClick={() => setAIIntelligenceLevel(level)}
                       >
-                        Cancelar
-                      </Button>
-                      <Button 
-                        className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
-                        onClick={handleSendFileWithMessage}
-                      >
-                        Enviar
-                      </Button>
-                    </div>
+                        {level === 'basic' ? 'Básico' : level === 'normal' ? 'Normal' : 'Avançado'}
+                      </button>
+                    ))}
                   </div>
                 </div>
-              )}
+
+                <div>
+                  <label className="text-xs text-gray-600 dark:text-gray-400 block mb-1">Estilo de linguagem</label>
+                  <div className="flex gap-2">
+                    {(['casual', 'formal', 'technical'] as const).map((style) => (
+                      <button
+                        key={style}
+                        className={`px-2 py-1 text-xs rounded ${
+                          aiLanguageStyle === style 
+                            ? 'bg-orange-500 text-white' 
+                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                        }`}
+                        onClick={() => setAILanguageStyle(style)}
+                      >
+                        {style === 'casual' ? 'Casual' : style === 'formal' ? 'Formal' : 'Técnico'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Input, botões de anexo e envio */}
+            <div className="flex items-center p-3 border-t border-gray-200 dark:border-gray-700">
+              <button
+                className="mr-2 p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={() => setShowAISettings(!showAISettings)}
+                title="Configurações da IA"
+              >
+                <Settings className="h-5 w-5" />
+              </button>
+
+              <button
+                className="mr-2 p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={openFileSelector}
+                title="Anexar arquivo"
+              >
+                <Paperclip className="h-5 w-5" />
+              </button>
+
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                onChange={handleFileSelection}
+                multiple
+              />
+
+              <input
+                type="text"
+                className="flex-1 px-4 py-2 rounded-full border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-gray-800 dark:text-gray-200"
+                placeholder="Digite sua mensagem..."
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+              />
+
+              <button
+                className="ml-2 p-2 rounded-full bg-orange-500 text-white hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                onClick={handleSendMessage}
+              >
+                <Send className="h-5 w-5" />
+              </button>
             </div>
-            <Button
-              type="submit"
-              size="icon"
-              disabled={isMessageEmpty || isLoading}
-              className={cn(
-                "bg-[#FF6B00] text-white hover:bg-[#FF6B00]/90",
-                isMessageEmpty && "opacity-50 cursor-not-allowed"
-              )}
-              onClick={handleSendMessage}
-            >
-              {isTyping ? (
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-dashed border-white" />
-              ) : (
-                <Send className="h-4 w-4 text-white" />
-              )}
-            </Button>
           </div>
         </div>
       </div>
@@ -1866,12 +1854,12 @@ const FloatingChatSupport: React.FC = () => {
             <div className="flex items-center justify-between p-4 border-b dark:border-gray-800">
               <div className="flex items-center gap-2">
                 <Button
-                  variant="ghost"
+                  variant={activeTab === "home" ? "default" : "ghost"}
                   size="icon"
-                  className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                  className={`h-10 w-10 rounded-full mb-4 ${activeTab === "home" ? "bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white" : ""}`}
                   onClick={() => setActiveTab("home")}
                 >
-                  <Home className="h-4 w-4" />
+                  <Home className="h-5 w-5" />
                 </Button>
               </div>
               <div className="flex items-center gap-2">
