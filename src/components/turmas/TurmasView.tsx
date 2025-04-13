@@ -1148,6 +1148,9 @@ const TurmasView: React.FC = () => {
   // If a group is selected, show the group detail view
   if (selectedGroup) {
     return <GroupDetail group={selectedGroup} onBack={handleBackFromGroup} />;
+  // Se selectedGroup for verdadeiro, renderiza o GroupDetail
+  if (selectedGroup) {
+    return <GroupDetail group={selectedGroup} onBack={handleBackFromGroup} />;
   }
 
   return (
