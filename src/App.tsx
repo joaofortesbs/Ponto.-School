@@ -368,19 +368,19 @@ function App() {
                 <Route path="*" element={<Navigate to="/login" />} />
               </Routes>
               </ErrorBoundary> {/* Closed ErrorBoundary */}
-              {/* Floating Chat Support */}
-              {!isAuthRoute && !isLoading && <FloatingChatSupport />}
+            {/* Floating Chat Support */}
+            {!isAuthRoute && !isLoading && <FloatingChatSupport />}
 
-              {/* Welcome Modal - apenas mostrado em rotas protegidas (não auth) */}
-              {!isAuthRoute &&
-                <WelcomeModal
-                  isOpen={showWelcomeModal}
-                  onClose={() => setShowWelcomeModal(false)}
-                  isFirstLogin={isFirstLogin}
-                />
-              }
-              <Toaster />
-            </div>
+            {/* Welcome Modal - apenas mostrado em rotas protegidas (não auth) */}
+            {!isAuthRoute &&
+              <WelcomeModal
+                isOpen={showWelcomeModal}
+                onClose={() => setShowWelcomeModal(false)}
+                isFirstLogin={isFirstLogin}
+              />
+            }
+            <Toaster />
+          </div>
         </StudyGoalProvider>
       </UsernameProvider>
     </ThemeProvider>
