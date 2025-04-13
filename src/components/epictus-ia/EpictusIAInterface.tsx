@@ -203,7 +203,7 @@ export default function EpictusIAInterface() {
           </div>
         </div>
 
-        {/* Right Panel - Content */}
+        {/* Main Content Panel */}
         <div className="flex-1 flex flex-col">
           <Tabs
             value={activeTab}
