@@ -19,19 +19,19 @@ export const formatDate = (dateString: string) => {
 export const getIconForMaterialType = (type: MaterialType, className = "h-5 w-5") => {
   switch (type) {
     case "video":
-      return <Video className={className} />;
+      return React.createElement(Video, { className });
     case "pdf":
-      return <FileText className={className} />;
+      return React.createElement(FileText, { className });
     case "audio":
-      return <Headphones className={className} />;
+      return React.createElement(Headphones, { className });
     case "link":
-      return <Link className={className} />;
+      return React.createElement(Link, { className });
     case "exercise":
-      return <PenTool className={className} />;
+      return React.createElement(PenTool, { className });
     case "mindmap":
-      return <Network className={className} />;
+      return React.createElement(Network, { className });
     default:
-      return <BookText className={className} />;
+      return React.createElement(BookText, { className });
   }
 };
 
