@@ -44,16 +44,21 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
         <div className="flex items-center justify-center w-full">
           <div
             className={cn(
-              "w-full max-w-[480px] rounded-2xl bg-white/50 dark:bg-[#0A2540]/50 p-8 shadow-xl shadow-brand-primary/10 backdrop-blur-lg border border-white/20 dark:border-white/10 transition-all duration-300",
-              "hover:shadow-2xl hover:shadow-brand-primary/15 animate-fadeIn",
+              "w-full max-w-[480px] rounded-2xl bg-white/30 dark:bg-[#0A2540]/30 p-8 shadow-xl shadow-brand-primary/15 backdrop-blur-lg transition-all duration-300",
+              "hover:shadow-2xl hover:shadow-brand-primary/25 animate-fadeIn",
               "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2",
               !contentReady && "opacity-0", // Inicialmente invisível até as teias estarem prontas
               contentReady && "opacity-100", // Aparece quando as teias estiverem prontas
               className,
             )}
             style={{ 
-              transition: "opacity 0.3s ease-in-out",
-              backdropFilter: "blur(12px)"  // Mais realista e moderno
+              transition: "opacity 0.3s ease-in-out, transform 0.3s ease-out, box-shadow 0.3s ease",
+              backdropFilter: "blur(16px)",
+              WebkitBackdropFilter: "blur(16px)",
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 107, 0, 0.15)",
+              border: "1px solid rgba(255, 107, 0, 0.2)",
+              borderRadius: "18px",
+              background: "linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%)"
             }}
           >
             {children}

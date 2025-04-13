@@ -138,17 +138,24 @@ export function LoginForm() {
             Usuário ou E-mail
           </label>
           <div className="relative group">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-brand-primary transition-colors duration-200" />
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-brand-primary transition-colors duration-200 z-10" />
             <Input
               type="text"
               name="email"
               value={formData.email}
               onChange={handleChange}
               placeholder="Digite seu usuário ou e-mail"
-              className="pl-10 h-11 bg-white/50 dark:bg-white/5 backdrop-blur-sm border-white/20 dark:border-white/10 focus:border-brand-primary/70 dark:focus:border-brand-primary/70 transition-all duration-300 hover:border-brand-primary/50"
+              className="pl-10 h-11 bg-white/30 dark:bg-white/8 backdrop-blur-md border-[#FF6B00]/10 dark:border-[#FF6B00]/20 focus:border-[#FF6B00]/60 dark:focus:border-[#FF6B00]/60 transition-all duration-300 hover:border-[#FF6B00]/30 rounded-lg"
               required
+              style={{
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+                boxShadow: "inset 0 1px 2px rgba(255, 255, 255, 0.1)"
+              }}
             />
-            <div className="absolute inset-0 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none border border-brand-primary/20 shadow-[0_0_10px_rgba(255,107,0,0.1)]"></div>
+            <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none border border-[#FF6B00]/30 shadow-[0_0_15px_rgba(255,107,0,0.15)]" style={{
+              background: "linear-gradient(135deg, rgba(255, 107, 0, 0.03) 0%, rgba(255, 140, 64, 0.02) 100%)"
+            }}></div>
           </div>
         </div>
 
@@ -165,30 +172,37 @@ export function LoginForm() {
             </Button>
           </div>
           <div className="relative group">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-brand-primary transition-colors duration-200" />
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-brand-primary transition-colors duration-200 z-10" />
             <Input
               type={showPassword ? "text" : "password"}
               name="password"
               value={formData.password}
               onChange={handleChange}
               placeholder="Digite sua senha"
-              className="pl-10 pr-10 h-11 bg-white/50 dark:bg-white/5 backdrop-blur-sm border-white/20 dark:border-white/10 focus:border-brand-primary/70 dark:focus:border-brand-primary/70 transition-all duration-300 hover:border-brand-primary/50"
+              className="pl-10 pr-10 h-11 bg-white/30 dark:bg-white/8 backdrop-blur-md border-[#FF6B00]/10 dark:border-[#FF6B00]/20 focus:border-[#FF6B00]/60 dark:focus:border-[#FF6B00]/60 transition-all duration-300 hover:border-[#FF6B00]/30 rounded-lg"
               required
+              style={{
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+                boxShadow: "inset 0 1px 2px rgba(255, 255, 255, 0.1)"
+              }}
             />
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent z-10"
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? (
-                <EyeOff className="h-4 w-4 text-muted-foreground hover:text-brand-primary" />
+                <EyeOff className="h-4 w-4 text-muted-foreground hover:text-[#FF6B00]" />
               ) : (
-                <Eye className="h-4 w-4 text-muted-foreground hover:text-brand-primary" />
+                <Eye className="h-4 w-4 text-muted-foreground hover:text-[#FF6B00]" />
               )}
             </Button>
-            <div className="absolute inset-0 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none border border-brand-primary/20 shadow-[0_0_10px_rgba(255,107,0,0.1)]"></div>
+            <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none border border-[#FF6B00]/30 shadow-[0_0_15px_rgba(255,107,0,0.15)]" style={{
+              background: "linear-gradient(135deg, rgba(255, 107, 0, 0.03) 0%, rgba(255, 140, 64, 0.02) 100%)"
+            }}></div>
           </div>
         </div>
 
@@ -234,21 +248,25 @@ export function LoginForm() {
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <Button variant="outline" className="h-11 bg-white/50 dark:bg-white/5 backdrop-blur-sm border-white/20 dark:border-white/10 hover:bg-white/70 dark:hover:bg-white/10 transition-all duration-300 hover:shadow-md">
+          <Button variant="outline" className="h-11 bg-white/20 dark:bg-white/5 backdrop-blur-xl border border-white/30 dark:border-white/10 hover:bg-white/30 dark:hover:bg-white/10 transition-all duration-300 hover:shadow-lg group rounded-lg relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 group-hover:translate-x-full transition-all duration-1500 ease-in-out"></div>
+            <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#FF6B00]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             <img
               src="https://www.svgrepo.com/show/506498/google.svg"
               alt="Google"
               className="w-5 h-5 mr-2"
             />
-            Google
+            <span className="relative z-10">Google</span>
           </Button>
-          <Button variant="outline" className="h-11 bg-white/50 dark:bg-white/5 backdrop-blur-sm border-white/20 dark:border-white/10 hover:bg-white/70 dark:hover:bg-white/10 transition-all duration-300 hover:shadow-md">
+          <Button variant="outline" className="h-11 bg-white/20 dark:bg-white/5 backdrop-blur-xl border border-white/30 dark:border-white/10 hover:bg-white/30 dark:hover:bg-white/10 transition-all duration-300 hover:shadow-lg group rounded-lg relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 group-hover:translate-x-full transition-all duration-1500 ease-in-out"></div>
+            <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#FF6B00]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             <img
               src="https://www.svgrepo.com/show/521654/facebook.svg"
               alt="Facebook"
               className="w-5 h-5 mr-2"
             />
-            Facebook
+            <span className="relative z-10">Facebook</span>
           </Button>
         </div>
 

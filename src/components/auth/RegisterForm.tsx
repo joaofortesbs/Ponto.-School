@@ -778,17 +778,25 @@ export function RegisterForm() {
                   <label className="text-sm fontmedium text-brand-black dark:text-white">
                     Nome Completo
                   </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <div className="relative group">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-brand-primary transition-colors duration-200 z-10" />
                     <Input
                       type="text"
                       name="fullName"
                       value={formData.fullName}
                       onChange={handleChange}
                       placeholder="Digite seu nome completo"
-                      className="pl-10 h-11"
+                      className="pl-10 h-11 bg-white/30 dark:bg-white/8 backdrop-blur-md border-[#FF6B00]/10 dark:border-[#FF6B00]/20 focus:border-[#FF6B00]/60 dark:focus:border-[#FF6B00]/60 transition-all duration-300 hover:border-[#FF6B00]/30 rounded-lg"
                       required
+                      style={{
+                        backdropFilter: "blur(12px)",
+                        WebkitBackdropFilter: "blur(12px)",
+                        boxShadow: "inset 0 1px 2px rgba(255, 255, 255, 0.1)"
+                      }}
                     />
+                    <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none border border-[#FF6B00]/30 shadow-[0_0_15px_rgba(255,107,0,0.15)]" style={{
+                      background: "linear-gradient(135deg, rgba(255, 107, 0, 0.03) 0%, rgba(255, 140, 64, 0.02) 100%)"
+                    }}></div>
                   </div>
                 </div>
 

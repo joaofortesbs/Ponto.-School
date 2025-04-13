@@ -107,16 +107,80 @@
 
 /* Efeito de "vidro" para contêineres */
 .glass-effect {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease-in-out;
+}
+
+.glass-effect:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 107, 0, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 107, 0, 0.1);
 }
 
 .dark .glass-effect {
-  background: rgba(10, 37, 64, 0.2);
+  background: rgba(10, 37, 64, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dark .glass-effect:hover {
+  background: rgba(10, 37, 64, 0.25);
+  border: 1px solid rgba(255, 107, 0, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 107, 0, 0.1);
+}
+
+/* Efeito de borda brilhante premium */
+@keyframes border-glow-premium {
+  0% {
+    border-color: rgba(255, 107, 0, 0.2);
+    box-shadow: 0 0 5px rgba(255, 107, 0, 0.2);
+  }
+  50% {
+    border-color: rgba(255, 107, 0, 0.4);
+    box-shadow: 0 0 12px rgba(255, 107, 0, 0.3);
+  }
+  100% {
+    border-color: rgba(255, 107, 0, 0.2);
+    box-shadow: 0 0 5px rgba(255, 107, 0, 0.2);
+  }
+}
+
+.animate-border-glow-premium {
+  animation: border-glow-premium 3s ease-in-out infinite;
+}
+
+/* Efeito de vidro ultra moderno */
+.ultra-glass {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 107, 0, 0.15);
+  box-shadow: 
+    0 4px 24px rgba(0, 0, 0, 0.1),
+    0 1px 2px rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.ultra-glass:hover {
+  border: 1px solid rgba(255, 107, 0, 0.3);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(255, 107, 0, 0.2),
+    0 4px 8px rgba(255, 107, 0, 0.1);
+}
+
+.dark .ultra-glass {
+  background: linear-gradient(135deg, rgba(10, 37, 64, 0.15) 0%, rgba(10, 37, 64, 0.1) 100%);
+  border: 1px solid rgba(255, 107, 0, 0.15);
+}
+
+.dark .ultra-glass:hover {
+  border: 1px solid rgba(255, 107, 0, 0.3);
+  background: linear-gradient(135deg, rgba(10, 37, 64, 0.2) 0%, rgba(10, 37, 64, 0.15) 100%);
 }
 
 /* Efeito de borda brilhante em hover */
