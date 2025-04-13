@@ -139,30 +139,66 @@ export async function generateXAIResponse(message: string, sessionId: string): P
       ];
     }
     
-    // Configuração da solicitação para a API xAI
-    const response = await axios.post(
-      XAI_BASE_URL,
-      {
-        messages: conversationHistory[sessionId],
-        model: 'grok-3-latest',
-        stream: false,
-        temperature: 0.7
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${XAI_API_KEY}`
+    // Implementa retry logic com backoff exponencial
+    let attempts = 0;
+    const maxAttempts = 3;
+    const baseDelay = 1000; // 1 segundo
+    
+    while (attempts < maxAttempts) {
+      try {
+        // Configuração da solicitação para a API xAI
+        const response = await axios.post(
+          XAI_BASE_URL,
+          {
+            messages: conversationHistory[sessionId],
+            model: 'grok-3-latest',
+            stream: false,
+            temperature: 0.7,
+            max_tokens: 2048 // Limitar tamanho da resposta para evitar erros
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${XAI_API_KEY}`
+            },
+            timeout: 30000 // Timeout de 30 segundos
+          }
+        );
+        
+        // Verifica se a resposta contém os dados esperados
+        if (response.data && 
+            response.data.choices && 
+            response.data.choices.length > 0 && 
+            response.data.choices[0].message && 
+            response.data.choices[0].message.content) {
+          
+          // Extrai a resposta
+          const aiResponse = response.data.choices[0].message.content;
+          
+          // Adiciona a resposta da IA ao histórico
+          conversationHistory[sessionId].push({ role: 'assistant', content: aiResponse });
+          
+          return aiResponse;
+        } else {
+          throw new Error("Resposta da API xAI incompleta ou malformada");
         }
+      } catch (error) {
+        attempts++;
+        
+        // Se atingiu o número máximo de tentativas, propaga o erro
+        if (attempts >= maxAttempts) {
+          console.error(`Erro na tentativa ${attempts}/${maxAttempts} ao chamar xAI:`, error);
+          throw error;
+        }
+        
+        // Espera com backoff exponencial antes de tentar novamente
+        const delay = baseDelay * Math.pow(2, attempts - 1);
+        console.warn(`Tentativa ${attempts}/${maxAttempts} falhou. Tentando novamente em ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
-    );
+    }
     
-    // Extrai a resposta
-    const aiResponse = response.data.choices[0].message.content;
-    
-    // Adiciona a resposta da IA ao histórico
-    conversationHistory[sessionId].push({ role: 'assistant', content: aiResponse });
-    
-    return aiResponse;
+    throw new Error("Todas as tentativas de conexão com a API xAI falharam");
   } catch (error) {
     console.error('Erro ao gerar resposta com xAI:', error);
     // Fallback para Gemini em caso de erro

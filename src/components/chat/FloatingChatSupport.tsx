@@ -40,6 +40,8 @@ import {
   Star,
   History,
   RefreshCw,
+  Mic,
+  CheckCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -299,7 +301,7 @@ const FloatingChatSupport: React.FC = () => {
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [userName, setUserName] = useState("Usuário");
-  
+
   // Estados para upload de arquivos e áudio
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -307,7 +309,7 @@ const FloatingChatSupport: React.FC = () => {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [audioFile, setAudioFile] = useState<File | null>(null);
-  
+
   // Refs para upload de arquivos e gravação de áudio
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -339,7 +341,7 @@ const FloatingChatSupport: React.FC = () => {
       }
     };
   }, [isOpen]);
-  
+
   // Obter nome do usuário ao inicializar
   useEffect(() => {
     const getUserName = async () => {
@@ -347,13 +349,13 @@ const FloatingChatSupport: React.FC = () => {
         // Tentar obter nome de diversas fontes
         const storedUserName = localStorage.getItem('username') || 
                              sessionStorage.getItem('username');
-        
+
         if (storedUserName) {
           // Extrair o primeiro nome
           const firstName = storedUserName.split(' ')[0];
           setUserName(firstName || storedUserName);
         }
-        
+
         // Tente importar de forma assíncrona o módulo de utils
         try {
           const { getUsernameFromAllSources } = await import('@/lib/username-utils');
@@ -372,7 +374,7 @@ const FloatingChatSupport: React.FC = () => {
         console.error('Erro ao obter nome do usuário:', error);
       }
     };
-    
+
     getUserName();
   }, []);
 
@@ -408,13 +410,13 @@ const FloatingChatSupport: React.FC = () => {
         const audioUrl = URL.createObjectURL(audioBlob);
         setAudioBlob(audioBlob);
         setAudioUrl(audioUrl);
-        
+
         // Criar um arquivo a partir do blob
         const filename = `audio_${Date.now()}.wav`;
         const audioFile = new File([audioBlob], filename, { type: 'audio/wav' });
         setAudioFile(audioFile);
         setSelectedFile(audioFile);
-        
+
         // Parar todos os tracks do stream
         stream.getTracks().forEach(track => track.stop());
       };
@@ -443,7 +445,7 @@ const FloatingChatSupport: React.FC = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      
+
       // Limpar timer
       if (recordingTimerRef.current) {
         clearInterval(recordingTimerRef.current);
@@ -458,14 +460,14 @@ const FloatingChatSupport: React.FC = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      
+
       // Limpar timer
       if (recordingTimerRef.current) {
         clearInterval(recordingTimerRef.current);
         recordingTimerRef.current = null;
       }
       setRecordingTime(0);
-      
+
       // Descartar o áudio
       setAudioBlob(null);
       setAudioUrl(null);
@@ -481,12 +483,12 @@ const FloatingChatSupport: React.FC = () => {
       if (recordingTimerRef.current) {
         clearInterval(recordingTimerRef.current);
       }
-      
+
       // Limpar URLs de objetos
       if (audioUrl) {
         URL.revokeObjectURL(audioUrl);
       }
-      
+
       // Parar gravação se estiver em andamento
       if (mediaRecorderRef.current && isRecording) {
         mediaRecorderRef.current.stop();
@@ -500,7 +502,7 @@ const FloatingChatSupport: React.FC = () => {
     // Criar conteúdo baseado no que está sendo enviado
     let messageText = inputMessage.trim();
     let fileInfo = "";
-    
+
     // Se tiver um arquivo, adicionar informações do arquivo
     if (selectedFile) {
       fileInfo = `[Arquivo anexado: ${selectedFile.name} (${(selectedFile.size / 1024).toFixed(1)}KB, tipo: ${selectedFile.type})]`;
@@ -1058,7 +1060,7 @@ const FloatingChatSupport: React.FC = () => {
                     }
                     return part;
                   })}
-                  
+
                   {/* Se a mensagem contém informações de um arquivo */}
                   {message.text.includes("[Arquivo anexado:") && (
                     <div className="mt-2 p-2 bg-gray-200/50 dark:bg-gray-700/50 rounded text-xs">
@@ -1138,7 +1140,7 @@ const FloatingChatSupport: React.FC = () => {
             Nova conversa
           </Button>
         </div>
-        
+
         {/* Área de visualização de arquivo sendo enviado */}
         {selectedFile && (
           <div className="mb-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-md">
@@ -1175,7 +1177,7 @@ const FloatingChatSupport: React.FC = () => {
             </div>
           </div>
         )}
-        
+
         {/* Área de gravação de áudio */}
         {isRecording && (
           <div className="mb-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
@@ -1205,7 +1207,7 @@ const FloatingChatSupport: React.FC = () => {
             </div>
           </div>
         )}
-        
+
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
             <Input
@@ -1228,7 +1230,7 @@ const FloatingChatSupport: React.FC = () => {
               )}
             </Button>
           </div>
-          
+
           {/* Botões para anexar arquivos e gravar áudio */}
           <div className="flex items-center justify-start gap-2 px-1">
             <input 
@@ -1248,7 +1250,7 @@ const FloatingChatSupport: React.FC = () => {
               <Paperclip className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
               <span className="text-gray-600 dark:text-gray-300">Arquivo</span>
             </Button>
-            
+
             <Button
               variant="ghost"
               size="sm"
@@ -1551,7 +1553,7 @@ const FloatingChatSupport: React.FC = () => {
                 className="border-orange-200 dark:border-orange-700 bg-white dark:bg-gray-800 dark:text-gray-200"
               />
             </div>
-            <div>
+            <div<div>
               <label className="text-sm font-medium mb-1 block dark:text-gray-300">
                 Descrição
               </label>
@@ -1690,12 +1692,12 @@ const FloatingChatSupport: React.FC = () => {
             <div className="flex items-center justify-between p-4 border-b dark:border-gray-800">
               <div className="flex items-center gap-2">
                 <Button
-                  variant="ghost"
+                  variant={activeTab === "home" ? "default" : "ghost"}
                   size="icon"
-                  className="h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                  className={`h-10 w-10 rounded-full mb-4 ${activeTab === "home" ? "bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white" : ""}`}
                   onClick={() => setActiveTab("home")}
                 >
-                  <Home className="h-4 w-4" />
+                  <Home className="h-5 w-5" />
                 </Button>
               </div>
               <div className="flex items-center gap-2">
@@ -1802,21 +1804,8 @@ const FloatingChatSupport: React.FC = () => {
         )}
       </div>
 
-      <style jsx global>{`
-        @keyframes bounce-subtle {
-          0%,
-          100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-5px);
-          }
-        }
-
-        .animate-bounce-subtle {
-          animation: bounce-subtle 2s ease-in-out infinite;
-        }
-
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .custom-scrollbar::-webkit-scrollbar {
           width: 3px;
           height: 3px;
@@ -1866,7 +1855,7 @@ const FloatingChatSupport: React.FC = () => {
             max-width: 75% !important;
           }
         }
-      `}</style>
+      `}} />
     </>
   );
 };
