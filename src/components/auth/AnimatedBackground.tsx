@@ -93,8 +93,8 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
       // Verifica se os nós armazenados são válidos
       if (!Array.isArray(storedNodes) || storedNodes.length === 0) return null;
 
-      // Margem de segurança para manter longe das bordas
-      const margin = Math.min(width, height) * 0.1;
+      // Margem mínima para garantir que as teias não saiam da tela
+      const margin = 2;
       
       // Adapta os nós armazenados ao tamanho atual da tela
       const adaptedNodes = storedNodes.map(node => ({
@@ -157,8 +157,8 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
       const calculatedNodeCount = Math.floor((width * height) / 6000); // Densidade aumentada
       const nodeCount = Math.max(minNodeCount, calculatedNodeCount);
 
-      // Margem de segurança para manter longe das bordas (10% de cada lado)
-      const margin = Math.min(width, height) * 0.1;
+      // Margem mínima para garantir que as teias não saiam da tela
+      const margin = 2;
       
       const newNodes: Node[] = [];
       for (let i = 0; i < nodeCount; i++) {
@@ -353,8 +353,8 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
     // Atualiza a posição dos nós com base na posição do cursor
     const updateNodePositions = () => {
       setNodes(prevNodes => {
-        // Margem de segurança para manter longe das bordas
-        const margin = Math.min(dimensions.width, dimensions.height) * 0.1;
+        // Margem mínima para garantir que as teias não saiam da tela
+        const margin = 2;
         
         const updatedNodes = prevNodes.map(node => {
           let { x, y, fadeState, fadeTimer, opacity } = node;
