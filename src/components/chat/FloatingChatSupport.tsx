@@ -321,7 +321,9 @@ const FloatingChatSupport: React.FC = () => {
   const [message, setMessage] = useState('');
   const [sessionId, setSessionId] = useState('');
   const [isMessageEmpty, setIsMessageEmpty] = useState(true);
-  const [soundEnabled, setSoundEnabled] = useState(true); // Adicione o estado para habilitar/desabilitar sons
+  const [soundEnabled, setSoundEnabled] = useState(true); // Estado para habilitar/desabilitar sons
+  const [editingMessageId, setEditingMessageId] = useState<number | null>(null); // ID da mensagem sendo editada
+  const [editMessageContent, setEditMessageContent] = useState(""); // Conteúdo da mensagem em edição
 
 
   // Configurações da IA
@@ -390,34 +392,39 @@ const FloatingChatSupport: React.FC = () => {
     setUserName(firstName);
     
     // Gerar uma ID de sessão baseada no usuário atual ou criar uma nova
-    const newSessionId = userName || 'anonymous-' + Date.now().toString();
+    const savedSessionId = localStorage.getItem('chatSessionId');
+    const newSessionId = savedSessionId || `chat_${firstName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`;
     setSessionId(newSessionId);
+    
+    if (!savedSessionId) {
+      localStorage.setItem('chatSessionId', newSessionId);
+    }
 
     // Tentar carregar mensagens salvas para este usuário
     const loadSavedMessages = async () => {
       try {
         const chatService = await import('@/services/aiChatService');
 
-        // Usar a nova função getConversationHistory para obter histórico
-        const history = chatService.getConversationHistory(newSessionId);
+        // Usar a função getConversationHistory para obter histórico
+        const history = await chatService.getConversationHistory(newSessionId);
 
-        // Se houver histórico com mensagens de usuário e IA, exibir as últimas mensagens
+        // Se houver histórico com mensagens de usuário e IA, exibir as mensagens
         if (history && history.length > 1) {
-          // Converter de ChatMessage para o formato Message do componente
+          // Converter de ChatMessage do serviço para o formato ChatMessage do componente
           const convertedMessages: ChatMessage[] = history
             .filter(msg => msg.role !== 'system') // Excluir mensagens do sistema
-            .slice(-6) // Pegar apenas as últimas 6 mensagens para não sobrecarregar
-            .map(msg => ({
-              id: Date.now() + Math.random().toString(),
+            .map((msg, index) => ({
+              id: Date.now() + index,
               content: msg.content,
               sender: msg.role === 'user' ? 'user' : 'assistant',
-              timestamp: new Date(),
+              timestamp: msg.timestamp instanceof Date ? msg.timestamp : new Date(),
             }));
 
           if (convertedMessages.length > 0) {
             setMessages(prev => {
-              // Manter a primeira mensagem (boas-vindas) e adicionar o histórico
-              return [prev[0], ...convertedMessages];
+              // Se não houver mensagens convertidas, manter a mensagem de boas-vindas padrão
+              // Caso contrário, usar apenas as mensagens convertidas
+              return convertedMessages.length > 0 ? convertedMessages : prev;
             });
           }
         }
@@ -433,6 +440,92 @@ const FloatingChatSupport: React.FC = () => {
     setIsMessageEmpty(message.trim() === '');
   }, [message]);
 
+  // Função para editar mensagem
+  const startEditingMessage = (messageId: number, content: string) => {
+    setEditingMessageId(messageId);
+    setEditMessageContent(content);
+  };
+
+  // Função para salvar edição de mensagem
+  const saveEditedMessage = async () => {
+    if (!editingMessageId || !editMessageContent.trim()) return;
+
+    // Encontrar a mensagem original e o seu índice
+    const messageIndex = messages.findIndex(msg => msg.id === editingMessageId);
+    if (messageIndex === -1) return;
+    
+    const originalMessage = messages[messageIndex];
+    const nextMessageIndex = messageIndex + 1;
+    
+    // Atualizar a mensagem editada
+    const updatedMessages = [...messages];
+    updatedMessages[messageIndex] = {
+      ...originalMessage,
+      content: editMessageContent,
+      timestamp: new Date() // Atualizar o timestamp
+    };
+    
+    // Se há uma resposta da IA logo após esta mensagem, vamos removê-la
+    // e gerar uma nova resposta baseada na mensagem editada
+    if (nextMessageIndex < messages.length && messages[nextMessageIndex].sender === 'assistant') {
+      // Remover a resposta antiga
+      updatedMessages.splice(nextMessageIndex, 1);
+    }
+    
+    // Atualizar o estado de mensagens
+    setMessages(updatedMessages);
+    
+    // Cancelar o modo de edição
+    setEditingMessageId(null);
+    setEditMessageContent("");
+    
+    // Sinalizar que a IA está digitando
+    setIsTyping(true);
+    
+    try {
+      // Gerar uma nova resposta para a mensagem editada
+      const aiService = await import('@/services/aiChatService');
+      const aiResponse = await aiService.generateAIResponse(
+        editMessageContent,
+        sessionId || 'default_session',
+        {
+          intelligenceLevel: aiIntelligenceLevel,
+          languageStyle: aiLanguageStyle
+        }
+      );
+      
+      // Adicionar a nova resposta da IA
+      setMessages(prevMessages => [
+        ...prevMessages,
+        { 
+          id: Date.now(), 
+          content: aiResponse, 
+          sender: 'assistant', 
+          timestamp: new Date() 
+        }
+      ]);
+    } catch (error) {
+      console.error('Erro ao gerar resposta para mensagem editada:', error);
+      setMessages(prevMessages => [
+        ...prevMessages,
+        { 
+          id: Date.now(), 
+          content: 'Desculpe, estou enfrentando problemas ao responder sua mensagem editada. Por favor, tente novamente mais tarde.', 
+          sender: 'assistant', 
+          timestamp: new Date() 
+        }
+      ]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  // Função para cancelar edição de mensagem
+  const cancelEditMessage = () => {
+    setEditingMessageId(null);
+    setEditMessageContent("");
+  };
+
   // Função para melhorar o prompt com IA
   const improvePrompt = async () => {
     if (!inputMessage.trim()) return;
@@ -446,17 +539,19 @@ const FloatingChatSupport: React.FC = () => {
       
       // Chamar a API para melhorar o prompt
       const improvedPromptText = await aiService.generateAIResponse(
-        `Melhore o seguinte prompt para obter uma resposta mais detalhada e completa. NÃO responda a pergunta, apenas melhore o prompt para torná-lo mais específico e detalhado: "${inputMessage}"`,
+        `Melhore o seguinte prompt para obter uma resposta mais detalhada e completa. 
+        Reescreva mantendo o tom como se EU estivesse fazendo a pergunta para a IA. 
+        Mantenha a primeira pessoa ("eu", "me", "minha") e torne a pergunta mais específica e detalhada: "${inputMessage}"`,
         `improve_prompt_${Date.now()}`,
         {
           intelligenceLevel: 'advanced',
-          languageStyle: 'formal'
+          languageStyle: aiLanguageStyle || 'casual'
         }
       );
       
       // Limpar qualquer formatação que possa ter vindo da resposta
       const cleanedImprovedPrompt = improvedPromptText
-        .replace(/^(Prompt melhorado:|Aqui está uma versão melhorada:|Versão melhorada:)/i, '')
+        .replace(/^(Prompt melhorado:|Aqui está uma versão melhorada:|Versão melhorada:|Reescrita:|Pergunta melhorada:)/i, '')
         .replace(/^["']|["']$/g, '')
         .trim();
       
@@ -516,21 +611,38 @@ const FloatingChatSupport: React.FC = () => {
       }))
     };
 
+    // Gerar sessão única para este chat se ainda não existir
+    if (!sessionId) {
+      // Usar um ID baseado no nome de usuário para melhor rastreamento
+      const newSessionId = `chat_${userName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`;
+      setSessionId(newSessionId);
+      localStorage.setItem('chatSessionId', newSessionId);
+    }
+
+    // Atualizar a interface com a mensagem do usuário
     setMessages(prevMessages => [...prevMessages, userMessage]);
     setInputMessage('');
     setSelectedFiles([]);
     setIsTyping(true);
 
     try {
-      // Gerar sessão única para este chat
-      if (!sessionId) {
-        const newSessionId = `chat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        setSessionId(newSessionId);
-        localStorage.setItem('chatSessionId', newSessionId);
-      }
-
+      // Importar o serviço AI dinamicamente
+      const aiService = await import('@/services/aiChatService');
+      
+      // Armazenar o histórico da conversa no serviço
+      const currentHistory = await aiService.getConversationHistory(sessionId || 'default_session');
+      
+      // Adicionar a mensagem do usuário ao histórico
+      currentHistory.push({ 
+        role: 'user', 
+        content: fullMessage 
+      });
+      
+      // Persistir o histórico atualizado
+      await aiService.saveConversationHistory(sessionId || 'default_session', currentHistory);
+      
       // Chamar a API para obter resposta com opções personalizadas
-      const aiResponse = await generateAIResponse(
+      const aiResponse = await aiService.generateAIResponse(
         fullMessage,
         sessionId || 'default_session',
         {
@@ -541,19 +653,34 @@ const FloatingChatSupport: React.FC = () => {
 
       // Reproduzir som se estiver ativado
       if (soundEnabled) {
-        // playMessageSound(); // Função playMessageSound ainda não implementada
-        console.log('Sound would play here if implemented')
+        try {
+          const audioElement = new Audio('/message-sound.mp3');
+          audioElement.volume = 0.5;
+          await audioElement.play();
+        } catch (audioError) {
+          console.log('Não foi possível reproduzir o som:', audioError);
+        }
       }
 
-      setMessages(prevMessages => [
-        ...prevMessages,
-        { 
-          id: Date.now(), 
-          content: aiResponse, 
-          sender: 'assistant', 
-          timestamp: new Date() 
-        }
-      ]);
+      // Adicionar a resposta da IA à interface
+      const assistantMessage = { 
+        id: Date.now(), 
+        content: aiResponse, 
+        sender: 'assistant', 
+        timestamp: new Date() 
+      };
+      
+      setMessages(prevMessages => [...prevMessages, assistantMessage]);
+      
+      // Atualizar o histórico com a resposta da IA
+      currentHistory.push({ 
+        role: 'assistant', 
+        content: aiResponse 
+      });
+      
+      // Persistir o histórico completo
+      await aiService.saveConversationHistory(sessionId || 'default_session', currentHistory);
+      
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
       setMessages(prevMessages => [
@@ -1156,56 +1283,107 @@ const FloatingChatSupport: React.FC = () => {
                   </Avatar>
                 </div>
               )}
-              <div
-                className={`max-w-[75%] rounded-lg px-3 py-2 ${message.sender === "user" ? "bg-blue-500 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200"}`}
-              >
-                <div 
-                  className="message-content whitespace-pre-wrap" 
-                  dangerouslySetInnerHTML={{ 
-                    __html: message.content
-                      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                      .replace(/\_(.*?)\_/g, '<em>$1</em>')
-                      .replace(/\~\~(.*?)\~\~/g, '<del>$1</del>')
-                      .replace(/\`(.*?)\`/g, '<code class="bg-black/10 dark:bg-white/10 rounded px-1">$1</code>')
-                      .replace(/\n/g, '<br />')
-                      .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" class="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>')
-                  }} 
-                />
-                {message.files && message.files.length > 0 && (
-                  <div className="mt-2 space-y-2">
-                    {message.files.map((file, index) => (
-                      <div key={`${file.name}-${index}`} className="flex items-center bg-opacity-20 bg-black rounded p-2 hover:bg-opacity-30 transition-all">
-                        <div className="mr-2 flex-shrink-0">
-                          {file.type.startsWith('image/') && <Image className="h-4 w-4" />}
-                          {file.type.startsWith('video/') && <Video className="h-4 w-4" />}
-                          {file.type.startsWith('audio/') && <Music className="h-4 w-4" />}
-                          {(!file.type.startsWith('image/') && !file.type.startsWith('video/') && !file.type.startsWith('audio/')) && <File className="h-4 w-4" />}
-                        </div>
-                        <div className="overflow-hidden text-sm">
-                          <a 
-                            href={file.url} 
-                            download={file.name} 
-                            className={`hover:underline font-medium truncate block ${message.sender === "user" ? "text-white" : "text-blue-500"}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {file.name.length > 20 ? file.name.substring(0, 17) + '...' : file.name}
-                          </a>
-                          <span className="text-xs opacity-70">
-                            {(file.size / 1024).toFixed(1)} KB
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+              
+              {editingMessageId === message.id && message.sender === "user" ? (
+                <div className="max-w-[75%] bg-blue-600 text-white p-2 rounded-lg">
+                  <textarea
+                    value={editMessageContent}
+                    onChange={(e) => setEditMessageContent(e.target.value)}
+                    className="w-full bg-blue-500 text-white p-2 rounded border border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    rows={3}
+                  />
+                  <div className="flex justify-end mt-2 space-x-2">
+                    <Button 
+                      size="sm" 
+                      variant="secondary"
+                      className="text-xs py-1 px-2 h-auto"
+                      onClick={cancelEditMessage}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button 
+                      size="sm"
+                      className="text-xs py-1 px-2 h-auto bg-green-600 hover:bg-green-700 text-white"
+                      onClick={saveEditedMessage}
+                    >
+                      Salvar
+                    </Button>
                   </div>
-                )}
-                <div className="text-xs opacity-70 mt-1 text-right">
-                  {message.timestamp.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
                 </div>
-              </div>
+              ) : (
+                <div
+                  className={`max-w-[75%] rounded-lg px-3 py-2 ${message.sender === "user" ? "bg-blue-500 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200"}`}
+                >
+                  {message.sender === "user" && (
+                    <div className="flex justify-end mb-1 opacity-0 hover:opacity-100 transition-opacity">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-5 w-5 p-0 text-blue-100 hover:text-white hover:bg-blue-600 rounded-full"
+                        onClick={() => startEditingMessage(message.id, message.content)}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                          className="w-3 h-3"
+                        >
+                          <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" />
+                          <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" />
+                        </svg>
+                      </Button>
+                    </div>
+                  )}
+                  <div 
+                    className="message-content whitespace-pre-wrap" 
+                    dangerouslySetInnerHTML={{ 
+                      __html: message.content
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\_(.*?)\_/g, '<em>$1</em>')
+                        .replace(/\~\~(.*?)\~\~/g, '<del>$1</del>')
+                        .replace(/\`(.*?)\`/g, '<code class="bg-black/10 dark:bg-white/10 rounded px-1">$1</code>')
+                        .replace(/\n/g, '<br />')
+                        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>')
+                        .replace(/(https?:\/\/[^\s]+)(?!\))/g, '<a href="$1" class="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>')
+                    }} 
+                  />
+                  {message.files && message.files.length > 0 && (
+                    <div className="mt-2 space-y-2">
+                      {message.files.map((file, index) => (
+                        <div key={`${file.name}-${index}`} className="flex items-center bg-opacity-20 bg-black rounded p-2 hover:bg-opacity-30 transition-all">
+                          <div className="mr-2 flex-shrink-0">
+                            {file.type.startsWith('image/') && <Image className="h-4 w-4" />}
+                            {file.type.startsWith('video/') && <Video className="h-4 w-4" />}
+                            {file.type.startsWith('audio/') && <Music className="h-4 w-4" />}
+                            {(!file.type.startsWith('image/') && !file.type.startsWith('video/') && !file.type.startsWith('audio/')) && <File className="h-4 w-4" />}
+                          </div>
+                          <div className="overflow-hidden text-sm">
+                            <a 
+                              href={file.url} 
+                              download={file.name} 
+                              className={`hover:underline font-medium truncate block ${message.sender === "user" ? "text-white" : "text-blue-500"}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {file.name.length > 20 ? file.name.substring(0, 17) + '...' : file.name}
+                            </a>
+                            <span className="text-xs opacity-70">
+                              {(file.size / 1024).toFixed(1)} KB
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="text-xs opacity-70 mt-1 text-right">
+                    {message.timestamp.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </div>
+                </div>
+              )}
+              
               {message.sender === "user" && (
                 <div className="w-8 h-8 rounded-full overflow-hidden ml-2 flex-shrink-0">
                   <Avatar>

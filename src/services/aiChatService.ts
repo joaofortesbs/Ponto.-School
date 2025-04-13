@@ -17,6 +17,29 @@ export interface ChatMessage {
 // Histórico de conversas
 let conversationHistory: Record<string, ChatMessage[]> = {};
 
+// Inicializar o histórico do localStorage quando o módulo carrega
+try {
+  const savedSessions = localStorage.getItem('aiChatSessions');
+  if (savedSessions) {
+    const parsedSessions = JSON.parse(savedSessions);
+    // Verificar se é um objeto válido
+    if (parsedSessions && typeof parsedSessions === 'object') {
+      // Para cada sessão, converter as datas de string para Date
+      Object.keys(parsedSessions).forEach(sessionId => {
+        if (Array.isArray(parsedSessions[sessionId])) {
+          conversationHistory[sessionId] = parsedSessions[sessionId].map(msg => ({
+            ...msg,
+            timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date()
+          }));
+        }
+      });
+      console.log(`Carregadas ${Object.keys(conversationHistory).length} sessões de chat do localStorage`);
+    }
+  }
+} catch (error) {
+  console.error('Erro ao carregar histórico de conversas do localStorage:', error);
+}
+
 // Função para obter dados do usuário atual com acesso expandido e completo
 async function getUserContext() {
   try {
@@ -582,7 +605,7 @@ export function clearConversationHistory(sessionId: string): void {
 }
 
 // Obter histórico da conversa
-export function getConversationHistory(sessionId: string): ChatMessage[] {
+export async function getConversationHistory(sessionId: string): Promise<ChatMessage[]> {
   // Primeiro verifica se já está carregado na memória
   if (conversationHistory[sessionId]) {
     return conversationHistory[sessionId];
@@ -593,8 +616,47 @@ export function getConversationHistory(sessionId: string): ChatMessage[] {
     const savedHistory = localStorage.getItem(`conversationHistory_${sessionId}`);
     if (savedHistory) {
       const parsedHistory = JSON.parse(savedHistory) as ChatMessage[];
-      conversationHistory[sessionId] = parsedHistory;
-      return parsedHistory;
+      // Converter timestamps de string para Date se necessário
+      const processedHistory = parsedHistory.map(msg => ({
+        ...msg,
+        timestamp: msg.timestamp ? (typeof msg.timestamp === 'string' ? new Date(msg.timestamp) : msg.timestamp) : new Date()
+      }));
+      conversationHistory[sessionId] = processedHistory;
+      return processedHistory;
+    }
+    
+    // Se não encontrou no localStorage, tenta recuperar do Supabase
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase;
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+      
+      if (userId) {
+        const { data, error } = await supabase
+          .from('ai_chat_history')
+          .select('messages')
+          .eq('user_id', userId)
+          .eq('session_id', sessionId)
+          .single();
+          
+        if (!error && data?.messages) {
+          const supabaseHistory = data.messages as ChatMessage[];
+          // Converter timestamps de string para Date
+          const processedHistory = supabaseHistory.map(msg => ({
+            ...msg,
+            timestamp: msg.timestamp ? (typeof msg.timestamp === 'string' ? new Date(msg.timestamp) : msg.timestamp) : new Date()
+          }));
+          
+          conversationHistory[sessionId] = processedHistory;
+          
+          // Atualizar também o localStorage
+          localStorage.setItem(`conversationHistory_${sessionId}`, JSON.stringify(processedHistory));
+          
+          return processedHistory;
+        }
+      }
+    } catch (supabaseError) {
+      console.log("Erro ao recuperar histórico do Supabase:", supabaseError);
     }
   } catch (error) {
     console.error("Erro ao recuperar histórico do localStorage:", error);
@@ -607,17 +669,23 @@ export function getConversationHistory(sessionId: string): ChatMessage[] {
 function fixPlatformLinks(text: string): string {
   const platformLinks = {
     'Portal de Estudos': 'https://pontoschool.com/portal',
+    'Portal': 'https://pontoschool.com/portal',
     'Agenda': 'https://pontoschool.com/agenda',
     'Turmas': 'https://pontoschool.com/turmas',
     'Biblioteca': 'https://pontoschool.com/biblioteca',
     'Perfil': 'https://pontoschool.com/profile',
+    'Meu Perfil': 'https://pontoschool.com/profile',
     'Configurações': 'https://pontoschool.com/configuracoes',
+    'Minhas Configurações': 'https://pontoschool.com/configuracoes',
     'Dashboard': 'https://pontoschool.com/dashboard',
     'Epictus IA': 'https://pontoschool.com/epictus-ia',
     'Mentor IA': 'https://pontoschool.com/mentor-ia',
     'Planos de Estudo': 'https://pontoschool.com/planos-estudo',
+    'Plano de Estudos': 'https://pontoschool.com/planos-estudo',
     'Conquistas': 'https://pontoschool.com/conquistas',
+    'Minhas Conquistas': 'https://pontoschool.com/conquistas',
     'Carteira': 'https://pontoschool.com/carteira',
+    'Minha Carteira': 'https://pontoschool.com/carteira',
     'Mercado': 'https://pontoschool.com/mercado',
     'Organização': 'https://pontoschool.com/organizacao',
     'Comunidades': 'https://pontoschool.com/comunidades',
@@ -629,20 +697,128 @@ function fixPlatformLinks(text: string): string {
     'Estudos': 'https://pontoschool.com/estudos'
   };
 
-  let newText = text;
+  // Primeiro, procura por textos específicos que pedem redirecionamento
+  const redirectPatterns = [
+    /(?:me\s+(?:redirecione|encaminhe|leve|direcione|mande|envie)\s+(?:para|ao|à|a|até))\s+(?:a\s+)?(?:página\s+(?:de|do|da)\s+)?([a-zà-ú\s]+)/gi,
+    /(?:quero\s+(?:ir|acessar|entrar|ver))\s+(?:a\s+)?(?:página\s+(?:de|do|da)\s+)?([a-zà-ú\s]+)/gi,
+    /(?:me\s+(?:mostre|mostra))\s+(?:a\s+)?(?:página\s+(?:de|do|da)\s+)?([a-zà-ú\s]+)/gi,
+    /(?:abrir?|abra|acesse|acessar|ver|veja)\s+(?:a\s+)?(?:página\s+(?:de|do|da)\s+)?([a-zà-ú\s]+)/gi
+  ];
+
+  // Aplicar padrões de redirecionamento
+  for (const pattern of redirectPatterns) {
+    text = text.replace(pattern, (match, sectionName) => {
+      const normalizedName = sectionName.trim();
+      // Verificar se o nome normalizado corresponde a alguma chave do objeto platformLinks
+      for (const key in platformLinks) {
+        if (normalizedName.toLowerCase() === key.toLowerCase() || 
+            key.toLowerCase().includes(normalizedName.toLowerCase()) || 
+            normalizedName.toLowerCase().includes(key.toLowerCase())) {
+          return `Você pode acessar [${key}](${platformLinks[key]})`;
+        }
+      }
+      return match; // Se não encontrou correspondência, mantém o texto original
+    });
+  }
+
+  // Depois, substitui todas as menções das seções por links formatados
+  const linkPatterns = {};
+  
+  // Criar regex específica para cada palavra-chave, considerando espaços antes e depois
   for (const key in platformLinks) {
-    const regex = new RegExp(`\\b(${key})\\b`, 'gi'); // Busca palavras inteiras
-    newText = newText.replace(regex, `[$1](${platformLinks[key]})`);
+    // Evita conflitos com palavras já substituídas em Markdown
+    const escapedKey = key.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+    linkPatterns[key] = new RegExp(`(?<![\\[\\(])\\b(${escapedKey})\\b(?!\\]\\()`, 'gi');
+  }
+  
+  // Aplicar substituições de forma ordenada (das mais longas para as mais curtas)
+  const orderedKeys = Object.keys(platformLinks).sort((a, b) => b.length - a.length);
+  
+  let newText = text;
+  for (const key of orderedKeys) {
+    if (linkPatterns[key]) {
+      // Verificar se o texto já contém um link Markdown para essa seção
+      const markdownLinkPattern = new RegExp(`\\[${key}\\]\\(${platformLinks[key].replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\)`, 'gi');
+      if (!markdownLinkPattern.test(newText)) {
+        newText = newText.replace(linkPatterns[key], `[$1](${platformLinks[key]})`);
+      }
+    }
   }
 
   return newText;
 }
 
 
-// Função para salvar o histórico da conversa no localStorage
-function saveConversationHistory(sessionId: string, history: ChatMessage[]): void {
+// Função para salvar o histórico da conversa no localStorage e sincronizar com Supabase
+async function saveConversationHistory(sessionId: string, history: ChatMessage[]): Promise<void> {
   try {
+    // Salvar localmente
+    conversationHistory[sessionId] = history;
+    
+    // Salvar todas as sessões em um único item no localStorage
+    const allSessions = { ...conversationHistory };
+    localStorage.setItem('aiChatSessions', JSON.stringify(allSessions));
+    
+    // Também salvar individualmente para compatibilidade com código existente
     localStorage.setItem(`conversationHistory_${sessionId}`, JSON.stringify(history));
+    
+    // Sincronizar com Supabase se disponível
+    try {
+      const supabase = (await import('@/lib/supabase')).supabase;
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+      
+      if (userId) {
+        // Verificar se a tabela existe
+        const { error: tableCheckError } = await supabase.rpc(
+          'execute_sql',
+          { 
+            sql_query: `SELECT to_regclass('public.ai_chat_history') IS NOT NULL as exists` 
+          }
+        );
+        
+        if (!tableCheckError) {
+          // Criar tabela se não existir
+          await supabase.rpc(
+            'execute_sql',
+            { 
+              sql_query: `
+                CREATE TABLE IF NOT EXISTS public.ai_chat_history (
+                  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+                  session_id TEXT NOT NULL,
+                  messages JSONB NOT NULL,
+                  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                  UNIQUE(user_id, session_id)
+                );
+                CREATE INDEX IF NOT EXISTS idx_ai_chat_history_user_id ON public.ai_chat_history(user_id);
+                CREATE INDEX IF NOT EXISTS idx_ai_chat_history_session_id ON public.ai_chat_history(session_id);
+              `
+            }
+          );
+          
+          // Upsert do histórico da conversa
+          const { error } = await supabase
+            .from('ai_chat_history')
+            .upsert({
+              user_id: userId,
+              session_id: sessionId,
+              messages: history,
+              updated_at: new Date().toISOString()
+            }, {
+              onConflict: 'user_id,session_id',
+              ignoreDuplicates: false
+            });
+            
+          if (error) {
+            console.error("Erro ao sincronizar histórico com Supabase:", error);
+          }
+        }
+      }
+    } catch (syncError) {
+      console.log("Supabase não disponível para sincronização:", syncError);
+    }
   } catch (error) {
     console.error("Erro ao salvar o histórico da conversa:", error);
   }
