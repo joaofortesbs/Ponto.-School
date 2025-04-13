@@ -122,7 +122,7 @@ interface CommonQuestion {
 const defaultMessages: ChatMessage[] = [
   {
     id: 1,
-    content: "Oi! Sou o Epictus IA, seu assistente descolado aqui na Ponto.School! 😊 Tô pronto pra te ajudar com o que precisar, é só mandar! Como posso facilitar sua vida hoje?",
+    content: "Oi! Sou o Epictus IA do suporte, seu assistente descolado aqui na Ponto.School! 😊 Estou aqui para te ajudar com dúvidas sobre a plataforma, navegação, funcionalidades e também posso responder questões sobre conteúdos educacionais. Como posso facilitar sua experiência hoje?",
     sender: "assistant",
     timestamp: new Date(),
   },
@@ -1298,11 +1298,11 @@ const FloatingChatSupport: React.FC = () => {
               {message.sender === "assistant" && (
                 <div className="w-10 h-10 rounded-full overflow-hidden mr-2 flex-shrink-0">
                   <Avatar>
-                    <AvatarImage src="/images/tempo-image-20250329T044440497Z.png" alt="Epictus IA" />
+                    <AvatarImage src="/images/tempo-image-20250329T044440497Z.png" alt="Epictus IA Suporte" />
                     <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] text-white">
-                      <Bot className="h-5 w-5" />
-                      <span className="absolute -right-1 -bottom-1 w-3.5 h-3.5 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800">
-                        <Sparkles className="h-2 w-2 text-white" />
+                      <LifeBuoy className="h-5 w-5" />
+                      <span className="absolute -right-1 -bottom-1 w-3.5 h-3.5 bg-green-500 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800">
+                        <Bot className="h-2 w-2 text-white" />
                       </span>
                     </AvatarFallback>
                   </Avatar>
