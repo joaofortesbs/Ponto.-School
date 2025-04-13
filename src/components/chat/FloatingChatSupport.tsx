@@ -1508,7 +1508,7 @@ const FloatingChatSupport: React.FC = () => {
 
   const renderSuggestionsContent = () => (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900 dark:to-orange-800">
+      <div className="p-2 border-b bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900 dark:to-orange-800">
         <div className="flex justify-between items-center mb-2">
           <div className="flex items-center gap-1">
             <Lightbulb className="h-3.5 w-3.5 text-orange-500" />
@@ -1553,7 +1553,7 @@ const FloatingChatSupport: React.FC = () => {
                 className="border-orange-200 dark:border-orange-700 bg-white dark:bg-gray-800 dark:text-gray-200"
               />
             </div>
-            <div<div>
+            <div>
               <label className="text-sm font-medium mb-1 block dark:text-gray-300">
                 Descrição
               </label>
