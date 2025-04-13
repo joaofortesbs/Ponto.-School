@@ -145,18 +145,35 @@ export default function Sidebar({
             )}
           >
             <div className="h-16 flex items-center justify-center w-full">
-              <img
-                src="/images/ponto-school-logo.png"
-                alt="Logo Ponto School"
-                className="h-12 w-auto object-contain"
-                loading="eager"
-                fetchpriority="high"
-                onError={(e) => {
-                  console.error("Erro ao renderizar logo no Sidebar");
-                  // Tentar novamente com um timestamp para evitar cache
-                  e.currentTarget.src = "/images/ponto-school-logo.png?retry=" + Date.now();
-                }}
-              />
+              {customLogo ? (
+                <img
+                  src={customLogo}
+                  alt="Logo Ponto School"
+                  className="h-12 w-auto object-contain"
+                  loading="eager"
+                  fetchpriority="high"
+                  onError={(e) => {
+                    console.error("Erro ao renderizar logo no Sidebar");
+                    // Tentar novamente com um timestamp para evitar cache
+                    const fallbackSrc = "/images/ponto-school-logo.png?retry=" + Date.now();
+                    e.currentTarget.src = fallbackSrc;
+                    setCustomLogo(fallbackSrc);
+                  }}
+                />
+              ) : (
+                <img
+                  src="/images/ponto-school-logo.png"
+                  alt="Logo Ponto School"
+                  className="h-12 w-auto object-contain"
+                  loading="eager"
+                  fetchpriority="high"
+                  onError={(e) => {
+                    console.error("Erro ao renderizar logo no Sidebar");
+                    // Tentar novamente com um timestamp para evitar cache
+                    e.currentTarget.src = "/images/ponto-school-logo.png?retry=" + Date.now();
+                  }}
+                />
+              )}
             </div>
           </div>
           <Button

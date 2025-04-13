@@ -122,7 +122,11 @@ export function preloadLogo(
   onSuccess?: (url: string) => void,
   onError?: () => void,
 ): void {
-  const versionedUrl = getVersionedLogoUrl(logoUrl, version);
+  // Verificar se a URL é válida ou usar o padrão
+  const targetLogoUrl = logoUrl || DEFAULT_LOGO;
+  const versionedUrl = getVersionedLogoUrl(targetLogoUrl, version);
+  
+  console.log("Preloading logo:", versionedUrl);
 
   const preloadImage = new Image();
   preloadImage.src = versionedUrl;
@@ -130,13 +134,31 @@ export function preloadLogo(
   preloadImage.crossOrigin = "anonymous";
 
   preloadImage.onload = () => {
-    console.log("Logo preloaded successfully");
-    saveLogoToLocalStorage(logoUrl, version);
+    console.log("Logo preloaded successfully:", versionedUrl);
+    saveLogoToLocalStorage(targetLogoUrl, version);
     if (onSuccess) onSuccess(versionedUrl);
   };
 
   preloadImage.onerror = () => {
     console.error(`Failed to preload logo with version ${version}`);
-    if (onError) onError();
+    
+    // Em caso de erro, tentar com o caminho absoluto da logo padrão
+    const fallbackUrl = DEFAULT_LOGO + "?fallback=true&t=" + Date.now();
+    console.log("Trying fallback logo:", fallbackUrl);
+    
+    const fallbackImage = new Image();
+    fallbackImage.src = fallbackUrl;
+    fallbackImage.fetchPriority = "high";
+    
+    fallbackImage.onload = () => {
+      console.log("Fallback logo loaded successfully");
+      saveLogoToLocalStorage(fallbackUrl, version);
+      if (onSuccess) onSuccess(fallbackUrl);
+    };
+    
+    fallbackImage.onerror = () => {
+      console.error("Even fallback logo failed to load");
+      if (onError) onError();
+    };
   };
 }

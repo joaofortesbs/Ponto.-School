@@ -23,24 +23,56 @@ export function LogoManager() {
       const fallbackLogo = PONTO_SCHOOL_LOGO_BASE64;
       
       try {
-        // Forçar o uso da logo padrão mais recente
-        const currentVersion = getLogoVersion() + 1; // Incrementar versão para forçar atualização
-        const defaultLogo = DEFAULT_LOGO;
-        const versionedUrl = getVersionedLogoUrl(defaultLogo, currentVersion);
+        // Verificar primeiro se a imagem enviada pelo usuário está disponível
+        const userUploadedLogo = "/images/ponto-school-logo.png";
+        const checkUserLogo = new Image();
+        checkUserLogo.src = userUploadedLogo;
         
-        // Salvar a nova versão no localStorage
-        saveLogoToLocalStorage(defaultLogo, currentVersion);
-        
-        window.PONTO_SCHOOL_CONFIG = {
-          defaultLogo: versionedUrl,
-          logoLoaded: true,
-          logoVersion: currentVersion,
+        // Tentar carregar a imagem enviada pelo usuário
+        checkUserLogo.onload = () => {
+          console.log("Imagem enviada pelo usuário carregada com sucesso:", userUploadedLogo);
+          const currentVersion = getLogoVersion() + 1;
+          const versionedUrl = getVersionedLogoUrl(userUploadedLogo, currentVersion);
+          
+          // Salvar a nova versão no localStorage
+          saveLogoToLocalStorage(userUploadedLogo, currentVersion);
+          
+          window.PONTO_SCHOOL_CONFIG = {
+            defaultLogo: versionedUrl,
+            logoLoaded: true,
+            logoVersion: currentVersion,
+          };
+          
+          setLogoLoaded(true);
+          document.dispatchEvent(
+            new CustomEvent("logoLoaded", { detail: versionedUrl }),
+          );
         };
         
-        setLogoLoaded(true);
-        document.dispatchEvent(
-          new CustomEvent("logoLoaded", { detail: versionedUrl }),
-        );
+        // Em caso de falha, usar a logo padrão
+        checkUserLogo.onerror = () => {
+          console.log("Falha ao carregar a imagem do usuário, usando a logo padrão");
+          
+          // Forçar o uso da logo padrão mais recente
+          const currentVersion = getLogoVersion() + 1; // Incrementar versão para forçar atualização
+          const defaultLogo = DEFAULT_LOGO;
+          const versionedUrl = getVersionedLogoUrl(defaultLogo, currentVersion);
+          
+          // Salvar a nova versão no localStorage
+          saveLogoToLocalStorage(defaultLogo, currentVersion);
+          
+          window.PONTO_SCHOOL_CONFIG = {
+            defaultLogo: versionedUrl,
+            logoLoaded: true,
+            logoVersion: currentVersion,
+          };
+          
+          setLogoLoaded(true);
+          document.dispatchEvent(
+            new CustomEvent("logoLoaded", { detail: versionedUrl }),
+          );
+        };
+        
         return;
 
         // Tentar buscar a logo do Supabase

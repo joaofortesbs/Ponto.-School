@@ -16,45 +16,82 @@ export function LogoPreloader() {
   useEffect(() => {
     // Sistema avançado de preload da logo com redundância
     const preloadLogoWithRetry = () => {
-      // Use the utility function to preload with versioning
-      preloadLogoUtil(
-        defaultLogo,
-        currentVersion + (retryCount > 0 ? retryCount : 0),
-        (versionedUrl) => {
-          console.log("Logo preloaded successfully in LogoPreloader component");
-          // Logo is already saved to localStorage in the utility function
-
+      // Verificar a existência da imagem enviada pelo usuário primeiro
+      const userLogoPath = "/images/ponto-school-logo.png";
+      
+      console.log("Tentando carregar a logo do usuário:", userLogoPath);
+      
+      const userLogoImg = new Image();
+      userLogoImg.src = userLogoPath + "?v=" + Date.now(); // Adicionar timestamp para evitar cache
+      userLogoImg.fetchPriority = "high";
+      userLogoImg.crossOrigin = "anonymous";
+      
+      userLogoImg.onload = () => {
+        console.log("Logo do usuário carregada com sucesso:", userLogoPath);
+        
+        // Salvar a logo no localStorage
+        try {
+          localStorage.setItem("logoPreloaded", "true");
+          localStorage.setItem("customLogo", userLogoPath);
+          localStorage.setItem("sidebarCustomLogo", userLogoPath);
+          localStorage.setItem("pontoSchoolLogo", userLogoPath);
+          
           // Notificar que a logo foi carregada
           document.dispatchEvent(
-            new CustomEvent("logoLoaded", { detail: versionedUrl }),
+            new CustomEvent("logoLoaded", { detail: userLogoPath }),
           );
-        },
-        () => {
-          console.error(`Failed to preload logo (attempt ${retryCount + 1})`);
-          if (retryCount < 3) {
-            // Tentar novamente após um pequeno atraso com incremento na versão
-            setTimeout(() => {
-              setRetryCount((prev) => prev + 1);
-            }, 1000);
-          } else {
-            // Após várias tentativas, usar um fallback
-            console.warn(
-              "Using fallback for logo after multiple failed attempts",
-            );
-            try {
-              // Usar null para indicar que devemos mostrar o texto como fallback
-              localStorage.setItem("logoPreloaded", "false");
-              localStorage.setItem("customLogo", "null");
-              localStorage.setItem("sidebarCustomLogo", "null");
+        } catch (e) {
+          console.error("Erro ao salvar logo no localStorage:", e);
+        }
+      };
+      
+      userLogoImg.onerror = () => {
+        console.warn("Erro ao carregar a logo do usuário, usando função de preload padrão");
+        
+        // Usar a função utilitária para preload com versionamento como fallback
+        preloadLogoUtil(
+          defaultLogo,
+          currentVersion + (retryCount > 0 ? retryCount : 0),
+          (versionedUrl) => {
+            console.log("Logo preloaded successfully in LogoPreloader component");
+            // Logo is already saved to localStorage in the utility function
 
-              // Notificar que a logo falhou ao carregar
-              document.dispatchEvent(new CustomEvent("logoLoadFailed"));
-            } catch (e) {
-              console.error("Failed to set fallback in localStorage", e);
+            // Notificar que a logo foi carregada
+            document.dispatchEvent(
+              new CustomEvent("logoLoaded", { detail: versionedUrl }),
+            );
+          },
+          () => {
+            console.error(`Failed to preload logo (attempt ${retryCount + 1})`);
+            if (retryCount < 3) {
+              // Tentar novamente após um pequeno atraso com incremento na versão
+              setTimeout(() => {
+                setRetryCount((prev) => prev + 1);
+              }, 1000);
+            } else {
+              // Após várias tentativas, usar a logo de fallback do padrão
+              console.warn(
+                "Using fallback for logo after multiple failed attempts",
+              );
+              try {
+                const fallbackLogo = "/images/ponto-school-logo.png?fallback=true&t=" + Date.now();
+                localStorage.setItem("logoPreloaded", "true");
+                localStorage.setItem("customLogo", fallbackLogo);
+                localStorage.setItem("sidebarCustomLogo", fallbackLogo);
+                localStorage.setItem("pontoSchoolLogo", fallbackLogo);
+
+                // Notificar que estamos usando o fallback
+                document.dispatchEvent(
+                  new CustomEvent("logoLoaded", { detail: fallbackLogo })
+                );
+              } catch (e) {
+                console.error("Failed to set fallback in localStorage", e);
+                document.dispatchEvent(new CustomEvent("logoLoadFailed"));
+              }
             }
-          }
-        },
-      );
+          },
+        );
+      };
     };
 
     // Executar o preload
