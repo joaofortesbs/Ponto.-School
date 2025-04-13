@@ -99,192 +99,22 @@ function ProtectedRoute({ children }) {
   return isAuthenticated ? children : null;
 }
 
+// Hooks específicos para lógica de inicialização do App
+import { useAppInitialization } from "@/hooks/useAppInitialization";
+import { useAuthRedirection } from "@/hooks/useAuthRedirection";
+import { useWelcomeModal } from "@/hooks/useWelcomeModal";
+
 function App() {
   const location = useLocation();
-  const [isLoading, setIsLoading] = useState(false);
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false); // Added state
-  const [isFirstLogin, setIsFirstLogin] = useState(false); // Added state
-
-
-  useEffect(() => {
-    console.log("App carregado com sucesso!");
-
-    // Verificação de conexão com Supabase
-    const checkConnection = async () => {
-      try {
-        // Tentar verificar conexão com Supabase (com tratamento de erro)
-        try {
-          const { checkSupabaseConnection, setupSupabaseHealthCheck } = await import('@/lib/supabase');
-
-          // Primeiro configurar verificação de saúde (apenas em desenvolvimento)
-          if (import.meta.env.DEV) {
-            await setupSupabaseHealthCheck();
-          }
-
-          const isConnected = await checkSupabaseConnection();
-
-          if (!isConnected) {
-            console.warn("Aviso: Falha na conexão com o Supabase. A aplicação continuará funcionando com dados locais.");
-          } else {
-            console.log("Conexão com Supabase estabelecida com sucesso!");
-          }
-        } catch (connectionError) {
-          console.warn("Aviso: Erro ao verificar conexão com Supabase:", connectionError);
-        }
-      } catch (error) {
-        console.error("Connection check error:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    // Definir um timeout para garantir que a aplicação será carregada mesmo se houver problemas
-    const loadingTimeout = setTimeout(() => {
-      setIsLoading(false);
-      console.log("Timeout de carregamento atingido. Forçando renderização.");
-    }, 3000);
-
-    checkConnection();
-
-    // Verificar logout
-    const handleLogout = () => {
-      localStorage.removeItem('auth_status');
-      localStorage.removeItem('auth_checked');
-    };
-
-    window.addEventListener('logout', handleLogout);
-
-    // Limpar timeout se a verificação terminar antes
-    return () => {
-      clearTimeout(loadingTimeout);
-      window.removeEventListener('logout', handleLogout);
-    };
-  }, []);
-
-  // Rotas de autenticação
-  const isAuthRoute = [
-    "/login",
-    "/register",
-    "/forgot-password",
-    "/reset-password",
-    "/select-plan",
-    "/admin/db-console",
-  ].some((route) => location.pathname.startsWith(route));
-
-  // Verificar se está na rota raiz e redirecionar para login se não estiver autenticado
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const checkRootRoute = async () => {
-      if (location.pathname === "/") {
-        const isAuth = await checkAuthentication();
-        if (!isAuth) {
-          navigate('/login', { replace: true });
-        }
-      }
-    };
-
-    checkRootRoute();
-  }, [location.pathname, navigate]);
-
-  useEffect(() => {
-    // Função que previne a rolagem quando o modal está aberto
-    const preventScroll = () => {
-      document.body.classList.add('modal-open');
-    };
-
-    // Função que restaura a rolagem quando o modal é fechado
-    const restoreScroll = () => {
-      document.body.classList.remove('modal-open');
-    };
-
-    const checkAuth = async () => {
-      try {
-        const isAuthenticated = await checkAuthentication();
-
-        // Verificar a rota atual
-        const isAuthRoute = [
-          "/login",
-          "/register",
-          "/forgot-password",
-          "/reset-password",
-          "/select-plan",
-        ].some((route) => location.pathname.startsWith(route));
-
-        // Não mostrar o modal nas rotas de autenticação
-        if (isAuthRoute) {
-          setShowWelcomeModal(false);
-          // Limpar sessão apenas se estiver deslogando para garantir novo modal ao logar
-          if (location.pathname === "/login") {
-            sessionStorage.removeItem('welcomeModalShown');
-          }
-          restoreScroll();
-          return;
-        }
-
-        if (isAuthenticated) {
-          // Obter ID do usuário atual para controle de primeiro login por conta
-          const { data: { session } } = await supabase.auth.getSession();
-          const currentUserId = session?.user?.id;
-
-          if (!currentUserId) return;
-
-          // Chave específica para este usuário
-          const userLoginKey = `hasLoggedInBefore_${currentUserId}`;
-          const sessionKey = `currentSession_${currentUserId}`;
-          const userHasLoggedBefore = localStorage.getItem(userLoginKey);
-          const currentSession = sessionStorage.getItem(sessionKey);
-
-          if (!userHasLoggedBefore) {
-            // Primeiro login desta conta específica - mostrar modal de comemoração
-            console.log("Primeiro login detectado para esta conta!");
-            setIsFirstLogin(true);
-            setShowWelcomeModal(true);
-            preventScroll(); // Evitar rolagem
-            localStorage.setItem(userLoginKey, 'true');
-            localStorage.setItem('hasLoggedInBefore', 'true'); // Compatibilidade com código existente
-            // Marcar sessão atual
-            sessionStorage.setItem(sessionKey, 'active');
-          } else if (!currentSession) {
-            // Login subsequente, mas primeira visita nesta sessão de navegador
-            console.log("Nova sessão detectada - mostrando modal de boas-vindas");
-            setIsFirstLogin(false);
-            setShowWelcomeModal(true);
-            preventScroll(); // Evitar rolagem
-            // Marcar sessão atual
-            sessionStorage.setItem(sessionKey, 'active');
-          } else if (location.pathname === "/") {
-            // Na página inicial, sempre mostrar o modal para garantir que seja visto
-            setIsFirstLogin(false);
-            setShowWelcomeModal(true);
-            preventScroll(); // Evitar rolagem
-          } else {
-            // Navegação dentro da mesma sessão - não mostrar o modal em outras páginas
-            console.log("Navegação dentro da mesma sessão - modal não será mostrado");
-            setShowWelcomeModal(false);
-            restoreScroll(); // Restaurar rolagem
-          }
-        }
-        console.log("Aplicação inicializada com sucesso.");
-
-      } catch (error) {
-        console.error("Erro ao inicializar aplicação:", error);
-        setShowWelcomeModal(false);
-        restoreScroll(); // Restaurar rolagem em caso de erro
-      }
-    };
-
-    // Aguardar apenas um curto tempo para inicialização prioritária do modal
-    const timer = setTimeout(() => {
-      console.log("Iniciando aplicação e verificando autenticação...");
-      checkAuth();
-    }, 100);
-
-    return () => {
-      clearTimeout(timer);
-      restoreScroll(); // Garantir que a rolagem seja restaurada ao desmontar
-    };
-  }, [location.pathname]);
+  
+  // Separando a lógica em hooks customizados
+  const { isLoading } = useAppInitialization();
+  const { isAuthRoute } = useAuthRedirection();
+  const { 
+    showWelcomeModal, 
+    setShowWelcomeModal, 
+    isFirstLogin 
+  } = useWelcomeModal(location.pathname, isAuthRoute);
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
