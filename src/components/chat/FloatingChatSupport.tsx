@@ -1092,11 +1092,22 @@ const FloatingChatSupport: React.FC = () => {
               <div
                 className={`max-w-[75%] rounded-lg px-3 py-2 ${message.sender === "user" ? "bg-blue-500 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200"}`}
               >
-                <div dangerouslySetInnerHTML={{ __html: message.content }} />
+                <div 
+                  className="message-content whitespace-pre-wrap" 
+                  dangerouslySetInnerHTML={{ 
+                    __html: message.content
+                      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                      .replace(/\_(.*?)\_/g, '<em>$1</em>')
+                      .replace(/\~\~(.*?)\~\~/g, '<del>$1</del>')
+                      .replace(/\`(.*?)\`/g, '<code class="bg-black/10 dark:bg-white/10 rounded px-1">$1</code>')
+                      .replace(/\n/g, '<br />')
+                      .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" class="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>')
+                  }} 
+                />
                 {message.files && message.files.length > 0 && (
                   <div className="mt-2 space-y-2">
                     {message.files.map((file, index) => (
-                      <div key={`${file.name}-${index}`} className="flex items-center bg-opacity-20 bg-black rounded p-1">
+                      <div key={`${file.name}-${index}`} className="flex items-center bg-opacity-20 bg-black rounded p-2 hover:bg-opacity-30 transition-all">
                         <div className="mr-2 flex-shrink-0">
                           {file.type.startsWith('image/') && <Image className="h-4 w-4" />}
                           {file.type.startsWith('video/') && <Video className="h-4 w-4" />}
@@ -1107,7 +1118,7 @@ const FloatingChatSupport: React.FC = () => {
                           <a 
                             href={file.url} 
                             download={file.name} 
-                            className={`hover:underline truncate block ${message.sender === "user" ? "text-white" : "text-blue-500"}`}
+                            className={`hover:underline font-medium truncate block ${message.sender === "user" ? "text-white" : "text-blue-500"}`}
                             target="_blank"
                             rel="noopener noreferrer"
                           >
@@ -1274,13 +1285,24 @@ const FloatingChatSupport: React.FC = () => {
           </div>
         )}
         <div className="flex items-center gap-2">
-          <Input
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            placeholder="Digite sua mensagem..."
-            className="flex-1 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
-            onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-          />
+          <div className="flex-1 relative">
+            <Input
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              placeholder="Digite sua mensagem..."
+              className="pr-10 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
+              onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-0 top-0 h-full text-orange-500 hover:text-orange-600"
+              onClick={handleSendMessage}
+              disabled={!inputMessage.trim() && selectedFiles.length === 0}
+            >
+              <Send className="h-5 w-5" />
+            </Button>
+          </div>
           <div className="flex items-center gap-1.5">
             <div className="relative">
               <Button
@@ -1999,6 +2021,34 @@ const FloatingChatSupport: React.FC = () => {
 
         .animate-bounce-subtle {
           animation: bounce-subtle 2s ease-in-out infinite;
+        }
+        
+        .message-content strong {
+          font-weight: 600;
+        }
+        
+        .message-content em {
+          font-style: italic;
+          opacity: 0.9;
+        }
+        
+        .message-content code {
+          font-family: monospace;
+          padding: 0.1rem 0.3rem;
+          border-radius: 3px;
+        }
+        
+        .message-content ul, .message-content ol {
+          padding-left: 1.5rem;
+          margin: 0.5rem 0;
+        }
+        
+        .message-content ul li {
+          list-style-type: disc;
+        }
+        
+        .message-content ol li {
+          list-style-type: decimal;
         }
 
         .custom-scrollbar::-webkit-scrollbar {
