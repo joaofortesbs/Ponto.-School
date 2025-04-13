@@ -41,7 +41,10 @@ export default function Dashboard() {
 
   return (
     <div className="w-full h-full bg-[#f7f9fa] dark:bg-[#001427] p-6 space-y-6 transition-colors duration-300">
-      <PromotionalBanner />
+      {/* Banner com prioridade de renderização */}
+      <div className="priority-render">
+        <PromotionalBanner />
+      </div>
       <h1 className="text-3xl font-bold text-brand-black dark:text-white flex items-center gap-2">
         <span className="text-2xl">👋</span> Olá, {(() => {
                 // Obter o primeiro nome do usuário com prioridade consistente

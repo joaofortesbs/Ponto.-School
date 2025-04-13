@@ -111,9 +111,8 @@ const PromotionalBanner = () => {
   const currentBanner = bannerData[currentIndex];
 
   useEffect(() => {
-    // Set banner visible with a slight delay for entrance animation
-    const timer = setTimeout(() => setIsVisible(true), 300);
-    return () => clearTimeout(timer);
+    // Tornar o banner visível imediatamente, sem delay
+    setIsVisible(true);
   }, []);
 
   const goToNextSlide = () => {

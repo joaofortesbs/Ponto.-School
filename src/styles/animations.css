@@ -400,6 +400,15 @@
   }
   25% {
     transform: translate(3px, -3px);
+
+/* Estilo para priorizar renderização de elementos */
+.priority-render {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
   }
   50% {
     transform: translate(-2px, -5px);
