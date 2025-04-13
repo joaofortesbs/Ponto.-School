@@ -220,7 +220,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
 
         if (distance < 200) {
           // Atração: mais forte entre 50 e 150 pixels, mais fraca quando muito perto ou muito longe
-          attractionForce = Math.min(0.08, 0.3 / (1 + Math.exp(-(distance - 100) / 20)));
+          attractionForce = Math.min(0.09, 0.35 / (1 + Math.exp(-(distance - 100) / 20)));
 
           // Calcular novas velocidades baseadas na força de atração
           const angle = Math.atan2(dy, dx);
@@ -229,9 +229,9 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
 
           // Limitar velocidade máxima
           const speed = Math.sqrt(node.vx * node.vx + node.vy * node.vy);
-          if (speed > 1.5) {
-            node.vx = (node.vx / speed) * 1.5;
-            node.vy = (node.vy / speed) * 1.5;
+          if (speed > 1.8) {
+            node.vx = (node.vx / speed) * 1.8;
+            node.vy = (node.vy / speed) * 1.8;
           }
         }
 
@@ -272,7 +272,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
     ctx.clearRect(0, 0, dimensions.width, dimensions.height);
 
     // Desenhar conexões entre nós próximos
-    ctx.strokeStyle = 'rgba(255, 107, 0, 0.2)';
+    ctx.strokeStyle = 'rgba(255, 107, 0, 0.4)'; // Aumentada opacidade base
 
     for (let i = 0; i < nodes.length; i++) {
       const nodeA = nodes[i];
@@ -285,21 +285,28 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
 
         // Desenhar linha se os nós estiverem próximos
         // Aumentando a distância máxima para criar mais conexões
-        if (distance < 150) {
+        if (distance < 160) { // Aumentado alcance
           // Opacidade baseada na distância e na opacidade dos nós
-          const opacity = (1 - distance / 150) * 0.2 * (nodeA.opacity + nodeB.opacity) / 2;
+          const opacity = (1 - distance / 160) * 0.45 * (nodeA.opacity + nodeB.opacity) / 2; // Aumentada opacidade
+
+          // Gradiente nas linhas para efeito mais vibrante
+          const gradient = ctx.createLinearGradient(nodeA.x, nodeA.y, nodeB.x, nodeB.y);
+          gradient.addColorStop(0, `rgba(255, 107, 0, ${opacity * 1.2})`);
+          gradient.addColorStop(0.5, `rgba(255, 140, 0, ${opacity * 1.5})`);
+          gradient.addColorStop(1, `rgba(255, 107, 0, ${opacity * 1.2})`);
+
           ctx.beginPath();
           ctx.moveTo(nodeA.x, nodeA.y);
           ctx.lineTo(nodeB.x, nodeB.y);
-          ctx.strokeStyle = `rgba(255, 107, 0, ${opacity})`;
-          ctx.lineWidth = 0.5;
+          ctx.strokeStyle = gradient;
+          ctx.lineWidth = 0.6; // Linhas ligeiramente mais grossas
           ctx.stroke();
         }
       }
     }
 
     // Efeito especial: mais conexões perto do cursor
-    const cursorRange = 200; // Aumentando ainda mais o alcance do cursor
+    const cursorRange = 220; // Aumentado alcance do cursor
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i];
       const dx = node.x - mousePosition.x;
@@ -307,12 +314,18 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
       const distanceToMouse = Math.sqrt(dx * dx + dy * dy);
 
       if (distanceToMouse < cursorRange) {
-        const opacity = (1 - distanceToMouse / cursorRange) * 0.18; // Aumentando opacidade
+        const opacity = (1 - distanceToMouse / cursorRange) * 0.35; // Aumentada opacidade
+
+        // Gradiente para o cursor
+        const gradient = ctx.createLinearGradient(node.x, node.y, mousePosition.x, mousePosition.y);
+        gradient.addColorStop(0, `rgba(255, 107, 0, ${opacity})`);
+        gradient.addColorStop(1, `rgba(255, 140, 0, ${opacity * 0.7})`);
+
         ctx.beginPath();
         ctx.moveTo(node.x, node.y);
         ctx.lineTo(mousePosition.x, mousePosition.y);
-        ctx.strokeStyle = `rgba(255, 107, 0, ${opacity})`;
-        ctx.lineWidth = 0.4;
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = 0.5;
         ctx.stroke();
 
         // Adicionar conexões extras entre nós próximos ao cursor
@@ -322,24 +335,38 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
           const dyB = nodeB.y - mousePosition.y;
           const distanceBToMouse = Math.sqrt(dxB * dxB + dyB * dyB);
 
-          if (distanceBToMouse < cursorRange && Math.random() > 0.7) {
-            const opacityB = (1 - Math.max(distanceToMouse, distanceBToMouse) / cursorRange) * 0.12;
+          if (distanceBToMouse < cursorRange && Math.random() > 0.6) { // Mais conexões (0.6 em vez de 0.7)
+            const opacityB = (1 - Math.max(distanceToMouse, distanceBToMouse) / cursorRange) * 0.25; // Aumentada opacidade
             ctx.beginPath();
             ctx.moveTo(node.x, node.y);
             ctx.lineTo(nodeB.x, nodeB.y);
-            ctx.strokeStyle = `rgba(255, 107, 0, ${opacityB})`;
-            ctx.lineWidth = 0.3;
+            ctx.strokeStyle = `rgba(255, 127, 0, ${opacityB})`; // Cor mais vibrante
+            ctx.lineWidth = 0.4; // Ligeiramente mais grosso
             ctx.stroke();
           }
         }
       }
     }
 
-    // Desenhar nós
+    // Desenhar nós com gradiente
     nodes.forEach(node => {
+      const radialGradient = ctx.createRadialGradient(
+        node.x, node.y, 0,
+        node.x, node.y, node.radius * 2
+      );
+      radialGradient.addColorStop(0, `rgba(255, 140, 0, ${node.opacity * 1.5})`); // Centro mais brilhante
+      radialGradient.addColorStop(0.5, `rgba(255, 107, 0, ${node.opacity * 1.2})`); // Meio tom
+      radialGradient.addColorStop(1, `rgba(255, 80, 0, ${node.opacity})`); // Borda
+
       ctx.beginPath();
-      ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255, 107, 0, ${node.opacity})`;
+      ctx.arc(node.x, node.y, node.radius * 1.1, 0, Math.PI * 2); // Nós ligeiramente maiores
+      ctx.fillStyle = radialGradient;
+      ctx.fill();
+
+      // Adicionar brilho
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, node.radius * 1.8, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 127, 0, ${node.opacity * 0.15})`;
       ctx.fill();
     });
   }, [nodes, dimensions, mousePosition]);
@@ -427,7 +454,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
         ref={canvasRef}
         width={dimensions.width}
         height={dimensions.height}
-        className="absolute top-0 left-0 w-full h-full z-0"
+        className="absolute top-0 left-0 w-full h-full z-10"  {/* z-index changed to place on top */}
         style={{ 
           pointerEvents: 'none',
           touchAction: 'none'
