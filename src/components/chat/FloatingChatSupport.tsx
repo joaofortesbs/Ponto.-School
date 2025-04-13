@@ -519,6 +519,32 @@ const FloatingChatSupport: React.FC = () => {
       e.target.value = '';
     }
   };
+  
+  // Função para abrir o seletor de arquivos
+  const openFileSelector = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+  
+  // Função para lidar com a seleção de arquivos
+  const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    // Adicionar os arquivos selecionados à lista
+    const newFiles = Array.from(e.target.files);
+    setSelectedFiles(prev => [...prev, ...newFiles]);
+    
+    // Limpar o input para permitir selecionar os mesmos arquivos novamente
+    if (e.target) {
+      e.target.value = '';
+    }
+  };
+  
+  // Função para remover um arquivo da lista
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
 
   // Função para iniciar gravação de áudio
   const startVoiceRecording = () => {
@@ -1067,19 +1093,34 @@ const FloatingChatSupport: React.FC = () => {
                 className={`max-w-[75%] rounded-lg px-3 py-2 ${message.sender === "user" ? "bg-blue-500 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200"}`}
               >
                 <div dangerouslySetInnerHTML={{ __html: message.content }} />
-                {message.files && message.files.map((file) => (
-                  <div key={file.name} className="mt-2 flex items-center">
-                    <div className="mr-2">
-                      {file.type.startsWith('image/') && <Image className="h-4 w-4" />}
-                      {file.type.startsWith('video/') && <Video className="h-4 w-4" />}
-                      {file.type.startsWith('audio/') && <Music className="h-4 w-4" />}
-                      {file.type.startsWith('application/') && <File className="h-4 w-4" />}
-                    </div>
-                    <a href={file.url} download={file.name} className="text-blue-500 hover:underline">
-                      {file.name} ({(file.size / 1024).toFixed(2)} KB)
-                    </a>
+                {message.files && message.files.length > 0 && (
+                  <div className="mt-2 space-y-2">
+                    {message.files.map((file, index) => (
+                      <div key={`${file.name}-${index}`} className="flex items-center bg-opacity-20 bg-black rounded p-1">
+                        <div className="mr-2 flex-shrink-0">
+                          {file.type.startsWith('image/') && <Image className="h-4 w-4" />}
+                          {file.type.startsWith('video/') && <Video className="h-4 w-4" />}
+                          {file.type.startsWith('audio/') && <Music className="h-4 w-4" />}
+                          {(!file.type.startsWith('image/') && !file.type.startsWith('video/') && !file.type.startsWith('audio/')) && <File className="h-4 w-4" />}
+                        </div>
+                        <div className="overflow-hidden text-sm">
+                          <a 
+                            href={file.url} 
+                            download={file.name} 
+                            className={`hover:underline truncate block ${message.sender === "user" ? "text-white" : "text-blue-500"}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {file.name.length > 20 ? file.name.substring(0, 17) + '...' : file.name}
+                          </a>
+                          <span className="text-xs opacity-70">
+                            {(file.size / 1024).toFixed(1)} KB
+                          </span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
                 <div className="text-xs opacity-70 mt-1 text-right">
                   {message.timestamp.toLocaleTimeString([], {
                     hour: "2-digit",
@@ -1382,48 +1423,27 @@ const FloatingChatSupport: React.FC = () => {
               </div>
             )}
 
-            {/* Input, botões de anexo e envio */}
-            <div className="flex items-center p-3 border-t border-gray-200 dark:border-gray-700">
-              <button
-                className="mr-2 p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
-                onClick={() => setShowAISettings(!showAISettings)}
-                title="Configurações da IA"
-              >
-                <Settings className="h-5 w-5" />
-              </button>
-
-              <button
-                className="mr-2 p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
-                onClick={openFileSelector}
-                title="Anexar arquivo"
-              >
-                <Paperclip className="h-5 w-5" />
-              </button>
-
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                onChange={handleFileSelection}
-                multiple
-              />
-
-              <input
-                type="text"
-                className="flex-1 px-4 py-2 rounded-full border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-gray-800 dark:text-gray-200"
-                placeholder="Digite sua mensagem..."
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-              />
-
-              <button
-                className="ml-2 p-2 rounded-full bg-orange-500 text-white hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                onClick={handleSendMessage}
-              >
-                <Send className="h-5 w-5" />
-              </button>
-            </div>
+            {/* Área de arquivos selecionados */}
+            {selectedFiles.length > 0 && (
+              <div className="p-2 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex flex-wrap gap-2">
+                  {selectedFiles.map((file, index) => (
+                    <div 
+                      key={index} 
+                      className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-full px-3 py-1"
+                    >
+                      <span className="text-xs truncate max-w-[120px]">{file.name}</span>
+                      <button 
+                        className="ml-1 text-gray-500 hover:text-red-500"
+                        onClick={() => removeFile(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
