@@ -102,7 +102,7 @@ interface CommonQuestion {
 const defaultMessages: Message[] = [
   {
     id: "1",
-    text: "Oi! Sou o Epictus IA, seu assistente descolado aqui na Ponto.School! 😊 Tô pronto pra te ajudar com o que precisar, é só mandar! Como posso facilitar sua vida hoje?",
+    text: "Olá! Sou o assistente da Ponto.School com IA integrada. Como posso ajudar você hoje?",
     sender: "ai",
     timestamp: new Date(),
   },
@@ -302,40 +302,6 @@ const FloatingChatSupport: React.FC = () => {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
-
-  // Obter e atualizar o nome do usuário ao carregar
-  useEffect(() => {
-    const getUserName = async () => {
-      try {
-        // Primeiro tenta obter do DOM para interface mais rápida
-        const sidebarWelcome = document.querySelector('.sidebar-welcome-message');
-        if (sidebarWelcome && sidebarWelcome.textContent) {
-          const match = sidebarWelcome.textContent.match(/Olá,\s+([\w\s]+)!/i);
-          if (match && match[1]) {
-            setUserName(match[1].trim());
-            return;
-          }
-        }
-        
-        // Tenta obter do localStorage ou sessionStorage
-        const storedUsername = localStorage.getItem('username') || sessionStorage.getItem('username');
-        if (storedUsername) {
-          // Extrair primeiro nome
-          const nameParts = storedUsername.split(/[_\s\-\.]/);
-          const firstName = nameParts[0];
-          
-          if (firstName && firstName.length > 1) {
-            const formattedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
-            setUserName(formattedName);
-          }
-        }
-      } catch (error) {
-        console.error('Erro ao obter nome do usuário:', error);
-      }
-    };
-    
-    getUserName();
-  }, []);
 
   // Scroll to bottom of messages
   useEffect(() => {
@@ -545,9 +511,9 @@ const FloatingChatSupport: React.FC = () => {
       <div className="p-3 flex flex-col items-start">
         <div className="mb-3 w-full">
           <h2 className="text-xl font-bold text-white mb-1 bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent truncate">
-            E AÍ, {userName.split(/[_\s]/)[0].toUpperCase()} 👋
+            OLÁ {userName.toUpperCase()} 👋
           </h2>
-          <p className="text-white/70 text-sm">Bora trocar uma ideia? Como posso te ajudar hoje?</p>
+          <p className="text-white/70 text-sm">Como posso ajudar você hoje?</p>
         </div>
 
         <Button
@@ -878,10 +844,7 @@ const FloatingChatSupport: React.FC = () => {
               <div
                 className={`max-w-[75%] rounded-lg px-3 py-2 ${message.sender === "user" ? "bg-blue-500 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200"}`}
               >
-                <p 
-                  className="text-sm"
-                  dangerouslySetInnerHTML={{ __html: message.text }}
-                ></p>
+                <p className="text-sm">{message.text}</p>
                 <div className="text-xs opacity-70 mt-1 text-right">
                   {message.timestamp.toLocaleTimeString([], {
                     hour: "2-digit",
