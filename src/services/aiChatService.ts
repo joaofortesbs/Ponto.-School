@@ -18,6 +18,72 @@ export interface ChatMessage {
 // Histórico de conversas
 let conversationHistory: Record<string, ChatMessage[]> = {};
 
+// Obter configurações da IA do usuário
+export function getAIUserSettings() {
+  try {
+    const storedSettings = localStorage.getItem('aiUserSettings');
+    if (storedSettings) {
+      return JSON.parse(storedSettings);
+    }
+    
+    // Configurações padrão
+    return {
+      intelligenceLevel: 'normal', // 'low', 'normal', 'high'
+      soundEnabled: true,
+      languageStyle: 'informal', // 'informal', 'formal', 'técnico'
+      autoSaveConversations: true,
+      messageTheme: 'default', // 'default', 'minimal', 'colorful'
+      fontSizePreference: 'medium', // 'small', 'medium', 'large'
+    };
+  } catch (error) {
+    console.error('Erro ao obter configurações da IA:', error);
+    return {
+      intelligenceLevel: 'normal',
+      soundEnabled: true,
+      languageStyle: 'informal',
+      autoSaveConversations: true,
+      messageTheme: 'default',
+      fontSizePreference: 'medium',
+    };
+  }
+}
+
+// Salvar configurações da IA do usuário
+export function saveAIUserSettings(settings) {
+  try {
+    localStorage.setItem('aiUserSettings', JSON.stringify(settings));
+    return true;
+  } catch (error) {
+    console.error('Erro ao salvar configurações da IA:', error);
+    return false;
+  }
+}
+
+// Persistência das conversas
+export function saveConversation(sessionId, messages) {
+  try {
+    const userSettings = getAIUserSettings();
+    if (userSettings.autoSaveConversations) {
+      const conversations = JSON.parse(localStorage.getItem('aiConversations') || '{}');
+      conversations[sessionId] = messages;
+      localStorage.setItem('aiConversations', JSON.stringify(conversations));
+    }
+  } catch (error) {
+    console.error('Erro ao salvar conversa:', error);
+  }
+}
+
+// Carregar conversa anterior
+export function loadConversation(sessionId) {
+  try {
+    const conversations = JSON.parse(localStorage.getItem('aiConversations') || '{}');
+    return conversations[sessionId] || [];
+  } catch (error) {
+    console.error('Erro ao carregar conversa:', error);
+    return [];
+  }
+}
+
 // Função para obter dados do usuário atual
 async function getUserContext() {
   try {
@@ -43,6 +109,9 @@ async function getUserContext() {
     const favoriteContent = JSON.parse(localStorage.getItem('favoriteContent') || '[]');
     const courseProgress = JSON.parse(localStorage.getItem('courseProgress') || '{}');
     
+    // Obter configurações da IA
+    const aiSettings = getAIUserSettings();
+    
     // Obter outras informações contextuais disponíveis
     const userContext = {
       username: username,
@@ -57,7 +126,8 @@ async function getUserContext() {
       courseProgress: courseProgress,
       achievements: JSON.parse(localStorage.getItem('achievements') || '[]'),
       schoolPoints: localStorage.getItem('schoolPoints') || '0',
-      notifications: JSON.parse(localStorage.getItem('notifications') || '[]')
+      notifications: JSON.parse(localStorage.getItem('notifications') || '[]'),
+      aiSettings: aiSettings
     };
     
     return userContext;
@@ -73,57 +143,100 @@ export async function generateXAIResponse(message: string, sessionId: string): P
     // Obter contexto do usuário
     const userContext = await getUserContext();
     
+    // Carregamos o histórico salvo ou inicializamos um novo
+    let savedHistory = loadConversation(sessionId);
+    
     // Inicializa o histórico se não existir
     if (!conversationHistory[sessionId]) {
-      conversationHistory[sessionId] = [
-        { 
-          role: 'system', 
-          content: `Você é o Epictus IA, o assistente inteligente da Ponto.School, uma plataforma educacional. 
-          
-          Contexto do usuário:
-          - Nome: ${userContext.firstName}
-          - Username: ${userContext.username}
-          - Email: ${userContext.email}
-          - Localização atual na plataforma: ${userContext.currentPage}
-          - Última atividade: ${userContext.lastActivity}
-          - School Points: ${userContext.schoolPoints}
-          
-          INFORMAÇÕES SOBRE A PLATAFORMA:
-          
-          A Ponto.School é uma plataforma educacional criada e desenvolvida por uma equipe de quatro administradores principais:
-          - Fundador & CEO: João Fortes (username: @joaofortes na plataforma)
-          - Co-Fundador & CMO: Felipe Brito (username: @felipe_rico na plataforma) 
-          - Co-Fundador & COO: Adriel Borges (username: @adriel_borges na plataforma)
-          - Co-Fundador & Coordenador de Design: Samuel Afonso (username: @samuel_afonso na plataforma)
-          
-          Além destes, a plataforma conta com equipes de suporte, marketing, TI e outras áreas.
-          
-          INSTRUÇÕES PARA VOCÊ:
-          
-          1. Sempre se refira ao usuário pelo primeiro nome: ${userContext.firstName}
-          2. Use uma linguagem informal e descontraída, mas profissional
-          3. Quando o usuário perguntar sobre quem criou, desenvolveu ou sobre a equipe da plataforma, compartilhe as informações dos 4 administradores mencionados acima
-          4. Se o usuário solicitar acesso a alguma seção da plataforma, envie o link direto utilizando https://pontoschool.com/ como base
-          5. Você tem acesso ao perfil completo, histórico, conquistas, School Points, e todas as informações do usuário na plataforma
-          6. Para personalizar as respostas, utilize o contexto atual do usuário
-          7. Demonstre entusiasmo e seja prestativo
-          
-          LINKS IMPORTANTES DA PLATAFORMA:
-          - Dashboard: https://pontoschool.com/dashboard
-          - Biblioteca: https://pontoschool.com/biblioteca
-          - Turmas: https://pontoschool.com/turmas
-          - Portal: https://pontoschool.com/portal
-          - Perfil: https://pontoschool.com/profile
-          - Organização: https://pontoschool.com/organizacao
-          - School Points: https://pontoschool.com/carteira
-          - Conquistas: https://pontoschool.com/conquistas
-          - Conexão Expert: https://pontoschool.com/pedidos-ajuda
-          - Comunidades: https://pontoschool.com/comunidades
-          - Mercado: https://pontoschool.com/mercado
-          
-          Sempre referir-se ao usuário como ${userContext.firstName} e personalizar as respostas com base no contexto acima.`
+      // Se temos histórico salvo, usamos ele
+      if (savedHistory && savedHistory.length > 0) {
+        conversationHistory[sessionId] = savedHistory;
+      } else {
+        // Caso contrário, iniciamos um novo
+        const aiSettings = userContext.aiSettings || { intelligenceLevel: 'normal', languageStyle: 'informal' };
+        
+        // Escolher estilo de linguagem baseado nas configurações
+        let languageStyle = 'informal e descontraída, mas profissional';
+        if (aiSettings.languageStyle === 'formal') {
+          languageStyle = 'formal e profissional';
+        } else if (aiSettings.languageStyle === 'técnico') {
+          languageStyle = 'técnica e detalhada';
         }
-      ];
+        
+        // Adaptar nível de inteligência
+        let detailLevel = 'explicações equilibradas';
+        if (aiSettings.intelligenceLevel === 'high') {
+          detailLevel = 'respostas detalhadas e aprofundadas';
+        } else if (aiSettings.intelligenceLevel === 'low') {
+          detailLevel = 'respostas simples e diretas';
+        }
+        
+        conversationHistory[sessionId] = [
+          { 
+            role: 'system', 
+            content: `Você é o Epictus IA, o assistente inteligente da Ponto.School, uma plataforma educacional. 
+            
+            Contexto do usuário:
+            - Nome: ${userContext.firstName}
+            - Username: ${userContext.username}
+            - Email: ${userContext.email}
+            - Localização atual na plataforma: ${userContext.currentPage}
+            - Última atividade: ${userContext.lastActivity}
+            - School Points: ${userContext.schoolPoints}
+            
+            INFORMAÇÕES SOBRE A PLATAFORMA:
+            
+            A Ponto.School é uma plataforma educacional criada e desenvolvida por uma equipe de quatro administradores principais:
+            - Fundador & CEO: João Fortes (username: @joaofortes na plataforma)
+            - Co-Fundador & CMO: Felipe Brito (username: @felipe_rico na plataforma) 
+            - Co-Fundador & COO: Adriel Borges (username: @adriel_borges na plataforma)
+            - Co-Fundador & Coordenador de Design: Samuel Afonso (username: @samuel_afonso na plataforma)
+            
+            Além destes, a plataforma conta com equipes de suporte, marketing, TI e outras áreas.
+            
+            CONFIGURAÇÕES PERSONALIZADAS DO USUÁRIO PARA IA:
+            - Nível de inteligência: ${aiSettings.intelligenceLevel}
+            - Estilo de linguagem: ${aiSettings.languageStyle}
+            
+            INSTRUÇÕES PARA VOCÊ:
+            
+            1. Sempre se refira ao usuário pelo primeiro nome: ${userContext.firstName}
+            2. Use uma linguagem ${languageStyle}
+            3. Forneça ${detailLevel}
+            4. Quando o usuário perguntar sobre quem criou, desenvolveu ou sobre a equipe da plataforma, compartilhe as informações dos 4 administradores mencionados acima
+            5. Se o usuário solicitar acesso a alguma seção da plataforma, SEMPRE envie o link direto e completo utilizando exatamente a URL https://pontoschool.com/ seguida do caminho específico
+            6. Você tem acesso ao perfil completo, histórico, conquistas, School Points, e todas as informações do usuário na plataforma
+            7. Para personalizar as respostas, utilize o contexto atual do usuário
+            8. Demonstre entusiasmo e seja prestativo
+            
+            MAPA COMPLETO DE LINKS DA PLATAFORMA:
+            - Dashboard: https://pontoschool.com/dashboard
+            - Biblioteca: https://pontoschool.com/biblioteca
+            - Turmas: https://pontoschool.com/turmas
+            - Portal: https://pontoschool.com/portal
+            - Perfil: https://pontoschool.com/profile
+            - Organização: https://pontoschool.com/organizacao
+            - School Points: https://pontoschool.com/carteira
+            - Conquistas: https://pontoschool.com/conquistas
+            - Conexão Expert: https://pontoschool.com/pedidos-ajuda
+            - Comunidades: https://pontoschool.com/comunidades
+            - Mercado: https://pontoschool.com/mercado
+            - Configurações: https://pontoschool.com/configuracoes
+            - Mentor IA: https://pontoschool.com/mentor-ia
+            - Epictus IA: https://pontoschool.com/epictus-ia
+            - Chat IA: https://pontoschool.com/chat-ia
+            - Agenda: https://pontoschool.com/agenda
+            - Lembretes: https://pontoschool.com/lembretes
+            - Planos de Estudo: https://pontoschool.com/planos-estudo
+            - Novidades: https://pontoschool.com/novidades
+            - Grupos de Estudo: https://pontoschool.com/estudos
+            
+            É EXTREMAMENTE IMPORTANTE que, quando o usuário pedir para ser redirecionado para qualquer seção da plataforma, você SEMPRE forneça o link completo e exato baseado no mapa acima. Por exemplo, se o usuário disser "me leve para o Portal", você deve responder com algo como "Aqui está o link para o Portal: https://pontoschool.com/portal" ou um redirecionamento similar que inclua o link completo.
+            
+            Sempre referir-se ao usuário como ${userContext.firstName} e personalizar as respostas com base no contexto acima.`
+          }
+        ];
+      }
     }
     
     // Adiciona a mensagem do usuário ao histórico
@@ -177,6 +290,9 @@ export async function generateXAIResponse(message: string, sessionId: string): P
           
           // Adiciona a resposta da IA ao histórico
           conversationHistory[sessionId].push({ role: 'assistant', content: aiResponse });
+          
+          // Salva a conversa para persistência
+          saveConversation(sessionId, conversationHistory[sessionId]);
           
           return aiResponse;
         } else {
