@@ -39,6 +39,7 @@ import {
   Rocket,
   Star,
   History,
+  RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -101,7 +102,7 @@ interface CommonQuestion {
 const defaultMessages: Message[] = [
   {
     id: "1",
-    text: "Olá! Sou o assistente da Ponto.School. Como posso ajudar você hoje?",
+    text: "Olá! Sou o assistente da Ponto.School com IA integrada. Como posso ajudar você hoje?",
     sender: "ai",
     timestamp: new Date(),
   },
@@ -326,7 +327,7 @@ const FloatingChatSupport: React.FC = () => {
     };
   }, [isOpen]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
 
     // Add user message
@@ -337,27 +338,51 @@ const FloatingChatSupport: React.FC = () => {
       timestamp: new Date(),
     };
 
+    // Guardar a mensagem para enviar à API
+    const currentMessage = inputMessage;
+
     setMessages((prev) => [...prev, userMessage]);
     setInputMessage("");
     setIsTyping(true);
 
-    // Simulate AI response after a delay
-    setTimeout(() => {
+    try {
+      // Importar dinamicamente para evitar problemas de circular dependency
+      const { generateAIResponse } = await import('@/services/aiChatService');
+      
+      // Gerar uma ID de sessão baseada no usuário atual ou criar uma nova
+      const sessionId = userName || 'anonymous-' + Date.now().toString();
+      
+      // Obter resposta da IA
+      const aiResponseText = await generateAIResponse(currentMessage, sessionId);
+
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: "Obrigado por sua mensagem. Como posso ajudar você hoje?",
+        text: aiResponseText,
         sender: "ai",
         timestamp: new Date(),
       };
 
       setMessages((prev) => [...prev, aiMessage]);
+    } catch (error) {
+      console.error('Erro ao processar resposta IA:', error);
+      
+      // Mensagem de fallback em caso de erro
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: "Desculpe, estou enfrentando dificuldades técnicas no momento. Por favor, tente novamente mais tarde.",
+        sender: "ai",
+        timestamp: new Date(),
+      };
+      
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-
+      
       // Scroll to bottom
       if (messagesEndRef.current) {
         messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
       }
-    }, 1000);
+    }
   };
 
   const handleCreateTicket = () => {
@@ -523,7 +548,10 @@ const FloatingChatSupport: React.FC = () => {
                 onClick={() => {
                   setActiveTab("chat");
                   setInputMessage(q.question);
-                  setTimeout(() => handleSendMessage(), 100);
+                  // Usar async/await com setTimeout para garantir que a mensagem seja atualizada antes de enviar
+                  setTimeout(async () => {
+                    await handleSendMessage();
+                  }, 100);
                 }}
               >
                 <div className="flex items-center gap-2">
@@ -804,8 +832,11 @@ const FloatingChatSupport: React.FC = () => {
               {message.sender === "ai" && (
                 <div className="w-8 h-8 rounded-full overflow-hidden mr-2 flex-shrink-0">
                   <Avatar>
-                    <AvatarFallback className="bg-blue-100 text-blue-600">
+                    <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] text-white">
                       <Bot className="h-4 w-4" />
+                      <span className="absolute -right-1 -bottom-1 w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center border border-white">
+                        <Sparkles className="h-2 w-2 text-white" />
+                      </span>
                     </AvatarFallback>
                   </Avatar>
                 </div>
@@ -854,6 +885,35 @@ const FloatingChatSupport: React.FC = () => {
       </ScrollArea>
 
       <div className="p-4 border-t dark:border-gray-800">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1">
+            <Badge variant="outline" className="bg-gradient-to-r from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/40 text-blue-800 dark:text-blue-300 text-xs px-2 py-0 h-5">
+              <Sparkles className="h-3 w-3 mr-1" />
+              IA Habilitada
+            </Badge>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 text-xs hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-1"
+            onClick={async () => {
+              // Limpar histórico de mensagens
+              setMessages(defaultMessages);
+              
+              // Importar e chamar função para limpar histórico de conversa
+              try {
+                const { clearConversationHistory } = await import('@/services/aiChatService');
+                const sessionId = userName || 'anonymous-' + Date.now().toString();
+                clearConversationHistory(sessionId);
+              } catch (error) {
+                console.error('Erro ao limpar histórico:', error);
+              }
+            }}
+          >
+            <RefreshCw className="h-3 w-3" />
+            Nova conversa
+          </Button>
+        </div>
         <div className="flex items-center gap-2">
           <Input
             value={inputMessage}
@@ -866,8 +926,13 @@ const FloatingChatSupport: React.FC = () => {
             size="icon"
             className="rounded-full bg-[#FF6B00] hover:bg-[#FF6B00]/90"
             onClick={handleSendMessage}
+            disabled={isTyping || inputMessage.trim() === ''}
           >
-            <Send className="h-4 w-4 text-white" />
+            {isTyping ? (
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-dashed border-white" />
+            ) : (
+              <Send className="h-4 w-4 text-white" />
+            )}
           </Button>
         </div>
       </div>
