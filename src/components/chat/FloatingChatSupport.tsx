@@ -102,7 +102,7 @@ interface CommonQuestion {
 const defaultMessages: Message[] = [
   {
     id: "1",
-    text: "Olá! Sou o assistente da Ponto.School com IA integrada. Como posso ajudar você hoje?",
+    text: "Oi! Sou o Epictus IA, seu assistente descolado aqui na Ponto.School! 😊 Tô pronto pra te ajudar com o que precisar, é só mandar! Como posso facilitar sua vida hoje?",
     sender: "ai",
     timestamp: new Date(),
   },
@@ -511,9 +511,9 @@ const FloatingChatSupport: React.FC = () => {
       <div className="p-3 flex flex-col items-start">
         <div className="mb-3 w-full">
           <h2 className="text-xl font-bold text-white mb-1 bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent truncate">
-            OLÁ {userName.toUpperCase()} 👋
+            E AÍ, {userName.split(/[_\s]/)[0].toUpperCase()} 👋
           </h2>
-          <p className="text-white/70 text-sm">Como posso ajudar você hoje?</p>
+          <p className="text-white/70 text-sm">Bora trocar uma ideia? Como posso te ajudar hoje?</p>
         </div>
 
         <Button
