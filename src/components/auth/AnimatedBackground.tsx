@@ -33,8 +33,8 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
     // Certifique-se de que temos dimensões válidas
     const { width, height } = dimensions.width === 0 ? { width: window.innerWidth || 1280, height: window.innerHeight || 800 } : dimensions;
 
-    const minNodeCount = 250; // Aumentando para pelo menos 250 nós
-    const calculatedNodeCount = Math.floor((width * height) / 4000); // Densidade ainda mais aumentada
+    const minNodeCount = 400; // Aumentando para pelo menos 400 nós
+    const calculatedNodeCount = Math.floor((width * height) / 2500); // Densidade muito mais aumentada
     const nodeCount = Math.max(minNodeCount, calculatedNodeCount);
 
     // Margem mínima para garantir que as teias não saiam da tela
@@ -285,9 +285,9 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
 
         // Desenhar linha se os nós estiverem próximos
         // Aumentando a distância máxima para criar mais conexões
-        if (distance < 120) {
+        if (distance < 150) {
           // Opacidade baseada na distância e na opacidade dos nós
-          const opacity = (1 - distance / 120) * 0.2 * (nodeA.opacity + nodeB.opacity) / 2;
+          const opacity = (1 - distance / 150) * 0.2 * (nodeA.opacity + nodeB.opacity) / 2;
           ctx.beginPath();
           ctx.moveTo(nodeA.x, nodeA.y);
           ctx.lineTo(nodeB.x, nodeB.y);
@@ -299,7 +299,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
     }
 
     // Efeito especial: mais conexões perto do cursor
-    const cursorRange = 150; // Aumentando o alcance do cursor
+    const cursorRange = 200; // Aumentando ainda mais o alcance do cursor
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i];
       const dx = node.x - mousePosition.x;
@@ -365,11 +365,11 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
     const x = e.clientX;
     const y = e.clientY;
 
-    // Adicionar 40 novos nós ao redor do clique
-    const newNodes = Array.from({ length: 40 }, () => {
+    // Adicionar 60 novos nós ao redor do clique
+    const newNodes = Array.from({ length: 60 }, () => {
       const radius = Math.random() * 1.8 + 0.5;
       const angle = Math.random() * Math.PI * 2;
-      const distance = Math.random() * 70;
+      const distance = Math.random() * 90;
 
       return {
         x: x + Math.cos(angle) * distance,
