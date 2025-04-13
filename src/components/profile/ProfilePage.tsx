@@ -40,53 +40,19 @@ export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
   );
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (user) {
-          const { data, error } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", user.id)
-            .single();
-
-          if (error) {
-            console.error("Error fetching user profile:", error);
-          } else if (data) {
-            // Ensure level and rank are set with defaults if not present
-            setUserProfile({
-              ...(data as unknown as UserProfile),
-              level: data.level || 1,
-              rank: data.rank || "Aprendiz",
-            });
-
-            // Set contact info from user data
-            setContactInfo({
-              email: data.email || user.email || "",
-              phone: data.phone || "Adicionar telefone",
-              location: data.location || "Adicionar localização",
-              birthDate: data.birth_date || 
-                (user.user_metadata?.birth_date) || 
-                (user.raw_user_meta_data?.birth_date) || 
-                "Adicionar data de nascimento",
-            });
-
-            if (data.bio) {
-              setAboutMe(data.bio);
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error:", error);
-      } finally {
-        setLoading(false);
+    // Utiliza o hook personalizado para buscar o perfil do usuário
+    const fetchProfile = async () => {
+      const result = await useProfileData();
+      if (result) {
+        const { userProfile, contactInfo, aboutMe } = result;
+        setUserProfile(userProfile);
+        setContactInfo(contactInfo);
+        if (aboutMe) setAboutMe(aboutMe);
       }
+      setLoading(false);
     };
 
-    fetchUserProfile();
+    fetchProfile();
   }, []);
 
   const toggleSection = (section: string | null) => {

@@ -352,68 +352,13 @@ const mockRecommendations = mockMaterials.filter(m => m.status === "recommended"
 const mockRecentlyAccessed = mockMaterials.filter(m => m.isRead).slice(0, 3);
 const mockNewMaterials = mockMaterials.filter(m => m.status === "new").slice(0, 4);
 
-// Helper functions
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
-};
-
-const getIconForMaterialType = (type: MaterialType, className = "h-5 w-5") => {
-  switch (type) {
-    case "video":
-      return <Video className={className} />;
-    case "pdf":
-      return <FileText className={className} />;
-    case "audio":
-      return <Headphones className={className} />;
-    case "link":
-      return <Link className={className} />;
-    case "exercise":
-      return <PenTool className={className} />;
-    case "mindmap":
-      return <Network className={className} />;
-    default:
-      return <BookText className={className} />;
-  }
-};
-
-const getColorForMaterialType = (type: MaterialType) => {
-  switch (type) {
-    case "video":
-      return "text-blue-500";
-    case "pdf":
-      return "text-red-500";
-    case "audio":
-      return "text-purple-500";
-    case "link":
-      return "text-green-500";
-    case "exercise":
-      return "text-amber-500";
-    case "mindmap":
-      return "text-cyan-500";
-    default:
-      return "text-gray-500";
-  }
-};
-
-const getBackgroundForMaterialType = (type: MaterialType) => {
-  switch (type) {
-    case "video":
-      return "bg-blue-50 dark:bg-blue-900/20";
-    case "pdf":
-      return "bg-red-50 dark:bg-red-900/20";
-    case "audio":
-      return "bg-purple-50 dark:bg-purple-900/20";
-    case "link":
-      return "bg-green-50 dark:bg-green-900/20";
-    case "exercise":
-      return "bg-amber-50 dark:bg-amber-900/20";
-    case "mindmap":
-      return "bg-cyan-50 dark:bg-cyan-900/20";
-    default:
-      return "bg-gray-50 dark:bg-gray-900/20";
-  }
-};
+// Importando funções utilitárias de um arquivo separado
+import { 
+  formatDate, 
+  getIconForMaterialType, 
+  getColorForMaterialType, 
+  getBackgroundForMaterialType 
+} from "@/lib/material-utils";
 
 // Components
 const MaterialTypeIcon = ({ type, className }: { type: MaterialType; className?: string }) => {
@@ -426,7 +371,7 @@ const MaterialTypeBadge = ({ type }: { type: MaterialType }) => {
   const icon = getIconForMaterialType(type, "h-3.5 w-3.5 mr-1");
   const color = getColorForMaterialType(type);
   const background = getBackgroundForMaterialType(type);
-  
+
   return (
     <Badge variant="outline" className={cn("flex items-center gap-1 px-2 py-0.5", background, color)}>
       {icon}
@@ -763,7 +708,7 @@ const FilterPanel = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <h4 className="text-sm font-medium text-[#001427] dark:text-white mb-2">Tipo de Material</h4>
@@ -782,7 +727,7 @@ const FilterPanel = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
                   ))}
                 </div>
               </div>
-              
+
               <div>
                 <h4 className="text-sm font-medium text-[#001427] dark:text-white mb-2">Turma</h4>
                 <div className="space-y-2">
@@ -800,7 +745,7 @@ const FilterPanel = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
                   ))}
                 </div>
               </div>
-              
+
               <div>
                 <h4 className="text-sm font-medium text-[#001427] dark:text-white mb-2">Status</h4>
                 <div className="space-y-2">
@@ -820,7 +765,7 @@ const FilterPanel = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
                 </div>
               </div>
             </div>
-            
+
             <div className="flex justify-end mt-4 space-x-2">
               <Button variant="outline" onClick={onClose}>Limpar Filtros</Button>
               <Button className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white">Aplicar Filtros</Button>
@@ -834,9 +779,9 @@ const FilterPanel = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
 
 const MaterialViewer = ({ material, isOpen, onClose }: { material: Material | null; isOpen: boolean; onClose: () => void }) => {
   const [isFocusMode, setIsFocusMode] = useState(false);
-  
+
   if (!material) return null;
-  
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -897,7 +842,7 @@ const MaterialViewer = ({ material, isOpen, onClose }: { material: Material | nu
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                  
+
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -914,7 +859,7 @@ const MaterialViewer = ({ material, isOpen, onClose }: { material: Material | nu
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                  
+
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -931,7 +876,7 @@ const MaterialViewer = ({ material, isOpen, onClose }: { material: Material | nu
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                  
+
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -951,7 +896,7 @@ const MaterialViewer = ({ material, isOpen, onClose }: { material: Material | nu
                   </TooltipProvider>
                 </div>
               </div>
-              
+
               <div className="flex-1 overflow-auto">
                 {material.type === "video" && (
                   <div className="relative pt-[56.25%] bg-black">
@@ -973,7 +918,7 @@ const MaterialViewer = ({ material, isOpen, onClose }: { material: Material | nu
                     />
                   </div>
                 )}
-                
+
                 {material.type === "pdf" && (
                   <div className="p-6">
                     <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-8 flex flex-col items-center justify-center min-h-[400px]">
@@ -988,7 +933,7 @@ const MaterialViewer = ({ material, isOpen, onClose }: { material: Material | nu
                     </div>
                   </div>
                 )}
-                
+
                 {material.type === "audio" && (
                   <div className="p-6">
                     <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg p-8 flex flex-col items-center justify-center min-h-[200px]">
@@ -1020,26 +965,26 @@ const MaterialViewer = ({ material, isOpen, onClose }: { material: Material | nu
                     </div>
                   </div>
                 )}
-                
+
                 {(material.type === "exercise" || material.type === "mindmap" || material.type === "link") && (
                   <div className="p-6">
                     <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-8 flex flex-col items-center justify-center min-h-[400px]">
                       {material.type === "exercise" && <PenTool className="h-16 w-16 text-amber-500 mb-4" />}
                       {material.type === "mindmap" && <Network className="h-16 w-16 text-cyan-500 mb-4" />}
                       {material.type === "link" && <Link className="h-16 w-16 text-green-500 mb-4" />}
-                      
+
                       <h4 className="text-lg font-medium text-[#001427] dark:text-white mb-2">
                         {material.type === "exercise" && "Exercício Interativo"}
                         {material.type === "mindmap" && "Mapa Mental"}
                         {material.type === "link" && "Link Externo"}
                       </h4>
-                      
+
                       <p className="text-gray-500 dark:text-gray-400 text-center mb-4">
                         {material.type === "exercise" && "Este é um exercício interativo. Clique no botão abaixo para iniciá-lo."}
                         {material.type === "mindmap" && "Este é um mapa mental interativo. Clique no botão abaixo para visualizá-lo."}
                         {material.type === "link" && "Este é um link para um recurso externo. Clique no botão abaixo para acessá-lo."}
                       </p>
-                      
+
                       <Button className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white">
                         {material.type === "exercise" && "Iniciar Exercício"}
                         {material.type === "mindmap" && "Abrir Mapa Mental"}
@@ -1048,11 +993,11 @@ const MaterialViewer = ({ material, isOpen, onClose }: { material: Material | nu
                     </div>
                   </div>
                 )}
-                
+
                 <div className="p-6">
                   <h4 className="text-lg font-semibold text-[#001427] dark:text-white mb-3">Descrição</h4>
                   <p className="text-gray-700 dark:text-gray-300 mb-6">{material.description}</p>
-                  
+
                   <div className="flex flex-wrap gap-4 mb-6">
                     <div className="flex items-center">
                       <div className="h-10 w-10 rounded-full overflow-hidden mr-2">
@@ -1067,7 +1012,7 @@ const MaterialViewer = ({ material, isOpen, onClose }: { material: Material | nu
                         <p className="text-xs text-gray-500 dark:text-gray-400">Professor</p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center">
                       <div className="flex items-center justify-center h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/20 text-blue-500 mr-2">
                         <Calendar className="h-5 w-5" />
@@ -1077,7 +1022,7 @@ const MaterialViewer = ({ material, isOpen, onClose }: { material: Material | nu
                         <p className="text-xs text-gray-500 dark:text-gray-400">{formatDate(material.date)}</p>
                       </div>
                     </div>
-                    
+
                     {material.duration && (
                       <div className="flex items-center">
                         <div className="flex items-center justify-center h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-900/20 text-purple-500 mr-2">
@@ -1089,7 +1034,7 @@ const MaterialViewer = ({ material, isOpen, onClose }: { material: Material | nu
                         </div>
                       </div>
                     )}
-                    
+
                     {material.fileSize && (
                       <div className="flex items-center">
                         <div className="flex items-center justify-center h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/20 text-blue-500 mr-2">
@@ -1102,14 +1047,14 @@ const MaterialViewer = ({ material, isOpen, onClose }: { material: Material | nu
                       </div>
                     )}
                   </div>
-                  
+
                   <Tabs defaultValue="discussao">
                     <TabsList className="mb-4">
                       <TabsTrigger value="discussao">Discussão</TabsTrigger>
                       <TabsTrigger value="anotacoes">Anotações</TabsTrigger>
                       <TabsTrigger value="recursos">Recursos Adicionais</TabsTrigger>
                     </TabsList>
-                    
+
                     <TabsContent value="discussao">
                       <div className="space-y-4">
                         <div className="flex items-start space-x-3">
@@ -1142,7 +1087,7 @@ const MaterialViewer = ({ material, isOpen, onClose }: { material: Material | nu
                             </div>
                           </div>
                         </div>
-                        
+
                         <div className="flex items-start space-x-3 ml-8">
                           <Avatar>
                             <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=teacher" />
@@ -1176,5 +1121,60 @@ const MaterialViewer = ({ material, isOpen, onClose }: { material: Material | nu
                             </div>
                           </div>
                         </div>
-                        
-                        <div className="flex items-start space-x-3 mt-6"
+
+                        <div className="flex items-start space-x-3 mt-6">
+                          <Avatar>
+                            <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=user2" />
+                            <AvatarFallback>ML</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <p className="text-sm font-medium text-[#001427] dark:text-white">Maria Lima</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">Há 1 hora</p>
+                                </div>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                                  <ChevronDown className="h-4 w-4" />
+                                </Button>
+                              </div>
+                              <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
+                                Concordo com João, eu também fiquei com algumas dúvidas em relação a esse ponto. A explicação do professor ajudou um pouco, mas ainda preciso de mais exemplos.
+                              </p>
+                            </div>
+                            <div className="flex items-center mt-1 ml-1 space-x-4">
+                              <Button variant="ghost" size="sm" className="h-8 px-2 text-xs text-gray-500 dark:text-gray-400">
+                                Responder
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-8 px-2 text-xs text-gray-500 dark:text-gray-400">
+                                Curtir
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="anotacoes">
+                      <div className="p-4">
+                        <Input placeholder="Adicione suas anotações aqui..." className="w-full" />
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="recursos">
+                      <div className="p-4">
+                        <p>Lista de recursos adicionais relacionados ao material...</p>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
+export default MaterialViewer;
