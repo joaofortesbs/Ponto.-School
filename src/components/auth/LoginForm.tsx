@@ -52,12 +52,12 @@ export function LoginForm() {
       setLoading(false);
       return;
     }
-    
+
     // Feedback visual imediato para melhorar a percepção
     setSuccess(true);
     localStorage.setItem('auth_checked', 'pending');
     localStorage.setItem('auth_status', 'authenticating');
-    
+
     // Iniciar redirecionamento antecipado para melhorar percepção de velocidade
     // Um timeout curto para dar percepção de resposta instantânea
     const preloadTimeout = setTimeout(() => {
@@ -69,7 +69,7 @@ export function LoginForm() {
         document.head.appendChild(preloadLink);
       }
     }, 300);
-    
+
     // Timeout mais curto (5 segundos) para feedback em caso de lentidão
     const authTimeout = setTimeout(() => {
       if (localStorage.getItem('auth_status') === 'authenticating') {
@@ -89,12 +89,12 @@ export function LoginForm() {
           setTimeout(() => reject(new Error("Tempo limite excedido")), 8000)
         )
       ]);
-      
+
       const { data, error } = await authPromise;
-      
+
       clearTimeout(preloadTimeout);
       clearTimeout(authTimeout);
-      
+
       if (error) {
         setSuccess(false);
         if (error.message.includes("Invalid login credentials") ||
@@ -286,7 +286,7 @@ export function LoginForm() {
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <Button variant="outline" className="h-11 bg-white/20 dark:bg-white/5 backdrop-blur-xl border border-white/30 dark:border-white/10 hover:bg-white/30 dark:hover:bg-white/10 transition-all duration-300 hover:shadow-lg group rounded-lg relative overflow-hidden">
+          <Button variant="outline" className="h-11 bg-white/15 dark:bg-white/3 backdrop-blur-2xl border border-white/25 dark:border-white/8 hover:bg-white/25 dark:hover:bg-white/8 transition-all duration-300 hover:shadow-lg group rounded-lg relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 group-hover:translate-x-full transition-all duration-1500 ease-in-out"></div>
             <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#FF6B00]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             <img
@@ -296,7 +296,7 @@ export function LoginForm() {
             />
             <span className="relative z-10">Google</span>
           </Button>
-          <Button variant="outline" className="h-11 bg-white/20 dark:bg-white/5 backdrop-blur-xl border border-white/30 dark:border-white/10 hover:bg-white/30 dark:hover:bg-white/10 transition-all duration-300 hover:shadow-lg group rounded-lg relative overflow-hidden">
+          <Button variant="outline" className="h-11 bg-white/15 dark:bg-white/3 backdrop-blur-2xl border border-white/25 dark:border-white/8 hover:bg-white/25 dark:hover:bg-white/8 transition-all duration-300 hover:shadow-lg group rounded-lg relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 group-hover:translate-x-full transition-all duration-1500 ease-in-out"></div>
             <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#FF6B00]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             <img

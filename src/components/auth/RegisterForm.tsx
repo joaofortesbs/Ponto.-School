@@ -776,7 +776,7 @@ export function RegisterForm() {
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           {showPlanConfirmation && <PlanConfirmationModal />} {/* Adiciona o modal */}
-          <div className="bg-white dark:bg-gray-800/30 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="bg-white/40 dark:bg-gray-800/20 backdrop-blur-2xl p-6 rounded-lg border border-white/20 dark:border-gray-700/50 shadow-lg">
             <h2 className="text-lg font-semibold mb-4 text-brand-black dark:text-white">
               {renderStepTitle()}
             </h2>
