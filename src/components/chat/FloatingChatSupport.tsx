@@ -348,10 +348,10 @@ const FloatingChatSupport: React.FC = () => {
     try {
       // Importar dinamicamente para evitar problemas de circular dependency
       const { generateAIResponse } = await import('@/services/aiChatService');
-      
+
       // Gerar uma ID de sessão baseada no usuário atual ou criar uma nova
       const sessionId = userName || 'anonymous-' + Date.now().toString();
-      
+
       // Obter resposta da IA
       const aiResponseText = await generateAIResponse(currentMessage, sessionId);
 
@@ -365,7 +365,7 @@ const FloatingChatSupport: React.FC = () => {
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
       console.error('Erro ao processar resposta IA:', error);
-      
+
       // Mensagem de fallback em caso de erro
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -373,11 +373,11 @@ const FloatingChatSupport: React.FC = () => {
         sender: "ai",
         timestamp: new Date(),
       };
-      
+
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsTyping(false);
-      
+
       // Scroll to bottom
       if (messagesEndRef.current) {
         messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -899,7 +899,7 @@ const FloatingChatSupport: React.FC = () => {
             onClick={async () => {
               // Limpar histórico de mensagens
               setMessages(defaultMessages);
-              
+
               // Importar e chamar função para limpar histórico de conversa
               try {
                 const { clearConversationHistory } = await import('@/services/aiChatService');

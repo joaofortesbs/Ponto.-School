@@ -18,15 +18,67 @@ export interface ChatMessage {
 // Histórico de conversas
 let conversationHistory: Record<string, ChatMessage[]> = {};
 
+// Função para obter dados do usuário atual
+async function getUserContext() {
+  try {
+    // Obter username do localStorage ou sessionStorage
+    const username = localStorage.getItem('username') || 
+                    sessionStorage.getItem('username') || 
+                    'Usuário';
+    
+    // Obter dados do perfil, se disponíveis
+    let profileData = {};
+    try {
+      const { data: profileModule } = await import('@/lib/username-utils');
+      if (profileModule && profileModule.getUserProfile) {
+        profileData = await profileModule.getUserProfile();
+      }
+    } catch (error) {
+      console.log('Perfil não disponível para IA:', error);
+    }
+    
+    // Obter outras informações contextuais disponíveis
+    const userContext = {
+      username: username,
+      email: localStorage.getItem('userEmail') || sessionStorage.getItem('userEmail') || 'email@exemplo.com',
+      profile: profileData,
+      currentPage: window.location.pathname,
+      lastActivity: localStorage.getItem('lastActivity') || 'Nenhuma atividade recente',
+      // Adicionar mais contextos conforme disponíveis
+    };
+    
+    return userContext;
+  } catch (error) {
+    console.error('Erro ao obter contexto do usuário:', error);
+    return { username: 'Usuário' };
+  }
+}
+
 // Função para gerar resposta usando a API xAI
 export async function generateXAIResponse(message: string, sessionId: string): Promise<string> {
   try {
+    // Obter contexto do usuário
+    const userContext = await getUserContext();
+    
     // Inicializa o histórico se não existir
     if (!conversationHistory[sessionId]) {
       conversationHistory[sessionId] = [
         { 
           role: 'system', 
-          content: 'Você é um assistente de suporte da Ponto.School, uma plataforma educacional. Forneça respostas úteis, precisas e amigáveis para ajudar os usuários com suas dúvidas sobre a plataforma. Priorize clareza e objetividade nas suas respostas.'
+          content: `Você é o Epictus IA, o assistente inteligente da Ponto.School, uma plataforma educacional. 
+          
+          Contexto do usuário:
+          - Username: ${userContext.username}
+          - Email: ${userContext.email}
+          - Localização atual na plataforma: ${userContext.currentPage}
+          - Última atividade: ${userContext.lastActivity}
+          
+          Forneça respostas úteis, precisas e personalizadas para este usuário específico.
+          Quando perguntado sobre sua identidade, responda que você é o Epictus IA, assistente da Ponto.School.
+          Você tem acesso aos dados do usuário e pode ajudar com informações sobre o perfil, agenda, turmas, conquistas, School Points, etc.
+          Se o usuário pedir para acessar alguma seção da plataforma, ofereça um link ou caminho para chegar lá.
+          Priorize clareza e objetividade nas suas respostas.
+          Personalize sua resposta para o usuário ${userContext.username}.`
         }
       ];
     }
@@ -78,6 +130,9 @@ export async function generateXAIResponse(message: string, sessionId: string): P
 // Função para gerar resposta usando a API Gemini
 export async function generateGeminiResponse(message: string, sessionId: string): Promise<string> {
   try {
+    // Obter contexto do usuário
+    const userContext = await getUserContext();
+    
     // Configuração da solicitação para a API Gemini
     const response = await axios.post(
       `${GEMINI_BASE_URL}?key=${GEMINI_API_KEY}`,
@@ -85,8 +140,20 @@ export async function generateGeminiResponse(message: string, sessionId: string)
         contents: [{
           parts: [
             {
-              text: `Você é um assistente de suporte da Ponto.School, uma plataforma educacional. 
-              Forneça respostas úteis, precisas e amigáveis para a seguinte pergunta do usuário: ${message}`
+              text: `Você é o Epictus IA, o assistente inteligente da Ponto.School, uma plataforma educacional.
+              
+              Contexto do usuário:
+              - Username: ${userContext.username}
+              - Email: ${userContext.email}
+              - Localização atual na plataforma: ${userContext.currentPage}
+              - Última atividade: ${userContext.lastActivity}
+              
+              Forneça respostas úteis, precisas e personalizadas para este usuário específico.
+              Quando perguntado sobre sua identidade, responda que você é o Epictus IA, assistente da Ponto.School.
+              Você tem acesso aos dados do usuário e pode ajudar com informações sobre o perfil, agenda, turmas, conquistas, School Points, etc.
+              Se o usuário pedir para acessar alguma seção da plataforma, ofereça um link ou caminho para chegar lá.
+              
+              Responda à seguinte pergunta do usuário ${userContext.username}: ${message}`
             }
           ]
         }]
