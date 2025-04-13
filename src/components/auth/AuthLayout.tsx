@@ -50,14 +50,15 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
       {/* Overlay para garantir fundo mínimo mesmo se AnimatedBackground falhar */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#001427] to-[#0A2540] z-0"></div>
 
-      {/* Fundo com efeito de gradiente sofisticado azul escuro e laranja (agora renderizado primeiro, debaixo das teias) */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#001427] via-[#0A1A2A] to-[#0e0500] opacity-85 z-0 animate-gradient"></div>
+      {/* Fundo com efeito de gradiente sofisticado azul escuro (agora renderizado primeiro, debaixo das teias) */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#001427] via-[#0A1A2A] to-[#051830] opacity-85 z-0 animate-gradient"></div>
 
-      {/* Efeitos de luz/brilho no fundo */}
+      {/* Efeitos de luz/brilho no fundo - apenas do lado direito */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-        <div className="absolute -top-[40%] -left-[20%] w-[110%] h-[110%] rounded-full bg-gradient-to-r from-[#FF6B00]/15 to-transparent blur-3xl transform rotate-12 animate-pulse-soft"></div>
-        <div className="absolute -bottom-[40%] -right-[20%] w-[110%] h-[110%] rounded-full bg-gradient-to-l from-[#FF6B00]/20 to-transparent blur-3xl transform -rotate-12 animate-pulse-soft"></div>
-        <div className="absolute top-[20%] right-[10%] w-[60%] h-[60%] rounded-full bg-gradient-to-tl from-[#FF8800]/10 to-transparent blur-3xl transform animate-floating-node"></div>
+        {/* Removido o efeito do lado esquerdo */}
+        {/* Efeito sutil do lado direito */}
+        <div className="absolute bottom-0 right-0 w-[40%] h-[80%] rounded-tl-full bg-gradient-to-tl from-[#FF6B00]/15 via-[#FF6B00]/08 to-transparent blur-3xl transform animate-float-node"></div>
+        <div className="absolute top-[30%] right-0 w-[25%] h-[40%] rounded-l-full bg-gradient-to-l from-[#FF6B00]/10 to-transparent blur-2xl transform animate-pulse-soft"></div>
       </div>
       
       {/* AnimatedBackground agora está por cima do fundo gradiente */}
