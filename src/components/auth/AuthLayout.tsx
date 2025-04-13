@@ -13,38 +13,41 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
 
   // Efeito para garantir que as teias sejam carregadas antes do conteúdo principal
   useEffect(() => {
-    // Verificar se o evento WebTeiasProntas já foi disparado anteriormente
-    if (window._teiasReady === true) {
-      setContentReady(true);
+    // Mostrar conteúdo imediatamente para evitar tela em branco
+    setContentReady(true);
+    
+    // Se já estiver marcado como pronto no localStorage, não precisamos fazer nada
+    const hasInitialized = localStorage.getItem('_teiasInitialized');
+    if (hasInitialized === 'true') {
+      window._teiasReady = true;
       return;
     }
 
-    // Mostrar conteúdo mais rapidamente para melhorar a percepção de desempenho
-    // mas manter efeito de fade-in para experiência visual
-    const timer = setTimeout(() => {
-      setContentReady(true);
-      window._teiasReady = true;
-    }, 100); // Reduzido para 100ms
-
     // Escuta o evento personalizado que indica que as teias estão prontas
     const handleTeiasReady = () => {
-      clearTimeout(timer);
       setContentReady(true);
       window._teiasReady = true;
+      localStorage.setItem('_teiasInitialized', 'true');
     };
 
+    // Registrar listener para o evento de teias prontas
     document.addEventListener('WebTeiasProntas', handleTeiasReady);
 
-    // Dispara um evento para solicitar atualização imediata das teias
+    // Disparar evento para forçar atualização das teias
     document.dispatchEvent(new CustomEvent('ForceWebTeiaUpdate'));
 
-    // Garantir renderização mesmo sem evento
-    requestAnimationFrame(() => {
-      setContentReady(true);
-    });
+    // Garantir que o conteúdo seja renderizado mesmo se as teias não carregarem
+    const backupTimer = setTimeout(() => {
+      if (!window._teiasReady) {
+        setContentReady(true);
+        window._teiasReady = true;
+        localStorage.setItem('_teiasInitialized', 'true');
+        console.warn("Renderização de teias forçada após timeout");
+      }
+    }, 300);
 
     return () => {
-      clearTimeout(timer);
+      clearTimeout(backupTimer);
       document.removeEventListener('WebTeiasProntas', handleTeiasReady);
     };
   }, []);
