@@ -1,8 +1,7 @@
-
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -11,7 +10,108 @@
 }
 
 .animate-fadeIn {
-  animation: fadeIn 0.4s ease-out forwards;
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.2) 20%,
+    rgba(255, 255, 255, 0) 40%
+  );
+  background-size: 1000px 100%;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideInUp {
+  animation: slideInUp 0.6s ease-out forwards;
+}
+
+/* Novas animações para melhorar carregamento */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 0, 0.3);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(255, 107, 0, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 0, 0);
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite;
+}
+
+/* Especificações para telas de autenticação */
+.auth-page-loading {
+  opacity: 1;
+  transition: opacity 0.3s ease-out;
+}
+
+/* Animação específica para componentes de autenticação */
+.auth-component {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeIn 0.4s ease-out 0.15s forwards;
+}
+
+/* Efeito de vidro aprimorado */
+.glass-effect {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 2px solid rgba(255, 107, 0, 0.3);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1), 
+    0 2px 8px rgba(255, 107, 0, 0.1),
+    inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.glass-effect:hover {
+  box-shadow: 
+    0 12px 48px rgba(0, 0, 0, 0.15), 
+    0 4px 12px rgba(255, 107, 0, 0.15),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 107, 0, 0.4);
 }
 
 /* Animações existentes abaixo */
@@ -106,20 +206,6 @@
 }
 
 /* Efeito de "vidro" para contêineres */
-.glass-effect {
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease-in-out;
-}
-
-.glass-effect:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 107, 0, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 107, 0, 0.1);
-}
 
 .dark .glass-effect {
   background: rgba(10, 37, 64, 0.15);

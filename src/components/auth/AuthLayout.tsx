@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { AnimatedBackground } from "./AnimatedBackground";
 
@@ -9,20 +9,28 @@ interface AuthLayoutProps {
 
 export function AuthLayout({ children, className }: AuthLayoutProps) {
   // Estado para controlar quando o conteúdo principal deve ser exibido
-  const [contentReady, setContentReady] = React.useState(false);
+  const [contentReady, setContentReady] = useState(false);
 
   // Efeito para garantir que as teias sejam carregadas antes do conteúdo principal
-  React.useEffect(() => {
+  useEffect(() => {
+    // Verificar se o evento WebTeiasProntas já foi disparado anteriormente
+    if (window._teiasReady === true) {
+      setContentReady(true);
+      return;
+    }
+
     // Força renderização do conteúdo após um curto tempo
     // mesmo que as teias ainda não estejam prontas (para falha segura)
     const timer = setTimeout(() => {
       setContentReady(true);
-    }, 50);
+      window._teiasReady = true;
+    }, 150);
 
     // Escuta o evento personalizado que indica que as teias estão prontas
     const handleTeiasReady = () => {
       clearTimeout(timer);
       setContentReady(true);
+      window._teiasReady = true;
     };
 
     document.addEventListener('WebTeiasProntas', handleTeiasReady);
@@ -36,19 +44,22 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
     };
   }, []);
 
+  // Renderizar o componente com um fallback que garante a visibilidade mesmo se houver problemas
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-[#f7f9fa] dark:bg-[#001427] p-4 relative overflow-hidden">
+      {/* Overlay para garantir fundo mínimo mesmo se AnimatedBackground falhar */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#001427] to-[#0A2540] z-0"></div>
+      
       {/* AnimatedBackground como primeiro componente a ser renderizado */}
       <AnimatedBackground>
-        {/* Conteúdo principal com renderização condicionada */}
-        <div className="flex items-center justify-center w-full">
+        {/* Conteúdo principal */}
+        <div className="flex items-center justify-center w-full z-10 relative">
           <div
             className={cn(
-              "w-full max-w-[480px] rounded-2xl bg-white/30 dark:bg-[#0A2540]/30 p-8 shadow-xl shadow-brand-primary/15 backdrop-blur-lg transition-all duration-300",
+              "w-full max-w-[480px] rounded-2xl p-8 shadow-xl shadow-brand-primary/15 backdrop-blur-lg transition-all duration-300",
               "hover:shadow-2xl hover:shadow-brand-primary/25 animate-fadeIn",
               "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2",
-              !contentReady && "opacity-0", // Inicialmente invisível até as teias estarem prontas
-              contentReady && "opacity-100", // Aparece quando as teias estiverem prontas
+              !contentReady ? "opacity-0" : "opacity-100", // Controle de visibilidade baseado no estado
               className,
             )}
             style={{ 
@@ -56,7 +67,7 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
               backdropFilter: "blur(16px)",
               WebkitBackdropFilter: "blur(16px)",
               boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 107, 0, 0.15)",
-              border: "1px solid rgba(255, 107, 0, 0.2)",
+              border: "2px solid rgba(255, 107, 0, 0.3)",
               borderRadius: "18px",
               background: "linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%)"
             }}
@@ -67,4 +78,11 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
       </AnimatedBackground>
     </div>
   );
+}
+
+// Adicionar a declaração de tipo para a propriedade global
+declare global {
+  interface Window {
+    _teiasReady?: boolean;
+  }
 }

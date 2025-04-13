@@ -1,438 +1,421 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { getWebPersistence, setWebPersistence } from "../../lib/web-persistence";
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import { saveNodes, loadNodes } from "@/lib/web-persistence";
 
 interface Node {
-  id: number;
   x: number;
   y: number;
   vx: number;
   vy: number;
-  opacity: number;
-  size: number;
-  fadeState: "in" | "out" | "stable";
+  radius: number;
+  fadeState: 'in' | 'out' | 'stable';
   fadeTimer: number;
+  opacity: number;
 }
 
-interface Props {
-  cursor: { x: number | null; y: number | null };
-  dimensions: { width: number; height: number };
+interface AnimatedBackgroundProps {
+  children?: React.ReactNode;
 }
 
-const AnimatedBackground: React.FC<Props> = ({ cursor, dimensions }) => {
+export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [nodes, setNodes] = useState<Node[]>([]);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const frameRef = useRef<number>();
-  const renderedRef = useRef<boolean>(false);
-  const [renderError, setRenderError] = useState<string | null>(null);
-  const lastClickRef = useRef<{ x: number, y: number, time: number } | null>(null);
+  const [dimensions, setDimensions] = useState({ width: window.innerWidth || 1280, height: window.innerHeight || 800 });
+  const [mousePosition, setMousePosition] = useState({ x: dimensions.width / 2, y: dimensions.height / 2 });
+  const [isReady, setIsReady] = useState(false);
+  const requestRef = useRef<number | null>(null);
+  const previousTimeRef = useRef<number | null>(null);
+  const isInitializedRef = useRef(false);
 
-  // Aumentar a quantidade de nós inicial para melhor densidade visual
-  const minNodeCount = 120;
+  // Função para criar novos nós
+  const createNodes = useCallback(() => {
+    console.log("Criando novas teias...");
 
-  // Função para recuperar os nós armazenados
-  const loadStoredNodes = () => {
+    // Certifique-se de que temos dimensões válidas
+    const { width, height } = dimensions.width === 0 ? { width: window.innerWidth || 1280, height: window.innerHeight || 800 } : dimensions;
+
+    const minNodeCount = 120; // Garantir pelo menos 120 nós
+    const calculatedNodeCount = Math.floor((width * height) / 6000); // Densidade aumentada
+    const nodeCount = Math.max(minNodeCount, calculatedNodeCount);
+
+    // Margem mínima para garantir que as teias não saiam da tela
+    const margin = 2;
+
+    const newNodes: Node[] = [];
+    for (let i = 0; i < nodeCount; i++) {
+      const x = margin + Math.random() * (width - 2 * margin);
+      const y = margin + Math.random() * (height - 2 * margin);
+      const radius = Math.random() * 1.5 + 0.5;
+
+      // Fade state aleatório para animação suave de aparecimento/desaparecimento
+      const fadeState = Math.random() > 0.7 ? 'out' : Math.random() > 0.5 ? 'in' : 'stable';
+      const fadeTimer = Math.floor(Math.random() * 500) + 100;
+      const opacity = fadeState === 'in' ? Math.random() * 0.3 : 
+                     fadeState === 'out' ? 0.1 + Math.random() * 0.3 : 
+                     0.2 + Math.random() * 0.3;
+
+      newNodes.push({
+        x,
+        y,
+        vx: (Math.random() - 0.5) * 0.2,
+        vy: (Math.random() - 0.5) * 0.2,
+        radius,
+        fadeState,
+        fadeTimer,
+        opacity
+      });
+    }
+
+    // Atualiza o estado e salva os nós no localStorage
+    setNodes(newNodes);
+    console.log(`Novas teias geradas com sucesso:`, newNodes.length);
+    saveNodes(newNodes);
+
+    // Disparar evento indicando que as teias estão prontas
+    document.dispatchEvent(new CustomEvent('WebTeiasProntas'));
+
+    return newNodes;
+  }, [dimensions]);
+
+  // Tentar obter nós salvos ou criar novos
+  const initializeNodes = useCallback(() => {
+    if (isInitializedRef.current) return;
+
+    // Garantir que temos dimensões válidas
+    const { width, height } = dimensions.width === 0 ? 
+      { width: window.innerWidth || 1280, height: window.innerHeight || 800 } : dimensions;
+
     try {
-      const storedNodes = getWebPersistence("backgroundNodes");
+      const storedNodes = loadNodes();
 
+      // Se temos nós salvos, adaptá-los às dimensões atuais
       if (storedNodes && Array.isArray(storedNodes) && storedNodes.length > 0) {
-        console.log("Estrutura de teias já existe no localStorage, carregando instantaneamente");
-
         // Margem mínima para garantir que as teias não saiam da tela
         const margin = 2;
 
         // Adapta os nós armazenados ao tamanho atual da tela
         const adaptedNodes = storedNodes.map(node => ({
           ...node,
-          x: Math.max(margin, Math.min(dimensions.width - margin, (node.x / 1920) * dimensions.width)),
-          y: Math.max(margin, Math.min(dimensions.height - margin, (node.y / 1080) * dimensions.height)),
+          x: Math.min(Math.max(margin, (node.x / 100) * width), width - margin),
+          y: Math.min(Math.max(margin, (node.y / 100) * height), height - margin),
         }));
 
-        return adaptedNodes;
-      }
+        setNodes(adaptedNodes);
+        console.log("Teias otimizadas em segundo plano:", adaptedNodes.length);
 
-      return null;
-    } catch (error) {
-      console.error("Erro ao carregar teias do localStorage:", error);
-      return null;
-    }
-  };
+        // Atualizar o salvamento para refletir as novas dimensões
+        saveNodes(adaptedNodes);
+        isInitializedRef.current = true;
+        setIsReady(true);
 
-  // Função para gerar novos nós
-  const generateNodes = useCallback(() => {
-    try {
-      // Verificar primeiro se já existem nós armazenados
-      const storedNodes = loadStoredNodes();
-      if (storedNodes) {
-        setNodes(storedNodes);
-        setIsInitialized(true);
+        // Disparar evento indicando que as teias estão prontas
+        document.dispatchEvent(new CustomEvent('WebTeiasProntas'));
+
         return;
       }
+    } catch (error) {
+      console.error("Erro ao carregar teias:", error);
+    }
 
-      console.log("Criando novas teias prioritárias...");
+    // Se não temos nós salvos ou falhou o carregamento, criar novos
+    createNodes();
+    isInitializedRef.current = true;
+    setIsReady(true);
+  }, [dimensions, createNodes]);
 
-      const calculatedNodeCount = Math.floor((dimensions.width * dimensions.height) / 6000);
-      const nodeCount = Math.max(minNodeCount, calculatedNodeCount);
+  // Inicializar as dimensões do canvas e os nós no carregamento da página
+  useEffect(() => {
+    // Dimensões iniciais
+    const updateDimensions = () => {
+      setDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
 
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+
+    // Inicializar as teias imediatamente
+    initializeNodes();
+
+    // Forçar atualização das teias quando solicitado
+    const handleForceUpdate = () => {
+      console.log("Atualizando teias forçadamente");
+      initializeNodes();
+    };
+
+    document.addEventListener('ForceWebTeiaUpdate', handleForceUpdate);
+
+    // Limpar
+    return () => {
+      window.removeEventListener('resize', updateDimensions);
+      document.removeEventListener('ForceWebTeiaUpdate', handleForceUpdate);
+      if (requestRef.current !== null) {
+        cancelAnimationFrame(requestRef.current);
+      }
+    };
+  }, [initializeNodes]);
+
+  // Atualiza a posição dos nós com base na posição do cursor
+  const updateNodePositions = useCallback(() => {
+    setNodes(prevNodes => {
       // Margem mínima para garantir que as teias não saiam da tela
       const margin = 2;
 
-      const newNodes: Node[] = [];
-      for (let i = 0; i < nodeCount; i++) {
-        // Distribui os nós de forma mais uniforme pela tela
-        const isAuthPage = window.location.pathname.includes('/auth') || 
-                          window.location.pathname.includes('/login') || 
-                          window.location.pathname.includes('/register');
+      const updatedNodes = prevNodes.map(node => {
+        let { x, y, fadeState, fadeTimer, opacity } = node;
 
-        // Distribuição mais uniforme para evitar aglomerações
-        const gridSize = Math.sqrt(nodeCount);
-        const cellWidth = dimensions.width / gridSize;
-        const cellHeight = dimensions.height / gridSize;
+        // Atualizar estado de fade
+        if (fadeState === 'in') {
+          opacity = Math.min(0.5, opacity + 0.002);
+          fadeTimer -= 1;
+          if (fadeTimer <= 0) {
+            fadeState = 'stable';
+            fadeTimer = Math.floor(Math.random() * 500) + 1000;
+          }
+        } else if (fadeState === 'out') {
+          opacity = Math.max(0.05, opacity - 0.002);
+          fadeTimer -= 1;
+          if (fadeTimer <= 0) {
+            fadeState = 'in';
+            fadeTimer = Math.floor(Math.random() * 300) + 200;
+          }
+        } else {
+          // Stable state
+          fadeTimer -= 1;
+          if (fadeTimer <= 0) {
+            fadeState = Math.random() > 0.5 ? 'in' : 'out';
+            fadeTimer = Math.floor(Math.random() * 300) + 200;
+          }
+        }
 
-        const gridX = i % gridSize;
-        const gridY = Math.floor(i / gridSize);
+        // Atualizar posição baseada nos vetores de velocidade
+        x += node.vx;
+        y += node.vy;
 
-        const baseX = gridX * cellWidth;
-        const baseY = gridY * cellHeight;
+        // Verificar limites da tela
+        if (x < margin) {
+          x = margin;
+          node.vx *= -1;
+        } else if (x > dimensions.width - margin) {
+          x = dimensions.width - margin;
+          node.vx *= -1;
+        }
 
-        // Adiciona variação dentro da célula
-        const x = Math.max(margin, Math.min(dimensions.width - margin, 
-          baseX + Math.random() * cellWidth));
-        const y = Math.max(margin, Math.min(dimensions.height - margin, 
-          baseY + Math.random() * cellHeight));
+        if (y < margin) {
+          y = margin;
+          node.vy *= -1;
+        } else if (y > dimensions.height - margin) {
+          y = dimensions.height - margin;
+          node.vy *= -1;
+        }
 
-        newNodes.push({
-          id: i,
+        // Calcular a distância do cursor
+        const dx = mousePosition.x - x;
+        const dy = mousePosition.y - y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // A força de atração depende da distância (menor atração quando próximo demais)
+        let attractionForce = 0;
+
+        if (distance < 200) {
+          // Atração: mais forte entre 50 e 150 pixels, mais fraca quando muito perto ou muito longe
+          attractionForce = Math.min(0.08, 0.3 / (1 + Math.exp(-(distance - 100) / 20)));
+
+          // Calcular novas velocidades baseadas na força de atração
+          const angle = Math.atan2(dy, dx);
+          node.vx += attractionForce * Math.cos(angle);
+          node.vy += attractionForce * Math.sin(angle);
+
+          // Limitar velocidade máxima
+          const speed = Math.sqrt(node.vx * node.vx + node.vy * node.vy);
+          if (speed > 1.5) {
+            node.vx = (node.vx / speed) * 1.5;
+            node.vy = (node.vy / speed) * 1.5;
+          }
+        }
+
+        // Aplicar atrito natural para evitar aceleração infinita
+        node.vx *= 0.99;
+        node.vy *= 0.99;
+
+        // Retornar nó atualizado
+        return {
+          ...node,
           x,
           y,
-          vx: (Math.random() - 0.5) * 0.3,
-          vy: (Math.random() - 0.5) * 0.3,
-          opacity: Math.random() * 0.5 + 0.3,
-          size: Math.random() * 2 + 1,
-          fadeState: "stable",
-          fadeTimer: Math.random() * 100
-        });
-      }
+          fadeState,
+          fadeTimer,
+          opacity
+        };
+      });
 
-      // Salva nós no localStorage para persistência
-      setWebPersistence("backgroundNodes", newNodes);
-      console.log("Novas teias geradas com sucesso:", newNodes.length);
+      return updatedNodes;
+    });
+  }, [dimensions, mousePosition]);
 
-      setNodes(newNodes);
-      setIsInitialized(true);
-    } catch (error) {
-      console.error("Erro ao gerar teias:", error);
-      setRenderError(`Erro ao gerar teias: ${error}`);
-      // Tenta uma abordagem mais simples se falhar
-      const simpleNodes: Node[] = [];
-      for (let i = 0; i < 30; i++) {
-        simpleNodes.push({
-          id: i,
-          x: Math.random() * dimensions.width,
-          y: Math.random() * dimensions.height,
-          vx: 0,
-          vy: 0,
-          opacity: 0.5,
-          size: 2,
-          fadeState: "stable",
-          fadeTimer: 0
-        });
-      }
-      setNodes(simpleNodes);
-      setIsInitialized(true);
-    }
-  }, [dimensions.width, dimensions.height]);
+  // Desenha os nós e conexões no canvas
+  const drawNodesAndConnections = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-  // Inicialização com alta prioridade
-  useEffect(() => {
-    if (!renderedRef.current && dimensions.width > 0 && dimensions.height > 0) {
-      // Verifica se estamos em uma página de autenticação
-      const isAuthPage = window.location.pathname.includes('/auth') || 
-                         window.location.pathname.includes('/login') || 
-                         window.location.pathname.includes('/register');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-      if (isAuthPage) {
-        console.log("Inicializando sistema de teias com prioridade máxima");
-        console.log("Página de autenticação detectada, preparando teias prioritárias");
-
-        // Executa a inicialização imediatamente
-        requestAnimationFrame(() => {
-          generateNodes();
-          renderedRef.current = true;
-        });
-      } else {
-        // Para outras páginas, mantém o comportamento normal
-        generateNodes();
-        renderedRef.current = true;
-      }
+    // Garantir que o canvas tem as dimensões corretas
+    if (canvas.width !== dimensions.width || canvas.height !== dimensions.height) {
+      canvas.width = dimensions.width;
+      canvas.height = dimensions.height;
     }
 
-    return () => {
-      if (frameRef.current) {
-        cancelAnimationFrame(frameRef.current);
-      }
-    };
-  }, [dimensions, generateNodes]);
+    // Limpar canvas
+    ctx.clearRect(0, 0, dimensions.width, dimensions.height);
 
-  // Atualização dos nós após serem carregados
-  useEffect(() => {
-    if (!isInitialized || nodes.length === 0) return;
-
-    console.log("Página de autenticação detectada, priorizando carregamento das teias");
-    console.log("Atualizando teias forçadamente");
-
-    const updatePositions = () => {
-      setNodes(currentNodes => {
-        const updatedNodes = [...currentNodes];
-        try {
-          // Otimizar as teias em segundo plano
-          // Este processo é executado em um timeout para evitar bloquear a interface
-          setTimeout(() => {
-            console.log("Teias otimizadas em segundo plano:", updatedNodes.length);
-          }, 1000);
-        } catch (error) {
-          console.error("Erro ao otimizar teias:", error);
-        }
-        return updatedNodes;
-      });
-    };
-
-    // Executa a atualização imediatamente
-    updatePositions();
-
-    // Adiciona o efeito de clique para gerar mais teias
-    const handleClick = (e: MouseEvent) => {
-      const now = Date.now();
-
-      // Limita a frequência de cliques para evitar sobrecarga
-      if (lastClickRef.current && now - lastClickRef.current.time < 300) {
-        return;
-      }
-
-      const clickX = e.clientX;
-      const clickY = e.clientY;
-
-      // Salva o último clique
-      lastClickRef.current = { x: clickX, y: clickY, time: now };
-
-      // Adiciona novos nós ao redor do clique
-      setNodes(prevNodes => {
-        const newNodes = [...prevNodes];
-
-        // Adiciona 3-5 novos nós ao redor do clique
-        const newNodesCount = Math.floor(Math.random() * 3) + 3;
-
-        for (let i = 0; i < newNodesCount; i++) {
-          const angle = Math.random() * Math.PI * 2;
-          const distance = Math.random() * 50 + 10;
-
-          newNodes.push({
-            id: prevNodes.length + i,
-            x: clickX + Math.cos(angle) * distance,
-            y: clickY + Math.sin(angle) * distance,
-            vx: (Math.random() - 0.5) * 0.3,
-            vy: (Math.random() - 0.5) * 0.3,
-            opacity: Math.random() * 0.5 + 0.3,
-            size: Math.random() * 2 + 1,
-            fadeState: "in",
-            fadeTimer: 0
-          });
-        }
-
-        // Limita o número total de nós para manter o desempenho
-        return newNodes.slice(0, 200);
-      });
-    };
-
-    // Adiciona listener de clique
-    document.addEventListener("click", handleClick);
-
-    return () => {
-      document.removeEventListener("click", handleClick);
-    };
-  }, [isInitialized, nodes.length]);
-
-  // Atualiza a posição dos nós com base na posição do cursor
-  useEffect(() => {
-    if (!isInitialized || nodes.length === 0) return;
-
-    const updateNodePositions = () => {
-      setNodes(prevNodes => {
-        // Margem mínima para garantir que as teias não saiam da tela
-        const margin = 2;
-
-        const updatedNodes = prevNodes.map(node => {
-          let { x, y, vx, vy, fadeState, fadeTimer, opacity } = node;
-
-          // Atração para o cursor do mouse (quando existir)
-          if (cursor.x !== null && cursor.y !== null) {
-            const distX = cursor.x - x;
-            const distY = cursor.y - y;
-            const dist = Math.sqrt(distX * distX + distY * distY);
-
-            // Ajusta a força de atração com base na distância
-            // Mais suave, menos intensa para evitar aglomerações
-            if (dist < 200) {
-              const force = Math.min(0.05, 10 / (dist + 10)); // Força mais suave
-              vx += (distX / dist) * force;
-              vy += (distY / dist) * force;
-            }
-          }
-
-          // Adiciona um pouco de aleatoriedade ao movimento
-          vx += (Math.random() - 0.5) * 0.01;
-          vy += (Math.random() - 0.5) * 0.01;
-
-          // Limita a velocidade máxima
-          const maxSpeed = 0.5;
-          const speed = Math.sqrt(vx * vx + vy * vy);
-          if (speed > maxSpeed) {
-            vx = (vx / speed) * maxSpeed;
-            vy = (vy / speed) * maxSpeed;
-          }
-
-          // Aplica o atrito para desacelerar gradualmente
-          vx *= 0.98;
-          vy *= 0.98;
-
-          // Atualiza a posição
-          x += vx;
-          y += vy;
-
-          // Mantém os nós dentro das bordas com efeito de colisão
-          if (x < margin) {
-            x = margin;
-            vx *= -0.8;
-          } else if (x > dimensions.width - margin) {
-            x = dimensions.width - margin;
-            vx *= -0.8;
-          }
-
-          if (y < margin) {
-            y = margin;
-            vy *= -0.8;
-          } else if (y > dimensions.height - margin) {
-            y = dimensions.height - margin;
-            vy *= -0.8;
-          }
-
-          // Atualiza o estado de fade
-          fadeTimer++;
-          if (fadeState === "stable" && fadeTimer > 200) {
-            if (Math.random() < 0.01) {
-              fadeState = Math.random() < 0.5 ? "in" : "out";
-              fadeTimer = 0;
-            }
-          } else if (fadeState === "in") {
-            opacity = Math.min(opacity + 0.01, 0.8);
-            if (opacity >= 0.8) {
-              fadeState = "stable";
-              fadeTimer = 0;
-            }
-          } else if (fadeState === "out") {
-            opacity = Math.max(opacity - 0.01, 0.2);
-            if (opacity <= 0.2) {
-              fadeState = "stable";
-              fadeTimer = 0;
-            }
-          }
-
-          return { ...node, x, y, vx, vy, fadeState, fadeTimer, opacity };
-        });
-
-        // Persiste os nós atualizados ocasionalmente
-        if (Math.random() < 0.01) {
-          setWebPersistence("backgroundNodes", updatedNodes);
-        }
-
-        return updatedNodes;
-      });
-
-      frameRef.current = requestAnimationFrame(updateNodePositions);
-    };
-
-    frameRef.current = requestAnimationFrame(updateNodePositions);
-
-    return () => {
-      if (frameRef.current) {
-        cancelAnimationFrame(frameRef.current);
-      }
-    };
-  }, [cursor, dimensions, isInitialized, nodes.length]);
-
-  // Renderiza os nós e as conexões (teias)
-  const renderNodes = () => {
-    if (nodes.length === 0) return null;
-
-    // Conexões entre os nós (teias)
-    const connections: React.ReactNode[] = [];
-    const connectionThreshold = 100; // Distância máxima para conexão
+    // Desenhar conexões entre nós próximos
+    ctx.strokeStyle = 'rgba(255, 107, 0, 0.2)';
 
     for (let i = 0; i < nodes.length; i++) {
       const nodeA = nodes[i];
+
       for (let j = i + 1; j < nodes.length; j++) {
         const nodeB = nodes[j];
         const dx = nodeA.x - nodeB.x;
         const dy = nodeA.y - nodeB.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (distance < connectionThreshold) {
-          const opacity = Math.min(nodeA.opacity, nodeB.opacity) * (1 - distance / connectionThreshold);
-          const width = Math.max(0.2, 1 - distance / connectionThreshold);
-
-          connections.push(
-            <line
-              key={`${nodeA.id}-${nodeB.id}`}
-              x1={nodeA.x}
-              y1={nodeA.y}
-              x2={nodeB.x}
-              y2={nodeB.y}
-              stroke={`rgba(255, 107, 0, ${opacity * 0.7})`}
-              strokeWidth={width}
-              strokeLinecap="round"
-            />
-          );
+        // Desenhar linha se os nós estiverem próximos
+        if (distance < 100) {
+          // Opacidade baseada na distância e na opacidade dos nós
+          const opacity = (1 - distance / 100) * 0.2 * (nodeA.opacity + nodeB.opacity) / 2;
+          ctx.beginPath();
+          ctx.moveTo(nodeA.x, nodeA.y);
+          ctx.lineTo(nodeB.x, nodeB.y);
+          ctx.strokeStyle = `rgba(255, 107, 0, ${opacity})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
         }
       }
     }
 
-    return (
-      <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
-        <g>
-          {connections}
-        </g>
-        <g>
-          {nodes.map(node => (
-            <circle
-              key={node.id}
-              cx={node.x}
-              cy={node.y}
-              r={node.size}
-              fill={`rgba(255, 107, 0, ${node.opacity})`}
-            />
-          ))}
-        </g>
-      </svg>
-    );
-  };
+    // Efeito especial: mais conexões perto do cursor
+    const cursorRange = 100;
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+      const dx = node.x - mousePosition.x;
+      const dy = node.y - mousePosition.y;
+      const distanceToMouse = Math.sqrt(dx * dx + dy * dy);
 
-  if (renderError) {
-    return <div className="fixed inset-0 bg-gradient-to-br from-slate-900 to-slate-800 opacity-50"></div>;
-  }
+      if (distanceToMouse < cursorRange) {
+        const opacity = (1 - distanceToMouse / cursorRange) * 0.15;
+        ctx.beginPath();
+        ctx.moveTo(node.x, node.y);
+        ctx.lineTo(mousePosition.x, mousePosition.y);
+        ctx.strokeStyle = `rgba(255, 107, 0, ${opacity})`;
+        ctx.lineWidth = 0.4;
+        ctx.stroke();
+      }
+    }
+
+    // Desenhar nós
+    nodes.forEach(node => {
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 107, 0, ${node.opacity})`;
+      ctx.fill();
+    });
+  }, [nodes, dimensions, mousePosition]);
+
+  // Lidar com o movimento do mouse
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({
+        x: e.clientX,
+        y: e.clientY
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, []);
+
+  // Quando o usuário clica no canvas, adicionar mais nós
+  const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const x = e.clientX;
+    const y = e.clientY;
+
+    // Adicionar 10 novos nós ao redor do clique
+    const newNodes = Array.from({ length: 10 }, () => {
+      const radius = Math.random() * 1.5 + 0.5;
+      const angle = Math.random() * Math.PI * 2;
+      const distance = Math.random() * 50;
+
+      return {
+        x: x + Math.cos(angle) * distance,
+        y: y + Math.sin(angle) * distance,
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: (Math.random() - 0.5) * 0.5,
+        radius,
+        fadeState: 'in' as const,
+        fadeTimer: Math.floor(Math.random() * 300) + 200,
+        opacity: 0.1
+      };
+    });
+
+    setNodes(prevNodes => {
+      const updatedNodes = [...prevNodes, ...newNodes];
+      saveNodes(updatedNodes);
+      return updatedNodes;
+    });
+  }, []);
+
+  // Loop de animação
+  useEffect(() => {
+    // Iniciar animação mesmo antes de isReady ser true para garantir que as teias apareçam
+    const animate = (time: number) => {
+      // Atualizar posições dos nós
+      updateNodePositions();
+
+      // Desenhar no canvas
+      drawNodesAndConnections();
+
+      previousTimeRef.current = time;
+      requestRef.current = requestAnimationFrame(animate);
+    };
+
+    requestRef.current = requestAnimationFrame(animate);
+
+    // Garantir que teiasWebProntas seja disparado
+    setTimeout(() => {
+      if (!isReady) {
+        setIsReady(true);
+        document.dispatchEvent(new CustomEvent('WebTeiasProntas'));
+      }
+    }, 200);
+
+    return () => {
+      if (requestRef.current !== null) {
+        cancelAnimationFrame(requestRef.current);
+      }
+    };
+  }, [updateNodePositions, drawNodesAndConnections]);
 
   return (
-    <AnimatePresence>
-      <motion.div
-        className="fixed inset-0 overflow-hidden"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        {renderNodes()}
-      </motion.div>
-    </AnimatePresence>
+    <div className="absolute inset-0 overflow-hidden">
+      <canvas
+        ref={canvasRef}
+        width={dimensions.width}
+        height={dimensions.height}
+        className="absolute top-0 left-0 w-full h-full z-0"
+        style={{ 
+          pointerEvents: 'none',
+          touchAction: 'none'
+        }}
+        onClick={handleCanvasClick}
+      />
+      {children}
+    </div>
   );
-};
-
-export default AnimatedBackground;
+}
