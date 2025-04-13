@@ -2623,6 +2623,48 @@ const FloatingChatSupport: React.FC = () => {
             max-width: 75% !important;
           }
         }
+
+        /* Styles for AI messages */
+        .chat-container .message.ai-message {
+          align-self: flex-start;
+          background-color: #f0f0f0;
+          border-radius: 18px 18px 18px 4px;
+          color: #333;
+          margin-right: 40px;
+        }
+
+        .chat-container .message.ai-message .message-content strong {
+          color: #FF6B00;
+          font-weight: 600;
+        }
+
+        .chat-container .message.ai-message .message-content table {
+          border-collapse: collapse;
+          width: 100%;
+          margin: 12px 0;
+          font-size: 0.9em;
+        }
+
+        .chat-container .message.ai-message .message-content th,
+        .chat-container .message.ai-message .message-content td {
+          padding: 8px;
+          text-align: left;
+          border: 1px solid rgba(255, 107, 0, 0.2);
+        }
+
+        .chat-container .message.ai-message .message-content th {
+          background-color: rgba(255, 107, 0, 0.1);
+          font-weight: 600;
+          text-align: center;
+        }
+
+        .chat-container .message.ai-message .message-content tr:nth-child(even) {
+          background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        .dark .chat-container .message.ai-message .message-content tr:nth-child(even) {
+          background-color: rgba(255, 255, 255, 0.05);
+        }
       `}</style>
     </>
   );

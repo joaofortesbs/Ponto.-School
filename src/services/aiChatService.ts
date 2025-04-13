@@ -45,10 +45,10 @@ async function getUserContext() {
   try {
     // Importar o aiChatDatabase para acesso a dados do usuário
     const aiChatDatabase = (await import('./aiChatDatabaseService')).aiChatDatabase;
-    
+
     // Obter o contexto completo do usuário através do serviço especializado
     const userContext = await aiChatDatabase.getUserContext();
-    
+
     // Se não conseguiu obter dados, usar fallback básico
     if (!userContext.isAuthenticated) {
       // Obter dados do localStorage e sessionStorage como fallback
@@ -57,11 +57,11 @@ async function getUserContext() {
         sessionStorage: sessionStorage.getItem('username'),
         email: localStorage.getItem('userEmail') || sessionStorage.getItem('userEmail')
       };
-      
+
       const bestUsername = usernameSources.localStorage || 
                            usernameSources.sessionStorage || 
                            'Usuário';
-      
+
       return {
         username: bestUsername,
         email: usernameSources.email || 'email@exemplo.com',
@@ -77,19 +77,19 @@ async function getUserContext() {
         series: []
       };
     }
-    
+
     // Adicionar dados extras relevantes ao contexto
     return {
       ...userContext,
       currentPage: window.location.pathname,
       lastActivity: localStorage.getItem('lastActivity') || 'Nenhuma atividade recente',
-      
+
       // Dados do dispositivo e ambiente
       userAgent: navigator.userAgent,
       platform: navigator.platform,
       screenSize: `${window.innerWidth}x${window.innerHeight}`,
       darkMode: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches,
-      
+
       // Dados do localStorage relevantes
       localStorageData: Object.keys(localStorage).filter(key => 
         key.startsWith('user_') || 
@@ -370,7 +370,7 @@ Clique no link acima para ser redirecionado. Posso ajudar com mais alguma coisa?
 
       // Transformar links em tutoriais detalhados
       let processedResponse = aiResponse;
-      
+
       // Substituir links por instruções de tutorial completo
       processedResponse = processedResponse.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
         // Verificar se é um link interno da plataforma
@@ -378,7 +378,7 @@ Clique no link acima para ser redirecionado. Posso ajudar com mais alguma coisa?
           // Extrair o nome da seção do URL
           const section = url.split('/').pop() || '';
           let tutorialText = '';
-          
+
           // Criar tutorial personalizado com base na seção
           switch(section) {
             case 'portal':
@@ -402,75 +402,37 @@ Clique no link acima para ser redirecionado. Posso ajudar com mais alguma coisa?
             default:
               tutorialText = `Para acessar "${text}", siga estes passos:\n1. No menu lateral esquerdo da plataforma, procure o item correspondente\n2. Você pode também utilizar a barra de pesquisa superior para encontrar esta seção\n3. Clique no item para acessar a página\n4. Explore as funcionalidades disponíveis nesta seção\n5. Se precisar de mais ajuda com esta área específica, me pergunte!`;
           }
-          
+
           return `"${text}": ${tutorialText}`;
         }
-        
+
         // Para links externos, substituir por informação sem link
         return `"${text}": Este recurso está disponível diretamente na plataforma. Não é necessário acessar links externos, pois todas as funcionalidades estão integradas na Ponto.School.`;
       });
-      
+
       // Remover URLs diretos
       processedResponse = processedResponse.replace(/(https?:\/\/[^\s]+)(?!\))/g, 'este recurso na plataforma');
-      
+
       // Adicionar incentivo para continuar a conversa ao final das respostas
       if (!processedResponse.includes('Posso ajudar') && !processedResponse.includes('mais alguma coisa')) {
         processedResponse += '\n\nPosso ajudar com mais alguma coisa sobre a plataforma? Estou à disposição para qualquer dúvida adicional.';
       }
-      
+
       // Formatação visual melhorada para a resposta processada
-      const formattedResponse = processedResponse
-        // Formatação de texto básica
-        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
-        .replace(/\_(.*?)\_/g, '<em class="italic">$1</em>')
-        .replace(/\~\~(.*?)\~\~/g, '<del class="line-through">$1</del>')
-        .replace(/\`(.*?)\`/g, '<code class="bg-black/10 dark:bg-white/10 rounded px-1 py-0.5 font-mono text-xs">$1</code>')
-
-        // Formatação de parágrafos e listas
-        .replace(/\n\n/g, '</p><p class="mt-3">')
-        .replace(/\n/g, '<br />')
-
-        // Formatação de títulos
-        .replace(/^# (.*?)$/gm, '<h3 class="text-lg font-bold my-2">$1</h3>')
-        .replace(/^## (.*?)$/gm, '<h4 class="text-md font-bold my-2">$1</h4>')
-
-        // Formatação de listas
-        .replace(/^\* (.*?)$/gm, '<li class="ml-4 list-disc">$1</li>')
-        .replace(/^\d\. (.*?)$/gm, '<li class="ml-4 list-decimal">$1</li>')
-
-        // Formatação de textos especiais sem links
-        .replace(/\"([^\"]+)\"\:/g, '<span class="font-bold text-orange-600 dark:text-orange-400">$1:</span>')
-
-        // Formatação especial para dicas e destaques
-        .replace(/💡 (.*?)$/gm, '<div class="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 p-2 rounded-md my-2 flex items-start"><span class="mr-2">💡</span><span>$1</span></div>')
-        .replace(/⚠️ (.*?)$/gm, '<div class="bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 p-2 rounded-md my-2 flex items-start"><span class="mr-2">⚠️</span><span>$1</span></div>')
-
-        // Garantir que o conteúdo esteja envolto em um parágrafo
-        .replace(/^(.+?)$/gm, function(match) {
-          if (!match.startsWith('<') && !match.endsWith('>')) {
-            return '<p>' + match + '</p>';
-          }
-          return match;
-        });
-
-      // Garantir que não existam múltiplos <br> consecutivos
-      const cleanedResponse = formattedResponse
-        .replace(/<br\s*\/?><br\s*\/?>/g, '<br />')
-        .replace(/<p><\/p>/g, '')
-        .replace(/<p><br \/><\/p>/g, '<p>&nbsp;</p>');
+      const formattedResponse = formatMessage(processedResponse);
 
 
-      // Adiciona a resposta da IA ao histórico
+      // Adicionar a resposta da IA ao histórico
       conversationHistory[sessionId].push({ 
         role: 'assistant', 
-        content: cleanedResponse,
+        content: formattedResponse,
         timestamp: new Date()
       });
 
       // Salvar histórico atualizado no localStorage
       await saveConversationHistory(sessionId, conversationHistory[sessionId]);
 
-      return cleanedResponse;
+      return formattedResponse;
     } catch (apiError) {
       console.error('Erro na API xAI:', apiError);
 
@@ -534,7 +496,7 @@ function initializeConversationHistory(sessionId: string, userContext?: any) {
       3. Responder dúvidas sobre conteúdos educacionais
       4. Servir como um tutorial interativo para novos usuários
       5. Resolver problemas técnicos básicos
-      
+
       CONTEXTO DO USUÁRIO (COMPLETO):
       - Nome: ${userContext?.fullName || 'Não disponível'}
       - Username: ${username}
@@ -671,7 +633,7 @@ export async function generateGeminiResponse(
               2. Use uma linguagem mais informal e descontraída, como se estivesse conversando com um amigo.
               3. Seja amigável, use emojis ocasionalmente e mantenha um tom leve e positivo.
               4. Use gírias leves e expressões coloquiais quando apropriado.
-              
+
               LEMBRE-SE: Seu objetivo é servir como suporte para a plataforma, ajudando com navegação, tutoriais e respondendo dúvidas sobre todas as funcionalidades. Você NÃO é o assistente de estudos personalizados (que fica no menu lateral).
 
               CONTEÚDO INSTITUCIONAL:
@@ -684,7 +646,7 @@ export async function generateGeminiResponse(
 
               REDIRECIONAMENTO:
               Quando o usuário pedir para ser redirecionado a uma seção da plataforma, SEMPRE inclua o link completo usando a base https://pontoschool.com/. Por exemplo:
-              - Para o Portal: "Aqui está o link para o Portal: https://pontoschool.com/portal"
+              - Para o Portal: `Aqui está o link para o Portal: https://pontoschool.com/portal"
               - Para Agenda: "Você pode acessar sua agenda aqui: https://pontoschool.com/agenda"
               - Para Turmas: "Acesse suas turmas por este link: https://pontoschool.com/turmas"
 
@@ -898,7 +860,7 @@ export async function getConversationHistory(sessionId: string): Promise<ChatMes
             // Atualizar localStorage para sincronização
             try {
               localStorage.setItem(`conversationHistory_${sessionId}`, JSON.stringify(conversationHistory[sessionId]));
-              
+
               // Se temos o userId, também armazenar com chave mais específica
               if (userId) {
                 localStorage.setItem(`conversationHistory_${userId}_${sessionId}`, 
@@ -923,12 +885,12 @@ export async function getConversationHistory(sessionId: string): Promise<ChatMes
     console.log("Criando novo histórico de conversa para a sessão:", sessionId);
     const userContext = await getUserContext();
     initializeConversationHistory(sessionId, userContext);
-    
+
     // Salvar o histórico inicial
     try {
       localStorage.setItem(`conversationHistory_${sessionId}`, 
         JSON.stringify(conversationHistory[sessionId]));
-        
+
       // Se temos userIdForStorage, também armazenar com chave mais específica
       if (userIdForStorage) {
         localStorage.setItem(`conversationHistory_${userIdForStorage}_${sessionId}`, 
@@ -937,7 +899,7 @@ export async function getConversationHistory(sessionId: string): Promise<ChatMes
     } catch (e) {
       console.error("Erro ao salvar histórico inicial:", e);
     }
-    
+
     return conversationHistory[sessionId];
   } catch (generalError) {
     console.error("Erro geral ao obter histórico de conversa:", generalError);
@@ -1036,7 +998,7 @@ function fixPlatformLinks(text: string): string {
   for (const pattern of redirectPatterns) {
     text = text.replace(pattern, (match, sectionName) => {
       if (!sectionName) return match;
-      
+
       const normalizedName = sectionName.trim();
       // Verificar se o nome normalizado corresponde a alguma seção conhecida
       for (const key in platformSections) {
@@ -1047,7 +1009,7 @@ function fixPlatformLinks(text: string): string {
           return `Para acessar ${key}:\n\n${platformSections[key].tutorial}`;
         }
       }
-      
+
       // Resposta genérica para seções não específicas
       return `Para encontrar "${normalizedName}" na plataforma, você pode seguir estas etapas:
 1. Verifique o menu lateral esquerdo, onde estão as principais seções da plataforma
@@ -1064,14 +1026,14 @@ function fixPlatformLinks(text: string): string {
     if (url.includes('pontoschool.com')) {
       // Extrair a parte final do URL
       const pathPart = url.split('pontoschool.com/').pop();
-      
+
       // Procurar em todas as seções por um caminho correspondente
       for (const key in platformSections) {
         if (platformSections[key].path.includes(pathPart)) {
           return `Para acessar ${linkText}:\n\n${platformSections[key].tutorial}`;
         }
       }
-      
+
       // Resposta genérica para URLs não específicas
       return `Para acessar "${linkText}":\n
 1. No menu lateral esquerdo da plataforma, procure o item correspondente
@@ -1080,7 +1042,7 @@ function fixPlatformLinks(text: string): string {
 4. Explore as funcionalidades disponíveis nesta seção
 5. Se precisar de mais ajuda com esta área específica, me pergunte!`;
     }
-    
+
     // Para links externos
     return `O recurso "${linkText}" está disponível diretamente na plataforma. Não é necessário acessar links externos, pois todas as funcionalidades estão integradas na Ponto.School.`;
   });
@@ -1125,7 +1087,7 @@ async function saveConversationHistory(sessionId: string, history: ChatMessage[]
       // Salvar para o usuário atual com uma estrutura mais persistente
       // Usar formato conversationHistory_USER_ID_sessionId quando possível
       let storageKey = `conversationHistory_${sessionId}`;
-      
+
       // Tentar obter dados de identificação do usuário para melhor rastreamento
       try {
         const { data: sessionData } = await (await import('@/lib/supabase')).supabase.auth.getSession();
@@ -1136,10 +1098,10 @@ async function saveConversationHistory(sessionId: string, history: ChatMessage[]
       } catch (e) {
         console.log('Erro ao obter ID do usuário, usando chave padrão:', e);
       }
-      
+
       // Salvar com uma chave mais específica para melhor identificação
       localStorage.setItem(storageKey, JSON.stringify(serializableHistory));
-      
+
       // Para compatibilidade, também salvar com a chave antiga
       localStorage.setItem(`conversationHistory_${sessionId}`, JSON.stringify(serializableHistory));
 
@@ -1147,12 +1109,12 @@ async function saveConversationHistory(sessionId: string, history: ChatMessage[]
       try {
         const userConversationsKey = 'userConversationsIndex';
         let conversationsIndex = {};
-        
+
         const savedIndex = localStorage.getItem(userConversationsKey);
         if (savedIndex) {
           conversationsIndex = JSON.parse(savedIndex);
         }
-        
+
         conversationsIndex[sessionId] = {
           lastUpdated: new Date().toISOString(),
           messageCount: serializableHistory.length,
@@ -1160,17 +1122,17 @@ async function saveConversationHistory(sessionId: string, history: ChatMessage[]
             serializableHistory[1].content.substring(0, 30) + "..." : 
             "Nova conversa"
         };
-        
+
         // Limitar o índice a 50 conversas mais recentes
         const sortedEntries = Object.entries(conversationsIndex)
           .sort((a, b) => new Date(b[1].lastUpdated).getTime() - new Date(a[1].lastUpdated).getTime())
           .slice(0, 50);
-        
+
         const trimmedIndex = {};
         sortedEntries.forEach(([key, value]) => {
           trimmedIndex[key] = value;
         });
-        
+
         localStorage.setItem(userConversationsKey, JSON.stringify(trimmedIndex));
       } catch (indexError) {
         console.error("Erro ao atualizar índice de conversas:", indexError);
@@ -1181,7 +1143,7 @@ async function saveConversationHistory(sessionId: string, history: ChatMessage[]
         const allSessions = {};
         // Só armazenar as últimas 20 sessões
         const sessionIds = Object.keys(conversationHistory).slice(-20);
-        
+
         for (const id of sessionIds) {
           const sessionHistory = conversationHistory[id];
           if (sessionHistory && sessionHistory.length > 0) {
@@ -1194,7 +1156,7 @@ async function saveConversationHistory(sessionId: string, history: ChatMessage[]
             }));
           }
         }
-        
+
         localStorage.setItem('aiChatSessions', JSON.stringify(allSessions));
       } catch (batchSaveError) {
         console.error("Erro ao salvar todas as sessões:", batchSaveError);
@@ -1225,7 +1187,7 @@ async function saveConversationHistory(sessionId: string, history: ChatMessage[]
             .select('table_name')
             .eq('table_schema', 'public')
             .eq('table_name', 'ai_chat_history');
-            
+
           if (!tablesData || tablesData.length === 0) {
             // Tabela não existe, tentar criar usando rpc
             try {
@@ -1240,7 +1202,7 @@ async function saveConversationHistory(sessionId: string, history: ChatMessage[]
                     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                     UNIQUE (user_id, session_id)
                   );
-                  
+
                   CREATE INDEX IF NOT EXISTS ai_chat_history_user_id_idx ON public.ai_chat_history(user_id);
                   CREATE INDEX IF NOT EXISTS ai_chat_history_session_id_idx ON public.ai_chat_history(session_id);
                 `
@@ -1292,3 +1254,51 @@ const getResponseForMessage = (message: string): string => {
     return "Desculpe, não entendi sua pergunta. Pode reformulá-la?";
   }
 };
+
+// Format the response from the AI with enhanced styling
+  function formatMessage(message: string): string {
+    // Aplicar formatação de negrito para títulos
+    message = message.replace(/\*\*(.*?)\*\*/g, '<strong class="text-[#FF6B00] font-semibold">$1</strong>');
+
+    // Aplicar formatação para listas
+    message = message.replace(/- (.*?)(?:\n|$)/g, '<div class="flex items-start mb-2"><span class="text-[#FF6B00] mr-2">•</span><span>$1</span></div>');
+
+    // Formatar parágrafos importantes
+    message = message.replace(/\[IMPORTANTE\](.*?)(?:\n\n|$)/gs, '<div class="p-3 bg-[#FF6B00]/10 border-l-4 border-[#FF6B00] rounded my-3">$1</div>');
+
+    // Formatar dicas
+    message = message.replace(/\[DICA\](.*?)(?:\n\n|$)/gs, '<div class="p-3 bg-blue-100 dark:bg-blue-900/30 border-l-4 border-blue-500 rounded my-3">💡 $1</div>');
+
+    // Adicionar emojis no início de parágrafos específicos
+    message = message.replace(/\n(Perfil:)/g, '\n📊 $1');
+    message = message.replace(/\n(Turmas:)/g, '\n👥 $1');
+    message = message.replace(/\n(Plano:)/g, '\n✨ $1');
+    message = message.replace(/\n(Nível:)/g, '\n🏆 $1');
+    message = message.replace(/\n(Email:)/g, '\n📧 $1');
+    message = message.replace(/\n(ID:)/g, '\n🆔 $1');
+    message = message.replace(/\n(Data de criação:)/g, '\n📅 $1');
+    message = message.replace(/\n(Seguidores:)/g, '\n👥 $1');
+
+    // Formatar tabelas simples
+    if (message.includes('| ') && message.includes(' |')) {
+      const tableRegex = /((?:\|.*\|[\n\r])+)/g;
+      message = message.replace(tableRegex, (match) => {
+        const tableHTML = '<div class="overflow-x-auto my-4"><table class="w-full border-collapse border border-[#FF6B00]/20 rounded">' +
+          match.split('\n').filter(line => line.trim().length > 0).map((row, index) => {
+            const cells = row.split('|').filter(cell => cell.trim().length > 0);
+            const isHeader = index === 0;
+            const cellTag = isHeader ? 'th' : 'td';
+
+            return '<tr class="' + (isHeader ? 'bg-[#FF6B00]/20' : (index % 2 === 0 ? 'bg-gray-50 dark:bg-gray-800/20' : '')) + '">' +
+              cells.map(cell => 
+                `<${cellTag} class="p-2 border border-[#FF6B00]/10 text-${isHeader ? 'center font-semibold' : 'left'}">${cell.trim()}</${cellTag}>`
+              ).join('') +
+              '</tr>';
+          }).join('') +
+          '</table></div>';
+        return tableHTML;
+      });
+    }
+
+    return message;
+  }

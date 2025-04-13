@@ -1,4 +1,3 @@
-
 import { UserProfile } from '@/types/user-profile';
 import { supabase } from '@/lib/supabase';
 
@@ -231,7 +230,7 @@ export const aiChatDatabase = {
     }
   },
 
-  // Format user profile information for display
+  // Format user profile information for display with enhanced styling
   formatUserProfile: (profileData: any): string => {
     if (!profileData) return 'Informações de perfil não disponíveis.';
 
@@ -244,32 +243,67 @@ export const aiChatDatabase = {
       }
     };
 
+    // Determinar nível de progresso para visualização
+    const levelProgress = Math.min(100, (profileData.userLevel || 1) * 10);
+    const planTypeFormatted = profileData.planType ? 
+      profileData.planType.charAt(0).toUpperCase() + profileData.planType.slice(1) : 
+      'Lite (Padrão)';
+
+    // Emojis específicos para cada tipo de plano
+    const planEmoji = {
+      'premium': '✨ Premium',
+      'lite': '🔹 Lite',
+      'full': '⭐ Full',
+      'pro': '💎 Pro',
+      'standard': '📚 Standard'
+    }[profileData.planType?.toLowerCase()] || '📚 ' + planTypeFormatted;
+
+    // Construir tabela das turmas e séries
+    let classesTable = '';
+    if (profileData.classes && profileData.classes.length > 0) {
+      classesTable = '\n\n**Turmas Atuais:**\n| Nome | Tipo | Status |\n|------|------|--------|\n';
+      profileData.classes.forEach((c: any) => {
+        classesTable += `| ${c.name || 'N/A'} | ${c.type || 'Regular'} | ${c.status || 'Ativo'} |\n`;
+      });
+    } else {
+      classesTable = '\n\n**Turmas Atuais:** Nenhuma turma inscrita';
+    }
+
+    let seriesTable = '';
+    if (profileData.series && profileData.series.length > 0) {
+      seriesTable = '\n\n**Séries Atuais:**\n| Nome | Progresso | Status |\n|------|-----------|--------|\n';
+      profileData.series.forEach((s: any) => {
+        seriesTable += `| ${s.name || 'N/A'} | ${s.progress || '0'}% | ${s.status || 'Em andamento'} |\n`;
+      });
+    } else {
+      seriesTable = '\n\n**Séries Atuais:** Nenhuma série inscrita';
+    }
+
     return `
-**📋 Informações do Perfil**
+**📊 Perfil do Usuário**
 
-**Dados Pessoais:**
-- **Nome Completo:** ${profileData.fullName || 'Não informado'}
-- **Nome de Usuário:** ${profileData.username || 'Não definido'}
-- **Nome de Exibição:** ${profileData.displayName || 'Não definido'}
-- **E-mail:** ${profileData.email || 'Não informado'}
-- **ID do Usuário:** ${profileData.userId || 'Não disponível'}
-- **Data de Criação:** ${formatDate(profileData.createdAt)}
+[IMPORTANTE]
+Estas são as informações da sua conta na plataforma Epictus:
+- ID: ${profileData.userId || 'Não disponível'}
+- Email: ${profileData.email || 'Não disponível'}
+- Data de criação: ${formatDate(profileData.createdAt) || 'Não disponível'}
+- Nome completo: ${profileData.fullName || 'Não disponível'}
+- Nome de exibição: ${profileData.displayName || 'Não disponível'}
+- Plano: ${planEmoji}
+- Nível: ${profileData.userLevel || '1'} (${levelProgress}% para o próximo nível)
+- Seguidores: ${profileData.followersCount || '0'}
+[/IMPORTANTE]
 
-**Detalhes da Conta:**
-- **Plano:** ${profileData.planType || 'Básico'}
-- **Nível:** ${profileData.userLevel || '1'}
-- **Seguidores:** ${profileData.followersCount || '0'}
+**🧠 Sobre mim**
+${profileData.bio || 'Nenhuma descrição disponível. Você pode adicionar uma bio no seu perfil!'}
 
-**Biografia:**
-${profileData.bio || 'Você ainda não adicionou uma biografia.'}
+${classesTable}
 
-**Educação:**
-- **Turmas:** ${profileData.classes && profileData.classes.length > 0 
-  ? profileData.classes.map((c: any) => c.class?.name || 'Turma').join(', ') 
-  : 'Nenhuma turma registrada'}
-- **Séries:** ${profileData.series && profileData.series.length > 0 
-  ? profileData.series.map((s: any) => s.serie?.name || 'Série').join(', ') 
-  : 'Nenhuma série registrada'}
+${seriesTable}
+
+[DICA]
+Você pode atualizar suas informações de perfil na seção "Perfil" do menu lateral.
+[/DICA]
 `;
   }
 };
