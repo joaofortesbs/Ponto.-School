@@ -454,9 +454,9 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
         ref={canvasRef}
         width={dimensions.width}
         height={dimensions.height}
-        className="absolute top-0 left-0 w-full h-full z-10"  {/* z-index changed to place on top */}
+        className="absolute top-0 left-0 w-full h-full z-10"  
         style={{ 
-          pointerEvents: 'none',
+          pointerEvents: 'auto',
           touchAction: 'none'
         }}
         onClick={handleCanvasClick}
