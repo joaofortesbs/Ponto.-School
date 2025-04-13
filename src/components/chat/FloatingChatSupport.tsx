@@ -690,14 +690,32 @@ const FloatingChatSupport: React.FC = () => {
       }
 
       // Adicionar a resposta da IA à interface com formatação melhorada
-      const formattedResponse = aiResponse
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\_(.*?)\_/g, '<em>$1</em>')
-        .replace(/\~\~(.*?)\~\~/g, '<del>$1</del>')
+      // Transformar links em instruções de tutorial e formatação melhorada para respostas da IA
+      let processedResponse = aiResponse;
+
+      // Transformar links em instruções de tutorial
+      processedResponse = processedResponse.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
+        if (url.includes('pontoschool.com')) {
+          return `"${text}": Para acessar esta seção, siga estas etapas:\n1. Vá para o menu lateral principal\n2. Procure pelo item correspondente (geralmente com ícone semelhante)\n3. Clique no item para acessar a página\n4. A página será carregada com todas as funcionalidades disponíveis`;
+        }
+        return `"${text}": Este recurso está disponível diretamente na plataforma. Não é necessário sair da Ponto.School para acessá-lo.`;
+      });
+
+      // Remover URLs diretos
+      processedResponse = processedResponse.replace(/(https?:\/\/[^\s]+)(?!\))/g, 'este recurso na plataforma');
+
+      // Adicionar incentivo para continuar a conversa ao final das respostas longas
+      if (processedResponse.length > 200) {
+        processedResponse += '\n\nPosso ajudar com mais alguma coisa? Estou à disposição para qualquer dúvida adicional.';
+      }
+
+      // Formatação visual melhorada
+      const formattedResponse = processedResponse
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
+        .replace(/\_(.*?)\_/g, '<em class="italic">$1</em>')
+        .replace(/\~\~(.*?)\~\~/g, '<del class="line-through">$1</del>')
         .replace(/\`(.*?)\`/g, '<code class="bg-black/10 dark:bg-white/10 rounded px-1">$1</code>')
-        .replace(/\n/g, '<br />')
-        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>')
-        .replace(/(https?:\/\/[^\s]+)(?!\))/g, '<a href="$1" class="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>');
+        .replace(/\n/g, '<br />');
 
       const assistantMessage = { 
         id: Date.now(), 
@@ -1605,9 +1623,9 @@ const FloatingChatSupport: React.FC = () => {
               <div className="max-w-[75%] rounded-xl px-4 py-3 bg-gray-100 dark:bg-gray-800/90 text-gray-800 dark:text-gray-200 shadow-sm backdrop-blur-sm">
                 <div className="flex items-center">
                   <div className="relative flex space-x-1 items-center pl-0.5">
-                    <div className="w-2 h-2 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] animate-pulse"></div>
-                    <div className="w-2 h-2 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] animate-pulse delay-150"></div>
-                    <div className="w-2 h-2 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] animate-pulse delay-300"></div>
+                    <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
+                    <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse delay-150"></div>
+                    <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse delay-300"></div>
                     <span className="ml-2 text-sm font-medium text-gray-600 dark:text-gray-300">
                       Epictus IA está elaborando uma resposta...
                     </span>
@@ -2228,7 +2246,7 @@ const FloatingChatSupport: React.FC = () => {
             className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-2 py-0 h-6 text-xs"
             onClick={() => setIsCreatingSuggestion(true)}
           >
-            <Plus className="h-3 w-3 mr-1" /> Nova
+            <Plus className="h-3 w3 mr-1" /> Nova
           </Button>
         </div>
         <div className="relative">

@@ -368,11 +368,58 @@ Clique no link acima para ser redirecionado. Posso ajudar com mais alguma coisa?
         throw new Error('Formato de resposta inválido da API xAI');
       }
 
-      // Verificar e corrigir links de redirecionamento
-      aiResponse = fixPlatformLinks(aiResponse);
-
-      // Adicionar a resposta da IA à interface com formatação melhorada e corrigida
-      const formattedResponse = aiResponse
+      // Transformar links em tutoriais detalhados
+      let processedResponse = aiResponse;
+      
+      // Substituir links por instruções de tutorial completo
+      processedResponse = processedResponse.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
+        // Verificar se é um link interno da plataforma
+        if (url.includes('pontoschool.com')) {
+          // Extrair o nome da seção do URL
+          const section = url.split('/').pop() || '';
+          let tutorialText = '';
+          
+          // Criar tutorial personalizado com base na seção
+          switch(section) {
+            case 'portal':
+              tutorialText = `Para acessar o Portal de Estudos, siga estes passos:\n1. No menu lateral esquerdo da plataforma, localize o ícone "Portal"\n2. Clique no ícone para entrar no Portal de Estudos\n3. Você verá todos os seus materiais didáticos organizados por disciplina\n4. Utilize os filtros disponíveis para encontrar conteúdos específicos\n5. Clique em qualquer material para acessar seu conteúdo completo`;
+              break;
+            case 'agenda':
+              tutorialText = `Para acessar sua Agenda, siga estes passos:\n1. No menu lateral esquerdo da plataforma, localize o ícone "Agenda"\n2. Clique no ícone para abrir sua Agenda completa\n3. Você verá sua programação em formato de calendário\n4. Use as opções de visualização (dia, semana, mês) para navegar melhor\n5. Clique no botão "+" para adicionar novos eventos ou compromissos`;
+              break;
+            case 'turmas':
+              tutorialText = `Para acessar suas Turmas, siga estes passos:\n1. No menu lateral esquerdo da plataforma, localize o ícone "Turmas"\n2. Clique no ícone para ver todas as suas turmas e grupos de estudo\n3. Você verá cards com cada turma que participa\n4. Clique em qualquer turma para acessar seu conteúdo, discussões e materiais\n5. Se desejar ingressar em uma nova turma, utilize o botão "Adicionar Turma"`;
+              break;
+            case 'profile':
+              tutorialText = `Para acessar seu Perfil, siga estes passos:\n1. No cabeçalho superior da plataforma, clique no seu avatar ou nome de usuário\n2. Selecione "Meu Perfil" no menu dropdown que aparecer\n3. Você será direcionado para sua página de perfil\n4. Aqui você pode visualizar e editar suas informações, conquistas e histórico\n5. Use os botões de edição para atualizar foto, bio e outras informações`;
+              break;
+            case 'configuracoes':
+              tutorialText = `Para acessar suas Configurações, siga estes passos:\n1. No cabeçalho superior da plataforma, clique no seu avatar ou nome de usuário\n2. Selecione "Configurações" no menu dropdown que aparecer\n3. Você será direcionado para a página de configurações\n4. Aqui você pode ajustar preferências de notificação, privacidade e conta\n5. Todas as alterações são salvas automaticamente ao serem realizadas`;
+              break;
+            case 'epictus-ia':
+              tutorialText = `Para acessar o Epictus IA do menu lateral, siga estes passos:\n1. No menu lateral esquerdo da plataforma, localize o ícone "Epictus IA"\n2. Clique no ícone para abrir o assistente completo\n3. Você verá a interface do assistente com diferentes abas e funções\n4. Você pode fazer perguntas, criar planos de estudo e analisar seu desempenho\n5. Note que este é diferente do chat flutuante de suporte, pois é focado em estudos personalizados`;
+              break;
+            default:
+              tutorialText = `Para acessar "${text}", siga estes passos:\n1. No menu lateral esquerdo da plataforma, procure o item correspondente\n2. Você pode também utilizar a barra de pesquisa superior para encontrar esta seção\n3. Clique no item para acessar a página\n4. Explore as funcionalidades disponíveis nesta seção\n5. Se precisar de mais ajuda com esta área específica, me pergunte!`;
+          }
+          
+          return `"${text}": ${tutorialText}`;
+        }
+        
+        // Para links externos, substituir por informação sem link
+        return `"${text}": Este recurso está disponível diretamente na plataforma. Não é necessário acessar links externos, pois todas as funcionalidades estão integradas na Ponto.School.`;
+      });
+      
+      // Remover URLs diretos
+      processedResponse = processedResponse.replace(/(https?:\/\/[^\s]+)(?!\))/g, 'este recurso na plataforma');
+      
+      // Adicionar incentivo para continuar a conversa ao final das respostas
+      if (!processedResponse.includes('Posso ajudar') && !processedResponse.includes('mais alguma coisa')) {
+        processedResponse += '\n\nPosso ajudar com mais alguma coisa sobre a plataforma? Estou à disposição para qualquer dúvida adicional.';
+      }
+      
+      // Formatação visual melhorada para a resposta processada
+      const formattedResponse = processedResponse
         // Formatação de texto básica
         .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
         .replace(/\_(.*?)\_/g, '<em class="italic">$1</em>')
@@ -391,9 +438,8 @@ Clique no link acima para ser redirecionado. Posso ajudar com mais alguma coisa?
         .replace(/^\* (.*?)$/gm, '<li class="ml-4 list-disc">$1</li>')
         .replace(/^\d\. (.*?)$/gm, '<li class="ml-4 list-decimal">$1</li>')
 
-        // Formatação de links com ícone
-        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-500 hover:text-blue-600 hover:underline font-medium inline-flex items-center" target="_blank" rel="noopener noreferrer">$1<svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>')
-        .replace(/(https?:\/\/[^\s]+)(?!\))/g, '<a href="$1" class="text-blue-500 hover:text-blue-600 hover:underline font-medium inline-flex items-center" target="_blank" rel="noopener noreferrer">$1<svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>')
+        // Formatação de textos especiais sem links
+        .replace(/\"([^\"]+)\"\:/g, '<span class="font-bold text-orange-600 dark:text-orange-400">$1:</span>')
 
         // Formatação especial para dicas e destaques
         .replace(/💡 (.*?)$/gm, '<div class="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 p-2 rounded-md my-2 flex items-start"><span class="mr-2">💡</span><span>$1</span></div>')
@@ -905,39 +951,80 @@ export async function getConversationHistory(sessionId: string): Promise<ChatMes
   }
 }
 
-// Função para corrigir links da plataforma
+// Função para transformar links da plataforma em tutoriais completos
 function fixPlatformLinks(text: string): string {
-  const platformLinks = {
-    'Portal de Estudos': 'https://pontoschool.com/portal',
-    'Portal': 'https://pontoschool.com/portal',
-    'Agenda': 'https://pontoschool.com/agenda',
-    'Turmas': 'https://pontoschool.com/turmas',
-    'Biblioteca': 'https://pontoschool.com/biblioteca',
-    'Perfil': 'https://pontoschool.com/profile',
-    'Meu Perfil': 'https://pontoschool.com/profile',
-    'Configurações': 'https://pontoschool.com/configuracoes',
-    'Minhas Configurações': 'https://pontoschool.com/configuracoes',
-    'Dashboard': 'https://pontoschool.com/dashboard',
-    'Epictus IA': 'https://pontoschool.com/epictus-ia',
-    'Mentor IA': 'https://pontoschool.com/mentor-ia',
-    'Planos de Estudo': 'https://pontoschool.com/planos-estudo',
-    'Plano de Estudos': 'https://pontoschool.com/planos-estudo',
-    'Conquistas': 'https://pontoschool.com/conquistas',
-    'Minhas Conquistas': 'https://pontoschool.com/conquistas',
-    'Carteira': 'https://pontoschool.com/carteira',
-    'Minha Carteira': 'https://pontoschool.com/carteira',
-    'Mercado': 'https://pontoschool.com/mercado',
-    'Organização': 'https://pontoschool.com/organizacao',
-    'Comunidades': 'https://pontoschool.com/comunidades',
-    'Chat IA': 'https://pontoschool.com/chat-ia',
-    'School IA': 'https://pontoschool.com/school-ia',
-    'Novidades': 'https://pontoschool.com/novidades',
-    'Lembretes': 'https://pontoschool.com/lembretes',
-    'Pedidos de Ajuda': 'https://pontoschool.com/pedidos-ajuda',
-    'Estudos': 'https://pontoschool.com/estudos'
+  const platformSections = {
+    'Portal de Estudos': {
+      path: '/portal',
+      tutorial: `Para acessar o Portal de Estudos, siga estes passos:
+1. No menu lateral esquerdo da plataforma, localize o ícone "Portal"
+2. Clique no ícone para entrar no Portal de Estudos
+3. Você verá todos os seus materiais didáticos organizados por disciplina
+4. Utilize os filtros disponíveis para encontrar conteúdos específicos
+5. Clique em qualquer material para acessar seu conteúdo completo`
+    },
+    'Portal': {
+      path: '/portal',
+      tutorial: `Para acessar o Portal, siga estes passos:
+1. No menu lateral esquerdo da plataforma, localize o ícone "Portal"
+2. Clique no ícone para entrar no Portal de Estudos
+3. Você verá todos os seus materiais didáticos organizados por disciplina
+4. Use os filtros na parte superior para encontrar materiais específicos
+5. Você pode alternar entre visualização em grade ou lista no canto superior direito`
+    },
+    'Agenda': {
+      path: '/agenda',
+      tutorial: `Para acessar sua Agenda, siga estes passos:
+1. No menu lateral esquerdo da plataforma, localize o ícone "Agenda"
+2. Clique no ícone para abrir sua Agenda completa
+3. Você verá sua programação em formato de calendário
+4. Use as opções de visualização (dia, semana, mês) para navegar melhor
+5. Clique no botão "+" para adicionar novos eventos ou compromissos
+6. Você pode arrastar e soltar eventos para reorganizar sua agenda`
+    },
+    'Turmas': {
+      path: '/turmas',
+      tutorial: `Para acessar suas Turmas, siga estes passos:
+1. No menu lateral esquerdo da plataforma, localize o ícone "Turmas"
+2. Clique no ícone para ver todas as suas turmas e grupos de estudo
+3. Você verá cards com cada turma que participa
+4. Clique em qualquer turma para acessar seu conteúdo, discussões e materiais
+5. Se desejar ingressar em uma nova turma, utilize o botão "Adicionar Turma"
+6. Você também pode criar grupos de estudo clicando em "Criar Grupo"`
+    },
+    'Biblioteca': {
+      path: '/biblioteca',
+      tutorial: `Para acessar a Biblioteca, siga estes passos:
+1. No menu lateral esquerdo da plataforma, localize o ícone "Biblioteca"
+2. Clique no ícone para explorar a biblioteca completa
+3. Você verá materiais organizados por categorias e tipos
+4. Use a barra de pesquisa para encontrar recursos específicos
+5. Filtre por tipo de mídia (PDF, vídeo, áudio, etc.) usando os filtros
+6. Você pode favoritar materiais para acesso rápido posteriormente`
+    },
+    'Perfil': {
+      path: '/profile',
+      tutorial: `Para acessar seu Perfil, siga estes passos:
+1. No cabeçalho superior da plataforma, clique no seu avatar ou nome de usuário
+2. Selecione "Meu Perfil" no menu dropdown que aparecer
+3. Você será direcionado para sua página de perfil
+4. Aqui você pode visualizar e editar suas informações, conquistas e histórico
+5. Use os botões de edição para atualizar foto, biografia e outras informações
+6. Você também pode gerenciar suas conexões e configurações de privacidade`
+    },
+    'Meu Perfil': {
+      path: '/profile',
+      tutorial: `Para acessar seu Perfil, siga estes passos:
+1. No cabeçalho superior da plataforma, clique no seu avatar ou nome de usuário
+2. Selecione "Meu Perfil" no menu dropdown que aparecer
+3. Você será direcionado para sua página de perfil
+4. Aqui você pode visualizar e editar suas informações pessoais
+5. Para editar sua biografia, clique no botão de edição ao lado da seção "Sobre mim"
+6. Para atualizar sua foto, passe o mouse sobre a imagem e clique no ícone de edição`
+    }
   };
 
-  // Primeiro, procura por textos específicos que pedem redirecionamento
+  // Processar pedidos de redirecionamento
   const redirectPatterns = [
     /(?:me\s+(?:redirecione|encaminhe|leve|direcione|mande|envie)\s+(?:para|ao|à|a|até))\s+(?:a\s+)?(?:página\s+(?:de|do|da)\s+)?([a-zà-ú\s]+)/gi,
     /(?:quero\s+(?:ir|acessar|entrar|ver))\s+(?:a\s+)?(?:página\s+(?:de|do|da)\s+)?([a-zà-ú\s]+)/gi,
@@ -945,101 +1032,66 @@ function fixPlatformLinks(text: string): string {
     /(?:abrir?|abra|acesse|acessar|ver|veja)\s+(?:a\s+)?(?:página\s+(?:de|do|da)\s+)?([a-zà-ú\s]+)/gi
   ];
 
-  // Aplicar padrões de redirecionamento de forma mais robusta
+  // Substituir pedidos de redirecionamento por tutoriais completos
   for (const pattern of redirectPatterns) {
     text = text.replace(pattern, (match, sectionName) => {
       if (!sectionName) return match;
       
       const normalizedName = sectionName.trim();
-      // Verificar se o nome normalizado corresponde a alguma chave do objeto platformLinks
-      for (const key in platformLinks) {
+      // Verificar se o nome normalizado corresponde a alguma seção conhecida
+      for (const key in platformSections) {
         if (normalizedName.toLowerCase() === key.toLowerCase() || 
             key.toLowerCase().includes(normalizedName.toLowerCase()) || 
             normalizedName.toLowerCase().includes(key.toLowerCase())) {
-          // Criar link em formato seguro sem possíveis bugs de formatação
-          return `Você pode acessar [${key}](${platformLinks[key]})`;
+          // Retornar tutorial completo em vez de link
+          return `Para acessar ${key}:\n\n${platformSections[key].tutorial}`;
         }
       }
-      return match; // Se não encontrou correspondência, mantém o texto original
+      
+      // Resposta genérica para seções não específicas
+      return `Para encontrar "${normalizedName}" na plataforma, você pode seguir estas etapas:
+1. Verifique o menu lateral esquerdo, onde estão as principais seções da plataforma
+2. Use a barra de pesquisa no topo da tela para buscar por "${normalizedName}"
+3. Caso não encontre diretamente, acesse a seção mais relacionada ao que procura
+4. Dentro das seções principais, use os filtros e categorias disponíveis
+5. Se ainda não encontrar, me pergunte novamente com mais detalhes que posso ajudar melhor`;
     });
   }
 
-  // Verificar se o texto já contém links markdown
+  // Substituir links markdown por tutoriais
   const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
-  const existingLinks = [];
-  let match;
-  
-  while ((match = markdownLinkRegex.exec(text)) !== null) {
-    existingLinks.push({
-      text: match[1],
-      url: match[2],
-      fullMatch: match[0]
-    });
-  }
-
-  // Depois, procurar menções a seções e converter para links (só se não forem já parte de um link)
-  let newText = text;
-  
-  // Aplicar substituições de forma ordenada (das mais longas para as mais curtas)
-  const orderedKeys = Object.keys(platformLinks).sort((a, b) => b.length - a.length);
-
-  for (const key of orderedKeys) {
-    // Criar regex segura que não captura dentro de links existentes
-    const safeRegex = new RegExp(`(?<![\\[\\w])\\b(${escapeRegExp(key)})\\b(?![\\]\\w])`, 'g');
-    
-    // Verificar cada ocorrência para garantir que não está dentro de um link existente
-    let lastIndex = 0;
-    let result = '';
-    let regexMatch;
-    
-    while ((regexMatch = safeRegex.exec(newText)) !== null) {
-      const matchStart = regexMatch.index;
-      const matchEnd = matchStart + regexMatch[0].length;
+  let newText = text.replace(markdownLinkRegex, (match, linkText, url) => {
+    if (url.includes('pontoschool.com')) {
+      // Extrair a parte final do URL
+      const pathPart = url.split('pontoschool.com/').pop();
       
-      // Verificar se esta ocorrência está dentro de algum link existente
-      let isInsideExistingLink = false;
-      for (const link of existingLinks) {
-        const linkIndex = newText.indexOf(link.fullMatch);
-        if (linkIndex <= matchStart && linkIndex + link.fullMatch.length >= matchEnd) {
-          isInsideExistingLink = true;
-          break;
+      // Procurar em todas as seções por um caminho correspondente
+      for (const key in platformSections) {
+        if (platformSections[key].path.includes(pathPart)) {
+          return `Para acessar ${linkText}:\n\n${platformSections[key].tutorial}`;
         }
       }
       
-      if (!isInsideExistingLink) {
-        result += newText.substring(lastIndex, matchStart);
-        result += `[${regexMatch[1]}](${platformLinks[key]})`;
-        lastIndex = matchEnd;
-      }
+      // Resposta genérica para URLs não específicas
+      return `Para acessar "${linkText}":\n
+1. No menu lateral esquerdo da plataforma, procure o item correspondente
+2. Você pode também utilizar a barra de pesquisa superior para encontrar esta seção
+3. Clique no item para acessar a página
+4. Explore as funcionalidades disponíveis nesta seção
+5. Se precisar de mais ajuda com esta área específica, me pergunte!`;
     }
     
-    if (lastIndex > 0) {
-      result += newText.substring(lastIndex);
-      newText = result;
-      
-      // Atualizar a lista de links existentes
-      existingLinks.length = 0;
-      while ((match = markdownLinkRegex.exec(newText)) !== null) {
-        existingLinks.push({
-          text: match[1],
-          url: match[2],
-          fullMatch: match[0]
-        });
-      }
-    }
-  }
+    // Para links externos
+    return `O recurso "${linkText}" está disponível diretamente na plataforma. Não é necessário acessar links externos, pois todas as funcionalidades estão integradas na Ponto.School.`;
+  });
 
-  // Remover qualquer formatação incorreta que possa ter sido introduzida
-  newText = newText
-    .replace(/\]\(\[/g, ']([') // Corrigir links aninhados
-    .replace(/\]\(https:\/\/pontoschool\.com\/[a-z-]+\)\(https:\/\/pontoschool\.com\/[a-z-]+\)/g, match => {
-      // Extrair o primeiro link válido
-      const urlMatch = match.match(/\]\((https:\/\/pontoschool\.com\/[a-z-]+)\)/);
-      if (urlMatch && urlMatch[1]) {
-        return `](${urlMatch[1]})`;
-      }
-      return match;
-    });
+  // Remover URLs diretos
+  newText = newText.replace(/(https?:\/\/[^\s]+)(?!\))/g, 'este recurso na plataforma');
+
+  // Garantir que há um convite para continuar a conversa
+  if (!newText.includes('Posso ajudar') && !newText.includes('mais alguma coisa')) {
+    newText += '\n\nPosso ajudar com mais alguma instrução ou dúvida sobre a plataforma? Estou à disposição para detalhar qualquer funcionalidade.';
+  }
 
   return newText;
 }
