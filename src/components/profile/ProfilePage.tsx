@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { supabase } from "@/lib/supabase";
 import type { UserProfile } from "@/types/user-profile";
 import "@/styles/typewriter-loader.css";
+import { useProfile } from "@/contexts/ProfileContext";
 
 // Import profile components
 import ProfileHeader from "./ProfileHeader";
@@ -25,103 +25,22 @@ interface ProfilePageProps {
 
 export default function ProfilePage({ isOwnProfile = true }: ProfilePageProps) {
   const [activeTab, setActiveTab] = useState("perfil");
-  const [isEditing, setIsEditing] = useState(false);
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [contactInfo, setContactInfo] = useState({
-    email: "",
-    phone: "Adicionar telefone",
-    location: "Adicionar localização",
-    birthDate: "Adicionar data de nascimento",
-  });
-  const [aboutMe, setAboutMe] = useState(
-    "Olá! Sou estudante de Engenharia de Software na Universidade de São Paulo. Apaixonado por tecnologia, programação e matemática. Busco constantemente novos conhecimentos e desafios para aprimorar minhas habilidades. Nas horas vagas, gosto de jogar xadrez, ler livros de ficção científica e praticar esportes.",
-  );
+  const { 
+    userProfile,
+    isLoading,
+    contactInfo,
+    aboutMe,
+    expandedSection,
+    isEditing,
+    setContactInfo,
+    setAboutMe,
+    toggleSection,
+    setIsEditing,
+    saveContactInfo,
+    saveAboutMe
+  } = useProfile();
 
-  useEffect(() => {
-    // Utiliza o hook personalizado para buscar o perfil do usuário
-    const fetchProfile = async () => {
-      const result = await useProfileData();
-      if (result) {
-        const { userProfile, contactInfo, aboutMe } = result;
-        setUserProfile(userProfile);
-        setContactInfo(contactInfo);
-        if (aboutMe) setAboutMe(aboutMe);
-      }
-      setLoading(false);
-    };
-
-    fetchProfile();
-  }, []);
-
-  const toggleSection = (section: string | null) => {
-    if (expandedSection === section) {
-      setExpandedSection(null);
-    } else {
-      setExpandedSection(section);
-    }
-  };
-
-  const saveContactInfo = async () => {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        const { error } = await supabase
-          .from("profiles")
-          .update({
-            email: contactInfo.email,
-            phone:
-              contactInfo.phone === "Adicionar telefone"
-                ? null
-                : contactInfo.phone,
-            location:
-              contactInfo.location === "Adicionar localização"
-                ? null
-                : contactInfo.location,
-            birth_date:
-              contactInfo.birthDate === "Adicionar data de nascimento"
-                ? null
-                : contactInfo.birthDate,
-          })
-          .eq("id", user.id);
-
-        if (error) {
-          console.error("Error updating contact info:", error);
-        }
-      }
-    } catch (error) {
-      console.error("Error:", error);
-    }
-    toggleSection(null);
-  };
-
-  const saveAboutMe = async () => {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        const { error } = await supabase
-          .from("profiles")
-          .update({
-            bio: aboutMe,
-          })
-          .eq("id", user.id);
-
-        if (error) {
-          console.error("Error updating bio:", error);
-        }
-      }
-    } catch (error) {
-      console.error("Error:", error);
-    }
-    setIsEditing(false);
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="w-full h-full relative">
         <div className="typewriter-container">

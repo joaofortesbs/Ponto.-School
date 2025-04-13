@@ -1,148 +1,221 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { useNavigate } from "react-router-dom";
+import type { User } from "@supabase/supabase-js";
+import type { UserProfile } from "@/types/user-profile";
 
-export interface AuthUser {
-  id: string;
-  email?: string;
-  username?: string;
-  displayName?: string;
-  avatarUrl?: string;
-  [key: string]: any;
+export interface AuthState {
+  user: User | null;
+  profile: UserProfile | null;
+  isLoading: boolean;
+  error: string | null;
 }
 
 export function useAuth() {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [authState, setAuthState] = useState<AuthState>({
+    user: null,
+    profile: null,
+    isLoading: true,
+    error: null,
+  });
 
-  // Carregar usuário inicial
   useEffect(() => {
-    const fetchUser = async () => {
+    // Verificar o usuário atual quando o componente monta
+    const checkUser = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          // Buscar perfil do usuário
-          const { data: profile } = await supabase
+        setAuthState(prev => ({ ...prev, isLoading: true }));
+        
+        // Obter o usuário atual
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError) {
+          throw userError;
+        }
+
+        if (user) {
+          // Buscar o perfil do usuário
+          const { data: profile, error: profileError } = await supabase
             .from("profiles")
             .select("*")
-            .eq("id", session.user.id)
+            .eq("id", user.id)
             .single();
 
-          setUser({
-            id: session.user.id,
-            email: session.user.email,
-            displayName: profile?.display_name || session.user.email?.split('@')[0],
-            avatarUrl: profile?.avatar_url,
-            ...profile
+          if (profileError && profileError.code !== "PGRST116") {
+            console.error("Erro ao buscar perfil:", profileError);
+          }
+
+          setAuthState({
+            user,
+            profile,
+            isLoading: false,
+            error: null,
+          });
+        } else {
+          setAuthState({
+            user: null,
+            profile: null,
+            isLoading: false,
+            error: null,
           });
         }
       } catch (error) {
-        console.error("Erro ao buscar usuário:", error);
-      } finally {
-        setLoading(false);
+        console.error("Erro de autenticação:", error);
+        setAuthState({
+          user: null,
+          profile: null,
+          isLoading: false,
+          error: error instanceof Error ? error.message : "Erro de autenticação",
+        });
       }
     };
 
-    fetchUser();
+    checkUser();
 
-    // Escutar mudanças na autenticação
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === "SIGNED_IN" && session?.user) {
-          // Buscar perfil do usuário
-          const { data: profile } = await supabase
+    // Configurar o listener para mudanças de autenticação
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" || event === "USER_UPDATED") {
+        if (session?.user) {
+          // Buscar o perfil do usuário quando ele faz login
+          const { data: profile, error: profileError } = await supabase
             .from("profiles")
             .select("*")
             .eq("id", session.user.id)
             .single();
 
-          setUser({
-            id: session.user.id,
-            email: session.user.email,
-            displayName: profile?.display_name || session.user.email?.split('@')[0],
-            avatarUrl: profile?.avatar_url,
-            ...profile
+          if (profileError && profileError.code !== "PGRST116") {
+            console.error("Erro ao buscar perfil:", profileError);
+          }
+
+          setAuthState({
+            user: session.user,
+            profile,
+            isLoading: false,
+            error: null,
           });
         }
-        
-        if (event === "SIGNED_OUT") {
-          setUser(null);
-          navigate("/auth/login");
-        }
+      } else if (event === "SIGNED_OUT") {
+        setAuthState({
+          user: null,
+          profile: null,
+          isLoading: false,
+          error: null,
+        });
       }
-    );
+    });
 
     return () => {
-      authListener.subscription.unsubscribe();
+      // Limpar o listener quando o componente desmonta
+      if (authListener) authListener.subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, []);
 
-  // Login com email/senha
-  const login = useCallback(async (email: string, password: string) => {
-    setLoading(true);
+  const signIn = async (email: string, password: string) => {
+    setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
       });
       
       if (error) throw error;
-      return { success: true };
-    } catch (error: any) {
-      return { 
-        success: false, 
-        error: error.message || "Falha ao fazer login" 
-      };
+      
+      return { success: true, data };
+    } catch (error) {
+      console.error("Erro ao fazer login:", error);
+      setAuthState(prev => ({ 
+        ...prev, 
+        isLoading: false, 
+        error: error instanceof Error ? error.message : "Erro ao fazer login" 
+      }));
+      return { success: false, error };
     } finally {
-      setLoading(false);
+      setAuthState(prev => ({ ...prev, isLoading: false }));
     }
-  }, []);
+  };
 
-  // Registro
-  const register = useCallback(async (email: string, password: string, userData?: Record<string, any>) => {
-    setLoading(true);
+  const signUp = async (email: string, password: string, userData: any = {}) => {
+    setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: userData
-        }
+          data: userData,
+        },
       });
       
       if (error) throw error;
-      return { success: true };
-    } catch (error: any) {
-      return { 
-        success: false, 
-        error: error.message || "Falha ao registrar usuário" 
-      };
+      
+      return { success: true, data };
+    } catch (error) {
+      console.error("Erro ao criar conta:", error);
+      setAuthState(prev => ({ 
+        ...prev, 
+        isLoading: false, 
+        error: error instanceof Error ? error.message : "Erro ao criar conta" 
+      }));
+      return { success: false, error };
     } finally {
-      setLoading(false);
+      setAuthState(prev => ({ ...prev, isLoading: false }));
     }
-  }, []);
+  };
 
-  // Logout
-  const logout = useCallback(async () => {
+  const signOut = async () => {
+    setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
     try {
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
       return { success: true };
-    } catch (error: any) {
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+      setAuthState(prev => ({ 
+        ...prev, 
+        isLoading: false, 
+        error: error instanceof Error ? error.message : "Erro ao fazer logout" 
+      }));
+      return { success: false, error };
+    } finally {
+      setAuthState(prev => ({ ...prev, isLoading: false }));
+    }
+  };
+
+  const updateProfile = async (profileData: Partial<UserProfile>) => {
+    if (!authState.user) {
+      return { success: false, error: "Usuário não autenticado" };
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .update(profileData)
+        .eq("id", authState.user.id)
+        .select();
+
+      if (error) throw error;
+
+      // Atualizar o estado de perfil localmente
+      if (data && data.length > 0) {
+        setAuthState(prev => ({
+          ...prev,
+          profile: data[0] as UserProfile,
+        }));
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      console.error("Erro ao atualizar perfil:", error);
       return { 
         success: false, 
-        error: error.message || "Falha ao fazer logout" 
+        error: error instanceof Error ? error.message : "Erro ao atualizar perfil" 
       };
     }
-  }, []);
+  };
 
   return {
-    user,
-    loading,
-    login,
-    register,
-    logout,
-    isAuthenticated: !!user
+    ...authState,
+    signIn,
+    signUp,
+    signOut,
+    updateProfile,
   };
 }
