@@ -334,6 +334,11 @@ const FloatingChatSupport: React.FC = () => {
   // Estado para armazenar arquivos selecionados
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
+  // Estado para melhorar prompt
+  const [isImprovingPrompt, setIsImprovingPrompt] = useState(false);
+  const [improvedPrompt, setImprovedPrompt] = useState("");
+  const [promptImprovementLoading, setPromptImprovementLoading] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -372,6 +377,18 @@ const FloatingChatSupport: React.FC = () => {
   }, [isOpen]);
 
   useEffect(() => {
+    // Obter o primeiro nome do usuário
+    const getFirstName = () => {
+      // Verifica se tem um nome completo e extrai o primeiro nome
+      if (userName && userName.includes(' ')) {
+        return userName.split(' ')[0];
+      }
+      return userName || 'Usuário';
+    };
+    
+    const firstName = getFirstName();
+    setUserName(firstName);
+    
     // Gerar uma ID de sessão baseada no usuário atual ou criar uma nova
     const newSessionId = userName || 'anonymous-' + Date.now().toString();
     setSessionId(newSessionId);
@@ -415,6 +432,55 @@ const FloatingChatSupport: React.FC = () => {
   useEffect(() => {
     setIsMessageEmpty(message.trim() === '');
   }, [message]);
+
+  // Função para melhorar o prompt com IA
+  const improvePrompt = async () => {
+    if (!inputMessage.trim()) return;
+    
+    setPromptImprovementLoading(true);
+    setIsImprovingPrompt(true);
+    
+    try {
+      // Importando o serviço dinamicamente
+      const aiService = await import('@/services/aiChatService');
+      
+      // Chamar a API para melhorar o prompt
+      const improvedPromptText = await aiService.generateAIResponse(
+        `Melhore o seguinte prompt para obter uma resposta mais detalhada e completa. NÃO responda a pergunta, apenas melhore o prompt para torná-lo mais específico e detalhado: "${inputMessage}"`,
+        `improve_prompt_${Date.now()}`,
+        {
+          intelligenceLevel: 'advanced',
+          languageStyle: 'formal'
+        }
+      );
+      
+      // Limpar qualquer formatação que possa ter vindo da resposta
+      const cleanedImprovedPrompt = improvedPromptText
+        .replace(/^(Prompt melhorado:|Aqui está uma versão melhorada:|Versão melhorada:)/i, '')
+        .replace(/^["']|["']$/g, '')
+        .trim();
+      
+      setImprovedPrompt(cleanedImprovedPrompt);
+    } catch (error) {
+      console.error('Erro ao melhorar o prompt:', error);
+      setImprovedPrompt(inputMessage);
+    } finally {
+      setPromptImprovementLoading(false);
+    }
+  };
+
+  // Função para aceitar o prompt melhorado
+  const acceptImprovedPrompt = () => {
+    setInputMessage(improvedPrompt);
+    setIsImprovingPrompt(false);
+    setImprovedPrompt("");
+  };
+
+  // Função para cancelar a melhoria do prompt
+  const cancelImprovedPrompt = () => {
+    setIsImprovingPrompt(false);
+    setImprovedPrompt("");
+  };
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() && selectedFiles.length === 0) return;
@@ -1078,11 +1144,12 @@ const FloatingChatSupport: React.FC = () => {
               className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
             >
               {message.sender === "assistant" && (
-                <div className="w-8 h-8 rounded-full overflow-hidden mr-2 flex-shrink-0">
+                <div className="w-10 h-10 rounded-full overflow-hidden mr-2 flex-shrink-0">
                   <Avatar>
+                    <AvatarImage src="/images/tempo-image-20250329T044440497Z.png" alt="Epictus IA" />
                     <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] text-white">
-                      <Bot className="h-4 w-4" />
-                      <span className="absolute -right-1 -bottom-1 w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center border border-white">
+                      <Bot className="h-5 w-5" />
+                      <span className="absolute -right-1 -bottom-1 w-3.5 h-3.5 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800">
                         <Sparkles className="h-2 w-2 text-white" />
                       </span>
                     </AvatarFallback>
@@ -1153,16 +1220,22 @@ const FloatingChatSupport: React.FC = () => {
             <div className="flex justify-start">
               <div className="w-8 h-8 rounded-full overflow-hidden mr-2 flex-shrink-0">
                 <Avatar>
-                  <AvatarFallback className="bg-blue-100 text-blue-600">
+                  <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] text-white">
                     <Bot className="h-4 w-4" />
+                    <span className="absolute -right-1 -bottom-1 w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center border border-white">
+                      <Sparkles className="h-2 w-2 text-white" />
+                    </span>
                   </AvatarFallback>
                 </Avatar>
               </div>
-              <div className="max-w-[75%] rounded-lg px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
-                <div className="flex space-x-2">
-                  <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                  <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse delay-150" />
-                  <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse delay-300" />
+              <div className="max-w-[75%] rounded-lg px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow-sm">
+                <div className="flex items-center">
+                  <div className="mr-2 text-xs text-gray-500 dark:text-gray-400">Epictus IA está digitando</div>
+                  <div className="flex items-center space-x-1">
+                    <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse delay-150" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse delay-300" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -1284,6 +1357,49 @@ const FloatingChatSupport: React.FC = () => {
             </div>
           </div>
         )}
+        {isImprovingPrompt ? (
+          <div className="mb-3 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-md border border-orange-200 dark:border-orange-700">
+            <div className="flex justify-between items-center mb-2">
+              <h4 className="text-sm font-medium flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-orange-500" />
+                Prompt melhorado
+              </h4>
+              <div className="flex gap-1">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="h-6 px-2 text-xs border-orange-200 dark:border-orange-700"
+                  onClick={cancelImprovedPrompt}
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="h-6 px-2 text-xs bg-orange-500 hover:bg-orange-600 text-white"
+                  onClick={acceptImprovedPrompt}
+                >
+                  Usar este prompt
+                </Button>
+              </div>
+            </div>
+            
+            {promptImprovementLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+                  <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse delay-150" />
+                  <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse delay-300" />
+                  <span className="text-sm text-orange-600 dark:text-orange-400 ml-2">Melhorando sua pergunta...</span>
+                </div>
+              </div>
+            ) : (
+              <div className="p-2 bg-white dark:bg-gray-800 rounded border border-orange-100 dark:border-orange-800">
+                <p className="text-sm whitespace-pre-wrap">{improvedPrompt}</p>
+              </div>
+            )}
+          </div>
+        ) : null}
+
         <div className="flex items-center gap-2">
           <div className="flex-1 relative">
             <Input
@@ -1293,15 +1409,28 @@ const FloatingChatSupport: React.FC = () => {
               className="pr-10 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
               onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
             />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-0 top-0 h-full text-orange-500 hover:text-orange-600"
-              onClick={handleSendMessage}
-              disabled={!inputMessage.trim() && selectedFiles.length === 0}
-            >
-              <Send className="h-5 w-5" />
-            </Button>
+            <div className="absolute right-0 top-0 h-full flex">
+              {inputMessage.trim().length > 0 && !isImprovingPrompt && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-orange-500 hover:text-orange-600 hover:bg-transparent"
+                  onClick={improvePrompt}
+                  title="Melhorar pergunta com IA"
+                >
+                  <Sparkles className="h-4 w-4" />
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-orange-500 hover:text-orange-600"
+                onClick={handleSendMessage}
+                disabled={!inputMessage.trim() && selectedFiles.length === 0}
+              >
+                <Send className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="relative">
