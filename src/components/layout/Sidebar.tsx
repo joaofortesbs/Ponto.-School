@@ -218,26 +218,16 @@ export default function Sidebar({
             {customLogo ? (
               <div className="h-16 flex items-center justify-center w-full">
                 <img
-                  src={customLogo}
+                  src={customLogo + "?v=" + Date.now()}
                   alt="Logo Ponto School"
-                  className="h-16 w-auto object-contain"
+                  className="h-12 w-auto object-contain"
                   loading="eager"
                   fetchpriority="high"
                   onError={(e) => {
                     console.error("Erro ao renderizar logo no Sidebar");
-                    // Tentar carregar a logo do localStorage
-                    const savedLogo = localStorage.getItem("pontoSchoolLogo");
-                    if (
-                      savedLogo &&
-                      savedLogo !== "null" &&
-                      savedLogo !== "undefined"
-                    ) {
-                      e.currentTarget.src = savedLogo + "?retry=" + Date.now();
-                    } else {
-                      // Tentar carregar a logo padrão com timestamp para evitar cache
-                      e.currentTarget.src =
-                        "/images/ponto-school-logo.png?retry=" + Date.now();
-                    }
+                    // Tentar carregar a logo diretamente do caminho padrão
+                    e.currentTarget.src = "/images/ponto-school-logo.png?retry=" + Date.now();
+                    
                     // Se ainda falhar, remover a imagem e mostrar o texto
                     e.currentTarget.onerror = () => {
                       // Verificar se o elemento ainda existe antes de acessar style

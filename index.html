@@ -54,6 +54,7 @@
           try {
             localStorage.setItem("customLogo", logoPath);
             localStorage.setItem("sidebarCustomLogo", logoPath);
+            localStorage.setItem("pontoSchoolLogo", logoPath);
             localStorage.setItem("logoPreloaded", "true");
             window.PONTO_SCHOOL_CONFIG.logoLoaded = true;
             console.log("Logo salva no localStorage com sucesso");
@@ -71,7 +72,7 @@
         // Quando a imagem carregar, salvar no localStorage
         img.onload = function () {
           saveLogo(window.PONTO_SCHOOL_CONFIG.defaultLogo);
-          document.dispatchEvent(new CustomEvent("logoLoaded"));
+          document.dispatchEvent(new CustomEvent("logoLoaded", { detail: window.PONTO_SCHOOL_CONFIG.defaultLogo }));
         };
 
         // Se houver erro, tentar novamente com um fallback
