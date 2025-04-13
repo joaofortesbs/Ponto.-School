@@ -646,7 +646,7 @@ export async function generateGeminiResponse(
 
               REDIRECIONAMENTO:
               Quando o usuário pedir para ser redirecionado a uma seção da plataforma, SEMPRE inclua o link completo usando a base https://pontoschool.com/. Por exemplo:
-              - Para o Portal: `Aqui está o link para o Portal: https://pontoschool.com/portal"
+              - Para o Portal: "Aqui está o link para o Portal: https://pontoschool.com/portal"
               - Para Agenda: "Você pode acessar sua agenda aqui: https://pontoschool.com/agenda"
               - Para Turmas: "Acesse suas turmas por este link: https://pontoschool.com/turmas"
 
