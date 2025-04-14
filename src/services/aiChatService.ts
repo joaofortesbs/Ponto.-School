@@ -1449,4 +1449,3 @@ export async function addMessageToHistory(
 }
 
 // Add blur effect to the rest of the page when chat is open
-}
