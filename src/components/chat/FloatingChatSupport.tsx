@@ -351,7 +351,7 @@ const FloatingChatSupport: React.FC = () => {
   const [isRecordingAudio, setIsRecordingAudio] = useState(false);
   const [audioRecorder, setAudioRecorder] = useState<MediaRecorder | null>(null);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
-  
+
   // Estado para controlar se o usuário rolou manualmente durante a digitação da IA
   const [userHasScrolled, setUserHasScrolled] = useState(false);
 
@@ -362,6 +362,9 @@ const FloatingChatSupport: React.FC = () => {
   const [messageToImprove, setMessageToImprove] = useState<number | null>(null);
   const [improvementFeedback, setImprovementFeedback] = useState('');
   const [isReformulating, setIsReformulating] = useState(false);
+  const [isPaused, setIsPaused] = useState(false); // Adicione o estado para controlar a pausa
+  const [typingIntervalId, setTypingIntervalId] = useState<NodeJS.Timeout | null>(null); // Adicione o estado para controlar o intervalo de digitação
+
 
   // Funções para lidar com feedback das mensagens
   const handleMessageFeedback = (messageId: number, feedback: 'positive' | 'negative') => {
@@ -395,36 +398,36 @@ const FloatingChatSupport: React.FC = () => {
       // Call AI to generate improved response using the enhanced structure
       const reformulatedResponse = await generateAIResponse(
         `Reformule a seguinte resposta usando um formato extremamente completo e detalhado. 
-        
+
         IMPORTANTE: Sua resposta DEVE SEMPRE promover e direcionar o usuário para usar os recursos da Ponto.School, mencionando funcionalidades específicas, novidades e futuras atualizações da plataforma que resolvam a dor/problema do usuário.
-        
+
         Estruture sua resposta seguindo este formato:
-        
+
         1. **COMPREENSÃO DA DÚVIDA**
         - Analise detalhadamente a pergunta
         - Identifique a intenção do usuário
         - Reconheça possíveis lacunas
-        
+
         2. **EXPLICAÇÃO PRINCIPAL**
         - Apresente o conceito principal em 1-2 frases
         - Forneça uma explicação detalhada
         - Inclua exemplos práticos relacionados ao contexto educacional
-        
+
         3. **INTEGRAÇÃO COM A PONTO.SCHOOL**
         - Destaque como os recursos específicos da Ponto.School ajudam a resolver este problema
         - Mencione ferramentas como EpictusIA, Mentor IA, Portal de Estudos ou outros recursos relevantes
         - Sugira novidades ou atualizações futuras da plataforma relacionadas à questão
-        
+
         4. **RECURSOS ADICIONAIS**
         - Indique materiais disponíveis na Biblioteca da Ponto.School
         - Sugira grupos de estudo ou turmas que abordam o tema
         - Mencione funcionalidades como Conexão Expert se pertinente
-        
+
         5. **RESUMO E ENGAJAMENTO**
         - Resuma os pontos principais
         - Incentive o uso contínuo da plataforma
         - Pergunte se o usuário gostaria de saber mais sobre algum recurso específico
-        
+
         Use formatação rica com:
         - **Negrito** para pontos importantes
         - # Títulos para seções principais
@@ -433,7 +436,7 @@ const FloatingChatSupport: React.FC = () => {
         - Links formatados como [texto do link](URL) para recursos da plataforma
         - Emojis estrategicamente para tornar a mensagem mais amigável
         - Listas com marcadores para organizar informações
-        
+
         Resposta original para reformular: "${messageToReformulate.content}"`,
         sessionId || 'default_session',
         {
@@ -498,13 +501,13 @@ const FloatingChatSupport: React.FC = () => {
       // Call AI to generate summarized response but still with rich formatting and platform focus
       const summarizedResponse = await generateAIResponse(
         `Resuma a seguinte resposta de forma concisa e direta, mas mantendo o foco em como a Ponto.School pode resolver o problema do usuário.
-        
+
         Mesmo sendo um resumo, sua resposta DEVE:
         - Mencionar pelo menos 2 recursos específicos da Ponto.School relevantes para a questão
         - Manter uma formatação rica com **negrito**, ## subtítulos e emojis estratégicos
         - Incluir pelo menos 1 link formatado para uma seção relevante da plataforma
         - Terminar com uma frase que incentive o usuário a continuar usando a Ponto.School
-        
+
         Resposta original para resumir: "${messageToSummarize.content}"`,
         sessionId || 'default_session',
         {
@@ -772,16 +775,16 @@ const FloatingChatSupport: React.FC = () => {
             timestamp: new Date() 
           }
         ]);
-        
+
         // Mostrar texto gradualmente como se estivesse sendo digitado
         let displayedContent = '';
         const words = aiResponse.split(' ');
-        
+
         // Função para adicionar palavras gradualmente
         const addNextWord = (index: number) => {
           if (index < words.length) {
             displayedContent += (index === 0 ? '' : ' ') + words[index];
-            
+
             setMessages(prevMessages => 
               prevMessages.map(msg => 
                 msg.id === messageId 
@@ -789,7 +792,7 @@ const FloatingChatSupport: React.FC = () => {
                   : msg
               )
             );
-            
+
             // Velocidade variável da digitação baseada no tamanho da palavra
             const typingSpeed = Math.min(100, Math.max(30, 70 - words[index].length * 5));
             setTimeout(() => addNextWord(index + 1), typingSpeed);
@@ -797,7 +800,7 @@ const FloatingChatSupport: React.FC = () => {
             setIsTyping(false);
           }
         };
-        
+
         // Inicia o efeito de digitação após um pequeno delay
         setTimeout(() => addNextWord(0), 500);
       } catch (error) {
@@ -878,7 +881,7 @@ const FloatingChatSupport: React.FC = () => {
 
       // Criar ID único para a nova mensagem
       const messageId = Date.now();
-      
+
       // Adicionar mensagem vazia inicialmente
       setMessages(prevMessages => [
         ...prevMessages,
@@ -889,16 +892,16 @@ const FloatingChatSupport: React.FC = () => {
           timestamp: new Date() 
         }
       ]);
-      
+
       // Mostrar texto gradualmente como se estivesse sendo digitado
       let displayedContent = '';
       const words = aiResponse.split(' ');
-      
+
       // Função para adicionar palavras gradualmente
       const addNextWord = (index: number) => {
-        if (index < words.length) {
+        if (index < words.length && !isPaused) {
           displayedContent += (index === 0 ? '' : ' ') + words[index];
-          
+
           setMessages(prevMessages => 
             prevMessages.map(msg => 
               msg.id === messageId 
@@ -906,13 +909,12 @@ const FloatingChatSupport: React.FC = () => {
                 : msg
             )
           );
-          
+
           // Velocidade variável da digitação baseada no tamanho da palavra
           const typingSpeed = Math.min(100, Math.max(30, 70 - words[index].length * 5));
-          setTimeout(() => addNextWord(index + 1), typingSpeed);
-          
-          // Removido o auto-scroll durante a digitação para permitir que o usuário controle a visualização
+          setTypingIntervalId(setTimeout(() => addNextWord(index + 1), typingSpeed));
         } else {
+          clearTimeout(typingIntervalId);
           setIsTyping(false);
           // Apenas rolar no final da mensagem completa e somente se o usuário não rolou manualmente
           // durante o carregamento
@@ -921,10 +923,10 @@ const FloatingChatSupport: React.FC = () => {
           }
         }
       };
-      
+
       // Inicia o efeito de digitação após um pequeno delay
-      setTimeout(() => addNextWord(0), 500);
-      
+      setTypingIntervalId(setTimeout(() => addNextWord(0), 500));
+
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
       setMessages(prevMessages => [
@@ -1363,7 +1365,8 @@ const FloatingChatSupport: React.FC = () => {
                     })}
                   </div>
                 </div>
-              ))
+              </div>
+            ))
             ) : (
               <div className="text-center py-8 px-4 dark:text-gray-300">
                 <div className="w-14 h-14 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center mx-auto mb-3">
@@ -1543,32 +1546,32 @@ const FloatingChatSupport: React.FC = () => {
                       .replace(/^# (.*?)$/gm, '<h1 class="text-xl font-bold text-gray-900 dark:text-gray-100 border-b pb-1 border-gray-200 dark:border-gray-700">$1</h1>')
                       .replace(/^## (.*?)$/gm, '<h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mt-3">$1</h2>')
                       .replace(/^### (.*?)$/gm, '<h3 class="text-base font-medium text-gray-800 dark:text-gray-200">$1</h3>')
-                      
+
                       // Text formatting
                       .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900 dark:text-white">$1</strong>')
                       .replace(/\_(.*?)\_/g, '<em class="text-gray-700 dark:text-gray-300 italic">$1</em>')
                       .replace(/\~\~(.*?)\~\~/g, '<del class="text-gray-500 dark:text-gray-400">$1</del>')
                       .replace(/\`(.*?)\`/g, '<code class="bg-gray-100 dark:bg-gray-800 text-orange-600 dark:text-orange-400 px-1.5 py-0.5 rounded text-sm font-mono">$1</code>')
-                      
+
                       // Lists
                       .replace(/^- (.*?)$/gm, '<ul class="list-disc pl-5 my-2"><li>$1</li></ul>').replace(/<\/ul>\s?<ul class="list-disc pl-5 my-2">/g, '')
                       .replace(/^[0-9]+\. (.*?)$/gm, '<ol class="list-decimal pl-5 my-2"><li>$1</li></ol>').replace(/<\/ol>\s?<ol class="list-decimal pl-5 my-2">/g, '')
-                      
+
                       // Blockquotes
                       .replace(/^> (.*?)$/gm, '<blockquote class="pl-3 border-l-4 border-orange-400 dark:border-orange-600 italic bg-orange-50 dark:bg-orange-900/20 py-1 px-2 rounded-r my-2 text-gray-700 dark:text-gray-300">$1</blockquote>')
-                      
+
                       // Separators
                       .replace(/^---$/gm, '<hr class="border-t border-gray-200 dark:border-gray-700 my-3" />')
-                      
+
                       // Line breaks
                       .replace(/\n/g, '<br />')
-                      
+
                       // Links
                       .replace(/\[(.*?)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-orange-600 dark:text-orange-400 hover:underline inline-flex items-center gap-0.5">$1<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-0.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>')
-                      
+
                       // URLs in parentheses
                       .replace(/(?<!\]|\()\((https?:\/\/[^\s)]+)\)/g, '(<a href="$1" target="_blank" rel="noopener noreferrer" class="text-orange-600 dark:text-orange-400 hover:underline">$1</a>)')
-                      
+
                       // Plain URLs
                       .replace(/(?<!\]|\()(?<!\(\s*)(https?:\/\/[^\s)]+)/g, '$1')
                   }} 
@@ -1585,7 +1588,7 @@ const FloatingChatSupport: React.FC = () => {
                           {file.type.startsWith('image/') && <Image className="h-4 w-4" />}
                           {file.type.startsWith('video/') && <Video className="h-4 w-4" />}
                           {file.type.startsWith('audio/') && <Music className="h-4 w-4" />}
-                          {(!file.type.startsWith('image/') && !file.type.startsWith('video/') && !file.type.startsWith('audio/')) && <File className="h-4 w-4" />}
+                          {(!file.type.startsWith('image/') && !file.type.startsWith('video/') && !file.type.startsWith('audio/')) && <File className="h-4 w-4" />}```javascript
                         </div>
                         <div className="overflow-hidden text-sm">
                           <a 
@@ -1739,7 +1742,7 @@ const FloatingChatSupport: React.FC = () => {
                     })}
                   </div>
                 </div>
-                <div className="relative min-h-[40px] flex items-center">
+                <div className="relative min-h-[40px] flex flex-col">
                   <div className="flex items-center">
                     <div className="flex space-x-1 mr-2">
                       <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
@@ -1747,6 +1750,40 @@ const FloatingChatSupport: React.FC = () => {
                       <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse delay-300"></div>
                     </div>
                     <span className="text-sm text-gray-600 dark:text-gray-400">Formulando resposta...</span>
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-2">
+                    <Button 
+                      size="sm" 
+                      variant="destructive" 
+                      className="h-7 px-2 py-0 text-xs bg-red-500 hover:bg-red-600"
+                      onClick={cancelTyping}
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Cancelar
+                    </Button>
+
+                    {isPaused ? (
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="h-7 px-2 py-0 text-xs border-orange-200 dark:border-orange-700"
+                        onClick={resumeTyping}
+                      >
+                        <RefreshCw className="h-3 w-3 mr-1" />
+                        Retomar
+                      </Button>
+                    ) : (
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="h-7 px-2 py-0 text-xs border-orange-200 dark:border-orange-700"
+                        onClick={pauseTyping}
+                      >
+                        <Square className="h-3 w-3 mr-1" />
+                        Pausar
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -2243,7 +2280,7 @@ const FloatingChatSupport: React.FC = () => {
           </div>
         </ScrollArea>
       )}
-    </div>
+    </</div>
   );
 
   const renderHelpContent = () => (
@@ -2848,5 +2885,30 @@ const FloatingChatSupport: React.FC = () => {
     </>
   );
 };
+
+const cancelTyping = () => {
+  // Implementar lógica para cancelar a digitação aqui
+  console.log("Cancelando digitação...");
+  // interromper o intervalo de digitação
+  clearTimeout(typingIntervalId);
+  setIsTyping(false);
+  setIsPaused(false);
+};
+
+const pauseTyping = () => {
+  // Implementar lógica para pausar a digitação aqui
+  console.log("Pausando digitação...");
+  clearTimeout(typingIntervalId);
+  setIsPaused(true);
+};
+
+const resumeTyping = () => {
+  // Implementar lógica para retomar a digitação aqui
+  console.log("Retomando digitação...");
+  setIsPaused(false);
+  // reiniciar o intervalo de digitação, se necessário
+  // ... (lógica para retomar a digitação a partir do ponto onde parou) ...
+};
+
 
 export default FloatingChatSupport;
