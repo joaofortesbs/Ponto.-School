@@ -1403,10 +1403,10 @@ const FloatingChatSupport: React.FC = () => {
                       .replace(/\~\~(.*?)\~\~/g, '<del>$1</del>')
                       .replace(/\`(.*?)\`/g, '<code class="bg-black/10 dark:bg-white/10 rounded px-1">$1</code>')
                       .replace(/\n/g, '<br />')
-                      // Renderiza texto de links Markdown com estilo laranja nos URLs
-                      .replace(/\[(.*?)\]\((https?:\/\/[^)]+)\)/g, '[$1]<span class="text-[#FF6B00]">($2)</span>')
-                      // Detecta URLs simples em parênteses e colore de laranja
-                      .replace(/(?<!\]|\()\((https?:\/\/[^\s)]+)\)/g, '<span class="text-[#FF6B00]">($1)</span>')
+                      // Renderiza texto de links Markdown com estilo laranja nos URLs e torna clicável apenas o URL
+                      .replace(/\[(.*?)\]\((https?:\/\/[^)]+)\)/g, '[$1](<a href="$2" target="_blank" rel="noopener noreferrer" class="text-[#FF6B00]">$2</a>)')
+                      // Detecta URLs simples em parênteses, colore de laranja e torna clicável
+                      .replace(/(?<!\]|\()\((https?:\/\/[^\s)]+)\)/g, '(<a href="$1" target="_blank" rel="noopener noreferrer" class="text-[#FF6B00]">$1</a>)')
                       // Detecta URLs simples fora de parênteses sem fazer links
                       .replace(/(?<!\]|\()(?<!\(\s*)(https?:\/\/[^\s)]+)/g, '$1')
                   }} 
