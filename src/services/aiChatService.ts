@@ -860,7 +860,7 @@ let isGenerating = false;
  * @param onPartialResponse Callback for partial response updates
  * @param onCompleteResponse Callback for complete response
  */
-export const generateAIResponse = (
+export const simulateAIResponse = (
   message: string,
   onPartialResponse: (text: string) => void,
   onCompleteResponse: (text: string) => void
@@ -937,7 +937,8 @@ export const resumeResponse = (): void => {
 };
 
 export default {
-  generateAIResponse,
+  generateAIResponse, // Exporta a função assíncrona definida acima
+  simulateAIResponse, // Exporta a nova função para simulação de respostas
   cancelResponse,
   pauseResponse,
   resumeResponse

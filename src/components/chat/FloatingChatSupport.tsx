@@ -1,10 +1,9 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquare, Send, X, PauseCircle, PlayCircle, XCircle } from "lucide-react";
-import { generateAIResponse, cancelResponse, pauseResponse, resumeResponse } from "@/services/aiChatService";
+import { simulateAIResponse, cancelResponse, pauseResponse, resumeResponse } from "@/services/aiChatService";
 
 interface Message {
   id: string;
@@ -30,12 +29,12 @@ const FloatingChatSupport: React.FC = () => {
     "Te deixando mais inteligente",
     "Conectando você com o futuro"
   ];
-  
+
   const [currentLoadingPhrase, setCurrentLoadingPhrase] = useState(loadingPhrases[0]);
-  
+
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    
+
     if (isTyping) {
       let index = 0;
       interval = setInterval(() => {
@@ -43,7 +42,7 @@ const FloatingChatSupport: React.FC = () => {
         setCurrentLoadingPhrase(loadingPhrases[index]);
       }, 3000);
     }
-    
+
     return () => {
       if (interval) clearInterval(interval);
     };
@@ -121,8 +120,8 @@ const FloatingChatSupport: React.FC = () => {
 
     try {
       const aiMessageId = `ai-${Date.now()}`;
-      
-      generateAIResponse(
+
+      simulateAIResponse(
         newMessage,
         (partialContent) => {
           setPartialResponse(partialContent);
@@ -131,14 +130,14 @@ const FloatingChatSupport: React.FC = () => {
           setIsTyping(false);
           setPartialResponse("");
           setIsPaused(false);
-          
+
           const aiMessage: Message = {
             id: aiMessageId,
             content: finalContent,
             sender: "ai",
             timestamp: new Date(),
           };
-          
+
           setMessages((prev) => [...prev, aiMessage]);
         }
       );
@@ -146,39 +145,39 @@ const FloatingChatSupport: React.FC = () => {
       console.error("Error generating AI response:", error);
       setIsTyping(false);
       setPartialResponse("");
-      
+
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
         content: "Desculpe, houve um erro ao processar sua mensagem. Por favor, tente novamente.",
         sender: "ai",
         timestamp: new Date(),
       };
-      
+
       setMessages((prev) => [...prev, errorMessage]);
     }
   };
 
   const formatMessageContent = (content: string) => {
     let formattedContent = content;
-    
+
     // Replace markdown-style bold with HTML bold
     formattedContent = formattedContent.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    
+
     // Replace markdown-style headers
     formattedContent = formattedContent.replace(/^# (.*?)$/gm, '<h1 class="text-xl font-bold mb-2 text-[#FF6B00]">$1</h1>');
     formattedContent = formattedContent.replace(/^## (.*?)$/gm, '<h2 class="text-lg font-bold mb-2 text-[#FF6B00]">$1</h2>');
     formattedContent = formattedContent.replace(/^### (.*?)$/gm, '<h3 class="text-md font-bold mb-2 text-[#FF6B00]">$1</h3>');
-    
+
     // Replace markdown-style lists
     formattedContent = formattedContent.replace(/^\- (.*?)$/gm, '<li class="ml-4">• $1</li>');
     formattedContent = formattedContent.replace(/^(\d+)\. (.*?)$/gm, '<li class="ml-4"><span class="font-bold text-[#FF6B00]">$1.</span> $2</li>');
-    
+
     // Replace markdown-style links
     formattedContent = formattedContent.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-blue-500 underline" target="_blank">$1</a>');
-    
+
     // Replace line breaks with <br>
     formattedContent = formattedContent.replace(/\n/g, '<br>');
-    
+
     return formattedContent;
   };
 
