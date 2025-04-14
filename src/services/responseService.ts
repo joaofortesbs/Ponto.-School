@@ -71,3 +71,43 @@ export const acceptExpertProposal = (responseId: string): Response | null => {
 export const rejectExpertProposal = (responseId: string): Response | null => {
   return updateResponseStatus(responseId, "rejected");
 };
+
+/**
+ * Response service for processing and enhancing AI responses
+ */
+
+/**
+ * Formats a message with rich styling
+ * @param message Raw message text
+ * @returns Formatted message with styling
+ */
+export const formatResponse = (message: string): string => {
+  let formattedResponse = message;
+
+  // Apply some basic formatting to the response
+  formattedResponse = formattedResponse.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  formattedResponse = formattedResponse.replace(/^# (.*?)$/gm, '<h1 class="text-xl font-bold mb-2 text-[#FF6B00]">$1</h1>');
+  formattedResponse = formattedResponse.replace(/^## (.*?)$/gm, '<h2 class="text-lg font-bold mb-2 text-[#FF6B00]">$1</h2>');
+  formattedResponse = formattedResponse.replace(/^### (.*?)$/gm, '<h3 class="text-md font-bold mb-2 text-[#FF6B00]">$1</h3>');
+
+  // Format lists
+  formattedResponse = formattedResponse.replace(/^\- (.*?)$/gm, '<li class="ml-4">• $1</li>');
+  formattedResponse = formattedResponse.replace(/^(\d+)\. (.*?)$/gm, '<li class="ml-4"><span class="font-bold text-[#FF6B00]">$1.</span> $2</li>');
+
+  return formattedResponse;
+};
+
+/**
+ * Enhances a response with platform-specific recommendations
+ * @param message Original response
+ * @returns Enhanced response with platform-specific content
+ */
+export const enhanceWithPlatformSpecific = (message: string): string => {
+  // This could be expanded with more sophisticated logic in the future
+  return message;
+};
+
+export default {
+  formatResponse,
+  enhanceWithPlatformSpecific
+};

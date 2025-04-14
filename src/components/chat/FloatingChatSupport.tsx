@@ -1,11 +1,9 @@
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquare, Send, X, PauseCircle, PlayCircle, XCircle } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { generateAIResponse, cancelResponse, pauseResponse, resumeResponse } from "@/services/aiChatService";
 
 interface Message {
@@ -184,165 +182,6 @@ const FloatingChatSupport: React.FC = () => {
     return formattedContent;
   };
 
-  const renderChatHistoryContent = () => (
-    <div className="flex flex-col h-full">
-      <div className="p-2 border-b bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900 dark:to-orange-800">
-        <div className="flex justify-between items-center mb-2">
-          <div className="flex items-center gap-1">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src="/images/ponto-school-logo.png" alt="AI" />
-              <AvatarFallback className="bg-[#FF6B00] text-white">AI</AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="text-sm font-semibold">Assistente de Suporte</p>
-              <p className="text-xs opacity-80">Ponto.School</p>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggleChat}
-            className="h-8 w-8 p-0 rounded-full"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-        <p className="text-xs">
-          Assistente alimentado pela Ponto.School, aqui para responder suas dúvidas.
-        </p>
-      </div>
-
-      <div 
-        className="flex-1 overflow-y-auto p-3 space-y-4" 
-        ref={chatContainerRef}
-        onScroll={handleScroll}
-      >
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${
-              message.sender === "user" ? "justify-end" : "justify-start"
-            }`}
-          >
-            <div
-              className={`max-w-[80%] rounded-lg p-3 ${
-                message.sender === "user"
-                  ? "bg-[#FF6B00] text-white"
-                  : "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-200"
-              }`}
-            >
-              {message.sender === "ai" ? (
-                <div
-                  className="text-sm prose dark:prose-invert max-w-none"
-                  dangerouslySetInnerHTML={{ __html: formatMessageContent(message.content) }}
-                />
-              ) : (
-                <p className="text-sm">{message.content}</p>
-              )}
-              <div
-                className={`text-xs mt-1 ${
-                  message.sender === "user"
-                    ? "text-white/70"
-                    : "text-slate-500"
-                }`}
-              >
-                {message.timestamp.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </div>
-            </div>
-          </div>
-        ))}
-
-        {isTyping && (
-          <div className="flex justify-start">
-            <div className="max-w-[80%] rounded-lg p-3 bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-200">
-              {partialResponse ? (
-                <div
-                  className="text-sm prose dark:prose-invert max-w-none"
-                  dangerouslySetInnerHTML={{
-                    __html: formatMessageContent(partialResponse),
-                  }}
-                />
-              ) : (
-                <div className="flex items-center">
-                  <span className="mr-2">{currentLoadingPhrase}</span>
-                  <div className="text-[#FF6B00]">
-                    <div className="loading-dots flex items-center">
-                      <span>.</span>
-                      <span>.</span>
-                      <span>.</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {isTyping && (
-          <div className="flex justify-center my-2 space-x-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleCancel}
-              className="bg-red-100 text-red-600 hover:bg-red-200 border-red-300"
-            >
-              <XCircle className="h-4 w-4 mr-1" /> Cancelar
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handlePauseResume}
-              className={isPaused 
-                ? "bg-green-100 text-green-600 hover:bg-green-200 border-green-300" 
-                : "bg-blue-100 text-blue-600 hover:bg-blue-200 border-blue-300"
-              }
-            >
-              {isPaused ? (
-                <>
-                  <PlayCircle className="h-4 w-4 mr-1" /> Retomar
-                </>
-              ) : (
-                <>
-                  <PauseCircle className="h-4 w-4 mr-1" /> Pausar
-                </>
-              )}
-            </Button>
-          </div>
-        )}
-
-        <div ref={messagesEndRef} />
-      </div>
-
-      <form
-        onSubmit={handleSendMessage}
-        className="p-2 border-t dark:border-slate-800 bg-white dark:bg-slate-950"
-      >
-        <div className="relative">
-          <Input
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Digite sua mensagem..."
-            className="pr-10"
-            disabled={isTyping}
-          />
-          <Button
-            type="submit"
-            size="sm"
-            disabled={!newMessage.trim() || isTyping}
-            className={`absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 ${
-              !newMessage.trim() ? "opacity-50" : "opacity-100"
-            }`}
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
-      </form>
-    </div>
-  );
-
   return (
     <div className="fixed bottom-4 right-4 z-40 flex flex-col items-end">
       <div
@@ -350,7 +189,164 @@ const FloatingChatSupport: React.FC = () => {
           isOpen ? "w-80 h-[500px] opacity-100" : "w-0 h-0 opacity-0"
         }`}
       >
-        {isOpen && renderChatHistoryContent()}
+        {isOpen && (
+          <div className="flex flex-col h-full">
+            <div className="p-2 border-b bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900 dark:to-orange-800">
+              <div className="flex justify-between items-center mb-2">
+                <div className="flex items-center gap-1">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src="/images/ponto-school-logo.png" alt="AI" />
+                    <AvatarFallback className="bg-[#FF6B00] text-white">AI</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="text-sm font-semibold">Assistente de Suporte</p>
+                    <p className="text-xs opacity-80">Ponto.School</p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleChat}
+                  className="h-8 w-8 p-0 rounded-full"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs">
+                Assistente alimentado pela Ponto.School, aqui para responder suas dúvidas.
+              </p>
+            </div>
+
+            <div 
+              className="flex-1 overflow-y-auto p-3 space-y-4" 
+              ref={chatContainerRef}
+              onScroll={handleScroll}
+            >
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${
+                    message.sender === "user" ? "justify-end" : "justify-start"
+                  }`}
+                >
+                  <div
+                    className={`max-w-[80%] rounded-lg p-3 ${
+                      message.sender === "user"
+                        ? "bg-[#FF6B00] text-white"
+                        : "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-200"
+                    }`}
+                  >
+                    {message.sender === "ai" ? (
+                      <div
+                        className="text-sm prose dark:prose-invert max-w-none"
+                        dangerouslySetInnerHTML={{ __html: formatMessageContent(message.content) }}
+                      />
+                    ) : (
+                      <p className="text-sm">{message.content}</p>
+                    )}
+                    <div
+                      className={`text-xs mt-1 ${
+                        message.sender === "user"
+                          ? "text-white/70"
+                          : "text-slate-500"
+                      }`}
+                    >
+                      {message.timestamp.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="max-w-[80%] rounded-lg p-3 bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-200">
+                    {partialResponse ? (
+                      <div
+                        className="text-sm prose dark:prose-invert max-w-none"
+                        dangerouslySetInnerHTML={{
+                          __html: formatMessageContent(partialResponse),
+                        }}
+                      />
+                    ) : (
+                      <div className="flex items-center">
+                        <span className="mr-2">{currentLoadingPhrase}</span>
+                        <div className="text-[#FF6B00]">
+                          <div className="loading-dots flex items-center">
+                            <span>.</span>
+                            <span>.</span>
+                            <span>.</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {isTyping && (
+                <div className="flex justify-center my-2 space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleCancel}
+                    className="bg-red-100 text-red-600 hover:bg-red-200 border-red-300"
+                  >
+                    <XCircle className="h-4 w-4 mr-1" /> Cancelar
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handlePauseResume}
+                    className={isPaused 
+                      ? "bg-green-100 text-green-600 hover:bg-green-200 border-green-300" 
+                      : "bg-blue-100 text-blue-600 hover:bg-blue-200 border-blue-300"
+                    }
+                  >
+                    {isPaused ? (
+                      <>
+                        <PlayCircle className="h-4 w-4 mr-1" /> Retomar
+                      </>
+                    ) : (
+                      <>
+                        <PauseCircle className="h-4 w-4 mr-1" /> Pausar
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+
+              <div ref={messagesEndRef} />
+            </div>
+
+            <form
+              onSubmit={handleSendMessage}
+              className="p-2 border-t dark:border-slate-800 bg-white dark:bg-slate-950"
+            >
+              <div className="relative">
+                <Input
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Digite sua mensagem..."
+                  className="pr-10"
+                  disabled={isTyping}
+                />
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={!newMessage.trim() || isTyping}
+                  className={`absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 ${
+                    !newMessage.trim() ? "opacity-50" : "opacity-100"
+                  }`}
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            </form>
+          </div>
+        )}
       </div>
 
       <Button
