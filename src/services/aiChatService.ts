@@ -878,8 +878,8 @@ export const setCancelTyping = (cancelled: boolean): void => {
   isTypingCancelled = cancelled;
 };
 
-// Generate AI response
-export const generateAIResponse = async (
+// Generate AI response with type animation support
+export const generateResponseWithAnimation = async (
   prompt: string,
   sessionId: string = 'default_session',
   options?: {
