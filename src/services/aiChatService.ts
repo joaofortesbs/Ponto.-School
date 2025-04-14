@@ -711,29 +711,6 @@ export async function generateAIResponse(
   }
 }
 
-// Exportar variáveis para controle de resposta
-export let isResponseGenerationCancelled = false;
-export let isResponseGenerationPaused = false;
-
-// Funções para controle de geração de resposta
-export const cancelResponseGeneration = () => {
-  isResponseGenerationCancelled = true;
-};
-
-export const pauseResponseGeneration = () => {
-  isResponseGenerationPaused = true;
-};
-
-export const resumeResponseGeneration = () => {
-  isResponseGenerationPaused = false;
-};
-
-// Reset do estado de controle
-export const resetResponseGenerationState = () => {
-  isResponseGenerationCancelled = false;
-  isResponseGenerationPaused = false;
-};
-
 // Limpar histórico da conversa
 export function clearConversationHistory(sessionId: string): void {
   if (conversationHistory[sessionId]) {
