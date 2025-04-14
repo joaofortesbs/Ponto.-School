@@ -125,17 +125,10 @@
   animation: keyboard05 var(--duration) linear infinite;
 }
 
+/* Remove the bounce animation to keep typewriter at fixed size */
 @keyframes bounce05 {
-  85%, 92%, 100% {
+  0%, 100% {
     transform: translateY(0);
-  }
-
-  89% {
-    transform: translateY(-4px);
-  }
-
-  95% {
-    transform: translateY(2px);
   }
 }
 
@@ -267,4 +260,28 @@
   position: relative;
   min-height: 24px;
   padding-left: 30px;
+}
+
+.typing-animation-container {
+  flex: 1;
+  text-align: left;
+  margin-right: 10px;
+}
+
+.typing-text {
+  display: inline-block;
+  border-right: 2px solid #FF8736;
+  padding-right: 5px;
+  animation: blink-caret 0.75s step-end infinite;
+}
+
+@keyframes blink-caret {
+  from, to { border-color: transparent; }
+  50% { border-color: #FF8736; }
+}
+
+.chat-typewriter {
+  transform: scale(0.6);
+  margin-right: 10px;
+  flex-shrink: 0;
 }
