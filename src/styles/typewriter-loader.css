@@ -1,3 +1,4 @@
+
 /* From Uiverse.io by Nawsome */ 
 .typewriter {
   --blue: #FF8736;
@@ -139,29 +140,9 @@
   }
 }
 
-/* Typing animation for the text */
 .typing-animation {
   display: inline-block;
   position: relative;
-  animation: typingDots 1.5s infinite ease-in-out;
-}
-
-@keyframes typingDots {
-  0%, 20% {
-    content: "Formulando resposta";
-  }
-  25%, 45% {
-    content: "Formulando resposta.";
-  }
-  50%, 70% {
-    content: "Formulando resposta..";
-  }
-  75%, 95% {
-    content: "Formulando resposta...";
-  }
-  100% {
-    content: "Formulando resposta";
-  }
 }
 
 .typewriter-container {
@@ -178,8 +159,8 @@
 }
 
 .typewriter {
-  transform: scale(0.5); /* Make the typewriter animation smaller */
-  margin-left: -30px; /* Adjust position to align better */
+  transform: scale(0.5);
+  margin-left: -30px;
 }
 
 .dark .typewriter {
@@ -187,7 +168,6 @@
   --text: #4b5563;
 }
 
-/* Additional styles for chat loading */
 .chat-typewriter {
   transform: scale(0.4);
   margin-left: -20px;
@@ -198,4 +178,21 @@
   position: relative;
   min-height: 24px;
   padding-left: 30px;
+}
+
+/* Texto de Formulando resposta */
+.typing-animation::after {
+  content: "Formulando resposta...";
+}
+
+.typing-animation.variation-1::after {
+  content: "Preparando explicação...";
+}
+
+.typing-animation.variation-2::after {
+  content: "Te deixando mais inteligente...";
+}
+
+.typing-animation.variation-3::after {
+  content: "Conectando você com o futuro...";
 }
