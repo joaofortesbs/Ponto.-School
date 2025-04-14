@@ -440,9 +440,12 @@ CONTEXTO DO USUÁRIO (COMPLETO):
       SEMPRE forneça o link direto e clicável para onde o usuário deseja ir.
 
       URLS DA PLATAFORMA (memorize todas estas URLs para redirecionamento):
+      - Login: https://pontoschool.com/login
+      - Cadastro: https://pontoschool.com/register
       - Portal de Estudos: https://pontoschool.com/portal
       - Agenda: https://pontoschool.com/agenda
       - Turmas: https://pontoschool.com/turmas
+      - Grupos de Estudo: https://pontoschool.com/turmas?view=estudos
       - Biblioteca: https://pontoschool.com/biblioteca
       - Perfil: https://pontoschool.com/profile
       - Configurações: https://pontoschool.com/configuracoes
@@ -460,7 +463,9 @@ CONTEXTO DO USUÁRIO (COMPLETO):
       - Novidades: https://pontoschool.com/novidades
       - Lembretes: https://pontoschool.com/lembretes
       - Pedidos de Ajuda: https://pontoschool.com/pedidos-ajuda
+      - Conexão Expert: https://pontoschool.com/pedidos-ajuda
       - Estudos: https://pontoschool.com/estudos
+      - Página de Ajuda: https://pontoschool.com/ajuda
 
       Personalize suas respostas para criar uma experiência única e amigável para ${username}.`;
 
@@ -520,10 +525,15 @@ Contexto do usuário:
               - Co-Fundador & Coordenador de Design: Samuel Afonso (@samuel_afonso) - usuário na plataforma Ponto.School"
 
               REDIRECIONAMENTO:
-              Quando o usuário pedir para ser redirecionado a uma seção da plataforma, SEMPRE inclua o link completo usando a base https://pontoschool.com/. Por exemplo:
-              - Para o Portal: "Aqui está o link para o Portal: https://pontoschool.com/portal"
-              - Para Agenda: "Você pode acessar sua agenda aqui: https://pontoschool.com/agenda"
-              - Para Turmas: "Acesse suas turmas por este link: https://pontoschool.com/turmas"
+              Quando o usuário pedir para ser redirecionado a uma seção da plataforma, SEMPRE inclua o link completo usando a base https://pontoschool.com/ e formate como link clicável. Por exemplo:
+              - Para o Portal: "Aqui está o [Portal de Estudos](https://pontoschool.com/portal). Clique para acessar."
+              - Para Agenda: "Você pode acessar sua [Agenda](https://pontoschool.com/agenda) imediatamente."
+              - Para Turmas: "Sua [página de Turmas](https://pontoschool.com/turmas) está pronta para acesso."
+              - Para Grupos de Estudo: "Acesse os [Grupos de Estudo](https://pontoschool.com/turmas?view=estudos) para interagir com colegas."
+              - Para Perfil: "Veja seu [Perfil](https://pontoschool.com/profile) aqui."
+              - Para Login: "Faça [Login](https://pontoschool.com/login) aqui."
+              - Para Cadastro: "Realize seu [Cadastro](https://pontoschool.com/register) aqui."
+              - Para Ajuda: "Acesse a [Página de Ajuda](https://pontoschool.com/ajuda) para suporte."
 
               Responda à seguinte pergunta do usuário ${usernameFull}: ${message}`
             }
@@ -613,12 +623,16 @@ export function getConversationHistory(sessionId: string): ChatMessage[] {
 // Função para corrigir links da plataforma
 function fixPlatformLinks(text: string): string {
   const platformLinks = {
+    'Portal': 'https://pontoschool.com/portal',
     'Portal de Estudos': 'https://pontoschool.com/portal',
     'Agenda': 'https://pontoschool.com/agenda',
     'Turmas': 'https://pontoschool.com/turmas',
+    'Grupos de Estudo': 'https://pontoschool.com/turmas?view=estudos',
     'Biblioteca': 'https://pontoschool.com/biblioteca',
     'Perfil': 'https://pontoschool.com/profile',
+    'Página de Perfil': 'https://pontoschool.com/profile',
     'Configurações': 'https://pontoschool.com/configuracoes',
+    'Página de Configurações': 'https://pontoschool.com/configuracoes',
     'Dashboard': 'https://pontoschool.com/dashboard',
     'Epictus IA': 'https://pontoschool.com/epictus-ia',
     'Mentor IA': 'https://pontoschool.com/mentor-ia',
@@ -633,15 +647,28 @@ function fixPlatformLinks(text: string): string {
     'Novidades': 'https://pontoschool.com/novidades',
     'Lembretes': 'https://pontoschool.com/lembretes',
     'Pedidos de Ajuda': 'https://pontoschool.com/pedidos-ajuda',
-    'Estudos': 'https://pontoschool.com/estudos'
+    'Conexão Expert': 'https://pontoschool.com/pedidos-ajuda',
+    'Estudos': 'https://pontoschool.com/estudos',
+    'Login': 'https://pontoschool.com/login',
+    'Cadastro': 'https://pontoschool.com/register',
+    'Página de Ajuda': 'https://pontoschool.com/ajuda',
+    'Ajuda': 'https://pontoschool.com/ajuda'
   };
 
   let newText = text;
+  
+  // Primeiro, substituir expressões mais específicas
   for (const key in platformLinks) {
     const regex = new RegExp(`\\b(${key})\\b`, 'gi'); // Busca palavras inteiras
     newText = newText.replace(regex, `[$1](${platformLinks[key]})`);
   }
-
+  
+  // Adicionar correção para URLs que podem ter sido escritas incorretamente
+  newText = newText.replace(/\(https:\/\/pontoschool\.com(\s+)([^)]+)\)/g, '(https://pontoschool.com/$2)');
+  
+  // Corrigir URLs que podem ter dupla barra
+  newText = newText.replace(/\(https:\/\/pontoschool\.com\/\/([^)]+)\)/g, '(https://pontoschool.com/$1)');
+  
   return newText;
 }
 
