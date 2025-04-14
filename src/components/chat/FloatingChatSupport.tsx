@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
 import {
   MessageSquare,
   Send,
@@ -69,9 +68,6 @@ interface ChatMessage {
   files?: MessageFile[];
   rating?: 'positive' | 'negative';
   needsImprovement?: boolean;
-  evaluation?: 'good' | 'bad';
-  showFeedbackOptions?: boolean;
-  feedbackText?: string;
 }
 
 interface Ticket {
@@ -126,7 +122,7 @@ interface CommonQuestion {
 const defaultMessages: ChatMessage[] = [
   {
     id: 1,
-    content: "Oi! Sou o Epictus IA do suporte, seu assistente descolado aqui na Ponto.School! 😊 Estou aqui para te ajudar com dúvidas sobre a plataforma, navegação, funcionalidades e também posso responder questões sobre conteúdos educacionais. Como posso facilitar sua experiência hoje?",
+    content: "Oi! Sou o Epictus IA, seu assistente descolado aqui na Ponto.School! 😊 Tô pronto pra te ajudar com o que precisar, é só mandar! Como posso facilitar sua vida hoje?",
     sender: "assistant",
     timestamp: new Date(),
   },
@@ -384,144 +380,24 @@ const FloatingChatSupport: React.FC = () => {
     };
   }, [isOpen]);
 
-  // Função de teste para verificar o funcionamento dos links da plataforma
-  const testLinkSystem = () => {
-    // Lista de URLs para testar a formatação e o processamento
-    const testURLs = [
-      '[Portal](https://pontoschool.com/portal)',
-      '[Meu Perfil](https://pontoschool.com/profile)',
-      '[Agenda](https://pontoschool.com/agenda)',
-      'https://pontoschool.com/turmas',
-      'Acesse https://pontoschool.com/biblioteca para ver seus livros',
-      '[Configurações](https://pontoschool.com/configuracoes?tab=perfil)',
-      'Link para [Epictus IA](https://pontoschool.com/epictus-ia#main)'
-    ];
-    
-    // Processar cada URL de teste
-    const results = testURLs.map(url => ({
-      original: url,
-      processed: processLinks(url)
-    }));
-    
-    // Logar resultados para verificação (apenas em desenvolvimento)
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Teste do sistema de links:');
-      console.table(results);
-    }
-    
-    // Verificar se todos os links foram processados corretamente
-    const allValid = results.every(item => 
-      item.processed.includes('href="https://pontoschool.com/') ||
-      !item.original.includes('pontoschool.com')
-    );
-    
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`Sistema de links ${allValid ? 'funcionando corretamente' : 'com problemas'}`);
-    }
-    
-    return allValid;
-  };
-
   useEffect(() => {
     const initializeChat = async () => {
       try {
-        // Testar o sistema de links
-        testLinkSystem();
-        
-        // Importar serviços necessários
+        // Tentar obter dados do perfil do usuário
         const profileService = await import('@/services/profileService');
-        const aiChatDatabaseService = await import('@/services/aiChatDatabaseService');
-        const { supabase } = await import('@/lib/supabase');
+        const userProfile = await profileService.profileService.getCurrentUserProfile();
         
-        // Inicializar serviço de sincronização para manter o banco de dados da IA atualizado
-        try {
-          const aiChatSyncService = await import('@/services/aiChatSyncService');
-          console.log('Inicializando serviço de sincronização da IA...');
-          const syncSubscriptions = await aiChatSyncService.aiChatSyncService.initialize();
-          
-          if (syncSubscriptions) {
-            console.log('Serviço de sincronização da IA inicializado com sucesso');
-          }
-        } catch (syncError) {
-          console.error('Erro ao inicializar serviço de sincronização da IA:', syncError);
-        }
-        
-        // Verificar sessão do usuário
-        const { data: sessionData } = await supabase.auth.getSession();
-        const isAuthenticated = !!sessionData?.session?.user;
-        
-        // Obter perfil detalhado com todas as informações associadas
-        let detailedProfile = null;
-        let userProfile = null;
-        
-        if (isAuthenticated) {
-          try {
-            // Obter perfil detalhado com todas as informações associadas
-            detailedProfile = await aiChatDatabaseService.aiChatDatabase.getDetailedUserProfile();
-            
-            // Se não conseguir o perfil detalhado, tentar o perfil básico
-            if (!detailedProfile) {
-              userProfile = await profileService.profileService.getCurrentUserProfile();
-            }
-          } catch (detailError) {
-            console.log('Erro ao obter perfil detalhado:', detailError);
-            // Tentar obter o perfil básico como fallback
-            try {
-              userProfile = await profileService.profileService.getCurrentUserProfile();
-            } catch (profileError) {
-              console.error('Erro ao obter perfil básico:', profileError);
-            }
-          }
-        }
-        
-        // Usar perfil detalhado se disponível, senão cair para o perfil básico
-        const effectiveProfile = detailedProfile || userProfile;
-
-        // Determinar o melhor nome de usuário a usar com prioridades claras
+        // Determinar o melhor nome de usuário a usar
         let displayName = 'Usuário';
-        let fullName = '';
-        let userId = '';
-        let userEmail = '';
-        let planType = 'lite';
-        let userLevel = 1;
-        let userState = '';
-        let userBio = '';
-        let userAvatar = '';
-
-        if (effectiveProfile) {
-          // Extrair todos os dados relevantes para uso no chat
-          userId = effectiveProfile.id || '';
-          userEmail = effectiveProfile.email || '';
-          fullName = effectiveProfile.full_name || '';
-          planType = effectiveProfile.plan_type || 'lite';
-          userLevel = effectiveProfile.level || 1;
-          userState = effectiveProfile.state || '';
-          userBio = effectiveProfile.bio || '';
-          userAvatar = effectiveProfile.avatar_url || '';
-          
-          // Prioridade para nome de exibição: nome completo > displayName > username
-          if (effectiveProfile.full_name) {
-            displayName = effectiveProfile.full_name.split(' ')[0]; // Pegar o primeiro nome
-          } else if (effectiveProfile.display_name) {
-            displayName = effectiveProfile.display_name;
-          } else if (effectiveProfile.username) {
-            displayName = effectiveProfile.username;
-          }
-          
-          // Salvar informações do usuário no localStorage para uso futuro e recuperação offline
-          try {
-            localStorage.setItem('userFirstName', displayName);
-            localStorage.setItem('userFullName', fullName);
-            localStorage.setItem('userEmail', userEmail);
-            localStorage.setItem('userId', userId);
-            localStorage.setItem('userPlan', planType);
-            localStorage.setItem('userLevel', userLevel.toString());
-            localStorage.setItem('userState', userState);
-            
-            // Guardar timestamp da última atualização para verificar frescor dos dados
-            localStorage.setItem('userDataLastUpdated', Date.now().toString());
-          } catch (storageError) {
-            console.log('Erro ao salvar dados do usuário no localStorage:', storageError);
+        
+        if (userProfile) {
+          // Prioridade: nome completo > displayName > username
+          if (userProfile.full_name) {
+            displayName = userProfile.full_name.split(' ')[0]; // Pegar o primeiro nome
+          } else if (userProfile.display_name) {
+            displayName = userProfile.display_name;
+          } else if (userProfile.username) {
+            displayName = userProfile.username;
           }
         } else {
           // Fallback para localStorage se não tiver perfil
@@ -531,75 +407,26 @@ const FloatingChatSupport: React.FC = () => {
           if (storedName) {
             displayName = storedName;
           }
-          
-          fullName = localStorage.getItem('userFullName') || displayName;
-          userEmail = localStorage.getItem('userEmail') || '';
-          userId = localStorage.getItem('userId') || '';
-          planType = localStorage.getItem('userPlan') || 'lite';
-          userLevel = Number(localStorage.getItem('userLevel') || '1');
         }
-
-        // Atualizar estados com as informações do usuário
+        
+        // Atualizar estado com o nome encontrado
         setUserName(displayName);
         
-        // Persistir informação da sessão atual para continuidade
-        const deviceId = localStorage.getItem('deviceId') || 
-                        `device_${Math.random().toString(36).substring(2, 9)}`;
-        
-        if (!localStorage.getItem('deviceId')) {
-          localStorage.setItem('deviceId', deviceId);
-        }
-        
-        // Usar ID definitivo para a sessão de chat
-        const chatUserId = userId || localStorage.getItem('userId') || 'anonymous';
+        // Gerar uma ID de sessão baseada no usuário atual ou usar existente
         const savedSessionId = localStorage.getItem('chatSessionId');
-        
-        // Gerar ID de sessão exclusivo e persistente
         const newSessionId = savedSessionId || 
-                            `chat_${chatUserId}_${displayName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`;
+                            `chat_${displayName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`;
         setSessionId(newSessionId);
-
+        
         if (!savedSessionId) {
           localStorage.setItem('chatSessionId', newSessionId);
-        }
-        
-        // Registrar início de sessão no banco de dados se autenticado
-        if (isAuthenticated && userId) {
-          try {
-            // Registrar a sessão de chat para rastreamento
-            await supabase.from('chat_sessions').insert({
-              session_id: newSessionId,
-              user_id: userId,
-              created_at: new Date().toISOString(),
-              device_info: {
-                userAgent: navigator.userAgent,
-                platform: navigator.platform,
-                deviceId: deviceId
-              }
-            }).select();
-            
-            // Registrar atividade para fins de análise
-            await supabase.from('user_activities').insert({
-              user_id: userId,
-              activity_type: 'chat_session',
-              description: 'Iniciou uma sessão de chat com o assistente',
-              created_at: new Date().toISOString(),
-              metadata: {
-                session_id: newSessionId,
-                page: window.location.pathname
-              }
-            });
-          } catch (dbError) {
-            console.log('Erro ao registrar sessão de chat:', dbError);
-            // Não crítico, apenas log
-          }
         }
 
         // Carregar mensagens salvas para este usuário
         try {
           const chatService = await import('@/services/aiChatService');
 
-          // Usar a função getConversationHistory para obter histórico com todos os detalhes
+          // Usar a função getConversationHistory para obter histórico
           const history = await chatService.getConversationHistory(newSessionId);
 
           // Se houver histórico com mensagens de usuário e IA, exibir as mensagens
@@ -612,9 +439,6 @@ const FloatingChatSupport: React.FC = () => {
                 content: msg.content,
                 sender: msg.role === 'user' ? 'user' : 'assistant',
                 timestamp: msg.timestamp instanceof Date ? msg.timestamp : new Date(),
-                // Preservar avaliações anteriores caso existam
-                rating: 'rating' in msg ? msg.rating as 'positive' | 'negative' : undefined,
-                needsImprovement: 'needsImprovement' in msg ? msg.needsImprovement as boolean : undefined,
               }));
 
             if (convertedMessages.length > 0) {
@@ -624,39 +448,17 @@ const FloatingChatSupport: React.FC = () => {
         } catch (error) {
           console.error('Erro ao carregar histórico de mensagens:', error);
         }
-        
-        // Vamos usar o aiIntelligenceLevel do localStorage se disponível
-        try {
-          const storedIntelligenceLevel = localStorage.getItem('aiIntelligenceLevel');
-          if (storedIntelligenceLevel && ['basic', 'normal', 'advanced'].includes(storedIntelligenceLevel)) {
-            setAIIntelligenceLevel(storedIntelligenceLevel as 'basic' | 'normal' | 'advanced');
-          }
-          
-          const storedLanguageStyle = localStorage.getItem('aiLanguageStyle');
-          if (storedLanguageStyle && ['casual', 'formal', 'technical'].includes(storedLanguageStyle)) {
-            setAILanguageStyle(storedLanguageStyle as 'casual' | 'formal' | 'technical');
-          }
-          
-          const storedSoundEnabled = localStorage.getItem('soundEnabled');
-          if (storedSoundEnabled !== null) {
-            setSoundEnabled(storedSoundEnabled === 'true');
-            setEnableNotificationSounds(storedSoundEnabled === 'true');
-          }
-        } catch (prefError) {
-          console.log('Erro ao carregar preferências do usuário:', prefError);
-        }
-        
       } catch (error) {
         console.error('Erro ao inicializar chat:', error);
-
+        
         // Usar valores padrão em caso de erro
         const displayName = 'Usuário';
         setUserName(displayName);
-
+        
         const savedSessionId = localStorage.getItem('chatSessionId');
         const newSessionId = savedSessionId || `chat_default_${Date.now()}`;
         setSessionId(newSessionId);
-
+        
         if (!savedSessionId) {
           localStorage.setItem('chatSessionId', newSessionId);
         }
@@ -683,10 +485,10 @@ const FloatingChatSupport: React.FC = () => {
     // Encontrar a mensagem original e o seu índice
     const messageIndex = messages.findIndex(msg => msg.id === editingMessageId);
     if (messageIndex === -1) return;
-
+    
     const originalMessage = messages[messageIndex];
     const nextMessageIndex = messageIndex + 1;
-
+    
     // Atualizar a mensagem editada
     const updatedMessages = [...messages];
     updatedMessages[messageIndex] = {
@@ -694,24 +496,24 @@ const FloatingChatSupport: React.FC = () => {
       content: editMessageContent,
       timestamp: new Date() // Atualizar o timestamp
     };
-
+    
     // Se há uma resposta da IA logo após esta mensagem, vamos removê-la
     // e gerar uma nova resposta baseada na mensagem editada
     if (nextMessageIndex < messages.length && messages[nextMessageIndex].sender === 'assistant') {
       // Remover a resposta antiga
       updatedMessages.splice(nextMessageIndex, 1);
     }
-
+    
     // Atualizar o estado de mensagens
     setMessages(updatedMessages);
-
+    
     // Cancelar o modo de edição
     setEditingMessageId(null);
     setEditMessageContent("");
-
+    
     // Sinalizar que a IA está digitando
     setIsTyping(true);
-
+    
     try {
       // Gerar uma nova resposta para a mensagem editada
       const aiService = await import('@/services/aiChatService');
@@ -723,7 +525,7 @@ const FloatingChatSupport: React.FC = () => {
           languageStyle: aiLanguageStyle
         }
       );
-
+      
       // Adicionar a nova resposta da IA
       setMessages(prevMessages => [
         ...prevMessages,
@@ -759,14 +561,14 @@ const FloatingChatSupport: React.FC = () => {
   // Função para melhorar o prompt com IA
   const improvePrompt = async () => {
     if (!inputMessage.trim()) return;
-
+    
     setPromptImprovementLoading(true);
     setIsImprovingPrompt(true);
-
+    
     try {
       // Importando o serviço dinamicamente
       const aiService = await import('@/services/aiChatService');
-
+      
       // Chamar a API para melhorar o prompt
       const improvedPromptText = await aiService.generateAIResponse(
         `Melhore o seguinte prompt para obter uma resposta mais detalhada e completa. 
@@ -778,13 +580,13 @@ const FloatingChatSupport: React.FC = () => {
           languageStyle: aiLanguageStyle || 'casual'
         }
       );
-
+      
       // Limpar qualquer formatação que possa ter vindo da resposta
       const cleanedImprovedPrompt = improvedPromptText
         .replace(/^(Prompt melhorado:|Aqui está uma versão melhorada:|Versão melhorada:|Reescrita:|Pergunta melhorada:)/i, '')
         .replace(/^["']|["']$/g, '')
         .trim();
-
+      
       setImprovedPrompt(cleanedImprovedPrompt);
     } catch (error) {
       console.error('Erro ao melhorar o prompt:', error);
@@ -812,7 +614,7 @@ const FloatingChatSupport: React.FC = () => {
 
     // Criar uma mensagem combinada com texto e informações sobre arquivos anexados
     let fullMessage = inputMessage.trim();
-    
+
     // Se houver arquivos selecionados, adicionar informações sobre eles à mensagem
     if (selectedFiles.length > 0) {
       // Incluir informações sobre os arquivos na mensagem para análise da IA
@@ -824,48 +626,6 @@ const FloatingChatSupport: React.FC = () => {
         fullMessage += `\n\nArquivos anexados:\n${fileInfos}`;
       } else {
         fullMessage = `Arquivos anexados:\n${fileInfos}`;
-      }
-      
-      // Tentar fazer upload dos arquivos para o Storage se o usuário estiver autenticado
-      try {
-        const { supabase } = await import('@/lib/supabase');
-        const { data: sessionData } = await supabase.auth.getSession();
-        
-        if (sessionData?.session?.user) {
-          const userId = sessionData.session.user.id;
-          
-          // Fazer upload de cada arquivo para o storage
-          for (const file of selectedFiles) {
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
-            const filePath = `chat_attachments/${userId}/${fileName}`;
-            
-            const { data, error } = await supabase.storage
-              .from('user_files')
-              .upload(filePath, file);
-              
-            if (error) {
-              console.error('Erro ao fazer upload do arquivo:', error);
-            } else {
-              console.log('Upload bem-sucedido:', data);
-              
-              // Registrar o arquivo no banco de dados para referência futura
-              await supabase.from('user_file_uploads').insert({
-                user_id: userId,
-                file_path: filePath,
-                file_name: file.name,
-                file_type: file.type,
-                file_size: file.size,
-                context: 'chat_support',
-                session_id: sessionId,
-                uploaded_at: new Date().toISOString()
-              });
-            }
-          }
-        }
-      } catch (uploadError) {
-        console.error('Erro durante o upload de arquivos:', uploadError);
-        // Continuar mesmo se o upload falhar - não é crítico
       }
     }
 
@@ -885,9 +645,8 @@ const FloatingChatSupport: React.FC = () => {
 
     // Gerar sessão única para este chat se ainda não existir
     if (!sessionId) {
-      // Usar um ID baseado no nome de usuário e timestamp para rastreamento único
-      const userId = localStorage.getItem('userId') || 'anonymous';
-      const newSessionId = `chat_${userId}_${userName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`;
+      // Usar um ID baseado no nome de usuário para melhor rastreamento
+      const newSessionId = `chat_${userName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`;
       setSessionId(newSessionId);
       localStorage.setItem('chatSessionId', newSessionId);
     }
@@ -899,115 +658,19 @@ const FloatingChatSupport: React.FC = () => {
     setIsTyping(true);
 
     try {
-      // Importar os serviços necessários dinamicamente
+      // Importar o serviço AI dinamicamente
       const aiService = await import('@/services/aiChatService');
-      const aiChatDatabase = await import('@/services/aiChatDatabaseService');
 
-      // Gerar um ID de sessão válido caso ainda não exista
+      // Gerar um ID de sessão valido caso ainda não exista
       const validSessionId = sessionId || `chat_${userName.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`;
       
-      // Antes de chamar a API, vamos verificar se a mensagem é uma solicitação especial
-      // que podemos tratar localmente com nossos próprios dados
-      const lowerMessage = fullMessage.toLowerCase();
-      
-      // Verificar se é uma solicitação de informações do perfil do usuário
-      const isProfileRequest = lowerMessage.includes('meu perfil') || 
-                             lowerMessage.includes('minhas informações') ||
-                             lowerMessage.includes('meus dados') ||
-                             lowerMessage.includes('minha conta');
-      
-      let customResponse = '';
-      
-      if (isProfileRequest) {
-        try {
-          // Tentar obter o perfil detalhado do usuário
-          const userProfile = await aiChatDatabase.aiChatDatabase.getDetailedUserProfile();
-          
-          if (userProfile) {
-            // Formatar o perfil para exibição
-            const formattedProfile = aiChatDatabase.aiChatDatabase.formatUserProfile(userProfile);
-            
-            // Criar uma resposta personalizada
-            customResponse = `Claro, ${userName}! Aqui estão as informações do seu perfil:
-
-${formattedProfile}
-
-Você pode atualizar suas informações acessando a [página de perfil](https://pontoschool.com/profile).`;
-          }
-        } catch (profileError) {
-          console.error('Erro ao buscar perfil do usuário:', profileError);
-        }
-      }
-      
-      // Se temos uma resposta personalizada, usá-la
-      if (customResponse) {
-        // Primeiro vamos salvar esta interação no histórico da conversa
-        await aiService.addMessageToHistory(validSessionId, {
-          role: 'user',
-          content: fullMessage
-        });
-        
-        await aiService.addMessageToHistory(validSessionId, {
-          role: 'assistant',
-          content: customResponse
-        });
-        
-        // Formatação visual melhorada para a resposta personalizada
-        const formattedResponse = customResponse
-          .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
-          .replace(/\_(.*?)\_/g, '<em class="italic">$1</em>')
-          .replace(/\~\~(.*?)\~\~/g, '<del class="line-through">$1</del>')
-          .replace(/\`(.*?)\`/g, '<code class="bg-black/10 dark:bg-white/10 rounded px-1">$1</code>')
-          .replace(/\n/g, '<br />')
-          .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-500 hover:underline" target="_blank">$1</a>');
-          
-        // Reproduzir som se estiver ativado
-        if (soundEnabled && enableNotificationSounds) {
-          try {
-            const audioElement = new Audio('/message-sound.mp3');
-            audioElement.volume = 0.5;
-            await audioElement.play();
-          } catch (audioError) {
-            console.log('Não foi possível reproduzir o som:', audioError);
-          }
-        }
-        
-        const assistantMessage = { 
-          id: Date.now(), 
-          content: formattedResponse, 
-          sender: 'assistant', 
-          timestamp: new Date(),
-          showFeedbackOptions: true
-        };
-        
-        setMessages(prevMessages => [...prevMessages, assistantMessage]);
-        setIsTyping(false);
-        return;
-      }
-
-      // Salvar as preferências atuais para uso futuro
-      localStorage.setItem('aiIntelligenceLevel', aiIntelligenceLevel);
-      localStorage.setItem('aiLanguageStyle', aiLanguageStyle);
-      localStorage.setItem('soundEnabled', soundEnabled.toString());
-      
-      // Obter o contexto da página atual para fornecer respostas mais relevantes
-      const pageContext = window.location.pathname;
-      const pageTitle = document.title;
-      
-      // Chamar a API para obter resposta com opções personalizadas e contexto - já gerencia o histórico internamente
+      // Chamar a API para obter resposta com opções personalizadas - já gerencia o histórico internamente
       const aiResponse = await aiService.generateAIResponse(
         fullMessage,
         validSessionId,
         {
           intelligenceLevel: aiIntelligenceLevel,
-          languageStyle: aiLanguageStyle,
-          userContext: {
-            currentPage: pageContext,
-            pageTitle: pageTitle,
-            userName: userName,
-            timeOfDay: new Date().getHours() < 12 ? 'manhã' : 
-                      (new Date().getHours() < 18 ? 'tarde' : 'noite')
-          }
+          languageStyle: aiLanguageStyle
         }
       );
 
@@ -1022,57 +685,34 @@ Você pode atualizar suas informações acessando a [página de perfil](https://
         }
       }
 
-      // Processamento especial para links e formatação da resposta da IA
-      let processedResponse = aiResponse;
-
-      // Adicionar incentivo para continuar a conversa ao final das respostas longas
-      if (processedResponse.length > 200 && !processedResponse.includes('Posso ajudar') && !processedResponse.includes('mais alguma coisa')) {
-        processedResponse += '\n\nPosso ajudar com mais alguma coisa? Estou à disposição para qualquer dúvida adicional.';
-      }
-
-      // Formatação visual melhorada com suporte a elementos HTML para melhor exibição
-      const formattedResponse = processLinks(processedResponse)
-        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-orange-500">$1</strong>')
-        .replace(/\_(.*?)\_/g, '<em class="italic">$1</em>')
-        .replace(/\~\~(.*?)\~\~/g, '<del class="line-through">$1</del>')
-        .replace(/\`(.*?)\`/g, '<code class="bg-black/10 dark:bg-white/10 rounded px-1 py-0.5 font-mono text-xs">$1</code>')
+      // Adicionar a resposta da IA à interface com formatação melhorada
+      const formattedResponse = aiResponse
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\_(.*?)\_/g, '<em>$1</em>')
+        .replace(/\~\~(.*?)\~\~/g, '<del>$1</del>')
+        .replace(/\`(.*?)\`/g, '<code class="bg-black/10 dark:bg-white/10 rounded px-1">$1</code>')
         .replace(/\n/g, '<br />')
-        // Detecção de listas não ordenadas
-        .replace(/^\s*-\s+(.*?)$/gm, '<div class="flex items-start mb-1"><span class="text-orange-500 mr-2">•</span><span>$1</span></div>')
-        // Detecção de listas numeradas
-        .replace(/^\s*(\d+)\.\s+(.*?)$/gm, '<div class="flex items-start mb-1"><span class="text-orange-500 mr-2">$1.</span><span>$2</span></div>')
-        // Seções importantes
-        .replace(/\[IMPORTANTE\](.*?)(?:\[\/IMPORTANTE\]|$)/gs, '<div class="p-3 bg-orange-50 dark:bg-orange-900/20 border-l-4 border-orange-500 rounded my-3">$1</div>')
-        // Seções de dicas
-        .replace(/\[DICA\](.*?)(?:\[\/DICA\]|$)/gs, '<div class="p-3 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded my-3">💡 $1</div>')
-        // Tratamento especial para URLs diretas que podem ter escapado do processamento anterior
-        .replace(/(https:\/\/pontoschool\.com\/[a-zA-Z0-9\-\/]+)(?!\>|\"|\')/g, (match) => {
-          const pathPart = match.split('pontoschool.com/')[1];
-          return `<a href="${match}" class="text-[#FF6B00] hover:underline font-medium" target="_blank">página ${pathPart}</a>`;
-        });
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>')
+        .replace(/(https?:\/\/[^\s]+)(?!\))/g, '<a href="$1" class="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>');
 
       const assistantMessage = { 
         id: Date.now(), 
         content: formattedResponse, 
         sender: 'assistant', 
-        timestamp: new Date(),
-        showFeedbackOptions: true  // Habilitar opções de feedback para esta mensagem
+        timestamp: new Date() 
       };
-
+      
       setMessages(prevMessages => [...prevMessages, assistantMessage]);
-
+      
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
-
-      // Resposta de erro mais amigável e informativa
+      
+      // Resposta de erro mais amigável
       setMessages(prevMessages => [
         ...prevMessages,
         { 
           id: Date.now(), 
-          content: `<div class="p-3 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded my-3">
-            <strong class="text-red-600 dark:text-red-400">Oops! Encontrei um problema técnico.</strong><br/>
-            Desculpe ${userName}, estou enfrentando dificuldades no momento. Isso pode ocorrer por instabilidade na conexão ou alta demanda. Por favor, tente novamente em alguns instantes.
-          </div>`, 
+          content: `Desculpe ${userName}, estou enfrentando problemas técnicos no momento. Por favor, tente novamente em alguns instantes.`, 
           sender: 'assistant', 
           timestamp: new Date() 
         }
@@ -1082,113 +722,6 @@ Você pode atualizar suas informações acessando a [página de perfil](https://
     }
   };
 
-  // Função para processar links da plataforma e garantir que sejam formatados corretamente
-  const processLinks = (content: string): string => {
-    const BASE_URL = 'https://pontoschool.com/';
-    
-    // Mapeamento de todas as seções da plataforma para URLs corretas
-    const platformLinks: Record<string, string> = {
-      'portal': `${BASE_URL}portal`,
-      'agenda': `${BASE_URL}agenda`,
-      'turmas': `${BASE_URL}turmas`,
-      'biblioteca': `${BASE_URL}biblioteca`,
-      'profile': `${BASE_URL}profile`,
-      'perfil': `${BASE_URL}profile`,
-      'configuracoes': `${BASE_URL}configuracoes`,
-      'dashboard': `${BASE_URL}dashboard`,
-      'epictus-ia': `${BASE_URL}epictus-ia`,
-      'mentor-ia': `${BASE_URL}mentor-ia`,
-      'planos-estudo': `${BASE_URL}planos-estudo`,
-      'conquistas': `${BASE_URL}conquistas`,
-      'carteira': `${BASE_URL}carteira`,
-      'mercado': `${BASE_URL}mercado`,
-      'organizacao': `${BASE_URL}organizacao`,
-      'comunidades': `${BASE_URL}comunidades`,
-      'chat-ia': `${BASE_URL}chat-ia`,
-      'school-ia': `${BASE_URL}school-ia`,
-      'novidades': `${BASE_URL}novidades`,
-      'lembretes': `${BASE_URL}lembretes`,
-      'pedidos-ajuda': `${BASE_URL}pedidos-ajuda`,
-      'estudos': `${BASE_URL}estudos`,
-      'conexao-expert': `${BASE_URL}conexao-expert`
-    };
-    
-    // Títulos alternativos que apontam para as mesmas URLs
-    const titleToPath: Record<string, string> = {
-      'Portal de Estudos': 'portal',
-      'Portal': 'portal',
-      'Agenda': 'agenda',
-      'Turmas': 'turmas',
-      'Biblioteca': 'biblioteca',
-      'Perfil': 'profile',
-      'Meu Perfil': 'profile',
-      'Configurações': 'configuracoes',
-      'Minhas Configurações': 'configuracoes',
-      'Dashboard': 'dashboard',
-      'Página Inicial': 'dashboard',
-      'Início': 'dashboard',
-      'Epictus IA': 'epictus-ia',
-      'Mentor IA': 'mentor-ia',
-      'Planos de Estudo': 'planos-estudo',
-      'Plano de Estudos': 'planos-estudo',
-      'Conquistas': 'conquistas',
-      'Minhas Conquistas': 'conquistas',
-      'Carteira': 'carteira',
-      'Minha Carteira': 'carteira',
-      'Mercado': 'mercado',
-      'Organização': 'organizacao',
-      'Comunidades': 'comunidades',
-      'Chat IA': 'chat-ia',
-      'School IA': 'school-ia',
-      'Novidades': 'novidades',
-      'Lembretes': 'lembretes',
-      'Pedidos de Ajuda': 'pedidos-ajuda',
-      'Estudos': 'estudos',
-      'Conexão Expert': 'conexao-expert'
-    };
-    
-    // Corrigir links em formato markdown
-    const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
-    
-    let processedContent = content.replace(markdownLinkRegex, (match, text, url) => {
-      // Verificar se é um link da plataforma
-      if (url.includes('pontoschool.com')) {
-        try {
-          // Extrair o caminho após o domínio
-          const pathPart = url.split('pontoschool.com/')[1]?.split(/[?#]/)[0] || '';
-          
-          // Verificar se o caminho é válido
-          if (platformLinks[pathPart]) {
-            // Link válido para seção conhecida da plataforma
-            return `<a href="${platformLinks[pathPart]}" class="text-[#FF6B00] hover:underline font-medium" target="_blank">${text}</a>`;
-          }
-          
-          // Verificar pelo título
-          if (titleToPath[text] && platformLinks[titleToPath[text]]) {
-            return `<a href="${platformLinks[titleToPath[text]]}" class="text-[#FF6B00] hover:underline font-medium" target="_blank">${text}</a>`;
-          }
-          
-          // Se não encontrou correspondência direta, manter o link original
-          return `<a href="${url}" class="text-[#FF6B00] hover:underline font-medium" target="_blank">${text}</a>`;
-        } catch (error) {
-          console.error('Erro ao processar link:', error);
-          // Fallback seguro em caso de erro
-          return `<a href="${BASE_URL}" class="text-[#FF6B00] hover:underline font-medium" target="_blank">${text}</a>`;
-        }
-      }
-      
-      // Para links não relacionados à plataforma, manter original
-      return match;
-    });
-    
-    // Aplicar formatação adicional para melhorar legibilidade
-    processedContent = processedContent
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-[#FF6B00] font-semibold">$1</strong>')
-      .replace(/\_(.*?)\_/g, '<em class="italic">$1</em>');
-    
-    return processedContent;
-  };
-  
   // Função para lidar com upload de arquivos
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
@@ -1204,28 +737,28 @@ Você pode atualizar suas informações acessando a [página de perfil](https://
       e.target.value = '';
     }
   };
-
+  
   // Função para abrir o seletor de arquivos
   const openFileSelector = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
-
+  
   // Função para lidar com a seleção de arquivos
   const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
-
+    
     // Adicionar os arquivos selecionados à lista
     const newFiles = Array.from(e.target.files);
     setSelectedFiles(prev => [...prev, ...newFiles]);
-
+    
     // Limpar o input para permitir selecionar os mesmos arquivos novamente
     if (e.target) {
       e.target.value = '';
     }
   };
-
+  
   // Função para remover um arquivo da lista
   const removeFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
@@ -1765,17 +1298,17 @@ Você pode atualizar suas informações acessando a [página de perfil](https://
               {message.sender === "assistant" && (
                 <div className="w-10 h-10 rounded-full overflow-hidden mr-2 flex-shrink-0">
                   <Avatar>
-                    <AvatarImage src="/images/tempo-image-20250329T044440497Z.png" alt="Epictus IA Suporte" />
+                    <AvatarImage src="/images/tempo-image-20250329T044440497Z.png" alt="Epictus IA" />
                     <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] text-white">
-                      <LifeBuoy className="h-5 w-5" />
-                      <span className="absolute -right-1 -bottom-1 w-3.5 h-3.5 bg-green-500 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800">
-                        <Bot className="h-2 w-2 text-white" />
+                      <Bot className="h-5 w-5" />
+                      <span className="absolute -right-1 -bottom-1 w-3.5 h-3.5 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800">
+                        <Sparkles className="h-2 w-2 text-white" />
                       </span>
                     </AvatarFallback>
                   </Avatar>
                 </div>
               )}
-
+              
               {editingMessageId === message.id && message.sender === "user" ? (
                 <div className="max-w-[75%] bg-blue-600 text-white p-2 rounded-lg">
                   <textarea
@@ -1955,18 +1488,18 @@ Você pode atualizar suas informações acessando a [página de perfil](https://
                                 setIsTyping(true);
                                 const updatedMessages = [...messages];
                                 const index = updatedMessages.findIndex(m => m.id === message.id);
-
+                                
                                 if (index !== -1) {
                                   updatedMessages[index] = {
                                     ...updatedMessages[index],
                                     needsImprovement: false
                                   };
                                   setMessages(updatedMessages);
-
+                                  
                                   try {
                                     // Importar o serviço AI dinamicamente
                                     const aiService = await import('@/services/aiChatService');
-
+                                    
                                     // Solicitar uma resposta melhorada
                                     const improvedResponse = await aiService.generateAIResponse(
                                       `Por favor, reformule sua resposta anterior para torná-la mais clara, precisa e útil: "${message.content.replace(/<[^>]*>/g, '')}"`,
@@ -1976,7 +1509,7 @@ Você pode atualizar suas informações acessando a [página de perfil](https://
                                         languageStyle: aiLanguageStyle
                                       }
                                     );
-
+                                    
                                     // Adicionar a resposta melhorada como uma nova mensagem
                                     setMessages(prev => [
                                       ...prev,
@@ -1988,7 +1521,7 @@ Você pode atualizar suas informações acessando a [página de perfil](https://
                                       }
                                     ]);
                                   } catch (error) {
-                                    console.error('Erroao reformular resposta:', error);
+                                    console.error('Erro ao reformular resposta:', error);
                                     setMessages(prev => [
                                       ...prev,
                                       { 
@@ -2013,11 +1546,11 @@ Você pode atualizar suas informações acessando a [página de perfil](https://
                               onClick={() => {
                                 const updatedMessages = [...messages];
                                 const index = updatedMessages.findIndex(m => m.id === message.id);
-
+                                
                                 if (index !== -1) {
                                   // Definir estado temporário para entrada de sugestão
                                   setInputMessage(`Quero uma resposta melhor para: "${message.content.replace(/<[^>]*>/g, '').substring(0, 50)}...". Preciso que você melhore em: `);
-
+                                  
                                   // Atualizar o estado da mensagem
                                   updatedMessages[index] = {
                                     ...updatedMessages[index],
@@ -2042,7 +1575,7 @@ Você pode atualizar suas informações acessando a [página de perfil](https://
                   </div>
                 </div>
               )}
-
+              
               {message.sender === "user" && (
                 <div className="w-8 h-8 rounded-full overflow-hidden ml-2 flex-shrink-0">
                   <Avatar>
@@ -2068,12 +1601,12 @@ Você pode atualizar suas informações acessando a [página de perfil](https://
               <div className="max-w-[75%] rounded-xl px-4 py-3 bg-gray-100 dark:bg-gray-800/90 text-gray-800 dark:text-gray-200 shadow-sm backdrop-blur-sm">
                 <div className="flex items-center">
                   <div className="relative flex space-x-1 items-center pl-0.5">
-                    <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
-                    <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse delay-150"></div>
-                    <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse delay-300"></div>
-                    <span className="ml-2 text-sm font-medium text-gray-600 dark:text-gray-300">
+                    <div className="w-2 h-2 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] animate-pulse"></div>
+                    <div className="w-2 h-2 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] animate-pulse delay-150"></div>
+                    <div className="w-2 h-2 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] animate-pulse delay-300"></div>
+                    <div className="ml-2 text-sm font-medium text-gray-600 dark:text-gray-300">
                       Epictus IA está elaborando uma resposta...
-                    </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2221,7 +1754,7 @@ Você pode atualizar suas informações acessando a [página de perfil](https://
                 </Button>
               </div>
             </div>
-
+            
             {promptImprovementLoading ? (
               <div className="flex items-center justify-center py-4">
                 <div className="flex items-center space-x-2">
@@ -2691,7 +2224,7 @@ Você pode atualizar suas informações acessando a [página de perfil](https://
             className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-2 py-0 h-6 text-xs"
             onClick={() => setIsCreatingSuggestion(true)}
           >
-            <Plus className="h-3 w3 mr-1" /> Nova
+            <Plus className="h-3 w-3 mr-1" /> Nova
           </Button>
         </div>
         <div className="relative">
@@ -2990,31 +2523,31 @@ Você pode atualizar suas informações acessando a [página de perfil](https://
         .animate-bounce-subtle {
           animation: bounce-subtle 2s ease-in-out infinite;
         }
-
+        
         .message-content strong {
           font-weight: 600;
         }
-
+        
         .message-content em {
           font-style: italic;
           opacity: 0.9;
         }
-
+        
         .message-content code {
           font-family: monospace;
           padding: 0.1rem 0.3rem;
           border-radius: 3px;
         }
-
+        
         .message-content ul, .message-content ol {
           padding-left: 1.5rem;
           margin: 0.5rem 0;
         }
-
+        
         .message-content ul li {
           list-style-type: disc;
         }
-
+        
         .message-content ol li {
           list-style-type: decimal;
         }
@@ -3067,48 +2600,6 @@ Você pode atualizar suas informações acessando a [página de perfil](https://
           .fixed.z-40 .rounded-2xl {
             max-width: 75% !important;
           }
-        }
-
-        /* Styles for AI messages */
-        .chat-container .message.ai-message {
-          align-self: flex-start;
-          background-color: #f0f0f0;
-          border-radius: 18px 18px 18px 4px;
-          color: #333;
-          margin-right: 40px;
-        }
-
-        .chat-container .message.ai-message .message-content strong {
-          color: #FF6B00;
-          font-weight: 600;
-        }
-
-        .chat-container .message.ai-message .message-content table {
-          border-collapse: collapse;
-          width: 100%;
-          margin: 12px 0;
-          font-size: 0.9em;
-        }
-
-        .chat-container .message.ai-message .message-content th,
-        .chat-container .message.ai-message .message-content td {
-          padding: 8px;
-          text-align: left;
-          border: 1px solid rgba(255, 107, 0, 0.2);
-        }
-
-        .chat-container .message.ai-message .message-content th {
-          background-color: rgba(255, 107, 0, 0.1);
-          font-weight: 600;
-          text-align: center;
-        }
-
-        .chat-container .message.ai-message .message-content tr:nth-child(even) {
-          background-color: rgba(0, 0, 0, 0.02);
-        }
-
-        .dark .chat-container .message.ai-message .message-content tr:nth-child(even) {
-          background-color: rgba(255, 255, 255, 0.05);
         }
       `}</style>
     </>

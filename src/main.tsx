@@ -139,7 +139,7 @@ const initializeApp = () => {
     // Renderizar imediatamente sem esperar por idle callback
     // para garantir carregamento rápido
     renderApp();
-
+    
     // Timeout reduzido para garantir que a UI não fique presa em carregamento
     setTimeout(() => {
       if (document.getElementById('initial-loader')) {
@@ -219,37 +219,3 @@ class ErrorBoundary extends React.Component {
 
 // Inicializar a aplicação
 initializeApp();
-
-
-// Inicializar serviço de sincronização da IA em segundo plano
-const initializeChatSyncService = async () => {
-  try {
-    // Importar e inicializar o serviço de sincronização
-    const { aiChatSyncService } = await import('./services/aiChatSyncService');
-
-    // Inicializar cache do banco de dados da IA
-    const { aiChatDatabase } = await import('./services/aiChatDatabaseService');
-    if (typeof aiChatDatabase.initializeFromCache === 'function') {
-      aiChatDatabase.initializeFromCache();
-    }
-
-    // Inicializar o serviço de sincronização com um pequeno atraso para não afetar o carregamento da página
-    setTimeout(() => {
-      aiChatSyncService.initialize().then((subscriptions) => {
-        if (subscriptions) {
-          console.log('Serviço de sincronização da IA inicializado com sucesso na aplicação');
-        }
-      }).catch(error => {
-        console.error('Erro ao inicializar serviço de sincronização da IA:', error);
-      });
-    }, 3000); // Atraso de 3 segundos para priorizar o carregamento da UI
-  } catch (error) {
-    console.error('Erro ao carregar serviço de sincronização da IA:', error);
-  }
-};
-
-// Iniciar sincronização em segundo plano
-initializeChatSyncService();
-
-// Esta renderização já é feita dentro da função initializeApp acima
-// Não é necessário renderizar duas vezes, o que pode causar problemas
