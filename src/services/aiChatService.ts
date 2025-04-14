@@ -289,61 +289,147 @@ Lá você poderá atualizar seu telefone, localização e outras informações d
 
     // Verificar se é um pedido de redirecionamento para área da plataforma
     if (isRedirectRequest) {
+      const BASE_URL = 'https://pontoschool.com/';
+
+      // Sistema de mapeamento completo de todas as seções da plataforma
       const platformLinks = {
-        'Portal de Estudos': 'https://pontoschool.com/portal',
-        'Portal': 'https://pontoschool.com/portal',
-        'Agenda': 'https://pontoschool.com/agenda',
-        'Turmas': 'https://pontoschool.com/turmas',
-        'Biblioteca': 'https://pontoschool.com/biblioteca',
-        'Perfil': 'https://pontoschool.com/profile',
-        'Meu Perfil': 'https://pontoschool.com/profile',
-        'Configurações': 'https://pontoschool.com/configuracoes',
-        'Minhas Configurações': 'https://pontoschool.com/configuracoes',
-        'Dashboard': 'https://pontoschool.com/dashboard',
-        'Epictus IA': 'https://pontoschool.com/epictus-ia',
-        'Mentor IA': 'https://pontoschool.com/mentor-ia',
-        'Planos de Estudo': 'https://pontoschool.com/planos-estudo',
-        'Plano de Estudos': 'https://pontoschool.com/planos-estudo',
-        'Conquistas': 'https://pontoschool.com/conquistas',
-        'Minhas Conquistas': 'https://pontoschool.com/conquistas',
-        'Carteira': 'https://pontoschool.com/carteira',
-        'Minha Carteira': 'https://pontoschool.com/carteira',
-        'Mercado': 'https://pontoschool.com/mercado',
-        'Organização': 'https://pontoschool.com/organizacao',
-        'Comunidades': 'https://pontoschool.com/comunidades',
-        'Chat IA': 'https://pontoschool.com/chat-ia',
-        'School IA': 'https://pontoschool.com/school-ia',
-        'Novidades': 'https://pontoschool.com/novidades',
-        'Lembretes': 'https://pontoschool.com/lembretes',
-        'Pedidos de Ajuda': 'https://pontoschool.com/pedidos-ajuda',
-        'Estudos': 'https://pontoschool.com/estudos'
+        // Seções principais
+        'portal': { url: `${BASE_URL}portal`, title: 'Portal de Estudos', aliases: ['portal de estudos', 'meus estudos', 'conteúdo', 'material', 'materiais'] },
+        'agenda': { url: `${BASE_URL}agenda`, title: 'Agenda', aliases: ['minha agenda', 'calendário', 'eventos', 'compromissos'] },
+        'turmas': { url: `${BASE_URL}turmas`, title: 'Turmas', aliases: ['minhas turmas', 'grupos', 'classes', 'salas', 'aulas'] },
+        'biblioteca': { url: `${BASE_URL}biblioteca`, title: 'Biblioteca', aliases: ['livros', 'materiais', 'acervo', 'recursos', 'documentos'] },
+        'profile': { url: `${BASE_URL}profile`, title: 'Perfil', aliases: ['meu perfil', 'perfil', 'conta', 'minha conta', 'meus dados'] },
+        'configuracoes': { url: `${BASE_URL}configuracoes`, title: 'Configurações', aliases: ['configs', 'ajustes', 'definições', 'minhas configurações', 'settings'] },
+        'dashboard': { url: `${BASE_URL}dashboard`, title: 'Dashboard', aliases: ['painel', 'início', 'home', 'página inicial', 'principal'] },
+        'epictus-ia': { url: `${BASE_URL}epictus-ia`, title: 'Epictus IA', aliases: ['epictus', 'ia', 'assistente ia', 'inteligência artificial', 'mentor ia'] },
+        'mentor-ia': { url: `${BASE_URL}mentor-ia`, title: 'Mentor IA', aliases: ['mentor', 'assistente mentor', 'mentoria ia', 'tutor ia'] },
+        'planos-estudo': { url: `${BASE_URL}planos-estudo`, title: 'Planos de Estudo', aliases: ['plano de estudos', 'planos', 'cronogramas', 'roteiros', 'roteiro de estudos'] },
+        'conquistas': { url: `${BASE_URL}conquistas`, title: 'Conquistas', aliases: ['minhas conquistas', 'medalhas', 'prêmios', 'troféus', 'badges'] },
+        'carteira': { url: `${BASE_URL}carteira`, title: 'Carteira', aliases: ['minha carteira', 'créditos', 'wallet', 'pagamentos', 'financeiro'] },
+        'mercado': { url: `${BASE_URL}mercado`, title: 'Mercado', aliases: ['loja', 'shopping', 'store', 'comprar', 'produtos'] },
+        'organizacao': { url: `${BASE_URL}organizacao`, title: 'Organização', aliases: ['tarefas', 'minha organização', 'to-do', 'planejamento', 'planner'] },
+        'comunidades': { url: `${BASE_URL}comunidades`, title: 'Comunidades', aliases: ['grupos', 'fóruns', 'discussões', 'tópicos', 'comunidade'] },
+        'chat-ia': { url: `${BASE_URL}chat-ia`, title: 'Chat IA', aliases: ['chat inteligente', 'conversa ia', 'bate-papo ia'] },
+        'school-ia': { url: `${BASE_URL}school-ia`, title: 'School IA', aliases: ['school ai', 'ia escola', 'assistente escola'] },
+        'novidades': { url: `${BASE_URL}novidades`, title: 'Novidades', aliases: ['notícias', 'atualizações', 'news', 'blog', 'anúncios'] },
+        'lembretes': { url: `${BASE_URL}lembretes`, title: 'Lembretes', aliases: ['meus lembretes', 'alertas', 'notificações', 'reminders'] },
+        'pedidos-ajuda': { url: `${BASE_URL}pedidos-ajuda`, title: 'Pedidos de Ajuda', aliases: ['ajuda', 'suporte', 'dúvidas', 'questões', 'problemas'] },
+        'estudos': { url: `${BASE_URL}estudos`, title: 'Estudos', aliases: ['meus estudos', 'matérias', 'conteúdos', 'disciplinas', 'trilhas'] },
+
+        // Seções adicionais e redirecionamentos
+        'conexao-expert': { url: `${BASE_URL}conexao-expert`, title: 'Conexão Expert', aliases: ['experts', 'ajuda especializada', 'tirar dúvidas'] },
+        'recursos': { url: `${BASE_URL}recursos`, title: 'Recursos', aliases: ['material extra', 'downloads', 'arquivos complementares'] },
+        'certificados': { url: `${BASE_URL}certificados`, title: 'Certificados', aliases: ['meus certificados', 'diplomas', 'comprovantes', 'histórico'] },
+        'avaliacao': { url: `${BASE_URL}avaliacao`, title: 'Avaliação', aliases: ['testes', 'provas', 'exames', 'simulados', 'questionários'] },
+        'suporte': { url: `${BASE_URL}suporte`, title: 'Suporte', aliases: ['ajuda', 'contato', 'atendimento', 'faq', 'perguntas frequentes'] },
+        'forum': { url: `${BASE_URL}forum`, title: 'Fórum', aliases: ['fóruns', 'discussões', 'debate', 'perguntas', 'comunidade'] },
+        'faq': { url: `${BASE_URL}faq`, title: 'FAQ', aliases: ['perguntas frequentes', 'dúvidas comuns', 'ajuda rápida'] }
       };
 
-      // Regex mais preciso para extrair a seção desejada
-      const sectionRegex = /(me\s+(redirecione|encaminhe|leve|direcione|mande|envie)\s+(para|ao|à|a|até)|quero\s+(ir|acessar|entrar|ver)|me\s+(mostre|mostra)|abrir?|abra|acesse|acessar|ver|veja)\s+(a\s+)?(página\s+(de|do|da)\s+)?([a-zà-ú\s]+)/i;
-      const match = message.match(sectionRegex);
+      // Dicionário de termos completo para reconhecimento mais preciso
+      const allPlatformTerms = Object.entries(platformLinks).reduce((terms, [key, data]) => {
+        terms[data.title.toLowerCase()] = key;
+        data.aliases.forEach(alias => {
+          terms[alias.toLowerCase()] = key;
+        });
+        return terms;
+      }, {} as Record<string, string>);
 
-      if (match && match[9]) {
-        const requestedSection = match[9].trim().toLowerCase();
+      // Regex mais abrangente para detectar pedidos de navegação/redirecionamento
+      const navigationRegex = /(como|posso|quero|onde|qual|preciso|gostaria de|me ajud(e|a) a|como (eu )?fa(ço|z)|como (eu )?pos+o)?\s*(?:ir|acessar|entrar|ver|abrir|encontrar|navegar|visitar|chegar|visualizar)\s+(para|no|na|a|o|à|ao|em|até)\s+(?:a\s+)?(página\s+(?:de|do|da)\s+)?([a-zà-ú\s\-]+)/i;
 
-        // Encontra a melhor correspondência entre as seções disponíveis
-        const sections = Object.keys(platformLinks);
-        const bestMatch = sections.find(section => 
-          section.toLowerCase() === requestedSection || 
-          section.toLowerCase().includes(requestedSection) ||
-          requestedSection.includes(section.toLowerCase())
-        );
+      // Regex alternativo para comandos diretos
+      const directCommandRegex = /(me\s+(?:redirecione|encaminhe|leve|direcione|mande|envie|mostre|mostra))\s+(?:para|ao|à|a|até)\s+(?:a\s+)?(página\s+(?:de|do|da)\s+)?([a-zà-ú\s\-]+)/i;
 
-        if (bestMatch) {
-          const response = `Claro, ${firstName}! Aqui está o link direto para ${bestMatch}: [${bestMatch}](${platformLinks[bestMatch]})
+      // Regex para pedidos de "onde fica" ou "como acessar"
+      const whereIsRegex = /(onde\s+(?:fica|está|encontro)|como\s+(?:acessar|entrar|encontrar))\s+(?:a|o|as|os)?\s*([a-zà-ú\s\-]+)/i;
 
-Clique no link acima para ser redirecionado. Posso ajudar com mais alguma coisa?`;
+      // Teste todos os padrões e escolha o melhor resultado
+      let requestedSection = '';
+      let match;
 
+      // Tentar com o regex de navegação principal
+      match = message.match(navigationRegex);
+      if (match && match[6]) {
+        requestedSection = match[6].trim().toLowerCase();
+      }
+
+      // Se não encontrou, tentar com o regex de comandos diretos
+      if (!requestedSection) {
+        match = message.match(directCommandRegex);
+        if (match && match[3]) {
+          requestedSection = match[3].trim().toLowerCase();
+        }
+      }
+
+      // Se ainda não encontrou, tentar com o regex de "onde fica"
+      if (!requestedSection) {
+        match = message.match(whereIsRegex);
+        if (match && match[2]) {
+          requestedSection = match[2].trim().toLowerCase();
+        }
+      }
+
+      // Se encontramos alguma seção solicitada, processar
+      if (requestedSection) {
+        // Limpar termos comuns que podem interferir na correspondência
+        requestedSection = requestedSection
+          .replace(/página d[eao]s?\s+/g, '')
+          .replace(/seção d[eao]s?\s+/g, '')
+          .replace(/área d[eao]s?\s+/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        console.log(`Seção solicitada (limpa): "${requestedSection}"`);
+
+        // Encontrar a melhor correspondência pelo nome exato ou por aliases
+        let bestMatchKey = '';
+
+        // Primeiro tenta correspondência exata com os termos
+        bestMatchKey = allPlatformTerms[requestedSection];
+
+        // Se não encontrou correspondência exata, busca a melhor correspondência parcial
+        if (!bestMatchKey) {
+          // Lista todas as possíveis correspondências parciais
+          const partialMatches = Object.entries(allPlatformTerms).filter(([term]) => {
+            return term.includes(requestedSection) || requestedSection.includes(term);
+          });
+
+          // Ordena por relevância (tamanho da correspondência)
+          if (partialMatches.length > 0) {
+            partialMatches.sort((a, b) => {
+              // Prioriza correspondências exatas
+              if (a[0] === requestedSection) return -1;
+              if (b[0] === requestedSection) return 1;
+
+              // Depois prioriza correspondências no início do termo
+              const aStartsWith = a[0].startsWith(requestedSection);
+              const bStartsWith = b[0].startsWith(requestedSection);
+              if (aStartsWith && !bStartsWith) return -1;
+              if (!aStartsWith && bStartsWith) return 1;
+
+              // Por fim, prioriza termos maiores para evitar falsos positivos
+              return b[0].length - a[0].length;
+            });
+
+            bestMatchKey = partialMatches[0][1];
+          }
+        }
+
+        // Se encontrou uma correspondência, retorna a resposta formatada
+        if (bestMatchKey && platformLinks[bestMatchKey]) {
+          const section = platformLinks[bestMatchKey];
+
+          // Gerar resposta com o link formatado de maneira segura
+          const response = `Claro, ${firstName}! Aqui está o link direto para ${section.title}:\n\n[${section.title}](${section.url})\n\nClique no link acima para acessar. Posso ajudar com mais alguma coisa?`;
+
+          // Adicionar ao histórico e salvar
           conversationHistory[sessionId].push({ 
             role: 'assistant', 
             content: response,
             timestamp: new Date()
           });
+
           await saveConversationHistory(sessionId, conversationHistory[sessionId]);
           return response;
         }
@@ -538,7 +624,7 @@ function initializeConversationHistory(sessionId: string, userContext?: any) {
       1. MUITO IMPORTANTE: Sempre se refira ao usuário pelo primeiro nome: "${firstName}". Use frases como "E aí, ${firstName}!", "Opa ${firstName}!", etc.
       2. Use uma linguagem mais informal e descontraída, como se estivesse conversando com um amigo.
       3. Seja amigável, use emojis ocasionalmente e mantenha um tom leve e positivo.
-      4. Use gírias leves e expressões coloquiais quando apropriado.
+      4. Use gírias leves e expressões coloquiaisquando apropriado.
       5. Mantenha respostas diretas e objetivas, evitando textos muito longos.
       6. Organize suas respostas em parágrafos curtos para fácil leitura.
       7. Use negrito **assim** para destacar informações importantes.
@@ -1085,7 +1171,7 @@ function fixPlatformLinks(text: string): string {
   return newText;
 }
 
-// Função auxiliar para escapar caracteres especiais em regex
+// Função para escapar caracteres especiais em regex
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -1363,3 +1449,4 @@ export async function addMessageToHistory(
 }
 
 // Add blur effect to the rest of the page when chat is open
+}

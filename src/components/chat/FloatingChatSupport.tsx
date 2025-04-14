@@ -384,9 +384,50 @@ const FloatingChatSupport: React.FC = () => {
     };
   }, [isOpen]);
 
+  // Função de teste para verificar o funcionamento dos links da plataforma
+  const testLinkSystem = () => {
+    // Lista de URLs para testar a formatação e o processamento
+    const testURLs = [
+      '[Portal](https://pontoschool.com/portal)',
+      '[Meu Perfil](https://pontoschool.com/profile)',
+      '[Agenda](https://pontoschool.com/agenda)',
+      'https://pontoschool.com/turmas',
+      'Acesse https://pontoschool.com/biblioteca para ver seus livros',
+      '[Configurações](https://pontoschool.com/configuracoes?tab=perfil)',
+      'Link para [Epictus IA](https://pontoschool.com/epictus-ia#main)'
+    ];
+    
+    // Processar cada URL de teste
+    const results = testURLs.map(url => ({
+      original: url,
+      processed: processLinks(url)
+    }));
+    
+    // Logar resultados para verificação (apenas em desenvolvimento)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Teste do sistema de links:');
+      console.table(results);
+    }
+    
+    // Verificar se todos os links foram processados corretamente
+    const allValid = results.every(item => 
+      item.processed.includes('href="https://pontoschool.com/') ||
+      !item.original.includes('pontoschool.com')
+    );
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Sistema de links ${allValid ? 'funcionando corretamente' : 'com problemas'}`);
+    }
+    
+    return allValid;
+  };
+
   useEffect(() => {
     const initializeChat = async () => {
       try {
+        // Testar o sistema de links
+        testLinkSystem();
+        
         // Importar serviços necessários
         const profileService = await import('@/services/profileService');
         const aiChatDatabaseService = await import('@/services/aiChatDatabaseService');
@@ -981,76 +1022,8 @@ Você pode atualizar suas informações acessando a [página de perfil](https://
         }
       }
 
-      // Adicionar a resposta da IA à interface com formatação melhorada
-      // Transformar links em instruções de tutorial e formatação melhorada para respostas da IA
+      // Processamento especial para links e formatação da resposta da IA
       let processedResponse = aiResponse;
-
-      // Transformar links em instruções de tutorial detalhadas com base na seção
-      processedResponse = processedResponse.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
-        if (url.includes('pontoschool.com')) {
-          const section = url.split('/').pop() || '';
-          let tutorialText = '';
-          
-          // Personalizar instruções com base na seção específica
-          switch(section) {
-            case 'portal':
-              tutorialText = `Para acessar o Portal de Estudos, siga estas etapas:
-1. No menu lateral esquerdo da plataforma, localize o ícone "Portal"
-2. Clique no ícone para entrar no Portal de Estudos
-3. Você verá todos os seus materiais didáticos organizados por disciplina
-4. Utilize os filtros disponíveis para encontrar conteúdos específicos
-5. Clique em qualquer material para acessar seu conteúdo completo`;
-              break;
-            case 'agenda':
-              tutorialText = `Para acessar sua Agenda, siga estas etapas:
-1. No menu lateral esquerdo da plataforma, localize o ícone "Agenda"
-2. Clique no ícone para abrir sua Agenda completa
-3. Você verá sua programação em formato de calendário
-4. Use as opções de visualização (dia, semana, mês) para navegar melhor
-5. Clique no botão "+" para adicionar novos eventos ou compromissos`;
-              break;
-            case 'turmas':
-              tutorialText = `Para acessar suas Turmas, siga estas etapas:
-1. No menu lateral esquerdo da plataforma, localize o ícone "Turmas"
-2. Clique no ícone para ver todas as suas turmas e grupos de estudo
-3. Você verá cards com cada turma que participa
-4. Clique em qualquer turma para acessar seu conteúdo, discussões e materiais
-5. Se desejar ingressar em uma nova turma, utilize o botão "Adicionar Turma"`;
-              break;
-            case 'profile':
-              tutorialText = `Para acessar seu Perfil, siga estas etapas:
-1. No menu superior da plataforma, clique no seu avatar ou nome de usuário
-2. Selecione "Meu Perfil" no menu dropdown
-3. Você verá sua página de perfil completa
-4. Aqui você pode editar suas informações pessoais, biografia e preferências
-5. Para alterar sua foto, clique sobre a imagem atual e selecione uma nova`;
-              break;
-            case 'epictus-ia':
-              tutorialText = `Para acessar o Epictus IA, siga estas etapas:
-1. No menu lateral esquerdo da plataforma, localize o ícone "Epictus IA"
-2. Clique no ícone para acessar a interface completa da IA
-3. Você terá acesso a recursos avançados de estudo personalizado
-4. Aqui você pode criar planos de estudo, receber recomendações e analisar seu progresso
-5. Este é diferente do chat de suporte - ele é focado em aprendizado personalizado`;
-              break;
-            default:
-              tutorialText = `Para acessar "${text}", siga estas etapas:
-1. No menu lateral esquerdo da plataforma, procure o item correspondente
-2. Você pode também utilizar a barra de pesquisa superior para encontrar esta seção
-3. Clique no item para acessar a página
-4. Explore as funcionalidades disponíveis nesta seção
-5. Se precisar de mais ajuda com esta área específica, me pergunte!`;
-          }
-          
-          return `"${text}": ${tutorialText}`;
-        }
-        
-        // Para links externos, substituir por informação sem link
-        return `"${text}": Este recurso está disponível diretamente na plataforma. Não é necessário acessar links externos, pois todas as funcionalidades estão integradas na Ponto.School.`;
-      });
-
-      // Remover URLs diretos para segurança
-      processedResponse = processedResponse.replace(/(https?:\/\/[^\s]+)(?!\))/g, 'este recurso na plataforma');
 
       // Adicionar incentivo para continuar a conversa ao final das respostas longas
       if (processedResponse.length > 200 && !processedResponse.includes('Posso ajudar') && !processedResponse.includes('mais alguma coisa')) {
@@ -1058,7 +1031,7 @@ Você pode atualizar suas informações acessando a [página de perfil](https://
       }
 
       // Formatação visual melhorada com suporte a elementos HTML para melhor exibição
-      const formattedResponse = processedResponse
+      const formattedResponse = processLinks(processedResponse)
         .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-orange-500">$1</strong>')
         .replace(/\_(.*?)\_/g, '<em class="italic">$1</em>')
         .replace(/\~\~(.*?)\~\~/g, '<del class="line-through">$1</del>')
@@ -1071,7 +1044,12 @@ Você pode atualizar suas informações acessando a [página de perfil](https://
         // Seções importantes
         .replace(/\[IMPORTANTE\](.*?)(?:\[\/IMPORTANTE\]|$)/gs, '<div class="p-3 bg-orange-50 dark:bg-orange-900/20 border-l-4 border-orange-500 rounded my-3">$1</div>')
         // Seções de dicas
-        .replace(/\[DICA\](.*?)(?:\[\/DICA\]|$)/gs, '<div class="p-3 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded my-3">💡 $1</div>');
+        .replace(/\[DICA\](.*?)(?:\[\/DICA\]|$)/gs, '<div class="p-3 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded my-3">💡 $1</div>')
+        // Tratamento especial para URLs diretas que podem ter escapado do processamento anterior
+        .replace(/(https:\/\/pontoschool\.com\/[a-zA-Z0-9\-\/]+)(?!\>|\"|\')/g, (match) => {
+          const pathPart = match.split('pontoschool.com/')[1];
+          return `<a href="${match}" class="text-[#FF6B00] hover:underline font-medium" target="_blank">página ${pathPart}</a>`;
+        });
 
       const assistantMessage = { 
         id: Date.now(), 
@@ -1104,6 +1082,113 @@ Você pode atualizar suas informações acessando a [página de perfil](https://
     }
   };
 
+  // Função para processar links da plataforma e garantir que sejam formatados corretamente
+  const processLinks = (content: string): string => {
+    const BASE_URL = 'https://pontoschool.com/';
+    
+    // Mapeamento de todas as seções da plataforma para URLs corretas
+    const platformLinks: Record<string, string> = {
+      'portal': `${BASE_URL}portal`,
+      'agenda': `${BASE_URL}agenda`,
+      'turmas': `${BASE_URL}turmas`,
+      'biblioteca': `${BASE_URL}biblioteca`,
+      'profile': `${BASE_URL}profile`,
+      'perfil': `${BASE_URL}profile`,
+      'configuracoes': `${BASE_URL}configuracoes`,
+      'dashboard': `${BASE_URL}dashboard`,
+      'epictus-ia': `${BASE_URL}epictus-ia`,
+      'mentor-ia': `${BASE_URL}mentor-ia`,
+      'planos-estudo': `${BASE_URL}planos-estudo`,
+      'conquistas': `${BASE_URL}conquistas`,
+      'carteira': `${BASE_URL}carteira`,
+      'mercado': `${BASE_URL}mercado`,
+      'organizacao': `${BASE_URL}organizacao`,
+      'comunidades': `${BASE_URL}comunidades`,
+      'chat-ia': `${BASE_URL}chat-ia`,
+      'school-ia': `${BASE_URL}school-ia`,
+      'novidades': `${BASE_URL}novidades`,
+      'lembretes': `${BASE_URL}lembretes`,
+      'pedidos-ajuda': `${BASE_URL}pedidos-ajuda`,
+      'estudos': `${BASE_URL}estudos`,
+      'conexao-expert': `${BASE_URL}conexao-expert`
+    };
+    
+    // Títulos alternativos que apontam para as mesmas URLs
+    const titleToPath: Record<string, string> = {
+      'Portal de Estudos': 'portal',
+      'Portal': 'portal',
+      'Agenda': 'agenda',
+      'Turmas': 'turmas',
+      'Biblioteca': 'biblioteca',
+      'Perfil': 'profile',
+      'Meu Perfil': 'profile',
+      'Configurações': 'configuracoes',
+      'Minhas Configurações': 'configuracoes',
+      'Dashboard': 'dashboard',
+      'Página Inicial': 'dashboard',
+      'Início': 'dashboard',
+      'Epictus IA': 'epictus-ia',
+      'Mentor IA': 'mentor-ia',
+      'Planos de Estudo': 'planos-estudo',
+      'Plano de Estudos': 'planos-estudo',
+      'Conquistas': 'conquistas',
+      'Minhas Conquistas': 'conquistas',
+      'Carteira': 'carteira',
+      'Minha Carteira': 'carteira',
+      'Mercado': 'mercado',
+      'Organização': 'organizacao',
+      'Comunidades': 'comunidades',
+      'Chat IA': 'chat-ia',
+      'School IA': 'school-ia',
+      'Novidades': 'novidades',
+      'Lembretes': 'lembretes',
+      'Pedidos de Ajuda': 'pedidos-ajuda',
+      'Estudos': 'estudos',
+      'Conexão Expert': 'conexao-expert'
+    };
+    
+    // Corrigir links em formato markdown
+    const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+    
+    let processedContent = content.replace(markdownLinkRegex, (match, text, url) => {
+      // Verificar se é um link da plataforma
+      if (url.includes('pontoschool.com')) {
+        try {
+          // Extrair o caminho após o domínio
+          const pathPart = url.split('pontoschool.com/')[1]?.split(/[?#]/)[0] || '';
+          
+          // Verificar se o caminho é válido
+          if (platformLinks[pathPart]) {
+            // Link válido para seção conhecida da plataforma
+            return `<a href="${platformLinks[pathPart]}" class="text-[#FF6B00] hover:underline font-medium" target="_blank">${text}</a>`;
+          }
+          
+          // Verificar pelo título
+          if (titleToPath[text] && platformLinks[titleToPath[text]]) {
+            return `<a href="${platformLinks[titleToPath[text]]}" class="text-[#FF6B00] hover:underline font-medium" target="_blank">${text}</a>`;
+          }
+          
+          // Se não encontrou correspondência direta, manter o link original
+          return `<a href="${url}" class="text-[#FF6B00] hover:underline font-medium" target="_blank">${text}</a>`;
+        } catch (error) {
+          console.error('Erro ao processar link:', error);
+          // Fallback seguro em caso de erro
+          return `<a href="${BASE_URL}" class="text-[#FF6B00] hover:underline font-medium" target="_blank">${text}</a>`;
+        }
+      }
+      
+      // Para links não relacionados à plataforma, manter original
+      return match;
+    });
+    
+    // Aplicar formatação adicional para melhorar legibilidade
+    processedContent = processedContent
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-[#FF6B00] font-semibold">$1</strong>')
+      .replace(/\_(.*?)\_/g, '<em class="italic">$1</em>');
+    
+    return processedContent;
+  };
+  
   // Função para lidar com upload de arquivos
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
