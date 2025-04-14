@@ -735,16 +735,45 @@ const FloatingChatSupport: React.FC = () => {
           console.log('Sound would play here if implemented');
         }
 
-        // Adicionar resposta da IA como uma nova mensagem
+        // Efeito de digitação para mostrar a resposta gradualmente
+        const messageId = Date.now();
         setMessages(prevMessages => [
           ...prevMessages,
           { 
-            id: Date.now(), 
-            content: aiResponse, 
+            id: messageId, 
+            content: '', 
             sender: 'assistant', 
             timestamp: new Date() 
           }
         ]);
+        
+        // Mostrar texto gradualmente como se estivesse sendo digitado
+        let displayedContent = '';
+        const words = aiResponse.split(' ');
+        
+        // Função para adicionar palavras gradualmente
+        const addNextWord = (index: number) => {
+          if (index < words.length) {
+            displayedContent += (index === 0 ? '' : ' ') + words[index];
+            
+            setMessages(prevMessages => 
+              prevMessages.map(msg => 
+                msg.id === messageId 
+                  ? { ...msg, content: displayedContent } 
+                  : msg
+              )
+            );
+            
+            // Velocidade variável da digitação baseada no tamanho da palavra
+            const typingSpeed = Math.min(100, Math.max(30, 70 - words[index].length * 5));
+            setTimeout(() => addNextWord(index + 1), typingSpeed);
+          } else {
+            setIsTyping(false);
+          }
+        };
+        
+        // Inicia o efeito de digitação após um pequeno delay
+        setTimeout(() => addNextWord(0), 500);
       } catch (error) {
         console.error('Erro ao obter resposta para mensagem editada:', error);
         setMessages(prevMessages => [
@@ -756,7 +785,6 @@ const FloatingChatSupport: React.FC = () => {
             timestamp: new Date() 
           }
         ]);
-      } finally {
         setIsTyping(false);
       }
       return;
@@ -818,19 +846,61 @@ const FloatingChatSupport: React.FC = () => {
 
       // Reproduzir som se estiver ativado
       if (soundEnabled) {
-        // playMessageSound(); // Função playMessageSound ainda não implementada
-        console.log('Sound would play here if implemented')
+        // Implementar função de som aqui
+        console.log('Sound would play here if implemented');
       }
 
+      // Criar ID único para a nova mensagem
+      const messageId = Date.now();
+      
+      // Adicionar mensagem vazia inicialmente
       setMessages(prevMessages => [
         ...prevMessages,
         { 
-          id: Date.now(), 
-          content: aiResponse, 
+          id: messageId, 
+          content: '', 
           sender: 'assistant', 
           timestamp: new Date() 
         }
       ]);
+      
+      // Mostrar texto gradualmente como se estivesse sendo digitado
+      let displayedContent = '';
+      const words = aiResponse.split(' ');
+      
+      // Função para adicionar palavras gradualmente
+      const addNextWord = (index: number) => {
+        if (index < words.length) {
+          displayedContent += (index === 0 ? '' : ' ') + words[index];
+          
+          setMessages(prevMessages => 
+            prevMessages.map(msg => 
+              msg.id === messageId 
+                ? { ...msg, content: displayedContent } 
+                : msg
+            )
+          );
+          
+          // Velocidade variável da digitação baseada no tamanho da palavra
+          const typingSpeed = Math.min(100, Math.max(30, 70 - words[index].length * 5));
+          setTimeout(() => addNextWord(index + 1), typingSpeed);
+          
+          // Rolar para o final a cada algumas palavras para acompanhar a digitação
+          if (index % 5 === 0 && messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+          }
+        } else {
+          setIsTyping(false);
+          // Rolar para o final após a mensagem completa
+          if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+          }
+        }
+      };
+      
+      // Inicia o efeito de digitação após um pequeno delay
+      setTimeout(() => addNextWord(0), 500);
+      
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
       setMessages(prevMessages => [
@@ -842,7 +912,6 @@ const FloatingChatSupport: React.FC = () => {
           timestamp: new Date() 
         }
       ]);
-    } finally {
       setIsTyping(false);
     }
   };
@@ -1443,19 +1512,40 @@ const FloatingChatSupport: React.FC = () => {
                 }`}
               >
                 <div 
-                  className="message-content whitespace-pre-wrap" 
+                  className="message-content whitespace-pre-wrap prose prose-headings:mb-2 prose-headings:mt-3 prose-p:my-1.5 prose-blockquote:my-2" 
                   dangerouslySetInnerHTML={{ 
                     __html: message.content
-                      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                      .replace(/\_(.*?)\_/g, '<em>$1</em>')
-                      .replace(/\~\~(.*?)\~\~/g, '<del>$1</del>')
-                      .replace(/\`(.*?)\`/g, '<code class="bg-black/10 dark:bg-white/10 rounded px-1">$1</code>')
+                      // Headers
+                      .replace(/^# (.*?)$/gm, '<h1 class="text-xl font-bold text-gray-900 dark:text-gray-100 border-b pb-1 border-gray-200 dark:border-gray-700">$1</h1>')
+                      .replace(/^## (.*?)$/gm, '<h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mt-3">$1</h2>')
+                      .replace(/^### (.*?)$/gm, '<h3 class="text-base font-medium text-gray-800 dark:text-gray-200">$1</h3>')
+                      
+                      // Text formatting
+                      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900 dark:text-white">$1</strong>')
+                      .replace(/\_(.*?)\_/g, '<em class="text-gray-700 dark:text-gray-300 italic">$1</em>')
+                      .replace(/\~\~(.*?)\~\~/g, '<del class="text-gray-500 dark:text-gray-400">$1</del>')
+                      .replace(/\`(.*?)\`/g, '<code class="bg-gray-100 dark:bg-gray-800 text-orange-600 dark:text-orange-400 px-1.5 py-0.5 rounded text-sm font-mono">$1</code>')
+                      
+                      // Lists
+                      .replace(/^- (.*?)$/gm, '<ul class="list-disc pl-5 my-2"><li>$1</li></ul>').replace(/<\/ul>\s?<ul class="list-disc pl-5 my-2">/g, '')
+                      .replace(/^[0-9]+\. (.*?)$/gm, '<ol class="list-decimal pl-5 my-2"><li>$1</li></ol>').replace(/<\/ol>\s?<ol class="list-decimal pl-5 my-2">/g, '')
+                      
+                      // Blockquotes
+                      .replace(/^> (.*?)$/gm, '<blockquote class="pl-3 border-l-4 border-orange-400 dark:border-orange-600 italic bg-orange-50 dark:bg-orange-900/20 py-1 px-2 rounded-r my-2 text-gray-700 dark:text-gray-300">$1</blockquote>')
+                      
+                      // Separators
+                      .replace(/^---$/gm, '<hr class="border-t border-gray-200 dark:border-gray-700 my-3" />')
+                      
+                      // Line breaks
                       .replace(/\n/g, '<br />')
-                      // Renderiza texto de links Markdown com estilo laranja nos URLs e torna clicável apenas o URL
-                      .replace(/\[(.*?)\]\((https?:\/\/[^)]+)\)/g, '[$1](<a href="$2" target="_blank" rel="noopener noreferrer" class="text-[#FF6B00]">$2</a>)')
-                      // Detecta URLs simples em parênteses, colore de laranja e torna clicável
-                      .replace(/(?<!\]|\()\((https?:\/\/[^\s)]+)\)/g, '(<a href="$1" target="_blank" rel="noopener noreferrer" class="text-[#FF6B00]">$1</a>)')
-                      // Detecta URLs simples fora de parênteses sem fazer links
+                      
+                      // Links
+                      .replace(/\[(.*?)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-orange-600 dark:text-orange-400 hover:underline inline-flex items-center gap-0.5">$1<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-0.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>')
+                      
+                      // URLs in parentheses
+                      .replace(/(?<!\]|\()\((https?:\/\/[^\s)]+)\)/g, '(<a href="$1" target="_blank" rel="noopener noreferrer" class="text-orange-600 dark:text-orange-400 hover:underline">$1</a>)')
+                      
+                      // Plain URLs
                       .replace(/(?<!\]|\()(?<!\(\s*)(https?:\/\/[^\s)]+)/g, '$1')
                   }} 
                 />
@@ -1600,7 +1690,7 @@ const FloatingChatSupport: React.FC = () => {
             </div>
           ))}
           {isTyping && (
-            <div className="flex justify-start">
+            <div className="flex justify-start animate-fadeIn">
               <div className="w-8 h-8 rounded-full overflow-hidden mr-2 flex-shrink-0">
                 <Avatar>
                   <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] text-white">
@@ -1611,14 +1701,27 @@ const FloatingChatSupport: React.FC = () => {
                   </AvatarFallback>
                 </Avatar>
               </div>
-              <div className="max-w-[75%] rounded-lg px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow-sm">
-                <div className="flex items-center">
-                  <div className="mr-2 text-xs text-gray-500 dark:text-gray-400">Assistente de Suporte está digitando</div>
-                  <div className="flex items-center space-x-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
-                    <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse delay-150" />
-                    <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse delay-300" />
+              <div className="max-w-[75%] rounded-lg px-4 py-3 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow-md">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center">
+                    <span className="text-xs font-semibold bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 px-2 py-0.5 rounded-full">
+                      Assistente IA
+                    </span>
                   </div>
+                  <div className="text-xs opacity-70">
+                    {new Date().toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </div>
+                </div>
+                <div className="relative min-h-[40px] flex items-center">
+                  <div className="typewriter">
+                    <div className="slide"><i></i></div>
+                    <div className="paper"></div>
+                    <div className="keyboard"></div>
+                  </div>
+                  <span className="ml-8 text-sm text-gray-600 dark:text-gray-400">Formulando resposta...</span>
                 </div>
               </div>
             </div>
@@ -2545,12 +2648,44 @@ const FloatingChatSupport: React.FC = () => {
           }
         }
 
+        @keyframes typeBlinkCursor {
+          from, to { border-color: transparent }
+          50% { border-color: #FF6B00; }
+        }
+
+        @keyframes typingIn {
+          from { width: 0 }
+          to { width: 100% }
+        }
+
         .animate-fadeIn {
           animation: fadeIn 0.3s ease-out forwards;
         }
 
+        .animate-typing {
+          display: inline-block;
+          white-space: nowrap;
+          overflow: hidden;
+          border-right: 2px solid #FF6B00;
+          animation: typingIn 3.5s steps(40, end), typeBlinkCursor .75s step-end infinite;
+        }
+
+        .message-content {
+          line-height: 1.6;
+          color: rgba(55, 65, 81, 1);
+        }
+
+        .dark .message-content {
+          color: rgba(229, 231, 235, 1);
+        }
+
         .message-content strong {
           font-weight: 600;
+          color: rgba(17, 24, 39, 1);
+        }
+
+        .dark .message-content strong {
+          color: rgba(255, 255, 255, 1);
         }
 
         .message-content em {
@@ -2559,22 +2694,79 @@ const FloatingChatSupport: React.FC = () => {
         }
 
         .message-content code {
-          font-family: monospace;
+          font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
           padding: 0.1rem 0.3rem;
           border-radius: 3px;
+          font-size: 0.9em;
+        }
+
+        .message-content h1, .message-content h2, .message-content h3 {
+          margin-top: 0.8em;
+          margin-bottom: 0.4em;
+          line-height: 1.3;
+        }
+
+        .message-content h1 {
+          font-size: 1.3em;
+          font-weight: 700;
+        }
+
+        .message-content h2 {
+          font-size: 1.2em;
+          font-weight: 600;
+        }
+
+        .message-content h3 {
+          font-size: 1.1em;
+          font-weight: 600;
+        }
+
+        .message-content p {
+          margin: 0.6em 0;
         }
 
         .message-content ul, .message-content ol {
           padding-left: 1.5rem;
-          margin: 0.5rem 0;
+          margin: 0.7rem 0;
         }
 
         .message-content ul li {
           list-style-type: disc;
+          margin: 0.3em 0;
         }
 
         .message-content ol li {
           list-style-type: decimal;
+          margin: 0.3em 0;
+        }
+
+        .message-content blockquote {
+          border-left: 3px solid #FF8736;
+          padding: 0.5em 1em;
+          margin: 0.8em 0;
+          background: rgba(255, 135, 54, 0.1);
+          border-radius: 0 0.25em 0.25em 0;
+        }
+
+        .message-content a {
+          text-decoration: none;
+          color: #FF6B00;
+          transition: all 0.2s ease;
+        }
+
+        .message-content a:hover {
+          text-decoration: underline;
+          opacity: 0.8;
+        }
+
+        .message-content hr {
+          margin: 1em 0;
+          border: 0;
+          border-top: 1px solid rgba(229, 231, 235, 1);
+        }
+
+        .dark .message-content hr {
+          border-color: rgba(55, 65, 81, 0.5);
         }
 
         .custom-scrollbar::-webkit-scrollbar {

@@ -247,10 +247,24 @@
 }
 
 .typewriter {
-  transform: scale(0.8); /* Make the typewriter animation smaller */
+  transform: scale(0.5); /* Make the typewriter animation smaller */
+  margin-left: -30px; /* Adjust position to align better */
 }
 
 .dark .typewriter {
   --paper: #1f2937;
   --text: #4b5563;
+}
+
+/* Additional styles for chat loading */
+.chat-typewriter {
+  transform: scale(0.4);
+  margin-left: -20px;
+  margin-top: -12px;
+}
+
+.chat-message-typing {
+  position: relative;
+  min-height: 24px;
+  padding-left: 30px;
 }
