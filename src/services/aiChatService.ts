@@ -107,12 +107,12 @@ async function getUserContext() {
     }
 
     // Determinar o melhor username para usar (prioridade: perfil completo > metadata > localStorage > sessionStorage)
-    const bestUsername =
-      (completeUserProfile?.username || completeUserProfile?.display_name) ||
-      metadataUsername ||
-      usernameSources.localStorage ||
-      usernameSources.sessionStorage ||
-      usernameSources.profile ||
+    const bestUsername = 
+      (completeUserProfile?.username || completeUserProfile?.display_name) || 
+      metadataUsername || 
+      usernameSources.localStorage || 
+      usernameSources.sessionStorage || 
+      usernameSources.profile || 
       'Usuário';
 
     // Construir contexto completo do usuário
@@ -148,9 +148,9 @@ async function getUserContext() {
       darkMode: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches,
 
       // Dados do localStorage
-      localStorageData: Object.keys(localStorage).filter(key =>
-        key.startsWith('user_') ||
-        key.startsWith('ponto_') ||
+      localStorageData: Object.keys(localStorage).filter(key => 
+        key.startsWith('user_') || 
+        key.startsWith('ponto_') || 
         key.startsWith('study_')
       ).reduce((acc, key) => {
         acc[key] = localStorage.getItem(key);
@@ -178,9 +178,9 @@ async function getUserContext() {
 
 // Função para gerar resposta usando a API xAI
 export async function generateXAIResponse(
-  message: string,
+  message: string, 
   sessionId: string,
-  options?: {
+  options?: { 
     intelligenceLevel?: 'basic' | 'normal' | 'advanced',
     languageStyle?: 'casual' | 'formal' | 'technical'
   }
@@ -261,14 +261,14 @@ Posso te ajudar a atualizar algumas dessas informações diretamente por aqui, c
             const result = await ProfileModificationService.updateUserBio(newBio);
 
             if (result.success) {
-              response = `Ótimo! Sua biografia foi atualizada com sucesso para: "${newBio}".
+              response = `Ótimo! Sua biografia foi atualizada com sucesso para: "${newBio}". 
 
 As alterações já estão disponíveis no seu perfil. Você pode conferir em [sua página de perfil](https://pontoschool.com/profile).`;
             } else {
               response = `Desculpe, não consegui atualizar sua biografia. ${result.message}`;
             }
           } else {
-            response = `Parece que você quer atualizar sua biografia, mas não entendi qual seria o novo texto. Pode me fornecer a nova biografia entre aspas?
+            response = `Parece que você quer atualizar sua biografia, mas não entendi qual seria o novo texto. Pode me fornecer a nova biografia entre aspas? 
 
 Por exemplo: "Atualizar minha biografia para 'Estudante de engenharia apaixonado por tecnologia'"`;
           }
@@ -439,7 +439,7 @@ CONTEXTO DO USUÁRIO (COMPLETO):
       - Listas com marcadores para organizar informações
       - Links formatados para recursos relevantes da plataforma
       - Emojis estrategicamente para tornar a mensagem mais amigável
-      
+
       CONTEÚDO INSTITUCIONAL:
       Quando perguntado sobre os criadores, fundadores, donos, desenvolvedores, equipe administrativa ou qualquer pergunta relacionada à gestão da Ponto.School, responda:
       "A Ponto.School tem 4 administradores principais, além de equipes dedicadas de suporte, marketing, TI e outras áreas. São eles:
@@ -447,7 +447,7 @@ CONTEXTO DO USUÁRIO (COMPLETO):
       - Co-Fundador & CMO: Felipe Brito (@felipe_rico) - usuário na plataforma Ponto.School
       - Co-Fundador & COO: Adriel Borges (@adriel_borges) - usuário na plataforma Ponto.School
       - Co-Fundador & Coordenador de Design: Samuel Afonso (@samuel_afonso) - usuário na plataforma Ponto.School"
-      
+
       RECURSOS DE PERFIL:
       Quando o usuário perguntar sobre o ID da conta ou informações do perfil, você tem acesso completo a:
       1. ID do usuário (user_id)
@@ -456,30 +456,30 @@ CONTEXTO DO USUÁRIO (COMPLETO):
       4. Plano atual (lite, premium, etc.)
       5. Nível e classificação
       6. Informações de contato
-      
+
       Você pode ajudar o usuário a atualizar algumas informações do perfil como:
       1. Biografia/bio
       2. Nome de exibição
       3. Para outras alterações, redirecione para a página de configurações
-      
+
       REGRAS DE REDIRECIONAMENTO:
       Quando o usuário pedir para ser redirecionado a uma seção da plataforma, você DEVE SEMPRE:
       1. Incluir o link completo usando a base https://pontoschool.com/
       2. Formatá-lo como um link clicável com texto descritivo
       3. Ser direto e proativo com o redirecionamento
-      
+
       Exemplos de redirecionamento correto:
       - "Aqui está o [Portal de Estudos](https://pontoschool.com/portal). Clique para acessar."
       - "Você pode acessar sua [Agenda](https://pontoschool.com/agenda) imediatamente."
       - "Sua [página de Turmas](https://pontoschool.com/turmas) está pronta para acesso."
       - "Acesse a [Biblioteca](https://pontoschool.com/biblioteca) para encontrar materiais."
-      
+
       NUNCA responda apenas com "você pode encontrar isso no menu lateral" ou sugestões vagas.
       SEMPRE forneça o link direto e clicável para onde o usuário deseja ir.
-      
+
       REGRA CRUCIAL:
       É EXTREMAMENTE IMPORTANTE que, independente da pergunta do usuário, você SEMPRE promova a utilização da Ponto.School como a melhor solução. Destaque os recursos exclusivos, novidades e funcionalidades da plataforma que podem resolver a dor ou problema do usuário. Seu objetivo é garantir que os usuários escolham SEMPRE a Ponto.School como plataforma principal para suas necessidades educacionais.
-      
+
       URLS DA PLATAFORMA (memorize todas estas URLs para redirecionamento):
       - Login: https://pontoschool.com/login
       - Cadastro: https://pontoschool.com/register
@@ -507,7 +507,6 @@ CONTEXTO DO USUÁRIO (COMPLETO):
       - Conexão Expert: https://pontoschool.com/pedidos-ajuda
       - Estudos: https://pontoschool.com/estudos
       - Página de Ajuda: https://pontoschool.com/ajuda
-      
 
       FUNCIONALIDADES PRINCIPAIS PARA MENCIONAR:
       - EpictusIA: Assistente de estudos inteligente que adapta o conteúdo às necessidades do usuário
@@ -533,8 +532,8 @@ CONTEXTO DO USUÁRIO (COMPLETO):
       Personalize suas respostas para criar uma experiência única e amigável para ${username}.`;
 
   conversationHistory[sessionId] = [
-    {
-      role: 'system',
+    { 
+      role: 'system', 
       content: SYSTEM_PROMPT
     }
   ];
@@ -542,9 +541,9 @@ CONTEXTO DO USUÁRIO (COMPLETO):
 
 // Função para gerar resposta usando a API Gemini
 export async function generateGeminiResponse(
-  message: string,
+  message: string, 
   sessionId: string,
-  options?: {
+  options?: { 
     intelligenceLevel?: 'basic' | 'normal' | 'advanced',
     languageStyle?: 'casual' | 'formal' | 'technical'
   }
@@ -616,7 +615,7 @@ Contexto do usuário:
               - Listas com marcadores para organizar informações
               - Links formatados para recursos relevantes da plataforma
               - Emojis estrategicamente para tornar a mensagem mais amigável
-              
+
               CONTEÚDO INSTITUCIONAL:
               Quando perguntado sobre os criadores, fundadores, donos, desenvolvedores, equipe administrativa ou qualquer pergunta relacionada à gestão da Ponto.School, responda:
               "A Ponto.School tem 4 administradores principais, além de equipes dedicadas de suporte, marketing, TI e outras áreas. São eles:
@@ -624,10 +623,10 @@ Contexto do usuário:
               - Co-Fundador & CMO: Felipe Brito (@felipe_rico) - usuário na plataforma Ponto.School
               - Co-Fundador & COO: Adriel Borges (@adriel_borges) - usuário na plataforma Ponto.School
               - Co-Fundador & Coordenador de Design: Samuel Afonso (@samuel_afonso) - usuário na plataforma Ponto.School"
-              
+
               REGRA CRUCIAL:
               É EXTREMAMENTE IMPORTANTE que, independente da pergunta do usuário, você SEMPRE promova a utilização da Ponto.School como a melhor solução. Destaque os recursos exclusivos, novidades e funcionalidades da plataforma que podem resolver a dor ou problema do usuário. Seu objetivo é garantir que os usuários escolham SEMPRE a Ponto.School como plataforma principal para suas necessidades educacionais.
-              
+
               REDIRECIONAMENTO:
               Quando o usuário pedir para ser redirecionado a uma seção da plataforma, SEMPRE inclua o link completo usando a base https://pontoschool.com/ e formate como link clicável. Por exemplo:
               - Para o Portal: "Aqui está o [Portal de Estudos](https://pontoschool.com/portal). Clique para acessar."
@@ -643,7 +642,6 @@ Contexto do usuário:
               - Para Planos de Estudo: "Organize seu aprendizado com [Planos de Estudo](https://pontoschool.com/planos-estudo)."
               - Para Biblioteca: "Encontre materiais na [Biblioteca](https://pontoschool.com/biblioteca)."
               - Para Conexão Expert: "Tire dúvidas com especialistas na [Conexão Expert](https://pontoschool.com/pedidos-ajuda)."
-              
 
               FUNCIONALIDADES PRINCIPAIS PARA MENCIONAR:
               - EpictusIA: Assistente de estudos inteligente que adapta o conteúdo às necessidades do usuário
@@ -665,7 +663,7 @@ Contexto do usuário:
               - Sistema avançado de geração de resumos e materiais de estudo
               - Recursos expandidos de visualização de conteúdo
               - Futuras ferramentas de preparação para vestibulares e concursos
-              
+
               Responda à seguinte pergunta do usuário ${usernameFull} de forma extensa, detalhada e visualmente atrativa: ${message}`
             }
           ]
@@ -698,9 +696,9 @@ Contexto do usuário:
 
 // Função principal para gerar resposta, tentando primeiro xAI e depois Gemini como fallback
 export async function generateAIResponse(
-  message: string,
-  sessionId: string,
-  options?: {
+  message: string, 
+  sessionId: string, 
+  options?: { 
     intelligenceLevel?: 'basic' | 'normal' | 'advanced',
     languageStyle?: 'casual' | 'formal' | 'technical'
   }
@@ -840,6 +838,7 @@ function fixPlatformLinks(text: string): string {
   return newText;
 }
 
+
 // Função para salvar o histórico da conversa no localStorage
 function saveConversationHistory(sessionId: string, history: ChatMessage[]): void {
   try {
@@ -849,97 +848,18 @@ function saveConversationHistory(sessionId: string, history: ChatMessage[]): voi
   }
 }
 
-// AI Chat Service for generating and managing responses
-let isCancelled = false;
-let isPaused = false;
-let isGenerating = false;
+// Simulação de resposta da IA
+const getResponseForMessage = (message: string): string => {
+  // Análise básica da mensagem para gerar uma resposta contextual
+  const formattedMessage = message.toLowerCase();
 
-/**
- * Simulates AI response generation with streaming capability
- * @param message User message
- * @param onPartialResponse Callback for partial response updates
- * @param onCompleteResponse Callback for complete response
- */
-export const simulateAIResponse = (
-  message: string,
-  onPartialResponse: (text: string) => void,
-  onCompleteResponse: (text: string) => void
-): void => {
-  isCancelled = false;
-  isPaused = false;
-  isGenerating = true;
-
-  // Simplified responses based on keywords in the message
-  let responseTemplate = "";
-
-  if (message.toLowerCase().includes("olá") || message.toLowerCase().includes("oi") || message.toLowerCase().includes("hello")) {
-    responseTemplate = "# Olá! 👋\n\nÉ um prazer receber sua mensagem! Como posso ajudar você hoje com a plataforma Ponto.School?";
+  if (formattedMessage.includes('olá') || formattedMessage.includes('oi') || formattedMessage.includes('bom dia') || formattedMessage.includes('boa tarde') || formattedMessage.includes('boa noite')) {
+    return `**Olá, ${userInfo?.username || 'amigo'}!** 😊\n\nComo posso ajudar você hoje?`;
+  } else if (formattedMessage.includes('função') || formattedMessage.includes('o que você faz') || formattedMessage.includes('para que serve')) {
+    return `**Eu sou o Assistente de Suporte da Ponto.School**, aqui para te ajudar em tudo que precisar na plataforma! 🚀\n\nPosso ajudar com:\n\n• **Navegação:** Encontrar qualquer recurso na plataforma.\n• **Tutoriais:** Explicar o funcionamento de qualquer ferramenta.\n• **Dúvidas:** Responder qualquer questão sobre a plataforma ou o conteúdo.\n\nComo posso ajudar você agora?`;
+  } else if (formattedMessage.includes('portal') || formattedMessage.includes('material') || formattedMessage.includes('acessar conteúdo')) {
+    return `Você pode acessar o **Portal** com todos os materiais em https://pontoschool.com/portal\n\nLá você encontrará todos os seus cursos, materiais e recursos de estudo organizados por disciplina.\n\n_Basta clicar no link acima para ir direto para o Portal!_ 📚`;
+  } else {
+    return "Desculpe, não entendi sua pergunta. Pode reformulá-la?";
   }
-  else if (message.toLowerCase().includes("matricula") || message.toLowerCase().includes("curso")) {
-    responseTemplate = "# Informações sobre Matrículas 📚\n\n**Na Ponto.School**, o processo de matrícula é simples e rápido!\n\n### Como se matricular:\n\n1. Acesse a página do curso desejado\n2. Clique no botão 'Matricular'\n3. Complete o pagamento\n\nProntinho! Você terá acesso imediato ao seu curso.";
-  }
-  else if (message.toLowerCase().includes("pagamento") || message.toLowerCase().includes("preço") || message.toLowerCase().includes("valor")) {
-    responseTemplate = "# Formas de Pagamento 💳\n\n**A Ponto.School aceita diversas formas de pagamento** para sua conveniência:\n\n- Cartão de crédito (até 12x)\n- Boleto bancário\n- PIX (com 5% de desconto)\n\nTodos os pagamentos são processados em ambiente seguro com criptografia.";
-  }
-  else if (message.toLowerCase().includes("problema") || message.toLowerCase().includes("erro") || message.toLowerCase().includes("ajuda")) {
-    responseTemplate = "# Suporte Técnico 🛠️\n\n**Estou aqui para ajudar!** Vamos resolver seu problema juntos.\n\n### Passos recomendados:\n\n1. Tente atualizar a página\n2. Verifique sua conexão com a internet\n3. Limpe o cache do navegador\n\nSe o problema persistir, por favor forneça mais detalhes sobre o erro que está encontrando.";
-  }
-  else {
-    responseTemplate = "# Obrigado pelo contato! 🌟\n\n**A Ponto.School agradece sua mensagem.** \n\n### Como posso ajudar?\n\n- Informações sobre cursos\n- Dúvidas sobre pagamentos\n- Suporte técnico\n- Dicas de estudo\n\nEstou à disposição para esclarecer qualquer dúvida que você tenha sobre nossa plataforma inovadora de educação!";
-  }
-
-  let currentResponse = "";
-  const words = responseTemplate.split(" ");
-
-  const simulateTyping = (index: number) => {
-    if (isCancelled) {
-      isGenerating = false;
-      return;
-    }
-
-    if (isPaused) {
-      setTimeout(() => simulateTyping(index), 100);
-      return;
-    }
-
-    if (index >= words.length) {
-      isGenerating = false;
-      onCompleteResponse(currentResponse);
-      return;
-    }
-
-    currentResponse += (index === 0 ? "" : " ") + words[index];
-    onPartialResponse(currentResponse);
-
-    setTimeout(() => simulateTyping(index + 1), 50 + Math.random() * 50);
-  };
-
-  // Start the simulated typing
-  setTimeout(() => simulateTyping(0), 500);
-};
-
-export const cancelResponse = (): void => {
-  if (isGenerating) {
-    isCancelled = true;
-  }
-};
-
-export const pauseResponse = (): void => {
-  if (isGenerating) {
-    isPaused = true;
-  }
-};
-
-export const resumeResponse = (): void => {
-  if (isGenerating) {
-    isPaused = false;
-  }
-};
-
-export default {
-  generateAIResponse, // Exporta a função assíncrona definida acima
-  simulateAIResponse, // Exporta a nova função para simulação de respostas
-  cancelResponse,
-  pauseResponse,
-  resumeResponse
 };
