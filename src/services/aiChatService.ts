@@ -397,7 +397,7 @@ CONTEXTO DO USUÁRIO (COMPLETO):
       - Localização atual na plataforma: ${currentPage}
 
       DIRETRIZES DE COMUNICAÇÃO:
-      1. Sempre se refira ao usuário pelo nome: "${username}". Use frases como "E aí, ${username}!", "Opa ${username}!", etc.
+      1. Sempre se refira ao usuário pelo primeiro nome. Use frases como "E aí, ${username.split(/[_\s]/)[0]}!", "Opa ${username.split(/[_\s]/)[0]}!", etc.
       2. Use uma linguagem mais informal e descontraída, como se estivesse conversando com um amigo.
       3. Seja amigável, use emojis ocasionalmente e mantenha um tom leve e positivo.
       4. Use gírias leves e expressões coloquiais quando apropriado.
@@ -511,7 +511,7 @@ Contexto do usuário:
               - Última atividade: ${userContext.lastActivity}
 
               DIRETRIZES DE COMUNICAÇÃO:
-              1. Sempre se refira ao usuário pelo nome de usuário completo: "${usernameFull}". Use frases como "E aí, ${usernameFull}!", "Opa ${usernameFull}!", etc.
+              1. Sempre se refira ao usuário pelo primeiro nome: "${usernameFull.split(/[_\s]/)[0]}". Use frases como "E aí, ${usernameFull.split(/[_\s]/)[0]}!", "Opa ${usernameFull.split(/[_\s]/)[0]}!", etc.
               2. Use uma linguagem mais informal e descontraída, como se estivesse conversando com um amigo.
               3. Seja amigável, use emojis ocasionalmente e mantenha um tom leve e positivo.
               4. Use gírias leves e expressões coloquiais quando apropriado.
@@ -656,11 +656,35 @@ function fixPlatformLinks(text: string): string {
   };
 
   let newText = text;
+  const alreadyReplaced = new Set<string>();
+  const linkRegex = /\[(.+?)\]\((.+?)\)/g;
   
-  // Primeiro, substituir expressões mais específicas
+  // Primeiro, coletar todos os links já presentes no texto
+  let match;
+  while ((match = linkRegex.exec(newText)) !== null) {
+    const linkText = match[1];
+    const url = match[2];
+    alreadyReplaced.add(url.toLowerCase());
+    
+    // Também adicionar o texto do link para evitar duplicação com diferentes textos
+    for (const key in platformLinks) {
+      if (linkText.toLowerCase() === key.toLowerCase()) {
+        alreadyReplaced.add(platformLinks[key].toLowerCase());
+      }
+    }
+  }
+  
+  // Substituir expressões mais específicas, evitando duplicidades
   for (const key in platformLinks) {
-    const regex = new RegExp(`\\b(${key})\\b`, 'gi'); // Busca palavras inteiras
-    newText = newText.replace(regex, `[$1](${platformLinks[key]})`);
+    const url = platformLinks[key];
+    // Pular se este URL já foi usado
+    if (alreadyReplaced.has(url.toLowerCase())) continue;
+    
+    const regex = new RegExp(`\\b(${key})\\b(?![^\\[]*\\])`, 'gi'); // Busca palavras inteiras que não estão dentro de colchetes
+    if (regex.test(newText)) {
+      newText = newText.replace(regex, `[$1](${url})`);
+      alreadyReplaced.add(url.toLowerCase());
+    }
   }
   
   // Adicionar correção para URLs que podem ter sido escritas incorretamente

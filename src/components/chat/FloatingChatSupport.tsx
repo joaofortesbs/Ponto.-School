@@ -50,7 +50,7 @@ import {
   Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { generateAIResponse } from "@/services/aiChatService";
+import { generateAIResponse, getConversationHistory, clearConversationHistory } from "@/services/aiChatService";
 
 // Interface para arquivos em mensagens
 interface MessageFile {
@@ -69,6 +69,7 @@ interface ChatMessage {
   files?: MessageFile[];
   feedback?: 'positive' | 'negative';
   needsImprovement?: boolean;
+  isEdited?: boolean; // Adicione a propriedade isEdited
 }
 
 interface Ticket {
@@ -325,7 +326,7 @@ const FloatingChatSupport: React.FC = () => {
   const [sessionId, setSessionId] = useState('');
   const [isMessageEmpty, setIsMessageEmpty] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true); // Adicione o estado para habilitar/desabilitar sons
-
+  const [editingMessage, setEditingMessage] = useState<ChatMessage | null>(null); // Adicione o estado para editar mensagens
 
   // Configurações da IA
   const [aiIntelligenceLevel, setAIIntelligenceLevel] = useState<'basic' | 'normal' | 'advanced'>('normal');
@@ -370,14 +371,14 @@ const FloatingChatSupport: React.FC = () => {
       });
     });
   };
-  
+
   const reformulateMessage = async (messageId: number) => {
     setIsReformulating(true);
     try {
       // Find message that needs to be reformulated
       const messageToReformulate = messages.find(msg => msg.id === messageId);
       if (!messageToReformulate) return;
-      
+
       // Mark original message as needing improvement
       setMessages(prevMessages => {
         return prevMessages.map(msg => {
@@ -387,7 +388,7 @@ const FloatingChatSupport: React.FC = () => {
           return msg;
         });
       });
-      
+
       // Call AI to generate improved response
       const reformulatedResponse = await generateAIResponse(
         `Reformule a seguinte resposta de forma mais detalhada, completa e eficiente. Seja abrangente e forneça exemplos práticos se possível. Resposta original: "${messageToReformulate.content}"`,
@@ -397,7 +398,7 @@ const FloatingChatSupport: React.FC = () => {
           languageStyle: aiLanguageStyle
         }
       );
-      
+
       // Add the reformulated response to messages
       setMessages(prevMessages => [
         ...prevMessages,
@@ -409,14 +410,14 @@ const FloatingChatSupport: React.FC = () => {
           feedback: undefined
         }
       ]);
-      
+
       // Scroll to bottom after adding new message
       setTimeout(() => {
         if (messagesEndRef.current) {
           messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
         }
       }, 100);
-      
+
     } catch (error) {
       console.error('Erro ao reformular resposta:', error);
       // Add error message
@@ -433,14 +434,14 @@ const FloatingChatSupport: React.FC = () => {
       setIsReformulating(false);
     }
   };
-  
+
   const summarizeMessage = async (messageId: number) => {
     setIsReformulating(true);
     try {
       // Find message that needs to be summarized
       const messageToSummarize = messages.find(msg => msg.id === messageId);
       if (!messageToSummarize) return;
-      
+
       // Mark original message as needing improvement
       setMessages(prevMessages => {
         return prevMessages.map(msg => {
@@ -450,7 +451,7 @@ const FloatingChatSupport: React.FC = () => {
           return msg;
         });
       });
-      
+
       // Call AI to generate summarized response
       const summarizedResponse = await generateAIResponse(
         `Resuma a seguinte resposta de forma concisa, direta e eficiente. Seja direto ao ponto e elimine informações não essenciais. Resposta original: "${messageToSummarize.content}"`,
@@ -460,7 +461,7 @@ const FloatingChatSupport: React.FC = () => {
           languageStyle: 'technical'
         }
       );
-      
+
       // Add the summarized response to messages
       setMessages(prevMessages => [
         ...prevMessages,
@@ -472,14 +473,14 @@ const FloatingChatSupport: React.FC = () => {
           feedback: undefined
         }
       ]);
-      
+
       // Scroll to bottom after adding new message
       setTimeout(() => {
         if (messagesEndRef.current) {
           messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
         }
       }, 100);
-      
+
     } catch (error) {
       console.error('Erro ao resumir resposta:', error);
       // Add error message
@@ -496,7 +497,7 @@ const FloatingChatSupport: React.FC = () => {
       setIsReformulating(false);
     }
   };
-  
+
   const requestReformulation = async () => {
     setIsReformulating(true);
     try {
@@ -520,7 +521,7 @@ const FloatingChatSupport: React.FC = () => {
       setIsReformulating(false);
     }
   };
-  
+
   const cancelReformulation = () => {
     setMessageToImprove(null);
     setImprovementFeedback('');
@@ -571,10 +572,8 @@ const FloatingChatSupport: React.FC = () => {
     // Tentar carregar mensagens salvas para este usuário
     const loadSavedMessages = async () => {
       try {
-        const chatService = await import('@/services/aiChatService');
-
         // Usar a nova função getConversationHistory para obter histórico
-        const history = chatService.getConversationHistory(newSessionId);
+        const history = await getConversationHistory(newSessionId);
 
         // Se houver histórico com mensagens de usuário e IA, exibir as últimas mensagens
         if (history && history.length > 1) {
@@ -616,11 +615,8 @@ const FloatingChatSupport: React.FC = () => {
     setIsImprovingPrompt(true);
 
     try {
-      // Importando o serviço dinamicamente
-      const aiService = await import('@/services/aiChatService');
-
       // Chamar a API para melhorar o prompt
-      const improvedPromptText = await aiService.generateAIResponse(
+      const improvedPromptText = await generateAIResponse(
         `Melhore o seguinte prompt para obter uma resposta mais detalhada e completa. NÃO responda a pergunta, apenas melhore o prompt para torná-lo mais específico e detalhado: "${inputMessage}"`,
         `improve_prompt_${Date.now()}`,
         {
@@ -657,8 +653,66 @@ const FloatingChatSupport: React.FC = () => {
     setImprovedPrompt("");
   };
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim() && selectedFiles.length === 0) return;
+  // Função para enviar mensagem
+  const sendMessage = async () => {
+    if (inputMessage.trim() === "" && selectedFiles.length === 0) return;
+
+    // Se estiver editando uma mensagem
+    if (editingMessage) {
+      // Atualizar a mensagem editada
+      const updatedMessages = messages.map((msg) =>
+        msg.id === editingMessage.id
+          ? { ...msg, content: inputMessage, isEdited: true }
+          : msg
+      );
+
+      setMessages(updatedMessages);
+      setInputMessage("");
+      setEditingMessage(null);
+      setIsTyping(true);
+
+      try {
+        // Chamar a API para obter resposta atualizada à mensagem editada
+        const aiResponse = await generateAIResponse(
+          inputMessage,
+          sessionId || 'default_session',
+          {
+            intelligenceLevel: aiIntelligenceLevel,
+            languageStyle: aiLanguageStyle
+          }
+        );
+
+        // Reproduzir som se estiver ativado
+        if (soundEnabled) {
+          console.log('Sound would play here if implemented');
+        }
+
+        // Adicionar resposta da IA como uma nova mensagem
+        setMessages(prevMessages => [
+          ...prevMessages,
+          { 
+            id: Date.now(), 
+            content: aiResponse, 
+            sender: 'assistant', 
+            timestamp: new Date() 
+          }
+        ]);
+      } catch (error) {
+        console.error('Erro ao obter resposta para mensagem editada:', error);
+        setMessages(prevMessages => [
+          ...prevMessages,
+          { 
+            id: Date.now(), 
+            content: 'Desculpe, estou enfrentando problemas no momento. Por favor, tente novamente mais tarde.', 
+            sender: 'assistant', 
+            timestamp: new Date() 
+          }
+        ]);
+      } finally {
+        setIsTyping(false);
+      }
+      return;
+    }
 
     // Criar uma mensagem combinada com texto e informações sobre arquivos anexados
     let fullMessage = inputMessage.trim();
@@ -1316,7 +1370,7 @@ const FloatingChatSupport: React.FC = () => {
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex animate-fadeIn ${message.sender === "user" ? "justify-end" : "justify-start"}`}
+              className={`flex animate-fadeIn ${message.sender === "user" ? "justify-end" : "justify-start"} group`}
             >
               {message.sender === "assistant" && (
                 <div className="w-10 h-10 rounded-full overflow-hidden mr-2 flex-shrink-0">
@@ -1384,6 +1438,32 @@ const FloatingChatSupport: React.FC = () => {
                     ))}
                   </div>
                 )}
+                {message.sender === "user" && (
+                  <div className="absolute right-0 top-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex space-x-1 p-1">
+                    <button 
+                      className="text-gray-400 hover:text-orange-500 dark:text-gray-500 dark:hover:text-orange-400 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                      onClick={() => {
+                        setEditingMessage(message);
+                        setInputMessage(message.content);
+                      }}
+                    >
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="14" 
+                        height="14" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                      >
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                    </button>
+                  </div>
+                )}
                 <div className="flex items-center justify-between mt-2">
                   <div className="text-xs opacity-80 flex items-center gap-1">
                     <span className={message.sender === "user" ? "bg-white/20 px-1.5 py-0.5 rounded-sm" : ""}>
@@ -1391,6 +1471,9 @@ const FloatingChatSupport: React.FC = () => {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
+                      {message.isEdited && (
+                        <span className="text-xs opacity-70 ml-1">(editado)</span>
+                      )}
                     </span>
                   </div>
 
@@ -1413,7 +1496,7 @@ const FloatingChatSupport: React.FC = () => {
                       </button>
                     </div>
                   )}
-                  
+
                   {/* Improvement options when negative feedback is given */}
                   {message.sender === "assistant" && message.feedback === 'negative' && (
                     <div className="mt-2 flex flex-col gap-2 w-full animate-fadeIn">
@@ -1496,7 +1579,7 @@ const FloatingChatSupport: React.FC = () => {
           <div className="flex items-center gap-1">
             <Badge 
               variant="outline" 
-              className="bg-gradient-to-r from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/40 text-blue-800 dark:text-blue-300 text-xs px-2 py-0 h-5 cursor-pointer"
+              className="bg-gradient-to-r from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/40 text-blue-800 dark:text-blue300 text-xs px-2 py-0 h-5 cursor-pointer"
               onClick={() => setIsShowingAISettings(!isShowingAISettings)}
             >
               <Sparkles className="h-3 w-3 mr-1" />
@@ -1515,9 +1598,8 @@ const FloatingChatSupport: React.FC = () => {
 
                 // Importar e chamar função para limpar histórico de conversa
                 try {
-                  const { clearConversationHistory } = await import('@/services/aiChatService');
                   const sessionId = userName || 'anonymous-' + Date.now().toString();
-                  clearConversationHistory(sessionId);
+                  await clearConversationHistory(sessionId);
                 } catch (error) {
                   console.error('Erro ao limpar histórico:', error);
                 }
@@ -1654,7 +1736,7 @@ const FloatingChatSupport: React.FC = () => {
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="Digite sua mensagem..."
               className="pr-10 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
-              onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+              onKeyPress={(e) => e.key === "Enter" && sendMessage()}
             />
             <div className="absolute right-0 top-0 h-full flex">
               {inputMessage.trim().length > 0 && !isImprovingPrompt && (
@@ -1672,8 +1754,8 @@ const FloatingChatSupport: React.FC = () => {
                 variant="ghost"
                 size="icon"
                 className="text-orange-500 hover:text-orange-600"
-                onClick={handleSendMessage}
-                disabled={!inputMessage.trim() && selectedFiles.length === 0}
+                onClick={sendMessage}
+                disabled={isMessageEmpty && selectedFiles.length === 0}
               >
                 <Send className="h-5 w-5" />
               </Button>
@@ -2220,7 +2302,7 @@ const FloatingChatSupport: React.FC = () => {
             ) : (
               <div className="text-center py-8 px-4 dark:text-gray-300">
                 <div className="w-14 h-14 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center mx-auto mb-3">
-                  <Lightbulb className="h-8 w-8 text-orange-500" />
+                  <Lightbulb className="h-8 w-8 text-orange500" />
                 </div>
                 <p className="text-gray-800 dark:text-gray-200 font-medium mb-2">
                   Nenhuma sugestão encontrada
@@ -2472,13 +2554,13 @@ const FloatingChatSupport: React.FC = () => {
         .ScrollAreaViewport {
           scrollbar-width: thin;
           scrollbar-color: rgba(249, 115, 22, 0.6) transparent;
-                }
+        }
 
         .dark .ScrollAreaViewport {
           scrollbar-color: rgba(249, 115, 22, 0.6) transparent;
         }
 
-                /* Fix for mobile responsiveness */
+        /* Fix for mobile responsiveness */
         @media (max-width: 640px) {
           .fixed.z-40 {
             width: 90% !important;
