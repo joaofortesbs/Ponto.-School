@@ -351,6 +351,9 @@ const FloatingChatSupport: React.FC = () => {
   const [isRecordingAudio, setIsRecordingAudio] = useState(false);
   const [audioRecorder, setAudioRecorder] = useState<MediaRecorder | null>(null);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
+  
+  // Estado para controlar se o usuário rolou manualmente durante a digitação da IA
+  const [userHasScrolled, setUserHasScrolled] = useState(false);
 
   // Estado para abrir/fechar o menu de anexos
   const [showAttachmentOptions, setShowAttachmentOptions] = useState(false);
@@ -576,12 +579,35 @@ const FloatingChatSupport: React.FC = () => {
   };
 
 
-  // Scroll to bottom of messages
+  // Scroll to bottom of messages, mas apenas quando uma nova mensagem é adicionada
+  // não quando uma mensagem está sendo digitada pela IA
   useEffect(() => {
-    if (messagesEndRef.current) {
+    if (messagesEndRef.current && !isTyping) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      setUserHasScrolled(false); // Reset o estado de rolagem do usuário quando uma nova mensagem é adicionada
     }
-  }, [messages]);
+  }, [messages.length, isTyping]);
+
+  // Detectar quando o usuário rola manualmente
+  useEffect(() => {
+    const handleScroll = () => {
+      if (isTyping) {
+        setUserHasScrolled(true);
+      }
+    };
+
+    // Encontrar o elemento de scroll (scroll area)
+    const scrollContainer = document.querySelector('.custom-scrollbar');
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll);
+    }
+
+    return () => {
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [isTyping]);
 
   // Add blur effect to the rest of the page when chat is open
   useEffect(() => {
@@ -885,14 +911,12 @@ const FloatingChatSupport: React.FC = () => {
           const typingSpeed = Math.min(100, Math.max(30, 70 - words[index].length * 5));
           setTimeout(() => addNextWord(index + 1), typingSpeed);
           
-          // Rolar para o final a cada algumas palavras para acompanhar a digitação
-          if (index % 5 === 0 && messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-          }
+          // Removido o auto-scroll durante a digitação para permitir que o usuário controle a visualização
         } else {
           setIsTyping(false);
-          // Rolar para o final após a mensagem completa
-          if (messagesEndRef.current) {
+          // Apenas rolar no final da mensagem completa e somente se o usuário não rolou manualmente
+          // durante o carregamento
+          if (messagesEndRef.current && !userHasScrolled) {
             messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
           }
         }
@@ -1716,12 +1740,14 @@ const FloatingChatSupport: React.FC = () => {
                   </div>
                 </div>
                 <div className="relative min-h-[40px] flex items-center">
-                  <div className="typewriter">
-                    <div className="slide"><i></i></div>
-                    <div className="paper"></div>
-                    <div className="keyboard"></div>
+                  <div className="flex items-center">
+                    <div className="flex space-x-1 mr-2">
+                      <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
+                      <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse delay-150"></div>
+                      <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse delay-300"></div>
+                    </div>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Formulando resposta...</span>
                   </div>
-                  <span className="ml-8 text-sm text-gray-600 dark:text-gray-400">Formulando resposta...</span>
                 </div>
               </div>
             </div>
