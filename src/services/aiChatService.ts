@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getChatHistory, saveChatMessage, getAllChatSessions, deleteChatSession } from "./aiChatDatabaseService";
 
 // Chaves de API
 const XAI_API_KEY = 'xai-PGLSB6snVtQm82k7xEmfCSo3RjkO41ICX4dUagAp5bz2GY02NTVqO6XWEXuNK5HCYWpYBYuz7WP2ENFP';
@@ -12,32 +13,7 @@ const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
-}
-
-// Histórico de conversas
-let conversationHistory: Record<string, ChatMessage[]> = {};
-
-// Inicializar o histórico do localStorage quando o módulo carrega
-try {
-  const savedSessions = localStorage.getItem('aiChatSessions');
-  if (savedSessions) {
-    const parsedSessions = JSON.parse(savedSessions);
-    // Verificar se é um objeto válido
-    if (parsedSessions && typeof parsedSessions === 'object') {
-      // Para cada sessão, converter as datas de string para Date
-      Object.keys(parsedSessions).forEach(sessionId => {
-        if (Array.isArray(parsedSessions[sessionId])) {
-          conversationHistory[sessionId] = parsedSessions[sessionId].map(msg => ({
-            ...msg,
-            timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date()
-          }));
-        }
-      });
-      console.log(`Carregadas ${Object.keys(conversationHistory).length} sessões de chat do localStorage`);
-    }
-  }
-} catch (error) {
-  console.error('Erro ao carregar histórico de conversas do localStorage:', error);
+  timestamp?: Date;
 }
 
 // Função para obter dados do usuário atual com acesso expandido e completo
@@ -63,662 +39,183 @@ async function getUserContext() {
     try {
       // Importar o serviço de perfil e o cliente Supabase
       profileService = (await import('@/services/profileService')).profileService;
-      supabase = (await import('@/lib/supabase')).supabase;
+      // Se o serviço estiver disponível, obter dados completos do perfil
+      if (profileService) {
+        completeUserProfile = await profileService.getCurrentProfileExpanded();
+      }
 
-      // Obter perfil completo do usuário com todos os detalhes
-      completeUserProfile = await profileService.getCurrentUserProfile();
+      // Tentar obter o cliente Supabase
+      const supabaseModule = await import('@/lib/supabase');
+      supabase = supabaseModule.supabase;
 
-      // Obter session para determinar o ID do usuário atual
-      const { data: sessionData } = await supabase.auth.getSession();
-      const currentUserId = sessionData?.session?.user?.id;
+      // Se tiver Supabase e não tiver perfil completo, tentar obter perfil diretamente
+      if (supabase && !completeUserProfile) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
 
-      if (currentUserId && completeUserProfile) {
-        // Obter turmas do usuário
-        const { data: classesData } = await supabase
-          .from('user_classes')
-          .select('*, class:classes(*)')
-          .eq('user_id', currentUserId);
-
-        if (classesData) {
-          userClasses = classesData;
-        }
-
-        // Obter séries do usuário
-        const { data: seriesData } = await supabase
-          .from('user_series')
-          .select('*, serie:series(*)')
-          .eq('user_id', currentUserId);
-
-        if (seriesData) {
-          userSeries = seriesData;
-        }
-
-        // Obter contagem de seguidores
-        const { count } = await supabase
-          .from('user_followers')
-          .select('*', { count: 'exact' })
-          .eq('followed_id', currentUserId);
-
-        if (count !== null) {
-          followersCount = count;
+          if (profile) {
+            completeUserProfile = profile;
+          }
         }
       }
     } catch (error) {
-      console.error('Erro ao obter dados completos do perfil:', error);
+      console.error("Erro ao obter dados expandidos do perfil:", error);
     }
 
-    // Tentar obter dados expandidos do perfil via username-utils (fallback)
-    let basicProfileData = {};
-    let metadataUsername = null;
-
-    try {
-      const usernameUtils = await import('@/lib/username-utils');
-      if (usernameUtils && usernameUtils.getUserProfile) {
-        basicProfileData = await usernameUtils.getUserProfile();
-
-        if (usernameUtils.getCurrentUsername) {
-          metadataUsername = await usernameUtils.getCurrentUsername();
-          usernameSources.metadata = metadataUsername;
-        }
-
-        if (basicProfileData && basicProfileData.username) {
-          usernameSources.profile = basicProfileData.username;
-        }
-      }
-    } catch (error) {
-      console.log('Erro ao obter perfil via username-utils:', error);
-    }
-
-    // Determinar o melhor username para usar (prioridade: perfil completo > metadata > localStorage > sessionStorage)
-    const bestUsername = 
-      (completeUserProfile?.username || completeUserProfile?.display_name) || 
-      metadataUsername || 
-      usernameSources.localStorage || 
-      usernameSources.sessionStorage || 
-      usernameSources.profile || 
-      'Usuário';
-
-    // Construir contexto completo do usuário
-    const userContext = {
-      // Dados básicos
-      username: bestUsername,
-      email: completeUserProfile?.email || usernameSources.email || 'email@exemplo.com',
-
-      // Dados completos do perfil
-      profile: completeUserProfile || basicProfileData,
-
-      // Dados específicos para fácil acesso
-      userId: completeUserProfile?.user_id || 'ID não disponível',
-      fullName: completeUserProfile?.full_name || 'Nome não disponível',
-      displayName: completeUserProfile?.display_name || bestUsername,
-      createdAt: completeUserProfile?.created_at || 'Data não disponível',
-      planType: completeUserProfile?.plan_type || 'lite',
-      userLevel: completeUserProfile?.level || 1,
-      followersCount: followersCount,
-
-      // Dados de contexto de uso
-      currentPage: window.location.pathname,
-      lastActivity: localStorage.getItem('lastActivity') || 'Nenhuma atividade recente',
-
-      // Dados das turmas e séries
-      classes: userClasses,
-      series: userSeries,
-
-      // Dados do dispositivo e ambiente
-      userAgent: navigator.userAgent,
-      platform: navigator.platform,
-      screenSize: `${window.innerWidth}x${window.innerHeight}`,
-      darkMode: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches,
-
-      // Dados do localStorage
-      localStorageData: Object.keys(localStorage).filter(key => 
-        key.startsWith('user_') || 
-        key.startsWith('ponto_') || 
-        key.startsWith('study_')
-      ).reduce((acc, key) => {
-        acc[key] = localStorage.getItem(key);
-        return acc;
-      }, {})
+    // Construir objeto de contexto completo
+    return {
+      username: usernameSources.localStorage || usernameSources.sessionStorage || 'usuário',
+      email: usernameSources.email || 'sem email registrado',
+      profile: completeUserProfile || {},
+      classes: userClasses || [],
+      series: userSeries || [],
+      followersCount: followersCount || 0,
+      isAuthenticated: !!completeUserProfile || !!localStorage.getItem('auth_status') === true,
+      preferences: localStorage.getItem('userPreferences') ? JSON.parse(localStorage.getItem('userPreferences') || '{}') : {}
     };
-
-    // Obter atividades recentes
-    try {
-      const recentActivities = JSON.parse(localStorage.getItem('user_recent_activities') || '[]');
-      if (Array.isArray(recentActivities) && recentActivities.length > 0) {
-        userContext.recentActivities = recentActivities;
-      }
-    } catch (e) {
-      console.log('Erro ao obter atividades recentes:', e);
-    }
-
-    return userContext;
   } catch (error) {
-    console.error('Erro ao obter contexto do usuário:', error);
-    return { username: 'Usuário' };
+    console.error("Erro ao obter contexto do usuário:", error);
+    return {
+      username: localStorage.getItem('username') || sessionStorage.getItem('username') || 'usuário',
+      isAuthenticated: false
+    };
   }
 }
 
+// Função para reordenar e filtrar contexto para o prompt do X.ai
+function prepareContextForModel(context) {
+  // Garantir que dados sensíveis não sejam enviados
+  const safeContext = { ...context };
+  delete safeContext.email;
+  delete safeContext.preferences;
 
-// Função para gerar resposta usando a API xAI
-export async function generateXAIResponse(
-  message: string, 
-  sessionId: string,
-  options?: { 
-    intelligenceLevel?: 'basic' | 'normal' | 'advanced',
-    languageStyle?: 'casual' | 'formal' | 'technical'
+  // Se houver um perfil detalhado, garantir que apenas informações relevantes sejam enviadas
+  if (safeContext.profile) {
+    const { displayName, bio, interests, studyGoal, preferredStudyTime } = safeContext.profile;
+    safeContext.profile = { displayName, bio, interests, studyGoal, preferredStudyTime };
   }
-): Promise<string> {
+
+  return safeContext;
+}
+
+// Função principal para conect com o X.ai
+export async function sendMessageToXAI(sessionId: string, userMessage: string): Promise<string> {
   try {
-    // Verificar se a mensagem contém comando para acessar ou modificar o perfil
-    const isProfileInfoRequest = /qual (é|e) (o )?meu (ID|id)|me (mostre|mostra|diga|informe) (o )?meu (ID|id)|informações da minha conta|dados da minha conta|meu perfil completo/i.test(message);
-    const isProfileUpdateRequest = /atualiz(e|ar) (minha|a) (bio|biografia)|mudar (minha|a) (bio|biografia)|modificar (minha|a) bio|mudar (meu|o) nome de exibição|atualizar (meu|o) nome de exibição|mudar (meu|o) telefone/i.test(message);
-    const isRedirectRequest = /(me\s+(redirecione|encaminhe|leve|direcione|mande|envie)\s+(para|ao|à|a|até)|quero\s+(ir|acessar|entrar|ver)|me\s+(mostre|mostra)|abrir?|abra|acesse|acessar|ver|veja)\s+(a\s+)?(página\s+(de|do|da)\s+)?([a-zà-ú\s]+)/i.test(message);
+    // Recuperar histórico da conversa atual
+    const historyMessages = await getChatHistory(sessionId);
 
-    // Importar o serviço de modificação de perfil se necessário
-    let ProfileModificationService;
-    if (isProfileInfoRequest || isProfileUpdateRequest) {
-      try {
-        ProfileModificationService = (await import('./profileModificationService')).ProfileModificationService;
-      } catch (e) {
-        console.error('Erro ao importar ProfileModificationService:', e);
-      }
-    }
-
-    // Obter contexto do usuário - fazer isso logo no início
+    // Obter contexto do usuário para personalização
     const userContext = await getUserContext();
 
-    // Extrair o primeiro nome do usuário para uso personalizado nas respostas
-    const firstName = userContext.fullName ? 
-      userContext.fullName.split(' ')[0] : 
-      (userContext.displayName || userContext.username || 'Usuário');
+    // Configurar mensagem do sistema com contexto
+    const systemPrompt = `Você é Epictus, o assistente virtual educacional da plataforma Ponto School. 
 
-    // Inicializar o histórico se não existir
-    if (!conversationHistory[sessionId]) {
-      initializeConversationHistory(sessionId, userContext);
+    Contexto do usuário: ${JSON.stringify(prepareContextForModel(userContext))}
+
+    Sua personalidade: Amigável, prestativo, paciente e especialista em educação. Você deve se referir ao usuário pelo nome real quando disponível.
+
+    Sempre que possível, forneça exemplos práticos e sugestões que ajudem o usuário a aplicar o conhecimento aprendido.
+
+    Seu objetivo é: Ajudar estudantes em sua jornada educacional, responder dúvidas sobre conteúdos escolares, sugerir métodos de estudo e oferecer apoio motivacional.
+
+    Limitações: Não forneça respostas diretas para questões de provas; em vez disso, oriente o processo de raciocínio. Não discuta tópicos inapropriados para ambiente escolar.`;
+
+    // Preparar mensagens para o modelo
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      ...historyMessages,
+      { role: 'user', content: userMessage }
+    ];
+
+    // Fazer requisição para a API
+    const response = await axios.post(
+      XAI_BASE_URL,
+      {
+        model: 'gpt-4',
+        messages,
+        max_tokens: 1000
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${XAI_API_KEY}`
+        }
+      }
+    );
+
+    // Extrair e salvar resposta
+    const assistantMessage = response.data.choices[0].message.content;
+
+    // Salvar mensagem do usuário e resposta no histórico
+    await saveChatMessage(sessionId, { role: 'user', content: userMessage, timestamp: new Date() });
+    await saveChatMessage(sessionId, { role: 'assistant', content: assistantMessage, timestamp: new Date() });
+
+    return assistantMessage;
+  } catch (error) {
+    console.error('Erro ao enviar mensagem para XAI:', error);
+
+    // Tentar usar Gemini como fallback
+    try {
+      return await sendMessageToGemini(sessionId, userMessage);
+    } catch (fallbackError) {
+      console.error('Erro também no fallback com Gemini:', fallbackError);
+
+      // Mensagem de erro amigável
+      const errorMessage = 'Desculpe, estou enfrentando dificuldades para processar sua mensagem no momento. Por favor, tente novamente em alguns instantes.';
+
+      // Salvar mensagem do usuário e resposta de erro
+      await saveChatMessage(sessionId, { role: 'user', content: userMessage, timestamp: new Date() });
+      await saveChatMessage(sessionId, { role: 'assistant', content: errorMessage, timestamp: new Date() });
+
+      return errorMessage;
     }
+  }
+}
 
-    // Adiciona a mensagem do usuário ao histórico
-    conversationHistory[sessionId].push({ 
-      role: 'user', 
-      content: message,
-      timestamp: new Date() 
+// Função para usar Gemini como fallback
+async function sendMessageToGemini(sessionId: string, userMessage: string): Promise<string> {
+  try {
+    // Recuperar histórico recente (limitado aos últimos 5 para não sobrecarregar)
+    const historyMessages = await getChatHistory(sessionId);
+    const recentMessages = historyMessages.slice(-5);
+
+    // Formatar contexto para o Gemini
+    const formattedContent = recentMessages.map(msg => {
+      return {
+        role: msg.role === 'assistant' ? 'model' : msg.role,
+        parts: [{ text: msg.content }]
+      };
     });
 
-    // Processar solicitação de informações do perfil
-    if (isProfileInfoRequest && ProfileModificationService) {
-      try {
-        const { profile, formattedInfo } = await ProfileModificationService.getDetailedUserProfile();
+    // Adicionar mensagem atual do usuário
+    formattedContent.push({
+      role: 'user',
+      parts: [{ text: userMessage }]
+    });
 
-        // Se conseguiu obter as informações, criar uma resposta personalizada
-        if (profile) {
-          // Criar resposta amigável com as informações
-          const response = `Claro, ${firstName}! Aqui estão as informações da sua conta:
-
-${formattedInfo}
-
-Você pode visualizar e editar seu perfil completo acessando [sua página de perfil](https://pontoschool.com/profile).
-
-Posso te ajudar a atualizar algumas dessas informações diretamente por aqui, como sua biografia ou nome de exibição. É só me pedir!`;
-
-          // Adicionar a resposta ao histórico
-          conversationHistory[sessionId].push({ 
-            role: 'assistant', 
-            content: response,
-            timestamp: new Date()
-          });
-
-          await saveConversationHistory(sessionId, conversationHistory[sessionId]);
-          return response;
-        }
-      } catch (e) {
-        console.error('Erro ao processar solicitação de informações do perfil:', e);
-      }
-    }
-
-    // Processar solicitação de atualização de perfil
-    if (isProfileUpdateRequest && ProfileModificationService) {
-      // Reconhecer o tipo de atualização solicitada
-      const isBioUpdate = /atualiz(e|ar) (minha|a) (bio|biografia)|mudar (minha|a) (bio|biografia)|modificar (minha|a) bio/i.test(message);
-      const isDisplayNameUpdate = /mudar (meu|o) nome de exibição|atualizar (meu|o) nome de exibição/i.test(message);
-      const isContactInfoUpdate = /mudar (meu|o) telefone|atualizar (meu|o) telefone|mudar (minha|a) localização|atualizar (minha|a) localização/i.test(message);
-
-      // Extrair o conteúdo a ser atualizado
-      try {
-        // Determinar qual atualização fazer e responder apropriadamente
-        let response = '';
-
-        if (isBioUpdate) {
-          // Extrair a nova biografia da mensagem
-          const bioRegex = /(?:para|como|com) ["|'|"](.+?)["|'|"]/i;
-          const bioMatch = message.match(bioRegex);
-
-          if (bioMatch && bioMatch[1]) {
-            const newBio = bioMatch[1].trim();
-            const result = await ProfileModificationService.updateUserBio(newBio);
-
-            if (result.success) {
-              response = `Ótimo, ${firstName}! Sua biografia foi atualizada com sucesso para: "${newBio}". 
-
-As alterações já estão disponíveis no seu perfil. Você pode conferir em [sua página de perfil](https://pontoschool.com/profile).`;
-            } else {
-              response = `Desculpe ${firstName}, não consegui atualizar sua biografia. ${result.message}`;
-            }
-          } else {
-            response = `Parece que você quer atualizar sua biografia, ${firstName}, mas não entendi qual seria o novo texto. Pode me fornecer a nova biografia entre aspas? 
-
-Por exemplo: "Atualizar minha biografia para 'Estudante de engenharia apaixonado por tecnologia'"`;
-          }
-        } else if (isDisplayNameUpdate) {
-          // Extrair o novo nome de exibição
-          const nameRegex = /(?:para|como|com) ["|'|"](.+?)["|'|"]/i;
-          const nameMatch = message.match(nameRegex);
-
-          if (nameMatch && nameMatch[1]) {
-            const newName = nameMatch[1].trim();
-            const result = await ProfileModificationService.updateDisplayName(newName);
-
-            if (result.success) {
-              response = `Perfeito, ${firstName}! Seu nome de exibição foi atualizado com sucesso para: "${newName}".
-
-A alteração já está disponível em seu perfil. Você pode conferir em [sua página de perfil](https://pontoschool.com/profile).`;
-            } else {
-              response = `Desculpe ${firstName}, não consegui atualizar seu nome de exibição. ${result.message}`;
-            }
-          } else {
-            response = `Parece que você quer atualizar seu nome de exibição, ${firstName}, mas não entendi qual seria o novo nome. Pode me fornecer o novo nome entre aspas?
-
-Por exemplo: "Atualizar meu nome de exibição para 'João Silva'"`;
-          }
-        } else if (isContactInfoUpdate) {
-          response = `${firstName}, para atualizar suas informações de contato, é melhor acessar diretamente a página de configurações:
-
-[Acesse as configurações do seu perfil](https://pontoschool.com/configuracoes)
-
-Lá você poderá atualizar seu telefone, localização e outras informações de contato de forma segura.`;
-        }
-
-        // Adicionar a resposta ao histórico
-        if (response) {
-          conversationHistory[sessionId].push({ 
-            role: 'assistant', 
-            content: response,
-            timestamp: new Date()
-          });
-          await saveConversationHistory(sessionId, conversationHistory[sessionId]);
-          return response;
-        }
-      } catch (e) {
-        console.error('Erro ao processar solicitação de atualização de perfil:', e);
-      }
-    }
-
-    // Verificar se é um pedido de redirecionamento para área da plataforma
-    if (isRedirectRequest) {
-      const platformLinks = {
-        'Portal de Estudos': 'https://pontoschool.com/portal',
-        'Portal': 'https://pontoschool.com/portal',
-        'Agenda': 'https://pontoschool.com/agenda',
-        'Turmas': 'https://pontoschool.com/turmas',
-        'Biblioteca': 'https://pontoschool.com/biblioteca',
-        'Perfil': 'https://pontoschool.com/profile',
-        'Meu Perfil': 'https://pontoschool.com/profile',
-        'Configurações': 'https://pontoschool.com/configuracoes',
-        'Minhas Configurações': 'https://pontoschool.com/configuracoes',
-        'Dashboard': 'https://pontoschool.com/dashboard',
-        'Epictus IA': 'https://pontoschool.com/epictus-ia',
-        'Mentor IA': 'https://pontoschool.com/mentor-ia',
-        'Planos de Estudo': 'https://pontoschool.com/planos-estudo',
-        'Plano de Estudos': 'https://pontoschool.com/planos-estudo',
-        'Conquistas': 'https://pontoschool.com/conquistas',
-        'Minhas Conquistas': 'https://pontoschool.com/conquistas',
-        'Carteira': 'https://pontoschool.com/carteira',
-        'Minha Carteira': 'https://pontoschool.com/carteira',
-        'Mercado': 'https://pontoschool.com/mercado',
-        'Organização': 'https://pontoschool.com/organizacao',
-        'Comunidades': 'https://pontoschool.com/comunidades',
-        'Chat IA': 'https://pontoschool.com/chat-ia',
-        'School IA': 'https://pontoschool.com/school-ia',
-        'Novidades': 'https://pontoschool.com/novidades',
-        'Lembretes': 'https://pontoschool.com/lembretes',
-        'Pedidos de Ajuda': 'https://pontoschool.com/pedidos-ajuda',
-        'Estudos': 'https://pontoschool.com/estudos'
-      };
-
-      // Regex mais preciso para extrair a seção desejada
-      const sectionRegex = /(me\s+(redirecione|encaminhe|leve|direcione|mande|envie)\s+(para|ao|à|a|até)|quero\s+(ir|acessar|entrar|ver)|me\s+(mostre|mostra)|abrir?|abra|acesse|acessar|ver|veja)\s+(a\s+)?(página\s+(de|do|da)\s+)?([a-zà-ú\s]+)/i;
-      const match = message.match(sectionRegex);
-
-      if (match && match[9]) {
-        const requestedSection = match[9].trim().toLowerCase();
-
-        // Encontra a melhor correspondência entre as seções disponíveis
-        const sections = Object.keys(platformLinks);
-        const bestMatch = sections.find(section => 
-          section.toLowerCase() === requestedSection || 
-          section.toLowerCase().includes(requestedSection) ||
-          requestedSection.includes(section.toLowerCase())
-        );
-
-        if (bestMatch) {
-          const response = `Claro, ${firstName}! Aqui está o link direto para ${bestMatch}: [${bestMatch}](${platformLinks[bestMatch]})
-
-Clique no link acima para ser redirecionado. Posso ajudar com mais alguma coisa?`;
-
-          conversationHistory[sessionId].push({ 
-            role: 'assistant', 
-            content: response,
-            timestamp: new Date()
-          });
-          await saveConversationHistory(sessionId, conversationHistory[sessionId]);
-          return response;
-        }
-      }
-    }
-
-    // Limita o histórico para evitar exceder os limites da API
-    if (conversationHistory[sessionId].length > 20) {
-      // Mantém a mensagem do sistema e as últimas 19 mensagens
-      const systemMessage = conversationHistory[sessionId][0];
-      conversationHistory[sessionId] = [
-        systemMessage,
-        ...conversationHistory[sessionId].slice(-19)
-      ];
-    }
-
-    try {
-      // Configuração da solicitação para a API xAI
-      const response = await axios.post(
-        XAI_BASE_URL,
+    // Configurar parâmetros para a API
+    const payload = {
+      contents: [
         {
-          messages: conversationHistory[sessionId].map(msg => ({
-            role: msg.role,
-            content: msg.content
-          })),
-          model: 'grok-3-latest',
-          stream: false,
-          temperature: 0.7,
-          max_tokens: 1000
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${XAI_API_KEY}`
-          },
-          timeout: 15000 // 15 segundos de timeout
+          role: 'user',
+          parts: [{ text: `Você é Epictus, o assistente virtual educacional. Responda à seguinte pergunta de forma útil, precisa e educacional: ${userMessage}` }]
         }
-      );
-
-      // Extrai a resposta
-      let aiResponse = '';
-
-      if (response.data && 
-          response.data.choices && 
-          response.data.choices.length > 0 && 
-          response.data.choices[0].message) {
-        aiResponse = response.data.choices[0].message.content;
-      } else {
-        throw new Error('Formato de resposta inválido da API xAI');
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 800
       }
+    };
 
-      // Verificar e corrigir links de redirecionamento
-      aiResponse = fixPlatformLinks(aiResponse);
-
-      // Adicionar a resposta da IA à interface com formatação melhorada e corrigida
-      const formattedResponse = aiResponse
-        // Formatação de texto básica
-        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
-        .replace(/\_(.*?)\_/g, '<em class="italic">$1</em>')
-        .replace(/\~\~(.*?)\~\~/g, '<del class="line-through">$1</del>')
-        .replace(/\`(.*?)\`/g, '<code class="bg-black/10 dark:bg-white/10 rounded px-1 py-0.5 font-mono text-xs">$1</code>')
-
-        // Formatação de parágrafos e listas
-        .replace(/\n\n/g, '</p><p class="mt-3">')
-        .replace(/\n/g, '<br />')
-
-        // Formatação de títulos
-        .replace(/^# (.*?)$/gm, '<h3 class="text-lg font-bold my-2">$1</h3>')
-        .replace(/^## (.*?)$/gm, '<h4 class="text-md font-bold my-2">$1</h4>')
-
-        // Formatação de listas
-        .replace(/^\* (.*?)$/gm, '<li class="ml-4 list-disc">$1</li>')
-        .replace(/^\d\. (.*?)$/gm, '<li class="ml-4 list-decimal">$1</li>')
-
-        // Formatação de links com ícone
-        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-500 hover:text-blue-600 hover:underline font-medium inline-flex items-center" target="_blank" rel="noopener noreferrer">$1<svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>')
-        .replace(/(https?:\/\/[^\s]+)(?!\))/g, '<a href="$1" class="text-blue-500 hover:text-blue-600 hover:underline font-medium inline-flex items-center" target="_blank" rel="noopener noreferrer">$1<svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>')
-
-        // Formatação especial para dicas e destaques
-        .replace(/💡 (.*?)$/gm, '<div class="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 p-2 rounded-md my-2 flex items-start"><span class="mr-2">💡</span><span>$1</span></div>')
-        .replace(/⚠️ (.*?)$/gm, '<div class="bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 p-2 rounded-md my-2 flex items-start"><span class="mr-2">⚠️</span><span>$1</span></div>')
-
-        // Garantir que o conteúdo esteja envolto em um parágrafo
-        .replace(/^(.+?)$/gm, function(match) {
-          if (!match.startsWith('<') && !match.endsWith('>')) {
-            return '<p>' + match + '</p>';
-          }
-          return match;
-        });
-
-      // Garantir que não existam múltiplos <br> consecutivos
-      const cleanedResponse = formattedResponse
-        .replace(/<br\s*\/?><br\s*\/?>/g, '<br />')
-        .replace(/<p><\/p>/g, '')
-        .replace(/<p><br \/><\/p>/g, '<p>&nbsp;</p>');
-
-
-      // Adiciona a resposta da IA ao histórico
-      conversationHistory[sessionId].push({ 
-        role: 'assistant', 
-        content: cleanedResponse,
-        timestamp: new Date()
-      });
-
-      // Salvar histórico atualizado no localStorage
-      await saveConversationHistory(sessionId, conversationHistory[sessionId]);
-
-      return cleanedResponse;
-    } catch (apiError) {
-      console.error('Erro na API xAI:', apiError);
-
-      // Resposta padrão em caso de erro
-      const fallbackResponse = `Desculpe ${firstName}, estou enfrentando dificuldades técnicas no momento. 
-
-Vou tentar responder sua pergunta mesmo assim. ${message.length < 50 ? "Você me perguntou sobre " + message : ""}
-
-O que mais posso ajudar você hoje?`;
-
-      // Adicionar a resposta alternativa ao histórico
-      conversationHistory[sessionId].push({ 
-        role: 'assistant', 
-        content: fallbackResponse,
-        timestamp: new Date()
-      });
-
-      // Salvar histórico atualizado
-      await saveConversationHistory(sessionId, conversationHistory[sessionId]);
-
-      // Tenta resposta fallback via Gemini
-      try {
-        return await generateGeminiResponse(message, sessionId, options);
-      } catch (geminiError) {
-        console.error('Erro também no Gemini:', geminiError);
-        return fallbackResponse;
-      }
-    }
-  } catch (error) {
-    console.error('Erro ao gerar resposta com xAI:', error);
-    // Fallback para Gemini em caso de erro
-    try {
-      return await generateGeminiResponse(message, sessionId, options);
-    } catch (geminiError) {
-      console.error('Erro também no Gemini:', geminiError);
-      return `Desculpe, estou enfrentando dificuldades técnicas no momento. Por favor, tente novamente mais tarde.`;
-    }
-  }
-}
-
-// Função auxiliar para inicializar o histórico de conversa com mensagem do sistema
-function initializeConversationHistory(sessionId: string, userContext?: any) {
-  // Se não tiver contexto do usuário, use valores padrão
-  const username = userContext?.username || 'Usuário';
-  const firstName = userContext?.fullName ? userContext.fullName.split(' ')[0] : username;
-  const email = userContext?.email || 'email@exemplo.com';
-  const userId = userContext?.userId || 'ID não disponível';
-  const currentPage = userContext?.currentPage || window.location.pathname;
-  const planType = userContext?.planType || 'lite';
-  const userLevel = userContext?.userLevel || 1;
-
-  conversationHistory[sessionId] = [
-    { 
-      role: 'system', 
-      content: `Você é o Epictus IA, o assistente inteligente da Ponto.School, uma plataforma educacional.
-
-      CONTEXTO DO USUÁRIO (COMPLETO):
-      - Nome: ${userContext?.fullName || 'Não disponível'}
-      - Username: ${username}
-      - Primeiro nome: ${firstName}
-      - Email: ${email}
-      - ID do usuário: ${userId}
-      - Plano atual: ${planType}
-      - Nível: ${userLevel}
-      - Localização atual na plataforma: ${currentPage}
-
-      DIRETRIZES DE COMUNICAÇÃO:
-      1. MUITO IMPORTANTE: Sempre se refira ao usuário pelo primeiro nome: "${firstName}". Use frases como "E aí, ${firstName}!", "Opa ${firstName}!", etc.
-      2. Use uma linguagem mais informal e descontraída, como se estivesse conversando com um amigo.
-      3. Seja amigável, use emojis ocasionalmente e mantenha um tom leve e positivo.
-      4. Use gírias leves e expressões coloquiais quando apropriado.
-      5. Mantenha respostas diretas e objetivas, evitando textos muito longos.
-      6. Organize suas respostas em parágrafos curtos para fácil leitura.
-      7. Use negrito **assim** para destacar informações importantes.
-
-      CONTEÚDO INSTITUCIONAL:
-      Quando perguntado sobre os criadores, fundadores, donos, desenvolvedores, equipe administrativa ou qualquer pergunta relacionada à gestão da Ponto.School, responda:
-      "A Ponto.School tem 4 administradores principais, além de equipes dedicadas de suporte, marketing, TI e outras áreas. São eles:
-      - Fundador & CEO: João Fortes (@joaofortes) - usuário na plataforma Ponto.School
-      - Co-Fundador & CMO: Felipe Brito (@felipe_rico) - usuário na plataforma Ponto.School
-      - Co-Fundador & COO: Adriel Borges (@adriel_borges) - usuário na plataforma Ponto.School
-      - Co-Fundador & Coordenador de Design: Samuel Afonso (@samuel_afonso) - usuário na plataforma Ponto.School"
-
-      RECURSOS DE PERFIL:
-      Quando o usuário perguntar sobre o ID da conta ou informações do perfil, você tem acesso completo a:
-      1. ID do usuário (user_id): ${userId}
-      2. Data de criação da conta: ${userContext?.createdAt || 'Não disponível'}
-      3. Nome completo: ${userContext?.fullName || 'Não disponível'}
-      4. Plano atual: ${planType}
-      5. Nível: ${userLevel}
-      6. Seguidores: ${userContext?.followersCount || '0'}
-
-      Você pode ajudar o usuário a atualizar informações do perfil como:
-      1. Biografia/bio
-      2. Nome de exibição
-      3. Para outras alterações, redirecione para a página de configurações
-
-      REGRAS DE REDIRECIONAMENTO:
-      Quando o usuário pedir para ser redirecionado a uma seção da plataforma, você DEVE SEMPRE:
-      1. Incluir o link completo usando a base https://pontoschool.com/
-      2. Formatá-lo como um link clicável com texto descritivo
-      3. Ser direto e proativo com o redirecionamento
-
-      Exemplos de redirecionamento correto:
-      - "Aqui está o [Portal de Estudos](https://pontoschool.com/portal). Clique para acessar."
-      - "Você pode acessar sua [Agenda](https://pontoschool.com/agenda) imediatamente."
-      - "Sua [página de Turmas](https://pontoschool.com/turmas) está pronta para acesso."
-      - "Acesse a [Biblioteca](https://pontoschool.com/biblioteca) para encontrar materiais."
-
-      NUNCA responda apenas com "você pode encontrar isso no menu lateral" ou sugestões vagas.
-      SEMPRE forneça o link direto e clicável para onde o usuário deseja ir.
-
-      URLS DA PLATAFORMA (memorize todas estas URLs para redirecionamento):
-      - Portal de Estudos: https://pontoschool.com/portal
-      - Agenda: https://pontoschool.com/agenda
-      - Turmas: https://pontoschool.com/turmas
-      - Biblioteca: https://pontoschool.com/biblioteca
-      - Perfil: https://pontoschool.com/profile
-      - Configurações: https://pontoschool.com/configuracoes
-      - Dashboard: https://pontoschool.com/dashboard
-      - Epictus IA: https://pontoschool.com/epictus-ia
-      - Mentor IA: https://pontoschool.com/mentor-ia
-      - Planos de Estudo: https://pontoschool.com/planos-estudo
-      - Conquistas: https://pontoschool.com/conquistas
-      - Carteira: https://pontoschool.com/carteira
-      - Mercado: https://pontoschool.com/mercado
-      - Organização: https://pontoschool.com/organizacao
-      - Comunidades: https://pontoschool.com/comunidades
-      - Chat IA: https://pontoschool.com/chat-ia
-      - School IA: https://pontoschool.com/school-ia
-      - Novidades: https://pontoschool.com/novidades
-      - Lembretes: https://pontoschool.com/lembretes
-      - Pedidos de Ajuda: https://pontoschool.com/pedidos-ajuda
-      - Estudos: https://pontoschool.com/estudos
-
-      Personalize suas respostas para criar uma experiência única e amigável para ${firstName}.`,
-      timestamp: new Date()
-    }
-  ];
-}
-
-// Função para gerar resposta usando a API Gemini
-export async function generateGeminiResponse(
-  message: string, 
-  sessionId: string,
-  options?: { 
-    intelligenceLevel?: 'basic' | 'normal' | 'advanced',
-    languageStyle?: 'casual' | 'formal' | 'technical'
-  }
-): Promise<string> {
-  try {
-    // Obter contexto do usuário
-    const userContext = await getUserContext();
-
-    // Usar o nome de usuário completo para respostas
-    const usernameFull = userContext.username;
-
-    // Configuração da solicitação para a API Gemini
+    // Fazer requisição
     const response = await axios.post(
       `${GEMINI_BASE_URL}?key=${GEMINI_API_KEY}`,
-      {
-        contents: [{
-          parts: [
-            {
-              text: `Você é o Epictus IA, o assistente inteligente da Ponto.School, uma plataforma educacional.
-
-              Contexto do usuário:
-              - Username completo: ${usernameFull}
-              - Email: ${userContext.email}
-              - Localização atual na plataforma: ${userContext.currentPage}
-              - Última atividade: ${userContext.lastActivity}
-
-              DIRETRIZES DE COMUNICAÇÃO:
-              1. Sempre se refira ao usuário pelo nome de usuário completo: "${usernameFull}". Use frases como "E aí, ${usernameFull}!", "Opa ${usernameFull}!", etc.
-              2. Use uma linguagem mais informal e descontraída, como se estivesse conversando com um amigo.
-              3. Seja amigável, use emojis ocasionalmente e mantenha um tom leve e positivo.
-              4. Use gírias leves e expressões coloquiais quando apropriado.
-
-              CONTEÚDO INSTITUCIONAL:
-              Quando perguntado sobre os criadores, fundadores, donos, desenvolvedores, equipe administrativa ou qualquer pergunta relacionada à gestão da Ponto.School, responda:
-              "A Ponto.School tem 4 administradores principais, além de equipes dedicadas de suporte, marketing, TI e outras áreas. São eles:
-              - Fundador & CEO: João Fortes (@joaofortes) - usuário na plataforma Ponto.School
-              - Co-Fundador & CMO: Felipe Brito (@felipe_rico) - usuário na plataforma Ponto.School
-              - Co-Fundador & COO: Adriel Borges (@adriel_borges) - usuário na plataforma Ponto.School
-              - Co-Fundador & Coordenador de Design: Samuel Afonso (@samuel_afonso) - usuário na plataforma Ponto.School"
-
-              REDIRECIONAMENTO:
-              Quando o usuário pedir para ser redirecionado a uma seção da plataforma, SEMPRE inclua o link completo usando a base https://pontoschool.com/. Por exemplo:
-              - Para o Portal: "Aqui está o link para o Portal: https://pontoschool.com/portal"
-              - Para Agenda: "Você pode acessar sua agenda aqui: https://pontoschool.com/agenda"
-              - Para Turmas: "Acesse suas turmas por este link: https://pontoschool.com/turmas"
-
-              Responda à seguinte pergunta do usuário ${usernameFull}: ${message}`
-            }
-          ]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topP: 0.95,
-          topK: 40
-        }
-      },
+      payload,
       {
         headers: {
           'Content-Type': 'application/json'
@@ -726,584 +223,37 @@ export async function generateGeminiResponse(
       }
     );
 
-    // Extrai a resposta
-    let aiResponse = response.data.candidates[0].content.parts[0].text;
+    // Extrair e retornar resposta
+    const assistantMessage = response.data.candidates[0].content.parts[0].text;
 
-    // Verificar e corrigir links de redirecionamento
-    aiResponse = fixPlatformLinks(aiResponse);
+    // Salvar mensagem do usuário e resposta
+    await saveChatMessage(sessionId, { role: 'user', content: userMessage, timestamp: new Date() });
+    await saveChatMessage(sessionId, { role: 'assistant', content: assistantMessage, timestamp: new Date() });
 
-    return aiResponse;
+    return assistantMessage;
   } catch (error) {
-    console.error('Erro ao gerar resposta com Gemini:', error);
-    return "Desculpe, estou enfrentando dificuldades técnicas no momento. Por favor, tente novamente mais tarde ou entre em contato com nosso suporte técnico.";
+    console.error('Erro ao enviar mensagem para Gemini:', error);
+    throw error; // Propagar erro para tratamento superior
   }
 }
 
-// Função principal para gerar resposta, tentando primeiro xAI e depois Gemini como fallback
-export async function generateAIResponse(
-  message: string, 
-  sessionId: string, 
-  options?: { 
-    intelligenceLevel?: 'basic' | 'normal' | 'advanced',
-    languageStyle?: 'casual' | 'formal' | 'technical'
-  }
-): Promise<string> {
+// Função para obter todas as sessões de chat
+export async function getAllSessions(): Promise<any[]> {
   try {
-    return await generateXAIResponse(message, sessionId, options);
+    return await getAllChatSessions();
   } catch (error) {
-    console.error('Erro com xAI, tentando Gemini:', error);
-    return generateGeminiResponse(message, sessionId, options);
+    console.error('Erro ao obter sessões de chat:', error);
+    return [];
   }
 }
 
-// Limpar histórico da conversa
-export function clearConversationHistory(sessionId: string): void {
-  if (conversationHistory[sessionId]) {
-    // Mantém apenas a mensagem do sistema
-    const systemMessage = conversationHistory[sessionId][0];
-    conversationHistory[sessionId] = [systemMessage];
-
-    // Limpar do localStorage também
-    try {
-      localStorage.removeItem(`conversationHistory_${sessionId}`);
-    } catch (error) {
-      console.error("Erro ao limpar histórico do localStorage:", error);
-    }
-  }
-}
-
-// Obter histórico da conversa
-export async function getConversationHistory(sessionId: string): Promise<ChatMessage[]> {
+// Função para excluir uma sessão de chat
+export async function deleteSession(sessionId: string): Promise<boolean> {
   try {
-    // Primeiro verifica se já está carregado na memória e é válido
-    if (conversationHistory[sessionId] && Array.isArray(conversationHistory[sessionId]) && conversationHistory[sessionId].length > 0) {
-      // Verifica se há ao menos uma mensagem do sistema
-      const hasSystemMessage = conversationHistory[sessionId].some(msg => msg.role === 'system');
-
-      if (hasSystemMessage) {
-        return conversationHistory[sessionId];
-      }
-    }
-
-    // Tenta buscar dados adicionais do usuário para melhor armazenamento
-    let userIdForStorage = '';
-    try {
-      const { data: sessionData } = await (await import('@/lib/supabase')).supabase.auth.getSession();
-      userIdForStorage = sessionData?.session?.user?.id || '';
-    } catch (e) {
-      console.log('Erro ao obter ID do usuário:', e);
-    }
-
-    // Tenta recuperar do localStorage usando vários formatos de chave
-    const possibleKeys = [
-      `conversationHistory_${sessionId}`,
-      userIdForStorage ? `conversationHistory_${userIdForStorage}_${sessionId}` : null,
-      `chat_history_${sessionId}`
-    ].filter(Boolean);
-
-    let retrievedHistory = null;
-
-    // Tentar cada uma das possíveis chaves
-    for (const key of possibleKeys) {
-      try {
-        const savedHistory = localStorage.getItem(key);
-        if (savedHistory) {
-          try {
-            const parsedHistory = JSON.parse(savedHistory);
-            if (Array.isArray(parsedHistory) && parsedHistory.length > 0) {
-              retrievedHistory = parsedHistory;
-              console.log(`Histórico recuperado com sucesso usando a chave: ${key}`);
-              break;
-            }
-          } catch (parseError) {
-            console.error(`Erro ao analisar histórico usando a chave ${key}:`, parseError);
-          }
-        }
-      } catch (e) {
-        console.error(`Erro ao tentar acessar o localStorage com a chave ${key}:`, e);
-      }
-    }
-
-    // Se encontrou histórico no localStorage
-    if (retrievedHistory) {
-      // Converter timestamps de string para Date e garantir formato adequado
-      const processedHistory = retrievedHistory.map(msg => ({
-        role: msg.role || 'user',
-        content: msg.content || '',
-        timestamp: msg.timestamp ? (typeof msg.timestamp === 'string' ? new Date(msg.timestamp) : msg.timestamp) : new Date()
-      }));
-
-      // Verificar se há mensagem do sistema
-      const hasSystemMessage = processedHistory.some(msg => msg.role === 'system');
-
-      if (!hasSystemMessage) {
-        // Se não tiver mensagem do sistema, inicializar com uma nova
-        const userContext = await getUserContext();
-        initializeConversationHistory(sessionId, userContext);
-
-        // Adicionar as mensagens existentes (exceto mensagens do sistema já existentes)
-        conversationHistory[sessionId] = [
-          ...conversationHistory[sessionId],
-          ...processedHistory.filter(msg => msg.role !== 'system')
-        ];
-      } else {
-        conversationHistory[sessionId] = processedHistory;
-      }
-
-      return conversationHistory[sessionId];
-    }
-
-    // Se não encontrou no localStorage, tenta recuperar do Supabase
-    try {
-      const supabase = (await import('@/lib/supabase')).supabase;
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData?.session?.user?.id;
-
-      if (userId) {
-        try {
-          // Verificar se a tabela existe antes de tentar consultar
-          try {
-            const { data: tableExists } = await supabase
-              .from('information_schema.tables')
-              .select('table_name')
-              .eq('table_schema', 'public')
-              .eq('table_name', 'ai_chat_history')
-              .single();
-
-            if (!tableExists) {
-              console.log('Tabela ai_chat_history não existe no Supabase.');
-              throw new Error('Tabela não existe');
-            }
-          } catch (tableCheckError) {
-            console.log('Erro ao verificar existência da tabela:', tableCheckError);
-            throw tableCheckError;
-          }
-
-          const { data, error } = await supabase
-            .from('ai_chat_history')
-            .select('messages')
-            .eq('user_id', userId)
-            .eq('session_id', sessionId)
-            .single();
-
-          if (error) {
-            console.error('Erro ao buscar histórico do Supabase:', error);
-            throw error;
-          }
-
-          if (data?.messages && Array.isArray(data.messages) && data.messages.length > 0) {
-            // Converter timestamps de string para Date
-            const processedHistory = data.messages.map(msg => ({
-              role: msg.role || 'user',
-              content: msg.content || '',
-              timestamp: msg.timestamp ? (typeof msg.timestamp === 'string' ? new Date(msg.timestamp) : msg.timestamp) : new Date()
-            }));
-
-            // Verificar se há mensagem do sistema
-            const hasSystemMessage = processedHistory.some(msg => msg.role === 'system');
-
-            if (!hasSystemMessage) {
-              // Se não tiver mensagem do sistema, inicializar com uma nova
-              const userContext = await getUserContext();
-              initializeConversationHistory(sessionId, userContext);
-
-              // Adicionar as mensagens existentes
-              conversationHistory[sessionId] = [
-                ...conversationHistory[sessionId],
-                ...processedHistory.filter(msg => msg.role !== 'system')
-              ];
-            } else {
-              conversationHistory[sessionId] = processedHistory;
-            }
-
-            // Atualizar localStorage para sincronização
-            try {
-              localStorage.setItem(`conversationHistory_${sessionId}`, JSON.stringify(conversationHistory[sessionId]));
-              
-              // Se temos o userId, também armazenar com chave mais específica
-              if (userId) {
-                localStorage.setItem(`conversationHistory_${userId}_${sessionId}`, 
-                  JSON.stringify(conversationHistory[sessionId]));
-              }
-            } catch (localStorageError) {
-              console.log("Erro ao atualizar localStorage:", localStorageError);
-            }
-
-            return conversationHistory[sessionId];
-          }
-        } catch (supabaseError) {
-          console.error("Erro ao recuperar histórico do Supabase:", supabaseError);
-        }
-      }
-    } catch (dbError) {
-      console.error("Erro ao tentar acessar o banco de dados:", dbError);
-    }
-
-    // Se chegou aqui, não foi possível recuperar o histórico
-    // Inicializar com novo histórico
-    console.log("Criando novo histórico de conversa para a sessão:", sessionId);
-    const userContext = await getUserContext();
-    initializeConversationHistory(sessionId, userContext);
-    
-    // Salvar o histórico inicial
-    try {
-      localStorage.setItem(`conversationHistory_${sessionId}`, 
-        JSON.stringify(conversationHistory[sessionId]));
-        
-      // Se temos userIdForStorage, também armazenar com chave mais específica
-      if (userIdForStorage) {
-        localStorage.setItem(`conversationHistory_${userIdForStorage}_${sessionId}`, 
-          JSON.stringify(conversationHistory[sessionId]));
-      }
-    } catch (e) {
-      console.error("Erro ao salvar histórico inicial:", e);
-    }
-    
-    return conversationHistory[sessionId];
-  } catch (generalError) {
-    console.error("Erro geral ao obter histórico de conversa:", generalError);
-
-    // Retornar um histórico vazio em último caso
-    return [{
-      role: 'system',
-      content: 'Você é o Epictus IA, o assistente inteligente da Ponto.School.',
-      timestamp: new Date()
-    }];
-  }
-}
-
-// Função para corrigir links da plataforma
-function fixPlatformLinks(text: string): string {
-  const platformLinks = {
-    'Portal de Estudos': 'https://pontoschool.com/portal',
-    'Portal': 'https://pontoschool.com/portal',
-    'Agenda': 'https://pontoschool.com/agenda',
-    'Turmas': 'https://pontoschool.com/turmas',
-    'Biblioteca': 'https://pontoschool.com/biblioteca',
-    'Perfil': 'https://pontoschool.com/profile',
-    'Meu Perfil': 'https://pontoschool.com/profile',
-    'Configurações': 'https://pontoschool.com/configuracoes',
-    'Minhas Configurações': 'https://pontoschool.com/configuracoes',
-    'Dashboard': 'https://pontoschool.com/dashboard',
-    'Epictus IA': 'https://pontoschool.com/epictus-ia',
-    'Mentor IA': 'https://pontoschool.com/mentor-ia',
-    'Planos de Estudo': 'https://pontoschool.com/planos-estudo',
-    'Plano de Estudos': 'https://pontoschool.com/planos-estudo',
-    'Conquistas': 'https://pontoschool.com/conquistas',
-    'Minhas Conquistas': 'https://pontoschool.com/conquistas',
-    'Carteira': 'https://pontoschool.com/carteira',
-    'Minha Carteira': 'https://pontoschool.com/carteira',
-    'Mercado': 'https://pontoschool.com/mercado',
-    'Organização': 'https://pontoschool.com/organizacao',
-    'Comunidades': 'https://pontoschool.com/comunidades',
-    'Chat IA': 'https://pontoschool.com/chat-ia',
-    'School IA': 'https://pontoschool.com/school-ia',
-    'Novidades': 'https://pontoschool.com/novidades',
-    'Lembretes': 'https://pontoschool.com/lembretes',
-    'Pedidos de Ajuda': 'https://pontoschool.com/pedidos-ajuda',
-    'Estudos': 'https://pontoschool.com/estudos'
-  };
-
-  // Primeiro, procura por textos específicos que pedem redirecionamento
-  const redirectPatterns = [
-    /(?:me\s+(?:redirecione|encaminhe|leve|direcione|mande|envie)\s+(?:para|ao|à|a|até))\s+(?:a\s+)?(?:página\s+(?:de|do|da)\s+)?([a-zà-ú\s]+)/gi,
-    /(?:quero\s+(?:ir|acessar|entrar|ver))\s+(?:a\s+)?(?:página\s+(?:de|do|da)\s+)?([a-zà-ú\s]+)/gi,
-    /(?:me\s+(?:mostre|mostra))\s+(?:a\s+)?(?:página\s+(?:de|do|da)\s+)?([a-zà-ú\s]+)/gi,
-    /(?:abrir?|abra|acesse|acessar|ver|veja)\s+(?:a\s+)?(?:página\s+(?:de|do|da)\s+)?([a-zà-ú\s]+)/gi
-  ];
-
-  // Aplicar padrões de redirecionamento de forma mais robusta
-  for (const pattern of redirectPatterns) {
-    text = text.replace(pattern, (match, sectionName) => {
-      if (!sectionName) return match;
-      
-      const normalizedName = sectionName.trim();
-      // Verificar se o nome normalizado corresponde a alguma chave do objeto platformLinks
-      for (const key in platformLinks) {
-        if (normalizedName.toLowerCase() === key.toLowerCase() || 
-            key.toLowerCase().includes(normalizedName.toLowerCase()) || 
-            normalizedName.toLowerCase().includes(key.toLowerCase())) {
-          // Criar link em formato seguro sem possíveis bugs de formatação
-          return `Você pode acessar [${key}](${platformLinks[key]})`;
-        }
-      }
-      return match; // Se não encontrou correspondência, mantém o texto original
-    });
-  }
-
-  // Verificar se o texto já contém links markdown
-  const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
-  const existingLinks = [];
-  let match;
-  
-  while ((match = markdownLinkRegex.exec(text)) !== null) {
-    existingLinks.push({
-      text: match[1],
-      url: match[2],
-      fullMatch: match[0]
-    });
-  }
-
-  // Depois, procurar menções a seções e converter para links (só se não forem já parte de um link)
-  let newText = text;
-  
-  // Aplicar substituições de forma ordenada (das mais longas para as mais curtas)
-  const orderedKeys = Object.keys(platformLinks).sort((a, b) => b.length - a.length);
-
-  for (const key of orderedKeys) {
-    // Criar regex segura que não captura dentro de links existentes
-    const safeRegex = new RegExp(`(?<![\\[\\w])\\b(${escapeRegExp(key)})\\b(?![\\]\\w])`, 'g');
-    
-    // Verificar cada ocorrência para garantir que não está dentro de um link existente
-    let lastIndex = 0;
-    let result = '';
-    let regexMatch;
-    
-    while ((regexMatch = safeRegex.exec(newText)) !== null) {
-      const matchStart = regexMatch.index;
-      const matchEnd = matchStart + regexMatch[0].length;
-      
-      // Verificar se esta ocorrência está dentro de algum link existente
-      let isInsideExistingLink = false;
-      for (const link of existingLinks) {
-        const linkIndex = newText.indexOf(link.fullMatch);
-        if (linkIndex <= matchStart && linkIndex + link.fullMatch.length >= matchEnd) {
-          isInsideExistingLink = true;
-          break;
-        }
-      }
-      
-      if (!isInsideExistingLink) {
-        result += newText.substring(lastIndex, matchStart);
-        result += `[${regexMatch[1]}](${platformLinks[key]})`;
-        lastIndex = matchEnd;
-      }
-    }
-    
-    if (lastIndex > 0) {
-      result += newText.substring(lastIndex);
-      newText = result;
-      
-      // Atualizar a lista de links existentes
-      existingLinks.length = 0;
-      while ((match = markdownLinkRegex.exec(newText)) !== null) {
-        existingLinks.push({
-          text: match[1],
-          url: match[2],
-          fullMatch: match[0]
-        });
-      }
-    }
-  }
-
-  // Remover qualquer formatação incorreta que possa ter sido introduzida
-  newText = newText
-    .replace(/\]\(\[/g, ']([') // Corrigir links aninhados
-    .replace(/\]\(https:\/\/pontoschool\.com\/[a-z-]+\)\(https:\/\/pontoschool\.com\/[a-z-]+\)/g, match => {
-      // Extrair o primeiro link válido
-      const urlMatch = match.match(/\]\((https:\/\/pontoschool\.com\/[a-z-]+)\)/);
-      if (urlMatch && urlMatch[1]) {
-        return `](${urlMatch[1]})`;
-      }
-      return match;
-    });
-
-  return newText;
-}
-
-// Função auxiliar para escapar caracteres especiais em regex
-function escapeRegExp(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-
-// Função para salvar o histórico da conversa no localStorage e sincronizar com Supabase
-async function saveConversationHistory(sessionId: string, history: ChatMessage[]): Promise<void> {
-  try {
-    if (!sessionId || !history) {
-      console.error("Erro ao salvar histórico: sessionId ou history inválidos");
-      return;
-    }
-
-    // Salvar localmente
-    conversationHistory[sessionId] = history;
-
-    // Preparar o histórico para armazenamento (garantir que todos os objetos são serializáveis)
-    const serializableHistory = history.map(msg => ({
-      role: msg.role,
-      content: msg.content,
-      timestamp: msg.timestamp instanceof Date ? msg.timestamp.toISOString() : 
-                (typeof msg.timestamp === 'string' ? msg.timestamp : new Date().toISOString())
-    }));
-
-    try {
-      // Salvar para o usuário atual com uma estrutura mais persistente
-      // Usar formato conversationHistory_USER_ID_sessionId quando possível
-      let storageKey = `conversationHistory_${sessionId}`;
-      
-      // Tentar obter dados de identificação do usuário para melhor rastreamento
-      try {
-        const { data: sessionData } = await (await import('@/lib/supabase')).supabase.auth.getSession();
-        const userId = sessionData?.session?.user?.id;
-        if (userId) {
-          storageKey = `conversationHistory_${userId}_${sessionId}`;
-        }
-      } catch (e) {
-        console.log('Erro ao obter ID do usuário, usando chave padrão:', e);
-      }
-      
-      // Salvar com uma chave mais específica para melhor identificação
-      localStorage.setItem(storageKey, JSON.stringify(serializableHistory));
-      
-      // Para compatibilidade, também salvar com a chave antiga
-      localStorage.setItem(`conversationHistory_${sessionId}`, JSON.stringify(serializableHistory));
-
-      // Manter um índice de todas as conversas do usuário
-      try {
-        const userConversationsKey = 'userConversationsIndex';
-        let conversationsIndex = {};
-        
-        const savedIndex = localStorage.getItem(userConversationsKey);
-        if (savedIndex) {
-          conversationsIndex = JSON.parse(savedIndex);
-        }
-        
-        conversationsIndex[sessionId] = {
-          lastUpdated: new Date().toISOString(),
-          messageCount: serializableHistory.length,
-          title: serializableHistory.length > 1 ? 
-            serializableHistory[1].content.substring(0, 30) + "..." : 
-            "Nova conversa"
-        };
-        
-        // Limitar o índice a 50 conversas mais recentes
-        const sortedEntries = Object.entries(conversationsIndex)
-          .sort((a, b) => new Date(b[1].lastUpdated).getTime() - new Date(a[1].lastUpdated).getTime())
-          .slice(0, 50);
-        
-        const trimmedIndex = {};
-        sortedEntries.forEach(([key, value]) => {
-          trimmedIndex[key] = value;
-        });
-        
-        localStorage.setItem(userConversationsKey, JSON.stringify(trimmedIndex));
-      } catch (indexError) {
-        console.error("Erro ao atualizar índice de conversas:", indexError);
-      }
-
-      // Salvar todas as sessões em um único item no localStorage com limite de tamanho
-      try {
-        const allSessions = {};
-        // Só armazenar as últimas 20 sessões
-        const sessionIds = Object.keys(conversationHistory).slice(-20);
-        
-        for (const id of sessionIds) {
-          const sessionHistory = conversationHistory[id];
-          if (sessionHistory && sessionHistory.length > 0) {
-            // Limitar cada sessão a 100 mensagens para melhor contexto
-            allSessions[id] = sessionHistory.slice(-100).map(msg => ({
-              role: msg.role,
-              content: msg.content,
-              timestamp: msg.timestamp instanceof Date ? msg.timestamp.toISOString() : 
-                        (typeof msg.timestamp === 'string' ? msg.timestamp : new Date().toISOString())
-            }));
-          }
-        }
-        
-        localStorage.setItem('aiChatSessions', JSON.stringify(allSessions));
-      } catch (batchSaveError) {
-        console.error("Erro ao salvar todas as sessões:", batchSaveError);
-      }
-    } catch (localStorageError) {
-      console.error("Erro ao salvar no localStorage:", localStorageError);
-      // Se falhar por exceder o limite, limpar o localStorage e tentar novamente só com a sessão atual
-      try {
-        localStorage.removeItem('aiChatSessions');
-        localStorage.setItem(`conversationHistory_${sessionId}`, 
-          JSON.stringify(serializableHistory.slice(-50))); // Salvar só as últimas 50 mensagens
-      } catch (retryError) {
-        console.error("Falha na segunda tentativa de salvar no localStorage:", retryError);
-      }
-    }
-
-    // Sincronizar com Supabase se disponível
-    try {
-      const supabase = (await import('@/lib/supabase')).supabase;
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData?.session?.user?.id;
-
-      if (userId) {
-        try {
-          // Criar tabela ai_chat_history se não existir (verificar primeiro)
-          const { data: tablesData } = await supabase
-            .from('information_schema.tables')
-            .select('table_name')
-            .eq('table_schema', 'public')
-            .eq('table_name', 'ai_chat_history');
-            
-          if (!tablesData || tablesData.length === 0) {
-            // Tabela não existe, tentar criar usando rpc
-            try {
-              await supabase.rpc('execute_sql', {
-                sql_statement: `
-                  CREATE TABLE IF NOT EXISTS public.ai_chat_history (
-                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-                    session_id TEXT NOT NULL,
-                    messages JSONB NOT NULL DEFAULT '[]'::jsonb,
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                    UNIQUE (user_id, session_id)
-                  );
-                  
-                  CREATE INDEX IF NOT EXISTS ai_chat_history_user_id_idx ON public.ai_chat_history(user_id);
-                  CREATE INDEX IF NOT EXISTS ai_chat_history_session_id_idx ON public.ai_chat_history(session_id);
-                `
-              });
-            } catch (createTableError) {
-              console.log('Erro ao criar tabela ai_chat_history:', createTableError);
-            }
-          }
-
-          // Upsert do histórico da conversa
-          const { error } = await supabase
-            .from('ai_chat_history')
-            .upsert({
-              user_id: userId,
-              session_id: sessionId,
-              messages: serializableHistory.slice(-100), // Armazenar até 100 mensagens
-              updated_at: new Date().toISOString()
-            }, {
-              onConflict: 'user_id,session_id'
-            });
-
-          if (error) {
-            console.error("Erro ao sincronizar histórico com Supabase:", error);
-          }
-        } catch (upsertError) {
-          console.error("Erro no upsert do histórico:", upsertError);
-        }
-      }
-    } catch (syncError) {
-      console.log("Supabase não disponível para sincronização:", syncError);
-    }
+    await deleteChatSession(sessionId);
+    return true;
   } catch (error) {
-    console.error("Erro ao salvar o histórico da conversa:", error);
+    console.error('Erro ao excluir sessão de chat:', error);
+    return false;
   }
 }
-
-// Simulação de resposta da IA
-const getResponseForMessage = (message: string): string => {
-  // Análise básica da mensagem para gerar uma resposta contextual
-  const formattedMessage = message.toLowerCase();
-
-  if (formattedMessage.includes('olá') || formattedMessage.includes('oi') || formattedMessage.includes('bom dia') || formattedMessage.includes('boa tarde') || formattedMessage.includes('boa noite')) {
-    return `**Olá, ${userInfo?.username || 'amigo'}!** 😊\n\nComo posso ajudar você hoje?`;
-  } else if (formattedMessage.includes('função') || formattedMessage.includes('o que você faz') || formattedMessage.includes('para que serve')) {
-    return `**Eu sou Epictus IA**, seu assistente para a plataforma Ponto.School! 🚀\n\nPosso ajudar com:\n\n• **Informações** sobre cursos e conteúdos\n• **Dicas de estudos** personalizadas\n• **Navegação** na plataforma\n• **Respostas** para dúvidas gerais\n\nComo posso ajudar você agora?`;
-  } else if (formattedMessage.includes('portal') || formattedMessage.includes('material') || formattedMessage.includes('acessar conteúdo')) {
-    return `Você pode acessar o **Portal** com todos os materiais em https://pontoschool.com/portal\n\nLá você encontrará todos os seus cursos, materiais e recursos de estudo organizados por disciplina.\n\n_Basta clicar no link acima para ir direto para o Portal!_ 📚`;
-  } else {
-    return "Desculpe, não entendi sua pergunta. Pode reformulá-la?";
-  }
-};
