@@ -46,7 +46,8 @@ import {
   Square,
   Download,
   File,
-  Music
+  Music,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { generateAIResponse } from "@/services/aiChatService";
@@ -66,6 +67,8 @@ interface ChatMessage {
   sender: 'user' | 'assistant';
   timestamp: Date;
   files?: MessageFile[];
+  feedback?: 'positive' | 'negative';
+  needsImprovement?: boolean;
 }
 
 interface Ticket {
@@ -351,6 +354,11 @@ const FloatingChatSupport: React.FC = () => {
   // Estado para abrir/fechar o menu de anexos
   const [showAttachmentOptions, setShowAttachmentOptions] = useState(false);
 
+  // Estado para gerenciar feedback das mensagens
+  const [messageToImprove, setMessageToImprove] = useState<number | null>(null);
+  const [improvementFeedback, setImprovementFeedback] = useState('');
+  const [isReformulating, setIsReformulating] = useState(false);
+
 
   // Scroll to bottom of messages
   useEffect(() => {
@@ -385,10 +393,10 @@ const FloatingChatSupport: React.FC = () => {
       }
       return userName || 'Usuário';
     };
-    
+
     const firstName = getFirstName();
     setUserName(firstName);
-    
+
     // Gerar uma ID de sessão baseada no usuário atual ou criar uma nova
     const newSessionId = userName || 'anonymous-' + Date.now().toString();
     setSessionId(newSessionId);
@@ -436,14 +444,14 @@ const FloatingChatSupport: React.FC = () => {
   // Função para melhorar o prompt com IA
   const improvePrompt = async () => {
     if (!inputMessage.trim()) return;
-    
+
     setPromptImprovementLoading(true);
     setIsImprovingPrompt(true);
-    
+
     try {
       // Importando o serviço dinamicamente
       const aiService = await import('@/services/aiChatService');
-      
+
       // Chamar a API para melhorar o prompt
       const improvedPromptText = await aiService.generateAIResponse(
         `Melhore o seguinte prompt para obter uma resposta mais detalhada e completa. NÃO responda a pergunta, apenas melhore o prompt para torná-lo mais específico e detalhado: "${inputMessage}"`,
@@ -453,13 +461,13 @@ const FloatingChatSupport: React.FC = () => {
           languageStyle: 'formal'
         }
       );
-      
+
       // Limpar qualquer formatação que possa ter vindo da resposta
       const cleanedImprovedPrompt = improvedPromptText
         .replace(/^(Prompt melhorado:|Aqui está uma versão melhorada:|Versão melhorada:)/i, '')
         .replace(/^["']|["']$/g, '')
         .trim();
-      
+
       setImprovedPrompt(cleanedImprovedPrompt);
     } catch (error) {
       console.error('Erro ao melhorar o prompt:', error);
@@ -585,28 +593,28 @@ const FloatingChatSupport: React.FC = () => {
       e.target.value = '';
     }
   };
-  
+
   // Função para abrir o seletor de arquivos
   const openFileSelector = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
-  
+
   // Função para lidar com a seleção de arquivos
   const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
-    
+
     // Adicionar os arquivos selecionados à lista
     const newFiles = Array.from(e.target.files);
     setSelectedFiles(prev => [...prev, ...newFiles]);
-    
+
     // Limpar o input para permitir selecionar os mesmos arquivos novamente
     if (e.target) {
       e.target.value = '';
     }
   };
-  
+
   // Função para remover um arquivo da lista
   const removeFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
@@ -865,7 +873,7 @@ const FloatingChatSupport: React.FC = () => {
                   // Usar async/await com setTimeout para garantir que a mensagem seja atualizada antes de enviar
                   setTimeout(async () => {
                     await handleSendMessage();
-                  }, 100);
+                  },100);
                 }}
               >
                 <div className="flex items-center gap-2">
@@ -1160,7 +1168,9 @@ const FloatingChatSupport: React.FC = () => {
                 className={`max-w-[75%] rounded-lg px-4 py-3 shadow-md ${
                   message.sender === "user"
                     ? "bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-tr-none"
-                    : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200"
+                    : message.needsImprovement 
+                      ? "bg-gray-100/80 dark:bg-gray-800/80 text-gray-500 dark:text-gray-400 line-through" 
+                      : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200"
                 }`}
               >
                 <div 
@@ -1207,13 +1217,35 @@ const FloatingChatSupport: React.FC = () => {
                     ))}
                   </div>
                 )}
-                <div className="text-xs opacity-80 mt-1.5 text-right flex items-center justify-end gap-1">
-                  <span className={message.sender === "user" ? "bg-white/20 px-1.5 py-0.5 rounded-sm" : ""}>
-                    {message.timestamp.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
+                <div className="flex items-center justify-between mt-2">
+                  <div className="text-xs opacity-80 flex items-center gap-1">
+                    <span className={message.sender === "user" ? "bg-white/20 px-1.5 py-0.5 rounded-sm" : ""}>
+                      {message.timestamp.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
+
+                  {/* Feedback buttons for AI messages */}
+                  {message.sender === "assistant" && !message.needsImprovement && (
+                    <div className="flex items-center gap-2 opacity-70 hover:opacity-100 transition-opacity">
+                      <button 
+                        onClick={() => handleMessageFeedback(message.id, 'positive')}
+                        className={`p-1 rounded-full transition-colors ${message.feedback === 'positive' ? 'bg-green-100 dark:bg-green-900/30' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+                        title="Avaliar como boa resposta"
+                      >
+                        <ThumbsUp className={`h-3.5 w-3.5 ${message.feedback === 'positive' ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`} />
+                      </button>
+                      <button 
+                        onClick={() => handleMessageFeedback(message.id, 'negative')}
+                        className={`p-1 rounded-full transition-colors ${message.feedback === 'negative' ? 'bg-red-100 dark:bg-red-900/30' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+                        title="Avaliar como resposta que precisa melhorar"
+                      >
+                        <ThumbsDown className={`h-3.5 w-3.5 ${message.feedback === 'negative' ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`} />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
               {message.sender === "user" && (
@@ -1392,7 +1424,7 @@ const FloatingChatSupport: React.FC = () => {
                 </Button>
               </div>
             </div>
-            
+
             {promptImprovementLoading ? (
               <div className="flex items-center justify-center py-4">
                 <div className="flex items-center space-x-2">
@@ -1486,7 +1518,7 @@ const FloatingChatSupport: React.FC = () => {
                     </label>
                     <input
                       type="file"
-                      id="video-upload"
+                      id="videoupload"
                       accept="video/*"
                       className="hidden"
                       onChange={handleFileUpload}
@@ -2161,7 +2193,7 @@ const FloatingChatSupport: React.FC = () => {
         .animate-bounce-subtle {
           animation: bounce-subtle 2s ease-in-out infinite;
         }
-        
+
         @keyframes fadeIn {
           from {
             opacity: 0;
@@ -2172,35 +2204,35 @@ const FloatingChatSupport: React.FC = () => {
             transform: translateY(0);
           }
         }
-        
+
         .animate-fadeIn {
           animation: fadeIn 0.3s ease-out forwards;
         }
-        
+
         .message-content strong {
           font-weight: 600;
         }
-        
+
         .message-content em {
           font-style: italic;
           opacity: 0.9;
         }
-        
+
         .message-content code {
           font-family: monospace;
           padding: 0.1rem 0.3rem;
           border-radius: 3px;
         }
-        
+
         .message-content ul, .message-content ol {
           padding-left: 1.5rem;
           margin: 0.5rem 0;
         }
-        
+
         .message-content ul li {
           list-style-type: disc;
         }
-        
+
         .message-content ol li {
           list-style-type: decimal;
         }
@@ -2235,13 +2267,13 @@ const FloatingChatSupport: React.FC = () => {
         .ScrollAreaViewport {
           scrollbar-width: thin;
           scrollbar-color: rgba(249, 115, 22, 0.6) transparent;
-        }
+                }
 
         .dark .ScrollAreaViewport {
           scrollbar-color: rgba(249, 115, 22, 0.6) transparent;
         }
 
-        /* Fix for mobile responsiveness */
+                /* Fix for mobile responsiveness */
         @media (max-width: 640px) {
           .fixed.z-40 {
             width: 90% !important;
@@ -2257,6 +2289,46 @@ const FloatingChatSupport: React.FC = () => {
       `}</style>
     </>
   );
+};
+
+const handleMessageFeedback = (messageId: number, feedback: 'positive' | 'negative') => {
+  setMessages(prevMessages => {
+    return prevMessages.map(msg => {
+      if (msg.id === messageId) {
+        return { ...msg, feedback };
+      }
+      return msg;
+    });
+  });
+};
+
+const requestReformulation = async () => {
+  setIsReformulating(true);
+  try {
+    // Implemente a lógica para reformular a resposta aqui
+    // ... (Chamada para API para reformular a resposta usando improvementFeedback) ...
+    const reformulatedResponse = await generateAIResponse(`Reformule a seguinte resposta considerando este feedback: "${improvementFeedback}". Resposta original: "${messages.find(msg => msg.id === messageToImprove)?.content || ''}"`);
+    setMessages(prevMessages => {
+      const updatedMessages = [...prevMessages];
+      const messageIndex = updatedMessages.findIndex(msg => msg.id === messageToImprove);
+      if (messageIndex !== -1) {
+        updatedMessages[messageIndex] = { ...updatedMessages[messageIndex], content: reformulatedResponse, needsImprovement: false };
+      }
+      return updatedMessages;
+    });
+    setMessageToImprove(null);
+    setImprovementFeedback('');
+  } catch (error) {
+    console.error('Erro ao reformular resposta:', error);
+    alert('Erro ao reformular resposta. Por favor, tente novamente mais tarde.');
+  } finally {
+    setIsReformulating(false);
+  }
+};
+
+const cancelReformulation = () => {
+  setMessageToImprove(null);
+  setImprovementFeedback('');
 };
 
 export default FloatingChatSupport;
