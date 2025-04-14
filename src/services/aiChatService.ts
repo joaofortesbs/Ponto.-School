@@ -1246,34 +1246,49 @@ const getResponseForMessage = (message: string): string => {
 
 // Format the response from the AI with enhanced styling
   function formatMessage(message: string): string {
+    // Preservar links markdown para restaurar após formatação
+    const markdownLinks: {[key: string]: {text: string, url: string}} = {};
+    let linkIndex = 0;
+    
+    // Salvar links em formato markdown
+    const messageWithPlaceholders = message.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
+      const placeholder = `__LINK_PLACEHOLDER_${linkIndex}__`;
+      markdownLinks[placeholder] = {text, url};
+      linkIndex++;
+      return placeholder;
+    });
+    
     // Aplicar formatação de negrito para títulos
-    message = message.replace(/\*\*(.*?)\*\*/g, '<strong class="text-[#FF6B00] font-semibold">$1</strong>');
+    let formattedMessage = messageWithPlaceholders.replace(/\*\*(.*?)\*\*/g, '<strong class="text-[#FF6B00] font-semibold">$1</strong>');
 
     // Aplicar formatação para listas
-    message = message.replace(/- (.*?)(?:\n|$)/g, '<div class="flex items-start mb-2"><span class="text-[#FF6B00] mr-2">•</span><span>$1</span></div>');
+    formattedMessage = formattedMessage.replace(/- (.*?)(?:\n|$)/g, '<div class="flex items-start mb-2"><span class="text-[#FF6B00] mr-2">•</span><span>$1</span></div>');
 
     // Formatar parágrafos importantes
-    message = message.replace(/\[IMPORTANTE\](.*?)(?:\n\n|$)/gs, '<div class="p-3 bg-[#FF6B00]/10 border-l-4 border-[#FF6B00] rounded my-3">$1</div>');
+    formattedMessage = formattedMessage.replace(/\[IMPORTANTE\](.*?)(?:\n\n|$)/gs, '<div class="p-3 bg-[#FF6B00]/10 border-l-4 border-[#FF6B00] rounded my-3">$1</div>');
 
     // Formatar dicas
-    message = message.replace(/\[DICA\](.*?)(?:\n\n|$)/gs, '<div class="p-3 bg-blue-100 dark:bg-blue-900/30 border-l-4 border-blue-500 rounded my-3">💡 $1</div>');
+    formattedMessage = formattedMessage.replace(/\[DICA\](.*?)(?:\n\n|$)/gs, '<div class="p-3 bg-blue-100 dark:bg-blue-900/30 border-l-4 border-blue-500 rounded my-3">💡 $1</div>');
 
     // Adicionar emojis no início de parágrafos específicos
-    message = message.replace(/\n(Perfil:)/g, '\n📊 $1');
-    message = message.replace(/\n(Turmas:)/g, '\n👥 $1');
-    message = message.replace(/\n(Plano:)/g, '\n✨ $1');
-    message = message.replace(/\n(Nível:)/g, '\n🏆 $1');
-    message = message.replace(/\n(Email:)/g, '\n📧 $1');
-    message = message.replace(/\n(ID:)/g, '\n🆔 $1');
-    message = message.replace(/\n(Data de criação:)/g, '\n📅 $1');
-    message = message.replace(/\n(Seguidores:)/g, '\n👥 $1');
+    formattedMessage = formattedMessage.replace(/\n(Perfil:)/g, '\n📊 $1');
+    formattedMessage = formattedMessage.replace(/\n(Turmas:)/g, '\n👥 $1');
+    formattedMessage = formattedMessage.replace(/\n(Plano:)/g, '\n✨ $1');
+    formattedMessage = formattedMessage.replace(/\n(Nível:)/g, '\n🏆 $1');
+    formattedMessage = formattedMessage.replace(/\n(Email:)/g, '\n📧 $1');
+    formattedMessage = formattedMessage.replace(/\n(ID:)/g, '\n🆔 $1');
+    formattedMessage = formattedMessage.replace(/\n(Data de criação:)/g, '\n📅 $1');
+    formattedMessage = formattedMessage.replace(/\n(Seguidores:)/g, '\n👥 $1');
+    
+    // Aplicar formatação para quebras de linha
+    formattedMessage = formattedMessage.replace(/\n/g, '<br />');
 
     // Formatar tabelas simples
-    if (message.includes('| ') && message.includes(' |')) {
+    if (formattedMessage.includes('| ') && formattedMessage.includes(' |')) {
       const tableRegex = /((?:\|.*\|[\n\r])+)/g;
-      message = message.replace(tableRegex, (match) => {
+      formattedMessage = formattedMessage.replace(tableRegex, (match) => {
         const tableHTML = '<div class="overflow-x-auto my-4"><table class="w-full border-collapse border border-[#FF6B00]/20 rounded">' +
-          match.split('\n').filter(line => line.trim().length > 0).map((row, index) => {
+          match.split('<br />').filter(line => line.trim().length > 0).map((row, index) => {
             const cells = row.split('|').filter(cell => cell.trim().length > 0);
             const isHeader = index === 0;
             const cellTag = isHeader ? 'th' : 'td';
@@ -1288,8 +1303,24 @@ const getResponseForMessage = (message: string): string => {
         return tableHTML;
       });
     }
+    
+    // Restaurar links markdown com HTML formatado
+    Object.keys(markdownLinks).forEach(placeholder => {
+      const {text, url} = markdownLinks[placeholder];
+      const linkHtml = `<a href="${url}" class="text-[#FF6B00] hover:underline font-medium" target="_blank">${text}</a>`;
+      formattedMessage = formattedMessage.replace(placeholder, linkHtml);
+    });
 
-    return message;
+    // Formatar URLs diretas que não foram capturadas como links markdown
+    formattedMessage = formattedMessage.replace(/(https?:\/\/[^\s<]+)/g, (url) => {
+      // Verificar se já não está dentro de uma tag HTML
+      if (url.includes('"') || url.includes("'") || url.includes("<") || url.includes(">")) {
+        return url;
+      }
+      return `<a href="${url}" class="text-[#FF6B00] hover:underline font-medium" target="_blank">${url}</a>`;
+    });
+
+    return formattedMessage;
   }
 
 // Função para adicionar mensagem ao histórico
