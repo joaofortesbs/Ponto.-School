@@ -1,4 +1,3 @@
-
 /* From Uiverse.io by Nawsome */ 
 .typewriter {
   --blue: #FF8736;
@@ -9,19 +8,25 @@
   --tool: #FBC56C;
   --duration: 3s;
   position: relative;
+  width: 24px;
+  height: 24px;
+  margin-right: 12px;
   -webkit-animation: bounce05 var(--duration) linear infinite;
   animation: bounce05 var(--duration) linear infinite;
 }
 
 .typewriter .slide {
-  width: 92px;
-  height: 20px;
+  width: 12px;
+  height: 24px;
   border-radius: 3px;
   margin-left: 14px;
   transform: translateX(14px);
   background: linear-gradient(var(--blue), var(--blue-dark));
   -webkit-animation: slide05 var(--duration) ease infinite;
   animation: slide05 var(--duration) ease infinite;
+  top: 0px;
+  position: absolute;
+  animation: slide 2s ease-in-out infinite alternate;
 }
 
 .typewriter .slide:before, .typewriter .slide:after,
@@ -32,10 +37,12 @@
 }
 
 .typewriter .slide:before {
-  width: 2px;
-  height: 8px;
-  top: 6px;
-  left: 100%;
+  width: 10px;
+  height: 10px;
+  top: 0;
+  left: 0;
+  border-radius: 50%;
+  animation: slideBefore 2s ease-in-out infinite alternate;
 }
 
 .typewriter .slide:after {
@@ -44,6 +51,14 @@
   height: 14px;
   width: 6px;
   border-radius: 3px;
+  width: 10px;
+  height: 10px;
+  background: #FF6B00;
+  position: absolute;
+  top: 14px;
+  left: 0;
+  border-radius: 50%;
+  animation: slideAfter 2s ease-in-out infinite alternate;
 }
 
 .typewriter .slide i {
@@ -75,6 +90,14 @@
   transform: translateY(46px);
   -webkit-animation: paper05 var(--duration) linear infinite;
   animation: paper05 var(--duration) linear infinite;
+  height: 16px;
+  width: 16px;
+  top: 4px;
+  border-radius: 3px;
+  background: #F5F5F5;
+  position: absolute;
+  animation: paper 2s ease-in-out infinite alternate;
+  transform: translateX(30px);
 }
 
 .typewriter .paper:before {
@@ -96,6 +119,15 @@
   margin-top: -10px;
   z-index: 1;
   position: relative;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  position: absolute;
+  animation: keyboard 2s ease-in-out infinite alternate;
+  box-shadow: 0 0 0 2px #EEEEEE;
+  top: 0;
+  left: 36px;
+  border-radius: 3px;
 }
 
 .typewriter .keyboard:before, .typewriter .keyboard:after {
@@ -230,6 +262,51 @@
 
   81% {
     box-shadow: 15px 0 0 var(--key), 30px 0 0 var(--key), 45px 0 0 var(--key), 60px 0 0 var(--key), 75px 0 0 var(--key), 90px 0 0 var(--key), 22px 10px 0 var(--key), 37px 12px 0 var(--key), 52px 10px 0 var(--key), 60px 10px 0 var(--key), 68px 10px 0 var(--key), 83px 10px 0 var(--key);
+  }
+}
+
+@keyframes slide {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(10px);
+  }
+}
+
+@keyframes slideBefore {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes slideAfter {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes paper {
+  0%, 100% {
+    transform: translateX(25px);
+  }
+  50% {
+    transform: translateX(35px);
+  }
+}
+
+@keyframes keyboard {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-10px);
   }
 }
 
