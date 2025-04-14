@@ -66,10 +66,6 @@ interface ChatMessage {
   sender: 'user' | 'assistant';
   timestamp: Date;
   files?: MessageFile[];
-  feedback?: 'positive' | 'negative';
-  showFeedbackOptions?: boolean;
-  feedbackText?: string;
-  isImproved?: boolean;
 }
 
 interface Ticket {
@@ -1167,28 +1163,18 @@ const FloatingChatSupport: React.FC = () => {
                     : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200"
                 }`}
               >
-                <div className="flex flex-col">
-                  {message.isImproved && (
-                    <div className="mb-2 flex items-center">
-                      <Badge className="bg-gradient-to-r from-green-500 to-green-600 text-white text-xs px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
-                        <Sparkles className="h-3.5 w-3.5" />
-                        Resposta melhorada
-                      </Badge>
-                    </div>
-                  )}
-                  <div 
-                    className="message-content whitespace-pre-wrap" 
-                    dangerouslySetInnerHTML={{ 
-                      __html: message.content
-                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                        .replace(/\_(.*?)\_/g, '<em>$1</em>')
-                        .replace(/\~\~(.*?)\~\~/g, '<del>$1</del>')
-                        .replace(/\`(.*?)\`/g, '<code class="bg-black/10 dark:bg-white/10 rounded px-1">$1</code>')
-                        .replace(/\n/g, '<br />')
-                        .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" class="text-white hover:underline hover:text-white/90" target="_blank" rel="noopener noreferrer">$1</a>')
-                    }} 
-                  />
-                </div>
+                <div 
+                  className="message-content whitespace-pre-wrap" 
+                  dangerouslySetInnerHTML={{ 
+                    __html: message.content
+                      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                      .replace(/\_(.*?)\_/g, '<em>$1</em>')
+                      .replace(/\~\~(.*?)\~\~/g, '<del>$1</del>')
+                      .replace(/\`(.*?)\`/g, '<code class="bg-black/10 dark:bg-white/10 rounded px-1">$1</code>')
+                      .replace(/\n/g, '<br />')
+                      .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" class="text-white hover:underline hover:text-white/90" target="_blank" rel="noopener noreferrer">$1</a>')
+                  }} 
+                />
                 {message.files && message.files.length > 0 && (
                   <div className="mt-3 space-y-2">
                     {message.files.map((file, index) => (
@@ -1236,185 +1222,6 @@ const FloatingChatSupport: React.FC = () => {
                     <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=John" />
                     <AvatarFallback>JD</AvatarFallback>
                   </Avatar>
-                </div>
-              )}
-              {message.sender === "assistant" && (
-                <div className="flex flex-col w-full mt-2">
-                  <div className="flex items-center justify-center space-x-4 mt-1">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-8 w-8 p-0 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                      title="Gostei da resposta"
-                      onClick={() => {
-                        // Marcar feedback positivo
-                        const updatedMessages = [...messages];
-                        const messageIndex = updatedMessages.findIndex(m => m.id === message.id);
-                        if (messageIndex >= 0) {
-                          updatedMessages[messageIndex] = {
-                            ...updatedMessages[messageIndex],
-                            feedback: 'positive'
-                          };
-                          setMessages(updatedMessages);
-                        }
-                      }}
-                    >
-                      <ThumbsUp className={`h-5 w-5 ${message.feedback === 'positive' ? 'text-green-500 fill-green-500' : 'text-gray-500 hover:text-green-500'}`} />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-8 w-8 p-0 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                      title="Não gostei da resposta"
-                      onClick={() => {
-                        // Marcar feedback negativo e mostrar opções para melhoria
-                        const updatedMessages = [...messages];
-                        const messageIndex = updatedMessages.findIndex(m => m.id === message.id);
-                        if (messageIndex >= 0) {
-                          updatedMessages[messageIndex] = {
-                            ...updatedMessages[messageIndex],
-                            feedback: 'negative',
-                            showFeedbackOptions: !updatedMessages[messageIndex].showFeedbackOptions
-                          };
-                          setMessages(updatedMessages);
-                        }
-                      }}
-                    >
-                      <ThumbsDown className={`h-5 w-5 ${message.feedback === 'negative' ? 'text-red-500 fill-red-500' : 'text-gray-500 hover:text-red-500'}`} />
-                    </Button>
-                  </div>
-                </div>
-              )}
-              {message.sender === "assistant" && message.showFeedbackOptions && (
-                <div className="mt-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <h4 className="text-sm font-medium mb-2 flex items-center text-orange-600 dark:text-orange-400">
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Como podemos melhorar esta resposta?
-                  </h4>
-                  <div className="space-y-3">
-                    <div className="flex flex-col space-y-3">
-                      <Textarea 
-                        placeholder="Descreva como a resposta poderia ser melhor..."
-                        className="text-sm resize-none min-h-[80px] border-orange-200 dark:border-orange-800 focus:ring-orange-500"
-                        value={message.feedbackText || ''}
-                        onChange={(e) => {
-                          const updatedMessages = [...messages];
-                          const messageIndex = updatedMessages.findIndex(m => m.id === message.id);
-                          if (messageIndex >= 0) {
-                            updatedMessages[messageIndex] = {
-                              ...updatedMessages[messageIndex],
-                              feedbackText: e.target.value
-                            };
-                            setMessages(updatedMessages);
-                          }
-                        }}
-                      />
-                      <div className="flex justify-between pt-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-sm border-orange-200 dark:border-orange-800 text-gray-700 dark:text-gray-300"
-                          onClick={() => {
-                            const updatedMessages = [...messages];
-                            const messageIndex = updatedMessages.findIndex(m => m.id === message.id);
-                            if (messageIndex >= 0) {
-                              updatedMessages[messageIndex] = {
-                                ...updatedMessages[messageIndex],
-                                showFeedbackOptions: false
-                              };
-                              setMessages(updatedMessages);
-                            }
-                          }}
-                        >
-                          Cancelar
-                        </Button>
-                        <Button
-                          size="sm"
-                          className="text-sm bg-orange-500 hover:bg-orange-600 text-white"
-                          onClick={async () => {
-                            // Encontrar a mensagem atual
-                            const messageIndex = messages.findIndex(m => m.id === message.id);
-                            if (messageIndex < 0) return;
-                            
-                            const currentMessage = messages[messageIndex];
-                            
-                            // Encontrar a mensagem do usuário que veio antes
-                            let userMessageIndex = messageIndex - 1;
-                            while (userMessageIndex >= 0 && messages[userMessageIndex].sender !== 'user') {
-                              userMessageIndex--;
-                            }
-                            
-                            if (userMessageIndex < 0) return;
-                            
-                            const userMessage = messages[userMessageIndex];
-                            
-                            // Criar um prompt para melhorar a resposta
-                            const prompt = `Melhore a seguinte resposta com base no feedback do usuário:
-                            
-Pergunta original: "${userMessage.content}"
-Resposta original: "${currentMessage.content}"
-Feedback do usuário: "${currentMessage.feedbackText || 'A resposta precisa ser mais clara, correta e bem organizada'}"
-
-Por favor, forneça uma nova resposta melhorada que:
-1. Seja mais clara e direta
-2. Esteja bem organizada
-3. Corrija quaisquer erros ou imprecisões
-4. Atenda melhor às expectativas do usuário conforme o feedback`;
-                            
-                            // Mostrar indicador de carregamento
-                            setIsTyping(true);
-                            
-                            // Ocultar as opções de feedback
-                            const updatedMessages = [...messages];
-                            updatedMessages[messageIndex] = {
-                              ...updatedMessages[messageIndex],
-                              showFeedbackOptions: false
-                            };
-                            setMessages(updatedMessages);
-                            
-                            try {
-                              // Gerar resposta melhorada
-                              const improvedResponse = await generateAIResponse(
-                                prompt,
-                                sessionId || 'default_session',
-                                {
-                                  intelligenceLevel: 'advanced',
-                                  languageStyle: aiLanguageStyle
-                                }
-                              );
-                              
-                              // Adicionar a resposta melhorada
-                              setMessages(prev => [
-                                ...prev,
-                                { 
-                                  id: Date.now(), 
-                                  content: improvedResponse, 
-                                  sender: 'assistant', 
-                                  timestamp: new Date(),
-                                  isImproved: true
-                                }
-                              ]);
-                            } catch (error) {
-                              console.error('Erro ao melhorar resposta:', error);
-                              setMessages(prev => [
-                                ...prev,
-                                { 
-                                  id: Date.now(), 
-                                  content: 'Desculpe, não foi possível gerar uma resposta melhorada. Por favor, tente novamente mais tarde.', 
-                                  sender: 'assistant', 
-                                  timestamp: new Date() 
-                                }
-                              ]);
-                            } finally {
-                              setIsTyping(false);
-                            }
-                          }}
-                        >
-                          Melhorar resposta
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               )}
             </div>
