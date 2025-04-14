@@ -1405,8 +1405,10 @@ const FloatingChatSupport: React.FC = () => {
                       .replace(/\n/g, '<br />')
                       // Renderiza links Markdown [texto](url) corretamente
                       .replace(/\[(.*?)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" class="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>')
-                      // Detecta URLs simples e as converte em links
-                      .replace(/(?<!\]|\()(https?:\/\/[^\s)]+)/g, '<a href="$1" class="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>')
+                      // Detecta URLs simples e as converte em links, mantendo os parâmetros fora dos parênteses
+                      .replace(/(?<!\]|\()\((https?:\/\/[^\s)]+)\)/g, '(<a href="$1" class="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>)')
+                      // Detecta URLs simples fora de parênteses
+                      .replace(/(?<!\]|\()(?<!\(\s*)(https?:\/\/[^\s)]+)/g, '<a href="$1" class="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>')
                   }} 
                 />
                 {message.files && message.files.length > 0 && (

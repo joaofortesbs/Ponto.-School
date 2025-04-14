@@ -658,18 +658,18 @@ function fixPlatformLinks(text: string): string {
   let newText = text;
   const alreadyReplaced = new Set<string>();
   const linkRegex = /\[(.+?)\]\((.+?)\)/g;
-  
+
   // Primeiro, coletar todos os links já presentes no texto e verificar se estão formatados corretamente
   let match;
-  
+
   // Armazenar os links que precisam ser corrigidos
   const linksToFix = [];
-  
+
   while ((match = linkRegex.exec(newText)) !== null) {
     const linkText = match[1];
     const url = match[2];
     alreadyReplaced.add(url.toLowerCase());
-    
+
     // Também adicionar o texto do link para evitar duplicação com diferentes textos
     for (const key in platformLinks) {
       if (linkText.toLowerCase() === key.toLowerCase()) {
@@ -677,34 +677,35 @@ function fixPlatformLinks(text: string): string {
       }
     }
   }
-  
+
   // Substituir expressões mais específicas, evitando duplicidades
   for (const key in platformLinks) {
     const url = platformLinks[key];
     // Pular se este URL já foi usado
     if (alreadyReplaced.has(url.toLowerCase())) continue;
-    
+
     const regex = new RegExp(`\\b(${key})\\b(?![^\\[]*\\])`, 'gi'); // Busca palavras inteiras que não estão dentro de colchetes
     if (regex.test(newText)) {
       newText = newText.replace(regex, `[${key}](${url})`);
       alreadyReplaced.add(url.toLowerCase());
     }
   }
-  
+
   // Adicionar correção para URLs que podem ter sido escritas incorretamente
   newText = newText.replace(/\(https:\/\/pontoschool\.com(\s+)([^)]+)\)/g, '(https://pontoschool.com/$2)');
-  
+
   // Corrigir URLs que podem ter dupla barra
   newText = newText.replace(/\(https:\/\/pontoschool\.com\/\/([^)]+)\)/g, '(https://pontoschool.com/$1)');
-  
+
   // Garantir que os links estejam formatados corretamente com os parênteses fora da URL clicável
   // Primeiro, encontrar todos os links no formato [texto](url)
   const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
   newText = newText.replace(markdownLinkRegex, (match, text, url) => {
     // Certificar-se de que apenas a URL está dentro dos parênteses
-    return `[${text}](${url})`;
+    const cleanUrl = url.split(' ')[0]; // Pegar apenas a URL sem atributos adicionais
+    return `[${text}](${cleanUrl})`;
   });
-  
+
   return newText;
 }
 
