@@ -659,8 +659,12 @@ function fixPlatformLinks(text: string): string {
   const alreadyReplaced = new Set<string>();
   const linkRegex = /\[(.+?)\]\((.+?)\)/g;
   
-  // Primeiro, coletar todos os links já presentes no texto
+  // Primeiro, coletar todos os links já presentes no texto e verificar se estão formatados corretamente
   let match;
+  
+  // Armazenar os links que precisam ser corrigidos
+  const linksToFix = [];
+  
   while ((match = linkRegex.exec(newText)) !== null) {
     const linkText = match[1];
     const url = match[2];
@@ -682,7 +686,7 @@ function fixPlatformLinks(text: string): string {
     
     const regex = new RegExp(`\\b(${key})\\b(?![^\\[]*\\])`, 'gi'); // Busca palavras inteiras que não estão dentro de colchetes
     if (regex.test(newText)) {
-      newText = newText.replace(regex, `[$1](${url})`);
+      newText = newText.replace(regex, `[${key}](${url})`);
       alreadyReplaced.add(url.toLowerCase());
     }
   }
@@ -692,6 +696,14 @@ function fixPlatformLinks(text: string): string {
   
   // Corrigir URLs que podem ter dupla barra
   newText = newText.replace(/\(https:\/\/pontoschool\.com\/\/([^)]+)\)/g, '(https://pontoschool.com/$1)');
+  
+  // Garantir que os links estejam formatados corretamente com os parênteses fora da URL clicável
+  // Primeiro, encontrar todos os links no formato [texto](url)
+  const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+  newText = newText.replace(markdownLinkRegex, (match, text, url) => {
+    // Certificar-se de que apenas a URL está dentro dos parênteses
+    return `[${text}](${url})`;
+  });
   
   return newText;
 }
