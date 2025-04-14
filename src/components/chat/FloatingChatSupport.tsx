@@ -352,6 +352,9 @@ const FloatingChatSupport: React.FC = () => {
   const [audioRecorder, setAudioRecorder] = useState<MediaRecorder | null>(null);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
 
+  // Estado para controlar se o usuário rolou manualmente durante a digitação da IA
+  const [userHasScrolled, setUserHasScrolled] = useState(false);
+
   // Estado para abrir/fechar o menu de anexos
   const [showAttachmentOptions, setShowAttachmentOptions] = useState(false);
 
@@ -359,6 +362,9 @@ const FloatingChatSupport: React.FC = () => {
   const [messageToImprove, setMessageToImprove] = useState<number | null>(null);
   const [improvementFeedback, setImprovementFeedback] = useState('');
   const [isReformulating, setIsReformulating] = useState(false);
+  const [isPaused, setIsPaused] = useState(false); // Adicione o estado para controlar a pausa
+  const [typingIntervalId, setTypingIntervalId] = useState<NodeJS.Timeout | null>(null); // Adicione o estado para controlar o intervalo de digitação
+
 
   // Funções para lidar com feedback das mensagens
   const handleMessageFeedback = (messageId: number, feedback: 'positive' | 'negative') => {
@@ -576,12 +582,35 @@ const FloatingChatSupport: React.FC = () => {
   };
 
 
-  // Scroll to bottom of messages
+  // Scroll to bottom of messages, mas apenas quando uma nova mensagem é adicionada
+  // não quando uma mensagem está sendo digitada pela IA
   useEffect(() => {
-    if (messagesEndRef.current) {
+    if (messagesEndRef.current && !isTyping) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      setUserHasScrolled(false); // Reset o estado de rolagem do usuário quando uma nova mensagem é adicionada
     }
-  }, [messages]);
+  }, [messages.length, isTyping]);
+
+  // Detectar quando o usuário rola manualmente
+  useEffect(() => {
+    const handleScroll = () => {
+      if (isTyping) {
+        setUserHasScrolled(true);
+      }
+    };
+
+    // Encontrar o elemento de scroll (scroll area)
+    const scrollContainer = document.querySelector('.custom-scrollbar');
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll);
+    }
+
+    return () => {
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [isTyping]);
 
   // Add blur effect to the rest of the page when chat is open
   useEffect(() => {
@@ -701,10 +730,6 @@ const FloatingChatSupport: React.FC = () => {
     setImprovedPrompt("");
   };
 
-  // Estado para controlar a digitação
-  const [typingController, setTypingController] = useState<any | null>(null);
-  const [isPaused, setIsPaused] = useState(false);
-
   // Função para enviar mensagem
   const sendMessage = async () => {
     if (inputMessage.trim() === "" && selectedFiles.length === 0) return;
@@ -754,43 +779,9 @@ const FloatingChatSupport: React.FC = () => {
         // Mostrar texto gradualmente como se estivesse sendo digitado
         let displayedContent = '';
         const words = aiResponse.split(' ');
-        let isCancelled = false;
-        let currentIndex = 0;
-        let typingTimeout: NodeJS.Timeout | null = null;
-
-        // Função para controlar a digitação
-        const typingControl = {
-          cancel: () => {
-            if (typingTimeout) {
-              clearTimeout(typingTimeout);
-            }
-            isCancelled = true;
-            setIsTyping(false);
-            setTypingController(null);
-          },
-          pause: () => {
-            if (typingTimeout) {
-              clearTimeout(typingTimeout);
-              typingTimeout = null;
-            }
-            setIsPaused(true);
-          },
-          resume: () => {
-            if (currentIndex < words.length && !isCancelled) {
-              setIsPaused(false);
-              addNextWord(currentIndex);
-            }
-          }
-        };
-
-        setTypingController(typingControl);
 
         // Função para adicionar palavras gradualmente
         const addNextWord = (index: number) => {
-          if (isCancelled) return;
-
-          currentIndex = index;
-
           if (index < words.length) {
             displayedContent += (index === 0 ? '' : ' ') + words[index];
 
@@ -804,18 +795,14 @@ const FloatingChatSupport: React.FC = () => {
 
             // Velocidade variável da digitação baseada no tamanho da palavra
             const typingSpeed = Math.min(100, Math.max(30, 70 - words[index].length * 5));
-
-            if (!isPaused) {
-              typingTimeout = setTimeout(() => addNextWord(index + 1), typingSpeed);
-            }
+            setTimeout(() => addNextWord(index + 1), typingSpeed);
           } else {
             setIsTyping(false);
-            setTypingController(null);
           }
         };
 
         // Inicia o efeito de digitação após um pequeno delay
-        typingTimeout = setTimeout(() => addNextWord(0), 500);
+        setTimeout(() => addNextWord(0), 500);
       } catch (error) {
         console.error('Erro ao obter resposta para mensagem editada:', error);
         setMessages(prevMessages => [
@@ -909,44 +896,10 @@ const FloatingChatSupport: React.FC = () => {
       // Mostrar texto gradualmente como se estivesse sendo digitado
       let displayedContent = '';
       const words = aiResponse.split(' ');
-      let isCancelled = false;
-      let currentIndex = 0;
-      let typingTimeout: NodeJS.Timeout | null = null;
-
-      // Função para controlar a digitação
-      const typingControl = {
-        cancel: () => {
-          if (typingTimeout) {
-            clearTimeout(typingTimeout);
-          }
-          isCancelled = true;
-          setIsTyping(false);
-          setTypingController(null);
-        },
-        pause: () => {
-          if (typingTimeout) {
-            clearTimeout(typingTimeout);
-            typingTimeout = null;
-          }
-          setIsPaused(true);
-        },
-        resume: () => {
-          if (currentIndex < words.length && !isCancelled) {
-            setIsPaused(false);
-            addNextWord(currentIndex);
-          }
-        }
-      };
-
-      setTypingController(typingControl);
 
       // Função para adicionar palavras gradualmente
       const addNextWord = (index: number) => {
-        if (isCancelled) return;
-
-        currentIndex = index;
-
-        if (index < words.length) {
+        if (index < words.length && !isPaused) {
           displayedContent += (index === 0 ? '' : ' ') + words[index];
 
           setMessages(prevMessages => 
@@ -959,18 +912,20 @@ const FloatingChatSupport: React.FC = () => {
 
           // Velocidade variável da digitação baseada no tamanho da palavra
           const typingSpeed = Math.min(100, Math.max(30, 70 - words[index].length * 5));
-
-          if (!isPaused) {
-            typingTimeout = setTimeout(() => addNextWord(index + 1), typingSpeed);
-          }
+          setTypingIntervalId(setTimeout(() => addNextWord(index + 1), typingSpeed));
         } else {
+          clearTimeout(typingIntervalId);
           setIsTyping(false);
-          setTypingController(null);
+          // Apenas rolar no final da mensagem completa e somente se o usuário não rolou manualmente
+          // durante o carregamento
+          if (messagesEndRef.current && !userHasScrolled) {
+            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+          }
         }
       };
 
       // Inicia o efeito de digitação após um pequeno delay
-      typingTimeout = setTimeout(() => addNextWord(0), 500);
+      setTypingIntervalId(setTimeout(() => addNextWord(0), 500));
 
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
@@ -1410,7 +1365,8 @@ const FloatingChatSupport: React.FC = () => {
                     })}
                   </div>
                 </div>
-              ))
+              </div>
+            ))
             ) : (
               <div className="text-center py-8 px-4 dark:text-gray-300">
                 <div className="w-14 h-14 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center mx-auto mb-3">
@@ -1632,7 +1588,7 @@ const FloatingChatSupport: React.FC = () => {
                           {file.type.startsWith('image/') && <Image className="h-4 w-4" />}
                           {file.type.startsWith('video/') && <Video className="h-4 w-4" />}
                           {file.type.startsWith('audio/') && <Music className="h-4 w-4" />}
-                          {(!file.type.startsWith('image/') && !file.type.startsWith('video/') && !file.type.startsWith('audio/')) && <File className="h-4 w-4" />}
+                          {(!file.type.startsWith('image/') && !file.type.startsWith('video/') && !file.type.startsWith('audio/')) && <File className="h-4 w-4" />}```javascript
                         </div>
                         <div className="overflow-hidden text-sm">
                           <a 
@@ -1786,13 +1742,49 @@ const FloatingChatSupport: React.FC = () => {
                     })}
                   </div>
                 </div>
-                <div className="relative min-h-[40px] flex items-center">
-                  <div className="typewriter">
-                    <div className="slide"><i></i></div>
-                    <div className="paper"></div>
-                    <div className="keyboard"></div>
+                <div className="relative min-h-[40px] flex flex-col">
+                  <div className="flex items-center">
+                    <div className="flex space-x-1 mr-2">
+                      <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
+                      <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse delay-150"></div>
+                      <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse delay-300"></div>
+                    </div>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Formulando resposta...</span>
                   </div>
-                  <span className="ml-8 text-sm text-gray-600 dark:text-gray-400">Formulando resposta...</span>
+
+                  <div className="flex items-center gap-2 mt-2">
+                    <Button 
+                      size="sm" 
+                      variant="destructive" 
+                      className="h-7 px-2 py-0 text-xs bg-red-500 hover:bg-red-600"
+                      onClick={cancelTyping}
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Cancelar
+                    </Button>
+
+                    {isPaused ? (
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="h-7 px-2 py-0 text-xs border-orange-200 dark:border-orange-700"
+                        onClick={resumeTyping}
+                      >
+                        <RefreshCw className="h-3 w-3 mr-1" />
+                        Retomar
+                      </Button>
+                    ) : (
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="h-7 px-2 py-0 text-xs border-orange-200 dark:border-orange-700"
+                        onClick={pauseTyping}
+                      >
+                        <Square className="h-3 w-3 mr-1" />
+                        Pausar
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -2288,7 +2280,7 @@ const FloatingChatSupport: React.FC = () => {
           </div>
         </ScrollArea>
       )}
-    </div>
+    </</div>
   );
 
   const renderHelpContent = () => (
@@ -2312,7 +2304,8 @@ const FloatingChatSupport: React.FC = () => {
             variant="ghost"
             size="sm"
             className="-ml-2 dark:text-gray-200 dark:hover:bg-gray-800"
-            onClick={() => setSelectedFaq(null)}>
+            onClick={() => setSelectedFaq(null)}
+          >
             ← Voltar
           </Button>
           <h3 className="text-lg font-semibold dark:text-gray-200">
@@ -2892,5 +2885,30 @@ const FloatingChatSupport: React.FC = () => {
     </>
   );
 };
+
+const cancelTyping = () => {
+  // Implementar lógica para cancelar a digitação aqui
+  console.log("Cancelando digitação...");
+  // interromper o intervalo de digitação
+  clearTimeout(typingIntervalId);
+  setIsTyping(false);
+  setIsPaused(false);
+};
+
+const pauseTyping = () => {
+  // Implementar lógica para pausar a digitação aqui
+  console.log("Pausando digitação...");
+  clearTimeout(typingIntervalId);
+  setIsPaused(true);
+};
+
+const resumeTyping = () => {
+  // Implementar lógica para retomar a digitação aqui
+  console.log("Retomando digitação...");
+  setIsPaused(false);
+  // reiniciar o intervalo de digitação, se necessário
+  // ... (lógica para retomar a digitação a partir do ponto onde parou) ...
+};
+
 
 export default FloatingChatSupport;
