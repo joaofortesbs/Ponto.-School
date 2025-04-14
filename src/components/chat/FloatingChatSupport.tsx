@@ -1242,8 +1242,46 @@ const FloatingChatSupport: React.FC = () => {
                         className={`p-1 rounded-full transition-colors ${message.feedback === 'negative' ? 'bg-red-100 dark:bg-red-900/30' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                         title="Avaliar como resposta que precisa melhorar"
                       >
-                        <ThumbsDown className={`h-3.5 w-3.5 ${message.feedback === 'negative' ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`} />
+                        <ThumbsDown className={`h-3.5 w-3.5 ${message.feedback === 'negative' ? 'text-red-600 dark:text-red-400' : 'text-red-500 dark:text-red-400'}`} />
                       </button>
+                    </div>
+                  )}
+                  
+                  {/* Improvement options when negative feedback is given */}
+                  {message.sender === "assistant" && message.feedback === 'negative' && (
+                    <div className="mt-2 flex flex-col gap-2 w-full animate-fadeIn">
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Como podemos melhorar esta resposta?</div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-xs py-1 px-2 h-auto border-orange-200 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 flex items-center gap-1"
+                          onClick={() => reformulateMessage(message.id)}
+                          disabled={isReformulating}
+                        >
+                          {isReformulating ? (
+                            <>
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              <span>Reformulando...</span>
+                            </>
+                          ) : (
+                            <>
+                              <RefreshCw className="h-3 w-3" />
+                              <span>Reformular (mais detalhado)</span>
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-xs py-1 px-2 h-auto border-orange-200 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 flex items-center gap-1"
+                          onClick={() => summarizeMessage(message.id)}
+                          disabled={isReformulating}
+                        >
+                          <FileText className="h-3 w-3" />
+                          <span>Resumir (mais direto)</span>
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -2300,6 +2338,132 @@ const handleMessageFeedback = (messageId: number, feedback: 'positive' | 'negati
       return msg;
     });
   });
+};
+
+const reformulateMessage = async (messageId: number) => {
+  setIsReformulating(true);
+  try {
+    // Find message that needs to be reformulated
+    const messageToReformulate = messages.find(msg => msg.id === messageId);
+    if (!messageToReformulate) return;
+    
+    // Mark original message as needing improvement
+    setMessages(prevMessages => {
+      return prevMessages.map(msg => {
+        if (msg.id === messageId) {
+          return { ...msg, needsImprovement: true };
+        }
+        return msg;
+      });
+    });
+    
+    // Call AI to generate improved response
+    const reformulatedResponse = await generateAIResponse(
+      `Reformule a seguinte resposta de forma mais detalhada, completa e eficiente. Seja abrangente e forneça exemplos práticos se possível. Resposta original: "${messageToReformulate.content}"`,
+      sessionId || 'default_session',
+      {
+        intelligenceLevel: 'advanced',
+        languageStyle: aiLanguageStyle
+      }
+    );
+    
+    // Add the reformulated response to messages
+    setMessages(prevMessages => [
+      ...prevMessages,
+      {
+        id: Date.now(),
+        content: reformulatedResponse,
+        sender: 'assistant',
+        timestamp: new Date(),
+        feedback: undefined
+      }
+    ]);
+    
+    // Scroll to bottom after adding new message
+    setTimeout(() => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    }, 100);
+    
+  } catch (error) {
+    console.error('Erro ao reformular resposta:', error);
+    // Add error message
+    setMessages(prevMessages => [
+      ...prevMessages,
+      {
+        id: Date.now(),
+        content: "Desculpe, ocorreu um erro ao reformular a resposta. Por favor, tente novamente mais tarde.",
+        sender: 'assistant',
+        timestamp: new Date()
+      }
+    ]);
+  } finally {
+    setIsReformulating(false);
+  }
+};
+
+const summarizeMessage = async (messageId: number) => {
+  setIsReformulating(true);
+  try {
+    // Find message that needs to be summarized
+    const messageToSummarize = messages.find(msg => msg.id === messageId);
+    if (!messageToSummarize) return;
+    
+    // Mark original message as needing improvement
+    setMessages(prevMessages => {
+      return prevMessages.map(msg => {
+        if (msg.id === messageId) {
+          return { ...msg, needsImprovement: true };
+        }
+        return msg;
+      });
+    });
+    
+    // Call AI to generate summarized response
+    const summarizedResponse = await generateAIResponse(
+      `Resuma a seguinte resposta de forma concisa, direta e eficiente. Seja direto ao ponto e elimine informações não essenciais. Resposta original: "${messageToSummarize.content}"`,
+      sessionId || 'default_session',
+      {
+        intelligenceLevel: aiIntelligenceLevel,
+        languageStyle: 'technical'
+      }
+    );
+    
+    // Add the summarized response to messages
+    setMessages(prevMessages => [
+      ...prevMessages,
+      {
+        id: Date.now(),
+        content: summarizedResponse,
+        sender: 'assistant',
+        timestamp: new Date(),
+        feedback: undefined
+      }
+    ]);
+    
+    // Scroll to bottom after adding new message
+    setTimeout(() => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    }, 100);
+    
+  } catch (error) {
+    console.error('Erro ao resumir resposta:', error);
+    // Add error message
+    setMessages(prevMessages => [
+      ...prevMessages,
+      {
+        id: Date.now(),
+        content: "Desculpe, ocorreu um erro ao resumir a resposta. Por favor, tente novamente mais tarde.",
+        sender: 'assistant',
+        timestamp: new Date()
+      }
+    ]);
+  } finally {
+    setIsReformulating(false);
+  }
 };
 
 const requestReformulation = async () => {
