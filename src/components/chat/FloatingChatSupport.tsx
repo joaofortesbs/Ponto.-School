@@ -1141,7 +1141,7 @@ const FloatingChatSupport: React.FC = () => {
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
+              className={`flex animate-fadeIn ${message.sender === "user" ? "justify-end" : "justify-start"}`}
             >
               {message.sender === "assistant" && (
                 <div className="w-10 h-10 rounded-full overflow-hidden mr-2 flex-shrink-0">
@@ -1157,7 +1157,11 @@ const FloatingChatSupport: React.FC = () => {
                 </div>
               )}
               <div
-                className={`max-w-[75%] rounded-lg px-3 py-2 ${message.sender === "user" ? "bg-blue-500 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200"}`}
+                className={`max-w-[75%] rounded-lg px-4 py-3 shadow-md ${
+                  message.sender === "user"
+                    ? "bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-tr-none"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200"
+                }`}
               >
                 <div 
                   className="message-content whitespace-pre-wrap" 
@@ -1168,14 +1172,18 @@ const FloatingChatSupport: React.FC = () => {
                       .replace(/\~\~(.*?)\~\~/g, '<del>$1</del>')
                       .replace(/\`(.*?)\`/g, '<code class="bg-black/10 dark:bg-white/10 rounded px-1">$1</code>')
                       .replace(/\n/g, '<br />')
-                      .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" class="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>')
+                      .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" class="text-white hover:underline hover:text-white/90" target="_blank" rel="noopener noreferrer">$1</a>')
                   }} 
                 />
                 {message.files && message.files.length > 0 && (
-                  <div className="mt-2 space-y-2">
+                  <div className="mt-3 space-y-2">
                     {message.files.map((file, index) => (
-                      <div key={`${file.name}-${index}`} className="flex items-center bg-opacity-20 bg-black rounded p-2 hover:bg-opacity-30 transition-all">
-                        <div className="mr-2 flex-shrink-0">
+                      <div key={`${file.name}-${index}`} className={`flex items-center rounded-md p-2.5 transition-all ${
+                        message.sender === "user" 
+                          ? "bg-white/10 hover:bg-white/20" 
+                          : "bg-black/5 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
+                      }`}>
+                        <div className="mr-3 flex-shrink-0 bg-white/20 p-2 rounded-full">
                           {file.type.startsWith('image/') && <Image className="h-4 w-4" />}
                           {file.type.startsWith('video/') && <Video className="h-4 w-4" />}
                           {file.type.startsWith('audio/') && <Music className="h-4 w-4" />}
@@ -1199,11 +1207,13 @@ const FloatingChatSupport: React.FC = () => {
                     ))}
                   </div>
                 )}
-                <div className="text-xs opacity-70 mt-1 text-right">
-                  {message.timestamp.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                <div className="text-xs opacity-80 mt-1.5 text-right flex items-center justify-end gap-1">
+                  <span className={message.sender === "user" ? "bg-white/20 px-1.5 py-0.5 rounded-sm" : ""}>
+                    {message.timestamp.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
                 </div>
               </div>
               {message.sender === "user" && (
@@ -2150,6 +2160,21 @@ const FloatingChatSupport: React.FC = () => {
 
         .animate-bounce-subtle {
           animation: bounce-subtle 2s ease-in-out infinite;
+        }
+        
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out forwards;
         }
         
         .message-content strong {
