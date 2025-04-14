@@ -359,6 +359,173 @@ const FloatingChatSupport: React.FC = () => {
   const [improvementFeedback, setImprovementFeedback] = useState('');
   const [isReformulating, setIsReformulating] = useState(false);
 
+  // Funções para lidar com feedback das mensagens
+  const handleMessageFeedback = (messageId: number, feedback: 'positive' | 'negative') => {
+    setMessages(prevMessages => {
+      return prevMessages.map(msg => {
+        if (msg.id === messageId) {
+          return { ...msg, feedback };
+        }
+        return msg;
+      });
+    });
+  };
+  
+  const reformulateMessage = async (messageId: number) => {
+    setIsReformulating(true);
+    try {
+      // Find message that needs to be reformulated
+      const messageToReformulate = messages.find(msg => msg.id === messageId);
+      if (!messageToReformulate) return;
+      
+      // Mark original message as needing improvement
+      setMessages(prevMessages => {
+        return prevMessages.map(msg => {
+          if (msg.id === messageId) {
+            return { ...msg, needsImprovement: true };
+          }
+          return msg;
+        });
+      });
+      
+      // Call AI to generate improved response
+      const reformulatedResponse = await generateAIResponse(
+        `Reformule a seguinte resposta de forma mais detalhada, completa e eficiente. Seja abrangente e forneça exemplos práticos se possível. Resposta original: "${messageToReformulate.content}"`,
+        sessionId || 'default_session',
+        {
+          intelligenceLevel: 'advanced',
+          languageStyle: aiLanguageStyle
+        }
+      );
+      
+      // Add the reformulated response to messages
+      setMessages(prevMessages => [
+        ...prevMessages,
+        {
+          id: Date.now(),
+          content: reformulatedResponse,
+          sender: 'assistant',
+          timestamp: new Date(),
+          feedback: undefined
+        }
+      ]);
+      
+      // Scroll to bottom after adding new message
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100);
+      
+    } catch (error) {
+      console.error('Erro ao reformular resposta:', error);
+      // Add error message
+      setMessages(prevMessages => [
+        ...prevMessages,
+        {
+          id: Date.now(),
+          content: "Desculpe, ocorreu um erro ao reformular a resposta. Por favor, tente novamente mais tarde.",
+          sender: 'assistant',
+          timestamp: new Date()
+        }
+      ]);
+    } finally {
+      setIsReformulating(false);
+    }
+  };
+  
+  const summarizeMessage = async (messageId: number) => {
+    setIsReformulating(true);
+    try {
+      // Find message that needs to be summarized
+      const messageToSummarize = messages.find(msg => msg.id === messageId);
+      if (!messageToSummarize) return;
+      
+      // Mark original message as needing improvement
+      setMessages(prevMessages => {
+        return prevMessages.map(msg => {
+          if (msg.id === messageId) {
+            return { ...msg, needsImprovement: true };
+          }
+          return msg;
+        });
+      });
+      
+      // Call AI to generate summarized response
+      const summarizedResponse = await generateAIResponse(
+        `Resuma a seguinte resposta de forma concisa, direta e eficiente. Seja direto ao ponto e elimine informações não essenciais. Resposta original: "${messageToSummarize.content}"`,
+        sessionId || 'default_session',
+        {
+          intelligenceLevel: aiIntelligenceLevel,
+          languageStyle: 'technical'
+        }
+      );
+      
+      // Add the summarized response to messages
+      setMessages(prevMessages => [
+        ...prevMessages,
+        {
+          id: Date.now(),
+          content: summarizedResponse,
+          sender: 'assistant',
+          timestamp: new Date(),
+          feedback: undefined
+        }
+      ]);
+      
+      // Scroll to bottom after adding new message
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100);
+      
+    } catch (error) {
+      console.error('Erro ao resumir resposta:', error);
+      // Add error message
+      setMessages(prevMessages => [
+        ...prevMessages,
+        {
+          id: Date.now(),
+          content: "Desculpe, ocorreu um erro ao resumir a resposta. Por favor, tente novamente mais tarde.",
+          sender: 'assistant',
+          timestamp: new Date()
+        }
+      ]);
+    } finally {
+      setIsReformulating(false);
+    }
+  };
+  
+  const requestReformulation = async () => {
+    setIsReformulating(true);
+    try {
+      // Implemente a lógica para reformular a resposta aqui
+      // ... (Chamada para API para reformular a resposta usando improvementFeedback) ...
+      const reformulatedResponse = await generateAIResponse(`Reformule a seguinte resposta considerando este feedback: "${improvementFeedback}". Resposta original: "${messages.find(msg => msg.id === messageToImprove)?.content || ''}"`);
+      setMessages(prevMessages => {
+        const updatedMessages = [...prevMessages];
+        const messageIndex = updatedMessages.findIndex(msg => msg.id === messageToImprove);
+        if (messageIndex !== -1) {
+          updatedMessages[messageIndex] = { ...updatedMessages[messageIndex], content: reformulatedResponse, needsImprovement: false };
+        }
+        return updatedMessages;
+      });
+      setMessageToImprove(null);
+      setImprovementFeedback('');
+    } catch (error) {
+      console.error('Erro ao reformular resposta:', error);
+      alert('Erro ao reformular resposta. Por favor, tente novamente mais tarde.');
+    } finally {
+      setIsReformulating(false);
+    }
+  };
+  
+  const cancelReformulation = () => {
+    setMessageToImprove(null);
+    setImprovementFeedback('');
+  };
+
 
   // Scroll to bottom of messages
   useEffect(() => {
@@ -2327,172 +2494,6 @@ const FloatingChatSupport: React.FC = () => {
       `}</style>
     </>
   );
-};
-
-const handleMessageFeedback = (messageId: number, feedback: 'positive' | 'negative') => {
-  setMessages(prevMessages => {
-    return prevMessages.map(msg => {
-      if (msg.id === messageId) {
-        return { ...msg, feedback };
-      }
-      return msg;
-    });
-  });
-};
-
-const reformulateMessage = async (messageId: number) => {
-  setIsReformulating(true);
-  try {
-    // Find message that needs to be reformulated
-    const messageToReformulate = messages.find(msg => msg.id === messageId);
-    if (!messageToReformulate) return;
-    
-    // Mark original message as needing improvement
-    setMessages(prevMessages => {
-      return prevMessages.map(msg => {
-        if (msg.id === messageId) {
-          return { ...msg, needsImprovement: true };
-        }
-        return msg;
-      });
-    });
-    
-    // Call AI to generate improved response
-    const reformulatedResponse = await generateAIResponse(
-      `Reformule a seguinte resposta de forma mais detalhada, completa e eficiente. Seja abrangente e forneça exemplos práticos se possível. Resposta original: "${messageToReformulate.content}"`,
-      sessionId || 'default_session',
-      {
-        intelligenceLevel: 'advanced',
-        languageStyle: aiLanguageStyle
-      }
-    );
-    
-    // Add the reformulated response to messages
-    setMessages(prevMessages => [
-      ...prevMessages,
-      {
-        id: Date.now(),
-        content: reformulatedResponse,
-        sender: 'assistant',
-        timestamp: new Date(),
-        feedback: undefined
-      }
-    ]);
-    
-    // Scroll to bottom after adding new message
-    setTimeout(() => {
-      if (messagesEndRef.current) {
-        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-      }
-    }, 100);
-    
-  } catch (error) {
-    console.error('Erro ao reformular resposta:', error);
-    // Add error message
-    setMessages(prevMessages => [
-      ...prevMessages,
-      {
-        id: Date.now(),
-        content: "Desculpe, ocorreu um erro ao reformular a resposta. Por favor, tente novamente mais tarde.",
-        sender: 'assistant',
-        timestamp: new Date()
-      }
-    ]);
-  } finally {
-    setIsReformulating(false);
-  }
-};
-
-const summarizeMessage = async (messageId: number) => {
-  setIsReformulating(true);
-  try {
-    // Find message that needs to be summarized
-    const messageToSummarize = messages.find(msg => msg.id === messageId);
-    if (!messageToSummarize) return;
-    
-    // Mark original message as needing improvement
-    setMessages(prevMessages => {
-      return prevMessages.map(msg => {
-        if (msg.id === messageId) {
-          return { ...msg, needsImprovement: true };
-        }
-        return msg;
-      });
-    });
-    
-    // Call AI to generate summarized response
-    const summarizedResponse = await generateAIResponse(
-      `Resuma a seguinte resposta de forma concisa, direta e eficiente. Seja direto ao ponto e elimine informações não essenciais. Resposta original: "${messageToSummarize.content}"`,
-      sessionId || 'default_session',
-      {
-        intelligenceLevel: aiIntelligenceLevel,
-        languageStyle: 'technical'
-      }
-    );
-    
-    // Add the summarized response to messages
-    setMessages(prevMessages => [
-      ...prevMessages,
-      {
-        id: Date.now(),
-        content: summarizedResponse,
-        sender: 'assistant',
-        timestamp: new Date(),
-        feedback: undefined
-      }
-    ]);
-    
-    // Scroll to bottom after adding new message
-    setTimeout(() => {
-      if (messagesEndRef.current) {
-        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-      }
-    }, 100);
-    
-  } catch (error) {
-    console.error('Erro ao resumir resposta:', error);
-    // Add error message
-    setMessages(prevMessages => [
-      ...prevMessages,
-      {
-        id: Date.now(),
-        content: "Desculpe, ocorreu um erro ao resumir a resposta. Por favor, tente novamente mais tarde.",
-        sender: 'assistant',
-        timestamp: new Date()
-      }
-    ]);
-  } finally {
-    setIsReformulating(false);
-  }
-};
-
-const requestReformulation = async () => {
-  setIsReformulating(true);
-  try {
-    // Implemente a lógica para reformular a resposta aqui
-    // ... (Chamada para API para reformular a resposta usando improvementFeedback) ...
-    const reformulatedResponse = await generateAIResponse(`Reformule a seguinte resposta considerando este feedback: "${improvementFeedback}". Resposta original: "${messages.find(msg => msg.id === messageToImprove)?.content || ''}"`);
-    setMessages(prevMessages => {
-      const updatedMessages = [...prevMessages];
-      const messageIndex = updatedMessages.findIndex(msg => msg.id === messageToImprove);
-      if (messageIndex !== -1) {
-        updatedMessages[messageIndex] = { ...updatedMessages[messageIndex], content: reformulatedResponse, needsImprovement: false };
-      }
-      return updatedMessages;
-    });
-    setMessageToImprove(null);
-    setImprovementFeedback('');
-  } catch (error) {
-    console.error('Erro ao reformular resposta:', error);
-    alert('Erro ao reformular resposta. Por favor, tente novamente mais tarde.');
-  } finally {
-    setIsReformulating(false);
-  }
-};
-
-const cancelReformulation = () => {
-  setMessageToImprove(null);
-  setImprovementFeedback('');
 };
 
 export default FloatingChatSupport;
