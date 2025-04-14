@@ -123,7 +123,7 @@ interface CommonQuestion {
 const defaultMessages: ChatMessage[] = [
   {
     id: 1,
-    content: "Oi! Sou o Epictus IA, seu assistente descolado aqui na Ponto.School! 😊 Tô pronto pra te ajudar com o que precisar, é só mandar! Como posso facilitar sua vida hoje?",
+    content: "Oi! Sou o Assistente de Suporte da Ponto.School! 😊 Estou aqui para te ajudar com navegação na plataforma, dúvidas sobre funcionalidades, e também posso responder perguntas sobre conteúdos educacionais. Como posso te auxiliar hoje?",
     sender: "assistant",
     timestamp: new Date(),
   },
@@ -1321,9 +1321,9 @@ const FloatingChatSupport: React.FC = () => {
               {message.sender === "assistant" && (
                 <div className="w-10 h-10 rounded-full overflow-hidden mr-2 flex-shrink-0">
                   <Avatar>
-                    <AvatarImage src="/images/tempo-image-20250329T044440497Z.png" alt="Epictus IA" />
+                    <AvatarImage src="/images/tempo-image-20250329T044440497Z.png" alt="Assistente de Suporte" />
                     <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] text-white">
-                      <Bot className="h-5 w-5" />
+                      <LifeBuoy className="h-5 w-5" />
                       <span className="absolute -right-1 -bottom-1 w-3.5 h-3.5 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800">
                         <Sparkles className="h-2 w-2 text-white" />
                       </span>
@@ -1477,7 +1477,7 @@ const FloatingChatSupport: React.FC = () => {
               </div>
               <div className="max-w-[75%] rounded-lg px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow-sm">
                 <div className="flex items-center">
-                  <div className="mr-2 text-xs text-gray-500 dark:text-gray-400">Epictus IA está digitando</div>
+                  <div className="mr-2 text-xs text-gray-500 dark:text-gray-400">Assistente de Suporte está digitando</div>
                   <div className="flex items-center space-x-1">
                     <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
                     <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse delay-150" />

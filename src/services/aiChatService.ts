@@ -383,12 +383,12 @@ function initializeConversationHistory(sessionId: string, userContext?: any) {
   const planType = userContext?.planType || 'lite';
   const userLevel = userContext?.userLevel || 1;
 
-  conversationHistory[sessionId] = [
-    { 
-      role: 'system', 
-      content: `Você é o Epictus IA, o assistente inteligente da Ponto.School, uma plataforma educacional.
+  // Define o contexto inicial para o chat do assistente de suporte
+  const SYSTEM_PROMPT = `Você é o Assistente de Suporte da plataforma educacional Ponto.School. Seu papel é ajudar os usuários da plataforma a navegar pela interface, entender as funcionalidades disponíveis, fornecer tutoriais sobre como usar a plataforma, e também responder perguntas sobre conteúdos educacionais. Você deve ser um guia completo sobre todas as funcionalidades da plataforma. Seja amigável, respeitoso e útil. Use uma linguagem casual mas educada. 
 
-      CONTEXTO DO USUÁRIO (COMPLETO):
+É importante observar que você é completamente diferente do Epictus IA que está disponível na seção específica do menu lateral. Enquanto aquele foca em ser um assistente de estudos personalizado, seu papel é ser o suporte completo da plataforma, conhecendo todas as suas funcionalidades, seções e páginas, servindo como um tutorial interativo.
+
+CONTEXTO DO USUÁRIO (COMPLETO):
       - Username: ${username}
       - Email: ${email}
       - ID do usuário: ${userId}
@@ -462,7 +462,12 @@ function initializeConversationHistory(sessionId: string, userContext?: any) {
       - Pedidos de Ajuda: https://pontoschool.com/pedidos-ajuda
       - Estudos: https://pontoschool.com/estudos
 
-      Personalize suas respostas para criar uma experiência única e amigável para ${username}.`
+      Personalize suas respostas para criar uma experiência única e amigável para ${username}.`;
+
+  conversationHistory[sessionId] = [
+    { 
+      role: 'system', 
+      content: SYSTEM_PROMPT
     }
   ];
 }
@@ -490,9 +495,11 @@ export async function generateGeminiResponse(
         contents: [{
           parts: [
             {
-              text: `Você é o Epictus IA, o assistente inteligente da Ponto.School, uma plataforma educacional.
+              text: `Você é o Assistente de Suporte da plataforma educacional Ponto.School. Seu papel é ajudar os usuários da plataforma a navegar pela interface, entender as funcionalidades disponíveis, fornecer tutoriais sobre como usar a plataforma, e também responder perguntas sobre conteúdos educacionais. Você deve ser um guia completo sobre todas as funcionalidades da plataforma. Seja amigável, respeitoso e útil. Use uma linguagem casual mas educada. 
 
-              Contexto do usuário:
+É importante observar que você é completamente diferente do Epictus IA que está disponível na seção específica do menu lateral. Enquanto aquele foca em ser um assistente de estudos personalizado, seu papel é ser o suporte completo da plataforma, conhecendo todas as suas funcionalidades, seções e páginas, servindo como um tutorial interativo.
+
+Contexto do usuário:
               - Username completo: ${usernameFull}
               - Email: ${userContext.email}
               - Localização atual na plataforma: ${userContext.currentPage}
@@ -571,7 +578,7 @@ export function clearConversationHistory(sessionId: string): void {
     // Mantém apenas a mensagem do sistema
     const systemMessage = conversationHistory[sessionId][0];
     conversationHistory[sessionId] = [systemMessage];
-    
+
     // Limpar do localStorage também
     try {
       localStorage.removeItem(`conversationHistory_${sessionId}`);
@@ -587,7 +594,7 @@ export function getConversationHistory(sessionId: string): ChatMessage[] {
   if (conversationHistory[sessionId]) {
     return conversationHistory[sessionId];
   }
-  
+
   // Caso contrário, tenta recuperar do localStorage
   try {
     const savedHistory = localStorage.getItem(`conversationHistory_${sessionId}`);
@@ -599,7 +606,7 @@ export function getConversationHistory(sessionId: string): ChatMessage[] {
   } catch (error) {
     console.error("Erro ao recuperar histórico do localStorage:", error);
   }
-  
+
   return [];
 }
 
@@ -656,7 +663,7 @@ const getResponseForMessage = (message: string): string => {
   if (formattedMessage.includes('olá') || formattedMessage.includes('oi') || formattedMessage.includes('bom dia') || formattedMessage.includes('boa tarde') || formattedMessage.includes('boa noite')) {
     return `**Olá, ${userInfo?.username || 'amigo'}!** 😊\n\nComo posso ajudar você hoje?`;
   } else if (formattedMessage.includes('função') || formattedMessage.includes('o que você faz') || formattedMessage.includes('para que serve')) {
-    return `**Eu sou Epictus IA**, seu assistente para a plataforma Ponto.School! 🚀\n\nPosso ajudar com:\n\n• **Informações** sobre cursos e conteúdos\n• **Dicas de estudos** personalizadas\n• **Navegação** na plataforma\n• **Respostas** para dúvidas gerais\n\nComo posso ajudar você agora?`;
+    return `**Eu sou o Assistente de Suporte da Ponto.School**, aqui para te ajudar em tudo que precisar na plataforma! 🚀\n\nPosso ajudar com:\n\n• **Navegação:** Encontrar qualquer recurso na plataforma.\n• **Tutoriais:** Explicar o funcionamento de qualquer ferramenta.\n• **Dúvidas:** Responder qualquer questão sobre a plataforma ou o conteúdo.\n\nComo posso ajudar você agora?`;
   } else if (formattedMessage.includes('portal') || formattedMessage.includes('material') || formattedMessage.includes('acessar conteúdo')) {
     return `Você pode acessar o **Portal** com todos os materiais em https://pontoschool.com/portal\n\nLá você encontrará todos os seus cursos, materiais e recursos de estudo organizados por disciplina.\n\n_Basta clicar no link acima para ir direto para o Portal!_ 📚`;
   } else {
