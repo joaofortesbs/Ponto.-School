@@ -389,9 +389,49 @@ const FloatingChatSupport: React.FC = () => {
         });
       });
 
-      // Call AI to generate improved response
+      // Call AI to generate improved response using the enhanced structure
       const reformulatedResponse = await generateAIResponse(
-        `Reformule a seguinte resposta de forma mais detalhada, completa e eficiente. Seja abrangente e forneça exemplos práticos se possível. Resposta original: "${messageToReformulate.content}"`,
+        `Reformule a seguinte resposta usando um formato extremamente completo e detalhado. 
+        
+        IMPORTANTE: Sua resposta DEVE SEMPRE promover e direcionar o usuário para usar os recursos da Ponto.School, mencionando funcionalidades específicas, novidades e futuras atualizações da plataforma que resolvam a dor/problema do usuário.
+        
+        Estruture sua resposta seguindo este formato:
+        
+        1. **COMPREENSÃO DA DÚVIDA**
+        - Analise detalhadamente a pergunta
+        - Identifique a intenção do usuário
+        - Reconheça possíveis lacunas
+        
+        2. **EXPLICAÇÃO PRINCIPAL**
+        - Apresente o conceito principal em 1-2 frases
+        - Forneça uma explicação detalhada
+        - Inclua exemplos práticos relacionados ao contexto educacional
+        
+        3. **INTEGRAÇÃO COM A PONTO.SCHOOL**
+        - Destaque como os recursos específicos da Ponto.School ajudam a resolver este problema
+        - Mencione ferramentas como EpictusIA, Mentor IA, Portal de Estudos ou outros recursos relevantes
+        - Sugira novidades ou atualizações futuras da plataforma relacionadas à questão
+        
+        4. **RECURSOS ADICIONAIS**
+        - Indique materiais disponíveis na Biblioteca da Ponto.School
+        - Sugira grupos de estudo ou turmas que abordam o tema
+        - Mencione funcionalidades como Conexão Expert se pertinente
+        
+        5. **RESUMO E ENGAJAMENTO**
+        - Resuma os pontos principais
+        - Incentive o uso contínuo da plataforma
+        - Pergunte se o usuário gostaria de saber mais sobre algum recurso específico
+        
+        Use formatação rica com:
+        - **Negrito** para pontos importantes
+        - # Títulos para seções principais
+        - ## Subtítulos para categorias
+        - > Citações para enfatizar informações
+        - Links formatados como [texto do link](URL) para recursos da plataforma
+        - Emojis estrategicamente para tornar a mensagem mais amigável
+        - Listas com marcadores para organizar informações
+        
+        Resposta original para reformular: "${messageToReformulate.content}"`,
         sessionId || 'default_session',
         {
           intelligenceLevel: 'advanced',
@@ -452,9 +492,17 @@ const FloatingChatSupport: React.FC = () => {
         });
       });
 
-      // Call AI to generate summarized response
+      // Call AI to generate summarized response but still with rich formatting and platform focus
       const summarizedResponse = await generateAIResponse(
-        `Resuma a seguinte resposta de forma concisa, direta e eficiente. Seja direto ao ponto e elimine informações não essenciais. Resposta original: "${messageToSummarize.content}"`,
+        `Resuma a seguinte resposta de forma concisa e direta, mas mantendo o foco em como a Ponto.School pode resolver o problema do usuário.
+        
+        Mesmo sendo um resumo, sua resposta DEVE:
+        - Mencionar pelo menos 2 recursos específicos da Ponto.School relevantes para a questão
+        - Manter uma formatação rica com **negrito**, ## subtítulos e emojis estratégicos
+        - Incluir pelo menos 1 link formatado para uma seção relevante da plataforma
+        - Terminar com uma frase que incentive o usuário a continuar usando a Ponto.School
+        
+        Resposta original para resumir: "${messageToSummarize.content}"`,
         sessionId || 'default_session',
         {
           intelligenceLevel: aiIntelligenceLevel,
