@@ -107,12 +107,12 @@ async function getUserContext() {
     }
 
     // Determinar o melhor username para usar (prioridade: perfil completo > metadata > localStorage > sessionStorage)
-    const bestUsername = 
-      (completeUserProfile?.username || completeUserProfile?.display_name) || 
-      metadataUsername || 
-      usernameSources.localStorage || 
-      usernameSources.sessionStorage || 
-      usernameSources.profile || 
+    const bestUsername =
+      (completeUserProfile?.username || completeUserProfile?.display_name) ||
+      metadataUsername ||
+      usernameSources.localStorage ||
+      usernameSources.sessionStorage ||
+      usernameSources.profile ||
       'Usuário';
 
     // Construir contexto completo do usuário
@@ -148,9 +148,9 @@ async function getUserContext() {
       darkMode: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches,
 
       // Dados do localStorage
-      localStorageData: Object.keys(localStorage).filter(key => 
-        key.startsWith('user_') || 
-        key.startsWith('ponto_') || 
+      localStorageData: Object.keys(localStorage).filter(key =>
+        key.startsWith('user_') ||
+        key.startsWith('ponto_') ||
         key.startsWith('study_')
       ).reduce((acc, key) => {
         acc[key] = localStorage.getItem(key);
@@ -178,9 +178,9 @@ async function getUserContext() {
 
 // Função para gerar resposta usando a API xAI
 export async function generateXAIResponse(
-  message: string, 
+  message: string,
   sessionId: string,
-  options?: { 
+  options?: {
     intelligenceLevel?: 'basic' | 'normal' | 'advanced',
     languageStyle?: 'casual' | 'formal' | 'technical'
   }
@@ -401,35 +401,35 @@ CONTEXTO DO USUÁRIO (COMPLETO):
       2. Use uma linguagem mais informal e descontraída, como se estivesse conversando com um amigo.
       3. Seja amigável, use emojis ocasionalmente e mantenha um tom leve e positivo.
       4. Use gírias leves e expressões coloquiais quando apropriado.
-      
+
       ESTRUTURA DE RESPOSTAS:
       Para todas as suas respostas, utilize uma estrutura completa e abrangente:
-      
+
       1. Compreensão da dúvida:
          - Analise detalhadamente a pergunta do usuário
          - Identifique a intenção e as necessidades implícitas
          - Reconheça possíveis lacunas de informação
-      
+
       2. Explicação principal:
          - Apresente o conceito principal de forma clara
          - Forneça uma explicação detalhada com todos os passos necessários
          - Inclua exemplos práticos relacionados ao contexto educacional
-      
+
       3. Integração com a Ponto.School:
          - SEMPRE destaque como os recursos da Ponto.School ajudam a resolver o problema
          - Mencione ferramentas específicas como EpictusIA, Mentor IA, Portal, etc.
          - Sugira novidades ou atualizações futuras da plataforma relacionadas à questão
-      
+
       4. Recursos adicionais:
          - Indique materiais disponíveis na Biblioteca
          - Sugira grupos de estudo ou turmas relacionadas
          - Mencione a Conexão Expert para questões mais complexas
-      
+
       5. Resumo e engajamento:
          - Resuma os pontos principais
          - Incentive o uso contínuo da plataforma
          - Pergunte se o usuário gostaria de saber mais sobre algum recurso
-      
+
       FORMATAÇÃO VISUAL:
       Utilize formato visual rico em suas respostas:
       - **Negrito** para pontos importantes
@@ -518,7 +518,7 @@ CONTEXTO DO USUÁRIO (COMPLETO):
       - Turmas: Salas de aula virtuais para acompanhamento sistemático
       - Organização: Ferramentas de gestão de tempo e tarefas
       - Biblioteca: Acervo digital de materiais didáticos e referências
-      
+
       NOVIDADES E FUTURAS ATUALIZAÇÕES PARA MENCIONAR:
       - Novo sistema de inteligência artificial para análise de desempenho
       - Ferramentas de gamificação aprimoradas para engajamento
@@ -528,12 +528,12 @@ CONTEXTO DO USUÁRIO (COMPLETO):
       - Sistema avançado de geração de resumos e materiais de estudo
       - Recursos expandidos de visualização de conteúdo
       - Futuras ferramentas de preparação para vestibulares e concursos
-      
+
       Personalize suas respostas para criar uma experiência única e amigável para ${username}.`;
 
   conversationHistory[sessionId] = [
-    { 
-      role: 'system', 
+    {
+      role: 'system',
       content: SYSTEM_PROMPT
     }
   ];
@@ -541,9 +541,9 @@ CONTEXTO DO USUÁRIO (COMPLETO):
 
 // Função para gerar resposta usando a API Gemini
 export async function generateGeminiResponse(
-  message: string, 
+  message: string,
   sessionId: string,
-  options?: { 
+  options?: {
     intelligenceLevel?: 'basic' | 'normal' | 'advanced',
     languageStyle?: 'casual' | 'formal' | 'technical'
   }
@@ -577,35 +577,35 @@ Contexto do usuário:
               2. Use uma linguagem mais informal e descontraída, como se estivesse conversando com um amigo.
               3. Seja amigável, use emojis ocasionalmente e mantenha um tom leve e positivo.
               4. Use gírias leves e expressões coloquiais quando apropriado.
-              
+
               ESTRUTURA DE RESPOSTAS:
               Para todas as suas respostas, utilize uma estrutura completa e abrangente:
-              
+
               1. Compreensão da dúvida:
                  - Analise detalhadamente a pergunta do usuário
                  - Identifique a intenção e as necessidades implícitas
                  - Reconheça possíveis lacunas de informação
-              
+
               2. Explicação principal:
                  - Apresente o conceito principal de forma clara
                  - Forneça uma explicação detalhada com todos os passos necessários
                  - Inclua exemplos práticos relacionados ao contexto educacional
-              
+
               3. Integração com a Ponto.School:
                  - SEMPRE destaque como os recursos da Ponto.School ajudam a resolver o problema
                  - Mencione ferramentas específicas como EpictusIA, Mentor IA, Portal, etc.
                  - Sugira novidades ou atualizações futuras da plataforma relacionadas à questão
-              
+
               4. Recursos adicionais:
                  - Indique materiais disponíveis na Biblioteca
                  - Sugira grupos de estudo ou turmas relacionadas
                  - Mencione a Conexão Expert para questões mais complexas
-              
+
               5. Resumo e engajamento:
                  - Resuma os pontos principais
                  - Incentive o uso contínuo da plataforma
                  - Pergunte se o usuário gostaria de saber mais sobre algum recurso
-              
+
               FORMATAÇÃO VISUAL:
               Utilize formato visual rico em suas respostas:
               - **Negrito** para pontos importantes
@@ -653,7 +653,7 @@ Contexto do usuário:
               - Turmas: Salas de aula virtuais para acompanhamento sistemático
               - Organização: Ferramentas de gestão de tempo e tarefas
               - Biblioteca: Acervo digital de materiais didáticos e referências
-              
+
               NOVIDADES E FUTURAS ATUALIZAÇÕES PARA MENCIONAR:
               - Novo sistema de inteligência artificial para análise de desempenho
               - Ferramentas de gamificação aprimoradas para engajamento
@@ -696,9 +696,9 @@ Contexto do usuário:
 
 // Função principal para gerar resposta, tentando primeiro xAI e depois Gemini como fallback
 export async function generateAIResponse(
-  message: string, 
-  sessionId: string, 
-  options?: { 
+  message: string,
+  sessionId: string,
+  options?: {
     intelligenceLevel?: 'basic' | 'normal' | 'advanced',
     languageStyle?: 'casual' | 'formal' | 'technical'
   }
@@ -861,5 +861,54 @@ const getResponseForMessage = (message: string): string => {
     return `Você pode acessar o **Portal** com todos os materiais em https://pontoschool.com/portal\n\nLá você encontrará todos os seus cursos, materiais e recursos de estudo organizados por disciplina.\n\n_Basta clicar no link acima para ir direto para o Portal!_ 📚`;
   } else {
     return "Desculpe, não entendi sua pergunta. Pode reformulá-la?";
+  }
+};
+
+// Global variables to control typing state
+let isTypingPaused = false;
+let isTypingCancelled = false;
+
+// Set typing pause state
+export const setPauseTyping = (paused: boolean): void => {
+  isTypingPaused = paused;
+};
+
+// Set typing cancelled state
+export const setCancelTyping = (cancelled: boolean): void => {
+  isTypingCancelled = cancelled;
+};
+
+// Generate AI response
+export const generateAIResponse = async (
+  prompt: string,
+  sessionId: string = 'default_session',
+  options?: {
+    intelligenceLevel?: 'basic' | 'normal' | 'advanced';
+    languageStyle?: 'casual' | 'formal' | 'technical';
+  }
+): Promise<string> => {
+  try {
+    // Reset control flags
+    isTypingPaused = false;
+    isTypingCancelled = false;
+
+    // Save the message to history
+    addMessageToHistory(sessionId, { role: 'user', content: prompt });
+
+    console.log(`Generating response for prompt: ${prompt.substring(0, 50)}...`);
+
+    // Simulate AI processing
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Use a better response service with pause/cancel support
+    let response = await generateResponseForPrompt(prompt, options);
+
+    // Add the AI response to history
+    addMessageToHistory(sessionId, { role: 'assistant', content: response });
+
+    return response;
+  } catch (error) {
+    console.error('Error generating AI response:', error);
+    return "Desculpe, encontrei um problema ao processar sua solicitação. Por favor, tente novamente mais tarde.";
   }
 };

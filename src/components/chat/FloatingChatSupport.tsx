@@ -47,7 +47,9 @@ import {
   Download,
   File,
   Music,
-  Loader2
+  Loader2,
+  Pause,
+  Play
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { generateAIResponse, getConversationHistory, clearConversationHistory } from "@/services/aiChatService";
@@ -327,6 +329,8 @@ const FloatingChatSupport: React.FC = () => {
   const [isMessageEmpty, setIsMessageEmpty] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true); // Adicione o estado para habilitar/desabilitar sons
   const [editingMessage, setEditingMessage] = useState<ChatMessage | null>(null); // Adicione o estado para editar mensagens
+  const [typingPaused, setTypingPaused] = useState(false); // Add state for pausing typing
+  const [typingAnimationId, setTypingAnimationId] = useState(0); // Add state for animation variation
 
   // Configurações da IA
   const [aiIntelligenceLevel, setAIIntelligenceLevel] = useState<'basic' | 'normal' | 'advanced'>('normal');
@@ -701,10 +705,6 @@ const FloatingChatSupport: React.FC = () => {
     setImprovedPrompt("");
   };
 
-  // Estado para controlar a digitação
-  const [typingController, setTypingController] = useState<any | null>(null);
-  const [isPaused, setIsPaused] = useState(false);
-
   // Função para enviar mensagem
   const sendMessage = async () => {
     if (inputMessage.trim() === "" && selectedFiles.length === 0) return;
@@ -754,43 +754,9 @@ const FloatingChatSupport: React.FC = () => {
         // Mostrar texto gradualmente como se estivesse sendo digitado
         let displayedContent = '';
         const words = aiResponse.split(' ');
-        let isCancelled = false;
-        let currentIndex = 0;
-        let typingTimeout: NodeJS.Timeout | null = null;
-
-        // Função para controlar a digitação
-        const typingControl = {
-          cancel: () => {
-            if (typingTimeout) {
-              clearTimeout(typingTimeout);
-            }
-            isCancelled = true;
-            setIsTyping(false);
-            setTypingController(null);
-          },
-          pause: () => {
-            if (typingTimeout) {
-              clearTimeout(typingTimeout);
-              typingTimeout = null;
-            }
-            setIsPaused(true);
-          },
-          resume: () => {
-            if (currentIndex < words.length && !isCancelled) {
-              setIsPaused(false);
-              addNextWord(currentIndex);
-            }
-          }
-        };
-
-        setTypingController(typingControl);
 
         // Função para adicionar palavras gradualmente
         const addNextWord = (index: number) => {
-          if (isCancelled) return;
-
-          currentIndex = index;
-
           if (index < words.length) {
             displayedContent += (index === 0 ? '' : ' ') + words[index];
 
@@ -804,18 +770,14 @@ const FloatingChatSupport: React.FC = () => {
 
             // Velocidade variável da digitação baseada no tamanho da palavra
             const typingSpeed = Math.min(100, Math.max(30, 70 - words[index].length * 5));
-
-            if (!isPaused) {
-              typingTimeout = setTimeout(() => addNextWord(index + 1), typingSpeed);
-            }
+            setTimeout(() => addNextWord(index + 1), typingSpeed);
           } else {
             setIsTyping(false);
-            setTypingController(null);
           }
         };
 
         // Inicia o efeito de digitação após um pequeno delay
-        typingTimeout = setTimeout(() => addNextWord(0), 500);
+        setTimeout(() => addNextWord(0), 500);
       } catch (error) {
         console.error('Erro ao obter resposta para mensagem editada:', error);
         setMessages(prevMessages => [
@@ -909,44 +871,10 @@ const FloatingChatSupport: React.FC = () => {
       // Mostrar texto gradualmente como se estivesse sendo digitado
       let displayedContent = '';
       const words = aiResponse.split(' ');
-      let isCancelled = false;
-      let currentIndex = 0;
-      let typingTimeout: NodeJS.Timeout | null = null;
-
-      // Função para controlar a digitação
-      const typingControl = {
-        cancel: () => {
-          if (typingTimeout) {
-            clearTimeout(typingTimeout);
-          }
-          isCancelled = true;
-          setIsTyping(false);
-          setTypingController(null);
-        },
-        pause: () => {
-          if (typingTimeout) {
-            clearTimeout(typingTimeout);
-            typingTimeout = null;
-          }
-          setIsPaused(true);
-        },
-        resume: () => {
-          if (currentIndex < words.length && !isCancelled) {
-            setIsPaused(false);
-            addNextWord(currentIndex);
-          }
-        }
-      };
-
-      setTypingController(typingControl);
 
       // Função para adicionar palavras gradualmente
       const addNextWord = (index: number) => {
-        if (isCancelled) return;
-
-        currentIndex = index;
-
-        if (index < words.length) {
+        if (index < words.length && !typingPaused) {
           displayedContent += (index === 0 ? '' : ' ') + words[index];
 
           setMessages(prevMessages => 
@@ -959,18 +887,23 @@ const FloatingChatSupport: React.FC = () => {
 
           // Velocidade variável da digitação baseada no tamanho da palavra
           const typingSpeed = Math.min(100, Math.max(30, 70 - words[index].length * 5));
+          setTimeout(() => addNextWord(index + 1), typingSpeed);
 
-          if (!isPaused) {
-            typingTimeout = setTimeout(() => addNextWord(index + 1), typingSpeed);
+          // Rolar para o final a cada algumas palavras para acompanhar a digitação
+          if (index % 5 === 0 && messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
           }
-        } else {
+        } else if (index >= words.length) {
           setIsTyping(false);
-          setTypingController(null);
+          // Rolar para o final após a mensagem completa
+          if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+          }
         }
       };
 
       // Inicia o efeito de digitação após um pequeno delay
-      typingTimeout = setTimeout(() => addNextWord(0), 500);
+      setTimeout(() => addNextWord(0), 500);
 
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
@@ -997,7 +930,7 @@ const FloatingChatSupport: React.FC = () => {
     // Armazenar o arquivo selecionado
     setSelectedFiles(prev => [...prev, file]);
 
-    // Limpar o input de arquivo para permitir selecionar o mesmo arquivo novamente
+    // Limpar o input de arquivo para permitir selecionar o mesmoarquivo novamente
     if (e.target) {
       e.target.value = '';
     }
@@ -1653,7 +1586,7 @@ const FloatingChatSupport: React.FC = () => {
                   </div>
                 )}
                 {message.sender === "user" && (
-                  <div className="absolute right-0 top-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex space-x-1 p-1">
+                  <div className="absolute right-0 top-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex space-x-1p-1">
                     <button 
                       className="text-gray-400 hover:text-orange-500 dark:text-gray-500 dark:hover:text-orange-400 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
                       onClick={() => {
@@ -1786,13 +1719,50 @@ const FloatingChatSupport: React.FC = () => {
                     })}
                   </div>
                 </div>
-                <div className="relative min-h-[40px] flex items-center">
-                  <div className="typewriter">
-                    <div className="slide"><i></i></div>
-                    <div className="paper"></div>
-                    <div className="keyboard"></div>
+                <div className="relative min-h-[40px] flex flex-col">
+                  <div className="flex items-center mb-2">
+                    <div className="typewriter mr-2">
+                      <div className="slide"><i></i></div>
+                      <div className="paper"></div>
+                      <div className="keyboard"></div>
+                    </div>
+                    <span className={`ml-2 text-sm text-gray-600 dark:text-gray-400 typing-animation variation-${Math.floor(Math.random() * 4)}`}></span>
                   </div>
-                  <span className="ml-8 text-sm text-gray-600 dark:text-gray-400">Formulando resposta...</span>
+
+                  {/* Typing control buttons */}
+                  <div className="flex items-center gap-2 mt-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs py-1 px-2 h-6 border-red-200 hover:bg-red-50 text-red-600 dark:border-red-800 dark:hover:bg-red-900/20 dark:text-red-400 flex items-center gap-1"
+                      onClick={cancelTyping}
+                    >
+                      <X className="h-3 w-3" />
+                      <span>Cancelar</span>
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className={`text-xs py-1 px-2 h-6 ${
+                        typingPaused 
+                        ? "border-green-200 hover:bg-green-50 text-green-600 dark:border-green-800 dark:hover:bg-green-900/20 dark:text-green-400" 
+                        : "border-amber-200 hover:bg-amber-50 text-amber-600 dark:border-amber-800 dark:hover:bg-amber-900/20 dark:text-amber-400"
+                      } flex items-center gap-1`}
+                      onClick={toggleTypingPause}
+                    >
+                      {typingPaused ? (
+                        <>
+                          <Play className="h-3 w-3" />
+                          <span>Retomar</span>
+                        </>
+                      ) : (
+                        <>
+                          <Pause className="h-3 w-3" />
+                          <span>Pausar</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2312,7 +2282,8 @@ const FloatingChatSupport: React.FC = () => {
             variant="ghost"
             size="sm"
             className="-ml-2 dark:text-gray-200 dark:hover:bg-gray-800"
-            onClick={() => setSelectedFaq(null)}>
+            onClick={() => setSelectedFaq(null)}
+          >
             ← Voltar
           </Button>
           <h3 className="text-lg font-semibold dark:text-gray-200">
@@ -2550,6 +2521,15 @@ const FloatingChatSupport: React.FC = () => {
       )}
     </div>
   );
+
+  const cancelTyping = () => {
+    setIsTyping(false);
+    setTypingPaused(false);
+  };
+
+  const toggleTypingPause = () => {
+    setTypingPaused(!typingPaused);
+  };
 
   return (
     <>
@@ -2887,6 +2867,31 @@ const FloatingChatSupport: React.FC = () => {
           .fixed.z-40 .rounded-2xl {
             max-width: 75% !important;
           }
+        }
+
+        /* Typing animation variations */
+        .typing-animation {
+          animation: typingIn 3s steps(40, end) forwards;
+        }
+
+        .typing-animation.variation-0::before {
+          content: "|";
+          animation: typeBlinkCursor 0.75s step-end infinite;
+        }
+
+        .typing-animation.variation-1::before {
+          content: "_";
+          animation: typeBlinkCursor 0.75s step-end infinite;
+        }
+
+        .typing-animation.variation-2::before {
+          content: ".";
+          animation: typeBlinkCursor 0.75s step-end infinite;
+        }
+
+        .typing-animation.variation-3::before {
+          content: "…";
+          animation: typeBlinkCursor 0.75s step-end infinite;
         }
       `}</style>
     </>
