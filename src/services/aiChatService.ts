@@ -734,3 +734,4 @@ const getResponseForMessage = (message: string): string => {
     return "Desculpe, não entendi sua pergunta. Pode reformulá-la?";
   }
 };
+}
