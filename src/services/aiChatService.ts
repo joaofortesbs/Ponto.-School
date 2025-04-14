@@ -558,7 +558,24 @@ export async function generateAIResponse(
   }
 ): Promise<string> {
   try {
-    return await generateXAIResponse(message, sessionId, options);
+    // Adicionar regras para melhorar a qualidade e organização das respostas
+    const responseGuidelines = `
+    Ao gerar sua resposta, siga estas diretrizes para garantir uma resposta de alta qualidade:
+
+    1. Seja conciso mas completo
+    2. Organize informações em parágrafos ou listas quando apropriado
+    3. Priorize clareza e precisão
+    4. Evite respostas vagas ou ambíguas
+    5. Use linguagem simples e direta
+    6. Mantenha um tom profissional e amigável
+    7. Verifique a precisão de qualquer informação ou link fornecido
+    8. Formate corretamente URLs e recursos externos
+    9. Quando mencionar links para páginas da plataforma, use o formato correto: https://pontoschool.com/[caminho]
+    `;
+
+    // Adicionar as diretrizes ao prompt
+    const enhancedMessage = `${message}\n\n${responseGuidelines}`;
+    return await generateXAIResponse(enhancedMessage, sessionId, options);
   } catch (error) {
     console.error('Erro com xAI, tentando Gemini:', error);
     return generateGeminiResponse(message, sessionId, options);
@@ -571,7 +588,7 @@ export function clearConversationHistory(sessionId: string): void {
     // Mantém apenas a mensagem do sistema
     const systemMessage = conversationHistory[sessionId][0];
     conversationHistory[sessionId] = [systemMessage];
-    
+
     // Limpar do localStorage também
     try {
       localStorage.removeItem(`conversationHistory_${sessionId}`);
@@ -587,7 +604,7 @@ export function getConversationHistory(sessionId: string): ChatMessage[] {
   if (conversationHistory[sessionId]) {
     return conversationHistory[sessionId];
   }
-  
+
   // Caso contrário, tenta recuperar do localStorage
   try {
     const savedHistory = localStorage.getItem(`conversationHistory_${sessionId}`);
@@ -599,7 +616,7 @@ export function getConversationHistory(sessionId: string): ChatMessage[] {
   } catch (error) {
     console.error("Erro ao recuperar histórico do localStorage:", error);
   }
-  
+
   return [];
 }
 
