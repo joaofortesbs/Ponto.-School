@@ -521,11 +521,11 @@ Clique no link acima para ser redirecionado. Posso ajudar com mais alguma coisa?
       console.error('Erro na API xAI:', apiError);
 
       // Resposta padrão em caso de erro
-      const fallbackResponse = `Desculpe ${firstName}, o chat de suporte está enfrentando dificuldades técnicas no momento. 
+      const fallbackResponse = `Desculpe ${firstName}, estou enfrentando dificuldades técnicas no momento. 
 
-Vou tentar responder sua pergunta sobre a plataforma mesmo assim. ${message.length < 50 ? "Você me perguntou sobre " + message : ""}
+Vou tentar responder sua pergunta mesmo assim. ${message.length < 50 ? "Você me perguntou sobre " + message : ""}
 
-Posso ajudar você a navegar pela plataforma ou esclarecer alguma outra dúvida hoje?`;
+O que mais posso ajudar você hoje?`;
 
       // Adicionar a resposta alternativa ao histórico
       conversationHistory[sessionId].push({ 
@@ -571,16 +571,8 @@ function initializeConversationHistory(sessionId: string, userContext?: any) {
   conversationHistory[sessionId] = [
     { 
       role: 'system', 
-      content: `Você é o Epictus IA do chat de suporte flutuante da Ponto.School, um assistente dedicado à navegação e suporte da plataforma, completamente diferente do Epictus IA do menu lateral.
+      content: `Você é o Epictus IA, o assistente inteligente da Ponto.School, uma plataforma educacional.
 
-      OBJETIVO ESPECÍFICO:
-      Você é um assistente de SUPORTE que funciona como um guia completo para a plataforma Ponto.School. Seu papel é:
-      1. Ajudar com navegação e localização de funcionalidades
-      2. Explicar como usar as diferentes ferramentas da plataforma
-      3. Responder dúvidas sobre conteúdos educacionais
-      4. Servir como um tutorial interativo para novos usuários
-      5. Resolver problemas técnicos básicos
-      
       CONTEXTO DO USUÁRIO (COMPLETO):
       - Nome: ${userContext?.fullName || 'Não disponível'}
       - Username: ${username}
@@ -599,9 +591,6 @@ function initializeConversationHistory(sessionId: string, userContext?: any) {
       5. Mantenha respostas diretas e objetivas, evitando textos muito longos.
       6. Organize suas respostas em parágrafos curtos para fácil leitura.
       7. Use negrito **assim** para destacar informações importantes.
-
-      DIFERENCIAÇÃO IMPORTANTE:
-      Você NÃO É o mesmo assistente que o Epictus IA da seção do menu lateral. O Epictus IA do menu lateral é focado em estudos personalizados, planos de aprendizagem e conteúdo educacional avançado. Você é o assistente de SUPORTE que ajuda com a navegação da plataforma, responde dúvidas gerais e técnicas. Nunca se confunda com o outro assistente.
 
       CONTEÚDO INSTITUCIONAL:
       Quando perguntado sobre os criadores, fundadores, donos, desenvolvedores, equipe administrativa ou qualquer pergunta relacionada à gestão da Ponto.School, responda:
@@ -625,25 +614,17 @@ function initializeConversationHistory(sessionId: string, userContext?: any) {
       2. Nome de exibição
       3. Para outras alterações, redirecione para a página de configurações
 
-      SUPORTE TÉCNICO E TUTORIAL:
-      Quando o usuário tiver dúvidas sobre como usar a plataforma:
-      1. Explique detalhadamente como acessar a funcionalidade desejada
-      2. Ofereça dicas para melhorar a experiência de uso
-      3. Sugira recursos relacionados que possam ser úteis
-      4. Se for um problema técnico, sugira soluções básicas ou redirecione para suporte especializado
-
       REGRAS DE REDIRECIONAMENTO:
       Quando o usuário pedir para ser redirecionado a uma seção da plataforma, você DEVE SEMPRE:
       1. Incluir o link completo usando a base https://pontoschool.com/
       2. Formatá-lo como um link clicável com texto descritivo
       3. Ser direto e proativo com o redirecionamento
-      4. Explicar brevemente o que o usuário encontrará na seção
 
       Exemplos de redirecionamento correto:
-      - "Aqui está o [Portal de Estudos](https://pontoschool.com/portal). Clique para acessar todos os seus materiais organizados."
-      - "Você pode acessar sua [Agenda](https://pontoschool.com/agenda) imediatamente para ver seus compromissos."
-      - "Sua [página de Turmas](https://pontoschool.com/turmas) está pronta para acesso, lá você encontrará todos os seus grupos de estudo."
-      - "Acesse a [Biblioteca](https://pontoschool.com/biblioteca) para encontrar materiais complementares e recursos de aprendizagem."
+      - "Aqui está o [Portal de Estudos](https://pontoschool.com/portal). Clique para acessar."
+      - "Você pode acessar sua [Agenda](https://pontoschool.com/agenda) imediatamente."
+      - "Sua [página de Turmas](https://pontoschool.com/turmas) está pronta para acesso."
+      - "Acesse a [Biblioteca](https://pontoschool.com/biblioteca) para encontrar materiais."
 
       NUNCA responda apenas com "você pode encontrar isso no menu lateral" ou sugestões vagas.
       SEMPRE forneça o link direto e clicável para onde o usuário deseja ir.
@@ -670,10 +651,6 @@ function initializeConversationHistory(sessionId: string, userContext?: any) {
       - Lembretes: https://pontoschool.com/lembretes
       - Pedidos de Ajuda: https://pontoschool.com/pedidos-ajuda
       - Estudos: https://pontoschool.com/estudos
-
-      QUANDO REMETER AO EPICTUS IA DO MENU LATERAL:
-      Se o usuário fizer perguntas específicas sobre planos de estudo personalizados, análise de desempenho aprofundada, ou solicitar assistência em conteúdos educacionais avançados, diga:
-      "Para essa funcionalidade específica, recomendo que você acesse o [Epictus IA do menu lateral](https://pontoschool.com/epictus-ia), que é nosso assistente especializado em estudos aprofundados e personalização de conteúdo educacional. Estou aqui para ajudar com navegação, dúvidas sobre a plataforma e suporte geral."
 
       Personalize suas respostas para criar uma experiência única e amigável para ${firstName}.`,
       timestamp: new Date()
@@ -704,7 +681,7 @@ export async function generateGeminiResponse(
         contents: [{
           parts: [
             {
-              text: `Você é o Epictus IA do chat de suporte flutuante da Ponto.School, um assistente dedicado à navegação e suporte da plataforma. Você é DIFERENTE do Epictus IA do menu lateral.
+              text: `Você é o Epictus IA, o assistente inteligente da Ponto.School, uma plataforma educacional.
 
               Contexto do usuário:
               - Username completo: ${usernameFull}
@@ -717,8 +694,6 @@ export async function generateGeminiResponse(
               2. Use uma linguagem mais informal e descontraída, como se estivesse conversando com um amigo.
               3. Seja amigável, use emojis ocasionalmente e mantenha um tom leve e positivo.
               4. Use gírias leves e expressões coloquiais quando apropriado.
-              
-              LEMBRE-SE: Seu objetivo é servir como suporte para a plataforma, ajudando com navegação, tutoriais e respondendo dúvidas sobre todas as funcionalidades. Você NÃO é o assistente de estudos personalizados (que fica no menu lateral).
 
               CONTEÚDO INSTITUCIONAL:
               Quando perguntado sobre os criadores, fundadores, donos, desenvolvedores, equipe administrativa ou qualquer pergunta relacionada à gestão da Ponto.School, responda:
@@ -810,100 +785,53 @@ export async function getConversationHistory(sessionId: string): Promise<ChatMes
       }
     }
 
-    // Tenta buscar dados adicionais do usuário para melhor armazenamento
-    let userIdForStorage = '';
+    // Caso contrário, tenta recuperar do localStorage
     try {
-      const { data: sessionData } = await (await import('@/lib/supabase')).supabase.auth.getSession();
-      userIdForStorage = sessionData?.session?.user?.id || '';
-    } catch (e) {
-      console.log('Erro ao obter ID do usuário:', e);
-    }
+      const savedHistory = localStorage.getItem(`conversationHistory_${sessionId}`);
+      if (savedHistory) {
+        try {
+          const parsedHistory = JSON.parse(savedHistory);
 
-    // Tenta recuperar do localStorage usando vários formatos de chave
-    const possibleKeys = [
-      `conversationHistory_${sessionId}`,
-      userIdForStorage ? `conversationHistory_${userIdForStorage}_${sessionId}` : null,
-      `chat_history_${sessionId}`
-    ].filter(Boolean);
+          // Verificar se é um array válido
+          if (Array.isArray(parsedHistory) && parsedHistory.length > 0) {
+            // Converter timestamps de string para Date se necessário
+            const processedHistory = parsedHistory.map(msg => ({
+              role: msg.role || 'user',
+              content: msg.content || '',
+              timestamp: msg.timestamp ? (typeof msg.timestamp === 'string' ? new Date(msg.timestamp) : msg.timestamp) : new Date()
+            }));
 
-    let retrievedHistory = null;
+            // Verificar se há mensagem do sistema
+            const hasSystemMessage = processedHistory.some(msg => msg.role === 'system');
 
-    // Tentar cada uma das possíveis chaves
-    for (const key of possibleKeys) {
-      try {
-        const savedHistory = localStorage.getItem(key);
-        if (savedHistory) {
-          try {
-            const parsedHistory = JSON.parse(savedHistory);
-            if (Array.isArray(parsedHistory) && parsedHistory.length > 0) {
-              retrievedHistory = parsedHistory;
-              console.log(`Histórico recuperado com sucesso usando a chave: ${key}`);
-              break;
+            if (!hasSystemMessage) {
+              // Se não tiver mensagem do sistema, inicializar com uma nova
+              const userContext = await getUserContext();
+              initializeConversationHistory(sessionId, userContext);
+
+              // Adicionar as mensagens existentes
+              conversationHistory[sessionId] = [
+                ...conversationHistory[sessionId],
+                ...processedHistory.filter(msg => msg.role !== 'system')
+              ];
+            } else {
+              conversationHistory[sessionId] = processedHistory;
             }
-          } catch (parseError) {
-            console.error(`Erro ao analisar histórico usando a chave ${key}:`, parseError);
+
+            return conversationHistory[sessionId];
           }
+        } catch (parseError) {
+          console.error("Erro ao analisar histórico do localStorage:", parseError);
         }
-      } catch (e) {
-        console.error(`Erro ao tentar acessar o localStorage com a chave ${key}:`, e);
-      }
-    }
-
-    // Se encontrou histórico no localStorage
-    if (retrievedHistory) {
-      // Converter timestamps de string para Date e garantir formato adequado
-      const processedHistory = retrievedHistory.map(msg => ({
-        role: msg.role || 'user',
-        content: msg.content || '',
-        timestamp: msg.timestamp ? (typeof msg.timestamp === 'string' ? new Date(msg.timestamp) : msg.timestamp) : new Date()
-      }));
-
-      // Verificar se há mensagem do sistema
-      const hasSystemMessage = processedHistory.some(msg => msg.role === 'system');
-
-      if (!hasSystemMessage) {
-        // Se não tiver mensagem do sistema, inicializar com uma nova
-        const userContext = await getUserContext();
-        initializeConversationHistory(sessionId, userContext);
-
-        // Adicionar as mensagens existentes (exceto mensagens do sistema já existentes)
-        conversationHistory[sessionId] = [
-          ...conversationHistory[sessionId],
-          ...processedHistory.filter(msg => msg.role !== 'system')
-        ];
-      } else {
-        conversationHistory[sessionId] = processedHistory;
       }
 
-      return conversationHistory[sessionId];
-    }
-
-    // Se não encontrou no localStorage, tenta recuperar do Supabase
-    try {
+      // Se não encontrou no localStorage ou houve erro, tenta recuperar do Supabase
       const supabase = (await import('@/lib/supabase')).supabase;
       const { data: sessionData } = await supabase.auth.getSession();
       const userId = sessionData?.session?.user?.id;
 
       if (userId) {
         try {
-          // Verificar se a tabela existe antes de tentar consultar
-          try {
-            const { data: tableExists } = await supabase
-              .from('information_schema.tables')
-              .select('table_name')
-              .eq('table_schema', 'public')
-              .eq('table_name', 'ai_chat_history')
-              .single();
-
-            if (!tableExists) {
-              console.log('Tabela ai_chat_history não existe no Supabase.');
-              throw new Error('Tabela não existe');
-            }
-          } catch (tableCheckError) {
-            console.log('Erro ao verificar existência da tabela:', tableCheckError);
-            throw tableCheckError;
-          }
-
           const { data, error } = await supabase
             .from('ai_chat_history')
             .select('messages')
@@ -911,12 +839,7 @@ export async function getConversationHistory(sessionId: string): Promise<ChatMes
             .eq('session_id', sessionId)
             .single();
 
-          if (error) {
-            console.error('Erro ao buscar histórico do Supabase:', error);
-            throw error;
-          }
-
-          if (data?.messages && Array.isArray(data.messages) && data.messages.length > 0) {
+          if (!error && data?.messages && Array.isArray(data.messages) && data.messages.length > 0) {
             // Converter timestamps de string para Date
             const processedHistory = data.messages.map(msg => ({
               role: msg.role || 'user',
@@ -941,15 +864,9 @@ export async function getConversationHistory(sessionId: string): Promise<ChatMes
               conversationHistory[sessionId] = processedHistory;
             }
 
-            // Atualizar localStorage para sincronização
+            // Atualizar localStorage
             try {
               localStorage.setItem(`conversationHistory_${sessionId}`, JSON.stringify(conversationHistory[sessionId]));
-              
-              // Se temos o userId, também armazenar com chave mais específica
-              if (userId) {
-                localStorage.setItem(`conversationHistory_${userId}_${sessionId}`, 
-                  JSON.stringify(conversationHistory[sessionId]));
-              }
             } catch (localStorageError) {
               console.log("Erro ao atualizar localStorage:", localStorageError);
             }
@@ -960,30 +877,14 @@ export async function getConversationHistory(sessionId: string): Promise<ChatMes
           console.error("Erro ao recuperar histórico do Supabase:", supabaseError);
         }
       }
-    } catch (dbError) {
-      console.error("Erro ao tentar acessar o banco de dados:", dbError);
+    } catch (error) {
+      console.error("Erro ao recuperar histórico:", error);
     }
 
     // Se chegou aqui, não foi possível recuperar o histórico
     // Inicializar com novo histórico
-    console.log("Criando novo histórico de conversa para a sessão:", sessionId);
     const userContext = await getUserContext();
     initializeConversationHistory(sessionId, userContext);
-    
-    // Salvar o histórico inicial
-    try {
-      localStorage.setItem(`conversationHistory_${sessionId}`, 
-        JSON.stringify(conversationHistory[sessionId]));
-        
-      // Se temos userIdForStorage, também armazenar com chave mais específica
-      if (userIdForStorage) {
-        localStorage.setItem(`conversationHistory_${userIdForStorage}_${sessionId}`, 
-          JSON.stringify(conversationHistory[sessionId]));
-      }
-    } catch (e) {
-      console.error("Erro ao salvar histórico inicial:", e);
-    }
-    
     return conversationHistory[sessionId];
   } catch (generalError) {
     console.error("Erro geral ao obter histórico de conversa:", generalError);
@@ -1037,18 +938,15 @@ function fixPlatformLinks(text: string): string {
     /(?:abrir?|abra|acesse|acessar|ver|veja)\s+(?:a\s+)?(?:página\s+(?:de|do|da)\s+)?([a-zà-ú\s]+)/gi
   ];
 
-  // Aplicar padrões de redirecionamento de forma mais robusta
+  // Aplicar padrões de redirecionamento
   for (const pattern of redirectPatterns) {
     text = text.replace(pattern, (match, sectionName) => {
-      if (!sectionName) return match;
-      
       const normalizedName = sectionName.trim();
       // Verificar se o nome normalizado corresponde a alguma chave do objeto platformLinks
       for (const key in platformLinks) {
         if (normalizedName.toLowerCase() === key.toLowerCase() || 
             key.toLowerCase().includes(normalizedName.toLowerCase()) || 
             normalizedName.toLowerCase().includes(key.toLowerCase())) {
-          // Criar link em formato seguro sem possíveis bugs de formatação
           return `Você pode acessar [${key}](${platformLinks[key]})`;
         }
       }
@@ -1056,89 +954,31 @@ function fixPlatformLinks(text: string): string {
     });
   }
 
-  // Verificar se o texto já contém links markdown
-  const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
-  const existingLinks = [];
-  let match;
-  
-  while ((match = markdownLinkRegex.exec(text)) !== null) {
-    existingLinks.push({
-      text: match[1],
-      url: match[2],
-      fullMatch: match[0]
-    });
+  // Depois, substitui todas as menções das seções por links formatados
+  const linkPatterns = {};
+
+  // Criar regex específica para cada palavra-chave, considerando espaços antes e depois
+  for (const key in platformLinks) {
+    // Evita conflitos com palavras já substituídas em Markdown
+    const escapedKey = key.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+    linkPatterns[key] = new RegExp(`(?<![\\[\\(])\\b(${escapedKey})\\b(?!\\]\\()`, 'gi');
   }
 
-  // Depois, procurar menções a seções e converter para links (só se não forem já parte de um link)
-  let newText = text;
-  
   // Aplicar substituições de forma ordenada (das mais longas para as mais curtas)
   const orderedKeys = Object.keys(platformLinks).sort((a, b) => b.length - a.length);
 
+  let newText = text;
   for (const key of orderedKeys) {
-    // Criar regex segura que não captura dentro de links existentes
-    const safeRegex = new RegExp(`(?<![\\[\\w])\\b(${escapeRegExp(key)})\\b(?![\\]\\w])`, 'g');
-    
-    // Verificar cada ocorrência para garantir que não está dentro de um link existente
-    let lastIndex = 0;
-    let result = '';
-    let regexMatch;
-    
-    while ((regexMatch = safeRegex.exec(newText)) !== null) {
-      const matchStart = regexMatch.index;
-      const matchEnd = matchStart + regexMatch[0].length;
-      
-      // Verificar se esta ocorrência está dentro de algum link existente
-      let isInsideExistingLink = false;
-      for (const link of existingLinks) {
-        const linkIndex = newText.indexOf(link.fullMatch);
-        if (linkIndex <= matchStart && linkIndex + link.fullMatch.length >= matchEnd) {
-          isInsideExistingLink = true;
-          break;
-        }
-      }
-      
-      if (!isInsideExistingLink) {
-        result += newText.substring(lastIndex, matchStart);
-        result += `[${regexMatch[1]}](${platformLinks[key]})`;
-        lastIndex = matchEnd;
-      }
-    }
-    
-    if (lastIndex > 0) {
-      result += newText.substring(lastIndex);
-      newText = result;
-      
-      // Atualizar a lista de links existentes
-      existingLinks.length = 0;
-      while ((match = markdownLinkRegex.exec(newText)) !== null) {
-        existingLinks.push({
-          text: match[1],
-          url: match[2],
-          fullMatch: match[0]
-        });
+    if (linkPatterns[key]) {
+      // Verificar se o texto já contém um link Markdown para essa seção
+      const markdownLinkPattern = new RegExp(`\\[${key}\\]\\(${platformLinks[key].replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\)`, 'gi');
+      if (!markdownLinkPattern.test(newText)) {
+        newText = newText.replace(linkPatterns[key], `[$1](${platformLinks[key]})`);
       }
     }
   }
 
-  // Remover qualquer formatação incorreta que possa ter sido introduzida
-  newText = newText
-    .replace(/\]\(\[/g, ']([') // Corrigir links aninhados
-    .replace(/\]\(https:\/\/pontoschool\.com\/[a-z-]+\)\(https:\/\/pontoschool\.com\/[a-z-]+\)/g, match => {
-      // Extrair o primeiro link válido
-      const urlMatch = match.match(/\]\((https:\/\/pontoschool\.com\/[a-z-]+)\)/);
-      if (urlMatch && urlMatch[1]) {
-        return `](${urlMatch[1]})`;
-      }
-      return match;
-    });
-
   return newText;
-}
-
-// Função auxiliar para escapar caracteres especiais em regex
-function escapeRegExp(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 
@@ -1162,90 +1002,36 @@ async function saveConversationHistory(sessionId: string, history: ChatMessage[]
     }));
 
     try {
-      // Salvar para o usuário atual com uma estrutura mais persistente
-      // Usar formato conversationHistory_USER_ID_sessionId quando possível
-      let storageKey = `conversationHistory_${sessionId}`;
-      
-      // Tentar obter dados de identificação do usuário para melhor rastreamento
-      try {
-        const { data: sessionData } = await (await import('@/lib/supabase')).supabase.auth.getSession();
-        const userId = sessionData?.session?.user?.id;
-        if (userId) {
-          storageKey = `conversationHistory_${userId}_${sessionId}`;
-        }
-      } catch (e) {
-        console.log('Erro ao obter ID do usuário, usando chave padrão:', e);
-      }
-      
-      // Salvar com uma chave mais específica para melhor identificação
-      localStorage.setItem(storageKey, JSON.stringify(serializableHistory));
-      
-      // Para compatibilidade, também salvar com a chave antiga
-      localStorage.setItem(`conversationHistory_${sessionId}`, JSON.stringify(serializableHistory));
-
-      // Manter um índice de todas as conversas do usuário
-      try {
-        const userConversationsKey = 'userConversationsIndex';
-        let conversationsIndex = {};
-        
-        const savedIndex = localStorage.getItem(userConversationsKey);
-        if (savedIndex) {
-          conversationsIndex = JSON.parse(savedIndex);
-        }
-        
-        conversationsIndex[sessionId] = {
-          lastUpdated: new Date().toISOString(),
-          messageCount: serializableHistory.length,
-          title: serializableHistory.length > 1 ? 
-            serializableHistory[1].content.substring(0, 30) + "..." : 
-            "Nova conversa"
-        };
-        
-        // Limitar o índice a 50 conversas mais recentes
-        const sortedEntries = Object.entries(conversationsIndex)
-          .sort((a, b) => new Date(b[1].lastUpdated).getTime() - new Date(a[1].lastUpdated).getTime())
-          .slice(0, 50);
-        
-        const trimmedIndex = {};
-        sortedEntries.forEach(([key, value]) => {
-          trimmedIndex[key] = value;
-        });
-        
-        localStorage.setItem(userConversationsKey, JSON.stringify(trimmedIndex));
-      } catch (indexError) {
-        console.error("Erro ao atualizar índice de conversas:", indexError);
-      }
-
       // Salvar todas as sessões em um único item no localStorage com limite de tamanho
-      try {
-        const allSessions = {};
-        // Só armazenar as últimas 20 sessões
-        const sessionIds = Object.keys(conversationHistory).slice(-20);
-        
-        for (const id of sessionIds) {
-          const sessionHistory = conversationHistory[id];
-          if (sessionHistory && sessionHistory.length > 0) {
-            // Limitar cada sessão a 100 mensagens para melhor contexto
-            allSessions[id] = sessionHistory.slice(-100).map(msg => ({
-              role: msg.role,
-              content: msg.content,
-              timestamp: msg.timestamp instanceof Date ? msg.timestamp.toISOString() : 
-                        (typeof msg.timestamp === 'string' ? msg.timestamp : new Date().toISOString())
-            }));
-          }
+      // Para evitar exceder o limite do localStorage, limitamos o histórico
+      const allSessions = {};
+
+      // Só armazenar as últimas 20 sessões
+      const sessionIds = Object.keys(conversationHistory).slice(-20);
+      for (const id of sessionIds) {
+        const sessionHistory = conversationHistory[id];
+        if (sessionHistory && sessionHistory.length > 0) {
+          // Limitar cada sessão a 50 mensagens (1 sistema + 49 de conversa)
+          allSessions[id] = sessionHistory.slice(-50).map(msg => ({
+            role: msg.role,
+            content: msg.content,
+            timestamp: msg.timestamp instanceof Date ? msg.timestamp.toISOString() : 
+                      (typeof msg.timestamp === 'string' ? msg.timestamp : new Date().toISOString())
+          }));
         }
-        
-        localStorage.setItem('aiChatSessions', JSON.stringify(allSessions));
-      } catch (batchSaveError) {
-        console.error("Erro ao salvar todas as sessões:", batchSaveError);
       }
+
+      localStorage.setItem('aiChatSessions', JSON.stringify(allSessions));
+
+      // Também salvar individualmente a sessão atual
+      localStorage.setItem(`conversationHistory_${sessionId}`, JSON.stringify(serializableHistory));
     } catch (localStorageError) {
       console.error("Erro ao salvar no localStorage:", localStorageError);
       // Se falhar por exceder o limite, limpar o localStorage e tentar novamente só com a sessão atual
       try {
         localStorage.removeItem('aiChatSessions');
         localStorage.setItem(`conversationHistory_${sessionId}`, 
-          JSON.stringify(serializableHistory.slice(-50))); // Salvar só as últimas 50 mensagens
+          JSON.stringify(serializableHistory.slice(-30))); // Salvar só as últimas 30 mensagens
       } catch (retryError) {
         console.error("Falha na segunda tentativa de salvar no localStorage:", retryError);
       }
@@ -1259,44 +1045,13 @@ async function saveConversationHistory(sessionId: string, history: ChatMessage[]
 
       if (userId) {
         try {
-          // Criar tabela ai_chat_history se não existir (verificar primeiro)
-          const { data: tablesData } = await supabase
-            .from('information_schema.tables')
-            .select('table_name')
-            .eq('table_schema', 'public')
-            .eq('table_name', 'ai_chat_history');
-            
-          if (!tablesData || tablesData.length === 0) {
-            // Tabela não existe, tentar criar usando rpc
-            try {
-              await supabase.rpc('execute_sql', {
-                sql_statement: `
-                  CREATE TABLE IF NOT EXISTS public.ai_chat_history (
-                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-                    session_id TEXT NOT NULL,
-                    messages JSONB NOT NULL DEFAULT '[]'::jsonb,
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                    UNIQUE (user_id, session_id)
-                  );
-                  
-                  CREATE INDEX IF NOT EXISTS ai_chat_history_user_id_idx ON public.ai_chat_history(user_id);
-                  CREATE INDEX IF NOT EXISTS ai_chat_history_session_id_idx ON public.ai_chat_history(session_id);
-                `
-              });
-            } catch (createTableError) {
-              console.log('Erro ao criar tabela ai_chat_history:', createTableError);
-            }
-          }
-
-          // Upsert do histórico da conversa
+          // Upsert do histórico da conversa - versão simplificada para evitar erros
           const { error } = await supabase
             .from('ai_chat_history')
             .upsert({
               user_id: userId,
               session_id: sessionId,
-              messages: serializableHistory.slice(-100), // Armazenar até 100 mensagens
+              messages: serializableHistory.slice(-50), // Limitar a 50 mensagens
               updated_at: new Date().toISOString()
             }, {
               onConflict: 'user_id,session_id'

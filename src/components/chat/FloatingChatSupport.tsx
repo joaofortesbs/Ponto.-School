@@ -66,8 +66,6 @@ interface ChatMessage {
   sender: 'user' | 'assistant';
   timestamp: Date;
   files?: MessageFile[];
-  rating?: 'positive' | 'negative';
-  needsImprovement?: boolean;
 }
 
 interface Ticket {
@@ -122,7 +120,7 @@ interface CommonQuestion {
 const defaultMessages: ChatMessage[] = [
   {
     id: 1,
-    content: "Oi! Sou o Epictus IA do suporte, seu assistente descolado aqui na Ponto.School! 😊 Estou aqui para te ajudar com dúvidas sobre a plataforma, navegação, funcionalidades e também posso responder questões sobre conteúdos educacionais. Como posso facilitar sua experiência hoje?",
+    content: "Oi! Sou o Epictus IA, seu assistente descolado aqui na Ponto.School! 😊 Tô pronto pra te ajudar com o que precisar, é só mandar! Como posso facilitar sua vida hoje?",
     sender: "assistant",
     timestamp: new Date(),
   },
@@ -1298,11 +1296,11 @@ const FloatingChatSupport: React.FC = () => {
               {message.sender === "assistant" && (
                 <div className="w-10 h-10 rounded-full overflow-hidden mr-2 flex-shrink-0">
                   <Avatar>
-                    <AvatarImage src="/images/tempo-image-20250329T044440497Z.png" alt="Epictus IA Suporte" />
+                    <AvatarImage src="/images/tempo-image-20250329T044440497Z.png" alt="Epictus IA" />
                     <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] text-white">
-                      <LifeBuoy className="h-5 w-5" />
-                      <span className="absolute -right-1 -bottom-1 w-3.5 h-3.5 bg-green-500 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800">
-                        <Bot className="h-2 w-2 text-white" />
+                      <Bot className="h-5 w-5" />
+                      <span className="absolute -right-1 -bottom-1 w-3.5 h-3.5 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800">
+                        <Sparkles className="h-2 w-2 text-white" />
                       </span>
                     </AvatarFallback>
                   </Avatar>
@@ -1424,154 +1422,11 @@ const FloatingChatSupport: React.FC = () => {
                       ))}
                     </div>
                   )}
-                  <div className="flex justify-between items-center mt-2">
-                    <div className={`flex gap-1 ${message.sender === 'assistant' ? 'opacity-80' : 'opacity-0'}`}>
-                      {message.sender === 'assistant' && !message.rating && (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0 text-green-500 hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/20 rounded-full"
-                            onClick={() => {
-                              const updatedMessages = [...messages];
-                              const index = updatedMessages.findIndex(m => m.id === message.id);
-                              if (index !== -1) {
-                                updatedMessages[index] = {
-                                  ...updatedMessages[index],
-                                  rating: 'positive'
-                                };
-                                setMessages(updatedMessages);
-                              }
-                            }}
-                            title="Resposta útil"
-                          >
-                            <ThumbsUp className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0 text-red-500 hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-full"
-                            onClick={() => {
-                              const updatedMessages = [...messages];
-                              const index = updatedMessages.findIndex(m => m.id === message.id);
-                              if (index !== -1) {
-                                updatedMessages[index] = {
-                                  ...updatedMessages[index],
-                                  rating: 'negative',
-                                  needsImprovement: true
-                                };
-                                setMessages(updatedMessages);
-                              }
-                            }}
-                            title="Resposta não útil"
-                          >
-                            <ThumbsDown className="h-3.5 w-3.5" />
-                          </Button>
-                        </>
-                      )}
-                      {message.rating === 'positive' && (
-                        <span className="text-xs text-green-500 flex items-center gap-1">
-                          <ThumbsUp className="h-3 w-3" /> Obrigado pelo feedback!
-                        </span>
-                      )}
-                      {message.rating === 'negative' && message.needsImprovement && (
-                        <div className="flex flex-col gap-1">
-                          <span className="text-xs text-red-500 flex items-center gap-1">
-                            <ThumbsDown className="h-3 w-3" /> Desculpe pela resposta insatisfatória
-                          </span>
-                          <div className="flex gap-1">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-6 text-xs py-0 px-2 border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
-                              onClick={async () => {
-                                setIsTyping(true);
-                                const updatedMessages = [...messages];
-                                const index = updatedMessages.findIndex(m => m.id === message.id);
-                                
-                                if (index !== -1) {
-                                  updatedMessages[index] = {
-                                    ...updatedMessages[index],
-                                    needsImprovement: false
-                                  };
-                                  setMessages(updatedMessages);
-                                  
-                                  try {
-                                    // Importar o serviço AI dinamicamente
-                                    const aiService = await import('@/services/aiChatService');
-                                    
-                                    // Solicitar uma resposta melhorada
-                                    const improvedResponse = await aiService.generateAIResponse(
-                                      `Por favor, reformule sua resposta anterior para torná-la mais clara, precisa e útil: "${message.content.replace(/<[^>]*>/g, '')}"`,
-                                      sessionId || 'default_session',
-                                      {
-                                        intelligenceLevel: 'advanced',
-                                        languageStyle: aiLanguageStyle
-                                      }
-                                    );
-                                    
-                                    // Adicionar a resposta melhorada como uma nova mensagem
-                                    setMessages(prev => [
-                                      ...prev,
-                                      { 
-                                        id: Date.now(), 
-                                        content: `**Resposta reformulada:**\n\n${improvedResponse}`, 
-                                        sender: 'assistant', 
-                                        timestamp: new Date() 
-                                      }
-                                    ]);
-                                  } catch (error) {
-                                    console.error('Erro ao reformular resposta:', error);
-                                    setMessages(prev => [
-                                      ...prev,
-                                      { 
-                                        id: Date.now(), 
-                                        content: 'Desculpe, ocorreu um erro ao tentar reformular a resposta. Por favor, tente novamente mais tarde.', 
-                                        sender: 'assistant', 
-                                        timestamp: new Date() 
-                                      }
-                                    ]);
-                                  } finally {
-                                    setIsTyping(false);
-                                  }
-                                }
-                              }}
-                            >
-                              Reformular resposta
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-6 text-xs py-0 px-2 border-blue-200 text-blue-600 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/20"
-                              onClick={() => {
-                                const updatedMessages = [...messages];
-                                const index = updatedMessages.findIndex(m => m.id === message.id);
-                                
-                                if (index !== -1) {
-                                  // Definir estado temporário para entrada de sugestão
-                                  setInputMessage(`Quero uma resposta melhor para: "${message.content.replace(/<[^>]*>/g, '').substring(0, 50)}...". Preciso que você melhore em: `);
-                                  
-                                  // Atualizar o estado da mensagem
-                                  updatedMessages[index] = {
-                                    ...updatedMessages[index],
-                                    needsImprovement: false
-                                  };
-                                  setMessages(updatedMessages);
-                                }
-                              }}
-                            >
-                              Sugerir melhoria
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="text-xs opacity-80 text-right font-medium ml-auto">
-                      {message.timestamp.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </div>
+                  <div className="text-xs opacity-80 mt-2 text-right font-medium">
+                    {message.timestamp.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </div>
                 </div>
               )}
