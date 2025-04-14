@@ -251,8 +251,5 @@ const initializeChatSyncService = async () => {
 // Iniciar sincronização em segundo plano
 initializeChatSyncService();
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-)
+// Esta renderização já é feita dentro da função initializeApp acima
+// Não é necessário renderizar duas vezes, o que pode causar problemas

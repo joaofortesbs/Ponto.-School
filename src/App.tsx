@@ -5,6 +5,7 @@ import {
   Navigate,
   useLocation,
   useNavigate,
+  BrowserRouter,
 } from "react-router-dom";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import routes from "./tempo-routes";
