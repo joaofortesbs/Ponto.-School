@@ -392,6 +392,19 @@ const FloatingChatSupport: React.FC = () => {
         const aiChatDatabaseService = await import('@/services/aiChatDatabaseService');
         const { supabase } = await import('@/lib/supabase');
         
+        // Inicializar serviço de sincronização para manter o banco de dados da IA atualizado
+        try {
+          const aiChatSyncService = await import('@/services/aiChatSyncService');
+          console.log('Inicializando serviço de sincronização da IA...');
+          const syncSubscriptions = await aiChatSyncService.aiChatSyncService.initialize();
+          
+          if (syncSubscriptions) {
+            console.log('Serviço de sincronização da IA inicializado com sucesso');
+          }
+        } catch (syncError) {
+          console.error('Erro ao inicializar serviço de sincronização da IA:', syncError);
+        }
+        
         // Verificar sessão do usuário
         const { data: sessionData } = await supabase.auth.getSession();
         const isAuthenticated = !!sessionData?.session?.user;

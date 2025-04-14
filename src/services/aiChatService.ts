@@ -46,6 +46,11 @@ async function getUserContext() {
     // Importar o aiChatDatabase para acesso a dados do usuário
     const aiChatDatabase = (await import('./aiChatDatabaseService')).aiChatDatabase;
 
+    // Inicializar cache do aiChatDatabase se ainda não foi feito
+    if (typeof aiChatDatabase.initializeFromCache === 'function') {
+      aiChatDatabase.initializeFromCache();
+    }
+
     // Obter o contexto completo do usuário através do serviço especializado
     const userContext = await aiChatDatabase.getUserContext();
 
@@ -78,6 +83,22 @@ async function getUserContext() {
       };
     }
 
+    // Obter dados das estruturas globais sincronizadas
+    let platformSections = [];
+    let globalNotifications = [];
+    let platformNews = [];
+    let platformStats = {};
+
+    try {
+      // Tentar obter dados da sincronização global
+      platformSections = aiChatDatabase.platformSections || [];
+      globalNotifications = JSON.parse(localStorage.getItem('aiChatGlobalNotifications') || '[]');
+      platformNews = JSON.parse(localStorage.getItem('aiChatPlatformNews') || '[]');
+      platformStats = JSON.parse(localStorage.getItem('aiChatPlatformStats') || '{}');
+    } catch (cacheError) {
+      console.log('Erro ao obter dados de cache global:', cacheError);
+    }
+
     // Adicionar dados extras relevantes ao contexto
     return {
       ...userContext,
@@ -89,6 +110,12 @@ async function getUserContext() {
       platform: navigator.platform,
       screenSize: `${window.innerWidth}x${window.innerHeight}`,
       darkMode: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches,
+
+      // Dados sincronizados da plataforma
+      platformSections,
+      globalNotifications: globalNotifications.slice(0, 5), // Limitar para as 5 mais recentes
+      platformNews: platformNews.slice(0, 3), // Limitar para as 3 mais recentes
+      platformStats,
 
       // Dados do localStorage relevantes
       localStorageData: Object.keys(localStorage).filter(key => 

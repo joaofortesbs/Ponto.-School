@@ -30,94 +30,262 @@ interface DetailedUserProfile extends UserProfile {
 }
 
 // Database for AI chat knowledge and context enhancement
+// Cache para dados globais e específicos
+const cache = {
+  profileCache: new Map(),
+  platformSections: [],
+  globalClassesData: [],
+  globalSeriesData: [],
+  globalNotifications: [],
+  platformStats: {},
+  platformNews: [],
+  lastCacheClean: Date.now()
+};
+
+// Inicializar com dados padrão
+const defaultPlatformSections = [
+  {
+    section: 'general',
+    name: 'Portal de Estudos',
+    description: 'Centro de materiais didáticos organizados por disciplina e tópico.',
+    path: '/portal'
+  },
+  {
+    section: 'general',
+    name: 'Agenda',
+    description: 'Visualize e gerencie seus compromissos, eventos e prazos de entrega.',
+    path: '/agenda'
+  },
+  {
+    section: 'general',
+    name: 'Turmas',
+    description: 'Acesse suas turmas e grupos de estudo.',
+    path: '/turmas'
+  },
+  {
+    section: 'general',
+    name: 'Biblioteca',
+    description: 'Acervo de recursos didáticos e materiais complementares.',
+    path: '/biblioteca'
+  },
+  {
+    section: 'profile',
+    name: 'Perfil',
+    description: 'Visualize e edite suas informações pessoais.',
+    path: '/profile'
+  },
+  {
+    section: 'settings',
+    name: 'Configurações',
+    description: 'Ajuste as configurações da sua conta e preferências.',
+    path: '/configuracoes'
+  },
+  {
+    section: 'ai',
+    name: 'Epictus IA',
+    description: 'Assistente de estudos pessoal para auxiliar em seu aprendizado.',
+    path: '/epictus-ia'
+  },
+  {
+    section: 'ai',
+    name: 'Mentor IA',
+    description: 'Mentoria personalizada para objetivos educacionais específicos.',
+    path: '/mentor-ia'
+  },
+  {
+    section: 'study',
+    name: 'Planos de Estudo',
+    description: 'Crie e gerencie planos de estudo personalizados.',
+    path: '/planos-estudo'
+  },
+  {
+    section: 'achievements',
+    name: 'Conquistas',
+    description: 'Visualize seus progressos e conquistas na plataforma.',
+    path: '/conquistas'
+  },
+  {
+    section: 'finance',
+    name: 'Carteira',
+    description: 'Gerencie seus pontos e recursos na plataforma.',
+    path: '/carteira'
+  },
+  {
+    section: 'marketplace',
+    name: 'Mercado',
+    description: 'Adquira materiais e recursos com seus pontos.',
+    path: '/mercado'
+  },
+  {
+    section: 'organization',
+    name: 'Organização',
+    description: 'Ferramentas para organizar seus estudos e tarefas.',
+    path: '/organizacao'
+  },
+  {
+    section: 'social',
+    name: 'Comunidades',
+    description: 'Participe de comunidades de interesse.',
+    path: '/comunidades'
+  }
+];
+
+// Inicializar o cache com valores padrão
+cache.platformSections = [...defaultPlatformSections];
+
 export const aiChatDatabase = {
   // Platform sections information for navigation and explanations with comprehensive knowledge
-  platformSections: [
-    {
-      section: 'general',
-      name: 'Portal de Estudos',
-      description: 'Centro de materiais didáticos organizados por disciplina e tópico.',
-      path: '/portal'
-    },
-    {
-      section: 'general',
-      name: 'Agenda',
-      description: 'Visualize e gerencie seus compromissos, eventos e prazos de entrega.',
-      path: '/agenda'
-    },
-    {
-      section: 'general',
-      name: 'Turmas',
-      description: 'Acesse suas turmas e grupos de estudo.',
-      path: '/turmas'
-    },
-    {
-      section: 'general',
-      name: 'Biblioteca',
-      description: 'Acervo de recursos didáticos e materiais complementares.',
-      path: '/biblioteca'
-    },
-    {
-      section: 'profile',
-      name: 'Perfil',
-      description: 'Visualize e edite suas informações pessoais.',
-      path: '/profile'
-    },
-    {
-      section: 'settings',
-      name: 'Configurações',
-      description: 'Ajuste as configurações da sua conta e preferências.',
-      path: '/configuracoes'
-    },
-    {
-      section: 'ai',
-      name: 'Epictus IA',
-      description: 'Assistente de estudos pessoal para auxiliar em seu aprendizado.',
-      path: '/epictus-ia'
-    },
-    {
-      section: 'ai',
-      name: 'Mentor IA',
-      description: 'Mentoria personalizada para objetivos educacionais específicos.',
-      path: '/mentor-ia'
-    },
-    {
-      section: 'study',
-      name: 'Planos de Estudo',
-      description: 'Crie e gerencie planos de estudo personalizados.',
-      path: '/planos-estudo'
-    },
-    {
-      section: 'achievements',
-      name: 'Conquistas',
-      description: 'Visualize seus progressos e conquistas na plataforma.',
-      path: '/conquistas'
-    },
-    {
-      section: 'finance',
-      name: 'Carteira',
-      description: 'Gerencie seus pontos e recursos na plataforma.',
-      path: '/carteira'
-    },
-    {
-      section: 'marketplace',
-      name: 'Mercado',
-      description: 'Adquira materiais e recursos com seus pontos.',
-      path: '/mercado'
-    },
-    {
-      section: 'organization',
-      name: 'Organização',
-      description: 'Ferramentas para organizar seus estudos e tarefas.',
-      path: '/organizacao'
-    },
-    {
-      section: 'social',
-      name: 'Comunidades',
-      description: 'Participe de comunidades de interesse.',
-      path: '/comunidades'
+  get platformSections() {
+    return cache.platformSections.length > 0 ? cache.platformSections : defaultPlatformSections;
+  },
+  
+  // Método para atualizar as seções da plataforma
+  updatePlatformSections(sections) {
+    if (sections && Array.isArray(sections) && sections.length > 0) {
+      cache.platformSections = sections;
+      // Salvar no localStorage para persistência
+      try {
+        localStorage.setItem('aiChatPlatformSections', JSON.stringify(sections));
+      } catch (e) {
+        console.error('Erro ao salvar platformSections no localStorage:', e);
+      }
     }
-  ],
+  },
+  
+  // Método para limpar o cache de perfis
+  clearProfileCache() {
+    cache.profileCache.clear();
+    cache.lastCacheClean = Date.now();
+    console.log('Cache de perfis limpo com sucesso');
+  },
+  
+  // Atualizar dados globais de turmas
+  updateGlobalClassesData(classesData) {
+    if (classesData && Array.isArray(classesData)) {
+      cache.globalClassesData = classesData;
+      // Salvar no localStorage para persistência
+      try {
+        localStorage.setItem('aiChatGlobalClassesData', JSON.stringify(classesData));
+      } catch (e) {
+        console.error('Erro ao salvar globalClassesData no localStorage:', e);
+      }
+    }
+  },
+  
+  // Atualizar dados globais de séries
+  updateGlobalSeriesData(seriesData) {
+    if (seriesData && Array.isArray(seriesData)) {
+      cache.globalSeriesData = seriesData;
+      // Salvar no localStorage para persistência
+      try {
+        localStorage.setItem('aiChatGlobalSeriesData', JSON.stringify(seriesData));
+      } catch (e) {
+        console.error('Erro ao salvar globalSeriesData no localStorage:', e);
+      }
+    }
+  },
+  
+  // Atualizar dados de notificações globais
+  updateGlobalNotificationsData(notificationsData) {
+    if (notificationsData && Array.isArray(notificationsData)) {
+      cache.globalNotifications = notificationsData;
+      // Salvar no localStorage para persistência
+      try {
+        localStorage.setItem('aiChatGlobalNotifications', JSON.stringify(notificationsData));
+      } catch (e) {
+        console.error('Erro ao salvar globalNotifications no localStorage:', e);
+      }
+    }
+  },
+  
+  // Atualizar estatísticas da plataforma
+  updatePlatformStats(statsData) {
+    if (statsData) {
+      cache.platformStats = statsData;
+      // Salvar no localStorage para persistência
+      try {
+        localStorage.setItem('aiChatPlatformStats', JSON.stringify(statsData));
+      } catch (e) {
+        console.error('Erro ao salvar platformStats no localStorage:', e);
+      }
+    }
+  },
+  
+  // Atualizar novidades da plataforma
+  updatePlatformNews(newsData) {
+    if (newsData && Array.isArray(newsData)) {
+      cache.platformNews = newsData;
+      // Salvar no localStorage para persistência
+      try {
+        localStorage.setItem('aiChatPlatformNews', JSON.stringify(newsData));
+      } catch (e) {
+        console.error('Erro ao salvar platformNews no localStorage:', e);
+      }
+    }
+  },
+  
+  // Recuperar dados de cache do localStorage na inicialização
+  initializeFromCache() {
+    try {
+      // Recuperar seções da plataforma
+      const savedSections = localStorage.getItem('aiChatPlatformSections');
+      if (savedSections) {
+        const parsedSections = JSON.parse(savedSections);
+        if (Array.isArray(parsedSections) && parsedSections.length > 0) {
+          cache.platformSections = parsedSections;
+        }
+      }
+      
+      // Recuperar dados de turmas
+      const savedClasses = localStorage.getItem('aiChatGlobalClassesData');
+      if (savedClasses) {
+        const parsedClasses = JSON.parse(savedClasses);
+        if (Array.isArray(parsedClasses)) {
+          cache.globalClassesData = parsedClasses;
+        }
+      }
+      
+      // Recuperar dados de séries
+      const savedSeries = localStorage.getItem('aiChatGlobalSeriesData');
+      if (savedSeries) {
+        const parsedSeries = JSON.parse(savedSeries);
+        if (Array.isArray(parsedSeries)) {
+          cache.globalSeriesData = parsedSeries;
+        }
+      }
+      
+      // Recuperar notificações
+      const savedNotifications = localStorage.getItem('aiChatGlobalNotifications');
+      if (savedNotifications) {
+        const parsedNotifications = JSON.parse(savedNotifications);
+        if (Array.isArray(parsedNotifications)) {
+          cache.globalNotifications = parsedNotifications;
+        }
+      }
+      
+      // Recuperar estatísticas
+      const savedStats = localStorage.getItem('aiChatPlatformStats');
+      if (savedStats) {
+        const parsedStats = JSON.parse(savedStats);
+        if (parsedStats) {
+          cache.platformStats = parsedStats;
+        }
+      }
+      
+      // Recuperar novidades
+      const savedNews = localStorage.getItem('aiChatPlatformNews');
+      if (savedNews) {
+        const parsedNews = JSON.parse(savedNews);
+        if (Array.isArray(parsedNews)) {
+          cache.platformNews = parsedNews;
+        }
+      }
+      
+      console.log('Cache da IA inicializado com sucesso a partir do localStorage');
+    } catch (e) {
+      console.error('Erro ao inicializar cache da IA a partir do localStorage:', e);
+    }
+  },
 
   // Function to fetch complete user profile information
   getUserProfile: async (): Promise<UserProfile | null> => {
