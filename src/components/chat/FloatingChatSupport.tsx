@@ -1170,8 +1170,8 @@ const FloatingChatSupport: React.FC = () => {
                 <div className="flex flex-col">
                   {message.isImproved && (
                     <div className="mb-2 flex items-center">
-                      <Badge className="bg-green-500 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
-                        <RefreshCw className="h-3 w-3" />
+                      <Badge className="bg-gradient-to-r from-green-500 to-green-600 text-white text-xs px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
+                        <Sparkles className="h-3.5 w-3.5" />
                         Resposta melhorada
                       </Badge>
                     </div>
@@ -1239,12 +1239,12 @@ const FloatingChatSupport: React.FC = () => {
                 </div>
               )}
               {message.sender === "assistant" && (
-                <div className="flex items-center justify-end mt-1 space-x-2">
-                  <div className="flex space-x-1">
+                <div className="flex flex-col w-full mt-2">
+                  <div className="flex items-center justify-center space-x-4 mt-1">
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="h-7 w-7 p-0 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                      className="h-8 w-8 p-0 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                       title="Gostei da resposta"
                       onClick={() => {
                         // Marcar feedback positivo
@@ -1259,12 +1259,12 @@ const FloatingChatSupport: React.FC = () => {
                         }
                       }}
                     >
-                      <ThumbsUp className={`h-3.5 w-3.5 ${message.feedback === 'positive' ? 'text-green-500 fill-green-500' : 'text-gray-500'}`} />
+                      <ThumbsUp className={`h-5 w-5 ${message.feedback === 'positive' ? 'text-green-500 fill-green-500' : 'text-gray-500 hover:text-green-500'}`} />
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="h-7 w-7 p-0 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                      className="h-8 w-8 p-0 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                       title="Não gostei da resposta"
                       onClick={() => {
                         // Marcar feedback negativo e mostrar opções para melhoria
@@ -1280,19 +1280,22 @@ const FloatingChatSupport: React.FC = () => {
                         }
                       }}
                     >
-                      <ThumbsDown className={`h-3.5 w-3.5 ${message.feedback === 'negative' ? 'text-red-500 fill-red-500' : 'text-gray-500'}`} />
+                      <ThumbsDown className={`h-5 w-5 ${message.feedback === 'negative' ? 'text-red-500 fill-red-500' : 'text-gray-500 hover:text-red-500'}`} />
                     </Button>
                   </div>
                 </div>
               )}
               {message.sender === "assistant" && message.showFeedbackOptions && (
-                <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
-                  <h4 className="text-sm font-medium mb-2">Como podemos melhorar esta resposta?</h4>
-                  <div className="space-y-2">
-                    <div className="flex flex-col space-y-2">
+                <div className="mt-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 shadow-sm">
+                  <h4 className="text-sm font-medium mb-2 flex items-center text-orange-600 dark:text-orange-400">
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Como podemos melhorar esta resposta?
+                  </h4>
+                  <div className="space-y-3">
+                    <div className="flex flex-col space-y-3">
                       <Textarea 
                         placeholder="Descreva como a resposta poderia ser melhor..."
-                        className="text-sm resize-none min-h-[60px]"
+                        className="text-sm resize-none min-h-[80px] border-orange-200 dark:border-orange-800 focus:ring-orange-500"
                         value={message.feedbackText || ''}
                         onChange={(e) => {
                           const updatedMessages = [...messages];
@@ -1306,11 +1309,11 @@ const FloatingChatSupport: React.FC = () => {
                           }
                         }}
                       />
-                      <div className="flex justify-between">
+                      <div className="flex justify-between pt-1">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="text-xs"
+                          className="text-sm border-orange-200 dark:border-orange-800 text-gray-700 dark:text-gray-300"
                           onClick={() => {
                             const updatedMessages = [...messages];
                             const messageIndex = updatedMessages.findIndex(m => m.id === message.id);
@@ -1327,7 +1330,7 @@ const FloatingChatSupport: React.FC = () => {
                         </Button>
                         <Button
                           size="sm"
-                          className="text-xs bg-orange-500 hover:bg-orange-600 text-white"
+                          className="text-sm bg-orange-500 hover:bg-orange-600 text-white"
                           onClick={async () => {
                             // Encontrar a mensagem atual
                             const messageIndex = messages.findIndex(m => m.id === message.id);
