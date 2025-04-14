@@ -1403,12 +1403,12 @@ const FloatingChatSupport: React.FC = () => {
                       .replace(/\~\~(.*?)\~\~/g, '<del>$1</del>')
                       .replace(/\`(.*?)\`/g, '<code class="bg-black/10 dark:bg-white/10 rounded px-1">$1</code>')
                       .replace(/\n/g, '<br />')
-                      // Renderiza links Markdown [texto](url) corretamente
-                      .replace(/\[(.*?)\]\((https?:\/\/[^)]+)\)/g, '[<a href="$2" class="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>]')
-                      // Detecta URLs simples e as converte em links, mantendo os parâmetros fora dos parênteses
-                      .replace(/(?<!\]|\()\((https?:\/\/[^\s)]+)\)/g, '(<a href="$1" class="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>)')
-                      // Detecta URLs simples fora de parênteses
-                      .replace(/(?<!\]|\()(?<!\(\s*)(https?:\/\/[^\s)]+)/g, '<a href="$1" class="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>')
+                      // Renderiza texto de links Markdown sem estilo e sem clicabilidade
+                      .replace(/\[(.*?)\]\((https?:\/\/[^)]+)\)/g, '[$1]($2)')
+                      // Detecta URLs simples em parênteses sem fazer links
+                      .replace(/(?<!\]|\()\((https?:\/\/[^\s)]+)\)/g, '($1)')
+                      // Detecta URLs simples fora de parênteses sem fazer links
+                      .replace(/(?<!\]|\()(?<!\(\s*)(https?:\/\/[^\s)]+)/g, '$1')
                   }} 
                 />
                 {message.files && message.files.length > 0 && (
