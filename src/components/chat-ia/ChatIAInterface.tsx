@@ -43,9 +43,37 @@ const ChatIAInterface = () => {
     scrollToBottom();
   }, [messages]);
 
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  // Handle scroll events to show/hide the scroll button
+  useEffect(() => {
+    const handleScroll = (e: Event) => {
+      const target = e.target as HTMLElement;
+      const scrollPosition = target.scrollTop;
+      const scrollHeight = target.scrollHeight;
+      const clientHeight = target.clientHeight;
+      
+      // Show button if not near the bottom
+      const isNearBottom = scrollHeight - scrollPosition - clientHeight < 100;
+      setShowScrollToBottom(!isNearBottom && scrollHeight > clientHeight + 200);
+    };
+
+    // Find scroll container
+    const scrollContainer = document.querySelector('.chat-scroll-area');
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll);
+    }
+
+    return () => {
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputValue(e.target.value);
@@ -132,7 +160,16 @@ const ChatIAInterface = () => {
         </div>
       </div>
 
-      <ScrollArea className="flex-1 p-4 overflow-y-auto">
+      <ScrollArea className="flex-1 p-4 overflow-y-auto relative chat-scroll-area">
+        {showScrollToBottom && (
+          <Button
+            onClick={scrollToBottom}
+            className="absolute bottom-5 right-5 rounded-full bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white shadow-md z-10 w-10 h-10 p-0"
+            aria-label="Scroll to latest messages"
+          >
+            <Send size={16} className="rotate-90" />
+          </Button>
+        )}
         <div className="space-y-4 max-w-3xl mx-auto">
           {messages.map((message) => (
             <div
