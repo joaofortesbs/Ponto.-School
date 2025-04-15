@@ -379,6 +379,9 @@ const FloatingChatSupport: React.FC = () => {
     social: true
   });
   
+  // Estado para controlar se a pesquisa avançada está ativada
+  const [advancedSearchEnabled, setAdvancedSearchEnabled] = useState(false);
+  
   // Estado para controlar modal de sugestão de prompt
   const [showPromptSuggestionModal, setShowPromptSuggestionModal] = useState(false);
   const [studyContent, setStudyContent] = useState("");
@@ -2256,57 +2259,91 @@ Exemplo de formato da resposta:
           )}
           
           {showWebSearchOptions && (
-            <div className="space-y-3">
-              <h4 className="text-sm font-medium mb-2">Fontes de Pesquisa</h4>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <Globe className="h-4 w-4 text-blue-500" />
-                    <div>
-                      <p className="text-sm font-medium">Web</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Pesquise em toda a internet</p>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={webSearchSettings.web}
-                    onCheckedChange={(checked) => 
-                      setWebSearchSettings(prev => ({...prev, web: checked}))
-                    }
-                  />
+            <div className="space-y-4">
+              <div className="flex items-center justify-center mb-4">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center mx-auto">
+                  <Globe className="h-6 w-6 text-white" />
                 </div>
-                
-                <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="h-4 w-4 text-green-500" />
-                    <div>
-                      <p className="text-sm font-medium">Acadêmico</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Pesquisar artigos acadêmicos</p>
-                    </div>
-                  </div>
+              </div>
+              
+              <h4 className="text-sm font-medium mb-2 text-center">Pesquisa Avançada</h4>
+              <p className="text-xs text-gray-500 dark:text-gray-400 text-center mb-3">
+                Ative a pesquisa avançada para buscar informações em diferentes fontes.
+              </p>
+              
+              <div className="flex items-center justify-center bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
+                <div className="flex flex-col items-center">
+                  <p className="text-sm font-medium mb-2">Ativar Pesquisa Avançada</p>
                   <Switch
-                    checked={webSearchSettings.academico}
-                    onCheckedChange={(checked) => 
-                      setWebSearchSettings(prev => ({...prev, academico: checked}))
-                    }
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-purple-500" />
-                    <div>
-                      <p className="text-sm font-medium">Social</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Discussões e opiniões</p>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={webSearchSettings.social}
-                    onCheckedChange={(checked) => 
-                      setWebSearchSettings(prev => ({...prev, social: checked}))
-                    }
+                    checked={advancedSearchEnabled}
+                    onCheckedChange={(checked) => {
+                      setAdvancedSearchEnabled(checked);
+                      if (checked) {
+                        toast({
+                          title: "Pesquisa Avançada ativada",
+                          description: "Agora você pode explorar múltiplas fontes de conhecimento",
+                          duration: 3000,
+                        });
+                      }
+                    }}
                   />
                 </div>
               </div>
+              
+              {advancedSearchEnabled && (
+                <div className="space-y-3 mt-4">
+                  <h5 className="text-xs font-medium mb-2">Fontes de Pesquisa</h5>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-4 w-4 text-blue-500" />
+                        <div>
+                          <p className="text-sm font-medium">Web</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Pesquise em toda a internet</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={webSearchSettings.web}
+                        onCheckedChange={(checked) => 
+                          setWebSearchSettings(prev => ({...prev, web: checked}))
+                        }
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <BookOpen className="h-4 w-4 text-green-500" />
+                        <div>
+                          <p className="text-sm font-medium">Acadêmico</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Pesquisar artigos acadêmicos</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={webSearchSettings.academico}
+                        onCheckedChange={(checked) => 
+                          setWebSearchSettings(prev => ({...prev, academico: checked}))
+                        }
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-purple-500" />
+                        <div>
+                          <p className="text-sm font-medium">Social</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Discussões e opiniões</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={webSearchSettings.social}
+                        onCheckedChange={(checked) => 
+                          setWebSearchSettings(prev => ({...prev, social: checked}))
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
               
               <div className="flex justify-end gap-2 mt-4">
                 <Button
