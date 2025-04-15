@@ -1976,41 +1976,94 @@ const FloatingChatSupport: React.FC = () => {
             </h4>
             
             <div className="space-y-2">
-              <div className="flex items-center gap-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md cursor-pointer">
+              <div 
+                className="flex items-center gap-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-gray-700 transition-all"
+                onClick={() => {
+                  // Toggle web search
+                  const webSearch = true; // Already enabled by default
+                  console.log('Web search toggled:', webSearch);
+                }}
+              >
                 <Globe className="h-4 w-4 text-blue-500" />
                 <div className="flex-1">
                   <div className="text-sm font-medium">Web</div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">Pesquise em toda a internet</div>
                 </div>
                 <div className="flex-shrink-0">
-                  <div className="relative inline-flex h-4 w-8 items-center rounded-full bg-gray-200 dark:bg-gray-700">
-                    <span className="absolute h-3 w-3 rounded-full bg-blue-500 translate-x-4"></span>
+                  <div className="relative inline-flex h-5 w-9 items-center rounded-full bg-blue-200 dark:bg-blue-700/40 p-1 transition-colors">
+                    <span className="absolute h-3.5 w-3.5 rounded-full bg-blue-500 translate-x-3.5 shadow-sm transition-transform"></span>
                   </div>
                 </div>
               </div>
               
-              <div className="flex items-center gap-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md cursor-pointer">
+              <div 
+                className="flex items-center gap-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-gray-700 transition-all"
+                onClick={() => {
+                  // Toggle academic search option
+                  const academicEnabled = !document.getElementById('academic-toggle')?.classList.contains('translate-x-3.5');
+                  const toggle = document.getElementById('academic-toggle');
+                  const bgToggle = document.getElementById('academic-bg');
+                  
+                  if (toggle && bgToggle) {
+                    if (academicEnabled) {
+                      toggle.classList.remove('translate-x-0.5');
+                      toggle.classList.add('translate-x-3.5');
+                      bgToggle.classList.remove('bg-gray-200', 'dark:bg-gray-700');
+                      bgToggle.classList.add('bg-purple-200', 'dark:bg-purple-700/40');
+                    } else {
+                      toggle.classList.remove('translate-x-3.5');
+                      toggle.classList.add('translate-x-0.5');
+                      bgToggle.classList.remove('bg-purple-200', 'dark:bg-purple-700/40');
+                      bgToggle.classList.add('bg-gray-200', 'dark:bg-gray-700');
+                    }
+                  }
+                  console.log('Academic search toggled:', academicEnabled);
+                }}
+              >
                 <BookOpen className="h-4 w-4 text-purple-500" />
                 <div className="flex-1">
                   <div className="text-sm font-medium">Acadêmico</div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">Pesquisar artigos acadêmicos</div>
                 </div>
                 <div className="flex-shrink-0">
-                  <div className="relative inline-flex h-4 w-8 items-center rounded-full bg-gray-200 dark:bg-gray-700">
-                    <span className="absolute h-3 w-3 rounded-full bg-gray-400 dark:bg-gray-500"></span>
+                  <div id="academic-bg" className="relative inline-flex h-5 w-9 items-center rounded-full bg-gray-200 dark:bg-gray-700 p-1 transition-colors">
+                    <span id="academic-toggle" className="absolute h-3.5 w-3.5 rounded-full bg-gray-400 dark:bg-gray-500 translate-x-0.5 shadow-sm transition-transform"></span>
                   </div>
                 </div>
               </div>
               
-              <div className="flex items-center gap-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md cursor-pointer">
+              <div 
+                className="flex items-center gap-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-gray-700 transition-all"
+                onClick={() => {
+                  // Toggle social search option
+                  const socialEnabled = !document.getElementById('social-toggle')?.classList.contains('translate-x-3.5');
+                  const toggle = document.getElementById('social-toggle');
+                  const bgToggle = document.getElementById('social-bg');
+                  
+                  if (toggle && bgToggle) {
+                    if (socialEnabled) {
+                      toggle.classList.remove('translate-x-0.5');
+                      toggle.classList.add('translate-x-3.5');
+                      bgToggle.classList.remove('bg-gray-200', 'dark:bg-gray-700');
+                      bgToggle.classList.add('bg-orange-200', 'dark:bg-orange-700/40');
+                    } else {
+                      toggle.classList.remove('translate-x-3.5');
+                      toggle.classList.add('translate-x-0.5');
+                      bgToggle.classList.remove('bg-orange-200', 'dark:bg-orange-700/40');
+                      bgToggle.classList.add('bg-gray-200', 'dark:bg-gray-700');
+                    }
+                  }
+                  console.log('Social search toggled:', socialEnabled);
+                }}
+              >
                 <Users className="h-4 w-4 text-orange-500" />
                 <div className="flex-1">
                   <div className="text-sm font-medium">Social</div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">Discussões e opiniões</div>
                 </div>
                 <div className="flex-shrink-0">
-                  <div className="relative inline-flex h-4 w-8 items-center rounded-full bg-gray-200 dark:bg-gray-700">
-                    <span className="absolute h-3 w-3 rounded-full bg-gray-400 dark:bg-gray-500"></span>
+                  <div id="social-bg" className="relative inline-flex h-5 w-9 items-center rounded-full bg-gray-200 dark:bg-gray-700 p-1 transition-colors">
+                    <span id="social-toggle" className="absolute h-3.5 w-3.5 rounded-full bg-gray-400 dark:bg-gray-500 translate-x-0.5 shadow-sm transition-transform"></span>
                   </div>
                 </div>
               </div>
@@ -2028,66 +2081,91 @@ const FloatingChatSupport: React.FC = () => {
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-medium mb-1 block">Nível de Inteligência</label>
-                <div className="flex gap-1">
+                <div className="flex flex-wrap gap-2">
                   {['basic', 'normal', 'advanced'].map((level) => (
-                    <Button
+                    <div 
                       key={level}
-                      size="sm"
-                      variant={aiIntelligenceLevel === level ? "default" : "outline"}
-                      className={`text-xs py-1 px-2 h-auto ${
+                      className={`flex items-center p-2 rounded-md border cursor-pointer transition-all ${
                         aiIntelligenceLevel === level 
-                          ? "bg-orange-500 hover:bg-orange-600 text-white" 
-                          : "border-orange-200 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                          ? "bg-orange-100 dark:bg-orange-900/30 border-orange-400 dark:border-orange-600" 
+                          : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-orange-50 dark:hover:bg-orange-900/10"
                       }`}
-                      onClick={() => setAIIntelligenceLevel(level)}
+                      onClick={() => setAIIntelligenceLevel(level as 'basic' | 'normal' | 'advanced')}
                     >
-                      {level === 'basic' ? 'Básico' : level === 'normal' ? 'Normal' : 'Avançado'}
-                    </Button>
+                      <div className={`w-4 h-4 rounded-full mr-2 flex items-center justify-center border ${
+                        aiIntelligenceLevel === level 
+                          ? "border-orange-500 bg-orange-500" 
+                          : "border-gray-300 dark:border-gray-600"
+                      }`}>
+                        {aiIntelligenceLevel === level && (
+                          <div className="w-2 h-2 rounded-full bg-white"></div>
+                        )}
+                      </div>
+                      <span className="text-xs">
+                        {level === 'basic' ? 'Básico' : level === 'normal' ? 'Normal' : 'Avançado'}
+                      </span>
+                    </div>
                   ))}
                 </div>
               </div>
 
               <div>
                 <label className="text-xs font-medium mb-1 block">Estilo de Linguagem</label>
-                <div className="flex gap-1">
+                <div className="flex flex-wrap gap-2">
                   {['casual', 'formal', 'technical'].map((style) => (
-                    <Button
+                    <div 
                       key={style}
-                      size="sm"
-                      variant={aiLanguageStyle === style ? "default" : "outline"}
-                      className={`text-xs py-1 px-2 h-auto ${
+                      className={`flex items-center p-2 rounded-md border cursor-pointer transition-all ${
                         aiLanguageStyle === style 
-                          ? "bg-orange-500 hover:bg-orange-600 text-white" 
-                          : "border-orange-200 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                          ? "bg-orange-100 dark:bg-orange-900/30 border-orange-400 dark:border-orange-600" 
+                          : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-orange-50 dark:hover:bg-orange-900/10"
                       }`}
-                      onClick={() => setAILanguageStyle(style)}
+                      onClick={() => setAILanguageStyle(style as 'casual' | 'formal' | 'technical')}
                     >
-                      {style === 'casual' ? 'Casual' : style === 'formal' ? 'Formal' : 'Técnico'}
-                    </Button>
+                      <div className={`w-4 h-4 rounded-full mr-2 flex items-center justify-center border ${
+                        aiLanguageStyle === style 
+                          ? "border-orange-500 bg-orange-500" 
+                          : "border-gray-300 dark:border-gray-600"
+                      }`}>
+                        {aiLanguageStyle === style && (
+                          <div className="w-2 h-2 rounded-full bg-white"></div>
+                        )}
+                      </div>
+                      <span className="text-xs">
+                        {style === 'casual' ? 'Casual' : style === 'formal' ? 'Formal' : 'Técnico'}
+                      </span>
+                    </div>
                   ))}
                 </div>
               </div>
 
               <div>
                 <label className="text-xs font-medium mb-1 block">Sons de Notificação</label>
-                <div className="flex items-center">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className={`text-xs py-1 px-2 h-auto mr-2 ${
-                      enableNotificationSounds 
-                        ? "bg-orange-500 hover:bg-orange-600 text-white" 
-                        : "border-orange-200 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
-                    }`}
-                    onClick={() => setEnableNotificationSounds(!enableNotificationSounds)}
-                  >
-                    {enableNotificationSounds ? (
-                      <Headphones className="h-3.5 w-3.5 mr-1" />
-                    ) : (
-                      <Bell className="h-3.5 w-3.5 mr-1" />
+                <div 
+                  className={`flex items-center p-2 rounded-md border cursor-pointer transition-all ${
+                    enableNotificationSounds 
+                      ? "bg-orange-100 dark:bg-orange-900/30 border-orange-400 dark:border-orange-600" 
+                      : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-orange-50 dark:hover:bg-orange-900/10"
+                  }`}
+                  onClick={() => setEnableNotificationSounds(!enableNotificationSounds)}
+                >
+                  <div className={`w-4 h-4 rounded mr-2 flex items-center justify-center border ${
+                    enableNotificationSounds 
+                      ? "border-orange-500 bg-orange-500" 
+                      : "border-gray-300 dark:border-gray-600"
+                  }`}>
+                    {enableNotificationSounds && (
+                      <div className="w-2 h-2 rounded-sm bg-white"></div>
                     )}
-                    {enableNotificationSounds ? 'Ativado' : 'Desativado'}
-                  </Button>
+                  </div>
+                  <div className="flex items-center">
+                    {enableNotificationSounds ? (
+                      <Headphones className="h-3.5 w-3.5 mr-1.5 text-orange-600 dark:text-orange-400" />
+                    ) : (
+                      <Bell className="h-3.5 w-3.5 mr-1.5 text-gray-500 dark:text-gray-400" />
+                    )}
+                    <span className="text-xs">{enableNotificationSounds ? 'Sons ativados' : 'Sons desativados'}</span>
+                  </div>
                 </div>
               </div>
             </div>
