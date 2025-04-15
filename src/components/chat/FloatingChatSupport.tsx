@@ -3155,41 +3155,10 @@ const FloatingChatSupport: React.FC = () => {
         /* Fix for mobile responsiveness */
         @media (max-width: 640px) {
           .fixed.z-40 {
-            width: 90% !i{/* AI Settings & Web Search Options Popover */}
-{(isShowingAISettings || showWebSearchOptions) && (
-  <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-xl w-[85%] max-h-[90vh] animate-fadeIn"> {/* Adjusted height */}
-    <div className="flex justify-between items-center mb-3">
-      <h4 className="text-sm font-medium flex items-center gap-1">
-        {isShowingAISettings ? (
-          <>
-            <Sparkles className="h-4 w-4 text-orange-500" />
-            Configurações da IA
-          </>
-        ) : (
-          <>
-            <Globe className="h-4 w-4 text-green-500" />
-            Pesquisa avançada
-          </>
-        )}
-      </h4>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-6 w-6 p-0 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
-        onClick={() => {
-          setIsShowingAISettings(false);
-          setShowWebSearchOptions(false);
-        }}
-      >
-        {/* Close button */}
-      </Button>
-    </div>
-    {/* Modal Content */}
-  </div>
-)}mportant;
+            width: 90% !important;
             right: 5% !important;
             left: 5% !important;
-            max-h-[500px] !important;
+            max-height: 80vh !important;
           }
 
           .fixed.z-40 .rounded-2xl {
