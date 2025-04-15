@@ -2159,7 +2159,7 @@ Exemplo de formato da resposta:
       </ScrollArea>
 
       {/* AI Settings Popover */}
-      {isShowingAISettings && (
+      {(isShowingAISettings || showWebSearchOptions) && (
         <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-xl w-[85%] max-w-sm animate-fadeIn">
           <div className="flex justify-between items-center mb-3">
             <h4 className="text-sm font-medium flex items-center gap-1">
@@ -2493,7 +2493,10 @@ Exemplo de formato da resposta:
               variant="ghost"
               size="sm"
               className="h-7 text-xs p-2 rounded-full bg-white/80 dark:bg-gray-800/80 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow flex items-center gap-1"
-              onClick={() => setIsShowingAISettings(!isShowingAISettings)}
+              onClick={() => {
+                setIsShowingAISettings(true);
+                setShowWebSearchOptions(false);
+              }}
             >
               <Sparkles className="h-3 w-3 text-orange-500" />
               <span className="text-gray-700 dark:text-gray-300">IA Habilitada</span>
@@ -2505,7 +2508,10 @@ Exemplo de formato da resposta:
               variant="ghost"
               size="sm"
               className="h-7 text-xs p-2 rounded-full bg-white/80 dark:bg-gray-800/80 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow flex items-center gap-1"
-              onClick={() => setShowWebSearchOptions(true)}
+              onClick={() => {
+                setShowWebSearchOptions(true);
+                setIsShowingAISettings(false);
+              }}
             >
               <Search className="h-3 w-3 text-purple-500" />
               <span className="text-gray-700 dark:text-gray-300">Pesquisa Avançada</span>
@@ -2515,7 +2521,32 @@ Exemplo de formato da resposta:
               variant="ghost"
               size="sm"
               className="h-7 text-xs p-2 rounded-full bg-white/80 dark:bg-gray-800/80 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow flex items-center gap-1"
-              onClick={() => {/* Função será implementada posteriormente */}}
+              onClick={() => {
+                // Desativa os outros modais para evitar conflitos
+                setIsShowingAISettings(false);
+                setShowWebSearchOptions(false);
+                
+                // Adiciona uma mensagem de sistema
+                setMessages(prevMessages => [
+                  ...prevMessages, 
+                  {
+                    id: Date.now(),
+                    content: "Agente IA ativado. Como posso ajudar você de forma mais específica?",
+                    sender: "assistant",
+                    timestamp: new Date()
+                  }
+                ]);
+                
+                // Rola para a última mensagem
+                setTimeout(scrollToBottom, 100);
+                
+                // Exibe um toast informativo
+                toast({
+                  title: "Agente IA ativado",
+                  description: "Agora o assistente está no modo agente proativo e pode ajudar com tarefas mais complexas.",
+                  duration: 3000,
+                });
+              }}
             >
               <Bot className="h-3 w-3 text-blue-500" />
               <span className="text-gray-700 dark:text-gray-300">Agente IA</span>
