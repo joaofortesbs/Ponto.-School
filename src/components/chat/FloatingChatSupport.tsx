@@ -599,12 +599,26 @@ const FloatingChatSupport: React.FC = () => {
     }
   }, [messages.length, isTyping]);
 
+  // Estado para controlar a visibilidade do botão de voltar ao fim
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  
   // Detectar quando o usuário rola manualmente
   useEffect(() => {
-    const handleScroll = () => {
+    const handleScroll = (e: Event) => {
+      const scrollArea = e.target as HTMLElement;
+      const scrollPosition = scrollArea.scrollTop;
+      const scrollHeight = scrollArea.scrollHeight;
+      const clientHeight = scrollArea.clientHeight;
+      
+      // Mostrar botão se o usuário estiver a uma certa distância do final
+      const isNearBottom = scrollHeight - scrollPosition - clientHeight < 100;
+      
       if (isTyping) {
         setUserHasScrolled(true);
       }
+      
+      // Se não estiver no final, mostrar o botão de voltar ao fim
+      setShowScrollToBottom(!isNearBottom && scrollHeight > clientHeight + 200);
     };
 
     // Encontrar o elemento de scroll (scroll area)
@@ -619,6 +633,14 @@ const FloatingChatSupport: React.FC = () => {
       }
     };
   }, [isTyping]);
+  
+  // Função para rolar para o fim da conversa
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      setUserHasScrolled(false);
+    }
+  };
 
   // Add blur effect to the rest of the page when chat is open
   useEffect(() => {
@@ -1579,9 +1601,24 @@ const FloatingChatSupport: React.FC = () => {
   const renderChatContent = () => (
     <div className="flex flex-col h-full">
       <ScrollArea
-        className="flex-1 p-4 custom-scrollbar overflow-y-auto"
+        className="flex-1 p-4 custom-scrollbar overflow-y-auto relative"
         style={{ maxHeight: "calc(100% - 90px)" }}
       >
+        {/* Botão flutuante para voltar ao fim da conversa */}
+        {showScrollToBottom && (
+          <div 
+            className="absolute bottom-6 right-6 z-50 animate-fadeIn"
+            onClick={scrollToBottom}
+          >
+            <Button 
+              size="icon"
+              className="h-10 w-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 text-white shadow-lg hover:scale-105 transition-all duration-300"
+            >
+              <ChevronRight className="h-5 w-5 rotate-90" />
+            </Button>
+          </div>
+        )}
+        
         <div className="space-y-4">
           {messages.map((message) => (
             <div
@@ -2233,34 +2270,36 @@ const FloatingChatSupport: React.FC = () => {
 
         <div className="flex items-center gap-2">
           <div className="flex-1 relative">
-            <Input
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Digite sua mensagem..."
-              className="pr-10 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
-              onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-            />
-            <div className="absolute right-0 top-0 h-full flex">
-              {inputMessage.trim().length > 0 && !isImprovingPrompt && (
+            <div className="relative flex items-center bg-white/5 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl border border-white/10 dark:border-gray-700/50 overflow-hidden shadow-inner">
+              <Input
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                placeholder="Digite sua mensagem..."
+                className="border-0 bg-transparent focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 pr-20 py-6 text-[15px]"
+                onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+              />
+              <div className="absolute right-2 h-8 flex items-center gap-1 bg-black/10 dark:bg-white/5 backdrop-blur-sm rounded-full px-2">
+                {inputMessage.trim().length > 0 && !isImprovingPrompt && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 rounded-full text-orange-500 hover:text-orange-600 hover:bg-white/10"
+                    onClick={improvePrompt}
+                    title="Melhorar pergunta com IA"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-orange-500 hover:text-orange-600 hover:bg-transparent"
-                  onClick={improvePrompt}
-                  title="Melhorar pergunta com IA"
+                  className="h-7 w-7 rounded-full text-orange-500 hover:text-orange-600 hover:bg-white/10"
+                  onClick={sendMessage}
+                  disabled={isMessageEmpty && selectedFiles.length === 0}
                 >
-                  <Sparkles className="h-4 w-4" />
+                  <Send className="h-5 w-5" />
                 </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-orange-500 hover:text-orange-600"
-                onClick={sendMessage}
-                disabled={isMessageEmpty && selectedFiles.length === 0}
-              >
-                <Send className="h-5 w-5" />
-              </Button>
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
