@@ -2468,10 +2468,15 @@ const FloatingChatSupport: React.FC = () => {
                       ? "bg-gray-200 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
                       : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
                   }`}
-                  onClick={sendMessage}
+                  onClick={inputMessage.trim().length > 0 ? sendMessage : startVoiceRecording}
                   disabled={isMessageEmpty && selectedFiles.length === 0}
+                  title={inputMessage.trim().length > 0 ? "Enviar mensagem" : "Gravar áudio"}
                 >
-                  <Send className="h-4 w-4" />
+                  {inputMessage.trim().length > 0 ? (
+                    <Send className="h-4 w-4" />
+                  ) : (
+                    <Mic className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
             </div>
