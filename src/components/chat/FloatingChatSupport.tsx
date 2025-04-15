@@ -2424,7 +2424,7 @@ Exemplo de formato da resposta:
               onClick={() => {/* Função será implementada posteriormente */}}
             >
               <Search className="h-3 w-3 text-purple-500" />
-              <span className="text-gray-700 dark:text-gray-300">Avançado</span>
+              <span className="text-gray-700 dark:text-gray-300">Pesquisa Avançada</span>
             </Button>
             
             <Button
