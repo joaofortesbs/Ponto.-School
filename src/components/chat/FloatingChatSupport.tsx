@@ -2227,8 +2227,74 @@ const FloatingChatSupport: React.FC = () => {
 
       {/* Modern floating input area fixed to bottom */}
       <div className="absolute bottom-2 left-0 right-0 px-2.5">
-        {/* Quick Actions Bar */}
-        <div className="flex items-center justify-between mb-2 px-1">
+        {/* Navigation Pills */}
+        <div className="flex items-center justify-center gap-1 mb-2 px-1 overflow-x-auto hide-scrollbar">
+          <Button
+            variant={activeTab === "home" ? "default" : "ghost"}
+            size="sm"
+            className={`h-7 text-xs p-2 rounded-full ${activeTab === "home" ? "bg-orange-500 text-white" : "bg-white/80 dark:bg-gray-800/80 border border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-300"} shadow-sm hover:shadow flex items-center gap-1`}
+            onClick={() => setActiveTab("home")}
+          >
+            <Home className="h-3 w-3" />
+            <span>Início</span>
+          </Button>
+          
+          <Button
+            variant={activeTab === "chat" ? "default" : "ghost"}
+            size="sm"
+            className={`h-7 text-xs p-2 rounded-full ${activeTab === "chat" ? "bg-orange-500 text-white" : "bg-white/80 dark:bg-gray-800/80 border border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-300"} shadow-sm hover:shadow flex items-center gap-1`}
+            onClick={() => {
+              setActiveTab("chat");
+              setSelectedChat(null);
+            }}
+          >
+            <MessageCircle className="h-3 w-3" />
+            <span>Chat</span>
+          </Button>
+          
+          <Button
+            variant={activeTab === "history" ? "default" : "ghost"}
+            size="sm"
+            className={`h-7 text-xs p-2 rounded-full ${activeTab === "history" ? "bg-orange-500 text-white" : "bg-white/80 dark:bg-gray-800/80 border border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-300"} shadow-sm hover:shadow flex items-center gap-1`}
+            onClick={() => setActiveTab("history")}
+          >
+            <History className="h-3 w-3" />
+            <span>Histórico</span>
+          </Button>
+          
+          <Button
+            variant={activeTab === "tickets" ? "default" : "ghost"}
+            size="sm"
+            className={`h-7 text-xs p-2 rounded-full ${activeTab === "tickets" ? "bg-orange-500 text-white" : "bg-white/80 dark:bg-gray-800/80 border border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-300"} shadow-sm hover:shadow flex items-center gap-1`}
+            onClick={() => setActiveTab("tickets")}
+          >
+            <TicketIcon className="h-3 w-3" />
+            <span>Tickets</span>
+          </Button>
+          
+          <Button
+            variant={activeTab === "suggestions" ? "default" : "ghost"}
+            size="sm"
+            className={`h-7 text-xs p-2 rounded-full ${activeTab === "suggestions" ? "bg-orange-500 text-white" : "bg-white/80 dark:bg-gray-800/80 border border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-300"} shadow-sm hover:shadow flex items-center gap-1`}
+            onClick={() => setActiveTab("suggestions")}
+          >
+            <Lightbulb className="h-3 w-3" />
+            <span>Sugestões</span>
+          </Button>
+          
+          <Button
+            variant={activeTab === "notifications" ? "default" : "ghost"}
+            size="sm"
+            className={`h-7 text-xs p-2 rounded-full ${activeTab === "notifications" ? "bg-orange-500 text-white" : "bg-white/80 dark:bg-gray-800/80 border border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-300"} shadow-sm hover:shadow flex items-center gap-1`}
+            onClick={() => setActiveTab("notifications")}
+          >
+            <Bell className="h-3 w-3" />
+            <span>Notificações</span>
+          </Button>
+        </div>
+        
+        {/* Bottom Action Bar */}
+        <div className="flex items-center justify-between px-1 mt-1 mb-2">
           <div className="flex items-center gap-1.5">
             <Button
               variant="ghost"
@@ -2978,6 +3044,15 @@ const FloatingChatSupport: React.FC = () => {
           overflow: hidden;
           border-right: 2px solid #FF6B00;
           animation: typingIn 3.5s steps(40, end), typeBlinkCursor .75s step-end infinite;
+        }
+        
+        .hide-scrollbar {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
+        }
+        
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;  /* Chrome, Safari, Opera */
         }
 
         .message-content {
