@@ -371,7 +371,13 @@ const FloatingChatSupport: React.FC = () => {
   const [improvementFeedback, setImprovementFeedback] = useState('');
   const [isReformulating, setIsReformulating] = useState(false);
 
-  // Estado para exibir opções de pesquisa avançada foi removido
+  // Estado para exibir opções de pesquisa avançada
+  const [showWebSearchOptions, setShowWebSearchOptions] = useState(false);
+  const [webSearchSettings, setWebSearchSettings] = useState({
+    web: true,
+    academico: true,
+    social: true
+  });
   
   // Estado para controlar modal de sugestão de prompt
   const [showPromptSuggestionModal, setShowPromptSuggestionModal] = useState(false);
@@ -2249,7 +2255,85 @@ Exemplo de formato da resposta:
             </div>
           )}
           
-          {/* Seção de opções de pesquisa web removida */}
+          {showWebSearchOptions && (
+            <div className="space-y-3">
+              <h4 className="text-sm font-medium mb-2">Fontes de Pesquisa</h4>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-blue-500" />
+                    <div>
+                      <p className="text-sm font-medium">Web</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Pesquise em toda a internet</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={webSearchSettings.web}
+                    onCheckedChange={(checked) => 
+                      setWebSearchSettings(prev => ({...prev, web: checked}))
+                    }
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="h-4 w-4 text-green-500" />
+                    <div>
+                      <p className="text-sm font-medium">Acadêmico</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Pesquisar artigos acadêmicos</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={webSearchSettings.academico}
+                    onCheckedChange={(checked) => 
+                      setWebSearchSettings(prev => ({...prev, academico: checked}))
+                    }
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-purple-500" />
+                    <div>
+                      <p className="text-sm font-medium">Social</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Discussões e opiniões</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={webSearchSettings.social}
+                    onCheckedChange={(checked) => 
+                      setWebSearchSettings(prev => ({...prev, social: checked}))
+                    }
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-2 mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs border-orange-200 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                  onClick={() => setShowWebSearchOptions(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  size="sm"
+                  className="text-xs bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white border-none"
+                  onClick={() => {
+                    setShowWebSearchOptions(false);
+                    toast({
+                      title: "Configurações salvas",
+                      description: "Suas preferências de pesquisa foram atualizadas.",
+                      duration: 3000,
+                    });
+                  }}
+                >
+                  Salvar preferências
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -2421,7 +2505,7 @@ Exemplo de formato da resposta:
               variant="ghost"
               size="sm"
               className="h-7 text-xs p-2 rounded-full bg-white/80 dark:bg-gray-800/80 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow flex items-center gap-1"
-              onClick={() => {/* Função será implementada posteriormente */}}
+              onClick={() => setShowWebSearchOptions(true)}
             >
               <Search className="h-3 w-3 text-purple-500" />
               <span className="text-gray-700 dark:text-gray-300">Pesquisa Avançada</span>
