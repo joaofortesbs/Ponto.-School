@@ -752,6 +752,12 @@ const FloatingChatSupport: React.FC = () => {
     setImprovedPrompt("");
   };
 
+  // Handle para enviar mensagem quando o usuário clica em perguntas comuns
+  const handleSendMessage = () => {
+    if (inputMessage.trim() === "") return;
+    sendMessage();
+  };
+
   // Função para enviar mensagem
   const sendMessage = async () => {
     if (inputMessage.trim() === "" && selectedFiles.length === 0) return;
@@ -2303,7 +2309,7 @@ const FloatingChatSupport: React.FC = () => {
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="Digite sua mensagem..."
               className="pr-10 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
-              onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             />
             <div className="absolute right-0 top-0 h-full flex">
               {inputMessage.trim().length > 0 && !isImprovingPrompt && (
