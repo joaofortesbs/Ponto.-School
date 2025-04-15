@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/use-toast";
 import {
   MessageSquare,
   Send,
@@ -49,7 +50,8 @@ import {
   Music,
   Loader2,
   Globe,
-  Users
+  Users,
+  Copy
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { generateAIResponse, getConversationHistory, clearConversationHistory } from "@/services/aiChatService";
@@ -297,6 +299,7 @@ const suggestionStatusColors = {
 };
 
 const FloatingChatSupport: React.FC = () => {
+  const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState("home");
@@ -1720,11 +1723,25 @@ const FloatingChatSupport: React.FC = () => {
                   {message.sender === "assistant" && !message.needsImprovement && (
                     <div className="flex items-center gap-2 opacity-70 hover:opacity-100 transition-opacity">
                       <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(message.content);
+                          toast({
+                            title: "Mensagem copiada!",
+                            description: "O conteúdo foi copiado para a área de transferência",
+                            duration: 3000,
+                          });
+                        }}
+                        className="p-1 rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
+                        title="Copiar mensagem"
+                      >
+                        <Copy className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
+                      </button>
+                      <button 
                         onClick={() => handleMessageFeedback(message.id, 'positive')}
                         className={`p-1 rounded-full transition-colors ${message.feedback === 'positive' ? 'bg-green-100 dark:bg-green-900/30' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                         title="Avaliar como boa resposta"
                       >
-                        <ThumbsUp className={`h-3.5 w-3.5 ${message.feedback === 'positive' ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`} />
+                        <ThumbsUp className={`h-3.5 w-3.5 ${message.feedback === 'positive' ? 'text-green-500 dark:text-green-400' : 'text-green-500 dark:text-green-400'}`} />
                       </button>
                       <button 
                         onClick={() => handleMessageFeedback(message.id, 'negative')}
