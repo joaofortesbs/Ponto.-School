@@ -1854,7 +1854,8 @@ const FloatingChatSupport: React.FC = () => {
                 // Importar e chamar função para limpar histórico de conversa
                 try {
                   const sessionId = userName || 'anonymous-' + Date.now().toString();
-                  await clearConversationHistory(sessionId);
+                  const { clearConversationHistory } = await import('@/services/aiChatService');
+                  clearConversationHistory(sessionId);
                 } catch (error) {
                   console.error('Erro ao limpar histórico:', error);
                 }
@@ -2721,7 +2722,7 @@ const FloatingChatSupport: React.FC = () => {
         )}
       </div>
 
-      <style jsx global>{`
+      <style>{`
         @keyframes bounce-subtle {
           0%,
           100% {

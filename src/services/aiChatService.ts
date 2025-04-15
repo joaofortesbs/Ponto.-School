@@ -897,16 +897,6 @@ const getResponseForMessage = (message: string): string => {
   }
 };
 
-export const clearConversationHistory = async (sessionId: string): Promise<void> => {
-  try {
-    localStorage.removeItem(`conversation_${sessionId}`);
-    console.log(`Histórico de conversa para a sessão ${sessionId} foi limpo.`);
-  } catch (error) {
-    console.error('Erro ao limpar histórico de conversa:', error);
-    throw error;
-  }
-};
-
 // Variável para controlar se a resposta está pausada
 let isPaused: Record<string, boolean> = {};
 
