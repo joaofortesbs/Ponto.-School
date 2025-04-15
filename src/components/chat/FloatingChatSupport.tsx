@@ -53,6 +53,7 @@ import {
   Users,
   Copy
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { generateAIResponse, getConversationHistory, clearConversationHistory } from "@/services/aiChatService";
 
