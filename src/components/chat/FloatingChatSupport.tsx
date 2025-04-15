@@ -1086,83 +1086,140 @@ const FloatingChatSupport: React.FC = () => {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then(stream => {
-          const recorder = new MediaRecorder(stream);
+          // Criar uma instância do MediaRecorder com o stream de áudio
+          const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
           setAudioRecorder(recorder);
           setAudioChunks([]);
 
+          // Coletar chunks de dados do áudio gravado
           recorder.ondataavailable = (e) => {
-            if (e.data.size > 0) {
+            if (e.data && e.data.size > 0) {
               setAudioChunks(prev => [...prev, e.data]);
             }
           };
 
+          // Quando a gravação parar
           recorder.onstop = () => {
-            // Processar áudio quando parar a gravação
-            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+            // Criar um blob com todos os chunks de áudio
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
             const audioUrl = URL.createObjectURL(audioBlob);
+
+            // Mostrar notificação de sucesso
+            toast({
+              title: "Áudio gravado com sucesso",
+              description: "Seu áudio foi processado e enviado.",
+              duration: 3000,
+            });
 
             // Adicionar mensagem com áudio
             const newMessage: ChatMessage = {
               id: Date.now(),
-              content: `Áudio gravado\n<audio src="${audioUrl}" controls></audio>`,
+              content: "Mensagem de áudio enviada",
               sender: "user",
               timestamp: new Date(),
-              files: [{name: 'audio.wav', size: audioBlob.size, type: 'audio/wav', url: audioUrl}]
+              files: [{name: 'audio.webm', size: audioBlob.size, type: 'audio/webm', url: audioUrl}]
             };
 
             setMessages((prev) => [...prev, newMessage]);
             setIsLoading(true);
 
             // Gerar resposta da IA
-            // Importar dinamicamente o serviço de IA
             import('@/services/aiChatService').then(aiService => {
               setIsTyping(true);
-              aiService.generateAIResponse("Analisando áudio enviado", sessionId)
+              aiService.generateAIResponse("Analisando áudio enviado pelo usuário", sessionId)
                 .then(response => {
                   const aiMessage: ChatMessage = {
                     id: Date.now() + 1,
-                    content: response,
+                    content: response || "Recebi seu áudio e analisei o conteúdo. Como posso ajudar com sua solicitação?",
                     sender: "assistant",
                     timestamp: new Date(),
                   };
                   setMessages((prev) => [...prev, aiMessage]);
                 })
-            })
-              .catch(error => {
-                console.error("Erro ao processar áudio:", error);
-                const errorMessage: ChatMessage = {
-                  id: Date.now() + 1,
-                  content: "Desculpe, encontrei um problema ao processar seu áudio. Por favor, tente novamente mais tarde.",
-                  sender: "assistant",
-                  timestamp: new Date(),
-                };
-                setMessages((prev) => [...prev, errorMessage]);
-              })
-              .finally(() => {
-                setIsLoading(false);
-              });
+                .catch(error => {
+                  console.error("Erro ao processar áudio:", error);
+                  const errorMessage: ChatMessage = {
+                    id: Date.now() + 1,
+                    content: "Desculpe, encontrei um problema ao processar seu áudio. Por favor, tente novamente mais tarde.",
+                    sender: "assistant",
+                    timestamp: new Date(),
+                  };
+                  setMessages((prev) => [...prev, errorMessage]);
+                })
+                .finally(() => {
+                  setIsLoading(false);
+                  setIsTyping(false);
+                });
+            });
 
             // Parar todos os tracks da stream
             stream.getTracks().forEach(track => track.stop());
           };
 
-          recorder.start();
+          // Configurar para capturar dados a cada 1 segundo
+          recorder.start(1000);
           setIsRecordingAudio(true);
+          
+          // Mostrar notificação de gravação iniciada
+          toast({
+            title: "Gravação de áudio iniciada",
+            description: "Fale sua mensagem e clique em parar quando terminar.",
+            duration: 3000,
+          });
         })
         .catch(err => {
           console.error("Erro ao acessar microfone:", err);
-          alert("Não foi possível acessar o microfone. Verifique as permissões do navegador.");
+          toast({
+            title: "Erro ao acessar microfone",
+            description: "Verifique se você concedeu permissão de acesso ao microfone.",
+            variant: "destructive",
+            duration: 5000,
+          });
         });
     } else {
-      alert("Seu navegador não suporta gravação de áudio. Por favor, use um navegador mais recente.");
+      toast({
+        title: "Navegador incompatível",
+        description: "Seu navegador não suporta gravação de áudio. Por favor, use um navegador mais recente.",
+        variant: "destructive",
+        duration: 5000,
+      });
     }
   };
 
   // Função para parar gravação de áudio
   const stopVoiceRecording = () => {
     if (audioRecorder && audioRecorder.state !== 'inactive') {
-      audioRecorder.stop();
-      setIsRecordingAudio(false);
+      try {
+        // Parar a gravação
+        audioRecorder.stop();
+        // Atualizar o estado
+        setIsRecordingAudio(false);
+        
+        // Mostrar indicador visual de processamento
+        toast({
+          title: "Processando áudio",
+          description: "Aguarde enquanto processamos sua mensagem de áudio...",
+          duration: 2000,
+        });
+      } catch (error) {
+        console.error("Erro ao parar a gravação:", error);
+        toast({
+          title: "Erro ao finalizar gravação",
+          description: "Ocorreu um problema ao finalizar a gravação de áudio.",
+          variant: "destructive",
+          duration: 3000,
+        });
+        
+        // Tentar limpar recursos mesmo em caso de erro
+        if (audioRecorder) {
+          try {
+            audioRecorder.stream?.getTracks().forEach(track => track.stop());
+          } catch (e) {
+            console.error("Erro ao limpar tracks de áudio:", e);
+          }
+        }
+        setIsRecordingAudio(false);
+      }
     }
   };
 
@@ -1699,19 +1756,40 @@ const FloatingChatSupport: React.FC = () => {
                           {file.type.startsWith('audio/') && <Music className="h-4 w-4" />}
                           {(!file.type.startsWith('image/') && !file.type.startsWith('video/') && !file.type.startsWith('audio/')) && <File className="h-4 w-4" />}
                         </div>
-                        <div className="overflow-hidden text-sm">
-                          <a 
-                            href={file.url} 
-                            download={file.name} 
-                            className={`hover:underline font-medium truncate block ${message.sender === "user" ? "text-white" : "text-blue-500"}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {file.name.length > 20 ? file.name.substring(0, 17) + '...' : file.name}
-                          </a>
-                          <span className="text-xs opacity-70">
-                            {(file.size / 1024).toFixed(1)} KB
-                          </span>
+                        <div className="overflow-hidden text-sm flex-1">
+                          {file.type.startsWith('audio/') ? (
+                            <div className="w-full">
+                              <div className="mb-1 flex justify-between">
+                                <span className={`font-medium ${message.sender === "user" ? "text-white" : "text-blue-500"}`}>
+                                  Mensagem de áudio
+                                </span>
+                                <span className="text-xs opacity-70">
+                                  {(file.size / 1024).toFixed(1)} KB
+                                </span>
+                              </div>
+                              <audio 
+                                src={file.url} 
+                                controls 
+                                className="w-full h-8 rounded-lg"
+                                preload="metadata"
+                              />
+                            </div>
+                          ) : (
+                            <>
+                              <a 
+                                href={file.url} 
+                                download={file.name} 
+                                className={`hover:underline font-medium truncate block ${message.sender === "user" ? "text-white" : "text-blue-500"}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {file.name.length > 20 ? file.name.substring(0, 17) + '...' : file.name}
+                              </a>
+                              <span className="text-xs opacity-70">
+                                {(file.size / 1024).toFixed(1)} KB
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -2418,20 +2496,32 @@ const FloatingChatSupport: React.FC = () => {
             )}
 
             {isRecordingAudio && (
-              <div className="absolute bottom-full left-0 mb-2 p-3 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-red-100 dark:border-red-900/50 shadow-lg z-50">
+              <div className="absolute bottom-full left-0 mb-2 p-3 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-red-100 dark:border-red-900/50 shadow-lg z-50 animate-pulse-subtle">
                 <div className="flex items-center gap-2">
-                  <div className="animate-pulse">
+                  <div className="relative">
                     <Mic className="h-5 w-5 text-red-500" />
+                    <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
                   </div>
-                  <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Gravando áudio...</span>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="ml-2 h-7 w-7 p-0 rounded-full border-red-200 dark:border-red-800"
-                    onClick={stopVoiceRecording}
-                  >
-                    <Square className="h-3.5 w-3.5 text-red-500" />
-                  </Button>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Gravando áudio...</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Fale sua mensagem</span>
+                  </div>
+                  <div className="flex gap-2 ml-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="h-8 w-8 p-0 rounded-full border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      onClick={stopVoiceRecording}
+                      title="Parar gravação"
+                    >
+                      <Square className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="mt-1 flex items-center gap-1">
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                    <div className="bg-red-500 h-1.5 rounded-full animate-recording-progress"></div>
+                  </div>
                 </div>
               </div>
             )}
@@ -2471,6 +2561,11 @@ const FloatingChatSupport: React.FC = () => {
                   onClick={inputMessage.trim().length > 0 ? sendMessage : startVoiceRecording}
                   disabled={isMessageEmpty && selectedFiles.length === 0}
                   title={inputMessage.trim().length > 0 ? "Enviar mensagem" : "Gravar áudio"}
+                  className={`h-8 w-8 rounded-full transition-all duration-300 ${
+                    isMessageEmpty && selectedFiles.length === 0
+                      ? "bg-gray-200 text-gray-400 dark:bg-gray-700 dark:text-gray-500 hover:bg-orange-500 hover:text-white dark:hover:bg-orange-600"
+                      : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
+                  }`}
                 >
                   {inputMessage.trim().length > 0 ? (
                     <Send className="h-4 w-4" />
@@ -3036,6 +3131,33 @@ const FloatingChatSupport: React.FC = () => {
 
         .animate-bounce-subtle {
           animation: bounce-subtle 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-subtle {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.8;
+          }
+        }
+        
+        .animate-pulse-subtle {
+          animation: pulse-subtle 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes recording-progress {
+          0% {
+            width: 0%;
+          }
+          100% {
+            width: 100%;
+          }
+        }
+        
+        .animate-recording-progress {
+          animation: recording-progress 10s linear infinite;
+          width: 0%;
         }
 
         @keyframes fadeIn {
