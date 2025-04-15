@@ -355,6 +355,9 @@ const FloatingChatSupport: React.FC = () => {
   // Estado para controlar se o usuário rolou manualmente durante a digitação da IA
   const [userHasScrolled, setUserHasScrolled] = useState(false);
 
+  // Estado para controlar se a resposta está pausada
+  const [isResponsePaused, setIsResponsePaused] = useState(false);
+
   // Estado para abrir/fechar o menu de anexos
   const [showAttachmentOptions, setShowAttachmentOptions] = useState(false);
 
@@ -730,6 +733,9 @@ const FloatingChatSupport: React.FC = () => {
   // Função para enviar mensagem
   const sendMessage = async () => {
     if (inputMessage.trim() === "" && selectedFiles.length === 0) return;
+
+    // Resetar o estado de pausa quando uma nova mensagem é enviada
+    setIsResponsePaused(false);
 
     // Se estiver editando uma mensagem
     if (editingMessage) {
@@ -1740,7 +1746,8 @@ const FloatingChatSupport: React.FC = () => {
               )}
             </div>
           ))}
-          {isTyping && (
+          {/* Mostra o componente de digitação quando está digitando ou pausado */}
+          {(isTyping || isResponsePaused) && (
             <div className="flex justify-start animate-fadeIn">
               <div className="w-8 h-8 rounded-full overflow-hidden mr-2 flex-shrink-0">
                 <Avatar>
@@ -1768,12 +1775,18 @@ const FloatingChatSupport: React.FC = () => {
                 </div>
                 <div className="relative min-h-[40px] flex flex-col">
                   <div className="flex items-center">
-                    <div className="flex space-x-1 mr-2">
-                      <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
-                      <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse delay-150"></div>
-                      <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse delay-300"></div>
-                    </div>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Formulando resposta...</span>
+                    {!isResponsePaused ? (
+                      <>
+                        <div className="flex space-x-1 mr-2">
+                          <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
+                          <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse delay-150"></div>
+                          <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse delay-300"></div>
+                        </div>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Formulando resposta...</span>
+                      </>
+                    ) : (
+                      <span className="text-sm text-orange-500 dark:text-orange-400 font-medium">Resposta pausada</span>
+                    )}
                   </div>
                   
                   <div className="flex items-center mt-2 justify-start gap-2">
@@ -1787,6 +1800,7 @@ const FloatingChatSupport: React.FC = () => {
                           }
                           // Atualizar UI
                           setIsTyping(false);
+                          setIsResponsePaused(false); // Resetar o estado de pausa
                           setMessages(prevMessages => 
                             prevMessages.filter(msg => 
                               msg.content !== ''
@@ -1802,24 +1816,49 @@ const FloatingChatSupport: React.FC = () => {
                     >
                       Cancelar
                     </button>
-                    <button 
-                      onClick={async () => {
-                        // Importar e chamar a função para pausar a resposta da IA
-                        try {
-                          const aiService = await import('@/services/aiChatService');
-                          if (typeof aiService.pauseResponse === 'function') {
-                            await aiService.pauseResponse(sessionId || 'default_session');
+                    
+                    {/* Usa o estado local para verificar se a resposta está pausada */}
+                    {isResponsePaused ? (
+                      <button 
+                        onClick={async () => {
+                          // Importar e chamar a função para retomar a resposta da IA
+                          try {
+                            const aiService = await import('@/services/aiChatService');
+                            if (typeof aiService.resumeResponse === 'function') {
+                              await aiService.resumeResponse(sessionId || 'default_session');
+                            }
+                            // Atualizar estados para indicar que voltou a digitar
+                            setIsResponsePaused(false);
+                            setIsTyping(true);
+                          } catch (error) {
+                            console.error('Erro ao retomar resposta da IA:', error);
                           }
-                          // Atualizar estado para indicar pausa na digitação
-                          setIsTyping(false);
-                        } catch (error) {
-                          console.error('Erro ao pausar resposta da IA:', error);
-                        }
-                      }}
-                      className="px-3 py-1 bg-orange-500/20 hover:bg-orange-500/30 dark:bg-orange-700/40 dark:hover:bg-orange-700/60 rounded-full text-xs font-medium text-orange-700 dark:text-orange-300 transition-all duration-200 transform hover:scale-105 shadow-sm backdrop-blur-sm"
-                    >
-                      Pausar
-                    </button>
+                        }}
+                        className="px-3 py-1 bg-green-500/20 hover:bg-green-500/30 dark:bg-green-700/40 dark:hover:bg-green-700/60 rounded-full text-xs font-medium text-green-700 dark:text-green-300 transition-all duration-200 transform hover:scale-105 shadow-sm backdrop-blur-sm"
+                      >
+                        Retomar
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={async () => {
+                          // Importar e chamar a função para pausar a resposta da IA
+                          try {
+                            const aiService = await import('@/services/aiChatService');
+                            if (typeof aiService.pauseResponse === 'function') {
+                              await aiService.pauseResponse(sessionId || 'default_session');
+                            }
+                            // Definir o estado de pausa como verdadeiro, mas manter isTyping true
+                            // para preservar o componente de resposta visível
+                            setIsResponsePaused(true);
+                          } catch (error) {
+                            console.error('Erro ao pausar resposta da IA:', error);
+                          }
+                        }}
+                        className="px-3 py-1 bg-orange-500/20 hover:bg-orange-500/30 dark:bg-orange-700/40 dark:hover:bg-orange-700/60 rounded-full text-xs font-medium text-orange-700 dark:text-orange-300 transition-all duration-200 transform hover:scale-105 shadow-sm backdrop-blur-sm"
+                      >
+                        Pausar
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
