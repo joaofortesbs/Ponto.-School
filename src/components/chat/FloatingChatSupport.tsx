@@ -935,7 +935,6 @@ const FloatingChatSupport: React.FC = () => {
       const words = aiResponse.split(' ');
 
       // Função para adicionar palavras gradualmente
-      ```javascript
       const addNextWord = async(index: number) => {
         try {
           // Importar o serviço de IA para verificar estado

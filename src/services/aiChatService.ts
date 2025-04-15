@@ -687,7 +687,7 @@ Contexto do usuário:
               - Organização: Ferramentas de gestão de tempo e tarefas
 - Biblioteca: Acervo digital de materiais didáticos e referências
 
-              NOVIDADES E FUTURAS ATUALIZAÇÕES PARA MENCIONAR:
+              NOVIDADES E FUTURASATUALIZAÇÕES PARA MENCIONAR:
               - Novo sistema de inteligência artificial para análise de desempenho
               - Ferramentas de gamificação aprimoradas para engajamento
               - Expansão das disciplinas disponíveis no portal
@@ -962,10 +962,10 @@ export const resumeResponse = async (sessionId: string): Promise<void> => {
 export const resetResponseState = (sessionId: string): void => {
   const wasPaused = isPaused[sessionId];
   const wasCancelled = isCancelled[sessionId];
-  
+
   isPaused[sessionId] = false;
   isCancelled[sessionId] = false;
-  
+
   console.log(`Estados resetados para a sessão ${sessionId}. 
     Estado anterior: pausado=${wasPaused}, cancelado=${wasCancelled}. 
     Estado atual: pausado=${isPaused[sessionId]}, cancelado=${isCancelled[sessionId]}`);

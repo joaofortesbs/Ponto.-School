@@ -1,3 +1,7 @@
+@import "./styles/animations.css";
+@import "./styles/hide-scrollbar.css";
+@import "./styles/typewriter-loader.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -158,10 +162,6 @@
 .glowing-border:hover::before {
   opacity: 1;
 }
-
-@import "./styles/animations.css";
-@import "./styles/hide-scrollbar.css";
-@import "./styles/typewriter-loader.css";
 
 @tailwind base;
 @tailwind components;
