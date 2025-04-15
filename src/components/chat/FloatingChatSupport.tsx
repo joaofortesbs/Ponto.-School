@@ -1596,7 +1596,7 @@ const FloatingChatSupport: React.FC = () => {
         </div>
       </ScrollArea>
     </div>
-  );
+  ));
 
   const renderChatContent = () => (
     <div className="flex flex-col h-full">
