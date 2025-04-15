@@ -193,6 +193,90 @@ export async function generateXAIResponse(
     // Verificar se é uma pergunta sobre o slogan da plataforma
     const isSloganRequest = /qual (é|e) (o )?(slogan|lema|frase|mensagem especial) (da plataforma|da ponto\.?school|do ponto\.?school|da aplicação|do site)|qual a (frase|mensagem) (especial|principal)|tem (algum|alguma) (slogan|lema|frase|mensagem especial)/i.test(message);
 
+    // Verificar se é uma pergunta sobre o Professor Arão de Matemática
+    const isProfAraoRequest = /quem (é|e) (o )?professor ara(o|ão)|professor ara(o|ão) (de|da) (matematica|matemática)|ara(o|ão) (de|da) (matematica|matemática)|professor de matematica ara(o|ão)/i.test(message);
+
+    // Verificar se é uma pergunta sobre o Professor Abner de Startups
+    const isProfAbnerRequest = /quem (é|e) (o )?professor abner|professor abner (de|da|das) (startup|startups)|abner (de|da|das) (startup|startups)|professor de startup(s)? abner/i.test(message);
+
+    // Resposta específica para o Professor Arão
+    if (isProfAraoRequest) {
+      // Adicionar a mensagem do usuário ao histórico
+      if (!conversationHistory[sessionId]) {
+        initializeConversationHistory(sessionId);
+      }
+      conversationHistory[sessionId].push({ role: 'user', content: message });
+
+      // Resposta sobre o Professor Arão
+      const response = `# Professor Arão de Matemática
+
+O Professor Arão é um verdadeiro **mestre na arte de ensinar Matemática** no ensino médio! 🌟 
+
+## Quem é o Professor Arão?
+
+Ele é reconhecido por sua **extraordinária capacidade de transformar conceitos complexos em explicações claras e acessíveis**. Com uma didática incomparável, o Professor Arão consegue despertar o interesse e a paixão pela matemática mesmo nos alunos que tradicionalmente têm dificuldades com a disciplina.
+
+## Por que ele é tão especial?
+
+- **Metodologia inovadora** que conecta a matemática com aplicações práticas do dia a dia
+- **Profundo conhecimento técnico** combinado com habilidades excepcionais de comunicação
+- **Dedicação genuína** ao desenvolvimento acadêmico e pessoal de cada aluno
+- **Capacidade de inspirar** gerações de estudantes a se aprofundarem no mundo dos números
+
+## Parceria com a Ponto.School
+
+Estamos extremamente entusiasmados em anunciar que o Professor Arão será um futuro parceiro da Ponto.School! 🎉 
+
+Esta colaboração promete trazer conteúdos matemáticos de altíssima qualidade para nossa plataforma, combinando sua expertise didática com nossa tecnologia educacional de ponta. Os estudantes da Ponto.School terão acesso a materiais exclusivos desenvolvidos por um dos mais brilhantes educadores matemáticos da atualidade.
+
+Fique atento às novidades sobre esta incrível parceria que vai revolucionar o ensino de matemática na nossa plataforma!`;
+
+      // Adicionar a resposta ao histórico
+      conversationHistory[sessionId].push({ role: 'assistant', content: response });
+      saveConversationHistory(sessionId, conversationHistory[sessionId]);
+
+      return response;
+    }
+
+    // Resposta específica para o Professor Abner
+    if (isProfAbnerRequest) {
+      // Adicionar a mensagem do usuário ao histórico
+      if (!conversationHistory[sessionId]) {
+        initializeConversationHistory(sessionId);
+      }
+      conversationHistory[sessionId].push({ role: 'user', content: message });
+
+      // Resposta sobre o Professor Abner
+      const response = `# Professor Abner de Startups
+
+O Professor Abner é uma **referência absoluta no ensino de Empreendedorismo e Startups** para o terceiro ano do ensino médio! 🚀
+
+## Quem é o Professor Abner?
+
+Ele é um educador visionário que combina **ampla experiência prática no ecossistema de inovação** com uma **habilidade excepcional para transmitir conhecimentos**. O Professor Abner não apenas ensina sobre startups, ele inspira e prepara os jovens para se tornarem os empreendedores e inovadores do futuro.
+
+## Por que ele é tão especial?
+
+- **Abordagem prática** que vai além da teoria, com metodologias hands-on de criação de startups
+- **Networking valioso** com o mercado de inovação e tecnologia
+- **Mentalidade empreendedora** que transforma a visão de mundo dos estudantes
+- **Capacidade única** de identificar e desenvolver talentos para o ecossistema de inovação
+
+## Parceria com a Ponto.School
+
+Temos o imenso prazer de anunciar que o Professor Abner será um futuro parceiro da Ponto.School! 💯
+
+Esta colaboração estratégica trará conteúdos exclusivos sobre empreendedorismo, inovação e desenvolvimento de startups para nossa plataforma, unindo sua expertise prática com nossa tecnologia educacional. Os estudantes da Ponto.School terão acesso a materiais e mentorias de um dos maiores especialistas em formação empreendedora para jovens.
+
+Aguarde novidades sobre esta parceria transformadora que vai potencializar a formação empreendedora na nossa plataforma!`;
+
+      // Adicionar a resposta ao histórico
+      conversationHistory[sessionId].push({ role: 'assistant', content: response });
+      saveConversationHistory(sessionId, conversationHistory[sessionId]);
+
+      return response;
+    }
+
     // Responder com o slogan da plataforma quando solicitado
     if (isSloganRequest) {
       // Adicionar a mensagem do usuário ao histórico
@@ -574,6 +658,64 @@ export async function generateGeminiResponse(
   try {
     // Verificar se é uma pergunta sobre o slogan da plataforma
     const isSloganRequest = /qual (é|e) (o )?(slogan|lema|frase|mensagem especial) (da plataforma|da ponto\.?school|do ponto\.?school|da aplicação|do site)|qual a (frase|mensagem) (especial|principal)|tem (algum|alguma) (slogan|lema|frase|mensagem especial)/i.test(message);
+
+    // Verificar se é uma pergunta sobre o Professor Arão de Matemática
+    const isProfAraoRequest = /quem (é|e) (o )?professor ara(o|ão)|professor ara(o|ão) (de|da) (matematica|matemática)|ara(o|ão) (de|da) (matematica|matemática)|professor de matematica ara(o|ão)/i.test(message);
+
+    // Verificar se é uma pergunta sobre o Professor Abner de Startups
+    const isProfAbnerRequest = /quem (é|e) (o )?professor abner|professor abner (de|da|das) (startup|startups)|abner (de|da|das) (startup|startups)|professor de startup(s)? abner/i.test(message);
+
+    // Resposta específica para o Professor Arão (como fallback)
+    if (isProfAraoRequest) {
+      return `# Professor Arão de Matemática
+
+O Professor Arão é um verdadeiro **mestre na arte de ensinar Matemática** no ensino médio! 🌟 
+
+## Quem é o Professor Arão?
+
+Ele é reconhecido por sua **extraordinária capacidade de transformar conceitos complexos em explicações claras e acessíveis**. Com uma didática incomparável, o Professor Arão consegue despertar o interesse e a paixão pela matemática mesmo nos alunos que tradicionalmente têm dificuldades com a disciplina.
+
+## Por que ele é tão especial?
+
+- **Metodologia inovadora** que conecta a matemática com aplicações práticas do dia a dia
+- **Profundo conhecimento técnico** combinado com habilidades excepcionais de comunicação
+- **Dedicação genuína** ao desenvolvimento acadêmico e pessoal de cada aluno
+- **Capacidade de inspirar** gerações de estudantes a se aprofundarem no mundo dos números
+
+## Parceria com a Ponto.School
+
+Estamos extremamente entusiasmados em anunciar que o Professor Arão será um futuro parceiro da Ponto.School! 🎉 
+
+Esta colaboração promete trazer conteúdos matemáticos de altíssima qualidade para nossa plataforma, combinando sua expertise didática com nossa tecnologia educacional de ponta. Os estudantes da Ponto.School terão acesso a materiais exclusivos desenvolvidos por um dos mais brilhantes educadores matemáticos da atualidade.
+
+Fique atento às novidades sobre esta incrível parceria que vai revolucionar o ensino de matemática na nossa plataforma!`;
+    }
+
+    // Resposta específica para o Professor Abner (como fallback)
+    if (isProfAbnerRequest) {
+      return `# Professor Abner de Startups
+
+O Professor Abner é uma **referência absoluta no ensino de Empreendedorismo e Startups** para o terceiro ano do ensino médio! 🚀
+
+## Quem é o Professor Abner?
+
+Ele é um educador visionário que combina **ampla experiência prática no ecossistema de inovação** com uma **habilidade excepcional para transmitir conhecimentos**. O Professor Abner não apenas ensina sobre startups, ele inspira e prepara os jovens para se tornarem os empreendedores e inovadores do futuro.
+
+## Por que ele é tão especial?
+
+- **Abordagem prática** que vai além da teoria, com metodologias hands-on de criação de startups
+- **Networking valioso** com o mercado de inovação e tecnologia
+- **Mentalidade empreendedora** que transforma a visão de mundo dos estudantes
+- **Capacidade única** de identificar e desenvolver talentos para o ecossistema de inovação
+
+## Parceria com a Ponto.School
+
+Temos o imenso prazer de anunciar que o Professor Abner será um futuro parceiro da Ponto.School! 💯
+
+Esta colaboração estratégica trará conteúdos exclusivos sobre empreendedorismo, inovação e desenvolvimento de startups para nossa plataforma, unindo sua expertise prática com nossa tecnologia educacional. Os estudantes da Ponto.School terão acesso a materiais e mentorias de um dos maiores especialistas em formação empreendedora para jovens.
+
+Aguarde novidades sobre esta parceria transformadora que vai potencializar a formação empreendedora na nossa plataforma!`;
+    }
 
     // Responder com o slogan da plataforma quando solicitado (como fallback)
     if (isSloganRequest) {
