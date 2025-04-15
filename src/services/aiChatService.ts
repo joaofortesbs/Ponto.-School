@@ -194,10 +194,10 @@ export async function generateXAIResponse(
     const isSloganRequest = /qual (é|e) (o )?(slogan|lema|frase|mensagem especial) (da plataforma|da ponto\.?school|do ponto\.?school|da aplicação|do site)|qual a (frase|mensagem) (especial|principal)|tem (algum|alguma) (slogan|lema|frase|mensagem especial)/i.test(message);
 
     // Verificar se é uma pergunta sobre o Professor Arão de Matemática
-    const isProfAraoRequest = /quem (é|e) (o )?professor ara(o|ão)|professor ara(o|ão) (de|da) (matematica|matemática)|ara(o|ão) (de|da) (matematica|matemática)|professor de matematica ara(o|ão)/i.test(message);
+    const isProfAraoRequest = /quem (é|e) (o )?prof(essor)? ara(o|ão)|prof(essor)? ara(o|ão)|ara(o|ão) (de )?(matematica|matemática)|professor de (matematica|matemática)|fale (sobre|do) (o )?prof(essor)? ara(o|ão)/i.test(message);
 
     // Verificar se é uma pergunta sobre o Professor Abner de Startups
-    const isProfAbnerRequest = /quem (é|e) (o )?professor abner|professor abner (de|da|das) (startup|startups)|abner (de|da|das) (startup|startups)|professor de startup(s)? abner/i.test(message);
+    const isProfAbnerRequest = /quem (é|e) (o )?prof(essor)? abner|prof(essor)? abner|abner (de )?(startup|startups)|professor de startup|fale (sobre|do) (o )?prof(essor)? abner/i.test(message);
 
     // Resposta específica para o Professor Arão
     if (isProfAraoRequest) {
@@ -660,10 +660,10 @@ export async function generateGeminiResponse(
     const isSloganRequest = /qual (é|e) (o )?(slogan|lema|frase|mensagem especial) (da plataforma|da ponto\.?school|do ponto\.?school|da aplicação|do site)|qual a (frase|mensagem) (especial|principal)|tem (algum|alguma) (slogan|lema|frase|mensagem especial)/i.test(message);
 
     // Verificar se é uma pergunta sobre o Professor Arão de Matemática
-    const isProfAraoRequest = /quem (é|e) (o )?professor ara(o|ão)|professor ara(o|ão) (de|da) (matematica|matemática)|ara(o|ão) (de|da) (matematica|matemática)|professor de matematica ara(o|ão)/i.test(message);
+    const isProfAraoRequest = /quem (é|e) (o )?prof(essor)? ara(o|ão)|prof(essor)? ara(o|ão)|ara(o|ão) (de )?(matematica|matemática)|professor de (matematica|matemática)|fale (sobre|do) (o )?prof(essor)? ara(o|ão)/i.test(message);
 
     // Verificar se é uma pergunta sobre o Professor Abner de Startups
-    const isProfAbnerRequest = /quem (é|e) (o )?professor abner|professor abner (de|da|das) (startup|startups)|abner (de|da|das) (startup|startups)|professor de startup(s)? abner/i.test(message);
+    const isProfAbnerRequest = /quem (é|e) (o )?prof(essor)? abner|prof(essor)? abner|abner (de )?(startup|startups)|professor de startup|fale (sobre|do) (o )?prof(essor)? abner/i.test(message);
 
     // Resposta específica para o Professor Arão (como fallback)
     if (isProfAraoRequest) {
