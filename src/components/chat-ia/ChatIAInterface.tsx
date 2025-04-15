@@ -57,23 +57,38 @@ const ChatIAInterface = () => {
       const scrollHeight = target.scrollHeight;
       const clientHeight = target.clientHeight;
       
-      // Show button if not near the bottom
-      const isNearBottom = scrollHeight - scrollPosition - clientHeight < 100;
-      setShowScrollToBottom(!isNearBottom && scrollHeight > clientHeight + 200);
+      // Show button if not near the bottom (more than 300px from bottom)
+      const isNearBottom = scrollHeight - scrollPosition - clientHeight < 300;
+      setShowScrollToBottom(!isNearBottom);
     };
 
-    // Find scroll container
-    const scrollContainer = document.querySelector('.chat-scroll-area');
-    if (scrollContainer) {
-      scrollContainer.addEventListener('scroll', handleScroll);
-    }
+    // Find all potential scroll containers
+    const scrollContainers = document.querySelectorAll('.chat-scroll-area, .ScrollAreaViewport');
+    
+    scrollContainers.forEach(container => {
+      container.addEventListener('scroll', handleScroll);
+    });
 
     return () => {
-      if (scrollContainer) {
-        scrollContainer.removeEventListener('scroll', handleScroll);
-      }
+      scrollContainers.forEach(container => {
+        container.removeEventListener('scroll', handleScroll);
+      });
     };
   }, []);
+
+  // Also check for scroll position when messages change
+  useEffect(() => {
+    // Find scroll container
+    const container = document.querySelector('.chat-scroll-area, .ScrollAreaViewport') as HTMLElement;
+    if (container) {
+      const scrollPosition = container.scrollTop;
+      const scrollHeight = container.scrollHeight;
+      const clientHeight = container.clientHeight;
+      
+      const isNearBottom = scrollHeight - scrollPosition - clientHeight < 300;
+      setShowScrollToBottom(!isNearBottom);
+    }
+  }, [messages]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputValue(e.target.value);
@@ -162,13 +177,15 @@ const ChatIAInterface = () => {
 
       <ScrollArea className="flex-1 p-4 overflow-y-auto relative chat-scroll-area">
         {showScrollToBottom && (
-          <Button
-            onClick={scrollToBottom}
-            className="absolute bottom-5 right-5 rounded-full bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white shadow-md z-10 w-10 h-10 p-0"
-            aria-label="Scroll to latest messages"
-          >
-            <Send size={16} className="rotate-90" />
-          </Button>
+          <div className="fixed bottom-24 right-8 z-50 animate-pulse">
+            <Button
+              onClick={scrollToBottom}
+              className="rounded-full bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white shadow-lg w-12 h-12 p-0 flex items-center justify-center"
+              aria-label="Scroll to latest messages"
+            >
+              <Send size={20} className="rotate-90" />
+            </Button>
+          </div>
         )}
         <div className="space-y-4 max-w-3xl mx-auto">
           {messages.map((message) => (
