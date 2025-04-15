@@ -2201,11 +2201,13 @@ const FloatingChatSupport: React.FC = () => {
               </div>
             ) : (
               <>
-                <div className="p-3 bg-white dark:bg-gray-800/80 rounded-lg border border-orange-100 dark:border-orange-800/40 mb-4">
-                  <p className="text-sm whitespace-pre-wrap">{improvedPrompt}</p>
-                </div>
+                <ScrollArea className="max-h-[200px] mb-4">
+                  <div className="p-3 bg-white dark:bg-gray-800/80 rounded-lg border border-orange-100 dark:border-orange-800/40">
+                    <p className="text-sm whitespace-pre-wrap">{improvedPrompt}</p>
+                  </div>
+                </ScrollArea>
                 
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-2 mt-3">
                   <Button 
                     size="sm" 
                     variant="outline" 
