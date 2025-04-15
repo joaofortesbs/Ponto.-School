@@ -2170,58 +2170,61 @@ const FloatingChatSupport: React.FC = () => {
 
       {/* Improved Prompt Panel */}
       {isImprovingPrompt && (
-        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 p-4 shadow-xl w-[85%] max-w-lg animate-fadeIn">
-          <div className="flex justify-between items-center mb-3">
-            <h4 className="text-sm font-bold flex items-center gap-1.5 text-orange-600 dark:text-orange-400">
-              <Sparkles className="h-4 w-4" />
-              Prompt Aprimorado com IA
-            </h4>
-            <Button 
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
-              onClick={cancelImprovedPrompt}
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          </div>
-
-          {promptImprovementLoading ? (
-            <div className="flex items-center justify-center py-6">
-              <div className="flex flex-col items-center space-y-3">
-                <div className="flex space-x-2">
-                  <div className="w-3 h-3 rounded-full bg-orange-500 animate-pulse" />
-                  <div className="w-3 h-3 rounded-full bg-orange-500 animate-pulse delay-150" />
-                  <div className="w-3 h-3 rounded-full bg-orange-500 animate-pulse delay-300" />
-                </div>
-                <span className="text-sm text-orange-600 dark:text-orange-400">Aprimorando sua pergunta com IA...</span>
-              </div>
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={cancelImprovedPrompt}></div>
+          <div className="relative bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 p-4 shadow-xl w-[90%] max-w-md animate-fadeIn">
+            <div className="flex justify-between items-center mb-3">
+              <h4 className="text-sm font-bold flex items-center gap-1.5 text-orange-600 dark:text-orange-400">
+                <Sparkles className="h-4 w-4" />
+                Prompt Aprimorado com IA
+              </h4>
+              <Button 
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={cancelImprovedPrompt}
+              >
+                <X className="h-3 w-3" />
+              </Button>
             </div>
-          ) : (
-            <>
-              <div className="p-3 bg-white dark:bg-gray-800/80 rounded-lg border border-orange-100 dark:border-orange-800/40 mb-4">
-                <p className="text-sm whitespace-pre-wrap">{improvedPrompt}</p>
+
+            {promptImprovementLoading ? (
+              <div className="flex items-center justify-center py-6">
+                <div className="flex flex-col items-center space-y-3">
+                  <div className="flex space-x-2">
+                    <div className="w-3 h-3 rounded-full bg-orange-500 animate-pulse" />
+                    <div className="w-3 h-3 rounded-full bg-orange-500 animate-pulse delay-150" />
+                    <div className="w-3 h-3 rounded-full bg-orange-500 animate-pulse delay-300" />
+                  </div>
+                  <span className="text-sm text-orange-600 dark:text-orange-400">Aprimorando sua pergunta com IA...</span>
+                </div>
               </div>
-              
-              <div className="flex justify-end gap-2">
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="text-xs border-orange-200 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
-                  onClick={cancelImprovedPrompt}
-                >
-                  Cancelar
-                </Button>
-                <Button 
-                  size="sm" 
-                  className="text-xs bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white border-none"
-                  onClick={acceptImprovedPrompt}
-                >
-                  Usar este prompt
-                </Button>
-              </div>
-            </>
-          )}
+            ) : (
+              <>
+                <div className="p-3 bg-white dark:bg-gray-800/80 rounded-lg border border-orange-100 dark:border-orange-800/40 mb-4">
+                  <p className="text-sm whitespace-pre-wrap">{improvedPrompt}</p>
+                </div>
+                
+                <div className="flex justify-end gap-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="text-xs border-orange-200 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                    onClick={cancelImprovedPrompt}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    className="text-xs bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white border-none"
+                    onClick={acceptImprovedPrompt}
+                  >
+                    Usar este prompt
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       )}
 
