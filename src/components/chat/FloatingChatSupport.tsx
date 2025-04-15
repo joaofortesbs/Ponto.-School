@@ -778,7 +778,23 @@ const FloatingChatSupport: React.FC = () => {
         const words = aiResponse.split(' ');
         
         // Função para adicionar palavras gradualmente
-        const addNextWord = (index: number) => {
+        const addNextWord = async (index: number) => {
+          // Importar o serviço de IA para verificar estado
+          const aiService = await import('@/services/aiChatService');
+          
+          // Verificar se a resposta foi cancelada
+          if (aiService.isResponseCancelled(sessionId || 'default_session')) {
+            setIsTyping(false);
+            return;
+          }
+          
+          // Verificar se a resposta está pausada
+          if (aiService.isResponsePaused(sessionId || 'default_session')) {
+            // Se pausada, verifica novamente após 500ms
+            setTimeout(() => addNextWord(index), 500);
+            return;
+          }
+          
           if (index < words.length) {
             displayedContent += (index === 0 ? '' : ' ') + words[index];
             
@@ -795,11 +811,22 @@ const FloatingChatSupport: React.FC = () => {
             setTimeout(() => addNextWord(index + 1), typingSpeed);
           } else {
             setIsTyping(false);
+            
+            // Resetar o estado de pausa/cancelamento quando terminar
+            aiService.resetResponseState(sessionId || 'default_session');
           }
         };
         
-        // Inicia o efeito de digitação após um pequeno delay
-        setTimeout(() => addNextWord(0), 500);
+        // Reset o estado de resposta antes de iniciar uma nova
+        const prepareAndStartTyping = async () => {
+          const aiService = await import('@/services/aiChatService');
+          aiService.resetResponseState(sessionId || 'default_session');
+          
+          // Inicia o efeito de digitação após um pequeno delay
+          setTimeout(() => addNextWord(0), 500);
+        };
+        
+        prepareAndStartTyping();
       } catch (error) {
         console.error('Erro ao obter resposta para mensagem editada:', error);
         setMessages(prevMessages => [
@@ -1751,24 +1778,43 @@ const FloatingChatSupport: React.FC = () => {
                   
                   <div className="flex items-center mt-2 justify-start gap-2">
                     <button 
-                      onClick={() => {
-                        setIsTyping(false);
-                        setMessages(prevMessages => 
-                          prevMessages.filter(msg => 
-                            msg.content !== ''
-                          )
-                        );
+                      onClick={async () => {
+                        try {
+                          // Importar e chamar a função para cancelar a resposta da IA
+                          const aiService = await import('@/services/aiChatService');
+                          if (typeof aiService.cancelResponse === 'function') {
+                            await aiService.cancelResponse(sessionId || 'default_session');
+                          }
+                          // Atualizar UI
+                          setIsTyping(false);
+                          setMessages(prevMessages => 
+                            prevMessages.filter(msg => 
+                              msg.content !== ''
+                            )
+                          );
+                        } catch (error) {
+                          console.error('Erro ao cancelar resposta da IA:', error);
+                          // Mesmo em caso de erro, atualizar UI
+                          setIsTyping(false);
+                        }
                       }}
                       className="px-3 py-1 bg-white/20 hover:bg-white/30 dark:bg-gray-700/40 dark:hover:bg-gray-700/60 rounded-full text-xs font-medium text-gray-700 dark:text-gray-300 transition-all duration-200 transform hover:scale-105 shadow-sm backdrop-blur-sm"
                     >
                       Cancelar
                     </button>
                     <button 
-                      onClick={() => {
-                        // Pausa temporariamente a digitação
-                        // Este é um placeholder para a função real de pausa
-                        // que seria implementada no serviço de IA
-                        setIsTyping(false);
+                      onClick={async () => {
+                        // Importar e chamar a função para pausar a resposta da IA
+                        try {
+                          const aiService = await import('@/services/aiChatService');
+                          if (typeof aiService.pauseResponse === 'function') {
+                            await aiService.pauseResponse(sessionId || 'default_session');
+                          }
+                          // Atualizar estado para indicar pausa na digitação
+                          setIsTyping(false);
+                        } catch (error) {
+                          console.error('Erro ao pausar resposta da IA:', error);
+                        }
                       }}
                       className="px-3 py-1 bg-orange-500/20 hover:bg-orange-500/30 dark:bg-orange-700/40 dark:hover:bg-orange-700/60 rounded-full text-xs font-medium text-orange-700 dark:text-orange-300 transition-all duration-200 transform hover:scale-105 shadow-sm backdrop-blur-sm"
                     >

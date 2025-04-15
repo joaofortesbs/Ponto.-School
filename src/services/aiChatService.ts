@@ -189,7 +189,7 @@ export async function generateXAIResponse(
     // Verificar se a mensagem contém comando para acessar ou modificar o perfil
     const isProfileInfoRequest = /qual (é|e) (o )?meu (ID|id)|me (mostre|mostra|diga|informe) (o )?meu (ID|id)|informações da minha conta|dados da minha conta|meu perfil completo/i.test(message);
     const isProfileUpdateRequest = /atualiz(e|ar) (minha|a) (bio|biografia)|mudar (minha|a) (bio|biografia)|modificar (minha|a) bio|mudar (meu|o) nome de exibição|atualizar (meu|o) nome de exibição|mudar (meu|o) telefone/i.test(message);
-    
+
     // Verificar se é uma pergunta sobre o slogan da plataforma
     const isSloganRequest = /qual (é|e) (o )?(slogan|lema|frase|mensagem especial) (da plataforma|da ponto\.?school|do ponto\.?school|da aplicação|do site)|qual a (frase|mensagem) (especial|principal)|tem (algum|alguma) (slogan|lema|frase|mensagem especial)/i.test(message);
 
@@ -200,19 +200,19 @@ export async function generateXAIResponse(
         initializeConversationHistory(sessionId);
       }
       conversationHistory[sessionId].push({ role: 'user', content: message });
-      
+
       // Resposta com o slogan
       const response = `"Não é sobre conectar você com a tecnologia, é sobre conectar você com o futuro!"
 
 Este é o slogan que representa a essência da Ponto.School - nossa missão é preparar você para as oportunidades do amanhã através da educação e tecnologia de ponta.`;
-      
+
       // Adicionar a resposta ao histórico
       conversationHistory[sessionId].push({ role: 'assistant', content: response });
       saveConversationHistory(sessionId, conversationHistory[sessionId]);
-      
+
       return response;
     }
-    
+
     // Importar o serviço de modificação de perfil se necessário
     let ProfileModificationService;
     if (isProfileInfoRequest || isProfileUpdateRequest) {
@@ -424,35 +424,35 @@ CONTEXTO DO USUÁRIO (COMPLETO):
       2. Use uma linguagem mais informal e descontraída, como se estivesse conversando com um amigo.
       3. Seja amigável, use emojis ocasionalmente e mantenha um tom leve e positivo.
       4. Use gírias leves e expressões coloquiais quando apropriado.
-      
+
       ESTRUTURA DE RESPOSTAS:
       Para todas as suas respostas, utilize uma estrutura completa e abrangente:
-      
+
       1. Compreensão da dúvida:
          - Analise detalhadamente a pergunta do usuário
          - Identifique a intenção e as necessidades implícitas
          - Reconheça possíveis lacunas de informação
-      
+
       2. Explicação principal:
          - Apresente o conceito principal de forma clara
          - Forneça uma explicação detalhada com todos os passos necessários
          - Inclua exemplos práticos relacionados ao contexto educacional
-      
+
       3. Integração com a Ponto.School:
          - SEMPRE destaque como os recursos da Ponto.School ajudam a resolver o problema
          - Mencione ferramentas específicas como EpictusIA, Mentor IA, Portal, etc.
          - Sugira novidades ou atualizações futuras da plataforma relacionadas à questão
-      
+
       4. Recursos adicionais:
          - Indique materiais disponíveis na Biblioteca
          - Sugira grupos de estudo ou turmas relacionadas
          - Mencione a Conexão Expert para questões mais complexas
-      
+
       5. Resumo e engajamento:
          - Resuma os pontos principais
          - Incentive o uso contínuo da plataforma
          - Pergunte se o usuário gostaria de saber mais sobre algum recurso
-      
+
       FORMATAÇÃO VISUAL:
       Utilize formato visual rico em suas respostas:
       - **Negrito** para pontos importantes
@@ -541,7 +541,7 @@ CONTEXTO DO USUÁRIO (COMPLETO):
       - Turmas: Salas de aula virtuais para acompanhamento sistemático
       - Organização: Ferramentas de gestão de tempo e tarefas
       - Biblioteca: Acervo digital de materiais didáticos e referências
-      
+
       NOVIDADES E FUTURAS ATUALIZAÇÕES PARA MENCIONAR:
       - Novo sistema de inteligência artificial para análise de desempenho
       - Ferramentas de gamificação aprimoradas para engajamento
@@ -551,7 +551,7 @@ CONTEXTO DO USUÁRIO (COMPLETO):
       - Sistema avançado de geração de resumos e materiais de estudo
       - Recursos expandidos de visualização de conteúdo
       - Futuras ferramentas de preparação para vestibulares e concursos
-      
+
       Personalize suas respostas para criar uma experiência única e amigável para ${username}.`;
 
   conversationHistory[sessionId] = [
@@ -574,14 +574,14 @@ export async function generateGeminiResponse(
   try {
     // Verificar se é uma pergunta sobre o slogan da plataforma
     const isSloganRequest = /qual (é|e) (o )?(slogan|lema|frase|mensagem especial) (da plataforma|da ponto\.?school|do ponto\.?school|da aplicação|do site)|qual a (frase|mensagem) (especial|principal)|tem (algum|alguma) (slogan|lema|frase|mensagem especial)/i.test(message);
-    
+
     // Responder com o slogan da plataforma quando solicitado (como fallback)
     if (isSloganRequest) {
       return `"Não é sobre conectar você com a tecnologia, é sobre conectar você com o futuro!"
 
 Este é o slogan que representa a essência da Ponto.School - nossa missão é preparar você para as oportunidades do amanhã através da educação e tecnologia de ponta.`;
     }
-    
+
     // Obter contexto do usuário
     const userContext = await getUserContext();
 
@@ -610,35 +610,35 @@ Contexto do usuário:
               2. Use uma linguagem mais informal e descontraída, como se estivesse conversando com um amigo.
               3. Seja amigável, use emojis ocasionalmente e mantenha um tom leve e positivo.
               4. Use gírias leves e expressões coloquiais quando apropriado.
-              
+
               ESTRUTURA DE RESPOSTAS:
               Para todas as suas respostas, utilize uma estrutura completa e abrangente:
-              
+
               1. Compreensão da dúvida:
                  - Analise detalhadamente a pergunta do usuário
                  - Identifique a intenção e as necessidades implícitas
                  - Reconheça possíveis lacunas de informação
-              
+
               2. Explicação principal:
                  - Apresente o conceito principal de forma clara
                  - Forneça uma explicação detalhada com todos os passos necessários
                  - Inclua exemplos práticos relacionados ao contexto educacional
-              
+
               3. Integração com a Ponto.School:
                  - SEMPRE destaque como os recursos da Ponto.School ajudam a resolver o problema
                  - Mencione ferramentas específicas como EpictusIA, Mentor IA, Portal, etc.
                  - Sugira novidades ou atualizações futuras da plataforma relacionadas à questão
-              
+
               4. Recursos adicionais:
                  - Indique materiais disponíveis na Biblioteca
                  - Sugira grupos de estudo ou turmas relacionadas
                  - Mencione a Conexão Expert para questões mais complexas
-              
+
               5. Resumo e engajamento:
                  - Resuma os pontos principais
                  - Incentive o uso contínuo da plataforma
                  - Pergunte se o usuário gostaria de saber mais sobre algum recurso
-              
+
               FORMATAÇÃO VISUAL:
               Utilize formato visual rico em suas respostas:
               - **Negrito** para pontos importantes
@@ -685,8 +685,8 @@ Contexto do usuário:
               - Grupos de Estudo: Comunidades colaborativas para aprendizado em conjunto
               - Turmas: Salas de aula virtuais para acompanhamento sistemático
               - Organização: Ferramentas de gestão de tempo e tarefas
-              - Biblioteca: Acervo digital de materiais didáticos e referências
-              
+- Biblioteca: Acervo digital de materiais didáticos e referências
+
               NOVIDADES E FUTURAS ATUALIZAÇÕES PARA MENCIONAR:
               - Novo sistema de inteligência artificial para análise de desempenho
               - Ferramentas de gamificação aprimoradas para engajamento
@@ -895,4 +895,70 @@ const getResponseForMessage = (message: string): string => {
   } else {
     return "Desculpe, não entendi sua pergunta. Pode reformulá-la?";
   }
+};
+
+export const clearConversationHistory = async (sessionId: string): Promise<void> => {
+  try {
+    localStorage.removeItem(`conversation_${sessionId}`);
+    console.log(`Histórico de conversa para a sessão ${sessionId} foi limpo.`);
+  } catch (error) {
+    console.error('Erro ao limpar histórico de conversa:', error);
+    throw error;
+  }
+};
+
+// Variável para controlar se a resposta está pausada
+let isPaused: Record<string, boolean> = {};
+
+// Função para pausar a resposta da IA
+export const pauseResponse = async (sessionId: string): Promise<void> => {
+  try {
+    isPaused[sessionId] = true;
+    console.log(`Resposta da IA pausada para a sessão ${sessionId}.`);
+  } catch (error) {
+    console.error('Erro ao pausar resposta da IA:', error);
+    throw error;
+  }
+};
+
+// Função para verificar se a resposta está pausada
+export const isResponsePaused = (sessionId: string): boolean => {
+  return isPaused[sessionId] || false;
+};
+
+// Variável para controlar se a resposta foi cancelada
+let isCancelled: Record<string, boolean> = {};
+
+// Função para cancelar a resposta da IA
+export const cancelResponse = async (sessionId: string): Promise<void> => {
+  try {
+    isCancelled[sessionId] = true;
+    isPaused[sessionId] = false; // Certifique-se de que não está em pausa também
+    console.log(`Resposta da IA cancelada para a sessão ${sessionId}.`);
+  } catch (error) {
+    console.error('Erro ao cancelar resposta da IA:', error);
+    throw error;
+  }
+};
+
+// Função para verificar se a resposta foi cancelada
+export const isResponseCancelled = (sessionId: string): boolean => {
+  return isCancelled[sessionId] || false;
+};
+
+// Função para retomar a resposta da IA
+export const resumeResponse = async (sessionId: string): Promise<void> => {
+  try {
+    isPaused[sessionId] = false;
+    console.log(`Resposta da IA retomada para a sessão ${sessionId}.`);
+  } catch (error) {
+    console.error('Erro ao retomar resposta da IA:', error);
+    throw error;
+  }
+};
+
+// Função para resetar o estado de cancelamento/pausa (útil ao iniciar novas respostas)
+export const resetResponseState = (sessionId: string): void => {
+  isPaused[sessionId] = false;
+  isCancelled[sessionId] = false;
 };
