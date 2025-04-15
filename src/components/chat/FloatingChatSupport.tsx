@@ -47,7 +47,9 @@ import {
   Download,
   File,
   Music,
-  Loader2
+  Loader2,
+  Globe,
+  Users
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { generateAIResponse, getConversationHistory, clearConversationHistory } from "@/services/aiChatService";
@@ -365,6 +367,9 @@ const FloatingChatSupport: React.FC = () => {
   const [messageToImprove, setMessageToImprove] = useState<number | null>(null);
   const [improvementFeedback, setImprovementFeedback] = useState('');
   const [isReformulating, setIsReformulating] = useState(false);
+
+  // Estado para exibir opções de pesquisa avançada
+  const [showWebSearchOptions, setShowWebSearchOptions] = useState(false);
 
   // Funções para lidar com feedback das mensagens
   const handleMessageFeedback = (messageId: number, feedback: 'positive' | 'negative') => {
@@ -1917,15 +1922,26 @@ const FloatingChatSupport: React.FC = () => {
       <div className="p-4 border-t dark:border-gray-800">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1">
-            <Badge 
-              variant="outline" 
-              className="bg-gradient-to-r from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/40 text-blue-800 dark:text-blue300 text-xs px-2 py-0 h-5 cursor-pointer"
-              onClick={() => setIsShowingAISettings(!isShowingAISettings)}
-            >
-              <Sparkles className="h-3 w-3 mr-1" />
-              IA Habilitada
-              <Settings className="h-3 w-3 ml-1" />
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge 
+                variant="outline" 
+                className="bg-gradient-to-r from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/40 text-blue-800 dark:text-blue300 text-xs px-2 py-0 h-5 cursor-pointer"
+                onClick={() => setIsShowingAISettings(!isShowingAISettings)}
+              >
+                <Sparkles className="h-3 w-3 mr-1" />
+                IA Habilitada
+                <Settings className="h-3 w-3 ml-1" />
+              </Badge>
+              
+              <Badge 
+                variant="outline" 
+                className="bg-gradient-to-r from-green-100 to-green-200 dark:from-green-900/40 dark:to-green-800/40 text-green-800 dark:text-green-300 text-xs px-2 py-0 h-5 cursor-pointer"
+                onClick={() => setShowWebSearchOptions(!showWebSearchOptions)}
+              >
+                <Globe className="h-3 w-3 mr-1" />
+                Pesquisa avançada
+              </Badge>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -1951,6 +1967,56 @@ const FloatingChatSupport: React.FC = () => {
             </Button>
           </div>
         </div>
+
+        {showWebSearchOptions && (
+          <div className="mb-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
+            <h4 className="text-sm font-medium mb-2 flex items-center">
+              <Globe className="h-3.5 w-3.5 mr-1.5 text-green-500" />
+              Pesquisa avançada
+            </h4>
+            
+            <div className="space-y-2">
+              <div className="flex items-center gap-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md cursor-pointer">
+                <Globe className="h-4 w-4 text-blue-500" />
+                <div className="flex-1">
+                  <div className="text-sm font-medium">Web</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Pesquise em toda a internet</div>
+                </div>
+                <div className="flex-shrink-0">
+                  <div className="relative inline-flex h-4 w-8 items-center rounded-full bg-gray-200 dark:bg-gray-700">
+                    <span className="absolute h-3 w-3 rounded-full bg-blue-500 translate-x-4"></span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md cursor-pointer">
+                <BookOpen className="h-4 w-4 text-purple-500" />
+                <div className="flex-1">
+                  <div className="text-sm font-medium">Acadêmico</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Pesquisar artigos acadêmicos</div>
+                </div>
+                <div className="flex-shrink-0">
+                  <div className="relative inline-flex h-4 w-8 items-center rounded-full bg-gray-200 dark:bg-gray-700">
+                    <span className="absolute h-3 w-3 rounded-full bg-gray-400 dark:bg-gray-500"></span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md cursor-pointer">
+                <Users className="h-4 w-4 text-orange-500" />
+                <div className="flex-1">
+                  <div className="text-sm font-medium">Social</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Discussões e opiniões</div>
+                </div>
+                <div className="flex-shrink-0">
+                  <div className="relative inline-flex h-4 w-8 items-center rounded-full bg-gray-200 dark:bg-gray-700">
+                    <span className="absolute h-3 w-3 rounded-full bg-gray-400 dark:bg-gray-500"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {isShowingAISettings && (
           <div className="mb-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
