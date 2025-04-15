@@ -265,6 +265,18 @@ const ChatIAInterface = () => {
                           <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
                         </svg>
                       </Button>
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className="h-7 w-7 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500/20"
+                        title="Scroll to Latest"
+                        onClick={scrollToBottom}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-down">
+                          <path d="M12 5v14"/>
+                          <path d="m19 12-7 7-7-7"/>
+                        </svg>
+                      </Button>
                     </div>
                   )}
                 </div>
