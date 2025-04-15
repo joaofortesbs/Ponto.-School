@@ -2914,6 +2914,14 @@ const FloatingChatSupport: React.FC = () => {
                   <History className="h-4 w-4 mr-1" /> Histórico
                 </Button>
                 <Button
+                  variant={activeTab === "tickets" ? "default" : "ghost"}
+                  size="sm"
+                  className={`h-8 rounded-full px-3 ${activeTab === "tickets" ? "bg-orange-500 text-white" : "text-gray-700 dark:text-gray-300"}`}
+                  onClick={() => setActiveTab("tickets")}
+                >
+                  <TicketIcon className="h-4 w-4 mr-1" /> Tickets
+                </Button>
+                <Button
                   variant={activeTab === "help" ? "default" : "ghost"}
                   size="sm"
                   className={`h-8 rounded-full px-3 ${activeTab === "help" ? "bg-orange-500 text-white" : "text-gray-700 dark:text-gray-300"}`}
