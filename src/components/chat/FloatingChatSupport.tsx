@@ -2529,6 +2529,16 @@ Exemplo de formato da resposta:
               <Search className="h-3 w-3 text-purple-500" />
               <span className="text-gray-700 dark:text-gray-300">Avançado</span>
             </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs p-2 rounded-full bg-white/80 dark:bg-gray-800/80 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow flex items-center gap-1"
+              onClick={() => {/* Função será implementada posteriormente */}}
+            >
+              <Bot className="h-3 w-3 text-blue-500" />
+              <span className="text-gray-700 dark:text-gray-300">Agente IA</span>
+            </Button>
           </div>
           
           <Button
