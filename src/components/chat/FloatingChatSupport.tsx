@@ -1975,7 +1975,7 @@ const FloatingChatSupport: React.FC = () => {
 
       {/* AI Settings & Web Search Options Popover */}
       {(isShowingAISettings || showWebSearchOptions) && (
-        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-xl w-[85%] max-w-sm animate-fadeIn">
+        <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-xl w-[85%] max-w-sm animate-fadeIn">
           <div className="flex justify-between items-center mb-3">
             <h4 className="text-sm font-medium flex items-center gap-1">
               {isShowingAISettings ? (
