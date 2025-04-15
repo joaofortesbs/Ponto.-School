@@ -371,8 +371,7 @@ const FloatingChatSupport: React.FC = () => {
   const [improvementFeedback, setImprovementFeedback] = useState('');
   const [isReformulating, setIsReformulating] = useState(false);
 
-  // Estado para exibir opções de pesquisa avançada
-  const [showWebSearchOptions, setShowWebSearchOptions] = useState(false);
+  // Estado para exibir opções de pesquisa avançada foi removido
   
   // Estado para controlar modal de sugestão de prompt
   const [showPromptSuggestionModal, setShowPromptSuggestionModal] = useState(false);
@@ -2153,8 +2152,8 @@ Exemplo de formato da resposta:
         </div>
       </ScrollArea>
 
-      {/* AI Settings & Web Search Options Popover */}
-      {(isShowingAISettings || showWebSearchOptions) && (
+      {/* AI Settings Popover */}
+      {isShowingAISettings && (
         <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-xl w-[85%] max-w-sm animate-fadeIn">
           <div className="flex justify-between items-center mb-3">
             <h4 className="text-sm font-medium flex items-center gap-1">
@@ -2250,101 +2249,7 @@ Exemplo de formato da resposta:
             </div>
           )}
           
-          {showWebSearchOptions && (
-            <div className="space-y-3">
-              <div 
-                className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-gray-700 transition-all"
-                onClick={() => {
-                  // Toggle web search
-                  const webSearch = true; // Already enabled by default
-                  console.log('Web search toggled:', webSearch);
-                }}
-              >
-                <Globe className="h-5 w-5 text-blue-500" />
-                <div className="flex-1">
-                  <div className="text-sm font-medium">Web</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">Pesquise em toda a internet</div>
-                </div>
-                <div className="flex-shrink-0">
-                  <div className="relative inline-flex h-6 w-11 items-center rounded-full bg-blue-200 dark:bg-blue-700/40 p-1 transition-colors">
-                    <span className="absolute h-4 w-4 rounded-full bg-blue-500 translate-x-5 shadow-sm transition-transform"></span>
-                  </div>
-                </div>
-              </div>
-              
-              <div 
-                className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-gray-700 transition-all"
-                onClick={() => {
-                  // Toggle academic search option
-                  const academicEnabled = !document.getElementById('academic-toggle')?.classList.contains('translate-x-3.5');
-                  const toggle = document.getElementById('academic-toggle');
-                  const bgToggle = document.getElementById('academic-bg');
-                  
-                  if (toggle && bgToggle) {
-                    if (academicEnabled) {
-                      toggle.classList.remove('translate-x-0.5');
-                      toggle.classList.add('translate-x-5');
-                      bgToggle.classList.remove('bg-gray-200', 'dark:bg-gray-700');
-                      bgToggle.classList.add('bg-purple-200', 'dark:bg-purple-700/40');
-                    } else {
-                      toggle.classList.remove('translate-x-5');
-                      toggle.classList.add('translate-x-0.5');
-                      bgToggle.classList.remove('bg-purple-200', 'dark:bg-purple-700/40');
-                      bgToggle.classList.add('bg-gray-200', 'dark:bg-gray-700');
-                    }
-                  }
-                  console.log('Academic search toggled:', academicEnabled);
-                }}
-              >
-                <BookOpen className="h-5 w-5 text-purple-500" />
-                <div className="flex-1">
-                  <div className="text-sm font-medium">Acadêmico</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">Pesquisar artigos acadêmicos</div>
-                </div>
-                <div className="flex-shrink-0">
-                  <div id="academic-bg" className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200 dark:bg-gray-700 p-1 transition-colors">
-                    <span id="academic-toggle" className="absolute h-4 w-4 rounded-full bg-gray-400 dark:bg-gray-500 translate-x-0.5 shadow-sm transition-transform"></span>
-                  </div>
-                </div>
-              </div>
-              
-              <div 
-                className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-gray-700 transition-all"
-                onClick={() => {
-                  // Toggle social search option
-                  const socialEnabled = !document.getElementById('social-toggle')?.classList.contains('translate-x-5');
-                  const toggle = document.getElementById('social-toggle');
-                  const bgToggle = document.getElementById('social-bg');
-                  
-                  if (toggle && bgToggle) {
-                    if (socialEnabled) {
-                      toggle.classList.remove('translate-x-0.5');
-                      toggle.classList.add('translate-x-5');
-                      bgToggle.classList.remove('bg-gray-200', 'dark:bg-gray-700');
-                      bgToggle.classList.add('bg-orange-200', 'dark:bg-orange-700/40');
-                    } else {
-                      toggle.classList.remove('translate-x-5');
-                      toggle.classList.add('translate-x-0.5');
-                      bgToggle.classList.remove('bg-orange-200', 'dark:bg-orange-700/40');
-                      bgToggle.classList.add('bg-gray-200', 'dark:bg-gray-700');
-                    }
-                  }
-                  console.log('Social search toggled:', socialEnabled);
-                }}
-              >
-                <Users className="h-5 w-5 text-orange-500" />
-                <div className="flex-1">
-                  <div className="text-sm font-medium">Social</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">Discussões e opiniões</div>
-                </div>
-                <div className="flex-shrink-0">
-                  <div id="social-bg" className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-200 dark:bg-gray-700 p-1 transition-colors">
-                    <span id="social-toggle" className="absolute h-4 w-4 rounded-full bg-gray-400 dark:bg-gray-500 translate-x-0.5 shadow-sm transition-transform"></span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Seção de opções de pesquisa web removida */}
         </div>
       )}
 
@@ -2510,15 +2415,7 @@ Exemplo de formato da resposta:
               <span className="text-gray-700 dark:text-gray-300">IA Habilitada</span>
             </Button>
             
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-xs p-2 rounded-full bg-white/80 dark:bg-gray-800/80 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow flex items-center gap-1"
-              onClick={() => setShowWebSearchOptions(!showWebSearchOptions)}
-            >
-              <Globe className="h-3 w-3 text-green-500" />
-              <span className="text-gray-700 dark:text-gray-300">Pesquisa</span>
-            </Button>
+            {/* Opção de pesquisa removida */}
             
             <Button
               variant="ghost"
