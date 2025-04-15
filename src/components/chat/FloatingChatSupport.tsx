@@ -373,6 +373,12 @@ const FloatingChatSupport: React.FC = () => {
 
   // Estado para exibir opções de pesquisa avançada
   const [showWebSearchOptions, setShowWebSearchOptions] = useState(false);
+  
+  // Estado para controlar modal de sugestão de prompt
+  const [showPromptSuggestionModal, setShowPromptSuggestionModal] = useState(false);
+  const [studyContent, setStudyContent] = useState("");
+  const [generatedPrompts, setGeneratedPrompts] = useState<string[]>([]);
+  const [isGeneratingPrompts, setIsGeneratingPrompts] = useState(false);
 
   // Funções para lidar com feedback das mensagens
   const handleMessageFeedback = (messageId: number, feedback: 'positive' | 'negative') => {
@@ -713,6 +719,53 @@ const FloatingChatSupport: React.FC = () => {
   useEffect(() => {
     setIsMessageEmpty(message.trim() === '');
   }, [message]);
+
+  // Função para gerar sugestões de prompts
+  const generatePromptSuggestions = async () => {
+    if (!studyContent.trim()) return;
+
+    setIsGeneratingPrompts(true);
+    setGeneratedPrompts([]);
+
+    try {
+      // Chamar a API para gerar sugestões de prompts
+      const promptSuggestions = await generateAIResponse(
+        `Com base no seguinte contexto de estudo, gere 5 prompts de alta qualidade que o usuário poderia fazer para obter informações valiosas. Os prompts devem ser específicos, úteis e variados para cobrir diferentes aspectos do assunto. Retorne apenas os prompts numerados de 1 a 5, sem explicações adicionais.
+
+Contexto de estudo: "${studyContent}"
+
+Exemplo de formato da resposta:
+1. [Prompt 1]
+2. [Prompt 2]
+3. [Prompt 3]
+4. [Prompt 4]
+5. [Prompt 5]`,
+        `prompt_suggestions_${Date.now()}`,
+        {
+          intelligenceLevel: 'advanced',
+          languageStyle: 'formal'
+        }
+      );
+
+      // Processar a resposta para extrair os prompts numerados
+      const promptList = promptSuggestions
+        .split('\n')
+        .filter(line => /^\d+\./.test(line.trim()))
+        .map(line => line.replace(/^\d+\.\s*/, '').trim())
+        .filter(prompt => prompt.length > 0);
+
+      setGeneratedPrompts(promptList);
+    } catch (error) {
+      console.error('Erro ao gerar sugestões de prompts:', error);
+      toast({
+        title: "Erro ao gerar sugestões",
+        description: "Ocorreu um problema ao gerar as sugestões de prompts. Por favor, tente novamente.",
+        duration: 3000,
+      });
+    } finally {
+      setIsGeneratingPrompts(false);
+    }
+  };
 
   // Função para melhorar o prompt com IA
   const improvePrompt = async () => {
@@ -2295,6 +2348,91 @@ const FloatingChatSupport: React.FC = () => {
         </div>
       )}
 
+      {/* Modal de Sugestão de Prompt */}
+      {showPromptSuggestionModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowPromptSuggestionModal(false)}></div>
+          <div className="relative bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 p-4 shadow-xl w-[90%] max-w-md animate-fadeIn">
+            <div className="flex justify-between items-center mb-3">
+              <h4 className="text-sm font-bold flex items-center gap-1.5 text-orange-600 dark:text-orange-400">
+                <Lightbulb className="h-4 w-4" />
+                Sugestão de Prompts Inteligentes
+              </h4>
+              <Button 
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={() => setShowPromptSuggestionModal(false)}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Quais conteúdos você está estudando?</label>
+              <textarea 
+                value={studyContent}
+                onChange={(e) => setStudyContent(e.target.value)}
+                placeholder="Ex: Estou estudando cálculo diferencial, especificamente sobre derivadas e suas aplicações em problemas de otimização."
+                className="w-full min-h-[100px] p-3 rounded-md border border-orange-200 dark:border-orange-700 bg-white dark:bg-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-orange-500/20 dark:focus:ring-orange-500/30 mb-4"
+              />
+
+              {generatedPrompts.length > 0 && (
+                <div className="mb-4">
+                  <h5 className="text-sm font-medium mb-2 flex items-center gap-1">
+                    <Sparkles className="h-3.5 w-3.5 text-orange-500" />
+                    Prompts Sugeridos
+                  </h5>
+                  <div className="space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar p-1">
+                    {generatedPrompts.map((prompt, index) => (
+                      <div 
+                        key={index}
+                        className="p-2 border border-orange-100 dark:border-orange-800/40 rounded-lg bg-orange-50/50 dark:bg-orange-900/20 hover:bg-orange-50 dark:hover:bg-orange-900/30 cursor-pointer transition-colors"
+                        onClick={() => {
+                          setInputMessage(prompt);
+                          setShowPromptSuggestionModal(false);
+                        }}
+                      >
+                        <p className="text-sm text-gray-700 dark:text-gray-300">{prompt}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 mt-3">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="text-xs border-orange-200 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                  onClick={() => setShowPromptSuggestionModal(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="text-xs bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white border-none flex items-center gap-1"
+                  onClick={generatePromptSuggestions}
+                  disabled={isGeneratingPrompts || !studyContent.trim()}
+                >
+                  {isGeneratingPrompts ? (
+                    <>
+                      <div className="h-3 w-3 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
+                      <span>Gerando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-3 w-3" />
+                      <span>Pedir IA sugerir prompts</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Improved Prompt Panel */}
       {isImprovingPrompt && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
@@ -2571,7 +2709,7 @@ const FloatingChatSupport: React.FC = () => {
                   onClick={inputMessage.trim().length > 0 ? sendMessage : startVoiceRecording}
                   disabled={isMessageEmpty && selectedFiles.length === 0}
                   title={inputMessage.trim().length > 0 ? "Enviar mensagem" : "Gravar áudio"}
-                  className={`h-8 w-8 rounded-full transition-all duration-300 ${
+                  className={`h-8 w-8 mr-2 rounded-full transition-all duration-300 ${
                     isMessageEmpty && selectedFiles.length === 0
                       ? "bg-gray-200 text-gray-400 dark:bg-gray-700 dark:text-gray-500 hover:bg-orange-500 hover:text-white dark:hover:bg-orange-600"
                       : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
@@ -2582,6 +2720,16 @@ const FloatingChatSupport: React.FC = () => {
                   ) : (
                     <Mic className="h-4 w-4" />
                   )}
+                </Button>
+                
+                {/* Botão de sugerir prompt */}
+                <Button
+                  size="icon"
+                  className="h-8 w-8 rounded-full bg-green-500 hover:bg-green-600 text-white transition-all duration-300 shadow-md hover:shadow-lg"
+                  onClick={() => setShowPromptSuggestionModal(true)}
+                  title="Sugerir prompt"
+                >
+                  <Lightbulb className="h-4 w-4" />
                 </Button>
               </div>
             </div>
