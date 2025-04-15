@@ -1,0 +1,157 @@
+[plugin:vite:react-swc] × Expected ';', '}' or <eof>
+      ╭─[/home/runner/workspace/src/components/chat/FloatingChatSupport.tsx:935:1]
+  935 │           const words = aiResponse.split(' ');
+  936 │     
+  937 │           // Função para adicionar palavras gradualmente
+  938 │ ╭─▶       ```javascript
+  939 │ │         const addNextWord = async(index: number) => {
+  940 │ │           try {
+  941 │ │             // Importar o serviço de IA para verificar estado
+  942 │ │             const aiService = await import('@/services/aiChatService');
+  943 │ │   
+  944 │ │             // Verificar se a resposta foi cancelada
+  945 │ │             if (aiService.isResponseCancelled(sessionId || 'default_session')) {
+  946 │ │               console.log('Resposta cancelada, parando geração');
+  947 │ │               setIsTyping(false);
+  948 │ │               return;
+  949 │ │             }
+  950 │ │   
+  951 │ │             // Verificar se a resposta está pausada
+  952 │ │             if (aiService.isResponsePaused(sessionId || 'default_session')) {
+  953 │ │               console.log('Resposta pausada, verificando novamente em 500ms');
+  954 │ │               // Se pausada, verifica novamente após 500ms, sem avançar o índice
+  955 │ │               setTimeout(() => addNextWord(index), 500);
+  956 │ │               return;
+  957 │ │             }
+  958 │ │   
+  959 │ │             if (index < words.length) {
+  960 │ │               displayedContent += (index === 0 ? '' : ' ') + words[index];
+  961 │ │   
+  962 │ │               setMessages(prevMessages => 
+  963 │ │                 prevMessages.map(msg => 
+  964 │ │                   msg.id === messageId 
+  965 │ │                     ? { ...msg, content: displayedContent } 
+  966 │ │                     : msg
+  967 │ │                 )
+  968 │ │               );
+  969 │ │   
+  970 │ │               // Velocidade variável da digitação baseada no tamanho da palavra
+  971 │ │               const typingSpeed = Math.min(100, Math.max(30, 70 - words[index].length * 5));
+  972 │ │               setTimeout(() => addNextWord(index + 1), typingSpeed);
+  973 │ │             } else {
+  974 │ │               setIsTyping(false);
+  975 │ │   
+  976 │ │               // Resetar o estado de pausa/cancelamento quando terminar
+  977 │ │               aiService.resetResponseState(sessionId || 'default_session');
+  978 │ │             }
+  979 │ │           } catch (error) {
+  980 │ │             console.error('Erro durante a geração de resposta:', error);
+  981 │ │             setIsTyping(false);
+  982 │ │           }
+  983 │ │         };
+  984 │ │   
+  985 │ │         // Reset o estado de resposta antes de iniciar uma nova
+  986 │ │         const prepareAndStartTyping = async () => {
+  987 │ │           const aiService = await import('@/services/aiChatService');
+  988 │ │           aiService.resetResponseState(sessionId || 'default_session');
+  989 │ │   
+  990 │ │           // Inicia o efeito de digitação após um pequeno delay
+  991 │ │           setTimeout(() => addNextWord(0), 500);
+  992 │ │         };
+  993 │ │   
+  994 │ │         prepareAndStartTyping();
+  995 │ │   
+  996 │ │       } catch (error) {
+  997 │ │         console.error('Erro ao enviar mensagem:', error);
+  998 │ │         setMessages(prevMessages => [
+  999 │ │           ...prevMessages,
+ 1000 │ │           { 
+ 1001 │ │             id: Date.now(), 
+ 1002 │ │             content: 'Desculpe, estou enfrentando problemas no momento. Por favor, tente novamente mais tarde.', 
+ 1003 │ │             sender: 'assistant', 
+ 1004 │ │             timestamp: new Date() 
+ 1005 │ │           }
+ 1006 │ │         ]);
+ 1007 │ │         setIsTyping(false);
+ 1008 │ │       }
+ 1009 │ │     };
+ 1010 │ │   
+ 1011 │ │     // Função para lidar com upload de arquivos
+ 1012 │ │     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+ 1013 │ │       if (!e.target.files || e.target.files.length === 0) return;
+ 1014 │ │   
+ 1015 │ │       const file = e.target.files[0];
+ 1016 │ │       setShowAttachmentOptions(false);
+ 1017 │ │   
+ 1018 │ │       // Armazenar o arquivo selecionado
+ 1019 │ │       setSelectedFiles(prev => [...prev, file]);
+ 1020 │ │   
+ 1021 │ │       // Limpar o input de arquivo para permitir selecionar o mesmo arquivo novamente
+ 1022 │ │       if (e.target) {
+ 1023 │ │         e.target.value = '';
+ 1024 │ │       }
+ 1025 │ │     };
+ 1026 │ │   
+ 1027 │ │     // Função para abrir o seletor de arquivos
+ 1028 │ │     const openFileSelector = () => {
+ 1029 │ │       if (fileInputRef.current) {
+ 1030 │ │         fileInputRef.current.click();
+ 1031 │ │       }
+ 1032 │ │     };
+ 1033 │ │   
+ 1034 │ │     // Função para lidar com a seleção de arquivos
+ 1035 │ │     const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+ 1036 │ │       if (!e.target.files || e.target.files.length === 0) return;
+ 1037 │ │   
+ 1038 │ │       // Adicionar os arquivos selecionados à lista
+ 1039 │ │       const newFiles = Array.from(e.target.files);
+ 1040 │ │       setSelectedFiles(prev => [...prev, ...newFiles]);
+ 1041 │ │   
+ 1042 │ │       // Limpar o input para permitir selecionar os mesmos arquivos novamente
+ 1043 │ │       if (e.target) {
+ 1044 │ │         e.target.value = '';
+ 1045 │ │       }
+ 1046 │ │     };
+ 1047 │ │   
+ 1048 │ │     // Função para remover um arquivo da lista
+ 1049 │ │     const removeFile = (index: number) => {
+ 1050 │ │       setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+ 1051 │ │     };
+ 1052 │ │   
+ 1053 │ │     // Função para iniciar gravação de áudio
+ 1054 │ │     const startVoiceRecording = () => {
+ 1055 │ │       setShowAttachmentOptions(false);
+ 1056 │ │   
+ 1057 │ │       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+ 1058 │ │         navigator.mediaDevices.getUserMedia({ audio: true })
+ 1059 │ │           .then(stream => {
+ 1060 │ │             const recorder = new MediaRecorder(stream);
+ 1061 │ │             setAudioRecorder(recorder);
+ 1062 │ │             setAudioChunks([]);
+ 1063 │ │   
+ 1064 │ │             recorder.ondataavailable = (e) => {
+ 1065 │ │               if (e.data.size > 0) {
+ 1066 │ │                 setAudioChunks(prev => [...prev, e.data]);
+ 1067 │ │               }
+ 1068 │ │             };
+ 1069 │ │   
+ 1070 │ │             recorder.onstop = () => {
+ 1071 │ │               // Processar áudio quando parar a gravação
+ 1072 │ │               const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+ 1073 │ │               const audioUrl = URL.createObjectURL(audioBlob);
+ 1074 │ │   
+ 1075 │ │               // Adicionar mensagem com áudio
+ 1076 │ │               const newMessage: ChatMessage = {
+ 1077 │ │                 id: Date.now(),
+ 1078 │ ├─▶               content: `Áudio gravado\n<audio src="${audioUrl}" controls></audio>`,
+      · ╰───                        ──────
+      · ╰──── This is the expression part of an expression statement
+ 1079 │                   sender: "user",
+ 1080 │                   timestamp: new Date(),
+ 1081 │                   files: [{name: 'audio.wav', size: audioBlob.size, type: 'audio/wav', url: audioUrl}]
+      ╰────
+
+
+Caused by:
+    Syntax Error
+/home/runner/workspace/src/components/chat/FloatingChatSupport.tsx:935:1
