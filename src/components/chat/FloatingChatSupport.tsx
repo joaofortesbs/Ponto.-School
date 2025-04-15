@@ -1749,7 +1749,7 @@ const FloatingChatSupport: React.FC = () => {
                     <span className="text-sm text-gray-600 dark:text-gray-400">Formulando resposta...</span>
                   </div>
                   
-                  <div className="flex items-center mt-2 justify-start">
+                  <div className="flex items-center mt-2 justify-start gap-2">
                     <button 
                       onClick={() => {
                         setIsTyping(false);
@@ -1762,6 +1762,17 @@ const FloatingChatSupport: React.FC = () => {
                       className="px-3 py-1 bg-white/20 hover:bg-white/30 dark:bg-gray-700/40 dark:hover:bg-gray-700/60 rounded-full text-xs font-medium text-gray-700 dark:text-gray-300 transition-all duration-200 transform hover:scale-105 shadow-sm backdrop-blur-sm"
                     >
                       Cancelar
+                    </button>
+                    <button 
+                      onClick={() => {
+                        // Pausa temporariamente a digitação
+                        // Este é um placeholder para a função real de pausa
+                        // que seria implementada no serviço de IA
+                        setIsTyping(false);
+                      }}
+                      className="px-3 py-1 bg-orange-500/20 hover:bg-orange-500/30 dark:bg-orange-700/40 dark:hover:bg-orange-700/60 rounded-full text-xs font-medium text-orange-700 dark:text-orange-300 transition-all duration-200 transform hover:scale-105 shadow-sm backdrop-blur-sm"
+                    >
+                      Pausar
                     </button>
                   </div>
                 </div>
