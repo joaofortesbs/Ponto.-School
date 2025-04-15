@@ -2922,6 +2922,14 @@ const FloatingChatSupport: React.FC = () => {
                   <TicketIcon className="h-4 w-4 mr-1" /> Tickets
                 </Button>
                 <Button
+                  variant={activeTab === "suggestions" ? "default" : "ghost"}
+                  size="sm"
+                  className={`h-8 rounded-full px-3 ${activeTab === "suggestions" ? "bg-orange-500 text-white" : "text-gray-700 dark:text-gray-300"}`}
+                  onClick={() => setActiveTab("suggestions")}
+                >
+                  <Lightbulb className="h-4 w-4 mr-1" /> Sugestões
+                </Button>
+                <Button
                   variant={activeTab === "help" ? "default" : "ghost"}
                   size="sm"
                   className={`h-8 rounded-full px-3 ${activeTab === "help" ? "bg-orange-500 text-white" : "text-gray-700 dark:text-gray-300"}`}
