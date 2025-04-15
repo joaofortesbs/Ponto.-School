@@ -370,6 +370,9 @@ const FloatingChatSupport: React.FC = () => {
 
   // Estado para exibir opções de pesquisa avançada
   const [showWebSearchOptions, setShowWebSearchOptions] = useState(false);
+  
+  // Estado para controlar o menu de opções da mensagem
+  const [showMessageOptions, setShowMessageOptions] = useState<number | null>(null);
 
   // Funções para lidar com feedback das mensagens
   const handleMessageFeedback = (messageId: number, feedback: 'positive' | 'negative') => {
@@ -616,6 +619,20 @@ const FloatingChatSupport: React.FC = () => {
       }
     };
   }, [isTyping]);
+  
+  // Fechar menu de opções ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showMessageOptions !== null && !(event.target as Element).closest('.message-options-menu')) {
+        setShowMessageOptions(null);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMessageOptions]);
 
   // Add blur effect to the rest of the page when chat is open
   useEffect(() => {
@@ -1776,12 +1793,77 @@ const FloatingChatSupport: React.FC = () => {
                 </div>
               </div>
               {message.sender === "user" && (
-                <div className="w-8 h-8 rounded-full overflow-hidden ml-2 flex-shrink-0">
-                  <Avatar>
-                    <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=John" />
-                    <AvatarFallback>JD</AvatarFallback>
-                  </Avatar>
-                </div>
+                <>
+                  <div className="absolute right-0 top-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <div className="relative">
+                      <Button 
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 rounded-full bg-gray-100/80 hover:bg-gray-200/80 dark:bg-gray-800/80 dark:hover:bg-gray-700/80"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowMessageOptions(showMessageOptions === message.id ? null : message.id);
+                        }}
+                      >
+                        <MoreHorizontal className="h-3.5 w-3.5" />
+                      </Button>
+                      
+                      {showMessageOptions === message.id && (
+                        <div className="absolute right-0 mt-1 w-36 bg-white dark:bg-gray-800 rounded-md shadow-lg z-50 py-1 border border-gray-200 dark:border-gray-700">
+                          <button 
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                            onClick={() => {
+                              setEditingMessage(message);
+                              setInputMessage(message.content);
+                              setShowMessageOptions(null);
+                            }}
+                          >
+                            <svg 
+                              width="14" 
+                              height="14" 
+                              viewBox="0 0 24 24" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              strokeWidth="2" 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round"
+                            >
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                            Editar
+                          </button>
+                          <button 
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                            onClick={() => {
+                              navigator.clipboard.writeText(message.content);
+                              setShowMessageOptions(null);
+                            }}
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                            Copiar
+                          </button>
+                          <button 
+                            className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                            onClick={() => {
+                              setMessages(prevMessages => prevMessages.filter(msg => msg.id !== message.id));
+                              setShowMessageOptions(null);
+                            }}
+                          >
+                            <Trash className="h-3.5 w-3.5" />
+                            Excluir
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="w-8 h-8 rounded-full overflow-hidden ml-2 flex-shrink-0">
+                    <Avatar>
+                      <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=John" />
+                      <AvatarFallback>JD</AvatarFallback>
+                    </Avatar>
+                  </div>
+                </>
               )}
             </div>
           ))}
