@@ -1832,14 +1832,26 @@ const FloatingChatSupport: React.FC = () => {
                           if (typeof aiService.cancelResponse === 'function') {
                             await aiService.cancelResponse(sessionId || 'default_session');
                           }
+                          
                           // Atualizar UI
                           setIsTyping(false);
                           setIsResponsePaused(false); // Resetar o estado de pausa
-                          setMessages(prevMessages => 
-                            prevMessages.filter(msg => 
-                              msg.content !== ''
-                            )
-                          );
+                          
+                          // Remover a mensagem incompleta da IA que está sendo gerada
+                          setMessages(prevMessages => {
+                            // Filtramos para remover a última mensagem da IA (a que está sendo gerada)
+                            // mas mantemos todas as outras mensagens
+                            const lastAIMessageIndex = [...prevMessages].reverse().findIndex(
+                              msg => msg.sender === 'assistant' && msg.content === ''
+                            );
+                            
+                            if (lastAIMessageIndex !== -1) {
+                              const actualIndex = prevMessages.length - 1 - lastAIMessageIndex;
+                              return prevMessages.filter((_, i) => i !== actualIndex);
+                            }
+                            
+                            return prevMessages;
+                          });
                         } catch (error) {
                           console.error('Erro ao cancelar resposta da IA:', error);
                           // Mesmo em caso de erro, atualizar UI
