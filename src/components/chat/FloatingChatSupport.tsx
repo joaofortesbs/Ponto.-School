@@ -1975,10 +1975,15 @@ const FloatingChatSupport: React.FC = () => {
 
       {/* AI Settings & Web Search Options Popover */}
       {(isShowingAISettings || showWebSearchOptions) && (
-        <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-xl w-[85%] max-w-sm animate-fadeIn">
-          <div className="flex justify-between items-center mb-3">
-            <h4 className="text-sm font-medium flex items-center gap-1">
-              {isShowingAISettings ? (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => {
+            setIsShowingAISettings(false);
+            setShowWebSearchOptions(false);
+          }}></div>
+          <div className="relative bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-xl w-[90%] max-w-md animate-fadeIn z-50">
+            <div className="flex justify-between items-center mb-3">
+              <h4 className="text-sm font-medium flex items-center gap-1">
+                {isShowingAISettings ? (
                 <>
                   <Sparkles className="h-4 w-4 text-orange-500" />
                   Configurações da IA
@@ -2226,6 +2231,7 @@ const FloatingChatSupport: React.FC = () => {
                 </div>
               </>
             )}
+          </div>
           </div>
         </div>
       )}
