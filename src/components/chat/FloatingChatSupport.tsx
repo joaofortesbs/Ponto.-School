@@ -1739,7 +1739,7 @@ const FloatingChatSupport: React.FC = () => {
                     })}
                   </div>
                 </div>
-                <div className="relative min-h-[40px] flex items-center">
+                <div className="relative min-h-[40px] flex flex-col">
                   <div className="flex items-center">
                     <div className="flex space-x-1 mr-2">
                       <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
@@ -1747,6 +1747,22 @@ const FloatingChatSupport: React.FC = () => {
                       <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse delay-300"></div>
                     </div>
                     <span className="text-sm text-gray-600 dark:text-gray-400">Formulando resposta...</span>
+                  </div>
+                  
+                  <div className="flex items-center mt-2 justify-start">
+                    <button 
+                      onClick={() => {
+                        setIsTyping(false);
+                        setMessages(prevMessages => 
+                          prevMessages.filter(msg => 
+                            msg.content !== ''
+                          )
+                        );
+                      }}
+                      className="px-3 py-1 bg-white/20 hover:bg-white/30 dark:bg-gray-700/40 dark:hover:bg-gray-700/60 rounded-full text-xs font-medium text-gray-700 dark:text-gray-300 transition-all duration-200 transform hover:scale-105 shadow-sm backdrop-blur-sm"
+                    >
+                      Cancelar
+                    </button>
                   </div>
                 </div>
               </div>
