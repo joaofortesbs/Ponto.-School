@@ -189,7 +189,30 @@ export async function generateXAIResponse(
     // Verificar se a mensagem contém comando para acessar ou modificar o perfil
     const isProfileInfoRequest = /qual (é|e) (o )?meu (ID|id)|me (mostre|mostra|diga|informe) (o )?meu (ID|id)|informações da minha conta|dados da minha conta|meu perfil completo/i.test(message);
     const isProfileUpdateRequest = /atualiz(e|ar) (minha|a) (bio|biografia)|mudar (minha|a) (bio|biografia)|modificar (minha|a) bio|mudar (meu|o) nome de exibição|atualizar (meu|o) nome de exibição|mudar (meu|o) telefone/i.test(message);
+    
+    // Verificar se é uma pergunta sobre o slogan da plataforma
+    const isSloganRequest = /qual (é|e) (o )?(slogan|lema|frase|mensagem especial) (da plataforma|da ponto\.?school|do ponto\.?school|da aplicação|do site)|qual a (frase|mensagem) (especial|principal)|tem (algum|alguma) (slogan|lema|frase|mensagem especial)/i.test(message);
 
+    // Responder com o slogan da plataforma quando solicitado
+    if (isSloganRequest) {
+      // Adicionar a mensagem do usuário ao histórico
+      if (!conversationHistory[sessionId]) {
+        initializeConversationHistory(sessionId);
+      }
+      conversationHistory[sessionId].push({ role: 'user', content: message });
+      
+      // Resposta com o slogan
+      const response = `"Não é sobre conectar você com a tecnologia, é sobre conectar você com o futuro!"
+
+Este é o slogan que representa a essência da Ponto.School - nossa missão é preparar você para as oportunidades do amanhã através da educação e tecnologia de ponta.`;
+      
+      // Adicionar a resposta ao histórico
+      conversationHistory[sessionId].push({ role: 'assistant', content: response });
+      saveConversationHistory(sessionId, conversationHistory[sessionId]);
+      
+      return response;
+    }
+    
     // Importar o serviço de modificação de perfil se necessário
     let ProfileModificationService;
     if (isProfileInfoRequest || isProfileUpdateRequest) {
@@ -549,6 +572,16 @@ export async function generateGeminiResponse(
   }
 ): Promise<string> {
   try {
+    // Verificar se é uma pergunta sobre o slogan da plataforma
+    const isSloganRequest = /qual (é|e) (o )?(slogan|lema|frase|mensagem especial) (da plataforma|da ponto\.?school|do ponto\.?school|da aplicação|do site)|qual a (frase|mensagem) (especial|principal)|tem (algum|alguma) (slogan|lema|frase|mensagem especial)/i.test(message);
+    
+    // Responder com o slogan da plataforma quando solicitado (como fallback)
+    if (isSloganRequest) {
+      return `"Não é sobre conectar você com a tecnologia, é sobre conectar você com o futuro!"
+
+Este é o slogan que representa a essência da Ponto.School - nossa missão é preparar você para as oportunidades do amanhã através da educação e tecnologia de ponta.`;
+    }
+    
     // Obter contexto do usuário
     const userContext = await getUserContext();
 
