@@ -52,10 +52,12 @@ import {
   Loader2,
   Globe,
   Users,
-  Copy
+  Copy,
+  Check
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { generateAIResponse, getConversationHistory, clearConversationHistory } from "@/services/aiChatService";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // Interface para arquivos em mensagens
 interface MessageFile {
@@ -2515,7 +2517,6 @@ Exemplo de formato da resposta:
               className="h-7 text-xs p-2 rounded-full bg-white/80 dark:bg-gray-800/80 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow flex items-center gap-1"
               onClick={() => {
                 setIsShowingAISettings(true);
-                setShowWebSearchOptions(false);
               }}
             >
               <Sparkles className="h-3 w-3 text-orange-500" />
