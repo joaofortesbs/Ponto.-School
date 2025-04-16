@@ -484,6 +484,8 @@ const FloatingChatSupport: React.FC = () => {
         - Emojis estrategicamente para tornar a mensagem mais amigável
         - Listas com marcadores para organizar informações
 
+        PERSONALIDADE: ${aiLanguageStyle === 'casual' ? 'Use um tom amigável, casual e acolhedor ao responder. Seja conversacional e use mais emojis.' : 'Use um tom técnico, formal e detalhado ao responder. Seja preciso e foque na profundidade técnica.'}
+
         Resposta original para reformular: "${messageToReformulate.content}"`,
         sessionId || 'default_session',
         {
@@ -555,11 +557,13 @@ const FloatingChatSupport: React.FC = () => {
         - Incluir pelo menos 1 link formatado para uma seção relevante da plataforma
         - Terminar com uma frase que incentive o usuário a continuar usando a Ponto.School
 
+        PERSONALIDADE: ${aiLanguageStyle === 'casual' ? 'Use um tom amigável, casual e acolhedor ao responder. Seja conversacional e use mais emojis.' : 'Use um tom técnico, formal e detalhado ao responder. Seja preciso e foque na profundidade técnica.'}
+
         Resposta original para resumir: "${messageToSummarize.content}"`,
         sessionId || 'default_session',
         {
           intelligenceLevel: aiIntelligenceLevel,
-          languageStyle: 'technical'
+          languageStyle: aiLanguageStyle
         }
       );
 
@@ -719,6 +723,17 @@ const FloatingChatSupport: React.FC = () => {
 
     // Carregar a imagem de perfil do usuário
     loadUserProfileImage();
+
+    // Carregar configurações de personalidade salvas
+    try {
+      const savedPersonality = localStorage.getItem('epictus_personality_style');
+      if (savedPersonality && (savedPersonality === 'casual' || savedPersonality === 'technical' || savedPersonality === 'formal')) {
+        setAILanguageStyle(savedPersonality as 'casual' | 'formal' | 'technical');
+        console.log('Personalidade da IA carregada do localStorage:', savedPersonality);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar configurações de personalidade:', error);
+    }
 
     // Tentar carregar mensagens salvas para este usuário
     const loadSavedMessages = async () => {
@@ -1040,7 +1055,7 @@ Exemplo de formato da resposta:
         sessionId || 'default_session',
         {
           intelligenceLevel: aiIntelligenceLevel,
-          languageStyle: aiLanguageStyle
+          languageStyle: aiLanguageStyle // Isso será 'casual' ou 'technical' conforme configurado pelo usuário
         }
       );
 
@@ -2619,7 +2634,28 @@ Exemplo de formato da resposta:
                   </h5>
                   
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="border border-gray-200 dark:border-gray-700 bg-white/60 dark:bg-gray-900/30 p-3 rounded-lg cursor-pointer hover:border-orange-300 dark:hover:border-orange-700 transition-colors">
+                    <div 
+                      className={`border ${aiLanguageStyle === 'casual' ? 'border-orange-300 dark:border-orange-700 bg-orange-50/60 dark:bg-orange-900/10' : 'border-gray-200 dark:border-gray-700 bg-white/60 dark:bg-gray-900/30'} p-3 rounded-lg cursor-pointer hover:border-orange-300 dark:hover:border-orange-700 transition-colors`}
+                      onClick={() => {
+                        setAILanguageStyle('casual');
+                        toast({
+                          title: "Personalidade atualizada",
+                          description: "Epictus IA agora usará um tom amigável e casual para responder a você.",
+                          duration: 2000,
+                        });
+                        
+                        // Adicionar mensagem informando sobre a mudança
+                        setMessages(prevMessages => [
+                          ...prevMessages, 
+                          {
+                            id: Date.now(),
+                            content: "Personalidade da IA atualizada para **Amigável**! 😊 Agora vou me comunicar com você de forma mais casual e amigável. Como posso te ajudar hoje?",
+                            sender: "assistant",
+                            timestamp: new Date()
+                          }
+                        ]);
+                      }}
+                    >
                       <div className="flex items-center gap-2 mb-1">
                         <div className="w-4 h-4 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                           <CheckCircle className="h-3 w-3 text-green-500" />
@@ -2629,7 +2665,28 @@ Exemplo de formato da resposta:
                       <p className="text-[10px] text-gray-500 dark:text-gray-400">Conversação casual e acolhedora</p>
                     </div>
                     
-                    <div className="border border-gray-200 dark:border-gray-700 bg-white/60 dark:bg-gray-900/30 p-3 rounded-lg cursor-pointer hover:border-orange-300 dark:hover:border-orange-700 transition-colors">
+                    <div 
+                      className={`border ${aiLanguageStyle === 'technical' ? 'border-orange-300 dark:border-orange-700 bg-orange-50/60 dark:bg-orange-900/10' : 'border-gray-200 dark:border-gray-700 bg-white/60 dark:bg-gray-900/30'} p-3 rounded-lg cursor-pointer hover:border-orange-300 dark:hover:border-orange-700 transition-colors`}
+                      onClick={() => {
+                        setAILanguageStyle('technical');
+                        toast({
+                          title: "Personalidade atualizada",
+                          description: "Epictus IA agora usará um tom técnico e detalhado para responder a você.",
+                          duration: 2000,
+                        });
+                        
+                        // Adicionar mensagem informando sobre a mudança
+                        setMessages(prevMessages => [
+                          ...prevMessages, 
+                          {
+                            id: Date.now(),
+                            content: "Personalidade da IA atualizada para **Técnico**. A partir de agora, fornecerei respostas com maior precisão técnica e detalhamento. Como posso auxiliá-lo com suas necessidades?",
+                            sender: "assistant",
+                            timestamp: new Date()
+                          }
+                        ]);
+                      }}
+                    >
                       <div className="flex items-center gap-2 mb-1">
                         <div className="w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
                           <BookOpen className="h-3 w-3 text-blue-500" />
@@ -2726,6 +2783,25 @@ Exemplo de formato da resposta:
                         }
                       } catch (error) {
                         console.error('Erro ao atualizar ocupação no perfil:', error);
+                      }
+                    }
+                    
+                    // Adicionar informação sobre a personalidade selecionada
+                    const personalityInfo = aiLanguageStyle === 'casual' 
+                      ? "Estou configurado para usar um tom amigável e casual nas nossas conversas. 😊" 
+                      : aiLanguageStyle === 'technical' 
+                        ? "Estou configurado para usar um tom técnico e formal nas nossas conversas." 
+                        : "";
+                    
+                    if (personalityInfo) {
+                      confirmationMessage += personalityInfo + " ";
+                      hasChanges = true;
+                      
+                      // Salvar configuração de personalidade no localStorage para persistência
+                      try {
+                        localStorage.setItem('epictus_personality_style', aiLanguageStyle);
+                      } catch (error) {
+                        console.error('Erro ao salvar personalidade no localStorage:', error);
                       }
                     }
                     
