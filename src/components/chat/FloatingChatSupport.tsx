@@ -80,7 +80,8 @@ interface ChatMessage {
   feedback?: 'positive' | 'negative';
   needsImprovement?: boolean;
   isEdited?: boolean; // Adicione a propriedade isEdited
-  showExportOptions?: boolean; // Controla a visibilidade do popup de exportação
+  showExportOptions?: boolean; // Controla a visibilidade do popup de exportação principal
+  showExportFormats?: boolean; // Controla a visibilidade do popup de formatos de exportação
 }
 
 interface Ticket {
@@ -647,7 +648,11 @@ const FloatingChatSupport: React.FC = () => {
   useEffect(() => {
     const handleGlobalClick = () => {
       setMessages(prevMessages => 
-        prevMessages.map(msg => ({...msg, showExportOptions: false}))
+        prevMessages.map(msg => ({
+          ...msg, 
+          showExportOptions: false,
+          showExportFormats: false
+        }))
       );
     };
     
@@ -2144,7 +2149,7 @@ Exemplo de formato da resposta:
                         </svg>
                       </button>
                       
-                      {/* Novo botão de Exportar com popup */}
+                      {/* Botão de Exportar com popup */}
                       <div className="relative">
                         <button 
                           onClick={(e) => {
@@ -2152,7 +2157,8 @@ Exemplo de formato da resposta:
                             setMessages(prevMessages => 
                               prevMessages.map(msg => ({
                                 ...msg, 
-                                showExportOptions: msg.id === message.id ? !msg.showExportOptions : false
+                                showExportOptions: msg.id === message.id ? !msg.showExportOptions : false,
+                                showExportFormats: false // Sempre fechar o menu secundário ao abrir o principal
                               }))
                             );
                           }}
@@ -2162,31 +2168,127 @@ Exemplo de formato da resposta:
                           <Download className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
                         </button>
                         
-                        {message.showExportOptions && (
+                        {/* Menu principal com opções Exportar e Compartilhar */}
+                        {message.showExportOptions && !message.showExportFormats && (
                           <div className="absolute z-50 bottom-full right-0 mb-1 w-28 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
                             <button 
-                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // Funcionalidade de exportar (seria implementada futuramente)
+                                // Mostrar o menu secundário de exportação
                                 setMessages(prevMessages => 
-                                  prevMessages.map(msg => ({...msg, showExportOptions: false}))
+                                  prevMessages.map(msg => {
+                                    if (msg.id === message.id) {
+                                      return { ...msg, showExportOptions: false, showExportFormats: true };
+                                    }
+                                    return msg;
+                                  })
                                 );
                               }}
                             >
+                              <Download className="h-3.5 w-3.5 mr-1.5 text-gray-500 dark:text-gray-400" />
                               Exportar
                             </button>
                             <button 
-                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 // Funcionalidade de compartilhar (seria implementada futuramente)
                                 setMessages(prevMessages => 
-                                  prevMessages.map(msg => ({...msg, showExportOptions: false}))
+                                  prevMessages.map(msg => ({...msg, showExportOptions: false, showExportFormats: false}))
                                 );
                               }}
                             >
+                              <Share2 className="h-3.5 w-3.5 mr-1.5 text-gray-500 dark:text-gray-400" />
                               Compartilhar
+                            </button>
+                          </div>
+                        )}
+                        
+                        {/* Menu secundário com formatos de exportação */}
+                        {message.showExportFormats && (
+                          <div className="absolute z-50 bottom-full right-0 mb-1 w-36 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
+                            <button 
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Exportar como TXT
+                                const blob = new Blob([message.content], { type: 'text/plain' });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `mensagem-${message.id}.txt`;
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                                URL.revokeObjectURL(url);
+                                
+                                setMessages(prevMessages => 
+                                  prevMessages.map(msg => ({...msg, showExportOptions: false, showExportFormats: false}))
+                                );
+                                
+                                toast({
+                                  title: "Exportação concluída",
+                                  description: "Arquivo TXT baixado com sucesso",
+                                  duration: 3000,
+                                });
+                              }}
+                            >
+                              <FileText className="h-3.5 w-3.5 mr-1.5 text-blue-500" />
+                              Texto (.txt)
+                            </button>
+                            <button 
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Exportar como PDF (simulado - na implementação real usaria uma biblioteca como jsPDF)
+                                toast({
+                                  title: "Exportando como PDF",
+                                  description: "Iniciando download do arquivo PDF",
+                                  duration: 3000,
+                                });
+                                
+                                setMessages(prevMessages => 
+                                  prevMessages.map(msg => ({...msg, showExportOptions: false, showExportFormats: false}))
+                                );
+                              }}
+                            >
+                              <File className="h-3.5 w-3.5 mr-1.5 text-red-500" />
+                              PDF (.pdf)
+                            </button>
+                            <button 
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Exportar como Word (simulado - na implementação real usaria uma biblioteca específica)
+                                // Criando um arquivo .docx simples (na verdade é HTML com extensão .docx)
+                                const content = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head><meta charset='utf-8'><title>Mensagem Exportada</title></head>
+<body><p>${message.content}</p></body></html>`;
+                                
+                                const blob = new Blob([content], { type: 'application/vnd.ms-word' });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `mensagem-${message.id}.docx`;
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                                URL.revokeObjectURL(url);
+                                
+                                setMessages(prevMessages => 
+                                  prevMessages.map(msg => ({...msg, showExportOptions: false, showExportFormats: false}))
+                                );
+                                
+                                toast({
+                                  title: "Exportação concluída",
+                                  description: "Arquivo Word baixado com sucesso",
+                                  duration: 3000,
+                                });
+                              }}
+                            >
+                              <File className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
+                              Word (.docx)
                             </button>
                           </div>
                         )}
