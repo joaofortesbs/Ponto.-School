@@ -353,19 +353,7 @@ const ChatIAInterface = () => {
                           <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z"/>
                         </svg>
                       </Button>
-                      <Button 
-                        variant="outline" 
-                        size="icon" 
-                        className="h-7 w-7 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 hover:bg-blue-500/20"
-                        title="Copiar mensagem"
-                        onClick={() => {
-                          navigator.clipboard.writeText(message.content);
-                          // Poderia adicionar um toast de confirmação aqui
-                          console.log("Mensagem copiada:", message.id);
-                        }}
-                      >
-                        <Copy size={16} />
-                      </Button>
+                      
                       <Button 
                         variant="outline" 
                         size="icon" 
