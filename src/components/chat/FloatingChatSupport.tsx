@@ -2591,6 +2591,24 @@ Exemplo de formato da resposta:
               size="sm"
               className="h-7 text-xs p-2 rounded-full bg-white/80 dark:bg-gray-800/80 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow flex items-center gap-1"
               onClick={() => {
+                // Abre o modal de busca profunda
+                setShowSearchModal(true);
+                
+                // Desativa outros modais para evitar conflitos
+                setIsShowingAISettings(false);
+                setShowPromptSuggestionModal(false);
+                setIsImprovingPrompt(false);
+              }}
+            >
+              <Search className="h-3 w-3 text-indigo-500" />
+              <span className="text-gray-700 dark:text-gray-300">Busca</span>
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs p-2 rounded-full bg-white/80 dark:bg-gray-800/80 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow flex items-center gap-1"
+              onClick={() => {
                 // Desativa os outros modais para evitar conflitos
                 setIsShowingAISettings(false);
                 
@@ -2618,24 +2636,6 @@ Exemplo de formato da resposta:
             >
               <Bot className="h-3 w-3 text-blue-500" />
               <span className="text-gray-700 dark:text-gray-300">Agente IA</span>
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-xs p-2 rounded-full bg-white/80 dark:bg-gray-800/80 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow flex items-center gap-1"
-              onClick={() => {
-                // Abre o modal de busca profunda
-                setShowSearchModal(true);
-                
-                // Desativa outros modais para evitar conflitos
-                setIsShowingAISettings(false);
-                setShowPromptSuggestionModal(false);
-                setIsImprovingPrompt(false);
-              }}
-            >
-              <Search className="h-3 w-3 text-indigo-500" />
-              <span className="text-gray-700 dark:text-gray-300">Busca</span>
             </Button>
           </div>
           
