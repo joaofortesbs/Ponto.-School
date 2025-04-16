@@ -304,7 +304,7 @@ const suggestionStatusColors = {
 const FloatingChatSupport: React.FC = () => {
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   const [activeTab, setActiveTab] = useState("home");
   const [messages, setMessages] = useState<ChatMessage[]>(defaultMessages);
   const [inputMessage, setInputMessage] = useState("");
@@ -3433,7 +3433,7 @@ Exemplo de formato da resposta:
           <div
             className={cn(
               "bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-950 rounded-3xl shadow-2xl backdrop-blur-md border border-gray-100 dark:border-gray-800 flex flex-col overflow-hidden transition-all duration-300 p-1",
-              isExpanded ? "w-[800px] h-[600px]" : "w-[380px] h-[550px]",
+              isExpanded ? "w-[900px] h-[700px]" : "w-[450px] h-[650px]",
             )}
           >
             {/* Header with glass effect */}
