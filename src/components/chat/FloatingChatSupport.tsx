@@ -4659,6 +4659,8 @@ Exemplo de formato da resposta:
           </div>
         )}
       </div>
+    </>
+  );
 
       <style>{`
         @keyframes bounce-subtle {
