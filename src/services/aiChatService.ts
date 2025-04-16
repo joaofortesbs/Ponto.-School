@@ -1112,3 +1112,50 @@ export const resetResponseState = (sessionId: string): void => {
     Estado anterior: pausado=${wasPaused}, cancelado=${wasCancelled}. 
     Estado atual: pausado=${isPaused[sessionId]}, cancelado=${isCancelled[sessionId]}`);
 };
+
+// Limpar histórico da conversa
+export function clearConversationHistory(sessionId: string): void {
+  if (conversationHistory[sessionId]) {
+    // Mantém apenas a mensagem do sistema
+    const systemMessage = conversationHistory[sessionId][0];
+    conversationHistory[sessionId] = [systemMessage];
+
+    // Limpar do localStorage também
+    try {
+      localStorage.removeItem(`conversationHistory_${sessionId}`);
+    } catch (error) {
+      console.error("Erro ao limpar histórico do localStorage:", error);
+    }
+  }
+}
+
+// Obter histórico da conversa
+export function getConversationHistory(sessionId: string): ChatMessage[] {
+  // Primeiro verifica se já está carregado na memória
+  if (conversationHistory[sessionId]) {
+    return conversationHistory[sessionId];
+  }
+
+  // Caso contrário, tenta recuperar do localStorage
+  try {
+    const savedHistory = localStorage.getItem(`conversationHistory_${sessionId}`);
+    if (savedHistory) {
+      const parsedHistory = JSON.parse(savedHistory) as ChatMessage[];
+      conversationHistory[sessionId] = parsedHistory;
+      return parsedHistory;
+    }
+  } catch (error) {
+    console.error("Erro ao recuperar histórico do localStorage:", error);
+  }
+
+  return [];
+}
+
+// Função para salvar o histórico da conversa no localStorage
+function saveConversationHistory(sessionId: string, history: ChatMessage[]): void {
+  try {
+    localStorage.setItem(`conversationHistory_${sessionId}`, JSON.stringify(history));
+  } catch (error) {
+    console.error("Erro ao salvar o histórico da conversa:", error);
+  }
+}

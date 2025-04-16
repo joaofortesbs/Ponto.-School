@@ -10,7 +10,8 @@ import {
   Loader2,
   ThumbsUp,
   ThumbsDown,
-  Copy
+  Copy,
+  Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,29 +19,70 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { generateAIResponse } from "@/services/epictusIAService";
+import { generateAIResponse, clearConversationHistory, getConversationHistory } from "@/services/aiChatService";
+import { v4 as uuidv4 } from 'uuid';
 
-type Message = {
+export type Message = {
   id: string;
   sender: "user" | "ai";
   content: string;
   timestamp: Date;
 };
 
+const CHAT_STORAGE_KEY = 'chat_history';
+const SESSION_ID_KEY = 'chat_session_id';
+
 const ChatIAInterface = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
+  // Gerar ou recuperar o ID da sessão
+  const [sessionId, setSessionId] = useState<string>(() => {
+    const savedSessionId = localStorage.getItem(SESSION_ID_KEY);
+    return savedSessionId || uuidv4();
+  });
+
+  // Carregar mensagens do armazenamento local
+  const [messages, setMessages] = useState<Message[]>(() => {
+    try {
+      const savedMessages = localStorage.getItem(CHAT_STORAGE_KEY);
+      if (savedMessages) {
+        const parsedMessages = JSON.parse(savedMessages) as Message[];
+        // Converter strings de data para objetos Date
+        return parsedMessages.map(msg => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        }));
+      }
+    } catch (error) {
+      console.error("Erro ao carregar histórico de chat:", error);
+    }
+    
+    // Mensagem de boas-vindas padrão
+    return [{
       id: "welcome-message",
       sender: "ai",
-      content: "Olá! Eu sou a Epictus IA, sua assistente para estudos. Como posso ajudar você hoje?",
+      content: "Olá! Eu sou a Epictus IA, sua assistente para estudos. Como posso ajudar você hoje? Posso me lembrar de nossas conversas anteriores nesta sessão.",
       timestamp: new Date()
-    }
-  ]);
+    }];
+  });
 
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Salvar mensagens no armazenamento local sempre que houver alterações
+  useEffect(() => {
+    try {
+      // Salvar somente se houver mais mensagens além da boas-vindas
+      if (messages.length > 1 || messages[0].id !== "welcome-message") {
+        localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
+      }
+      
+      // Salvar ID da sessão
+      localStorage.setItem(SESSION_ID_KEY, sessionId);
+    } catch (error) {
+      console.error("Erro ao salvar histórico de chat:", error);
+    }
+  }, [messages, sessionId]);
 
   useEffect(() => {
     scrollToBottom();
@@ -110,6 +152,30 @@ const ChatIAInterface = () => {
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   };
+  
+  // Limpar histórico da conversa
+  const handleClearChat = () => {
+    if (window.confirm("Tem certeza que deseja limpar todo o histórico de conversa?")) {
+      // Limpar histórico no serviço
+      clearConversationHistory(sessionId);
+      
+      // Gerar nova sessão
+      const newSessionId = uuidv4();
+      setSessionId(newSessionId);
+      localStorage.setItem(SESSION_ID_KEY, newSessionId);
+      
+      // Limpar mensagens exibidas
+      setMessages([{
+        id: "welcome-message",
+        sender: "ai",
+        content: "Histórico de chat limpo. Como posso ajudar você hoje?",
+        timestamp: new Date()
+      }]);
+      
+      // Limpar localStorage
+      localStorage.removeItem(CHAT_STORAGE_KEY);
+    }
+  };
 
   const handleSendMessage = async () => {
     if (inputValue.trim() === "" || isLoading) return;
@@ -126,8 +192,8 @@ const ChatIAInterface = () => {
     setIsLoading(true);
 
     try {
-      // Usando o serviço epictusIAService para obter a resposta
-      const response = await generateAIResponse(userMessage.content);
+      // Usar o serviço aiChatService para manter histórico de contexto
+      const response = await generateAIResponse(userMessage.content, sessionId);
 
       const aiMessage: Message = {
         id: `ai-${Date.now()}`,
@@ -172,9 +238,21 @@ const ChatIAInterface = () => {
               <p className="text-sm text-muted-foreground">Assistente inteligente para seus estudos</p>
             </div>
           </div>
-          <Badge variant="outline" className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">
-            Online
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center gap-1 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+              onClick={handleClearChat}
+              title="Limpar histórico de conversa"
+            >
+              <Trash2 size={16} />
+              <span className="hidden sm:inline">Limpar histórico</span>
+            </Button>
+            <Badge variant="outline" className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">
+              Online
+            </Badge>
+          </div>
         </div>
       </div>
 
