@@ -2480,52 +2480,13 @@ Exemplo de formato da resposta:
                                       if (email && email.includes('@')) {
                                         // Remover o modal
                                         modal.remove();
-                                      
-                                      // Tentar enviar o e-mail
-                                      try {
-                                        if (window.Email && typeof window.Email.send === 'function') {
-                                          // Usando EmailJS (precisaria ser configurado com credenciais)
-                                          window.Email.send({
-                                            SecureToken: "seu-token-securizado",
-                                            To: email,
-                                            From: "noreply@ponto.school",
-                                            Subject: "Material compartilhado da Ponto.School",
-                                            Body: emailHTML
-                                          }).then(
-                                            message => {
-                                              if (message === "OK") {
-                                                toast({
-                                                  title: "E-mail enviado com sucesso!",
-                                                  description: `Conteúdo enviado para ${email}`,
-                                                  duration: 3000,
-                                                });
-                                              } else {
-                                                // Fallback para método mailto
-                                                window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-                                                toast({
-                                                  title: "Redirecionando para seu cliente de e-mail",
-                                                  description: "Seu cliente de e-mail será aberto para enviar o conteúdo",
-                                                  duration: 3000,
-                                                });
-                                              }
-                                            }
-                                          );
-                                        } else {
-                                          // Método de fallback usando mailto
-                                          window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-                                          toast({
-                                            title: "Redirecionando para seu cliente de e-mail",
-                                            description: "Seu cliente de e-mail será aberto para enviar o conteúdo",
-                                            duration: 3000,
-                                          });
-                                        }
-                                      } catch (error) {
-                                        console.error("Erro ao compartilhar por e-mail:", error);
-                                        // Fallback para método mailto em caso de erro
+                                        
+                                        // Sempre usar mailto (método mais direto e confiável para este caso)
                                         window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+                                        
                                         toast({
-                                          title: "Redirecionando para seu cliente de e-mail",
-                                          description: "Seu cliente de e-mail será aberto para enviar o conteúdo",
+                                          title: "E-mail sendo preparado",
+                                          description: `Seu cliente de e-mail foi aberto para enviar o conteúdo para ${email}`,
                                           duration: 3000,
                                         });
                                       }
