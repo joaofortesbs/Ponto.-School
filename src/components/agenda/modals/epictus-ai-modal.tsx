@@ -22,8 +22,8 @@ const EpictusAIModal: React.FC<EpictusAIModalProps> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] bg-gradient-to-br from-[#001427] to-[#29335C] text-white border-none">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[450px] max-h-[80vh] bg-gradient-to-br from-[#001427] to-[#29335C] text-white border-none overflow-hidden flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] flex items-center justify-center">
               <Bot className="h-6 w-6 text-white" />
@@ -38,7 +38,8 @@ const EpictusAIModal: React.FC<EpictusAIModalProps> = ({
             </div>
           </div>
         </DialogHeader>
-        <div className="bg-[#29335C]/30 rounded-lg p-4 mb-4">
+        <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
+          <div className="bg-[#29335C]/30 rounded-lg p-4 mb-4">
           <div className="flex items-center gap-2 mb-3">
             <Avatar>
               <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=epictus" />
@@ -80,23 +81,24 @@ const EpictusAIModal: React.FC<EpictusAIModalProps> = ({
               <Lightbulb className="h-4 w-4 mr-1" /> Sugestões
             </Button>
           </div>
-          <div className="relative">
-            <Input
-              placeholder="Digite sua mensagem..."
-              className="bg-[#29335C]/30 border-[#29335C] text-white placeholder:text-gray-400 pr-24"
-            />
-            <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-gray-400 hover:text-white hover:bg-[#29335C]/30"
-              >
-                <Mic className="h-4 w-4" />
-              </Button>
-              <Button className="h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white">
-                Enviar
-              </Button>
-            </div>
+          </div>
+        </div>
+        <div className="relative mt-3 flex-shrink-0">
+          <Input
+            placeholder="Digite sua mensagem..."
+            className="bg-[#29335C]/30 border-[#29335C] text-white placeholder:text-gray-400 pr-24"
+          />
+          <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-gray-400 hover:text-white hover:bg-[#29335C]/30"
+            >
+              <Mic className="h-4 w-4" />
+            </Button>
+            <Button className="h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white">
+              Enviar
+            </Button>
           </div>
         </div>
       </DialogContent>
