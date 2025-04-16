@@ -3433,7 +3433,7 @@ Exemplo de formato da resposta:
           <div
             className={cn(
               "bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-950 rounded-3xl shadow-2xl backdrop-blur-md border border-gray-100 dark:border-gray-800 flex flex-col overflow-hidden transition-all duration-300 p-1",
-              isExpanded ? "w-[550px] h-[600px]" : "w-[1200px] h-[600px]",
+              isExpanded ? "w-[550px] h-[600px]" : "w-[1400px] h-[600px]",
             )}
           >
             {/* Header with glass effect */}
