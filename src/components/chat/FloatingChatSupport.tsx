@@ -382,12 +382,7 @@ const FloatingChatSupport: React.FC = () => {
   const [generatedPrompts, setGeneratedPrompts] = useState<string[]>([]);
   const [isGeneratingPrompts, setIsGeneratingPrompts] = useState(false);
   
-  // Estado para controlar modal de busca profunda
-  const [showSearchModal, setShowSearchModal] = useState(false);
-  const [deepSearchEnabled, setDeepSearchEnabled] = useState(false);
-  const [globalSearchEnabled, setGlobalSearchEnabled] = useState(false);
-  const [academicSearchEnabled, setAcademicSearchEnabled] = useState(false);
-  const [socialSearchEnabled, setSocialSearchEnabled] = useState(false);
+  // Estados removidos relacionados à busca profunda
 
   // Funções para lidar com feedback das mensagens
   const handleMessageFeedback = (messageId: number, feedback: 'positive' | 'negative') => {
@@ -2249,194 +2244,7 @@ Exemplo de formato da resposta:
         </div>
       )}
 
-      {/* Modal de Busca Profunda */}
-      {showSearchModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowSearchModal(false)}></div>
-          <div className="relative bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 p-4 shadow-xl w-[90%] max-w-md animate-fadeIn">
-            <div className="flex justify-between items-center mb-3">
-              <h4 className="text-sm font-bold flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400">
-                <Search className="h-4 w-4" />
-                Busca Profunda
-              </h4>
-              <Button 
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
-                onClick={() => setShowSearchModal(false)}
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            </div>
-
-            <div className="flex items-center justify-center bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg mb-4">
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center mx-auto mb-3">
-                  <Globe className="h-6 w-6 text-white" />
-                </div>
-                <p className="text-sm font-medium mb-2">Ativar Busca Profunda</p>
-                <Switch
-                  checked={deepSearchEnabled}
-                  onCheckedChange={(checked) => {
-                    setDeepSearchEnabled(checked);
-                    if (checked) {
-                      toast({
-                        title: "Busca Profunda ativada",
-                        description: "Suas pesquisas agora serão realizadas com mais profundidade e precisão",
-                        duration: 3000,
-                      });
-                    }
-                  }}
-                />
-              </div>
-            </div>
-            
-            {/* Opção de pesquisa na internet global */}
-            <div className="mb-2">
-              <h4 className="text-sm font-bold text-blue-600 dark:text-blue-400 ml-1 mb-1 flex items-center gap-1">
-                <Globe className="h-4 w-4" />
-                Web
-              </h4>
-              <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg mb-4">
-                <div className="flex items-center flex-1">
-                  <Checkbox 
-                    id="global-search" 
-                    checked={globalSearchEnabled}
-                    onCheckedChange={(checked) => {
-                      setGlobalSearchEnabled(!!checked);
-                      if (checked) {
-                        toast({
-                          title: "Busca global ativada",
-                          description: "Suas pesquisas agora incluirão resultados da internet global",
-                          duration: 3000,
-                        });
-                      }
-                    }}
-                    className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                  />
-                  <label 
-                    htmlFor="global-search" 
-                    className="ml-2 text-sm font-medium flex items-center gap-1 cursor-pointer"
-                  >
-                    <Globe className="h-3.5 w-3.5 text-blue-600" />
-                    Pesquise em toda a internet global
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            {/* Opção de pesquisa acadêmica */}
-            <div className="mb-2">
-              <h4 className="text-sm font-bold text-purple-600 dark:text-purple-400 ml-1 mb-1 flex items-center gap-1">
-                <BookOpen className="h-4 w-4" />
-                Acadêmico
-              </h4>
-              <div className="flex items-center gap-2 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg mb-4">
-                <div className="flex items-center flex-1">
-                  <Checkbox 
-                    id="academic-search" 
-                    checked={academicSearchEnabled}
-                    onCheckedChange={(checked) => {
-                      setAcademicSearchEnabled(!!checked);
-                      if (checked) {
-                        toast({
-                          title: "Busca acadêmica ativada",
-                          description: "Suas pesquisas agora incluirão artigos e fóruns acadêmicos",
-                          duration: 3000,
-                        });
-                      }
-                    }}
-                    className="data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
-                  />
-                  <label 
-                    htmlFor="academic-search" 
-                    className="ml-2 text-sm font-medium flex items-center gap-1 cursor-pointer"
-                  >
-                    <FileText className="h-3.5 w-3.5 text-purple-600" />
-                    Pesquisar artigos e fóruns acadêmicos
-                  </label>
-                </div>
-              </div>
-            </div>
-            
-            {/* Opção de pesquisa social */}
-            <div className="mb-2">
-              <h4 className="text-sm font-bold text-green-600 dark:text-green-400 ml-1 mb-1 flex items-center gap-1">
-                <Users className="h-4 w-4" />
-                Social
-              </h4>
-              <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg mb-4">
-                <div className="flex items-center flex-1">
-                  <Checkbox 
-                    id="social-search" 
-                    checked={socialSearchEnabled}
-                    onCheckedChange={(checked) => {
-                      setSocialSearchEnabled(!!checked);
-                      if (checked) {
-                        toast({
-                          title: "Busca social ativada",
-                          description: "Suas pesquisas agora incluirão discussões e opiniões de redes sociais",
-                          duration: 3000,
-                        });
-                      }
-                    }}
-                    className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
-                  />
-                  <label 
-                    htmlFor="social-search" 
-                    className="ml-2 text-sm font-medium flex items-center gap-1 cursor-pointer"
-                  >
-                    <MessageCircle className="h-3.5 w-3.5 text-green-600" />
-                    Discussões e opiniões
-                  </label>
-                </div>
-              </div>
-            </div>
-            
-            <p className="text-xs text-gray-500 dark:text-gray-400 text-center mb-3">
-              A Busca Profunda permite encontrar informações mais detalhadas e específicas, analisando fontes mais extensas e complexas.
-            </p>
-            
-            <div className="flex justify-end gap-2 mt-3">
-              <Button
-                size="sm"
-                variant="outline" 
-                className="text-xs border-orange-200 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
-                onClick={() => setShowSearchModal(false)}
-              >
-                Cancelar
-              </Button>
-              <Button 
-                size="sm" 
-                className="text-xs bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white border-none"
-                onClick={() => {
-                  setShowSearchModal(false);
-                  
-                  let description = "Busca padrão será utilizada em suas pesquisas";
-                  
-                  // Construir mensagem com base nas opções selecionadas
-                  const enabledOptions = [];
-                  if (deepSearchEnabled) enabledOptions.push("Busca Profunda");
-                  if (globalSearchEnabled) enabledOptions.push("pesquisa na internet global");
-                  if (academicSearchEnabled) enabledOptions.push("pesquisa acadêmica");
-                  
-                  if (enabledOptions.length > 0) {
-                    description = `${enabledOptions.join(", ")} ${enabledOptions.length > 1 ? 'estão ativas' : 'está ativa'} para suas próximas pesquisas`;
-                  }
-                  
-                  toast({
-                    title: "Configurações salvas",
-                    description: description,
-                    duration: 3000,
-                  });
-                }}
-              >
-                Salvar configurações
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      
       
       {/* Modal de Sugestão de Prompt */}
       {showPromptSuggestionModal && (
@@ -2640,23 +2448,7 @@ Exemplo de formato da resposta:
               <span className="text-gray-700 dark:text-gray-300">Agente IA</span>
             </Button>
             
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-xs p-2 rounded-full bg-white/80 dark:bg-gray-800/80 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow flex items-center gap-1"
-              onClick={() => {
-                // Abre o modal de busca profunda
-                setShowSearchModal(true);
-                
-                // Desativa outros modais para evitar conflitos
-                setIsShowingAISettings(false);
-                setShowPromptSuggestionModal(false);
-                setIsImprovingPrompt(false);
-              }}
-            >
-              <Search className="h-3 w-3 text-indigo-500" />
-              <span className="text-gray-700 dark:text-gray-300">Busca</span>
-            </Button>
+            
           </div>
           
           <Button
