@@ -11,12 +11,8 @@ import {
   ThumbsUp,
   ThumbsDown,
   Copy,
-  Trash2,
-  Share,
-  Download,
-  Share2
+  Trash2
 } from "lucide-react";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -43,71 +39,17 @@ const ChatIAInterface = () => {
     return savedSessionId || uuidv4();
   });
 
-  // Estado para notificação de compartilhamento
-  const [shareNotification, setShareNotification] = useState<string | null>(null);
-
-  // Função para compartilhar mensagem usando a API nativa de compartilhamento
-  const handleShareMessage = async (content: string) => {
-    try {
-      // Usar a API Web Share se disponível
-      if (navigator.share) {
-        await navigator.share({
-          title: 'Mensagem do Chat Epictus IA',
-          text: content,
-        });
-        // Não mostrar notificação para não confundir com a cópia
-        // O compartilhamento já abre uma UI própria do sistema
-      } else {
-        // Apenas mostrar no console, sem notificação visual
-        console.log("API de compartilhamento não disponível");
-
-        // Abrir um menu de compartilhamento alternativo
-        const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(content)}`;
-        window.open(url, '_blank');
-      }
-    } catch (error) {
-      // Ignorar erros de compartilhamento (como cancelamento)
-      console.error("Compartilhamento cancelado ou com erro:", error);
-      // Não mostrar notificação de erro para o usuário
-    }
-  };
-
-  // Função para exportar mensagem como arquivo de texto
-  const handleExportMessage = (content: string, sender: string) => {
-    try {
-      const element = document.createElement("a");
-      const file = new Blob([content], {type: 'text/plain'});
-      element.href = URL.createObjectURL(file);
-      element.download = `epictus-ia-mensagem-${new Date().toISOString().slice(0,10)}.txt`;
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
-
-      setShareNotification("Mensagem exportada com sucesso!");
-
-      // Limpar a notificação após 3 segundos
-      setTimeout(() => {
-        setShareNotification(null);
-      }, 3000);
-    } catch (error) {
-      console.error("Erro ao exportar mensagem:", error);
-      // Mostrar notificação apenas para erro
-      setShareNotification("Erro ao exportar mensagem");
-      setTimeout(() => setShareNotification(null), 3000);
-    }
-  };
-
   // Carregar mensagens do armazenamento local e do serviço aiChatService
   const [messages, setMessages] = useState<Message[]>(() => {
     try {
       // Primeiro verificar se há histórico no serviço de IA
       const aiServiceHistory = getConversationHistory(sessionId);
-
+      
       // Se tiver histórico no serviço, converter para o formato Message
       if (aiServiceHistory && aiServiceHistory.length > 0) {
         // Pular a primeira mensagem que é do sistema (não visível para o usuário)
         const visibleHistory = aiServiceHistory.slice(1);
-
+        
         return visibleHistory.map((msg, index) => ({
           id: `${msg.role}-${index}`,
           sender: msg.role === 'user' ? 'user' : 'ai',
@@ -115,7 +57,7 @@ const ChatIAInterface = () => {
           timestamp: new Date()
         }));
       }
-
+      
       // Se não tiver no serviço, tentar carregar do localStorage
       const savedMessages = localStorage.getItem(CHAT_STORAGE_KEY);
       if (savedMessages) {
@@ -129,7 +71,7 @@ const ChatIAInterface = () => {
     } catch (error) {
       console.error("Erro ao carregar histórico de chat:", error);
     }
-
+    
     // Mensagem de boas-vindas padrão
     return [{
       id: "welcome-message",
@@ -151,7 +93,7 @@ const ChatIAInterface = () => {
       if (messages.length > 1 || messages[0].id !== "welcome-message") {
         localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
       }
-
+      
       // Salvar ID da sessão
       localStorage.setItem(SESSION_ID_KEY, sessionId);
     } catch (error) {
@@ -164,7 +106,7 @@ const ChatIAInterface = () => {
   }, [messages]);
 
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
-
+  
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -176,7 +118,7 @@ const ChatIAInterface = () => {
       const scrollPosition = target.scrollTop;
       const scrollHeight = target.scrollHeight;
       const clientHeight = target.clientHeight;
-
+      
       // Show button if not near the bottom (more than 300px from bottom)
       const isNearBottom = scrollHeight - scrollPosition - clientHeight < 300;
       setShowScrollToBottom(!isNearBottom);
@@ -184,7 +126,7 @@ const ChatIAInterface = () => {
 
     // Find all potential scroll containers
     const scrollContainers = document.querySelectorAll('.chat-scroll-area, .ScrollAreaViewport');
-
+    
     scrollContainers.forEach(container => {
       container.addEventListener('scroll', handleScroll);
     });
@@ -204,7 +146,7 @@ const ChatIAInterface = () => {
       const scrollPosition = container.scrollTop;
       const scrollHeight = container.scrollHeight;
       const clientHeight = container.clientHeight;
-
+      
       const isNearBottom = scrollHeight - scrollPosition - clientHeight < 300;
       setShowScrollToBottom(!isNearBottom);
     }
@@ -227,18 +169,18 @@ const ChatIAInterface = () => {
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   };
-
+  
   // Limpar histórico da conversa
   const handleClearChat = () => {
     if (window.confirm("Tem certeza que deseja limpar todo o histórico de conversa?")) {
       // Limpar histórico no serviço
       clearConversationHistory(sessionId);
-
+      
       // Gerar nova sessão
       const newSessionId = uuidv4();
       setSessionId(newSessionId);
       localStorage.setItem(SESSION_ID_KEY, newSessionId);
-
+      
       // Limpar mensagens exibidas
       setMessages([{
         id: "welcome-message",
@@ -246,10 +188,10 @@ const ChatIAInterface = () => {
         content: "Histórico de chat limpo. Como posso ajudar você hoje?",
         timestamp: new Date()
       }]);
-
+      
       // Limpar localStorage
       localStorage.removeItem(CHAT_STORAGE_KEY);
-
+      
       console.log("Histórico de conversa limpo completamente. Nova sessão:", newSessionId);
     }
   };
@@ -280,7 +222,7 @@ const ChatIAInterface = () => {
       };
 
       setMessages(prev => [...prev, aiMessage]);
-
+      
       // Opcional: sincronizar o estado local com o histórico mais recente do serviço
       // Isso garante que estamos sempre alinhados com o estado interno do serviço
       const latestHistory = getConversationHistory(sessionId);
@@ -377,10 +319,10 @@ const ChatIAInterface = () => {
                       <p className="whitespace-pre-wrap">{message.content}</p>
                     </CardContent>
                   </Card>
-
+                  
                   {/* Botões de feedback para mensagens da IA */}
                   {message.sender === "ai" && message.id !== "welcome-message" && (
-                    <div className="absolute right-0 top-0 flex space-x-1 -mr-26 mt-1">
+                    <div className="absolute right-0 top-0 flex space-x-1 -mr-20 mt-1">
                       <Button 
                         variant="outline" 
                         size="icon" 
@@ -391,18 +333,10 @@ const ChatIAInterface = () => {
                           console.log("Feedback positivo para mensagem:", message.id);
                         }}
                       >
-                        <ThumbsUp size={16} />
-                      </Button>
-
-                      {/* Botão de Exportar */}
-                      <Button 
-                        variant="outline" 
-                        size="icon" 
-                        className="h-7 w-7 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20 hover:bg-teal-500/20"
-                        title="Exportar mensagem"
-                        onClick={() => handleExportMessage(message.content, message.sender)}
-                      >
-                        <Download size={16} />
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-thumbs-up">
+                          <path d="M7 10v12"/>
+                          <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"/>
+                        </svg>
                       </Button>
                       <Button 
                         variant="outline" 
@@ -414,7 +348,10 @@ const ChatIAInterface = () => {
                           console.log("Feedback negativo para mensagem:", message.id);
                         }}
                       >
-                        <ThumbsDown size={16} />
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-thumbs-down">
+                          <path d="M17 14V2"/>
+                          <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z"/>
+                        </svg>
                       </Button>
                       <Button 
                         variant="outline" 
@@ -423,64 +360,20 @@ const ChatIAInterface = () => {
                         title="Copiar mensagem"
                         onClick={() => {
                           navigator.clipboard.writeText(message.content);
-                          // Mostrar notificação visual apenas para a operação de cópia
-                          setShareNotification("Mensagem copiada para a área de transferência!");
-                          setTimeout(() => setShareNotification(null), 3000);
+                          // Poderia adicionar um toast de confirmação aqui
+                          console.log("Mensagem copiada:", message.id);
                         }}
                       >
-                        <Copy size={16} />
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-copy">
+                          <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                          <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                        </svg>
                       </Button>
-
-                      {/* Botão de compartilhamento com mini modal usando Popover */}
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button 
-                            variant="outline" 
-                            size="icon" 
-                            className="h-7 w-7 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20 hover:bg-purple-500/20"
-                            title="Compartilhar mensagem"
-                          >
-                            <Share2 size={16} />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent 
-                          className="w-[200px] p-3 bg-white dark:bg-gray-800 border-0 shadow-lg animate-in fade-in zoom-in"
-                          side="top" 
-                          align="end"
-                          sideOffset={5}
-                        >
-                          <div>
-                            <h4 className="text-sm font-medium mb-2 text-[#29335C] dark:text-white">Compartilhar mensagem</h4>
-                            <div className="flex flex-col gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="flex justify-start h-auto py-2 px-2 text-sm w-full"
-                                onClick={() => handleShareMessage(message.content)}
-                              >
-                                <Share2 className="h-4 w-4 mr-2" />
-                                Compartilhar
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="flex justify-start h-auto py-2 px-2 text-sm w-full"
-                                onClick={() => handleExportMessage(message.content, message.sender)}
-                              >
-                                <Download className="h-4 w-4 mr-2" />
-                                Exportar
-                              </Button>
-                            </div>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-
-                      {/* Novo botão de Exportar */}
                       <Button 
                         variant="outline" 
                         size="icon" 
                         className="h-7 w-7 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500/20"
-                        title="Rolar para o final"
+                        title="Scroll to Latest"
                         onClick={scrollToBottom}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-down">
@@ -488,13 +381,6 @@ const ChatIAInterface = () => {
                           <path d="m19 12-7 7-7-7"/>
                         </svg>
                       </Button>
-                    </div>
-                  )}
-
-                  {/* Notificação de compartilhamento */}
-                  {shareNotification && (
-                    <div className="absolute left-0 top-full mt-2 bg-green-500 text-white text-xs rounded px-2 py-1 animate-fade-in-out">
-                      {shareNotification}
                     </div>
                   )}
                 </div>
