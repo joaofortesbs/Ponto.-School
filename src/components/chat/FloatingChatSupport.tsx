@@ -1955,12 +1955,11 @@ Exemplo de formato da resposta:
     </div>
   );
 
-  const renderChatContent = () => {
-    return (
-      <div className="flex flex-col h-full">
-        <ScrollArea
-          className="flex-1 p-4 custom-scrollbar overflow-y-auto relative"
-          style={{ maxHeight: "calc(100% - 90px)" }}
+  const renderChatContent = () => (
+    <div className="flex flex-col h-full">
+      <ScrollArea
+        className="flex-1 p-4 custom-scrollbar overflow-y-auto relative"
+        style={{ maxHeight: "calc(100% - 90px)" }}
       >
         {/* Botão flutuante para voltar ao fim da conversa */}
         {showScrollToBottom && (
@@ -2481,13 +2480,52 @@ Exemplo de formato da resposta:
                                       if (email && email.includes('@')) {
                                         // Remover o modal
                                         modal.remove();
-                                        
-                                        // Sempre usar mailto (método mais direto e confiável para este caso)
+                                      
+                                      // Tentar enviar o e-mail
+                                      try {
+                                        if (window.Email && typeof window.Email.send === 'function') {
+                                          // Usando EmailJS (precisaria ser configurado com credenciais)
+                                          window.Email.send({
+                                            SecureToken: "seu-token-securizado",
+                                            To: email,
+                                            From: "noreply@ponto.school",
+                                            Subject: "Material compartilhado da Ponto.School",
+                                            Body: emailHTML
+                                          }).then(
+                                            message => {
+                                              if (message === "OK") {
+                                                toast({
+                                                  title: "E-mail enviado com sucesso!",
+                                                  description: `Conteúdo enviado para ${email}`,
+                                                  duration: 3000,
+                                                });
+                                              } else {
+                                                // Fallback para método mailto
+                                                window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+                                                toast({
+                                                  title: "Redirecionando para seu cliente de e-mail",
+                                                  description: "Seu cliente de e-mail será aberto para enviar o conteúdo",
+                                                  duration: 3000,
+                                                });
+                                              }
+                                            }
+                                          );
+                                        } else {
+                                          // Método de fallback usando mailto
+                                          window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+                                          toast({
+                                            title: "Redirecionando para seu cliente de e-mail",
+                                            description: "Seu cliente de e-mail será aberto para enviar o conteúdo",
+                                            duration: 3000,
+                                          });
+                                        }
+                                      } catch (error) {
+                                        console.error("Erro ao compartilhar por e-mail:", error);
+                                        // Fallback para método mailto em caso de erro
                                         window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-                                        
                                         toast({
-                                          title: "E-mail sendo preparado",
-                                          description: `Seu cliente de e-mail foi aberto para enviar o conteúdo para ${email}`,
+                                          title: "Redirecionando para seu cliente de e-mail",
+                                          description: "Seu cliente de e-mail será aberto para enviar o conteúdo",
                                           duration: 3000,
                                         });
                                       }
@@ -2806,12 +2844,9 @@ Exemplo de formato da resposta:
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
-    </div>
-    );
-  };
 
-  {/* AI Settings Popover */}
-  {isShowingAISettings && (
+      {/* AI Settings Popover */}
+      {isShowingAISettings && (
         <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-xl w-[85%] max-w-sm animate-fadeIn">
           <div className="flex justify-between items-center mb-3">
             <h4 className="text-sm font-medium flex items-center gap-1">
@@ -4663,8 +4698,6 @@ Exemplo de formato da resposta:
           </div>
         )}
       </div>
-    </>
-  );
 
       <style>{`
         @keyframes bounce-subtle {
