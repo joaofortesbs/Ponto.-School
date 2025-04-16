@@ -2441,230 +2441,235 @@ Exemplo de formato da resposta:
         <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-md" onClick={() => setShowSearchModal(false)}></div>
           
-          {/* Modal principal com efeitos glassmorphism avançados */}
-          <div className="relative bg-gradient-to-br from-white/90 to-gray-50/80 dark:from-gray-900/90 dark:to-gray-950/80 backdrop-blur-xl rounded-2xl border border-white/20 dark:border-gray-700/30 p-6 shadow-2xl w-[90%] max-w-lg animate-fadeIn overflow-hidden">
+          {/* Modal principal com efeitos glassmorphism avançados - versão menor */}
+          <div className="relative bg-gradient-to-br from-white/90 to-gray-50/80 dark:from-gray-900/90 dark:to-gray-950/80 backdrop-blur-xl rounded-2xl border border-white/20 dark:border-gray-700/30 p-4 shadow-2xl w-[85%] max-w-md max-h-[500px] animate-fadeIn">
             {/* Elementos decorativos de fundo */}
             <div className="absolute -right-20 -top-20 w-60 h-60 bg-blue-500/10 rounded-full blur-3xl"></div>
             <div className="absolute -left-20 -bottom-20 w-60 h-60 bg-purple-500/10 rounded-full blur-3xl"></div>
             <div className="absolute right-1/4 bottom-0 w-40 h-40 bg-orange-500/10 rounded-full blur-3xl"></div>
             
             {/* Header com design futurista */}
-            <div className="flex justify-between items-center mb-6 relative z-10">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-800 shadow-lg shadow-blue-500/20">
-                  <Search className="h-5 w-5 text-white" />
+            <div className="flex justify-between items-center mb-4 relative z-10 sticky top-0 bg-gradient-to-b from-white/80 to-transparent dark:from-gray-900/80 dark:to-transparent pb-2">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center h-8 w-8 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-800 shadow-lg shadow-blue-500/20">
+                  <Search className="h-4 w-4 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
+                  <h3 className="text-base font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
                     DeepSearch™
                   </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Powered by advanced AI</p>
+                  <p className="text-[10px] text-gray-500 dark:text-gray-400">Powered by advanced AI</p>
                 </div>
               </div>
               <Button 
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 p-0 rounded-full bg-white/30 dark:bg-gray-800/30 backdrop-blur-md hover:bg-white/50 dark:hover:bg-gray-700/50 transition-all duration-200"
+                className="h-7 w-7 p-0 rounded-full bg-white/30 dark:bg-gray-800/30 backdrop-blur-md hover:bg-white/50 dark:hover:bg-gray-700/50 transition-all duration-200"
                 onClick={() => setShowSearchModal(false)}
               >
-                <X className="h-4 w-4" />
+                <X className="h-3.5 w-3.5" />
               </Button>
             </div>
 
-            {/* Campo de pesquisa com UI aprimorada */}
-            <div className="mb-6 relative z-10">
-              <div className="relative">
-                <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-500 dark:text-blue-400">
-                  <Search className="h-5 w-5" />
+            {/* Conteúdo com barra de rolagem */}
+            <ScrollArea className="h-[400px] pr-2 relative z-10">
+              {/* Campo de pesquisa com UI aprimorada */}
+              <div className="mb-4 relative z-10">
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-500 dark:text-blue-400">
+                    <Search className="h-4 w-4" />
+                  </div>
+                  <Input 
+                    placeholder="O que você deseja pesquisar?"
+                    className="pl-9 pr-3 h-9 bg-white/70 dark:bg-gray-800/50 backdrop-blur-md border-white/20 dark:border-gray-700/50 rounded-lg text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-blue-500/30 dark:focus:ring-blue-500/50 shadow-sm text-sm"
+                  />
                 </div>
-                <Input 
-                  placeholder="O que você deseja pesquisar?"
-                  className="pl-12 pr-4 h-12 bg-white/70 dark:bg-gray-800/50 backdrop-blur-md border-white/20 dark:border-gray-700/50 rounded-xl text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-blue-500/30 dark:focus:ring-blue-500/50 shadow-sm"
-                />
-              </div>
-            </div>
-            
-            {/* Seletor de fontes com design mais moderno */}
-            <div className="space-y-5 relative z-10">
-              <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                <div className="h-8 w-1 bg-gradient-to-b from-blue-500 to-indigo-700 rounded-full"></div>
-                <span>Fontes de Pesquisa</span>
               </div>
               
-              {/* Web Global - Card mais avançado */}
-              <div className="group relative overflow-hidden p-4 bg-gradient-to-br from-white/80 to-blue-50/50 dark:from-gray-800/40 dark:to-blue-900/20 backdrop-blur-md rounded-xl border border-blue-100/60 dark:border-blue-900/30 hover:shadow-md hover:shadow-blue-500/5 transition-all duration-300">
-                <div className="absolute -right-10 -bottom-10 w-32 h-32 bg-blue-500/5 rounded-full opacity-50 group-hover:opacity-70 transition-opacity"></div>
+              {/* Seletor de fontes com design mais moderno */}
+              <div className="space-y-3 relative z-10">
+                <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1.5">
+                  <div className="h-6 w-1 bg-gradient-to-b from-blue-500 to-indigo-700 rounded-full"></div>
+                  <span>Fontes de Pesquisa</span>
+                </div>
                 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
-                      <Globe className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-800 dark:text-gray-200">Web Global</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">Resultados da internet mundial</div>
-                    </div>
-                  </div>
+                {/* Web Global - Card mais avançado */}
+                <div className="group relative overflow-hidden p-3 bg-gradient-to-br from-white/80 to-blue-50/50 dark:from-gray-800/40 dark:to-blue-900/20 backdrop-blur-md rounded-lg border border-blue-100/60 dark:border-blue-900/30 hover:shadow-md hover:shadow-blue-500/5 transition-all duration-300">
+                  <div className="absolute -right-8 -bottom-8 w-24 h-24 bg-blue-500/5 rounded-full opacity-50 group-hover:opacity-70 transition-opacity"></div>
                   
-                  <div className="relative">
-                    <Switch 
-                      checked={globalSearchEnabled}
-                      onCheckedChange={(checked) => {
-                        setGlobalSearchEnabled(!!checked);
-                        if (checked) {
-                          toast({
-                            title: "Web Global ativada",
-                            description: "Suas pesquisas agora incluirão resultados da internet global",
-                            duration: 3000,
-                          });
-                        }
-                      }}
-                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-blue-500 data-[state=checked]:to-blue-600 data-[state=unchecked]:bg-gray-200 dark:data-[state=unchecked]:bg-gray-700"
-                    />
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+                        <Globe className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-sm text-gray-800 dark:text-gray-200">Web Global</div>
+                        <div className="text-[10px] text-gray-500 dark:text-gray-400">Resultados da internet mundial</div>
+                      </div>
+                    </div>
+                    
+                    <div className="relative">
+                      <Switch 
+                        checked={globalSearchEnabled}
+                        onCheckedChange={(checked) => {
+                          setGlobalSearchEnabled(!!checked);
+                          if (checked) {
+                            toast({
+                              title: "Web Global ativada",
+                              description: "Suas pesquisas agora incluirão resultados da internet global",
+                              duration: 3000,
+                            });
+                          }
+                        }}
+                        className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-blue-500 data-[state=checked]:to-blue-600 data-[state=unchecked]:bg-gray-200 dark:data-[state=unchecked]:bg-gray-700 scale-75"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              {/* Acadêmico - Card mais avançado */}
-              <div className="group relative overflow-hidden p-4 bg-gradient-to-br from-white/80 to-purple-50/50 dark:from-gray-800/40 dark:to-purple-900/20 backdrop-blur-md rounded-xl border border-purple-100/60 dark:border-purple-900/30 hover:shadow-md hover:shadow-purple-500/5 transition-all duration-300">
-                <div className="absolute -right-10 -bottom-10 w-32 h-32 bg-purple-500/5 rounded-full opacity-50 group-hover:opacity-70 transition-opacity"></div>
                 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white shadow-md shadow-purple-500/20">
-                      <BookOpen className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-800 dark:text-gray-200">Acadêmico</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">Artigos científicos e pesquisas</div>
-                    </div>
-                  </div>
+                {/* Acadêmico - Card mais avançado */}
+                <div className="group relative overflow-hidden p-3 bg-gradient-to-br from-white/80 to-purple-50/50 dark:from-gray-800/40 dark:to-purple-900/20 backdrop-blur-md rounded-lg border border-purple-100/60 dark:border-purple-900/30 hover:shadow-md hover:shadow-purple-500/5 transition-all duration-300">
+                  <div className="absolute -right-8 -bottom-8 w-24 h-24 bg-purple-500/5 rounded-full opacity-50 group-hover:opacity-70 transition-opacity"></div>
                   
-                  <div className="relative">
-                    <Switch 
-                      checked={academicSearchEnabled}
-                      onCheckedChange={(checked) => {
-                        setAcademicSearchEnabled(!!checked);
-                        if (checked) {
-                          toast({
-                            title: "Busca acadêmica ativada",
-                            description: "Suas pesquisas agora incluirão artigos e fóruns acadêmicos",
-                            duration: 3000,
-                          });
-                        }
-                      }}
-                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-purple-500 data-[state=checked]:to-purple-600 data-[state=unchecked]:bg-gray-200 dark:data-[state=unchecked]:bg-gray-700"
-                    />
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white shadow-md shadow-purple-500/20">
+                        <BookOpen className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-sm text-gray-800 dark:text-gray-200">Acadêmico</div>
+                        <div className="text-[10px] text-gray-500 dark:text-gray-400">Artigos científicos e pesquisas</div>
+                      </div>
+                    </div>
+                    
+                    <div className="relative">
+                      <Switch 
+                        checked={academicSearchEnabled}
+                        onCheckedChange={(checked) => {
+                          setAcademicSearchEnabled(!!checked);
+                          if (checked) {
+                            toast({
+                              title: "Busca acadêmica ativada",
+                              description: "Suas pesquisas agora incluirão artigos e fóruns acadêmicos",
+                              duration: 3000,
+                            });
+                          }
+                        }}
+                        className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-purple-500 data-[state=checked]:to-purple-600 data-[state=unchecked]:bg-gray-200 dark:data-[state=unchecked]:bg-gray-700 scale-75"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              {/* Social - Card mais avançado */}
-              <div className="group relative overflow-hidden p-4 bg-gradient-to-br from-white/80 to-green-50/50 dark:from-gray-800/40 dark:to-green-900/20 backdrop-blur-md rounded-xl border border-green-100/60 dark:border-green-900/30 hover:shadow-md hover:shadow-green-500/5 transition-all duration-300">
-                <div className="absolute -right-10 -bottom-10 w-32 h-32 bg-green-500/5 rounded-full opacity-50 group-hover:opacity-70 transition-opacity"></div>
                 
-                <div className="flex items-center justify-between">
+                {/* Social - Card mais avançado */}
+                <div className="group relative overflow-hidden p-3 bg-gradient-to-br from-white/80 to-green-50/50 dark:from-gray-800/40 dark:to-green-900/20 backdrop-blur-md rounded-lg border border-green-100/60 dark:border-green-900/30 hover:shadow-md hover:shadow-green-500/5 transition-all duration-300">
+                  <div className="absolute -right-8 -bottom-8 w-24 h-24 bg-green-500/5 rounded-full opacity-50 group-hover:opacity-70 transition-opacity"></div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white shadow-md shadow-green-500/20">
+                        <Users className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-sm text-gray-800 dark:text-gray-200">Social</div>
+                        <div className="text-[10px] text-gray-500 dark:text-gray-400">Discussões e opiniões da comunidade</div>
+                      </div>
+                    </div>
+                    
+                    <div className="relative">
+                      <Switch 
+                        checked={socialSearchEnabled}
+                        onCheckedChange={(checked) => {
+                          setSocialSearchEnabled(!!checked);
+                          if (checked) {
+                            toast({
+                              title: "Busca social ativada",
+                              description: "Suas pesquisas agora incluirão discussões e opiniões de redes sociais",
+                              duration: 3000,
+                            });
+                          }
+                        }}
+                        className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-green-500 data-[state=checked]:to-green-600 data-[state=unchecked]:bg-gray-200 dark:data-[state=unchecked]:bg-gray-700 scale-75"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Profundidade da Busca com um slider visual */}
+                <div className="mt-3 p-3 bg-white/50 dark:bg-gray-800/30 backdrop-blur-md rounded-lg border border-gray-100/60 dark:border-gray-700/30 relative z-10">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5 text-orange-500" />
+                      <span className="text-xs font-semibold text-gray-800 dark:text-gray-200">Profundidade da Busca</span>
+                    </div>
+                    <div className="px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-[10px] font-medium">
+                      {deepSearchEnabled ? "Avançada" : "Padrão"}
+                    </div>
+                  </div>
+                  
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white shadow-md shadow-green-500/20">
-                      <Users className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-800 dark:text-gray-200">Social</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">Discussões e opiniões da comunidade</div>
-                    </div>
-                  </div>
-                  
-                  <div className="relative">
+                    <span className="text-[10px] text-gray-500">Padrão</span>
                     <Switch 
-                      checked={socialSearchEnabled}
+                      checked={deepSearchEnabled}
                       onCheckedChange={(checked) => {
-                        setSocialSearchEnabled(!!checked);
-                        if (checked) {
-                          toast({
-                            title: "Busca social ativada",
-                            description: "Suas pesquisas agora incluirão discussões e opiniões de redes sociais",
-                            duration: 3000,
-                          });
-                        }
+                        setDeepSearchEnabled(!!checked);
                       }}
-                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-green-500 data-[state=checked]:to-green-600 data-[state=unchecked]:bg-gray-200 dark:data-[state=unchecked]:bg-gray-700"
+                      className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-orange-500 data-[state=checked]:to-orange-600 data-[state=unchecked]:bg-gray-200 dark:data-[state=unchecked]:bg-gray-700 scale-75"
                     />
+                    <span className="text-[10px] text-gray-500">Profunda</span>
                   </div>
+                  
+                  <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1.5 italic">
+                    A busca profunda analisa fontes extensas e realiza conexões complexas entre diferentes conteúdos.
+                  </p>
+                </div>
+                
+                {/* Botões de ação com aparência mais moderna */}
+                <div className="flex justify-end items-center gap-2 mt-5 relative z-10">
+                  <Button
+                    variant="outline" 
+                    size="sm"
+                    className="px-3 py-1 h-8 text-xs bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border-white/20 dark:border-gray-700/50 text-gray-700 dark:text-gray-300 hover:bg-white/70 dark:hover:bg-gray-700/70 transition-all duration-300 rounded-lg"
+                    onClick={() => setShowSearchModal(false)}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button 
+                    size="sm"
+                    className="px-3 py-1 h-8 text-xs bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white border-none shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-300 rounded-lg"
+                    onClick={() => {
+                      setShowSearchModal(false);
+                      
+                      let description = "Busca padrão será utilizada em suas pesquisas";
+                      
+                      // Construir mensagem com base nas opções selecionadas
+                      const enabledOptions = [];
+                      if (deepSearchEnabled) enabledOptions.push("Busca Profunda");
+                      if (globalSearchEnabled) enabledOptions.push("Web Global");
+                      if (academicSearchEnabled) enabledOptions.push("Acadêmico");
+                      if (socialSearchEnabled) enabledOptions.push("Social");
+                      
+                      if (enabledOptions.length > 0) {
+                        description = `Fontes ativadas: ${enabledOptions.join(", ")}`;
+                      }
+                      
+                      toast({
+                        title: "Configurações salvas",
+                        description: description,
+                        duration: 3000,
+                      });
+                    }}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span>Aplicar</span>
+                      <div className="h-3.5 w-3.5 rounded-full bg-white/20 flex items-center justify-center">
+                        <ArrowRight className="h-2 w-2" />
+                      </div>
+                    </div>
+                  </Button>
                 </div>
               </div>
-            </div>
-            
-            {/* Profundidade da Busca com um slider visual */}
-            <div className="mt-6 p-4 bg-white/50 dark:bg-gray-800/30 backdrop-blur-md rounded-xl border border-gray-100/60 dark:border-gray-700/30 relative z-10">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-orange-500" />
-                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">Profundidade da Busca</span>
-                </div>
-                <div className="px-2 py-1 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-xs font-medium">
-                  {deepSearchEnabled ? "Avançada" : "Padrão"}
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-4">
-                <span className="text-xs text-gray-500">Padrão</span>
-                <Switch 
-                  checked={deepSearchEnabled}
-                  onCheckedChange={(checked) => {
-                    setDeepSearchEnabled(!!checked);
-                  }}
-                  className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-orange-500 data-[state=checked]:to-orange-600 data-[state=unchecked]:bg-gray-200 dark:data-[state=unchecked]:bg-gray-700"
-                />
-                <span className="text-xs text-gray-500">Profunda</span>
-              </div>
-              
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 italic">
-                A busca profunda analisa fontes extensas e realiza conexões complexas entre diferentes conteúdos.
-              </p>
-            </div>
-            
-            {/* Botões de ação com aparência mais moderna */}
-            <div className="flex justify-end items-center gap-3 mt-6 relative z-10">
-              <Button
-                variant="outline" 
-                className="px-4 py-2 text-sm bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border-white/20 dark:border-gray-700/50 text-gray-700 dark:text-gray-300 hover:bg-white/70 dark:hover:bg-gray-700/70 transition-all duration-300 rounded-lg"
-                onClick={() => setShowSearchModal(false)}
-              >
-                Cancelar
-              </Button>
-              <Button 
-                className="px-4 py-2 text-sm bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white border-none shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-300 rounded-lg"
-                onClick={() => {
-                  setShowSearchModal(false);
-                  
-                  let description = "Busca padrão será utilizada em suas pesquisas";
-                  
-                  // Construir mensagem com base nas opções selecionadas
-                  const enabledOptions = [];
-                  if (deepSearchEnabled) enabledOptions.push("Busca Profunda");
-                  if (globalSearchEnabled) enabledOptions.push("Web Global");
-                  if (academicSearchEnabled) enabledOptions.push("Acadêmico");
-                  if (socialSearchEnabled) enabledOptions.push("Social");
-                  
-                  if (enabledOptions.length > 0) {
-                    description = `Fontes ativadas: ${enabledOptions.join(", ")}`;
-                  }
-                  
-                  toast({
-                    title: "Configurações salvas",
-                    description: description,
-                    duration: 3000,
-                  });
-                }}
-              >
-                <div className="flex items-center gap-2">
-                  <span>Aplicar Configurações</span>
-                  <div className="h-4 w-4 rounded-full bg-white/20 flex items-center justify-center">
-                    <ArrowRight className="h-2.5 w-2.5" />
-                  </div>
-                </div>
-              </Button>
-            </div>
+            </ScrollArea>
           </div>
         </div>
       )}
