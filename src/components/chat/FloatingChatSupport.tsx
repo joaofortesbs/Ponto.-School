@@ -2163,30 +2163,67 @@ Exemplo de formato da resposta:
                         </button>
                         
                         {message.showExportOptions && (
-                          <div className="absolute z-50 bottom-full right-0 mb-1 w-28 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
+                          <div className="absolute z-50 bottom-full right-0 mb-1 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
                             <button 
-                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // Funcionalidade de exportar (seria implementada futuramente)
+                                // Exportar como arquivo de texto (.txt)
+                                const blob = new Blob([message.content], { type: 'text/plain' });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = 'mensagem_suporte.txt';
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                                URL.revokeObjectURL(url);
+                                
                                 setMessages(prevMessages => 
                                   prevMessages.map(msg => ({...msg, showExportOptions: false}))
                                 );
                               }}
                             >
-                              Exportar
+                              <FileText className="h-3.5 w-3.5 mr-2 text-blue-500" />
+                              Exportar como TXT
                             </button>
                             <button 
-                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // Funcionalidade de compartilhar (seria implementada futuramente)
+                                // Exportar como PDF (simulação - na implementação real seria usado uma biblioteca como jsPDF)
+                                toast({
+                                  title: "Exportando como PDF",
+                                  description: "Função será implementada em breve.",
+                                  duration: 3000,
+                                });
+                                
                                 setMessages(prevMessages => 
                                   prevMessages.map(msg => ({...msg, showExportOptions: false}))
                                 );
                               }}
                             >
-                              Compartilhar
+                              <File className="h-3.5 w-3.5 mr-2 text-red-500" />
+                              Exportar como PDF
+                            </button>
+                            <button 
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Exportar para Word (simulação - na implementação real seria usado uma biblioteca específica)
+                                toast({
+                                  title: "Exportando para Word",
+                                  description: "Função será implementada em breve.",
+                                  duration: 3000,
+                                });
+                                
+                                setMessages(prevMessages => 
+                                  prevMessages.map(msg => ({...msg, showExportOptions: false}))
+                                );
+                              }}
+                            >
+                              <File className="h-3.5 w-3.5 mr-2 text-blue-600" />
+                              Exportar para Word
                             </button>
                           </div>
                         )}
