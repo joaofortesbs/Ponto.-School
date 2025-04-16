@@ -388,6 +388,10 @@ const FloatingChatSupport: React.FC = () => {
   const [studyContent, setStudyContent] = useState("");
   const [generatedPrompts, setGeneratedPrompts] = useState<string[]>([]);
   const [isGeneratingPrompts, setIsGeneratingPrompts] = useState(false);
+  
+  // Estado para controlar modal de busca profunda
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [deepSearchEnabled, setDeepSearchEnabled] = useState(false);
 
   // Funções para lidar com feedback das mensagens
   const handleMessageFeedback = (messageId: number, feedback: 'positive' | 'negative') => {
@@ -2375,6 +2379,80 @@ Exemplo de formato da resposta:
         </div>
       )}
 
+      {/* Modal de Busca Profunda */}
+      {showSearchModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowSearchModal(false)}></div>
+          <div className="relative bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 p-4 shadow-xl w-[90%] max-w-md animate-fadeIn">
+            <div className="flex justify-between items-center mb-3">
+              <h4 className="text-sm font-bold flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400">
+                <Search className="h-4 w-4" />
+                Busca Profunda
+              </h4>
+              <Button 
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={() => setShowSearchModal(false)}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+
+            <div className="flex items-center justify-center bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg mb-4">
+              <div className="flex flex-col items-center">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center mx-auto mb-3">
+                  <Globe className="h-6 w-6 text-white" />
+                </div>
+                <p className="text-sm font-medium mb-2">Ativar Busca Profunda</p>
+                <Switch
+                  checked={deepSearchEnabled}
+                  onCheckedChange={(checked) => {
+                    setDeepSearchEnabled(checked);
+                    if (checked) {
+                      toast({
+                        title: "Busca Profunda ativada",
+                        description: "Suas pesquisas agora serão realizadas com mais profundidade e precisão",
+                        duration: 3000,
+                      });
+                    }
+                  }}
+                />
+              </div>
+            </div>
+            
+            <p className="text-xs text-gray-500 dark:text-gray-400 text-center mb-3">
+              A Busca Profunda permite encontrar informações mais detalhadas e específicas, analisando fontes mais extensas e complexas.
+            </p>
+            
+            <div className="flex justify-end gap-2 mt-3">
+              <Button
+                size="sm"
+                variant="outline" 
+                className="text-xs border-orange-200 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                onClick={() => setShowSearchModal(false)}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                size="sm" 
+                className="text-xs bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white border-none"
+                onClick={() => {
+                  setShowSearchModal(false);
+                  toast({
+                    title: "Configurações salvas",
+                    description: deepSearchEnabled ? "Busca Profunda está ativa para suas próximas pesquisas" : "Busca padrão será utilizada em suas pesquisas",
+                    duration: 3000,
+                  });
+                }}
+              >
+                Salvar configurações
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Modal de Sugestão de Prompt */}
       {showPromptSuggestionModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
@@ -2588,6 +2666,25 @@ Exemplo de formato da resposta:
             >
               <Bot className="h-3 w-3 text-blue-500" />
               <span className="text-gray-700 dark:text-gray-300">Agente IA</span>
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs p-2 rounded-full bg-white/80 dark:bg-gray-800/80 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow flex items-center gap-1"
+              onClick={() => {
+                // Abre o modal de busca profunda
+                setShowSearchModal(true);
+                
+                // Desativa outros modais para evitar conflitos
+                setIsShowingAISettings(false);
+                setShowWebSearchOptions(false);
+                setShowPromptSuggestionModal(false);
+                setIsImprovingPrompt(false);
+              }}
+            >
+              <Search className="h-3 w-3 text-indigo-500" />
+              <span className="text-gray-700 dark:text-gray-300">Busca</span>
             </Button>
           </div>
           
