@@ -386,6 +386,7 @@ const FloatingChatSupport: React.FC = () => {
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [deepSearchEnabled, setDeepSearchEnabled] = useState(false);
   const [globalSearchEnabled, setGlobalSearchEnabled] = useState(false);
+  const [academicSearchEnabled, setAcademicSearchEnabled] = useState(false);
 
   // Funções para lidar com feedback das mensagens
   const handleMessageFeedback = (messageId: number, feedback: 'positive' | 'negative') => {
@@ -2322,6 +2323,40 @@ Exemplo de formato da resposta:
                 </div>
               </div>
             </div>
+
+            {/* Opção de pesquisa acadêmica */}
+            <div className="mb-2">
+              <h4 className="text-sm font-bold text-purple-600 dark:text-purple-400 ml-1 mb-1 flex items-center gap-1">
+                <BookOpen className="h-4 w-4" />
+                Acadêmico
+              </h4>
+              <div className="flex items-center gap-2 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg mb-4">
+                <div className="flex items-center flex-1">
+                  <Checkbox 
+                    id="academic-search" 
+                    checked={academicSearchEnabled}
+                    onCheckedChange={(checked) => {
+                      setAcademicSearchEnabled(!!checked);
+                      if (checked) {
+                        toast({
+                          title: "Busca acadêmica ativada",
+                          description: "Suas pesquisas agora incluirão artigos e fóruns acadêmicos",
+                          duration: 3000,
+                        });
+                      }
+                    }}
+                    className="data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
+                  />
+                  <label 
+                    htmlFor="academic-search" 
+                    className="ml-2 text-sm font-medium flex items-center gap-1 cursor-pointer"
+                  >
+                    <FileText className="h-3.5 w-3.5 text-purple-600" />
+                    Pesquisar artigos e fóruns acadêmicos
+                  </label>
+                </div>
+              </div>
+            </div>
             
             <p className="text-xs text-gray-500 dark:text-gray-400 text-center mb-3">
               A Busca Profunda permite encontrar informações mais detalhadas e específicas, analisando fontes mais extensas e complexas.
@@ -2343,12 +2378,15 @@ Exemplo de formato da resposta:
                   setShowSearchModal(false);
                   
                   let description = "Busca padrão será utilizada em suas pesquisas";
-                  if (deepSearchEnabled && globalSearchEnabled) {
-                    description = "Busca Profunda e pesquisa global estão ativas para suas próximas pesquisas";
-                  } else if (deepSearchEnabled) {
-                    description = "Busca Profunda está ativa para suas próximas pesquisas";
-                  } else if (globalSearchEnabled) {
-                    description = "Pesquisa na internet global está ativa para suas próximas pesquisas";
+                  
+                  // Construir mensagem com base nas opções selecionadas
+                  const enabledOptions = [];
+                  if (deepSearchEnabled) enabledOptions.push("Busca Profunda");
+                  if (globalSearchEnabled) enabledOptions.push("pesquisa na internet global");
+                  if (academicSearchEnabled) enabledOptions.push("pesquisa acadêmica");
+                  
+                  if (enabledOptions.length > 0) {
+                    description = `${enabledOptions.join(", ")} ${enabledOptions.length > 1 ? 'estão ativas' : 'está ativa'} para suas próximas pesquisas`;
                   }
                   
                   toast({
