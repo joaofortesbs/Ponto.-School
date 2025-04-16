@@ -83,6 +83,7 @@ interface ChatMessage {
   isEdited?: boolean; // Adicione a propriedade isEdited
   showExportOptions?: boolean; // Controla a visibilidade do popup de exportação principal
   showExportFormats?: boolean; // Controla a visibilidade do popup de formatos de exportação
+  showShareOptions?: boolean; // Controla a visibilidade do popup de opções de compartilhamento
 }
 
 interface Ticket {
@@ -652,7 +653,8 @@ const FloatingChatSupport: React.FC = () => {
         prevMessages.map(msg => ({
           ...msg, 
           showExportOptions: false,
-          showExportFormats: false
+          showExportFormats: false,
+          showShareOptions: false
         }))
       );
     };
@@ -2194,9 +2196,19 @@ Exemplo de formato da resposta:
                               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // Funcionalidade de compartilhar (seria implementada futuramente)
+                                // Mostrar o menu de opções de compartilhamento
                                 setMessages(prevMessages => 
-                                  prevMessages.map(msg => ({...msg, showExportOptions: false, showExportFormats: false}))
+                                  prevMessages.map(msg => {
+                                    if (msg.id === message.id) {
+                                      return { 
+                                        ...msg, 
+                                        showExportOptions: false, 
+                                        showExportFormats: false, 
+                                        showShareOptions: true 
+                                      };
+                                    }
+                                    return msg;
+                                  })
                                 );
                               }}
                             >
@@ -2290,6 +2302,120 @@ Exemplo de formato da resposta:
                             >
                               <File className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
                               Word (.docx)
+                            </button>
+                          </div>
+                        )}
+                        
+                        {/* Menu secundário com opções de compartilhamento */}
+                        {message.showShareOptions && (
+                          <div className="absolute z-50 bottom-full right-0 mb-1 w-64 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
+                            <button 
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Gerar URL compartilhável (simulado)
+                                const fakeShareableUrl = `https://ponto.school/share/msg/${message.id}`;
+                                
+                                // Copiar para a área de transferência
+                                navigator.clipboard.writeText(fakeShareableUrl);
+                                
+                                setMessages(prevMessages => 
+                                  prevMessages.map(msg => ({...msg, showExportOptions: false, showExportFormats: false, showShareOptions: false}))
+                                );
+                                
+                                toast({
+                                  title: "Link copiado!",
+                                  description: "Link compartilhável copiado para a área de transferência",
+                                  duration: 3000,
+                                });
+                              }}
+                            >
+                              <Globe className="h-3.5 w-3.5 mr-2 text-blue-500" />
+                              Copiar Link Compartilhável
+                            </button>
+                            
+                            <button 
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Compartilhar por e-mail
+                                const subject = encodeURIComponent("Material compartilhado da Ponto.School");
+                                const body = encodeURIComponent(`Confira este conteúdo da Ponto.School:\n\n${message.content}`);
+                                window.location.href = `mailto:?subject=${subject}&body=${body}`;
+                                
+                                setMessages(prevMessages => 
+                                  prevMessages.map(msg => ({...msg, showExportOptions: false, showExportFormats: false, showShareOptions: false}))
+                                );
+                                
+                                toast({
+                                  title: "E-mail sendo preparado",
+                                  description: "Seu cliente de e-mail será aberto para compartilhar o conteúdo",
+                                  duration: 3000,
+                                });
+                              }}
+                            >
+                              <FileText className="h-3.5 w-3.5 mr-2 text-orange-500" />
+                              Compartilhar por E-mail
+                            </button>
+                            
+                            <button 
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Compartilhar no Microsoft Teams (simulado)
+                                setMessages(prevMessages => 
+                                  prevMessages.map(msg => ({...msg, showExportOptions: false, showExportFormats: false, showShareOptions: false}))
+                                );
+                                
+                                toast({
+                                  title: "Compartilhando no Teams",
+                                  description: "Abrindo Microsoft Teams para compartilhar o conteúdo",
+                                  duration: 3000,
+                                });
+                              }}
+                            >
+                              <MessageSquare className="h-3.5 w-3.5 mr-2 text-blue-600" />
+                              Compartilhar no Microsoft Teams
+                            </button>
+                            
+                            <button 
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Gerar código QR (simulado)
+                                setMessages(prevMessages => 
+                                  prevMessages.map(msg => ({...msg, showExportOptions: false, showExportFormats: false, showShareOptions: false}))
+                                );
+                                
+                                toast({
+                                  title: "Código QR gerado",
+                                  description: "O código QR pode ser compartilhado com os alunos",
+                                  duration: 3000,
+                                });
+                              }}
+                            >
+                              <Image className="h-3.5 w-3.5 mr-2 text-purple-500" />
+                              Gerar Código QR da Mensagem
+                            </button>
+                            
+                            <button 
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Compartilhar com outros usuários da Ponto.School (simulado)
+                                setMessages(prevMessages => 
+                                  prevMessages.map(msg => ({...msg, showExportOptions: false, showExportFormats: false, showShareOptions: false}))
+                                );
+                                
+                                toast({
+                                  title: "Compartilhando na plataforma",
+                                  description: "Conteúdo disponível para outros usuários da Ponto.School",
+                                  duration: 3000,
+                                });
+                              }}
+                            >
+                              <Users className="h-3.5 w-3.5 mr-2 text-green-500" />
+                              Compartilhar na Ponto.School
                             </button>
                           </div>
                         )}
