@@ -48,18 +48,9 @@ const ChatIAInterface = () => {
   
   // Função para compartilhar mensagem
   const handleShareMessage = (content: string) => {
-    if (navigator.share) {
-      navigator.share({
-        title: 'Mensagem da Epictus IA',
-        text: content,
-      })
-      .then(() => setShareNotification("Mensagem compartilhada com sucesso!"))
-      .catch((error) => console.log('Erro ao compartilhar:', error));
-    } else {
-      // Fallback para navegadores que não suportam a API Web Share
-      navigator.clipboard.writeText(content);
-      setShareNotification("Link copiado para a área de transferência!");
-    }
+    // Copiar o conteúdo para a área de transferência em vez de usar o compartilhamento nativo
+    navigator.clipboard.writeText(content);
+    setShareNotification("Mensagem copiada para a área de transferência!");
     
     // Limpar a notificação após 3 segundos
     setTimeout(() => {
