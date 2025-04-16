@@ -398,6 +398,11 @@ const FloatingChatSupport: React.FC = () => {
     respondMessages: false,
     makeTransfers: false
   });
+  
+  // Estado para controlar modal de personalização do Epictus IA
+  const [showEpictusPersonalizeModal, setShowEpictusPersonalizeModal] = useState(false);
+  const [epictusNickname, setEpictusNickname] = useState(userName || "Usuário");
+  const [tempNickname, setTempNickname] = useState("");
 
   // Funções para lidar com feedback das mensagens
   const handleMessageFeedback = (messageId: number, feedback: 'positive' | 'negative') => {
@@ -696,6 +701,8 @@ const FloatingChatSupport: React.FC = () => {
 
     const firstName = getFirstName();
     setUserName(firstName);
+    // Inicializa o nickname do Epictus com o nome do usuário
+    setEpictusNickname(firstName);
 
     // Gerar uma ID de sessão baseada no usuário atual ou criar uma nova
     const newSessionId = userName || 'anonymous-' + Date.now().toString();
@@ -1421,7 +1428,7 @@ Exemplo de formato da resposta:
       <div className="p-3 flex flex-col items-start">
         <div className="mb-3 w-full">
           <h2 className="text-xl font-bold text-white mb-1 bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent truncate">
-            E AÍ, {userName.split(/[_\s]/)[0].toUpperCase()} 👋
+            E AÍ, {epictusNickname.split(/[_\s]/)[0].toUpperCase()} 👋
           </h2>
           <p className="text-white/70 text-sm">Bora trocar uma ideia? Como posso te ajudar hoje?</p>
         </div>
@@ -2254,6 +2261,181 @@ Exemplo de formato da resposta:
                   <span className="text-xs font-medium">{enableNotificationSounds ? 'Sons ativados' : 'Sons desativados'}</span>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Personalização do Epictus IA */}
+      {showEpictusPersonalizeModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-md" onClick={() => setShowEpictusPersonalizeModal(false)}></div>
+          <div className="relative bg-gradient-to-br from-white/90 to-gray-50/80 dark:from-gray-900/90 dark:to-gray-950/80 backdrop-blur-xl rounded-2xl border border-white/20 dark:border-gray-700/30 p-4 shadow-2xl w-[85%] max-w-md max-h-[480px] animate-fadeIn flex flex-col">
+            {/* Elementos decorativos de fundo */}
+            <div className="absolute -right-20 -top-20 w-60 h-60 bg-orange-500/10 rounded-full blur-3xl"></div>
+            <div className="absolute -left-20 -bottom-20 w-60 h-60 bg-indigo-500/10 rounded-full blur-3xl"></div>
+            <div className="absolute right-1/4 bottom-0 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl"></div>
+            
+            {/* Header com design futurista */}
+            <div className="flex justify-between items-center mb-4 relative z-10 sticky top-0 bg-gradient-to-b from-white/80 to-transparent dark:from-gray-900/80 dark:to-transparent pb-2">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center h-8 w-8 rounded-xl bg-gradient-to-br from-orange-600 to-amber-500 shadow-lg shadow-orange-500/20">
+                  <User className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-600 to-amber-500 dark:from-orange-400 dark:to-amber-300">
+                    Personalizar Epictus IA
+                  </h3>
+                  <p className="text-[10px] text-gray-500 dark:text-gray-400">Configure sua experiência personalizada</p>
+                </div>
+              </div>
+              <Button 
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 p-0 rounded-full bg-white/30 dark:bg-gray-800/30 backdrop-blur-md hover:bg-white/50 dark:hover:bg-gray-700/50 transition-all duration-200"
+                onClick={() => setShowEpictusPersonalizeModal(false)}
+              >
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+
+            {/* Conteúdo principal */}
+            <ScrollArea className="h-[350px] pr-2 relative z-10">
+              <div className="flex flex-col items-center mb-6">
+                <div className="relative mb-4">
+                  <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-gradient p-1 bg-white dark:bg-gray-800">
+                    <div className="w-full h-full rounded-full overflow-hidden">
+                      <Avatar className="w-full h-full">
+                        <AvatarImage 
+                          src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&mouth=smile&eyes=happy"
+                          alt="Avatar Epictus IA"
+                          className="w-full h-full object-cover"
+                        />
+                        <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] text-white">
+                          IA
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-0 right-0">
+                    <div className="bg-white dark:bg-gray-800 rounded-full p-1 shadow-md border border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                      <Edit className="h-4 w-4 text-orange-500" />
+                    </div>
+                  </div>
+                </div>
+                
+                <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-1">Epictus IA</h4>
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center max-w-sm mb-6">
+                  Seu assistente de suporte inteligente, personalizado para atender às suas necessidades.
+                </p>
+              </div>
+              
+              <div className="space-y-6">
+                <div className="bg-white/70 dark:bg-gray-800/40 p-4 rounded-xl border border-gray-100/80 dark:border-gray-700/30 backdrop-filter backdrop-blur-sm shadow-sm">
+                  <h5 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-1.5">
+                    <MessageSquare className="h-4 w-4 text-orange-500" />
+                    Como o Epictus IA deveria chamar você?
+                  </h5>
+                  
+                  <div className="space-y-3">
+                    <Input
+                      value={tempNickname || epictusNickname}
+                      onChange={(e) => setTempNickname(e.target.value)}
+                      placeholder="Digite seu nome ou apelido preferido"
+                      className="bg-white/80 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 focus-visible:ring-orange-500"
+                    />
+                    
+                    <p className="text-xs text-gray-500 dark:text-gray-400 italic">
+                      Este nome será usado pelo Epictus IA para se referir a você durante as conversas.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="bg-white/70 dark:bg-gray-800/40 p-4 rounded-xl border border-gray-100/80 dark:border-gray-700/30 backdrop-filter backdrop-blur-sm shadow-sm">
+                  <h5 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-1.5">
+                    <Zap className="h-4 w-4 text-orange-500" />
+                    Personalidade do Epictus IA
+                  </h5>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="border border-gray-200 dark:border-gray-700 bg-white/60 dark:bg-gray-900/30 p-3 rounded-lg cursor-pointer hover:border-orange-300 dark:hover:border-orange-700 transition-colors">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-4 h-4 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                        </div>
+                        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Amigável</span>
+                      </div>
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400">Conversação casual e acolhedora</p>
+                    </div>
+                    
+                    <div className="border border-gray-200 dark:border-gray-700 bg-white/60 dark:bg-gray-900/30 p-3 rounded-lg cursor-pointer hover:border-orange-300 dark:hover:border-orange-700 transition-colors">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                          <BookOpen className="h-3 w-3 text-blue-500" />
+                        </div>
+                        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Técnico</span>
+                      </div>
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400">Comunicação formal e detalhada</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-white/70 dark:bg-gray-800/40 p-4 rounded-xl border border-gray-100/80 dark:border-gray-700/30 backdrop-filter backdrop-blur-sm shadow-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <h5 className="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
+                      <Bell className="h-4 w-4 text-orange-500" />
+                      Notificações
+                    </h5>
+                    <Switch />
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Receba lembretes e sugestões personalizados do Epictus IA.
+                  </p>
+                </div>
+              </div>
+            </ScrollArea>
+            
+            {/* Botões de ação */}
+            <div className="flex justify-end items-center gap-2 mt-3 pb-1 relative z-10">
+              <Button
+                variant="outline" 
+                size="sm"
+                className="px-3 py-1 h-8 text-xs bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border-white/20 dark:border-gray-700/50 text-gray-700 dark:text-gray-300 hover:bg-white/70 dark:hover:bg-gray-700/70 transition-all duration-300 rounded-lg"
+                onClick={() => setShowEpictusPersonalizeModal(false)}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                size="sm"
+                className="px-3 py-1 h-8 text-xs bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white border-none shadow-lg shadow-orange-500/20 hover:shadow-xl hover:shadow-orange-500/30 transition-all duration-300 rounded-lg"
+                onClick={() => {
+                  if (tempNickname.trim()) {
+                    setEpictusNickname(tempNickname.trim());
+                    setTempNickname("");
+                  }
+                  setShowEpictusPersonalizeModal(false);
+                  
+                  // Adiciona uma mensagem de confirmação ao chat
+                  setMessages(prevMessages => [
+                    ...prevMessages, 
+                    {
+                      id: Date.now(),
+                      content: `Perfeito! A partir de agora vou te chamar de ${tempNickname.trim() || epictusNickname}. Como posso te ajudar hoje?`,
+                      sender: "assistant",
+                      timestamp: new Date()
+                    }
+                  ]);
+                  
+                  // Notificação visual
+                  toast({
+                    title: "Personalização salva",
+                    description: `O Epictus IA agora irá te chamar de ${tempNickname.trim() || epictusNickname}.`,
+                    duration: 3000,
+                  });
+                }}
+              >
+                Salvar preferências
+              </Button>
             </div>
           </div>
         </div>
@@ -3521,6 +3703,21 @@ Exemplo de formato da resposta:
               </div>
               
               <div className="flex items-center gap-1">
+                <div 
+                  className="h-8 w-8 rounded-full border-2 border-white/30 hover:border-white/70 cursor-pointer overflow-hidden transition-all duration-300 transform hover:scale-110"
+                  onClick={() => setShowEpictusPersonalizeModal(true)}
+                  title="Personalizar Epictus IA"
+                >
+                  <Avatar>
+                    <AvatarImage 
+                      src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&mouth=smile&eyes=happy"
+                      alt="Personalizar IA"
+                    />
+                    <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] text-white">
+                      <User className="h-4 w-4" />
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -3635,6 +3832,13 @@ Exemplo de formato da resposta:
 
         .animate-bounce-subtle {
           animation: bounce-subtle 2s ease-in-out infinite;
+        }
+        
+        .border-gradient {
+          position: relative;
+          background-clip: padding-box;
+          background-origin: border-box;
+          background-image: linear-gradient(to right, #FF6B00, #FF8C40);
         }
         
         @keyframes pulse-subtle {
