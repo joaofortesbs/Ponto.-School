@@ -2834,68 +2834,72 @@ Exemplo de formato da resposta:
                 </h5>
                 
                 <div className="grid grid-cols-1 gap-2">
-                  <div className="flex items-center p-2 rounded-lg bg-white/70 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-700/40 backdrop-filter backdrop-blur-sm transition-all hover:shadow-md hover:bg-white dark:hover:bg-gray-800/60">
+                  <div className={`flex items-center p-2 rounded-lg bg-white/70 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-700/40 backdrop-filter backdrop-blur-sm transition-all ${agentIAEnabled ? "hover:shadow-md hover:bg-white dark:hover:bg-gray-800/60" : "opacity-60"}`}>
                     <Checkbox 
                       id="adjust-settings" 
                       checked={agentSettings.adjustSettings}
+                      disabled={!agentIAEnabled}
                       onCheckedChange={(checked) => 
                         setAgentSettings(prev => ({...prev, adjustSettings: !!checked}))}
-                      className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 mr-2 h-3.5 w-3.5"
+                      className={`data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 mr-2 h-3.5 w-3.5 ${!agentIAEnabled && "cursor-not-allowed"}`}
                     />
                     <label 
-                      htmlFor="adjust-settings" 
-                      className="flex flex-col flex-1 cursor-pointer"
+                      htmlFor={agentIAEnabled ? "adjust-settings" : undefined}
+                      className={`flex flex-col flex-1 ${agentIAEnabled ? "cursor-pointer" : "cursor-not-allowed"}`}
                     >
                       <span className="text-xs font-medium text-gray-800 dark:text-gray-200">Configurações do usuário</span>
                       <span className="text-[10px] text-gray-500 dark:text-gray-400">Ajusta suas preferências automaticamente</span>
                     </label>
                   </div>
                   
-                  <div className="flex items-center p-2 rounded-lg bg-white/70 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-700/40 backdrop-filter backdrop-blur-sm transition-all hover:shadow-md hover:bg-white dark:hover:bg-gray-800/60">
+                  <div className={`flex items-center p-2 rounded-lg bg-white/70 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-700/40 backdrop-filter backdrop-blur-sm transition-all ${agentIAEnabled ? "hover:shadow-md hover:bg-white dark:hover:bg-gray-800/60" : "opacity-60"}`}>
                     <Checkbox 
                       id="access-pages" 
                       checked={agentSettings.accessPages}
+                      disabled={!agentIAEnabled}
                       onCheckedChange={(checked) => 
                         setAgentSettings(prev => ({...prev, accessPages: !!checked}))}
-                      className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 mr-2 h-3.5 w-3.5"
+                      className={`data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 mr-2 h-3.5 w-3.5 ${!agentIAEnabled && "cursor-not-allowed"}`}
                     />
                     <label 
-                      htmlFor="access-pages" 
-                      className="flex flex-col flex-1 cursor-pointer"
+                      htmlFor={agentIAEnabled ? "access-pages" : undefined}
+                      className={`flex flex-col flex-1 ${agentIAEnabled ? "cursor-pointer" : "cursor-not-allowed"}`}
                     >
                       <span className="text-xs font-medium text-gray-800 dark:text-gray-200">Navegação assistida</span>
                       <span className="text-[10px] text-gray-500 dark:text-gray-400">Acessa seções e páginas da plataforma</span>
                     </label>
                   </div>
                   
-                  <div className="flex items-center p-2 rounded-lg bg-white/70 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-700/40 backdrop-filter backdrop-blur-sm transition-all hover:shadow-md hover:bg-white dark:hover:bg-gray-800/60">
+                  <div className={`flex items-center p-2 rounded-lg bg-white/70 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-700/40 backdrop-filter backdrop-blur-sm transition-all ${agentIAEnabled ? "hover:shadow-md hover:bg-white dark:hover:bg-gray-800/60" : "opacity-60"}`}>
                     <Checkbox 
                       id="respond-messages" 
                       checked={agentSettings.respondMessages}
+                      disabled={!agentIAEnabled}
                       onCheckedChange={(checked) => 
                         setAgentSettings(prev => ({...prev, respondMessages: !!checked}))}
-                      className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 mr-2 h-3.5 w-3.5"
+                      className={`data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 mr-2 h-3.5 w-3.5 ${!agentIAEnabled && "cursor-not-allowed"}`}
                     />
                     <label 
-                      htmlFor="respond-messages" 
-                      className="flex flex-col flex-1 cursor-pointer"
+                      htmlFor={agentIAEnabled ? "respond-messages" : undefined}
+                      className={`flex flex-col flex-1 ${agentIAEnabled ? "cursor-pointer" : "cursor-not-allowed"}`}
                     >
                       <span className="text-xs font-medium text-gray-800 dark:text-gray-200">Comunicação autônoma</span>
                       <span className="text-[10px] text-gray-500 dark:text-gray-400">Responde notificações e mensagens</span>
                     </label>
                   </div>
                   
-                  <div className="flex items-center p-2 rounded-lg bg-white/70 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-700/40 backdrop-filter backdrop-blur-sm transition-all hover:shadow-md hover:bg-white dark:hover:bg-gray-800/60">
+                  <div className={`flex items-center p-2 rounded-lg bg-white/70 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-700/40 backdrop-filter backdrop-blur-sm transition-all ${agentIAEnabled ? "hover:shadow-md hover:bg-white dark:hover:bg-gray-800/60" : "opacity-60"}`}>
                     <Checkbox 
                       id="make-transfers" 
                       checked={agentSettings.makeTransfers}
+                      disabled={!agentIAEnabled}
                       onCheckedChange={(checked) => 
                         setAgentSettings(prev => ({...prev, makeTransfers: !!checked}))}
-                      className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 mr-2 h-3.5 w-3.5"
+                      className={`data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 mr-2 h-3.5 w-3.5 ${!agentIAEnabled && "cursor-not-allowed"}`}
                     />
                     <label 
-                      htmlFor="make-transfers" 
-                      className="flex flex-col flex-1 cursor-pointer"
+                      htmlFor={agentIAEnabled ? "make-transfers" : undefined}
+                      className={`flex flex-col flex-1 ${agentIAEnabled ? "cursor-pointer" : "cursor-not-allowed"}`}
                     >
                       <span className="text-xs font-medium text-gray-800 dark:text-gray-200">Transações financeiras</span>
                       <span className="text-[10px] text-gray-500 dark:text-gray-400">Realiza transferências e recargas</span>
