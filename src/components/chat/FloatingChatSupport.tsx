@@ -2262,118 +2262,149 @@ Exemplo de formato da resposta:
       {/* Modal do Agente IA */}
       {showAgentModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowAgentModal(false)}></div>
-          <div className="relative bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 p-4 shadow-xl w-[90%] max-w-md animate-fadeIn">
-            <div className="flex justify-between items-center mb-3">
-              <h4 className="text-sm font-bold flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
-                <Bot className="h-4 w-4" />
-                Agente IA
-              </h4>
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-md" onClick={() => setShowAgentModal(false)}></div>
+          <div className="relative bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-gray-900/95 dark:to-gray-800/95 backdrop-blur-xl rounded-2xl border border-blue-200/50 dark:border-blue-500/20 p-6 shadow-2xl w-[90%] max-w-md animate-fadeIn overflow-hidden">
+            {/* Elementos decorativos de fundo */}
+            <div className="absolute -right-20 -top-20 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl"></div>
+            <div className="absolute -left-20 -bottom-20 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl"></div>
+            
+            {/* Header com design modernizado */}
+            <div className="flex justify-between items-center mb-6 relative z-10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                  <Bot className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h4 className="text-base font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1.5">
+                    Agente IA
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">Beta</span>
+                  </h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Assistente inteligente avançado</p>
+                </div>
+              </div>
               <Button 
                 variant="ghost"
                 size="sm"
-                className="h-6 w-6 p-0 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="h-8 w-8 p-0 rounded-full bg-white/80 dark:bg-gray-800/80 hover:bg-gray-100 dark:hover:bg-gray-700 shadow-sm transition-all duration-200"
                 onClick={() => setShowAgentModal(false)}
               >
-                <X className="h-3 w-3" />
+                <X className="h-4 w-4" />
               </Button>
             </div>
 
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium">Ativar Agente IA</span>
+            {/* Status e descrição */}
+            <div className="mb-6 relative z-10">
+              <div className="flex items-center justify-between p-4 mb-5 rounded-xl bg-blue-50/80 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30 backdrop-filter backdrop-blur-sm shadow-sm">
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">Ativar Agente IA</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">Assistência automática inteligente</span>
+                </div>
                 <Switch 
                   checked={agentIAEnabled} 
                   onCheckedChange={setAgentIAEnabled}
-                  className="data-[state=checked]:bg-blue-600"
+                  className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-blue-500 data-[state=checked]:to-indigo-600 scale-110"
                 />
               </div>
               
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                O Agente IA pode ajudar com tarefas mais complexas agindo proativamente conforme suas instruções.
-              </p>
+              <div className="p-4 rounded-xl bg-gradient-to-br from-gray-50/70 to-white/70 dark:from-gray-800/30 dark:to-gray-900/30 border border-gray-100/80 dark:border-gray-700/30 backdrop-filter backdrop-blur-sm shadow-sm mb-5">
+                <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                  O Agente IA utiliza tecnologia avançada para auxiliar proativamente em tarefas complexas, aprendendo com suas interações para oferecer suporte personalizado.
+                </p>
+              </div>
               
-              <div className="space-y-3">
-                <h5 className="text-sm font-medium">Permitir que o Agente IA faça:</h5>
+              <div className="space-y-4 relative z-10">
+                <h5 className="text-sm font-bold text-gray-700 dark:text-gray-200 flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                    <Settings className="h-3 w-3 text-white" />
+                  </div>
+                  Capacidades do Agente IA
+                </h5>
                 
-                <div className="flex items-start space-x-2">
-                  <Checkbox 
-                    id="adjust-settings" 
-                    checked={agentSettings.adjustSettings}
-                    onCheckedChange={(checked) => 
-                      setAgentSettings(prev => ({...prev, adjustSettings: !!checked}))}
-                    className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 mt-1"
-                  />
-                  <label 
-                    htmlFor="adjust-settings" 
-                    className="text-sm"
-                  >
-                    Ajuste as configurações do usuário
-                  </label>
-                </div>
-                
-                <div className="flex items-start space-x-2">
-                  <Checkbox 
-                    id="access-pages" 
-                    checked={agentSettings.accessPages}
-                    onCheckedChange={(checked) => 
-                      setAgentSettings(prev => ({...prev, accessPages: !!checked}))}
-                    className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 mt-1"
-                  />
-                  <label 
-                    htmlFor="access-pages" 
-                    className="text-sm"
-                  >
-                    Acesse seções e páginas da plataforma
-                  </label>
-                </div>
-                
-                <div className="flex items-start space-x-2">
-                  <Checkbox 
-                    id="respond-messages" 
-                    checked={agentSettings.respondMessages}
-                    onCheckedChange={(checked) => 
-                      setAgentSettings(prev => ({...prev, respondMessages: !!checked}))}
-                    className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 mt-1"
-                  />
-                  <label 
-                    htmlFor="respond-messages" 
-                    className="text-sm"
-                  >
-                    Responder Notificações e Mensagens
-                  </label>
-                </div>
-                
-                <div className="flex items-start space-x-2">
-                  <Checkbox 
-                    id="make-transfers" 
-                    checked={agentSettings.makeTransfers}
-                    onCheckedChange={(checked) => 
-                      setAgentSettings(prev => ({...prev, makeTransfers: !!checked}))}
-                    className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 mt-1"
-                  />
-                  <label 
-                    htmlFor="make-transfers" 
-                    className="text-sm"
-                  >
-                    Fazer transferências e recargas
-                  </label>
+                <div className="grid grid-cols-1 gap-3">
+                  <div className="flex items-center p-3 rounded-lg bg-white/70 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-700/40 backdrop-filter backdrop-blur-sm transition-all hover:shadow-md hover:bg-white dark:hover:bg-gray-800/60">
+                    <Checkbox 
+                      id="adjust-settings" 
+                      checked={agentSettings.adjustSettings}
+                      onCheckedChange={(checked) => 
+                        setAgentSettings(prev => ({...prev, adjustSettings: !!checked}))}
+                      className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 mr-3"
+                    />
+                    <label 
+                      htmlFor="adjust-settings" 
+                      className="flex flex-col flex-1 cursor-pointer"
+                    >
+                      <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Configurações do usuário</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Ajusta suas preferências automaticamente</span>
+                    </label>
+                  </div>
+                  
+                  <div className="flex items-center p-3 rounded-lg bg-white/70 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-700/40 backdrop-filter backdrop-blur-sm transition-all hover:shadow-md hover:bg-white dark:hover:bg-gray-800/60">
+                    <Checkbox 
+                      id="access-pages" 
+                      checked={agentSettings.accessPages}
+                      onCheckedChange={(checked) => 
+                        setAgentSettings(prev => ({...prev, accessPages: !!checked}))}
+                      className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 mr-3"
+                    />
+                    <label 
+                      htmlFor="access-pages" 
+                      className="flex flex-col flex-1 cursor-pointer"
+                    >
+                      <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Navegação assistida</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Acessa seções e páginas da plataforma</span>
+                    </label>
+                  </div>
+                  
+                  <div className="flex items-center p-3 rounded-lg bg-white/70 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-700/40 backdrop-filter backdrop-blur-sm transition-all hover:shadow-md hover:bg-white dark:hover:bg-gray-800/60">
+                    <Checkbox 
+                      id="respond-messages" 
+                      checked={agentSettings.respondMessages}
+                      onCheckedChange={(checked) => 
+                        setAgentSettings(prev => ({...prev, respondMessages: !!checked}))}
+                      className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 mr-3"
+                    />
+                    <label 
+                      htmlFor="respond-messages" 
+                      className="flex flex-col flex-1 cursor-pointer"
+                    >
+                      <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Comunicação autônoma</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Responde notificações e mensagens</span>
+                    </label>
+                  </div>
+                  
+                  <div className="flex items-center p-3 rounded-lg bg-white/70 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-700/40 backdrop-filter backdrop-blur-sm transition-all hover:shadow-md hover:bg-white dark:hover:bg-gray-800/60">
+                    <Checkbox 
+                      id="make-transfers" 
+                      checked={agentSettings.makeTransfers}
+                      onCheckedChange={(checked) => 
+                        setAgentSettings(prev => ({...prev, makeTransfers: !!checked}))}
+                      className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 mr-3"
+                    />
+                    <label 
+                      htmlFor="make-transfers" 
+                      className="flex flex-col flex-1 cursor-pointer"
+                    >
+                      <span className="text-sm font-medium text-gray-800 dark:text-gray-200">Transações financeiras</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Realiza transferências e recargas</span>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>
             
-            <div className="flex justify-end gap-2 mt-3">
+            {/* Botões de ação */}
+            <div className="flex justify-end gap-3 mt-3 relative z-10">
               <Button
                 size="sm"
                 variant="outline" 
-                className="text-xs border-orange-200 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                className="px-4 py-2 h-auto text-sm font-medium border-blue-200 dark:border-blue-800/50 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all"
                 onClick={() => setShowAgentModal(false)}
               >
                 Cancelar
               </Button>
               <Button 
                 size="sm" 
-                className="text-xs bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-none"
+                className="px-4 py-2 h-auto text-sm font-medium bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white border-none rounded-lg shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 transition-all"
                 onClick={() => {
                   setShowAgentModal(false);
                   
