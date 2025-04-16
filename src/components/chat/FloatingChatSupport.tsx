@@ -388,6 +388,16 @@ const FloatingChatSupport: React.FC = () => {
   const [globalSearchEnabled, setGlobalSearchEnabled] = useState(false);
   const [academicSearchEnabled, setAcademicSearchEnabled] = useState(false);
   const [socialSearchEnabled, setSocialSearchEnabled] = useState(false);
+  
+  // Estado para controlar modal do Agente IA
+  const [showAgentModal, setShowAgentModal] = useState(false);
+  const [agentIAEnabled, setAgentIAEnabled] = useState(false);
+  const [agentSettings, setAgentSettings] = useState({
+    adjustSettings: false,
+    accessPages: false,
+    respondMessages: false,
+    makeTransfers: false
+  });
 
   // Funções para lidar com feedback das mensagens
   const handleMessageFeedback = (messageId: number, feedback: 'positive' | 'negative') => {
@@ -2249,6 +2259,152 @@ Exemplo de formato da resposta:
         </div>
       )}
 
+      {/* Modal do Agente IA */}
+      {showAgentModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowAgentModal(false)}></div>
+          <div className="relative bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 p-4 shadow-xl w-[90%] max-w-md animate-fadeIn">
+            <div className="flex justify-between items-center mb-3">
+              <h4 className="text-sm font-bold flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
+                <Bot className="h-4 w-4" />
+                Agente IA
+              </h4>
+              <Button 
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={() => setShowAgentModal(false)}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium">Ativar Agente IA</span>
+                <Switch 
+                  checked={agentIAEnabled} 
+                  onCheckedChange={setAgentIAEnabled}
+                  className="data-[state=checked]:bg-blue-600"
+                />
+              </div>
+              
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                O Agente IA pode ajudar com tarefas mais complexas agindo proativamente conforme suas instruções.
+              </p>
+              
+              <div className="space-y-3">
+                <h5 className="text-sm font-medium">Permitir que o Agente IA faça:</h5>
+                
+                <div className="flex items-start space-x-2">
+                  <Checkbox 
+                    id="adjust-settings" 
+                    checked={agentSettings.adjustSettings}
+                    onCheckedChange={(checked) => 
+                      setAgentSettings(prev => ({...prev, adjustSettings: !!checked}))}
+                    className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 mt-1"
+                  />
+                  <label 
+                    htmlFor="adjust-settings" 
+                    className="text-sm"
+                  >
+                    Ajuste as configurações do usuário
+                  </label>
+                </div>
+                
+                <div className="flex items-start space-x-2">
+                  <Checkbox 
+                    id="access-pages" 
+                    checked={agentSettings.accessPages}
+                    onCheckedChange={(checked) => 
+                      setAgentSettings(prev => ({...prev, accessPages: !!checked}))}
+                    className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 mt-1"
+                  />
+                  <label 
+                    htmlFor="access-pages" 
+                    className="text-sm"
+                  >
+                    Acesse seções e páginas da plataforma
+                  </label>
+                </div>
+                
+                <div className="flex items-start space-x-2">
+                  <Checkbox 
+                    id="respond-messages" 
+                    checked={agentSettings.respondMessages}
+                    onCheckedChange={(checked) => 
+                      setAgentSettings(prev => ({...prev, respondMessages: !!checked}))}
+                    className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 mt-1"
+                  />
+                  <label 
+                    htmlFor="respond-messages" 
+                    className="text-sm"
+                  >
+                    Responder Notificações e Mensagens
+                  </label>
+                </div>
+                
+                <div className="flex items-start space-x-2">
+                  <Checkbox 
+                    id="make-transfers" 
+                    checked={agentSettings.makeTransfers}
+                    onCheckedChange={(checked) => 
+                      setAgentSettings(prev => ({...prev, makeTransfers: !!checked}))}
+                    className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 mt-1"
+                  />
+                  <label 
+                    htmlFor="make-transfers" 
+                    className="text-sm"
+                  >
+                    Fazer transferências e recargas
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-2 mt-3">
+              <Button
+                size="sm"
+                variant="outline" 
+                className="text-xs border-orange-200 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                onClick={() => setShowAgentModal(false)}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                size="sm" 
+                className="text-xs bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-none"
+                onClick={() => {
+                  setShowAgentModal(false);
+                  
+                  if (agentIAEnabled) {
+                    // Adiciona uma mensagem de confirmação ao chat
+                    setMessages(prevMessages => [
+                      ...prevMessages, 
+                      {
+                        id: Date.now(),
+                        content: "Agente IA ativado com sucesso! Como posso ajudar você hoje?",
+                        sender: "assistant",
+                        timestamp: new Date()
+                      }
+                    ]);
+                    
+                    // Notificação visual
+                    toast({
+                      title: "Agente IA ativado",
+                      description: `O Agente IA agora está ativo e pronto para auxiliar você ${agentSettings.accessPages ? 'com navegação na plataforma' : ''} ${agentSettings.respondMessages ? 'e responder a mensagens' : ''}.`,
+                      duration: 3000,
+                    });
+                  }
+                }}
+              >
+                Salvar configurações
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Modal de Busca Profunda */}
       {showSearchModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
@@ -2612,26 +2768,8 @@ Exemplo de formato da resposta:
                 // Desativa os outros modais para evitar conflitos
                 setIsShowingAISettings(false);
                 
-                // Adiciona uma mensagem de sistema
-                setMessages(prevMessages => [
-                  ...prevMessages, 
-                  {
-                    id: Date.now(),
-                    content: "Agente IA ativado. Como posso ajudar você de forma mais específica?",
-                    sender: "assistant",
-                    timestamp: new Date()
-                  }
-                ]);
-                
-                // Rola para a última mensagem
-                setTimeout(scrollToBottom, 100);
-                
-                // Exibe um toast informativo
-                toast({
-                  title: "Agente IA ativado",
-                  description: "Agora o assistente está no modo agente proativo e pode ajudar com tarefas mais complexas.",
-                  duration: 3000,
-                });
+                // Abre o modal do Agente IA
+                setShowAgentModal(true);
               }}
             >
               <Bot className="h-3 w-3 text-blue-500" />
