@@ -2262,38 +2262,38 @@ Exemplo de formato da resposta:
       {/* Modal do Agente IA */}
       {showAgentModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-md" onClick={() => setShowAgentModal(false)}></div>
-          <div className="relative bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-gray-900/95 dark:to-gray-800/95 backdrop-blur-xl rounded-2xl border border-blue-200/50 dark:border-blue-500/20 p-5 shadow-2xl w-[80%] max-w-sm h-[400px] animate-fadeIn overflow-hidden">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-md" onClick={() => setShowAgentModal(false)}></div>
+          <div className="relative bg-gradient-to-br from-white/90 to-gray-50/80 dark:from-gray-900/90 dark:to-gray-950/80 backdrop-blur-xl rounded-2xl border border-white/20 dark:border-gray-700/30 p-4 shadow-2xl w-[85%] max-w-md max-h-[500px] animate-fadeIn">
             {/* Elementos decorativos de fundo */}
-            <div className="absolute -right-20 -top-20 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl"></div>
-            <div className="absolute -left-20 -bottom-20 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl"></div>
+            <div className="absolute -right-20 -top-20 w-60 h-60 bg-blue-500/10 rounded-full blur-3xl"></div>
+            <div className="absolute -left-20 -bottom-20 w-60 h-60 bg-indigo-500/10 rounded-full blur-3xl"></div>
+            <div className="absolute right-1/4 bottom-0 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl"></div>
             
-            {/* Header com design modernizado */}
-            <div className="flex justify-between items-center mb-4 relative z-10">
+            {/* Header com design futurista */}
+            <div className="flex justify-between items-center mb-4 relative z-10 sticky top-0 bg-gradient-to-b from-white/80 to-transparent dark:from-gray-900/80 dark:to-transparent pb-2">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <div className="flex items-center justify-center h-8 w-8 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-800 shadow-lg shadow-blue-500/20">
                   <Bot className="h-4 w-4 text-white" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1">
+                  <h3 className="text-base font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
                     Agente IA
-                    <span className="inline-flex items-center px-1 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">Beta</span>
-                  </h4>
-                  <p className="text-[10px] text-gray-500 dark:text-gray-400">Assistente inteligente avançado</p>
+                  </h3>
+                  <p className="text-[10px] text-gray-500 dark:text-gray-400">Powered by advanced AI</p>
                 </div>
               </div>
               <Button 
                 variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0 rounded-full bg-white/80 dark:bg-gray-800/80 hover:bg-gray-100 dark:hover:bg-gray-700 shadow-sm transition-all duration-200"
+                size="icon"
+                className="h-7 w-7 p-0 rounded-full bg-white/30 dark:bg-gray-800/30 backdrop-blur-md hover:bg-white/50 dark:hover:bg-gray-700/50 transition-all duration-200"
                 onClick={() => setShowAgentModal(false)}
               >
-                <X className="h-3 w-3" />
+                <X className="h-3.5 w-3.5" />
               </Button>
             </div>
 
-            {/* Conteúdo com scroll */}
-            <ScrollArea className="h-[290px] pr-2 relative z-10">
+            {/* Conteúdo com barra de rolagem */}
+            <ScrollArea className="h-[400px] pr-2 relative z-10">
               <div className="flex items-center justify-between p-3 mb-3 rounded-xl bg-blue-50/80 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30 backdrop-filter backdrop-blur-sm shadow-sm">
                 <div className="flex flex-col">
                   <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-0.5">Ativar Agente IA</span>
@@ -2392,19 +2392,19 @@ Exemplo de formato da resposta:
               </div>
             </ScrollArea>
             
-            {/* Botões de ação */}
-            <div className="flex justify-end gap-2 mt-3 relative z-10">
+            {/* Botões de ação com aparência mais moderna */}
+            <div className="flex justify-end items-center gap-2 mt-5 relative z-10">
               <Button
-                size="sm"
                 variant="outline" 
-                className="px-3 py-1 h-7 text-xs font-medium border-blue-200 dark:border-blue-800/50 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all"
+                size="sm"
+                className="px-3 py-1 h-8 text-xs bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border-white/20 dark:border-gray-700/50 text-gray-700 dark:text-gray-300 hover:bg-white/70 dark:hover:bg-gray-700/70 transition-all duration-300 rounded-lg"
                 onClick={() => setShowAgentModal(false)}
               >
                 Cancelar
               </Button>
               <Button 
-                size="sm" 
-                className="px-3 py-1 h-7 text-xs font-medium bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white border-none rounded-lg shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 transition-all"
+                size="sm"
+                className="px-3 py-1 h-8 text-xs bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white border-none shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-300 rounded-lg"
                 onClick={() => {
                   setShowAgentModal(false);
                   
