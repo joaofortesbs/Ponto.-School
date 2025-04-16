@@ -53,7 +53,8 @@ import {
   Globe,
   Users,
   Copy,
-  Check
+  Check,
+  Edit
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { generateAIResponse, getConversationHistory, clearConversationHistory } from "@/services/aiChatService";
