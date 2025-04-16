@@ -2129,30 +2129,25 @@ Exemplo de formato da resposta:
                       </button>
                       <button 
                         onClick={() => {
-                          // Compartilhar mensagem
-                          if (navigator.share) {
-                            navigator.share({
-                              title: 'Compartilhar mensagem do Suporte Ponto.School',
-                              text: message.content,
-                            }).catch(error => {
-                              console.error('Erro ao compartilhar:', error);
-                              toast({
-                                title: "Erro ao compartilhar",
-                                description: "Não foi possível compartilhar esta mensagem",
-                                duration: 3000,
-                              });
-                            });
-                          } else {
+                          // Apenas copiar para área de transferência
+                          try {
                             navigator.clipboard.writeText(message.content);
                             toast({
-                              title: "Copiado para compartilhar!",
+                              title: "Mensagem copiada!",
                               description: "O conteúdo foi copiado para a área de transferência",
+                              duration: 3000,
+                            });
+                          } catch (error) {
+                            console.error('Erro ao copiar:', error);
+                            toast({
+                              title: "Erro ao copiar",
+                              description: "Não foi possível copiar esta mensagem",
                               duration: 3000,
                             });
                           }
                         }}
                         className="p-1 rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
-                        title="Compartilhar mensagem"
+                        title="Copiar mensagem"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400">
                           <circle cx="18" cy="5" r="3"></circle>
