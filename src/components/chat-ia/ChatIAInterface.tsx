@@ -393,6 +393,17 @@ const ChatIAInterface = () => {
                       >
                         <ThumbsUp size={16} />
                       </Button>
+                      
+                      {/* Botão de Exportar (posicionado ao lado direito do botão de Editar) */}
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className="h-7 w-7 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20 hover:bg-teal-500/20"
+                        title="Exportar mensagem"
+                        onClick={() => handleExportMessage(message.content, message.sender)}
+                      >
+                        <Download size={16} />
+                      </Button>
                       <Button 
                         variant="outline" 
                         size="icon" 
@@ -465,16 +476,6 @@ const ChatIAInterface = () => {
                       </Popover>
                       
                       {/* Novo botão de Exportar */}
-                      <Button 
-                        variant="outline" 
-                        size="icon" 
-                        className="h-7 w-7 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20 hover:bg-teal-500/20"
-                        title="Exportar mensagem"
-                        onClick={() => handleExportMessage(message.content, message.sender)}
-                      >
-                        <Download size={16} />
-                      </Button>
-                      
                       <Button 
                         variant="outline" 
                         size="icon" 
