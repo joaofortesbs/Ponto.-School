@@ -46,11 +46,16 @@ const ChatIAInterface = () => {
   // Estado para notificação de compartilhamento
   const [shareNotification, setShareNotification] = useState<string | null>(null);
   
-  // Função para compartilhar mensagem
+  // Função para compartilhar mensagem (apenas copia para área de transferência)
   const handleShareMessage = (content: string) => {
-    // Copiar o conteúdo para a área de transferência em vez de usar o compartilhamento nativo
-    navigator.clipboard.writeText(content);
-    setShareNotification("Mensagem copiada para a área de transferência!");
+    try {
+      // Usar apenas clipboard, nunca usar navigator.share
+      navigator.clipboard.writeText(content);
+      setShareNotification("Mensagem copiada para a área de transferência!");
+    } catch (error) {
+      console.error("Erro ao copiar mensagem:", error);
+      setShareNotification("Erro ao copiar mensagem");
+    }
     
     // Limpar a notificação após 3 segundos
     setTimeout(() => {
@@ -419,8 +424,8 @@ const ChatIAInterface = () => {
                               className="gap-2 justify-start text-sm"
                               onClick={() => handleShareMessage(message.content)}
                             >
-                              <Share size={14} />
-                              <span>Compartilhar</span>
+                              <Copy size={14} />
+                              <span>Copiar texto</span>
                             </Button>
                             <Button 
                               variant="outline" 
