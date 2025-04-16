@@ -403,83 +403,49 @@ const ChatIAInterface = () => {
                         <Copy size={16} />
                       </Button>
 
-                      {/* Botão de compartilhamento com mini modal */}
-                      <Button 
-                        variant="outline" 
-                        size="icon" 
-                        className="h-7 w-7 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20 hover:bg-purple-500/20"
-                        title="Compartilhar mensagem"
-                        onClick={() => {
-                          // Criar um elemento div para o mini modal
-                          const modalId = `share-modal-${message.id}`;
-                          // Remover qualquer modal existente primeiro
-                          const existingModal = document.getElementById(modalId);
-                          if (existingModal) {
-                            existingModal.remove();
-                          }
-                          
-                          // Criar o novo modal
-                          const modal = document.createElement('div');
-                          modal.id = modalId;
-                          modal.className = 'fixed z-50 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-3 animate-in fade-in zoom-in';
-                          modal.style.width = '200px';
-                          modal.style.top = `${event.clientY}px`;
-                          modal.style.left = `${event.clientX - 210}px`;
-                          
-                          // Conteúdo do modal
-                          modal.innerHTML = `
-                            <h4 class="text-sm font-medium mb-2 text-[#29335C] dark:text-white">Compartilhar mensagem</h4>
-                            <div class="flex flex-col gap-2">
-                              <button id="copy-btn-${message.id}" class="flex items-center gap-2 text-sm p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                      {/* Botão de compartilhamento com mini modal usando Popover */}
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
+                            className="h-7 w-7 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20 hover:bg-purple-500/20"
+                            title="Compartilhar mensagem"
+                          >
+                            <Share2 size={16} />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent 
+                          className="w-[200px] p-3 bg-white dark:bg-gray-800 border-0 shadow-lg animate-in fade-in zoom-in"
+                          side="top" 
+                          align="end"
+                          sideOffset={5}
+                        >
+                          <div>
+                            <h4 className="text-sm font-medium mb-2 text-[#29335C] dark:text-white">Compartilhar mensagem</h4>
+                            <div className="flex flex-col gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="flex justify-start h-auto py-2 px-2 text-sm w-full"
+                                onClick={() => handleShareMessage(message.content)}
+                              >
+                                <Copy className="h-4 w-4 mr-2" />
                                 Compartilhar
-                              </button>
-                              <button id="export-btn-${message.id}" class="flex items-center gap-2 text-sm p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="flex justify-start h-auto py-2 px-2 text-sm w-full"
+                                onClick={() => handleExportMessage(message.content, message.sender)}
+                              >
+                                <Download className="h-4 w-4 mr-2" />
                                 Exportar
-                              </button>
+                              </Button>
                             </div>
-                          `;
-                          
-                          // Adicionar o modal ao body
-                          document.body.appendChild(modal);
-                          
-                          // Adicionar evento de click para fechar o modal ao clicar fora dele
-                          const closeOnClickOutside = (e: MouseEvent) => {
-                            if (!modal.contains(e.target as Node)) {
-                              modal.remove();
-                              document.removeEventListener('click', closeOnClickOutside);
-                            }
-                          };
-                          
-                          // Pequeno atraso para evitar que o modal feche imediatamente
-                          setTimeout(() => {
-                            document.addEventListener('click', closeOnClickOutside);
-                          }, 100);
-                          
-                          // Adicionar event listeners para os botões
-                          setTimeout(() => {
-                            const copyBtn = document.getElementById(`copy-btn-${message.id}`);
-                            const exportBtn = document.getElementById(`export-btn-${message.id}`);
-                            
-                            if (copyBtn) {
-                              copyBtn.addEventListener('click', () => {
-                                handleShareMessage(message.content);
-                                modal.remove();
-                              });
-                            }
-                            
-                            if (exportBtn) {
-                              exportBtn.addEventListener('click', () => {
-                                handleExportMessage(message.content, message.sender);
-                                modal.remove();
-                              });
-                            }
-                          }, 0);
-                        }}
-                      >
-                        <Share2 size={16} />
-                      </Button>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                       
                       <Button 
                         variant="outline" 
