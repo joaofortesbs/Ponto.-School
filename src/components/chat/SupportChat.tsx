@@ -809,7 +809,7 @@ const SupportChat: React.FC = () => {
             <div className="flex justify-start">
               <div className="w-10 h-10 rounded-full overflow-hidden mr-2 flex-shrink-0">
                 <Avatar>
-                  <AvatarFallback className="bg-[#E0E1DD] dark:bg-[#E0E1DD]/20 text-[#29335C] dark:text-white">
+                  <AvatarFallback className="bg-[#E0E1DD] dark:bg-[#E0E1DD]/20 text-[#29335C] dark:text-white">```jsx
                     <Bot className="h-6 w-6" />
                   </AvatarFallback>
                 </Avatar>

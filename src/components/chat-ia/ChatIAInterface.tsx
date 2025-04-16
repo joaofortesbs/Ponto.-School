@@ -44,12 +44,12 @@ const ChatIAInterface = () => {
     try {
       // Primeiro verificar se há histórico no serviço de IA
       const aiServiceHistory = getConversationHistory(sessionId);
-      
+
       // Se tiver histórico no serviço, converter para o formato Message
       if (aiServiceHistory && aiServiceHistory.length > 0) {
         // Pular a primeira mensagem que é do sistema (não visível para o usuário)
         const visibleHistory = aiServiceHistory.slice(1);
-        
+
         return visibleHistory.map((msg, index) => ({
           id: `${msg.role}-${index}`,
           sender: msg.role === 'user' ? 'user' : 'ai',
@@ -57,7 +57,7 @@ const ChatIAInterface = () => {
           timestamp: new Date()
         }));
       }
-      
+
       // Se não tiver no serviço, tentar carregar do localStorage
       const savedMessages = localStorage.getItem(CHAT_STORAGE_KEY);
       if (savedMessages) {
@@ -71,7 +71,7 @@ const ChatIAInterface = () => {
     } catch (error) {
       console.error("Erro ao carregar histórico de chat:", error);
     }
-    
+
     // Mensagem de boas-vindas padrão
     return [{
       id: "welcome-message",
@@ -93,7 +93,7 @@ const ChatIAInterface = () => {
       if (messages.length > 1 || messages[0].id !== "welcome-message") {
         localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
       }
-      
+
       // Salvar ID da sessão
       localStorage.setItem(SESSION_ID_KEY, sessionId);
     } catch (error) {
@@ -106,7 +106,7 @@ const ChatIAInterface = () => {
   }, [messages]);
 
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
-  
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -118,7 +118,7 @@ const ChatIAInterface = () => {
       const scrollPosition = target.scrollTop;
       const scrollHeight = target.scrollHeight;
       const clientHeight = target.clientHeight;
-      
+
       // Show button if not near the bottom (more than 300px from bottom)
       const isNearBottom = scrollHeight - scrollPosition - clientHeight < 300;
       setShowScrollToBottom(!isNearBottom);
@@ -126,7 +126,7 @@ const ChatIAInterface = () => {
 
     // Find all potential scroll containers
     const scrollContainers = document.querySelectorAll('.chat-scroll-area, .ScrollAreaViewport');
-    
+
     scrollContainers.forEach(container => {
       container.addEventListener('scroll', handleScroll);
     });
@@ -146,7 +146,7 @@ const ChatIAInterface = () => {
       const scrollPosition = container.scrollTop;
       const scrollHeight = container.scrollHeight;
       const clientHeight = container.clientHeight;
-      
+
       const isNearBottom = scrollHeight - scrollPosition - clientHeight < 300;
       setShowScrollToBottom(!isNearBottom);
     }
@@ -169,18 +169,18 @@ const ChatIAInterface = () => {
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   };
-  
+
   // Limpar histórico da conversa
   const handleClearChat = () => {
     if (window.confirm("Tem certeza que deseja limpar todo o histórico de conversa?")) {
       // Limpar histórico no serviço
       clearConversationHistory(sessionId);
-      
+
       // Gerar nova sessão
       const newSessionId = uuidv4();
       setSessionId(newSessionId);
       localStorage.setItem(SESSION_ID_KEY, newSessionId);
-      
+
       // Limpar mensagens exibidas
       setMessages([{
         id: "welcome-message",
@@ -188,10 +188,10 @@ const ChatIAInterface = () => {
         content: "Histórico de chat limpo. Como posso ajudar você hoje?",
         timestamp: new Date()
       }]);
-      
+
       // Limpar localStorage
       localStorage.removeItem(CHAT_STORAGE_KEY);
-      
+
       console.log("Histórico de conversa limpo completamente. Nova sessão:", newSessionId);
     }
   };
@@ -222,7 +222,7 @@ const ChatIAInterface = () => {
       };
 
       setMessages(prev => [...prev, aiMessage]);
-      
+
       // Opcional: sincronizar o estado local com o histórico mais recente do serviço
       // Isso garante que estamos sempre alinhados com o estado interno do serviço
       const latestHistory = getConversationHistory(sessionId);
@@ -319,7 +319,7 @@ const ChatIAInterface = () => {
                       <p className="whitespace-pre-wrap">{message.content}</p>
                     </CardContent>
                   </Card>
-                  
+
                   {/* Botões de feedback para mensagens da IA */}
                   {message.sender === "ai" && message.id !== "welcome-message" && (
                     <div className="absolute right-0 top-0 flex space-x-1 -mr-20 mt-1">
@@ -353,7 +353,7 @@ const ChatIAInterface = () => {
                           <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z"/>
                         </svg>
                       </Button>
-                      
+
                       <Button 
                         variant="outline" 
                         size="icon" 
