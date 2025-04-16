@@ -2263,7 +2263,7 @@ Exemplo de formato da resposta:
       {showAgentModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-md" onClick={() => setShowAgentModal(false)}></div>
-          <div className="relative bg-gradient-to-br from-white/90 to-gray-50/80 dark:from-gray-900/90 dark:to-gray-950/80 backdrop-blur-xl rounded-2xl border border-white/20 dark:border-gray-700/30 p-4 shadow-2xl w-[85%] max-w-md max-h-[500px] animate-fadeIn">
+          <div className="relative bg-gradient-to-br from-white/90 to-gray-50/80 dark:from-gray-900/90 dark:to-gray-950/80 backdrop-blur-xl rounded-2xl border border-white/20 dark:border-gray-700/30 p-4 shadow-2xl w-[85%] max-w-md max-h-[480px] animate-fadeIn flex flex-col">
             {/* Elementos decorativos de fundo */}
             <div className="absolute -right-20 -top-20 w-60 h-60 bg-blue-500/10 rounded-full blur-3xl"></div>
             <div className="absolute -left-20 -bottom-20 w-60 h-60 bg-indigo-500/10 rounded-full blur-3xl"></div>
@@ -2293,7 +2293,7 @@ Exemplo de formato da resposta:
             </div>
 
             {/* Conteúdo com barra de rolagem */}
-            <ScrollArea className="h-[400px] pr-2 relative z-10">
+            <ScrollArea className="h-[350px] pr-2 relative z-10">
               <div className="flex items-center justify-between p-3 mb-3 rounded-xl bg-blue-50/80 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30 backdrop-filter backdrop-blur-sm shadow-sm">
                 <div className="flex flex-col">
                   <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-0.5">Ativar Agente IA</span>
@@ -2393,7 +2393,7 @@ Exemplo de formato da resposta:
             </ScrollArea>
             
             {/* Botões de ação com aparência mais moderna */}
-            <div className="flex justify-end items-center gap-2 mt-5 relative z-10">
+            <div className="flex justify-end items-center gap-2 mt-3 pb-1 relative z-10">
               <Button
                 variant="outline" 
                 size="sm"
