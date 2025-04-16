@@ -407,6 +407,10 @@ const FloatingChatSupport: React.FC = () => {
   const [tempNickname, setTempNickname] = useState("");
   const [userOccupation, setUserOccupation] = useState("");
   const [tempOccupation, setTempOccupation] = useState("");
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [tempProfileImage, setTempProfileImage] = useState<File | null>(null);
+  const [isUploadingProfileImage, setIsUploadingProfileImage] = useState(false);
+  const profileImageInputRef = useRef<HTMLInputElement>(null);
 
   // Funções para lidar com feedback das mensagens
   const handleMessageFeedback = (messageId: number, feedback: 'positive' | 'negative') => {
@@ -712,6 +716,9 @@ const FloatingChatSupport: React.FC = () => {
     const newSessionId = userName || 'anonymous-' + Date.now().toString();
     setSessionId(newSessionId);
 
+    // Carregar a imagem de perfil do usuário
+    loadUserProfileImage();
+
     // Tentar carregar mensagens salvas para este usuário
     const loadSavedMessages = async () => {
       try {
@@ -744,6 +751,19 @@ const FloatingChatSupport: React.FC = () => {
     };
 
     loadSavedMessages();
+
+    // Ouvir eventos de atualização de avatar
+    const handleAvatarUpdate = (event: CustomEvent) => {
+      if (event.detail && event.detail.url) {
+        setProfileImageUrl(event.detail.url);
+      }
+    };
+
+    document.addEventListener('avatar-updated', handleAvatarUpdate as EventListener);
+
+    return () => {
+      document.removeEventListener('avatar-updated', handleAvatarUpdate as EventListener);
+    };
   }, [userName]);
 
   useEffect(() => {
@@ -1160,6 +1180,163 @@ Exemplo de formato da resposta:
   // Função para remover um arquivo da lista
   const removeFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Função para carregar a imagem de perfil do usuário
+  const loadUserProfileImage = async () => {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) return;
+
+      const userId = sessionData.session.user.id;
+      
+      // Consultar o perfil do usuário para obter a URL da imagem
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', userId)
+        .single();
+      
+      if (profileError) {
+        console.error('Erro ao buscar imagem de perfil:', profileError);
+        return;
+      }
+      
+      if (profileData?.avatar_url) {
+        setProfileImageUrl(profileData.avatar_url);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar imagem de perfil:', error);
+    }
+  };
+
+  // Função para upload da foto de perfil
+  const handleProfileImageUpload = async () => {
+    if (!tempProfileImage) return;
+
+    try {
+      setIsUploadingProfileImage(true);
+      
+      // Obter a sessão do usuário
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para fazer upload de imagens",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const userId = sessionData.session.user.id;
+      const fileExt = tempProfileImage.name.split('.').pop();
+      const fileName = `avatar-${userId}-${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      // Comprimir a imagem antes do upload
+      let fileToUpload = tempProfileImage;
+      if (tempProfileImage.size > 1000000) { // Se for maior que 1MB
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        const compressedFile = await new Promise<File>((resolve) => {
+          img.onload = () => {
+            // Calcular novo tamanho mantendo proporção
+            const maxSize = 800;
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > height && width > maxSize) {
+              height = (height / width) * maxSize;
+              width = maxSize;
+            } else if (height > maxSize) {
+              width = (width / height) * maxSize;
+              height = maxSize;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            ctx?.drawImage(img, 0, 0, width, height);
+
+            canvas.toBlob((blob) => {
+              if (blob) {
+                const optimizedFile = new File([blob], tempProfileImage.name, { 
+                  type: 'image/jpeg', 
+                  lastModified: Date.now() 
+                });
+                resolve(optimizedFile);
+              } else {
+                resolve(tempProfileImage);
+              }
+            }, 'image/jpeg', 0.85);
+          };
+          img.onerror = () => resolve(tempProfileImage);
+          
+          img.src = URL.createObjectURL(tempProfileImage);
+        });
+        
+        fileToUpload = compressedFile;
+      }
+
+      // Upload para o storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('profile-images')
+        .upload(filePath, fileToUpload, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) {
+        throw new Error(`Erro ao fazer upload da imagem: ${uploadError.message}`);
+      }
+
+      // Obter a URL pública da imagem
+      const { data: publicUrlData } = supabase.storage
+        .from('profile-images')
+        .getPublicUrl(filePath);
+
+      if (!publicUrlData.publicUrl) {
+        throw new Error('Não foi possível obter a URL pública da imagem');
+      }
+
+      // Atualizar o perfil do usuário com a URL da imagem
+      const { data: updateData, error: updateError } = await supabase
+        .from('profiles')
+        .update({ 
+          avatar_url: publicUrlData.publicUrl,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId);
+
+      if (updateError) {
+        throw new Error(`Erro ao atualizar perfil: ${updateError.message}`);
+      }
+
+      // Atualizar o estado da imagem
+      setProfileImageUrl(publicUrlData.publicUrl);
+      
+      // Disparar evento para outros componentes saberem que o avatar foi atualizado
+      const avatarUpdateEvent = new CustomEvent('avatar-updated', {
+        detail: { url: publicUrlData.publicUrl }
+      });
+      document.dispatchEvent(avatarUpdateEvent);
+
+      toast({
+        title: "Sucesso",
+        description: "Foto de perfil atualizada com sucesso",
+      });
+    } catch (error) {
+      console.error("Erro ao fazer upload da foto de perfil:", error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao fazer upload da foto: " + (error instanceof Error ? error.message : "Erro desconhecido"),
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploadingProfileImage(false);
+      setTempProfileImage(null);
+    }
   };
 
   // Função para iniciar gravação de áudio
@@ -2042,8 +2219,8 @@ Exemplo de formato da resposta:
               {message.sender === "user" && (
                 <div className="w-8 h-8 rounded-full overflow-hidden ml-2 flex-shrink-0">
                   <Avatar>
-                    <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=John" />
-                    <AvatarFallback>JD</AvatarFallback>
+                    <AvatarImage src={profileImageUrl || "https://api.dicebear.com/7.x/avataaars/svg?seed=John"} />
+                    <AvatarFallback>{userName ? userName.substring(0, 2).toUpperCase() : "US"}</AvatarFallback>
                   </Avatar>
                 </div>
               )}
@@ -2311,7 +2488,7 @@ Exemplo de formato da resposta:
                     <div className="w-full h-full rounded-full overflow-hidden">
                       <Avatar className="w-full h-full">
                         <AvatarImage 
-                          src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&mouth=smile&eyes=happy"
+                          src={profileImageUrl || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&mouth=smile&eyes=happy"}
                           alt="Avatar Epictus IA"
                           className="w-full h-full object-cover"
                         />
@@ -2322,11 +2499,70 @@ Exemplo de formato da resposta:
                     </div>
                   </div>
                   <div className="absolute bottom-0 right-0">
-                    <div className="bg-white dark:bg-gray-800 rounded-full p-1 shadow-md border border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    <input 
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      ref={profileImageInputRef}
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setTempProfileImage(e.target.files[0]);
+                        }
+                      }}
+                    />
+                    <div 
+                      className="bg-white dark:bg-gray-800 rounded-full p-1 shadow-md border border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      onClick={() => profileImageInputRef.current?.click()}
+                    >
                       <Edit className="h-4 w-4 text-orange-500" />
                     </div>
                   </div>
                 </div>
+                
+                {tempProfileImage && (
+                  <div className="mb-3 w-full flex justify-center">
+                    <div className="flex items-center gap-2 bg-orange-100 dark:bg-orange-900/20 p-2 rounded-lg">
+                      <div className="w-8 h-8 rounded-full overflow-hidden">
+                        <img 
+                          src={URL.createObjectURL(tempProfileImage)} 
+                          alt="Nova imagem" 
+                          className="w-full h-full object-cover" 
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-medium text-gray-800 dark:text-gray-200 truncate" style={{ maxWidth: "120px" }}>
+                          {tempProfileImage.name}
+                        </p>
+                        <p className="text-[10px] text-gray-500 dark:text-gray-400">
+                          {(tempProfileImage.size / 1024).toFixed(1)} KB
+                        </p>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="h-6 w-6 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full"
+                          onClick={() => setTempProfileImage(null)}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="h-6 w-6 p-0 text-green-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-full"
+                          onClick={handleProfileImageUpload}
+                          disabled={isUploadingProfileImage}
+                        >
+                          {isUploadingProfileImage ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Check className="h-3.5 w-3.5" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 
                 <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-1">Epictus IA</h4>
                 <p className="text-sm text-gray-500 dark:text-gray-400 text-center max-w-sm mb-6">
@@ -2432,51 +2668,100 @@ Exemplo de formato da resposta:
               <Button 
                 size="sm"
                 className="px-3 py-1 h-8 text-xs bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white border-none shadow-lg shadow-orange-500/20 hover:shadow-xl hover:shadow-orange-500/30 transition-all duration-300 rounded-lg"
-                onClick={() => {
-                  let hasChanges = false;
-                  let confirmationMessage = "Perfeito! ";
+                onClick={async () => {
+                  try {
+                    let hasChanges = false;
+                    let confirmationMessage = "Perfeito! ";
 
-                  // Atualiza o nickname se foi alterado
-                  if (tempNickname.trim()) {
-                    setEpictusNickname(tempNickname.trim());
-                    setTempNickname("");
-                    confirmationMessage += `A partir de agora vou te chamar de ${tempNickname.trim() || epictusNickname}. `;
-                    hasChanges = true;
-                  }
-                  
-                  // Atualiza a ocupação se foi alterada
-                  if (tempOccupation.trim()) {
-                    setUserOccupation(tempOccupation.trim());
-                    setTempOccupation("");
-                    confirmationMessage += `Entendi que você ${tempOccupation.trim()} e vou adaptar minhas respostas ao seu contexto. `;
-                    hasChanges = true;
-                  }
-                  
-                  if (!hasChanges) {
-                    confirmationMessage = "Suas configurações foram mantidas. ";
-                  }
-                  
-                  confirmationMessage += "Como posso te ajudar hoje?";
-                  
-                  setShowEpictusPersonalizeModal(false);
-                  
-                  // Adiciona uma mensagem de confirmação ao chat
-                  setMessages(prevMessages => [
-                    ...prevMessages, 
-                    {
-                      id: Date.now(),
-                      content: confirmationMessage,
-                      sender: "assistant",
-                      timestamp: new Date()
+                    // Primeiro, vamos salvar a imagem de perfil se houver uma temporária
+                    if (tempProfileImage) {
+                      await handleProfileImageUpload();
+                      confirmationMessage += "Sua imagem de perfil foi atualizada. ";
+                      hasChanges = true;
                     }
-                  ]);
-                  
-                  // Notificação visual
-                  toast({
-                    title: "Personalização salva",
-                    description: "Suas preferências foram atualizadas com sucesso.",
-                    duration: 3000,
-                  });
+
+                    // Atualiza o nickname se foi alterado
+                    if (tempNickname.trim()) {
+                      setEpictusNickname(tempNickname.trim());
+                      setTempNickname("");
+                      confirmationMessage += `A partir de agora vou te chamar de ${tempNickname.trim() || epictusNickname}. `;
+                      hasChanges = true;
+                      
+                      // Atualizar o nickname no banco de dados, se possível
+                      try {
+                        const { data: sessionData } = await supabase.auth.getSession();
+                        if (sessionData.session) {
+                          await supabase
+                            .from('profiles')
+                            .update({ 
+                              display_name: tempNickname.trim(),
+                              updated_at: new Date().toISOString()
+                            })
+                            .eq('id', sessionData.session.user.id);
+                        }
+                      } catch (error) {
+                        console.error('Erro ao atualizar nickname no perfil:', error);
+                      }
+                    }
+                    
+                    // Atualiza a ocupação se foi alterada
+                    if (tempOccupation.trim()) {
+                      setUserOccupation(tempOccupation.trim());
+                      setTempOccupation("");
+                      confirmationMessage += `Entendi que você ${tempOccupation.trim()} e vou adaptar minhas respostas ao seu contexto. `;
+                      hasChanges = true;
+                      
+                      // Atualizar a ocupação no banco de dados, se possível
+                      try {
+                        const { data: sessionData } = await supabase.auth.getSession();
+                        if (sessionData.session) {
+                          await supabase
+                            .from('profiles')
+                            .update({ 
+                              bio: tempOccupation.trim(),
+                              updated_at: new Date().toISOString()
+                            })
+                            .eq('id', sessionData.session.user.id);
+                        }
+                      } catch (error) {
+                        console.error('Erro ao atualizar ocupação no perfil:', error);
+                      }
+                    }
+                    
+                    if (!hasChanges) {
+                      confirmationMessage = "Suas configurações foram mantidas. ";
+                    }
+                    
+                    confirmationMessage += "Como posso te ajudar hoje?";
+                    
+                    setShowEpictusPersonalizeModal(false);
+                    
+                    // Adiciona uma mensagem de confirmação ao chat
+                    setMessages(prevMessages => [
+                      ...prevMessages, 
+                      {
+                        id: Date.now(),
+                        content: confirmationMessage,
+                        sender: "assistant",
+                        timestamp: new Date()
+                      }
+                    ]);
+                    
+                    // Notificação visual
+                    toast({
+                      title: "Personalização salva",
+                      description: "Suas preferências foram atualizadas com sucesso.",
+                      duration: 3000,
+                    });
+                  } catch (error) {
+                    console.error('Erro ao salvar preferências:', error);
+                    toast({
+                      title: "Erro",
+                      description: "Ocorreu um erro ao salvar suas preferências. Por favor, tente novamente.",
+                      variant: "destructive",
+                      duration: 3000,
+                    });
+                  }
                 }}
               >
                 Salvar preferências
@@ -3755,7 +4040,7 @@ Exemplo de formato da resposta:
                 >
                   <Avatar>
                     <AvatarImage 
-                      src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&mouth=smile&eyes=happy"
+                      src={profileImageUrl || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&mouth=smile&eyes=happy"}
                       alt="Personalizar IA"
                     />
                     <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] text-white">
