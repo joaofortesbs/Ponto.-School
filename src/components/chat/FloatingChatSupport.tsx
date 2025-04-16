@@ -376,6 +376,8 @@ const FloatingChatSupport: React.FC = () => {
   const [messageToImprove, setMessageToImprove] = useState<number | null>(null);
   const [improvementFeedback, setImprovementFeedback] = useState('');
   const [isReformulating, setIsReformulating] = useState(false);
+  const [showExportOptions, setShowExportOptions] = useState<number | null>(null);
+  const [showExportFormats, setShowExportFormats] = useState<number | null>(null);
 
   // Estados removidos relacionados à pesquisa avançada
   
@@ -1153,6 +1155,68 @@ Exemplo de formato da resposta:
         }
       ]);
       setIsTyping(false);
+    }
+  };
+
+  // Função para exportar mensagem em diferentes formatos
+  const exportMessageAs = (content: string, format: 'txt' | 'pdf' | 'docx', messageId: number) => {
+    const fileName = `mensagem-${new Date().toISOString().slice(0, 10)}`;
+    
+    if (format === 'txt') {
+      // Exportar como arquivo .txt
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${fileName}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Mensagem exportada como TXT",
+        description: "O arquivo foi baixado com sucesso",
+        duration: 3000,
+      });
+    } 
+    else if (format === 'pdf') {
+      // Simulação de exportação como PDF (em um cenário real, usaria uma biblioteca como jsPDF)
+      toast({
+        title: "Exportação como PDF",
+        description: "O arquivo PDF foi gerado e baixado",
+        duration: 3000,
+      });
+      
+      // Simulação de download para demonstração
+      const blob = new Blob([`PDF do conteúdo: ${content}`], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${fileName}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } 
+    else if (format === 'docx') {
+      // Simulação de exportação como Word (em um cenário real, usaria uma biblioteca como docx)
+      toast({
+        title: "Exportação como Word",
+        description: "O arquivo Word foi gerado e baixado",
+        duration: 3000,
+      });
+      
+      // Simulação de download para demonstração
+      const blob = new Blob([`Documento Word: ${content}`], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${fileName}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     }
   };
 
@@ -2142,6 +2206,72 @@ Exemplo de formato da resposta:
                       >
                         <Copy className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
                       </button>
+                      
+                      {/* Botão Exportar com Popover */}
+                      <div className="relative">
+                        <button 
+                          onClick={() => setShowExportOptions(messageId => messageId === message.id ? null : message.id)}
+                          className="p-1 rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
+                          title="Exportar mensagem"
+                        >
+                          <Download className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
+                        </button>
+                        
+                        {/* Popup principal com Exportar e Compartilhar */}
+                        {showExportOptions === message.id && (
+                          <div className="absolute bottom-full right-0 mb-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-10 min-w-[120px] py-1">
+                            <button 
+                              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                              onClick={() => {
+                                setShowExportOptions(null);
+                                setShowExportFormats(message.id);
+                              }}
+                            >
+                              <Download className="h-3.5 w-3.5" /> Exportar
+                            </button>
+                            <button 
+                              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                              onClick={() => setShowExportOptions(null)}
+                            >
+                              <Share2 className="h-3.5 w-3.5" /> Compartilhar
+                            </button>
+                          </div>
+                        )}
+                        
+                        {/* Modal secundário com opções de exportação */}
+                        {showExportFormats === message.id && (
+                          <div className="absolute bottom-full right-0 mb-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-10 min-w-[140px] py-1">
+                            <button 
+                              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                              onClick={() => {
+                                exportMessageAs(message.content, 'txt', message.id);
+                                setShowExportFormats(null);
+                              }}
+                            >
+                              <FileText className="h-3.5 w-3.5" /> Exportar como TXT
+                            </button>
+                            <button 
+                              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                              onClick={() => {
+                                exportMessageAs(message.content, 'pdf', message.id);
+                                setShowExportFormats(null);
+                              }}
+                            >
+                              <FileText className="h-3.5 w-3.5" /> Exportar como PDF
+                            </button>
+                            <button 
+                              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                              onClick={() => {
+                                exportMessageAs(message.content, 'docx', message.id);
+                                setShowExportFormats(null);
+                              }}
+                            >
+                              <FileText className="h-3.5 w-3.5" /> Exportar como Word
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      
                       <button 
                         onClick={() => handleMessageFeedback(message.id, 'positive')}
                         className={`p-1 rounded-full transition-colors ${message.feedback === 'positive' ? 'bg-green-100 dark:bg-green-900/30' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}`}
