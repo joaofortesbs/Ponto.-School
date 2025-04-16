@@ -46,21 +46,37 @@ const ChatIAInterface = () => {
   // Estado para notificação de compartilhamento
   const [shareNotification, setShareNotification] = useState<string | null>(null);
   
-  // Função para compartilhar mensagem (apenas copia para área de transferência)
-  const handleShareMessage = (content: string) => {
+  // Função para compartilhar mensagem usando a API nativa de compartilhamento
+  const handleShareMessage = async (content: string) => {
     try {
-      // Usar apenas clipboard, nunca usar navigator.share
-      navigator.clipboard.writeText(content);
-      setShareNotification("Mensagem copiada para a área de transferência!");
+      // Usar a API Web Share se disponível
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Mensagem do Chat Epictus IA',
+          text: content,
+        });
+        setShareNotification("Mensagem compartilhada com sucesso!");
+      } else {
+        // Fallback para navegadores que não suportam a API Share
+        setShareNotification("Seu navegador não suporta compartilhamento nativo.");
+        console.error("API de compartilhamento não disponível");
+      }
     } catch (error) {
-      console.error("Erro ao copiar mensagem:", error);
-      setShareNotification("Erro ao copiar mensagem");
+      // Usuário cancelou o compartilhamento ou ocorreu outro erro
+      console.error("Erro ao compartilhar mensagem:", error);
+      
+      // Não mostrar mensagem caso usuário cancele o compartilhamento
+      if (error.name !== 'AbortError') {
+        setShareNotification("Erro ao compartilhar mensagem");
+      }
     }
     
-    // Limpar a notificação após 3 segundos
-    setTimeout(() => {
-      setShareNotification(null);
-    }, 3000);
+    // Limpar a notificação após 3 segundos (se houver)
+    if (setShareNotification) {
+      setTimeout(() => {
+        setShareNotification(null);
+      }, 3000);
+    }
   };
   
   // Função para exportar mensagem como arquivo de texto
@@ -430,7 +446,7 @@ const ChatIAInterface = () => {
                                 className="flex justify-start h-auto py-2 px-2 text-sm w-full"
                                 onClick={() => handleShareMessage(message.content)}
                               >
-                                <Copy className="h-4 w-4 mr-2" />
+                                <Share2 className="h-4 w-4 mr-2" />
                                 Compartilhar
                               </Button>
                               <Button
