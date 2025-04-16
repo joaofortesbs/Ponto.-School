@@ -1,0 +1,636 @@
+[plugin:vite:react-swc] × the name `clearConversationHistory` is defined multiple times
+      ╭─[/home/runner/workspace/src/services/aiChatService.ts:887:1]
+  887 │ }
+  888 │ 
+  889 │ // Limpar histórico da conversa
+  890 │ export function clearConversationHistory(sessionId: string): void {
+      ·                 ────────────┬───────────
+      ·                             ╰── previous definition of `clearConversationHistory` here
+  891 │   if (conversationHistory[sessionId]) {
+  892 │     // Mantém apenas a mensagem do sistema
+  893 │     const systemMessage = conversationHistory[sessionId][0];
+  894 │     conversationHistory[sessionId] = [systemMessage];
+  895 │ 
+  896 │     // Limpar do localStorage também
+  897 │     try {
+  898 │       localStorage.removeItem(`conversationHistory_${sessionId}`);
+  899 │     } catch (error) {
+  900 │       console.error("Erro ao limpar histórico do localStorage:", error);
+  901 │     }
+  902 │   }
+  903 │ }
+  904 │ 
+  905 │ // Obter histórico da conversa
+  906 │ export function getConversationHistory(sessionId: string): ChatMessage[] {
+  907 │   // Primeiro verifica se já está carregado na memória
+  908 │   if (conversationHistory[sessionId]) {
+  909 │     return conversationHistory[sessionId];
+  910 │   }
+  911 │ 
+  912 │   // Caso contrário, tenta recuperar do localStorage
+  913 │   try {
+  914 │     const savedHistory = localStorage.getItem(`conversationHistory_${sessionId}`);
+  915 │     if (savedHistory) {
+  916 │       const parsedHistory = JSON.parse(savedHistory) as ChatMessage[];
+  917 │       conversationHistory[sessionId] = parsedHistory;
+  918 │       return parsedHistory;
+  919 │     }
+  920 │   } catch (error) {
+  921 │     console.error("Erro ao recuperar histórico do localStorage:", error);
+  922 │   }
+  923 │ 
+  924 │   return [];
+  925 │ }
+  926 │ 
+  927 │ // Função para corrigir links da plataforma
+  928 │ function fixPlatformLinks(text: string): string {
+  929 │   const platformLinks = {
+  930 │     'Portal': 'https://pontoschool.com/portal',
+  931 │     'Portal de Estudos': 'https://pontoschool.com/portal',
+  932 │     'Agenda': 'https://pontoschool.com/agenda',
+  933 │     'Turmas': 'https://pontoschool.com/turmas',
+  934 │     'Grupos de Estudo': 'https://pontoschool.com/turmas?view=estudos',
+  935 │     'Biblioteca': 'https://pontoschool.com/biblioteca',
+  936 │     'Perfil': 'https://pontoschool.com/profile',
+  937 │     'Página de Perfil': 'https://pontoschool.com/profile',
+  938 │     'Configurações': 'https://pontoschool.com/configuracoes',
+  939 │     'Página de Configurações': 'https://pontoschool.com/configuracoes',
+  940 │     'Dashboard': 'https://pontoschool.com/dashboard',
+  941 │     'Epictus IA': 'https://pontoschool.com/epictus-ia',
+  942 │     'Mentor IA': 'https://pontoschool.com/mentor-ia',
+  943 │     'Planos de Estudo': 'https://pontoschool.com/planos-estudo',
+  944 │     'Conquistas': 'https://pontoschool.com/conquistas',
+  945 │     'Carteira': 'https://pontoschool.com/carteira',
+  946 │     'Mercado': 'https://pontoschool.com/mercado',
+  947 │     'Organização': 'https://pontoschool.com/organizacao',
+  948 │     'Comunidades': 'https://pontoschool.com/comunidades',
+  949 │     'Chat IA': 'https://pontoschool.com/chat-ia',
+  950 │     'School IA': 'https://pontoschool.com/school-ia',
+  951 │     'Novidades': 'https://pontoschool.com/novidades',
+  952 │     'Lembretes': 'https://pontoschool.com/lembretes',
+  953 │     'Pedidos de Ajuda': 'https://pontoschool.com/pedidos-ajuda',
+  954 │     'Conexão Expert': 'https://pontoschool.com/pedidos-ajuda',
+  955 │     'Estudos': 'https://pontoschool.com/estudos',
+  956 │     'Login': 'https://pontoschool.com/login',
+  957 │     'Cadastro': 'https://pontoschool.com/register',
+  958 │     'Página de Ajuda': 'https://pontoschool.com/ajuda',
+  959 │     'Ajuda': 'https://pontoschool.com/ajuda'
+  960 │   };
+  961 │ 
+  962 │   let newText = text;
+  963 │   const alreadyReplaced = new Set<string>();
+  964 │   const linkRegex = /\[(.+?)\]\((.+?)\)/g;
+  965 │ 
+  966 │   // Primeiro, coletar todos os links já presentes no texto e verificar se estão formatados corretamente
+  967 │   let match;
+  968 │ 
+  969 │   // Armazenar os links que precisam ser corrigidos
+  970 │   const linksToFix = [];
+  971 │ 
+  972 │   while ((match = linkRegex.exec(newText)) !== null) {
+  973 │     const linkText = match[1];
+  974 │     const url = match[2];
+  975 │     alreadyReplaced.add(url.toLowerCase());
+  976 │ 
+  977 │     // Também adicionar o texto do link para evitar duplicação com diferentes textos
+  978 │     for (const key in platformLinks) {
+  979 │       if (linkText.toLowerCase() === key.toLowerCase()) {
+  980 │         alreadyReplaced.add(platformLinks[key].toLowerCase());
+  981 │       }
+  982 │     }
+  983 │   }
+  984 │ 
+  985 │   // Substituir expressões mais específicas, evitando duplicidades
+  986 │   for (const key in platformLinks) {
+  987 │     const url = platformLinks[key];
+  988 │     // Pular se este URL já foi usado
+  989 │     if (alreadyReplaced.has(url.toLowerCase())) continue;
+  990 │ 
+  991 │     const regex = new RegExp(`\\b(${key})\\b(?![^\\[]*\\])`, 'gi'); // Busca palavras inteiras que não estão dentro de colchetes
+  992 │     if (regex.test(newText)) {
+  993 │       newText = newText.replace(regex, `[${key}](${url})`);
+  994 │       alreadyReplaced.add(url.toLowerCase());
+  995 │     }
+  996 │   }
+  997 │ 
+  998 │   // Adicionar correção para URLs que podem ter sido escritas incorretamente
+  999 │   newText = newText.replace(/\(https:\/\/pontoschool\.com(\s+)([^)]+)\)/g, '(https://pontoschool.com/$2)');
+ 1000 │ 
+ 1001 │   // Corrigir URLs que podem ter dupla barra
+ 1002 │   newText = newText.replace(/\(https:\/\/pontoschool\.com\/\/([^)]+)\)/g, '(https://pontoschool.com/$1)');
+ 1003 │ 
+ 1004 │   // Garantir que os links estejam formatados corretamente com os parênteses fora da URL clicável
+ 1005 │   // Primeiro, encontrar todos os links no formato [texto](url)
+ 1006 │   const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+ 1007 │   newText = newText.replace(markdownLinkRegex, (match, text, url) => {
+ 1008 │     // Certificar-se de que apenas a URL está dentro dos parênteses
+ 1009 │     const cleanUrl = url.split(' ')[0]; // Pegar apenas a URL sem atributos adicionais
+ 1010 │     return `[${text}](${cleanUrl})`;
+ 1011 │   });
+ 1012 │ 
+ 1013 │   return newText;
+ 1014 │ }
+ 1015 │ 
+ 1016 │ 
+ 1017 │ // Função para salvar o histórico da conversa no localStorage
+ 1018 │ function saveConversationHistory(sessionId: string, history: ChatMessage[]): void {
+ 1019 │   try {
+ 1020 │     localStorage.setItem(`conversationHistory_${sessionId}`, JSON.stringify(history));
+ 1021 │   } catch (error) {
+ 1022 │     console.error("Erro ao salvar o histórico da conversa:", error);
+ 1023 │   }
+ 1024 │ }
+ 1025 │ 
+ 1026 │ // Simulação de resposta da IA
+ 1027 │ const getResponseForMessage = (message: string): string => {
+ 1028 │   // Análise básica da mensagem para gerar uma resposta contextual
+ 1029 │   const formattedMessage = message.toLowerCase();
+ 1030 │ 
+ 1031 │   if (formattedMessage.includes('olá') || formattedMessage.includes('oi') || formattedMessage.includes('bom dia') || formattedMessage.includes('boa tarde') || formattedMessage.includes('boa noite')) {
+ 1032 │     return `**Olá, ${userInfo?.username || 'amigo'}!** 😊\n\nComo posso ajudar você hoje?`;
+ 1033 │   } else if (formattedMessage.includes('função') || formattedMessage.includes('o que você faz') || formattedMessage.includes('para que serve')) {
+ 1034 │     return `**Eu sou o Assistente de Suporte da Ponto.School**, aqui para te ajudar em tudo que precisar na plataforma! 🚀\n\nPosso ajudar com:\n\n• **Navegação:** Encontrar qualquer recurso na plataforma.\n• **Tutoriais:** Explicar o funcionamento de qualquer ferramenta.\n• **Dúvidas:** Responder qualquer questão sobre a plataforma ou o conteúdo.\n\nComo posso ajudar você agora?`;
+ 1035 │   } else if (formattedMessage.includes('portal') || formattedMessage.includes('material') || formattedMessage.includes('acessar conteúdo')) {
+ 1036 │     return `Você pode acessar o **Portal** com todos os materiais em https://pontoschool.com/portal\n\nLá você encontrará todos os seus cursos, materiais e recursos de estudo organizados por disciplina.\n\n_Basta clicar no link acima para ir direto para o Portal!_ 📚`;
+ 1037 │   } else {
+ 1038 │     return "Desculpe, não entendi sua pergunta. Pode reformulá-la?";
+ 1039 │   }
+ 1040 │ };
+ 1041 │ 
+ 1042 │ // Variável para controlar se a resposta está pausada
+ 1043 │ let isPaused: Record<string, boolean> = {};
+ 1044 │ 
+ 1045 │ // Função para pausar a resposta da IA
+ 1046 │ export const pauseResponse = async (sessionId: string): Promise<void> => {
+ 1047 │   try {
+ 1048 │     isPaused[sessionId] = true;
+ 1049 │     isCancelled[sessionId] = false; // Garantir que não está cancelada
+ 1050 │     console.log(`Resposta da IA pausada para a sessão ${sessionId}. Estado atual:`, isPaused[sessionId]);
+ 1051 │   } catch (error) {
+ 1052 │     console.error('Erro ao pausar resposta da IA:', error);
+ 1053 │     throw error;
+ 1054 │   }
+ 1055 │ };
+ 1056 │ 
+ 1057 │ // Função para verificar se a resposta está pausada
+ 1058 │ export const isResponsePaused = (sessionId: string): boolean => {
+ 1059 │   const paused = isPaused[sessionId] || false;
+ 1060 │   // Para debugging
+ 1061 │   if (paused) {
+ 1062 │     console.log(`Verificação de pausa: sessão ${sessionId} está pausada`);
+ 1063 │   }
+ 1064 │   return paused;
+ 1065 │ };
+ 1066 │ 
+ 1067 │ // Variável para controlar se a resposta foi cancelada
+ 1068 │ let isCancelled: Record<string, boolean> = {};
+ 1069 │ 
+ 1070 │ // Função para cancelar a resposta da IA
+ 1071 │ export const cancelResponse = async (sessionId: string): Promise<void> => {
+ 1072 │   try {
+ 1073 │     isCancelled[sessionId] = true;
+ 1074 │     isPaused[sessionId] = false; // Certifique-se de que não está em pausa também
+ 1075 │     console.log(`Resposta da IA cancelada para a sessão ${sessionId}. Estado atual:`, isCancelled[sessionId]);
+ 1076 │   } catch (error) {
+ 1077 │     console.error('Erro ao cancelar resposta da IA:', error);
+ 1078 │     throw error;
+ 1079 │   }
+ 1080 │ };
+ 1081 │ 
+ 1082 │ // Função para verificar se a resposta foi cancelada
+ 1083 │ export const isResponseCancelled = (sessionId: string): boolean => {
+ 1084 │   const cancelled = isCancelled[sessionId] || false;
+ 1085 │   // Para debugging
+ 1086 │   if (cancelled) {
+ 1087 │     console.log(`Verificação de cancelamento: sessão ${sessionId} está cancelada`);
+ 1088 │   }
+ 1089 │   return cancelled;
+ 1090 │ };
+ 1091 │ 
+ 1092 │ // Função para retomar a resposta da IA
+ 1093 │ export const resumeResponse = async (sessionId: string): Promise<void> => {
+ 1094 │   try {
+ 1095 │     isPaused[sessionId] = false;
+ 1096 │     console.log(`Resposta da IA retomada para a sessão ${sessionId}. Estado atual:`, isPaused[sessionId]);
+ 1097 │   } catch (error) {
+ 1098 │     console.error('Erro ao retomar resposta da IA:', error);
+ 1099 │     throw error;
+ 1100 │   }
+ 1101 │ };
+ 1102 │ 
+ 1103 │ // Função para resetar o estado de cancelamento/pausa (útil ao iniciar novas respostas)
+ 1104 │ export const resetResponseState = (sessionId: string): void => {
+ 1105 │   const wasPaused = isPaused[sessionId];
+ 1106 │   const wasCancelled = isCancelled[sessionId];
+ 1107 │ 
+ 1108 │   isPaused[sessionId] = false;
+ 1109 │   isCancelled[sessionId] = false;
+ 1110 │ 
+ 1111 │   console.log(`Estados resetados para a sessão ${sessionId}. 
+ 1112 │     Estado anterior: pausado=${wasPaused}, cancelado=${wasCancelled}. 
+ 1113 │     Estado atual: pausado=${isPaused[sessionId]}, cancelado=${isCancelled[sessionId]}`);
+ 1114 │ };
+ 1115 │ 
+ 1116 │ // Limpar histórico da conversa
+ 1117 │ export function clearConversationHistory(sessionId: string): void {
+      ·                 ────────────┬───────────
+      ·                             ╰── `clearConversationHistory` redefined here
+ 1118 │   if (conversationHistory[sessionId]) {
+ 1119 │     // Mantém apenas a mensagem do sistema
+ 1120 │     const systemMessage = conversationHistory[sessionId][0];
+      ╰────
+
+  × the name `getConversationHistory` is defined multiple times
+      ╭─[/home/runner/workspace/src/services/aiChatService.ts:903:1]
+  903 │ }
+  904 │ 
+  905 │ // Obter histórico da conversa
+  906 │ export function getConversationHistory(sessionId: string): ChatMessage[] {
+      ·                 ───────────┬──────────
+      ·                            ╰── previous definition of `getConversationHistory` here
+  907 │   // Primeiro verifica se já está carregado na memória
+  908 │   if (conversationHistory[sessionId]) {
+  909 │     return conversationHistory[sessionId];
+  910 │   }
+  911 │ 
+  912 │   // Caso contrário, tenta recuperar do localStorage
+  913 │   try {
+  914 │     const savedHistory = localStorage.getItem(`conversationHistory_${sessionId}`);
+  915 │     if (savedHistory) {
+  916 │       const parsedHistory = JSON.parse(savedHistory) as ChatMessage[];
+  917 │       conversationHistory[sessionId] = parsedHistory;
+  918 │       return parsedHistory;
+  919 │     }
+  920 │   } catch (error) {
+  921 │     console.error("Erro ao recuperar histórico do localStorage:", error);
+  922 │   }
+  923 │ 
+  924 │   return [];
+  925 │ }
+  926 │ 
+  927 │ // Função para corrigir links da plataforma
+  928 │ function fixPlatformLinks(text: string): string {
+  929 │   const platformLinks = {
+  930 │     'Portal': 'https://pontoschool.com/portal',
+  931 │     'Portal de Estudos': 'https://pontoschool.com/portal',
+  932 │     'Agenda': 'https://pontoschool.com/agenda',
+  933 │     'Turmas': 'https://pontoschool.com/turmas',
+  934 │     'Grupos de Estudo': 'https://pontoschool.com/turmas?view=estudos',
+  935 │     'Biblioteca': 'https://pontoschool.com/biblioteca',
+  936 │     'Perfil': 'https://pontoschool.com/profile',
+  937 │     'Página de Perfil': 'https://pontoschool.com/profile',
+  938 │     'Configurações': 'https://pontoschool.com/configuracoes',
+  939 │     'Página de Configurações': 'https://pontoschool.com/configuracoes',
+  940 │     'Dashboard': 'https://pontoschool.com/dashboard',
+  941 │     'Epictus IA': 'https://pontoschool.com/epictus-ia',
+  942 │     'Mentor IA': 'https://pontoschool.com/mentor-ia',
+  943 │     'Planos de Estudo': 'https://pontoschool.com/planos-estudo',
+  944 │     'Conquistas': 'https://pontoschool.com/conquistas',
+  945 │     'Carteira': 'https://pontoschool.com/carteira',
+  946 │     'Mercado': 'https://pontoschool.com/mercado',
+  947 │     'Organização': 'https://pontoschool.com/organizacao',
+  948 │     'Comunidades': 'https://pontoschool.com/comunidades',
+  949 │     'Chat IA': 'https://pontoschool.com/chat-ia',
+  950 │     'School IA': 'https://pontoschool.com/school-ia',
+  951 │     'Novidades': 'https://pontoschool.com/novidades',
+  952 │     'Lembretes': 'https://pontoschool.com/lembretes',
+  953 │     'Pedidos de Ajuda': 'https://pontoschool.com/pedidos-ajuda',
+  954 │     'Conexão Expert': 'https://pontoschool.com/pedidos-ajuda',
+  955 │     'Estudos': 'https://pontoschool.com/estudos',
+  956 │     'Login': 'https://pontoschool.com/login',
+  957 │     'Cadastro': 'https://pontoschool.com/register',
+  958 │     'Página de Ajuda': 'https://pontoschool.com/ajuda',
+  959 │     'Ajuda': 'https://pontoschool.com/ajuda'
+  960 │   };
+  961 │ 
+  962 │   let newText = text;
+  963 │   const alreadyReplaced = new Set<string>();
+  964 │   const linkRegex = /\[(.+?)\]\((.+?)\)/g;
+  965 │ 
+  966 │   // Primeiro, coletar todos os links já presentes no texto e verificar se estão formatados corretamente
+  967 │   let match;
+  968 │ 
+  969 │   // Armazenar os links que precisam ser corrigidos
+  970 │   const linksToFix = [];
+  971 │ 
+  972 │   while ((match = linkRegex.exec(newText)) !== null) {
+  973 │     const linkText = match[1];
+  974 │     const url = match[2];
+  975 │     alreadyReplaced.add(url.toLowerCase());
+  976 │ 
+  977 │     // Também adicionar o texto do link para evitar duplicação com diferentes textos
+  978 │     for (const key in platformLinks) {
+  979 │       if (linkText.toLowerCase() === key.toLowerCase()) {
+  980 │         alreadyReplaced.add(platformLinks[key].toLowerCase());
+  981 │       }
+  982 │     }
+  983 │   }
+  984 │ 
+  985 │   // Substituir expressões mais específicas, evitando duplicidades
+  986 │   for (const key in platformLinks) {
+  987 │     const url = platformLinks[key];
+  988 │     // Pular se este URL já foi usado
+  989 │     if (alreadyReplaced.has(url.toLowerCase())) continue;
+  990 │ 
+  991 │     const regex = new RegExp(`\\b(${key})\\b(?![^\\[]*\\])`, 'gi'); // Busca palavras inteiras que não estão dentro de colchetes
+  992 │     if (regex.test(newText)) {
+  993 │       newText = newText.replace(regex, `[${key}](${url})`);
+  994 │       alreadyReplaced.add(url.toLowerCase());
+  995 │     }
+  996 │   }
+  997 │ 
+  998 │   // Adicionar correção para URLs que podem ter sido escritas incorretamente
+  999 │   newText = newText.replace(/\(https:\/\/pontoschool\.com(\s+)([^)]+)\)/g, '(https://pontoschool.com/$2)');
+ 1000 │ 
+ 1001 │   // Corrigir URLs que podem ter dupla barra
+ 1002 │   newText = newText.replace(/\(https:\/\/pontoschool\.com\/\/([^)]+)\)/g, '(https://pontoschool.com/$1)');
+ 1003 │ 
+ 1004 │   // Garantir que os links estejam formatados corretamente com os parênteses fora da URL clicável
+ 1005 │   // Primeiro, encontrar todos os links no formato [texto](url)
+ 1006 │   const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+ 1007 │   newText = newText.replace(markdownLinkRegex, (match, text, url) => {
+ 1008 │     // Certificar-se de que apenas a URL está dentro dos parênteses
+ 1009 │     const cleanUrl = url.split(' ')[0]; // Pegar apenas a URL sem atributos adicionais
+ 1010 │     return `[${text}](${cleanUrl})`;
+ 1011 │   });
+ 1012 │ 
+ 1013 │   return newText;
+ 1014 │ }
+ 1015 │ 
+ 1016 │ 
+ 1017 │ // Função para salvar o histórico da conversa no localStorage
+ 1018 │ function saveConversationHistory(sessionId: string, history: ChatMessage[]): void {
+ 1019 │   try {
+ 1020 │     localStorage.setItem(`conversationHistory_${sessionId}`, JSON.stringify(history));
+ 1021 │   } catch (error) {
+ 1022 │     console.error("Erro ao salvar o histórico da conversa:", error);
+ 1023 │   }
+ 1024 │ }
+ 1025 │ 
+ 1026 │ // Simulação de resposta da IA
+ 1027 │ const getResponseForMessage = (message: string): string => {
+ 1028 │   // Análise básica da mensagem para gerar uma resposta contextual
+ 1029 │   const formattedMessage = message.toLowerCase();
+ 1030 │ 
+ 1031 │   if (formattedMessage.includes('olá') || formattedMessage.includes('oi') || formattedMessage.includes('bom dia') || formattedMessage.includes('boa tarde') || formattedMessage.includes('boa noite')) {
+ 1032 │     return `**Olá, ${userInfo?.username || 'amigo'}!** 😊\n\nComo posso ajudar você hoje?`;
+ 1033 │   } else if (formattedMessage.includes('função') || formattedMessage.includes('o que você faz') || formattedMessage.includes('para que serve')) {
+ 1034 │     return `**Eu sou o Assistente de Suporte da Ponto.School**, aqui para te ajudar em tudo que precisar na plataforma! 🚀\n\nPosso ajudar com:\n\n• **Navegação:** Encontrar qualquer recurso na plataforma.\n• **Tutoriais:** Explicar o funcionamento de qualquer ferramenta.\n• **Dúvidas:** Responder qualquer questão sobre a plataforma ou o conteúdo.\n\nComo posso ajudar você agora?`;
+ 1035 │   } else if (formattedMessage.includes('portal') || formattedMessage.includes('material') || formattedMessage.includes('acessar conteúdo')) {
+ 1036 │     return `Você pode acessar o **Portal** com todos os materiais em https://pontoschool.com/portal\n\nLá você encontrará todos os seus cursos, materiais e recursos de estudo organizados por disciplina.\n\n_Basta clicar no link acima para ir direto para o Portal!_ 📚`;
+ 1037 │   } else {
+ 1038 │     return "Desculpe, não entendi sua pergunta. Pode reformulá-la?";
+ 1039 │   }
+ 1040 │ };
+ 1041 │ 
+ 1042 │ // Variável para controlar se a resposta está pausada
+ 1043 │ let isPaused: Record<string, boolean> = {};
+ 1044 │ 
+ 1045 │ // Função para pausar a resposta da IA
+ 1046 │ export const pauseResponse = async (sessionId: string): Promise<void> => {
+ 1047 │   try {
+ 1048 │     isPaused[sessionId] = true;
+ 1049 │     isCancelled[sessionId] = false; // Garantir que não está cancelada
+ 1050 │     console.log(`Resposta da IA pausada para a sessão ${sessionId}. Estado atual:`, isPaused[sessionId]);
+ 1051 │   } catch (error) {
+ 1052 │     console.error('Erro ao pausar resposta da IA:', error);
+ 1053 │     throw error;
+ 1054 │   }
+ 1055 │ };
+ 1056 │ 
+ 1057 │ // Função para verificar se a resposta está pausada
+ 1058 │ export const isResponsePaused = (sessionId: string): boolean => {
+ 1059 │   const paused = isPaused[sessionId] || false;
+ 1060 │   // Para debugging
+ 1061 │   if (paused) {
+ 1062 │     console.log(`Verificação de pausa: sessão ${sessionId} está pausada`);
+ 1063 │   }
+ 1064 │   return paused;
+ 1065 │ };
+ 1066 │ 
+ 1067 │ // Variável para controlar se a resposta foi cancelada
+ 1068 │ let isCancelled: Record<string, boolean> = {};
+ 1069 │ 
+ 1070 │ // Função para cancelar a resposta da IA
+ 1071 │ export const cancelResponse = async (sessionId: string): Promise<void> => {
+ 1072 │   try {
+ 1073 │     isCancelled[sessionId] = true;
+ 1074 │     isPaused[sessionId] = false; // Certifique-se de que não está em pausa também
+ 1075 │     console.log(`Resposta da IA cancelada para a sessão ${sessionId}. Estado atual:`, isCancelled[sessionId]);
+ 1076 │   } catch (error) {
+ 1077 │     console.error('Erro ao cancelar resposta da IA:', error);
+ 1078 │     throw error;
+ 1079 │   }
+ 1080 │ };
+ 1081 │ 
+ 1082 │ // Função para verificar se a resposta foi cancelada
+ 1083 │ export const isResponseCancelled = (sessionId: string): boolean => {
+ 1084 │   const cancelled = isCancelled[sessionId] || false;
+ 1085 │   // Para debugging
+ 1086 │   if (cancelled) {
+ 1087 │     console.log(`Verificação de cancelamento: sessão ${sessionId} está cancelada`);
+ 1088 │   }
+ 1089 │   return cancelled;
+ 1090 │ };
+ 1091 │ 
+ 1092 │ // Função para retomar a resposta da IA
+ 1093 │ export const resumeResponse = async (sessionId: string): Promise<void> => {
+ 1094 │   try {
+ 1095 │     isPaused[sessionId] = false;
+ 1096 │     console.log(`Resposta da IA retomada para a sessão ${sessionId}. Estado atual:`, isPaused[sessionId]);
+ 1097 │   } catch (error) {
+ 1098 │     console.error('Erro ao retomar resposta da IA:', error);
+ 1099 │     throw error;
+ 1100 │   }
+ 1101 │ };
+ 1102 │ 
+ 1103 │ // Função para resetar o estado de cancelamento/pausa (útil ao iniciar novas respostas)
+ 1104 │ export const resetResponseState = (sessionId: string): void => {
+ 1105 │   const wasPaused = isPaused[sessionId];
+ 1106 │   const wasCancelled = isCancelled[sessionId];
+ 1107 │ 
+ 1108 │   isPaused[sessionId] = false;
+ 1109 │   isCancelled[sessionId] = false;
+ 1110 │ 
+ 1111 │   console.log(`Estados resetados para a sessão ${sessionId}. 
+ 1112 │     Estado anterior: pausado=${wasPaused}, cancelado=${wasCancelled}. 
+ 1113 │     Estado atual: pausado=${isPaused[sessionId]}, cancelado=${isCancelled[sessionId]}`);
+ 1114 │ };
+ 1115 │ 
+ 1116 │ // Limpar histórico da conversa
+ 1117 │ export function clearConversationHistory(sessionId: string): void {
+ 1118 │   if (conversationHistory[sessionId]) {
+ 1119 │     // Mantém apenas a mensagem do sistema
+ 1120 │     const systemMessage = conversationHistory[sessionId][0];
+ 1121 │     conversationHistory[sessionId] = [systemMessage];
+ 1122 │ 
+ 1123 │     // Limpar do localStorage também
+ 1124 │     try {
+ 1125 │       localStorage.removeItem(`conversationHistory_${sessionId}`);
+ 1126 │     } catch (error) {
+ 1127 │       console.error("Erro ao limpar histórico do localStorage:", error);
+ 1128 │     }
+ 1129 │   }
+ 1130 │ }
+ 1131 │ 
+ 1132 │ // Obter histórico da conversa
+ 1133 │ export function getConversationHistory(sessionId: string): ChatMessage[] {
+      ·                 ───────────┬──────────
+      ·                            ╰── `getConversationHistory` redefined here
+ 1134 │   // Primeiro verifica se já está carregado na memória
+ 1135 │   if (conversationHistory[sessionId]) {
+ 1136 │     return conversationHistory[sessionId];
+      ╰────
+
+  × the name `saveConversationHistory` is defined multiple times
+      ╭─[/home/runner/workspace/src/services/aiChatService.ts:1015:1]
+ 1015 │ 
+ 1016 │ 
+ 1017 │ // Função para salvar o histórico da conversa no localStorage
+ 1018 │ function saveConversationHistory(sessionId: string, history: ChatMessage[]): void {
+      ·          ───────────┬───────────
+      ·                     ╰── previous definition of `saveConversationHistory` here
+ 1019 │   try {
+ 1020 │     localStorage.setItem(`conversationHistory_${sessionId}`, JSON.stringify(history));
+ 1021 │   } catch (error) {
+ 1022 │     console.error("Erro ao salvar o histórico da conversa:", error);
+ 1023 │   }
+ 1024 │ }
+ 1025 │ 
+ 1026 │ // Simulação de resposta da IA
+ 1027 │ const getResponseForMessage = (message: string): string => {
+ 1028 │   // Análise básica da mensagem para gerar uma resposta contextual
+ 1029 │   const formattedMessage = message.toLowerCase();
+ 1030 │ 
+ 1031 │   if (formattedMessage.includes('olá') || formattedMessage.includes('oi') || formattedMessage.includes('bom dia') || formattedMessage.includes('boa tarde') || formattedMessage.includes('boa noite')) {
+ 1032 │     return `**Olá, ${userInfo?.username || 'amigo'}!** 😊\n\nComo posso ajudar você hoje?`;
+ 1033 │   } else if (formattedMessage.includes('função') || formattedMessage.includes('o que você faz') || formattedMessage.includes('para que serve')) {
+ 1034 │     return `**Eu sou o Assistente de Suporte da Ponto.School**, aqui para te ajudar em tudo que precisar na plataforma! 🚀\n\nPosso ajudar com:\n\n• **Navegação:** Encontrar qualquer recurso na plataforma.\n• **Tutoriais:** Explicar o funcionamento de qualquer ferramenta.\n• **Dúvidas:** Responder qualquer questão sobre a plataforma ou o conteúdo.\n\nComo posso ajudar você agora?`;
+ 1035 │   } else if (formattedMessage.includes('portal') || formattedMessage.includes('material') || formattedMessage.includes('acessar conteúdo')) {
+ 1036 │     return `Você pode acessar o **Portal** com todos os materiais em https://pontoschool.com/portal\n\nLá você encontrará todos os seus cursos, materiais e recursos de estudo organizados por disciplina.\n\n_Basta clicar no link acima para ir direto para o Portal!_ 📚`;
+ 1037 │   } else {
+ 1038 │     return "Desculpe, não entendi sua pergunta. Pode reformulá-la?";
+ 1039 │   }
+ 1040 │ };
+ 1041 │ 
+ 1042 │ // Variável para controlar se a resposta está pausada
+ 1043 │ let isPaused: Record<string, boolean> = {};
+ 1044 │ 
+ 1045 │ // Função para pausar a resposta da IA
+ 1046 │ export const pauseResponse = async (sessionId: string): Promise<void> => {
+ 1047 │   try {
+ 1048 │     isPaused[sessionId] = true;
+ 1049 │     isCancelled[sessionId] = false; // Garantir que não está cancelada
+ 1050 │     console.log(`Resposta da IA pausada para a sessão ${sessionId}. Estado atual:`, isPaused[sessionId]);
+ 1051 │   } catch (error) {
+ 1052 │     console.error('Erro ao pausar resposta da IA:', error);
+ 1053 │     throw error;
+ 1054 │   }
+ 1055 │ };
+ 1056 │ 
+ 1057 │ // Função para verificar se a resposta está pausada
+ 1058 │ export const isResponsePaused = (sessionId: string): boolean => {
+ 1059 │   const paused = isPaused[sessionId] || false;
+ 1060 │   // Para debugging
+ 1061 │   if (paused) {
+ 1062 │     console.log(`Verificação de pausa: sessão ${sessionId} está pausada`);
+ 1063 │   }
+ 1064 │   return paused;
+ 1065 │ };
+ 1066 │ 
+ 1067 │ // Variável para controlar se a resposta foi cancelada
+ 1068 │ let isCancelled: Record<string, boolean> = {};
+ 1069 │ 
+ 1070 │ // Função para cancelar a resposta da IA
+ 1071 │ export const cancelResponse = async (sessionId: string): Promise<void> => {
+ 1072 │   try {
+ 1073 │     isCancelled[sessionId] = true;
+ 1074 │     isPaused[sessionId] = false; // Certifique-se de que não está em pausa também
+ 1075 │     console.log(`Resposta da IA cancelada para a sessão ${sessionId}. Estado atual:`, isCancelled[sessionId]);
+ 1076 │   } catch (error) {
+ 1077 │     console.error('Erro ao cancelar resposta da IA:', error);
+ 1078 │     throw error;
+ 1079 │   }
+ 1080 │ };
+ 1081 │ 
+ 1082 │ // Função para verificar se a resposta foi cancelada
+ 1083 │ export const isResponseCancelled = (sessionId: string): boolean => {
+ 1084 │   const cancelled = isCancelled[sessionId] || false;
+ 1085 │   // Para debugging
+ 1086 │   if (cancelled) {
+ 1087 │     console.log(`Verificação de cancelamento: sessão ${sessionId} está cancelada`);
+ 1088 │   }
+ 1089 │   return cancelled;
+ 1090 │ };
+ 1091 │ 
+ 1092 │ // Função para retomar a resposta da IA
+ 1093 │ export const resumeResponse = async (sessionId: string): Promise<void> => {
+ 1094 │   try {
+ 1095 │     isPaused[sessionId] = false;
+ 1096 │     console.log(`Resposta da IA retomada para a sessão ${sessionId}. Estado atual:`, isPaused[sessionId]);
+ 1097 │   } catch (error) {
+ 1098 │     console.error('Erro ao retomar resposta da IA:', error);
+ 1099 │     throw error;
+ 1100 │   }
+ 1101 │ };
+ 1102 │ 
+ 1103 │ // Função para resetar o estado de cancelamento/pausa (útil ao iniciar novas respostas)
+ 1104 │ export const resetResponseState = (sessionId: string): void => {
+ 1105 │   const wasPaused = isPaused[sessionId];
+ 1106 │   const wasCancelled = isCancelled[sessionId];
+ 1107 │ 
+ 1108 │   isPaused[sessionId] = false;
+ 1109 │   isCancelled[sessionId] = false;
+ 1110 │ 
+ 1111 │   console.log(`Estados resetados para a sessão ${sessionId}. 
+ 1112 │     Estado anterior: pausado=${wasPaused}, cancelado=${wasCancelled}. 
+ 1113 │     Estado atual: pausado=${isPaused[sessionId]}, cancelado=${isCancelled[sessionId]}`);
+ 1114 │ };
+ 1115 │ 
+ 1116 │ // Limpar histórico da conversa
+ 1117 │ export function clearConversationHistory(sessionId: string): void {
+ 1118 │   if (conversationHistory[sessionId]) {
+ 1119 │     // Mantém apenas a mensagem do sistema
+ 1120 │     const systemMessage = conversationHistory[sessionId][0];
+ 1121 │     conversationHistory[sessionId] = [systemMessage];
+ 1122 │ 
+ 1123 │     // Limpar do localStorage também
+ 1124 │     try {
+ 1125 │       localStorage.removeItem(`conversationHistory_${sessionId}`);
+ 1126 │     } catch (error) {
+ 1127 │       console.error("Erro ao limpar histórico do localStorage:", error);
+ 1128 │     }
+ 1129 │   }
+ 1130 │ }
+ 1131 │ 
+ 1132 │ // Obter histórico da conversa
+ 1133 │ export function getConversationHistory(sessionId: string): ChatMessage[] {
+ 1134 │   // Primeiro verifica se já está carregado na memória
+ 1135 │   if (conversationHistory[sessionId]) {
+ 1136 │     return conversationHistory[sessionId];
+ 1137 │   }
+ 1138 │ 
+ 1139 │   // Caso contrário, tenta recuperar do localStorage
+ 1140 │   try {
+ 1141 │     const savedHistory = localStorage.getItem(`conversationHistory_${sessionId}`);
+ 1142 │     if (savedHistory) {
+ 1143 │       const parsedHistory = JSON.parse(savedHistory) as ChatMessage[];
+ 1144 │       conversationHistory[sessionId] = parsedHistory;
+ 1145 │       return parsedHistory;
+ 1146 │     }
+ 1147 │   } catch (error) {
+ 1148 │     console.error("Erro ao recuperar histórico do localStorage:", error);
+ 1149 │   }
+ 1150 │ 
+ 1151 │   return [];
+ 1152 │ }
+ 1153 │ 
+ 1154 │ // Função para salvar o histórico da conversa no localStorage
+ 1155 │ function saveConversationHistory(sessionId: string, history: ChatMessage[]): void {
+      ·          ───────────┬───────────
+      ·                     ╰── `saveConversationHistory` redefined here
+ 1156 │   try {
+ 1157 │     localStorage.setItem(`conversationHistory_${sessionId}`, JSON.stringify(history));
+ 1158 │   } catch (error) {
+      ╰────
+/home/runner/workspace/src/services/aiChatService.ts:887:1
