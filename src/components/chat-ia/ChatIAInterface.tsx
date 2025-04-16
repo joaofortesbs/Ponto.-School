@@ -39,9 +39,26 @@ const ChatIAInterface = () => {
     return savedSessionId || uuidv4();
   });
 
-  // Carregar mensagens do armazenamento local
+  // Carregar mensagens do armazenamento local e do serviço aiChatService
   const [messages, setMessages] = useState<Message[]>(() => {
     try {
+      // Primeiro verificar se há histórico no serviço de IA
+      const aiServiceHistory = getConversationHistory(sessionId);
+      
+      // Se tiver histórico no serviço, converter para o formato Message
+      if (aiServiceHistory && aiServiceHistory.length > 0) {
+        // Pular a primeira mensagem que é do sistema (não visível para o usuário)
+        const visibleHistory = aiServiceHistory.slice(1);
+        
+        return visibleHistory.map((msg, index) => ({
+          id: `${msg.role}-${index}`,
+          sender: msg.role === 'user' ? 'user' : 'ai',
+          content: msg.content,
+          timestamp: new Date()
+        }));
+      }
+      
+      // Se não tiver no serviço, tentar carregar do localStorage
       const savedMessages = localStorage.getItem(CHAT_STORAGE_KEY);
       if (savedMessages) {
         const parsedMessages = JSON.parse(savedMessages) as Message[];
@@ -174,6 +191,8 @@ const ChatIAInterface = () => {
       
       // Limpar localStorage
       localStorage.removeItem(CHAT_STORAGE_KEY);
+      
+      console.log("Histórico de conversa limpo completamente. Nova sessão:", newSessionId);
     }
   };
 
@@ -203,6 +222,13 @@ const ChatIAInterface = () => {
       };
 
       setMessages(prev => [...prev, aiMessage]);
+      
+      // Opcional: sincronizar o estado local com o histórico mais recente do serviço
+      // Isso garante que estamos sempre alinhados com o estado interno do serviço
+      const latestHistory = getConversationHistory(sessionId);
+      if (latestHistory && latestHistory.length > 0) {
+        console.log("Histórico de conversa atualizado com sucesso!", latestHistory.length, "mensagens");
+      }
     } catch (error) {
       console.error("Erro ao processar mensagem:", error);
 
