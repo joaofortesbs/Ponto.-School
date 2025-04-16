@@ -405,6 +405,8 @@ const FloatingChatSupport: React.FC = () => {
   const [showEpictusPersonalizeModal, setShowEpictusPersonalizeModal] = useState(false);
   const [epictusNickname, setEpictusNickname] = useState(userName || "Usuário");
   const [tempNickname, setTempNickname] = useState("");
+  const [userOccupation, setUserOccupation] = useState("");
+  const [tempOccupation, setTempOccupation] = useState("");
 
   // Funções para lidar com feedback das mensagens
   const handleMessageFeedback = (messageId: number, feedback: 'positive' | 'negative') => {
@@ -2355,6 +2357,26 @@ Exemplo de formato da resposta:
                 
                 <div className="bg-white/70 dark:bg-gray-800/40 p-4 rounded-xl border border-gray-100/80 dark:border-gray-700/30 backdrop-filter backdrop-blur-sm shadow-sm">
                   <h5 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-1.5">
+                    <User className="h-4 w-4 text-orange-500" />
+                    O que você faz?
+                  </h5>
+                  
+                  <div className="space-y-3">
+                    <textarea
+                      value={tempOccupation || userOccupation}
+                      onChange={(e) => setTempOccupation(e.target.value)}
+                      placeholder="Ex: Estudante de engenharia, Professor, Profissional de Marketing..."
+                      className="w-full h-20 px-3 py-2 bg-white/80 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 text-sm resize-none"
+                    />
+                    
+                    <p className="text-xs text-gray-500 dark:text-gray-400 italic">
+                      Isso ajuda a IA a adaptar as respostas ao seu contexto pessoal ou profissional, tornando as informações mais relevantes para você.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="bg-white/70 dark:bg-gray-800/40 p-4 rounded-xl border border-gray-100/80 dark:border-gray-700/30 backdrop-filter backdrop-blur-sm shadow-sm">
+                  <h5 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-1.5">
                     <Zap className="h-4 w-4 text-orange-500" />
                     Personalidade do Epictus IA
                   </h5>
@@ -2411,10 +2433,31 @@ Exemplo de formato da resposta:
                 size="sm"
                 className="px-3 py-1 h-8 text-xs bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white border-none shadow-lg shadow-orange-500/20 hover:shadow-xl hover:shadow-orange-500/30 transition-all duration-300 rounded-lg"
                 onClick={() => {
+                  let hasChanges = false;
+                  let confirmationMessage = "Perfeito! ";
+
+                  // Atualiza o nickname se foi alterado
                   if (tempNickname.trim()) {
                     setEpictusNickname(tempNickname.trim());
                     setTempNickname("");
+                    confirmationMessage += `A partir de agora vou te chamar de ${tempNickname.trim() || epictusNickname}. `;
+                    hasChanges = true;
                   }
+                  
+                  // Atualiza a ocupação se foi alterada
+                  if (tempOccupation.trim()) {
+                    setUserOccupation(tempOccupation.trim());
+                    setTempOccupation("");
+                    confirmationMessage += `Entendi que você ${tempOccupation.trim()} e vou adaptar minhas respostas ao seu contexto. `;
+                    hasChanges = true;
+                  }
+                  
+                  if (!hasChanges) {
+                    confirmationMessage = "Suas configurações foram mantidas. ";
+                  }
+                  
+                  confirmationMessage += "Como posso te ajudar hoje?";
+                  
                   setShowEpictusPersonalizeModal(false);
                   
                   // Adiciona uma mensagem de confirmação ao chat
@@ -2422,7 +2465,7 @@ Exemplo de formato da resposta:
                     ...prevMessages, 
                     {
                       id: Date.now(),
-                      content: `Perfeito! A partir de agora vou te chamar de ${tempNickname.trim() || epictusNickname}. Como posso te ajudar hoje?`,
+                      content: confirmationMessage,
                       sender: "assistant",
                       timestamp: new Date()
                     }
@@ -2431,7 +2474,7 @@ Exemplo de formato da resposta:
                   // Notificação visual
                   toast({
                     title: "Personalização salva",
-                    description: `O Epictus IA agora irá te chamar de ${tempNickname.trim() || epictusNickname}.`,
+                    description: "Suas preferências foram atualizadas com sucesso.",
                     duration: 3000,
                   });
                 }}
