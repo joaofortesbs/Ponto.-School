@@ -2269,27 +2269,7 @@ Exemplo de formato da resposta:
               </Button>
             </div>
 
-            <div className="flex items-center justify-center bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg mb-4">
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center mx-auto mb-3">
-                  <Globe className="h-6 w-6 text-white" />
-                </div>
-                <p className="text-sm font-medium mb-2">Ativar Busca Profunda</p>
-                <Switch
-                  checked={deepSearchEnabled}
-                  onCheckedChange={(checked) => {
-                    setDeepSearchEnabled(checked);
-                    if (checked) {
-                      toast({
-                        title: "Busca Profunda ativada",
-                        description: "Suas pesquisas agora serão realizadas com mais profundidade e precisão",
-                        duration: 3000,
-                      });
-                    }
-                  }}
-                />
-              </div>
-            </div>
+            
             
             {/* Opção de pesquisa na internet global */}
             <div className="mb-2">
