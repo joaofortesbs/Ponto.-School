@@ -2338,20 +2338,110 @@ Exemplo de formato da resposta:
                               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // Compartilhar por e-mail
-                                const subject = encodeURIComponent("Material compartilhado da Ponto.School");
-                                const body = encodeURIComponent(`Confira este conteúdo da Ponto.School:\n\n${message.content}`);
-                                window.location.href = `mailto:?subject=${subject}&body=${body}`;
                                 
+                                // Preparar conteúdo para e-mail com formatação HTML
+                                const formattedContent = message.content
+                                  // Converter quebras de linha em <br>
+                                  .replace(/\n/g, '<br>')
+                                  // Converter negrito markdown para HTML
+                                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                  // Converter itálico markdown para HTML
+                                  .replace(/\_(.*?)\_/g, '<em>$1</em>')
+                                  // Converter links markdown para HTML
+                                  .replace(/\[(.*?)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2">$1</a>');
+                                
+                                // Estrutura completa do email
+                                const emailHTML = `
+                                <html>
+                                <head>
+                                  <style>
+                                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                                    .header { background-color: #FF6B00; color: white; padding: 15px; border-radius: 8px 8px 0 0; }
+                                    .content { padding: 20px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px; }
+                                    .footer { margin-top: 20px; font-size: 12px; color: #888; text-align: center; }
+                                    h1 { margin: 0; font-size: 20px; }
+                                    a { color: #FF6B00; text-decoration: none; }
+                                    a:hover { text-decoration: underline; }
+                                  </style>
+                                </head>
+                                <body>
+                                  <div class="container">
+                                    <div class="header">
+                                      <h1>Conteúdo compartilhado da Ponto.School</h1>
+                                    </div>
+                                    <div class="content">
+                                      ${formattedContent}
+                                    </div>
+                                    <div class="footer">
+                                      <p>Este conteúdo foi compartilhado através da plataforma <a href="https://www.ponto.school">Ponto.School</a></p>
+                                    </div>
+                                  </div>
+                                </body>
+                                </html>`;
+                                
+                                // Versão plain text para clientes que não suportam HTML
+                                const plainText = `Conteúdo compartilhado da Ponto.School\n\n${message.content}\n\nCompartilhado via Ponto.School`;
+                                
+                                // Criar assunto do e-mail
+                                const subject = encodeURIComponent("Material compartilhado da Ponto.School");
+                                
+                                // Preparar corpo do e-mail (versão texto)
+                                const body = encodeURIComponent(plainText);
+                                
+                                try {
+                                  // Tentativa de usar a API moderna EmailJS se disponível no navegador
+                                  if (window.Email && typeof window.Email.send === 'function') {
+                                    const recipientEmail = prompt("Digite o endereço de e-mail do destinatário:");
+                                    if (recipientEmail) {
+                                      // Usando EmailJS (precisaria ser configurado com credenciais)
+                                      window.Email.send({
+                                        SecureToken: "seu-token-securizado",
+                                        To: recipientEmail,
+                                        From: "noreply@ponto.school",
+                                        Subject: "Material compartilhado da Ponto.School",
+                                        Body: emailHTML
+                                      }).then(
+                                        message => {
+                                          if (message === "OK") {
+                                            toast({
+                                              title: "E-mail enviado com sucesso!",
+                                              description: `Conteúdo enviado para ${recipientEmail}`,
+                                              duration: 3000,
+                                            });
+                                          } else {
+                                            throw new Error("Falha ao enviar e-mail");
+                                          }
+                                        }
+                                      );
+                                    }
+                                  } else {
+                                    // Método de fallback usando mailto
+                                    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+                                    
+                                    toast({
+                                      title: "E-mail sendo preparado",
+                                      description: "Seu cliente de e-mail será aberto para compartilhar o conteúdo",
+                                      duration: 3000,
+                                    });
+                                  }
+                                } catch (error) {
+                                  console.error("Erro ao compartilhar por e-mail:", error);
+                                  
+                                  // Método de fallback em caso de erro
+                                  window.location.href = `mailto:?subject=${subject}&body=${body}`;
+                                  
+                                  toast({
+                                    title: "E-mail sendo preparado",
+                                    description: "Seu cliente de e-mail será aberto para compartilhar o conteúdo",
+                                    duration: 3000,
+                                  });
+                                }
+                                
+                                // Fechar todos os popups após a ação
                                 setMessages(prevMessages => 
                                   prevMessages.map(msg => ({...msg, showExportOptions: false, showExportFormats: false, showShareOptions: false}))
                                 );
-                                
-                                toast({
-                                  title: "E-mail sendo preparado",
-                                  description: "Seu cliente de e-mail será aberto para compartilhar o conteúdo",
-                                  duration: 3000,
-                                });
                               }}
                             >
                               <FileText className="h-3.5 w-3.5 mr-2 text-orange-500" />
