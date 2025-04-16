@@ -383,6 +383,7 @@ const FloatingChatSupport: React.FC = () => {
   // Estado para controlar modal de busca profunda
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [deepSearchEnabled, setDeepSearchEnabled] = useState(false);
+  const [globalSearchEnabled, setGlobalSearchEnabled] = useState(false);
 
   // Funções para lidar com feedback das mensagens
   const handleMessageFeedback = (messageId: number, feedback: 'positive' | 'negative') => {
@@ -2286,6 +2287,34 @@ Exemplo de formato da resposta:
               </div>
             </div>
             
+            {/* Opção de pesquisa na internet global */}
+            <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg mb-4">
+              <div className="flex items-center flex-1">
+                <Checkbox 
+                  id="global-search" 
+                  checked={globalSearchEnabled}
+                  onCheckedChange={(checked) => {
+                    setGlobalSearchEnabled(!!checked);
+                    if (checked) {
+                      toast({
+                        title: "Busca global ativada",
+                        description: "Suas pesquisas agora incluirão resultados da internet global",
+                        duration: 3000,
+                      });
+                    }
+                  }}
+                  className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                />
+                <label 
+                  htmlFor="global-search" 
+                  className="ml-2 text-sm font-medium flex items-center gap-1 cursor-pointer"
+                >
+                  <Globe className="h-3.5 w-3.5 text-blue-600" />
+                  Pesquise em toda a internet global
+                </label>
+              </div>
+            </div>
+            
             <p className="text-xs text-gray-500 dark:text-gray-400 text-center mb-3">
               A Busca Profunda permite encontrar informações mais detalhadas e específicas, analisando fontes mais extensas e complexas.
             </p>
@@ -2304,9 +2333,19 @@ Exemplo de formato da resposta:
                 className="text-xs bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white border-none"
                 onClick={() => {
                   setShowSearchModal(false);
+                  
+                  let description = "Busca padrão será utilizada em suas pesquisas";
+                  if (deepSearchEnabled && globalSearchEnabled) {
+                    description = "Busca Profunda e pesquisa global estão ativas para suas próximas pesquisas";
+                  } else if (deepSearchEnabled) {
+                    description = "Busca Profunda está ativa para suas próximas pesquisas";
+                  } else if (globalSearchEnabled) {
+                    description = "Pesquisa na internet global está ativa para suas próximas pesquisas";
+                  }
+                  
                   toast({
                     title: "Configurações salvas",
-                    description: deepSearchEnabled ? "Busca Profunda está ativa para suas próximas pesquisas" : "Busca padrão será utilizada em suas pesquisas",
+                    description: description,
                     duration: 3000,
                   });
                 }}
