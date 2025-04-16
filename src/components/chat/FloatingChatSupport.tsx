@@ -80,6 +80,7 @@ interface ChatMessage {
   feedback?: 'positive' | 'negative';
   needsImprovement?: boolean;
   isEdited?: boolean; // Adicione a propriedade isEdited
+  showExportOptions?: boolean; // Controla a visibilidade do popup de exportação
 }
 
 interface Ticket {
@@ -641,6 +642,21 @@ const FloatingChatSupport: React.FC = () => {
       setUserHasScrolled(false); // Reset o estado de rolagem do usuário quando uma nova mensagem é adicionada
     }
   }, [messages.length, isTyping]);
+  
+  // Adicionar ouvinte de clique global para fechar popups de exportação
+  useEffect(() => {
+    const handleGlobalClick = () => {
+      setMessages(prevMessages => 
+        prevMessages.map(msg => ({...msg, showExportOptions: false}))
+      );
+    };
+    
+    document.addEventListener('click', handleGlobalClick);
+    
+    return () => {
+      document.removeEventListener('click', handleGlobalClick);
+    };
+  }, []);
 
   // Estado para controlar a visibilidade do botão de voltar ao fim
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
@@ -2127,6 +2143,54 @@ Exemplo de formato da resposta:
                           <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                         </svg>
                       </button>
+                      
+                      {/* Novo botão de Exportar com popup */}
+                      <div className="relative">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setMessages(prevMessages => 
+                              prevMessages.map(msg => ({
+                                ...msg, 
+                                showExportOptions: msg.id === message.id ? !msg.showExportOptions : false
+                              }))
+                            );
+                          }}
+                          className="p-1 rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
+                          title="Exportar mensagem"
+                        >
+                          <Download className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
+                        </button>
+                        
+                        {message.showExportOptions && (
+                          <div className="absolute z-50 bottom-full right-0 mb-1 w-28 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
+                            <button 
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Funcionalidade de exportar (seria implementada futuramente)
+                                setMessages(prevMessages => 
+                                  prevMessages.map(msg => ({...msg, showExportOptions: false}))
+                                );
+                              }}
+                            >
+                              Exportar
+                            </button>
+                            <button 
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Funcionalidade de compartilhar (seria implementada futuramente)
+                                setMessages(prevMessages => 
+                                  prevMessages.map(msg => ({...msg, showExportOptions: false}))
+                                );
+                              }}
+                            >
+                              Compartilhar
+                            </button>
+                          </div>
+                        )}
+                      </div>
                       
                       <button 
                         onClick={() => {
