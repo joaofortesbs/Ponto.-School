@@ -1282,7 +1282,7 @@ Exemplo de formato da resposta:
 
       // Upload para o storage
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('profile-images')
+        .from('avatars')
         .upload(filePath, fileToUpload, {
           cacheControl: '3600',
           upsert: true
@@ -1294,7 +1294,7 @@ Exemplo de formato da resposta:
 
       // Obter a URL pública da imagem
       const { data: publicUrlData } = supabase.storage
-        .from('profile-images')
+        .from('avatars')
         .getPublicUrl(filePath);
 
       if (!publicUrlData.publicUrl) {
