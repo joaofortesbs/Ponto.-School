@@ -1955,12 +1955,11 @@ Exemplo de formato da resposta:
     </div>
   );
 
-  const renderChatContent = () => {
-    return (
-      <div className="flex flex-col h-full">
-        <ScrollArea
-          className="flex-1 p-4 custom-scrollbar overflow-y-auto relative"
-          style={{ maxHeight: "calc(100% - 90px)" }}
+  const renderChatContent = () => (
+    <div className="flex flex-col h-full">
+      <ScrollArea
+        className="flex-1 p-4 custom-scrollbar overflow-y-auto relative"
+        style={{ maxHeight: "calc(100% - 90px)" }}
       >
         {/* Botão flutuante para voltar ao fim da conversa */}
         {showScrollToBottom && (
@@ -2806,11 +2805,11 @@ Exemplo de formato da resposta:
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
-      )
-    };
+    </div>
+  );
 
-      {/* AI Settings Popover */}
-      {isShowingAISettings && (
+  {/* AI Settings Popover */}
+  {isShowingAISettings && (
         <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-xl w-[85%] max-w-sm animate-fadeIn">
           <div className="flex justify-between items-center mb-3">
             <h4 className="text-sm font-medium flex items-center gap-1">
