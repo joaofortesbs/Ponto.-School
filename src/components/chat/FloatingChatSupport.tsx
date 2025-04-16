@@ -2173,7 +2173,7 @@ Exemplo de formato da resposta:
                         
                         {/* Menu principal com opções Exportar e Compartilhar */}
                         {message.showExportOptions && !message.showExportFormats && (
-                          <div className="absolute z-50 bottom-full right-0 mb-1 w-28 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
+                          <div className="absolute z-50 top-full right-0 mt-1 w-28 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
                             <button 
                               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
                               onClick={(e) => {
@@ -2220,7 +2220,7 @@ Exemplo de formato da resposta:
                         
                         {/* Menu secundário com formatos de exportação */}
                         {message.showExportFormats && (
-                          <div className="absolute z-50 bottom-full right-0 mb-1 w-36 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
+                          <div className="absolute z-50 top-full right-0 mt-1 w-36 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
                             <button 
                               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
                               onClick={(e) => {
@@ -2308,7 +2308,7 @@ Exemplo de formato da resposta:
                         
                         {/* Menu secundário com opções de compartilhamento */}
                         {message.showShareOptions && (
-                          <div className="absolute z-50 bottom-full right-0 mb-1 w-64 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
+                          <div className="absolute z-50 top-full right-0 mt-1 w-64 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
                             <button 
                               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
                               onClick={(e) => {
