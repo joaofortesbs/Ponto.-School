@@ -55,46 +55,46 @@ const ChatIAInterface = () => {
           title: 'Mensagem do Chat Epictus IA',
           text: content,
         });
-        setShareNotification("Mensagem compartilhada com sucesso!");
+        // Não mostrar notificação para não confundir com a cópia
+        // O compartilhamento já abre uma UI própria do sistema
       } else {
-        // Fallback para navegadores que não suportam a API Share
-        setShareNotification("Seu navegador não suporta compartilhamento nativo.");
-        console.error("API de compartilhamento não disponível");
+        // Apenas mostrar no console, sem notificação visual
+        console.log("API de compartilhamento não disponível");
+        
+        // Abrir um menu de compartilhamento alternativo
+        const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(content)}`;
+        window.open(url, '_blank');
       }
     } catch (error) {
-      // Usuário cancelou o compartilhamento ou ocorreu outro erro
-      console.error("Erro ao compartilhar mensagem:", error);
-      
-      // Não mostrar mensagem caso usuário cancele o compartilhamento
-      if (error.name !== 'AbortError') {
-        setShareNotification("Erro ao compartilhar mensagem");
-      }
-    }
-    
-    // Limpar a notificação após 3 segundos (se houver)
-    if (setShareNotification) {
-      setTimeout(() => {
-        setShareNotification(null);
-      }, 3000);
+      // Ignorar erros de compartilhamento (como cancelamento)
+      console.error("Compartilhamento cancelado ou com erro:", error);
+      // Não mostrar notificação de erro para o usuário
     }
   };
   
   // Função para exportar mensagem como arquivo de texto
   const handleExportMessage = (content: string, sender: string) => {
-    const element = document.createElement("a");
-    const file = new Blob([content], {type: 'text/plain'});
-    element.href = URL.createObjectURL(file);
-    element.download = `epictus-ia-mensagem-${new Date().toISOString().slice(0,10)}.txt`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-    
-    setShareNotification("Mensagem exportada com sucesso!");
-    
-    // Limpar a notificação após 3 segundos
-    setTimeout(() => {
-      setShareNotification(null);
-    }, 3000);
+    try {
+      const element = document.createElement("a");
+      const file = new Blob([content], {type: 'text/plain'});
+      element.href = URL.createObjectURL(file);
+      element.download = `epictus-ia-mensagem-${new Date().toISOString().slice(0,10)}.txt`;
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+      
+      setShareNotification("Mensagem exportada com sucesso!");
+      
+      // Limpar a notificação após 3 segundos
+      setTimeout(() => {
+        setShareNotification(null);
+      }, 3000);
+    } catch (error) {
+      console.error("Erro ao exportar mensagem:", error);
+      // Mostrar notificação apenas para erro
+      setShareNotification("Erro ao exportar mensagem");
+      setTimeout(() => setShareNotification(null), 3000);
+    }
   };
 
   // Carregar mensagens do armazenamento local e do serviço aiChatService
@@ -412,6 +412,7 @@ const ChatIAInterface = () => {
                         title="Copiar mensagem"
                         onClick={() => {
                           navigator.clipboard.writeText(message.content);
+                          // Mostrar notificação visual apenas para a operação de cópia
                           setShareNotification("Mensagem copiada para a área de transferência!");
                           setTimeout(() => setShareNotification(null), 3000);
                         }}
