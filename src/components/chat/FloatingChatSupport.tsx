@@ -387,6 +387,7 @@ const FloatingChatSupport: React.FC = () => {
   const [deepSearchEnabled, setDeepSearchEnabled] = useState(false);
   const [globalSearchEnabled, setGlobalSearchEnabled] = useState(false);
   const [academicSearchEnabled, setAcademicSearchEnabled] = useState(false);
+  const [socialSearchEnabled, setSocialSearchEnabled] = useState(false);
 
   // Funções para lidar com feedback das mensagens
   const handleMessageFeedback = (messageId: number, feedback: 'positive' | 'negative') => {
@@ -2353,6 +2354,40 @@ Exemplo de formato da resposta:
                   >
                     <FileText className="h-3.5 w-3.5 text-purple-600" />
                     Pesquisar artigos e fóruns acadêmicos
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            {/* Opção de pesquisa social */}
+            <div className="mb-2">
+              <h4 className="text-sm font-bold text-green-600 dark:text-green-400 ml-1 mb-1 flex items-center gap-1">
+                <Users className="h-4 w-4" />
+                Social
+              </h4>
+              <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg mb-4">
+                <div className="flex items-center flex-1">
+                  <Checkbox 
+                    id="social-search" 
+                    checked={socialSearchEnabled}
+                    onCheckedChange={(checked) => {
+                      setSocialSearchEnabled(!!checked);
+                      if (checked) {
+                        toast({
+                          title: "Busca social ativada",
+                          description: "Suas pesquisas agora incluirão discussões e opiniões de redes sociais",
+                          duration: 3000,
+                        });
+                      }
+                    }}
+                    className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+                  />
+                  <label 
+                    htmlFor="social-search" 
+                    className="ml-2 text-sm font-medium flex items-center gap-1 cursor-pointer"
+                  >
+                    <MessageCircle className="h-3.5 w-3.5 text-green-600" />
+                    Discussões e opiniões
                   </label>
                 </div>
               </div>
