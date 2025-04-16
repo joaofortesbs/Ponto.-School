@@ -2290,30 +2290,36 @@ Exemplo de formato da resposta:
             </div>
             
             {/* Opção de pesquisa na internet global */}
-            <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg mb-4">
-              <div className="flex items-center flex-1">
-                <Checkbox 
-                  id="global-search" 
-                  checked={globalSearchEnabled}
-                  onCheckedChange={(checked) => {
-                    setGlobalSearchEnabled(!!checked);
-                    if (checked) {
-                      toast({
-                        title: "Busca global ativada",
-                        description: "Suas pesquisas agora incluirão resultados da internet global",
-                        duration: 3000,
-                      });
-                    }
-                  }}
-                  className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                />
-                <label 
-                  htmlFor="global-search" 
-                  className="ml-2 text-sm font-medium flex items-center gap-1 cursor-pointer"
-                >
-                  <Globe className="h-3.5 w-3.5 text-blue-600" />
-                  Pesquise em toda a internet global
-                </label>
+            <div className="mb-2">
+              <h4 className="text-sm font-bold text-blue-600 dark:text-blue-400 ml-1 mb-1 flex items-center gap-1">
+                <Globe className="h-4 w-4" />
+                Web
+              </h4>
+              <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg mb-4">
+                <div className="flex items-center flex-1">
+                  <Checkbox 
+                    id="global-search" 
+                    checked={globalSearchEnabled}
+                    onCheckedChange={(checked) => {
+                      setGlobalSearchEnabled(!!checked);
+                      if (checked) {
+                        toast({
+                          title: "Busca global ativada",
+                          description: "Suas pesquisas agora incluirão resultados da internet global",
+                          duration: 3000,
+                        });
+                      }
+                    }}
+                    className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                  />
+                  <label 
+                    htmlFor="global-search" 
+                    className="ml-2 text-sm font-medium flex items-center gap-1 cursor-pointer"
+                  >
+                    <Globe className="h-3.5 w-3.5 text-blue-600" />
+                    Pesquise em toda a internet global
+                  </label>
+                </div>
               </div>
             </div>
             
