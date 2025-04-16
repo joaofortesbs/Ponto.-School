@@ -58,6 +58,7 @@ import {
   CheckCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 import { generateAIResponse, getConversationHistory, clearConversationHistory } from "@/services/aiChatService";
 import { Checkbox } from "@/components/ui/checkbox";
 
