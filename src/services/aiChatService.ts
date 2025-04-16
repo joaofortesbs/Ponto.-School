@@ -730,7 +730,38 @@ Este é o slogan que representa a essência da Ponto.School - nossa missão é p
     // Usar o nome de usuário completo para respostas
     const usernameFull = userContext.username;
 
-    // Configuração da solicitação para a API Gemini
+    // Inicializar o histórico de conversa se não existir
+    if (!conversationHistory[sessionId]) {
+      initializeConversationHistory(sessionId, userContext);
+    }
+
+    // Adicionar a mensagem do usuário ao histórico
+    conversationHistory[sessionId].push({ role: 'user', content: message });
+
+    // Preparar as mensagens para enviar à API do Gemini
+    // Formatando o histórico da conversa para o formato que o Gemini espera
+    const geminiContents = [];
+
+    // Mensagem do sistema (primeira mensagem no histórico)
+    const systemMessage = conversationHistory[sessionId][0];
+    geminiContents.push({
+      role: "user",
+      parts: [{ text: systemMessage.content }]
+    });
+
+    // Restante do histórico (pulando a mensagem do sistema)
+    for (let i = 1; i < conversationHistory[sessionId].length; i++) {
+      const msg = conversationHistory[sessionId][i];
+      geminiContents.push({
+        role: msg.role === 'user' ? 'user' : 'model',
+        parts: [{ text: msg.content }]
+      });
+    }
+
+    // Configuração da solicitação para a API Gemini com o histórico completo
+    console.log(`Enviando histórico de conversa para Gemini com ${geminiContents.length} mensagens`);
+    
+    // Usar o endpoint de chat que suporta contexto
     const response = await axios.post(
       `${GEMINI_BASE_URL}?key=${GEMINI_API_KEY}`,
       {
@@ -839,6 +870,9 @@ Contexto do usuário:
               - Recursos expandidos de visualização de conteúdo
               - Futuras ferramentas de preparação para vestibulares e concursos
 
+              Histórico de mensagens anteriores:
+              ${conversationHistory[sessionId].slice(1).map(msg => `${msg.role}: ${msg.content}`).join('\n\n')}
+              
               Responda à seguinte pergunta do usuário ${usernameFull} de forma extensa, detalhada e visualmente atrativa: ${message}`
             }
           ]
@@ -862,6 +896,14 @@ Contexto do usuário:
     // Verificar e corrigir links de redirecionamento
     aiResponse = fixPlatformLinks(aiResponse);
 
+    // Adicionar a resposta da IA ao histórico
+    conversationHistory[sessionId].push({ role: 'assistant', content: aiResponse });
+    
+    // Salvar histórico atualizado no localStorage
+    saveConversationHistory(sessionId, conversationHistory[sessionId]);
+    
+    console.log(`Histórico de conversa atualizado para ${sessionId}. Total de mensagens: ${conversationHistory[sessionId].length}`);
+
     return aiResponse;
   } catch (error) {
     console.error('Erro ao gerar resposta com Gemini:', error);
@@ -879,10 +921,29 @@ export async function generateAIResponse(
   }
 ): Promise<string> {
   try {
-    return await generateXAIResponse(message, sessionId, options);
+    // Verificar se o sessionId já existe
+    if (!conversationHistory[sessionId]) {
+      console.log(`Iniciando nova conversa com ID: ${sessionId}`);
+      // Carrega histórico do localStorage ou inicializa novo
+      const history = getConversationHistory(sessionId);
+      if (history.length === 0) {
+        console.log(`Nenhum histórico encontrado para ${sessionId}, inicializando...`);
+        initializeConversationHistory(sessionId);
+      } else {
+        console.log(`Carregado histórico existente com ${history.length} mensagens para ${sessionId}`);
+      }
+    } else {
+      console.log(`Usando conversa existente com ID: ${sessionId}, ${conversationHistory[sessionId].length} mensagens`);
+    }
+
+    const response = await generateXAIResponse(message, sessionId, options);
+    console.log(`Resposta gerada via xAI para ${sessionId}`);
+    return response;
   } catch (error) {
     console.error('Erro com xAI, tentando Gemini:', error);
-    return generateGeminiResponse(message, sessionId, options);
+    const response = await generateGeminiResponse(message, sessionId, options);
+    console.log(`Resposta gerada via Gemini para ${sessionId} (fallback)`);
+    return response;
   }
 }
 
