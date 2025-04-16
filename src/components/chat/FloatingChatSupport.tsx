@@ -2394,13 +2394,9 @@ Exemplo de formato da resposta:
                                   prevMessages.map(msg => ({...msg, showExportOptions: false, showExportFormats: false, showShareOptions: false}))
                                 );
                                 
-                                // Estado para controlar o modal de e-mail e os dados do destinatário
-                                const [showEmailModal, setShowEmailModal] = useState(false);
-                                const [recipientEmail, setRecipientEmail] = useState("");
-                                
-                                // Renderizar modal personalizado
-                                document.body.insertAdjacentHTML('beforeend', `
-                                  <div id="custom-email-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                                // Criar e adicionar o modal diretamente ao DOM
+                                const modalHTML = `
+                                  <div id="custom-email-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
                                     <div class="bg-[#1a1d2d] text-white rounded-lg w-[90%] max-w-md shadow-xl overflow-hidden border border-gray-700">
                                       <div class="bg-gradient-to-r from-orange-600 to-orange-700 p-4">
                                         <h3 class="text-lg font-semibold">Compartilhar por E-mail</h3>
@@ -2430,37 +2426,60 @@ Exemplo de formato da resposta:
                                       </div>
                                     </div>
                                   </div>
-                                `);
+                                `;
+
+                                // Remover qualquer modal existente
+                                const existingModal = document.getElementById('custom-email-modal');
+                                if (existingModal) {
+                                  existingModal.remove();
+                                }
                                 
-                                // Adicionar event listeners ao modal
-                                const modal = document.getElementById('custom-email-modal');
-                                const input = document.getElementById('recipient-email-input');
-                                const cancelButton = document.getElementById('cancel-email-button');
-                                const sendButton = document.getElementById('send-email-button');
+                                // Adicionar o novo modal ao DOM
+                                document.body.insertAdjacentHTML('beforeend', modalHTML);
                                 
-                                // Focar no input
-                                if (input) {
-                                  setTimeout(() => {
+                                // Adicionar event listeners ao modal com atraso para garantir que o DOM foi atualizado
+                                setTimeout(() => {
+                                  const modal = document.getElementById('custom-email-modal');
+                                  const input = document.getElementById('recipient-email-input');
+                                  const cancelButton = document.getElementById('cancel-email-button');
+                                  const sendButton = document.getElementById('send-email-button');
+                                  
+                                  // Focar no input
+                                  if (input) {
                                     input.focus();
-                                  }, 100);
-                                }
-                                
-                                // Adicionar evento de cancelamento
-                                if (cancelButton) {
-                                  cancelButton.addEventListener('click', () => {
-                                    if (modal) {
-                                      modal.remove();
-                                    }
-                                  });
-                                }
+                                  }
+                                  
+                                  // Adicionar evento de cancelamento
+                                  if (cancelButton) {
+                                    cancelButton.addEventListener('click', () => {
+                                      if (modal) {
+                                        modal.remove();
+                                      }
+                                    });
+                                  }
+                                  
+                                  // Adicionar evento para fechar o modal ao clicar fora
+                                  if (modal) {
+                                    modal.addEventListener('click', (e) => {
+                                      if (e.target === modal) {
+                                        modal.remove();
+                                      }
+                                    });
+                                  }
+                                }, 50);
                                 
                                 // Adicionar evento de envio
-                                if (sendButton && input && modal) {
-                                  sendButton.addEventListener('click', () => {
-                                    const email = input.value;
-                                    if (email && email.includes('@')) {
-                                      // Remover o modal
-                                      modal.remove();
+                                setTimeout(() => {
+                                  const modal = document.getElementById('custom-email-modal');
+                                  const input = document.getElementById('recipient-email-input');
+                                  const sendButton = document.getElementById('send-email-button');
+                                  
+                                  if (sendButton && input && modal) {
+                                    sendButton.addEventListener('click', () => {
+                                      const email = input.value;
+                                      if (email && email.includes('@')) {
+                                        // Remover o modal
+                                        modal.remove();
                                       
                                       // Tentar enviar o e-mail
                                       try {
@@ -2529,14 +2548,15 @@ Exemplo de formato da resposta:
                                       input.classList.add('border-red-500', 'focus:ring-red-500');
                                     }
                                   });
-                                  
-                                  // Adicionar evento de tecla Enter para envio
-                                  input.addEventListener('keydown', (e) => {
-                                    if (e.key === 'Enter') {
-                                      sendButton.click();
-                                    }
-                                  });
-                                }
+                                    
+                                    // Adicionar evento de tecla Enter para envio
+                                    input.addEventListener('keydown', (e) => {
+                                      if (e.key === 'Enter') {
+                                        sendButton.click();
+                                      }
+                                    });
+                                  }
+                                }, 50);
                                 
                                 // Fechar todos os popups após a ação
                                 setMessages(prevMessages => 
