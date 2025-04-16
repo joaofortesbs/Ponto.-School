@@ -47,6 +47,19 @@
   animation: shimmer 2s infinite linear;
   background: linear-gradient(
     to right,
+
+/* Animação de fade in e out para notificações */
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.animate-fade-in-out {
+  animation: fadeInOut 3s ease-in-out;
+}
+
     rgba(255, 255, 255, 0) 0%,
     rgba(255, 255, 255, 0.2) 20%,
     rgba(255, 255, 255, 0) 40%

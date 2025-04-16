@@ -11,8 +11,12 @@ import {
   ThumbsUp,
   ThumbsDown,
   Copy,
-  Trash2
+  Trash2,
+  Share,
+  Download,
+  Share2
 } from "lucide-react";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -38,6 +42,48 @@ const ChatIAInterface = () => {
     const savedSessionId = localStorage.getItem(SESSION_ID_KEY);
     return savedSessionId || uuidv4();
   });
+
+  // Estado para notificação de compartilhamento
+  const [shareNotification, setShareNotification] = useState<string | null>(null);
+  
+  // Função para compartilhar mensagem
+  const handleShareMessage = (content: string) => {
+    if (navigator.share) {
+      navigator.share({
+        title: 'Mensagem da Epictus IA',
+        text: content,
+      })
+      .then(() => setShareNotification("Mensagem compartilhada com sucesso!"))
+      .catch((error) => console.log('Erro ao compartilhar:', error));
+    } else {
+      // Fallback para navegadores que não suportam a API Web Share
+      navigator.clipboard.writeText(content);
+      setShareNotification("Link copiado para a área de transferência!");
+    }
+    
+    // Limpar a notificação após 3 segundos
+    setTimeout(() => {
+      setShareNotification(null);
+    }, 3000);
+  };
+  
+  // Função para exportar mensagem como arquivo de texto
+  const handleExportMessage = (content: string, sender: string) => {
+    const element = document.createElement("a");
+    const file = new Blob([content], {type: 'text/plain'});
+    element.href = URL.createObjectURL(file);
+    element.download = `epictus-ia-mensagem-${new Date().toISOString().slice(0,10)}.txt`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    
+    setShareNotification("Mensagem exportada com sucesso!");
+    
+    // Limpar a notificação após 3 segundos
+    setTimeout(() => {
+      setShareNotification(null);
+    }, 3000);
+  };
 
   // Carregar mensagens do armazenamento local e do serviço aiChatService
   const [messages, setMessages] = useState<Message[]>(() => {
@@ -322,7 +368,7 @@ const ChatIAInterface = () => {
                   
                   {/* Botões de feedback para mensagens da IA */}
                   {message.sender === "ai" && message.id !== "welcome-message" && (
-                    <div className="absolute right-0 top-0 flex space-x-1 -mr-20 mt-1">
+                    <div className="absolute right-0 top-0 flex space-x-1 -mr-26 mt-1">
                       <Button 
                         variant="outline" 
                         size="icon" 
@@ -333,10 +379,7 @@ const ChatIAInterface = () => {
                           console.log("Feedback positivo para mensagem:", message.id);
                         }}
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-thumbs-up">
-                          <path d="M7 10v12"/>
-                          <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"/>
-                        </svg>
+                        <ThumbsUp size={16} />
                       </Button>
                       <Button 
                         variant="outline" 
@@ -348,10 +391,7 @@ const ChatIAInterface = () => {
                           console.log("Feedback negativo para mensagem:", message.id);
                         }}
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-thumbs-down">
-                          <path d="M17 14V2"/>
-                          <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z"/>
-                        </svg>
+                        <ThumbsDown size={16} />
                       </Button>
                       <Button 
                         variant="outline" 
@@ -360,20 +400,55 @@ const ChatIAInterface = () => {
                         title="Copiar mensagem"
                         onClick={() => {
                           navigator.clipboard.writeText(message.content);
-                          // Poderia adicionar um toast de confirmação aqui
-                          console.log("Mensagem copiada:", message.id);
+                          setShareNotification("Mensagem copiada para a área de transferência!");
+                          setTimeout(() => setShareNotification(null), 3000);
                         }}
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-copy">
-                          <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
-                          <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
-                        </svg>
+                        <Copy size={16} />
                       </Button>
+
+                      {/* Popover para compartilhamento */}
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
+                            className="h-7 w-7 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20 hover:bg-purple-500/20"
+                            title="Compartilhar mensagem"
+                          >
+                            <Share2 size={16} />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-48 p-2">
+                          <div className="flex flex-col gap-2">
+                            <h4 className="text-sm font-medium mb-1">Compartilhar mensagem</h4>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="gap-2 justify-start text-sm"
+                              onClick={() => handleShareMessage(message.content)}
+                            >
+                              <Share size={14} />
+                              <span>Compartilhar</span>
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="gap-2 justify-start text-sm"
+                              onClick={() => handleExportMessage(message.content, message.sender)}
+                            >
+                              <Download size={14} />
+                              <span>Exportar como txt</span>
+                            </Button>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                      
                       <Button 
                         variant="outline" 
                         size="icon" 
                         className="h-7 w-7 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500/20"
-                        title="Scroll to Latest"
+                        title="Rolar para o final"
                         onClick={scrollToBottom}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-down">
@@ -381,6 +456,13 @@ const ChatIAInterface = () => {
                           <path d="m19 12-7 7-7-7"/>
                         </svg>
                       </Button>
+                    </div>
+                  )}
+                  
+                  {/* Notificação de compartilhamento */}
+                  {shareNotification && (
+                    <div className="absolute left-0 top-full mt-2 bg-green-500 text-white text-xs rounded px-2 py-1 animate-fade-in-out">
+                      {shareNotification}
                     </div>
                   )}
                 </div>
