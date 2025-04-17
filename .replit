@@ -84,15 +84,6 @@ mode = "sequential"
 task = "shell.exec"
 args = "node scripts/api-server.js"
 
-[[workflows.workflow]]
-name = "API e-mail"
-author = 41255696
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node scripts/api-server.js"
-
 [auth]
 pageEnabled = false
 buttonEnabled = false
