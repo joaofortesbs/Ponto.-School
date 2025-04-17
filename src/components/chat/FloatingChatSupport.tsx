@@ -2122,7 +2122,7 @@ Exemplo de formato da resposta:
                 {message.sender === "user" && (
                   <div className="absolute right-0 top-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex space-x-1 p-1">
                     <button 
-                      className="text-gray-400 hover:text-orange-500 dark:text-gray-500 dark:hover:text-orange-400 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                      className="text-gray-400 hover:text-[#FF6B00] dark:text-gray-500 dark:hover:text-[#FF6B00] transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
                       onClick={() => {
                         setEditingMessage(message);
                         setInputMessage(message.content);
@@ -2167,7 +2167,7 @@ Exemplo de formato da resposta:
                           setEditingMessage(message);
                           setInputMessage(message.content);
                         }}
-                        className="p-1 rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
+                        className="p-1 rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00]"
                         title="Editar mensagem"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400">
@@ -2188,7 +2188,7 @@ Exemplo de formato da resposta:
                               }))
                             );
                           }}
-                          className="p-1 rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
+                          className="p-1 rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00]"
                           title="Ferramentas de Contexto"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400">
@@ -2200,7 +2200,7 @@ Exemplo de formato da resposta:
                         {message.showContextTools && (
                           <div className="absolute z-50 top-full right-0 mt-1 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
                             <button 
-                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 // Implementar aprofundamento no tema
@@ -2224,7 +2224,7 @@ Exemplo de formato da resposta:
                             </button>
                             
                             <button 
-                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 // Implementar simulador de questões
@@ -2248,7 +2248,7 @@ Exemplo de formato da resposta:
                             </button>
                             
                             <button 
-                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 // Implementar escrita no caderno
@@ -2274,7 +2274,7 @@ Exemplo de formato da resposta:
                             </button>
                             
                             <button 
-                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 // Implementar simulação de apresentação
@@ -2313,7 +2313,7 @@ Exemplo de formato da resposta:
                               }))
                             );
                           }}
-                          className="p-1 rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
+                          className="p-1 rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00]"
                           title="Exportar mensagem"
                         >
                           <Download className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
@@ -2323,7 +2323,7 @@ Exemplo de formato da resposta:
                         {message.showExportOptions && !message.showExportFormats && (
                           <div className="absolute z-50 top-full right-0 mt-1 w-28 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
                             <button 
-                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 // Mostrar o menu secundário de exportação
@@ -2341,7 +2341,7 @@ Exemplo de formato da resposta:
                               Exportar
                             </button>
                             <button 
-                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 // Mostrar o menu de opções de compartilhamento
@@ -2370,7 +2370,7 @@ Exemplo de formato da resposta:
                         {message.showExportFormats && (
                           <div className="absolute z-50 top-full right-0 mt-1 w-36 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
                             <button 
-                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 // Exportar como TXT
@@ -2399,7 +2399,7 @@ Exemplo de formato da resposta:
                               Texto (.txt)
                             </button>
                             <button 
-                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 // Exportar como PDF (simulado - na implementação real usaria uma biblioteca como jsPDF)
@@ -2418,7 +2418,7 @@ Exemplo de formato da resposta:
                               PDF (.pdf)
                             </button>
                             <button 
-                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 // Exportar como Word (simulado - na implementação real usaria uma biblioteca específica)
@@ -2458,7 +2458,7 @@ Exemplo de formato da resposta:
                         {message.showShareOptions && (
                           <div className="absolute z-50 top-full right-0 mt-1 w-64 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
                             <button 
-                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 // Gerar URL compartilhável (simulado)
@@ -2483,7 +2483,7 @@ Exemplo de formato da resposta:
                             </button>
                             
                             <button 
-                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 
@@ -2715,7 +2715,7 @@ Exemplo de formato da resposta:
                             </button>
                             
                             <button 
-                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 // Compartilhar no Microsoft Teams (simulado)
@@ -2735,7 +2735,7 @@ Exemplo de formato da resposta:
                             </button>
                             
                             <button 
-                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 // Gerar código QR (simulado)
@@ -2755,7 +2755,7 @@ Exemplo de formato da resposta:
                             </button>
                             
                             <button 
-                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 // Compartilhar com outros usuários da Ponto.School (simulado)
@@ -2786,21 +2786,21 @@ Exemplo de formato da resposta:
                             duration: 3000,
                           });
                         }}
-                        className="p-1 rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
+                        className="p-1 rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00]"
                         title="Copiar mensagem"
                       >
                         <Copy className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
                       </button>
                       <button 
                         onClick={() => handleMessageFeedback(message.id, 'positive')}
-                        className={`p-1 rounded-full transition-colors ${message.feedback === 'positive' ? 'bg-green-100 dark:bg-green-900/30' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+                        className={`p-1 rounded-full transition-colors ${message.feedback === 'positive' ? 'bg-green-100 dark:bg-green-900/30' : 'hover:bg-gray-200 dark:hover:bg-gray-700'} hover:text-[#FF6B00] dark:hover:text-[#FF6B00]`}
                         title="Avaliar como boa resposta"
                       >
                         <ThumbsUp className={`h-3.5 w-3.5 ${message.feedback === 'positive' ? 'text-green-500 dark:text-green-400' : 'text-green-500 dark:text-green-400'}`} />
                       </button>
                       <button 
                         onClick={() => handleMessageFeedback(message.id, 'negative')}
-                        className={`p-1 rounded-full transition-colors ${message.feedback === 'negative' ? 'bg-red-100 dark:bg-red-900/30' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+                        className={`p-1 rounded-full transition-colors ${message.feedback === 'negative' ? 'bg-red-100 dark:bg-red-900/30' : 'hover:bg-gray-200 dark:hover:bg-gray-700'} hover:text-[#FF6B00] dark:hover:text-[#FF6B00]`}
                         title="Avaliar como resposta que precisa melhorar"
                       >
                         <ThumbsDown className={`h-3.5 w-3.5 ${message.feedback === 'negative' ? 'text-red-600 dark:text-red-400' : 'text-red-500 dark:text-red-400'}`} />
