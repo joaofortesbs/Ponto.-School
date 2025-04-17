@@ -3212,7 +3212,7 @@ Exemplo de formato da resposta:
                     
                     <div>
                       <label className="text-xs font-medium mb-1 block text-gray-700 dark:text-gray-300">
-                        Série/Turma
+                        Série
                       </label>
                       <select
                         className="w-full h-9 px-3 py-2 bg-white/80 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-md text-sm text-gray-800 dark:text-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
@@ -3223,7 +3223,7 @@ Exemplo de formato da resposta:
                           }
                         }}
                       >
-                        <option value="">Selecione sua série/turma</option>
+                        <option value="">Selecione sua série</option>
                         <option value="1º Ano - Ensino Fundamental">1º Ano - Ensino Fundamental</option>
                         <option value="2º Ano - Ensino Fundamental">2º Ano - Ensino Fundamental</option>
                         <option value="3º Ano - Ensino Fundamental">3º Ano - Ensino Fundamental</option>
@@ -3241,6 +3241,45 @@ Exemplo de formato da resposta:
                         <option value="Outro">Outro</option>
                       </select>
                     </div>
+                    
+                    <div>
+                      <label className="text-xs font-medium mb-1 block text-gray-700 dark:text-gray-300">
+                        Turma
+                      </label>
+                      <select
+                        className="w-full h-9 px-3 py-2 bg-white/80 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-md text-sm text-gray-800 dark:text-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+                        value={formData && formData.classGroup || ""}
+                        onChange={(e) => {
+                          if (setFormData) {
+                            setFormData(prev => ({...prev, classGroup: e.target.value}));
+                          }
+                        }}
+                      >
+                        <option value="">Selecione sua turma</option>
+                        <option value="Turma A">Turma A</option>
+                        <option value="Turma B">Turma B</option>
+                        <option value="Turma C">Turma C</option>
+                        <option value="Turma D">Turma D</option>
+                        <option value="Turma E">Turma E</option>
+                        <option value="Turma F">Turma F</option>
+                        <option value="outra">Outra turma</option>
+                      </select>
+                    </div>
+                    
+                    {formData && formData.classGroup === "outra" && (
+                      <div className="mt-1">
+                        <Input
+                          placeholder="Digite o nome da sua turma"
+                          className="bg-white/80 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 text-sm"
+                          value={formData.customClassGroup || ""}
+                          onChange={(e) => {
+                            if (setFormData) {
+                              setFormData(prev => ({...prev, customClassGroup: e.target.value}));
+                            }
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
                 
