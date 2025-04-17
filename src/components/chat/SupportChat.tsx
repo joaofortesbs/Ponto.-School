@@ -24,6 +24,7 @@ import {
   Bot,
   User,
   ChevronRight,
+  ChevronLeft,
   AlertCircle,
   FileText,
   ThumbsUp,
@@ -42,6 +43,10 @@ import {
   Headphones,
   BookOpen,
   Settings,
+  Trash,
+  CreditCard,
+  FolderIcon,
+  ListIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -698,83 +703,239 @@ const SupportChat: React.FC = () => {
     </div>
   );
 
-  // Interface para conversas salvas - ATUALIZADO
+  // Interface para conversas salvas
   interface SavedConversation {
     id: string;
     title: string;
     lastMessage: string;
     timestamp: Date;
     avatar?: string;
-    messages?: Message[]; // Adicionando o campo messages
+    messages: Message[]; // Todos os históricos agora terão mensagens
+    category?: string;
+    isUnread?: boolean;
   }
 
-  const [savedConversations, setSavedConversations] = useState<SavedConversation[]>([
-    {
-      id: "suporte-tecnico",
-      title: "Suporte Técnico",
-      lastMessage: "Obrigado por sua mensagem. Como posso ajudar você hoje?",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 dias atrás
-      messages: defaultMessages, // Adicionando mensagens exemplo
-    },
-    {
-      id: "duvidas-curso",
-      title: "Dúvidas sobre Curso",
-      lastMessage: "Os certificados são emitidos automaticamente após a conclusão do curso.",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 dia atrás
-      messages: [...defaultMessages, ...[{
-        id: "2",
-        text: "Eu não consigo acessar o certificado, o que eu faço?",
-        sender: "user",
-        timestamp: new Date(),
-      }, {
-        id: "3",
-        text: "Por favor, verifique sua caixa de entrada e spam. Se ainda não encontrar, abra um ticket de suporte.",
-        sender: "ai",
-        timestamp: new Date(),
-      }]],
-    },
-    {
-      id: "problemas-pagamento",
-      title: "Problemas de Pagamento",
-      lastMessage: "Seu pagamento foi confirmado com sucesso!",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12), // 12 horas atrás
-      messages: defaultMessages,
-    },
-  ]);
+  const [savedConversations, setSavedConversations] = useState<SavedConversation[]>([]);
+  const [historyView, setHistoryView] = useState<'list' | 'categories'>('list');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  
+  // Categorias para organizar o histórico
+  const historyCategories = [
+    { id: 'recent', name: 'Recentes', icon: <Clock className="h-4 w-4" /> },
+    { id: 'technical', name: 'Suporte Técnico', icon: <Settings className="h-4 w-4" /> },
+    { id: 'courses', name: 'Dúvidas de Cursos', icon: <BookOpen className="h-4 w-4" /> },
+    { id: 'payments', name: 'Pagamentos', icon: <CreditCard className="h-4 w-4" /> },
+  ];
 
-  // Efeito para carregar conversas salvas
+  // Efeito para carregar conversas salvas - implementação completa
   useEffect(() => {
-    // Aqui você pode implementar a lógica para carregar conversas do localStorage ou serviço
     const loadSavedConversations = () => {
       try {
+        // Carregar conversas do localStorage
         const storedConversations = localStorage.getItem('chat_conversations');
+        let conversations = [];
+        
         if (storedConversations) {
           const parsedConversations = JSON.parse(storedConversations);
-          // Converter as strings de data em objetos Date (tanto para a conversa quanto para as mensagens)
-          const formattedConversations = parsedConversations.map(conv => ({
+          
+          // Processar timestamps e formatar corretamente
+          conversations = parsedConversations.map(conv => ({
             ...conv,
             timestamp: new Date(conv.timestamp),
-            // Processar também as mensagens dentro de cada conversa, se existirem
-            messages: conv.messages ? conv.messages.map(msg => ({
+            messages: Array.isArray(conv.messages) ? conv.messages.map(msg => ({
               ...msg,
               timestamp: new Date(msg.timestamp)
-            })) : undefined
+            })) : defaultMessages,
+            // Adicionar categoria padrão se não existir
+            category: conv.category || 'recent'
           }));
-          setSavedConversations(formattedConversations);
+        } 
+        
+        // Se não houver conversas salvas, criar exemplos iniciais
+        if (conversations.length === 0) {
+          conversations = [
+            {
+              id: "suporte-tecnico",
+              title: "Suporte Técnico",
+              lastMessage: "Obrigado por sua mensagem. Como posso ajudar você hoje?",
+              timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 dias atrás
+              category: 'technical',
+              messages: defaultMessages,
+            },
+            {
+              id: "duvidas-curso",
+              title: "Dúvidas sobre Curso",
+              lastMessage: "Os certificados são emitidos automaticamente após a conclusão do curso.",
+              timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 dia atrás
+              category: 'courses',
+              messages: [...defaultMessages, ...[{
+                id: "2",
+                text: "Eu não consigo acessar o certificado, o que eu faço?",
+                sender: "user",
+                timestamp: new Date(),
+              }, {
+                id: "3",
+                text: "Por favor, verifique sua caixa de entrada e spam. Se ainda não encontrar, abra um ticket de suporte.",
+                sender: "ai",
+                timestamp: new Date(),
+              }]],
+            },
+            {
+              id: "problemas-pagamento",
+              title: "Problemas de Pagamento",
+              lastMessage: "Seu pagamento foi confirmado com sucesso!",
+              timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12), // 12 horas atrás
+              category: 'payments',
+              messages: defaultMessages,
+            },
+          ];
+          
+          // Salvar exemplos iniciais no localStorage
+          localStorage.setItem('chat_conversations', JSON.stringify(conversations));
         }
+        
+        // Ordenar conversas por data (mais recentes primeiro)
+        conversations.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+        
+        setSavedConversations(conversations);
       } catch (error) {
         console.error("Erro ao carregar histórico de conversas:", error);
+        // Em caso de erro, inicializar com array vazio
+        setSavedConversations([]);
       }
     };
 
     loadSavedConversations();
   }, []);
 
-  // Filtrar conversas de acordo com a busca
-  const filteredConversations = savedConversations.filter(
-    conv => conv.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            conv.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Função para salvar conversa no histórico - implementação melhorada
+  const saveConversationToHistory = (conversationMessages: Message[]) => {
+    if (conversationMessages.length < 2) return;
+
+    try {
+      // Determinar título e categoria baseado no conteúdo das mensagens
+      const firstUserMessage = conversationMessages.find(msg => msg.sender === "user");
+      const lastMessage = conversationMessages[conversationMessages.length - 1];
+      
+      if (!firstUserMessage || !lastMessage) return;
+      
+      // Criar título baseado na primeira mensagem do usuário
+      let conversationTitle = firstUserMessage.text.substring(0, 30);
+      if (firstUserMessage.text.length > 30) conversationTitle += "...";
+      
+      // Se título for muito curto, usar um título genérico
+      if (conversationTitle.length < 10) {
+        conversationTitle = "Conversa com Suporte";
+      }
+      
+      // Determinar categoria baseada em palavras-chave
+      const messageContent = conversationMessages.map(msg => msg.text.toLowerCase()).join(' ');
+      let category = 'recent';
+      
+      if (messageContent.includes('certificado') || 
+          messageContent.includes('curso') || 
+          messageContent.includes('aula')) {
+        category = 'courses';
+      } else if (messageContent.includes('erro') || 
+                messageContent.includes('problema') || 
+                messageContent.includes('técnico')) {
+        category = 'technical';
+      } else if (messageContent.includes('pagamento') || 
+                messageContent.includes('cobran') || 
+                messageContent.includes('compra')) {
+        category = 'payments';
+      }
+      
+      // Criar objeto de conversa com ID único
+      const conversationId = `conv_${Date.now()}`;
+      const newConversation: SavedConversation = {
+        id: conversationId,
+        title: conversationTitle,
+        lastMessage: lastMessage.text.substring(0, 100) + (lastMessage.text.length > 100 ? "..." : ""),
+        timestamp: new Date(),
+        category: category,
+        isUnread: false,
+        messages: [...conversationMessages] // Cópia profunda das mensagens
+      };
+      
+      // Verificar se já existe conversa semelhante
+      const existingConversations = [...savedConversations];
+      const existingIndex = existingConversations.findIndex(
+        conv => conv.title.toLowerCase() === conversationTitle.toLowerCase()
+      );
+      
+      let updatedConversations;
+      
+      if (existingIndex >= 0) {
+        // Atualizar conversa existente
+        updatedConversations = [...existingConversations];
+        updatedConversations[existingIndex] = {
+          ...existingConversations[existingIndex],
+          lastMessage: newConversation.lastMessage,
+          timestamp: newConversation.timestamp,
+          messages: [...newConversation.messages]
+        };
+      } else {
+        // Adicionar nova conversa no início do array
+        updatedConversations = [newConversation, ...existingConversations];
+      }
+      
+      // Atualizar estado e salvar no localStorage
+      setSavedConversations(updatedConversations);
+      localStorage.setItem('chat_conversations', JSON.stringify(updatedConversations));
+      
+      // Exibir toast confirmando que a conversa foi salva
+      toast({
+        title: "Conversa salva",
+        description: "Esta conversa foi salva no histórico para referência futura.",
+        duration: 3000,
+      });
+      
+    } catch (error) {
+      console.error("Erro ao salvar conversa no histórico:", error);
+      toast({
+        title: "Erro ao salvar conversa",
+        description: "Não foi possível salvar a conversa no histórico.",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  };
+
+  // Filtrar conversas de acordo com a busca e categoria
+  const filteredConversations = savedConversations.filter(conv => {
+    const matchesSearch = conv.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          conv.lastMessage.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesCategory = !selectedCategory || conv.category === selectedCategory;
+    
+    return matchesSearch && matchesCategory;
+  });
+  
+  // Função para limpar uma conversa específica do histórico
+  const clearConversation = (conversationId: string) => {
+    const updatedConversations = savedConversations.filter(conv => conv.id !== conversationId);
+    setSavedConversations(updatedConversations);
+    localStorage.setItem('chat_conversations', JSON.stringify(updatedConversations));
+    
+    toast({
+      title: "Conversa removida",
+      description: "A conversa foi removida do histórico.",
+      duration: 3000,
+    });
+  };
+  
+  // Função para limpar todo o histórico
+  const clearAllHistory = () => {
+    setSavedConversations([]);
+    localStorage.removeItem('chat_conversations');
+    
+    toast({
+      title: "Histórico limpo",
+      description: "Todo o histórico de conversas foi removido.",
+      duration: 3000,
+    });
+  };
 
   const renderMessagesListContent = () => (
     <div className="flex flex-col h-full">
@@ -783,30 +944,102 @@ const SupportChat: React.FC = () => {
           <div className="flex items-center gap-2">
             <MessageCircle className="h-5 w-5 text-[#778DA9] dark:text-[#778DA9]" />
             <h3 className="text-lg font-semibold text-[#29335C] dark:text-white">
-              Minhas Conversas
+              {historyView === 'list' ? 'Minhas Conversas' : 'Categorias'}
             </h3>
           </div>
-          <Button
-            size="sm"
-            className="bg-[#778DA9] hover:bg-[#778DA9]/90 text-white rounded-full px-4 py-0 h-9 text-sm"
-            onClick={() => {
-              // Iniciar uma nova conversa vazia
-              setMessages(defaultMessages);
-              setIsStartingNewChat(true);
-            }}
-          >
-            <Plus className="h-4 w-4 mr-1" /> Nova
-          </Button>
+          <div className="flex gap-2">
+            {/* Alternador de visualização: Lista ou Categorias */}
+            <div className="bg-[#E0E1DD]/50 dark:bg-[#29335C]/50 rounded-full p-1 flex">
+              <Button
+                size="sm"
+                variant={historyView === 'list' ? 'default' : 'ghost'}
+                className={`rounded-full px-3 py-0 h-7 text-xs ${
+                  historyView === 'list' 
+                    ? 'bg-[#778DA9] text-white' 
+                    : 'text-[#29335C] dark:text-white hover:bg-[#E0E1DD]/80 dark:hover:bg-[#29335C]/80'
+                }`}
+                onClick={() => {
+                  setHistoryView('list');
+                  setSelectedCategory(null);
+                }}
+              >
+                <ListIcon className="h-3.5 w-3.5 mr-1" /> Lista
+              </Button>
+              <Button
+                size="sm"
+                variant={historyView === 'categories' ? 'default' : 'ghost'}
+                className={`rounded-full px-3 py-0 h-7 text-xs ${
+                  historyView === 'categories' 
+                    ? 'bg-[#778DA9] text-white' 
+                    : 'text-[#29335C] dark:text-white hover:bg-[#E0E1DD]/80 dark:hover:bg-[#29335C]/80'
+                }`}
+                onClick={() => setHistoryView('categories')}
+              >
+                <FolderIcon className="h-3.5 w-3.5 mr-1" /> Categorias
+              </Button>
+            </div>
+            
+            <Button
+              size="sm"
+              className="bg-[#778DA9] hover:bg-[#778DA9]/90 text-white rounded-full px-3 py-0 h-7 text-xs"
+              onClick={() => {
+                // Iniciar uma nova conversa vazia
+                setMessages(defaultMessages);
+                setIsStartingNewChat(true);
+              }}
+            >
+              <Plus className="h-3.5 w-3.5 mr-1" /> Nova
+            </Button>
+          </div>
         </div>
-        <div className="relative">
+        
+        {selectedCategory && (
+          <div className="mb-2 flex items-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 flex items-center gap-1 text-[#778DA9] hover:text-[#778DA9]/80 hover:bg-[#E0E1DD]/30 dark:hover:bg-[#29335C]/30 pl-0 -ml-2"
+              onClick={() => setSelectedCategory(null)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span>Voltar</span>
+            </Button>
+            <span className="text-sm font-medium ml-2 text-[#29335C] dark:text-white">
+              {historyCategories.find(cat => cat.id === selectedCategory)?.name || 'Categoria'}
+            </span>
+          </div>
+        )}
+        
+        <div className="relative mb-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar conversas..."
-            className="pl-10 py-2 h-10 text-sm rounded-full border-[#E0E1DD] dark:border-[#E0E1DD]/30 bg-white dark:bg-[#29335C]/50"
+            className="pl-10 py-2 h-9 text-sm rounded-full border-[#E0E1DD] dark:border-[#E0E1DD]/30 bg-white dark:bg-[#29335C]/50"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+        
+        {savedConversations.length > 0 && (
+          <div className="flex justify-between items-center mt-2">
+            <span className="text-xs text-muted-foreground">
+              {filteredConversations.length} {filteredConversations.length === 1 ? 'conversa' : 'conversas'} 
+              {selectedCategory ? ' nesta categoria' : ''}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 text-xs text-[#778DA9] hover:text-red-500 hover:bg-[#E0E1DD]/30 dark:hover:bg-[#29335C]/30"
+              onClick={() => {
+                if (window.confirm('Tem certeza que deseja limpar todo o histórico de conversas?')) {
+                  clearAllHistory();
+                }
+              }}
+            >
+              <Trash className="h-3 w-3 mr-1" /> Limpar histórico
+            </Button>
+          </div>
+        )}
       </div>
 
       {isStartingNewChat ? (
@@ -816,84 +1049,175 @@ const SupportChat: React.FC = () => {
           className="flex-1 custom-scrollbar"
           style={{ maxHeight: "calc(100% - 60px)" }}
         >
-          <div className="p-4 space-y-4">
-            {filteredConversations.length > 0 ? (
-              filteredConversations.map((conversation) => (
-                <div
-                  key={conversation.id}
-                  className="border border-[#e1e8f0] dark:border-white/10 rounded-xl p-4 hover:bg-[#f8f9fa] dark:hover:bg-white/5 transition-all duration-300 cursor-pointer hover:shadow-md hover:translate-y-[-2px]"
-                  onClick={() => {
-                    // Carregar mensagens desta conversa, se existirem
-                    if (conversation.messages && conversation.messages.length > 0) {
-                      // Converter datas de string para objeto Date, se necessário
-                      const processedMessages = conversation.messages.map(msg => ({
-                        ...msg,
-                        timestamp: msg.timestamp instanceof Date ? msg.timestamp : new Date(msg.timestamp)
-                      }));
-                      setMessages(processedMessages);
-                    } else {
-                      // Se não houver mensagens salvas, começar um novo chat
-                      setMessages(defaultMessages);
-                    }
-                    setIsStartingNewChat(true);
-                  }}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center gap-2">
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage
-                          src={conversation.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=Support"}
-                          alt={conversation.title}
-                        />
-                        <AvatarFallback className="bg-[#f0f4f8] text-[#29335C]">
-                          {conversation.title.substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <h4 className="font-medium text-[#29335C] dark:text-white">
-                        {conversation.title}
-                      </h4>
-                    </div>
-                    <div className="text-xs text-muted-foreground bg-[#f0f4f8] dark:bg-white/10 px-2 py-1 rounded-full">
-                      {conversation.timestamp.toLocaleDateString()}
+          {historyView === 'categories' && !selectedCategory ? (
+            // Visualização por categorias
+            <div className="p-4 grid grid-cols-1 gap-3">
+              {historyCategories.map((category) => {
+                const categoryConversations = savedConversations.filter(
+                  conv => conv.category === category.id
+                );
+                return (
+                  <div
+                    key={category.id}
+                    className="border border-[#e1e8f0] dark:border-white/10 rounded-xl p-4 hover:bg-[#f8f9fa] dark:hover:bg-white/5 transition-all duration-300 cursor-pointer"
+                    onClick={() => setSelectedCategory(category.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-[#778DA9]/10 flex items-center justify-center">
+                          {category.icon}
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-[#29335C] dark:text-white">
+                            {category.name}
+                          </h4>
+                          <p className="text-xs text-muted-foreground">
+                            {categoryConversations.length} {categoryConversations.length === 1 ? 'conversa' : 'conversas'}
+                          </p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
                     </div>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2 pl-10">
-                    {conversation.lastMessage}
+                );
+              })}
+            </div>
+          ) : (
+            // Visualização em lista (padrão ou dentro de uma categoria)
+            <div className="p-4 space-y-3">
+              {filteredConversations.length > 0 ? (
+                filteredConversations.map((conversation) => (
+                  <div
+                    key={conversation.id}
+                    className="border border-[#e1e8f0] dark:border-white/10 rounded-xl p-3 hover:bg-[#f8f9fa] dark:hover:bg-white/5 transition-all duration-300 cursor-pointer hover:shadow-md group relative"
+                    onClick={() => {
+                      // Carregar mensagens desta conversa, se existirem
+                      if (conversation.messages && conversation.messages.length > 0) {
+                        // Converter datas de string para objeto Date, se necessário
+                        const processedMessages = conversation.messages.map(msg => ({
+                          ...msg,
+                          timestamp: msg.timestamp instanceof Date ? msg.timestamp : new Date(msg.timestamp)
+                        }));
+                        setMessages(processedMessages);
+                      } else {
+                        // Se não houver mensagens salvas, começar um novo chat
+                        setMessages(defaultMessages);
+                      }
+                      setIsStartingNewChat(true);
+                    }}
+                  >
+                    {/* Botão de excluir que aparece ao passar o mouse */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 h-6 w-6 p-0 bg-transparent hover:bg-red-100 dark:hover:bg-red-900/30 text-muted-foreground hover:text-red-500 rounded-full transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Evitar que o clique se propague para o card
+                        clearConversation(conversation.id);
+                      }}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                    
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="w-8 h-8">
+                          {conversation.category === 'technical' && (
+                            <AvatarFallback className="bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400">
+                              <Settings className="h-4 w-4" />
+                            </AvatarFallback>
+                          )}
+                          {conversation.category === 'courses' && (
+                            <AvatarFallback className="bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400">
+                              <BookOpen className="h-4 w-4" />
+                            </AvatarFallback>
+                          )}
+                          {conversation.category === 'payments' && (
+                            <AvatarFallback className="bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-400">
+                              <CreditCard className="h-4 w-4" />
+                            </AvatarFallback>
+                          )}
+                          {conversation.category === 'recent' && (
+                            <AvatarFallback className="bg-[#f0f4f8] text-[#29335C] dark:bg-[#29335C] dark:text-white">
+                              {conversation.title.substring(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          )}
+                        </Avatar>
+                        <h4 className="font-medium text-[#29335C] dark:text-white text-sm">
+                          {conversation.title}
+                          {conversation.isUnread && (
+                            <span className="ml-2 inline-block w-2 h-2 bg-[#778DA9] rounded-full"></span>
+                          )}
+                        </h4>
+                      </div>
+                      <div className="text-xs text-muted-foreground bg-[#f0f4f8] dark:bg-white/10 px-2 py-1 rounded-full mt-1 mr-5">
+                        {formatDate(conversation.timestamp)}
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-2 line-clamp-2 pl-10">
+                      {conversation.lastMessage}
+                    </p>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground pl-10">
+                      <div className="flex items-center">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {conversation.timestamp.toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </div>
+                      <div className="flex items-center">
+                        <MessageCircle className="h-3 w-3 mr-1" />
+                        {conversation.messages.length} mensagens
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 px-4">
+                  <div className="w-14 h-14 rounded-full bg-[#f0f4f8] dark:bg-white/5 flex items-center justify-center mx-auto mb-3">
+                    <MessageCircle className="h-8 w-8 text-[#778DA9] dark:text-[#778DA9]" />
+                  </div>
+                  <p className="text-[#29335C] dark:text-white font-medium mb-2">
+                    Nenhuma conversa encontrada
                   </p>
-                  <div className="flex items-center text-xs text-muted-foreground pl-10">
-                    <Clock className="h-3 w-3 mr-1" />
-                    {conversation.timestamp.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </div>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    {selectedCategory ? 'Não há conversas nesta categoria' : 'Inicie uma nova conversa com nosso suporte'}
+                  </p>
+                  <Button
+                    className="bg-[#778DA9] hover:bg-[#778DA9]/90 text-white rounded-full px-6"
+                    onClick={() => {
+                      setMessages(defaultMessages);
+                      setIsStartingNewChat(true);
+                    }}
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Iniciar uma nova conversa
+                  </Button>
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-8 px-4">
-                <div className="w-14 h-14 rounded-full bg-[#f0f4f8] dark:bg-white/5 flex items-center justify-center mx-auto mb-3">
-                  <MessageCircle className="h-8 w-8 text-[#778DA9] dark:text-[#778DA9]" />
-                </div>
-                <p className="text-[#29335C] dark:text-white font-medium mb-2">
-                  Nenhuma conversa encontrada
-                </p>
-                <p className="text-sm text-muted-foreground mb-6">
-                  Inicie uma nova conversa com nosso suporte
-                </p>
-                <Button
-                  className="bg-[#778DA9] hover:bg-[#778DA9]/90 text-white rounded-full px-6"
-                  onClick={() => setIsStartingNewChat(true)}
-                >
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  Iniciar uma nova conversa
-                </Button>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </ScrollArea>
       )}
     </div>
   );
+  
+  // Função auxiliar para formatação de datas
+  const formatDate = (date: Date) => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      return 'Hoje';
+    } else if (diffDays === 1) {
+      return 'Ontem';
+    } else if (diffDays < 7) {
+      return `${diffDays} dias atrás`;
+    } else {
+      return date.toLocaleDateString();
+    }
+  };
 
   const renderChatContent = () => (
     <div className="flex flex-col h-full">
