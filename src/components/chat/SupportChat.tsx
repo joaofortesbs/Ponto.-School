@@ -394,68 +394,12 @@ const SupportChat: React.FC = () => {
       const updatedMessages = [...messages, userMessage, aiMessage];
       setMessages(updatedMessages);
       setIsTyping(false);
-
-      // Salvar conversa no histórico
-      saveConversationToHistory(updatedMessages);
+      
+      // Função de salvar conversa no histórico removida
     }, 1500);
   };
 
-  // Função para salvar conversa no histórico
-  const saveConversationToHistory = (conversationMessages: Message[]) => {
-    if (conversationMessages.length < 2) return;
-
-    try {
-      // Determinar um título para a conversa baseado no primeiro input do usuário
-      const firstUserMessage = conversationMessages.find(msg => msg.sender === "user");
-      const lastMessage = conversationMessages[conversationMessages.length - 1];
-
-      if (!firstUserMessage || !lastMessage) return;
-
-      // Criar um título com base na primeira mensagem do usuário (limitado a 30 caracteres)
-      let conversationTitle = firstUserMessage.text.substring(0, 30);
-      if (firstUserMessage.text.length > 30) conversationTitle += "...";
-
-      // Se a conversa for muito curta, use um título genérico
-      if (conversationTitle.length < 10) {
-        conversationTitle = "Conversa com Suporte";
-      }
-
-      // Criar objeto de conversa
-      const conversationId = `conv_${Date.now()}`;
-      const newConversation: SavedConversation = {
-        id: conversationId,
-        title: conversationTitle,
-        lastMessage: lastMessage.text.substring(0, 100) + (lastMessage.text.length > 100 ? "..." : ""),
-        timestamp: new Date(),
-        messages: conversationMessages // Adicionando mensagens à conversa salva
-      };
-
-      // Verificar se já existe uma conversa com título semelhante
-      const existingConversations = [...savedConversations];
-      const existingIndex = existingConversations.findIndex(
-        conv => conv.title.toLowerCase() === conversationTitle.toLowerCase()
-      );
-
-      if (existingIndex >= 0) {
-        // Atualizar conversa existente
-        existingConversations[existingIndex] = {
-          ...existingConversations[existingIndex],
-          lastMessage: newConversation.lastMessage,
-          timestamp: newConversation.timestamp,
-          messages: newConversation.messages // Atualizando as mensagens
-        };
-      } else {
-        // Adicionar nova conversa
-        existingConversations.unshift(newConversation);
-      }
-
-      // Atualizar estado e salvar no localStorage
-      setSavedConversations(existingConversations);
-      localStorage.setItem('chat_conversations', JSON.stringify(existingConversations));
-    } catch (error) {
-      console.error("Erro ao salvar conversa no histórico:", error);
-    }
-  };
+  // Função para salvar conversa no histórico removida
 
   const getAIResponse = (message: string): string => {
     const lowerMessage = message.toLowerCase();
@@ -698,202 +642,9 @@ const SupportChat: React.FC = () => {
     </div>
   );
 
-  // Interface para conversas salvas - ATUALIZADO
-  interface SavedConversation {
-    id: string;
-    title: string;
-    lastMessage: string;
-    timestamp: Date;
-    avatar?: string;
-    messages?: Message[]; // Adicionando o campo messages
-  }
+  // Estado e interfaces relacionados ao histórico de conversas removidos
 
-  const [savedConversations, setSavedConversations] = useState<SavedConversation[]>([
-    {
-      id: "suporte-tecnico",
-      title: "Suporte Técnico",
-      lastMessage: "Obrigado por sua mensagem. Como posso ajudar você hoje?",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 dias atrás
-      messages: defaultMessages, // Adicionando mensagens exemplo
-    },
-    {
-      id: "duvidas-curso",
-      title: "Dúvidas sobre Curso",
-      lastMessage: "Os certificados são emitidos automaticamente após a conclusão do curso.",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 dia atrás
-      messages: [...defaultMessages, ...[{
-        id: "2",
-        text: "Eu não consigo acessar o certificado, o que eu faço?",
-        sender: "user",
-        timestamp: new Date(),
-      }, {
-        id: "3",
-        text: "Por favor, verifique sua caixa de entrada e spam. Se ainda não encontrar, abra um ticket de suporte.",
-        sender: "ai",
-        timestamp: new Date(),
-      }]],
-    },
-    {
-      id: "problemas-pagamento",
-      title: "Problemas de Pagamento",
-      lastMessage: "Seu pagamento foi confirmado com sucesso!",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12), // 12 horas atrás
-      messages: defaultMessages,
-    },
-  ]);
-
-  // Efeito para carregar conversas salvas
-  useEffect(() => {
-    // Aqui você pode implementar a lógica para carregar conversas do localStorage ou serviço
-    const loadSavedConversations = () => {
-      try {
-        const storedConversations = localStorage.getItem('chat_conversations');
-        if (storedConversations) {
-          const parsedConversations = JSON.parse(storedConversations);
-          // Converter as strings de data em objetos Date (tanto para a conversa quanto para as mensagens)
-          const formattedConversations = parsedConversations.map(conv => ({
-            ...conv,
-            timestamp: new Date(conv.timestamp),
-            // Processar também as mensagens dentro de cada conversa, se existirem
-            messages: conv.messages ? conv.messages.map(msg => ({
-              ...msg,
-              timestamp: new Date(msg.timestamp)
-            })) : undefined
-          }));
-          setSavedConversations(formattedConversations);
-        }
-      } catch (error) {
-        console.error("Erro ao carregar histórico de conversas:", error);
-      }
-    };
-
-    loadSavedConversations();
-  }, []);
-
-  // Filtrar conversas de acordo com a busca
-  const filteredConversations = savedConversations.filter(
-    conv => conv.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            conv.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const renderMessagesListContent = () => (
-    <div className="flex flex-col h-full">
-      <div className="p-4 border-b bg-gradient-to-r from-[#E0E1DD] to-[#E0E1DD]/80 dark:from-[#29335C] dark:to-[#29335C]/90">
-        <div className="flex justify-between items-center mb-3">
-          <div className="flex items-center gap-2">
-            <MessageCircle className="h-5 w-5 text-[#778DA9] dark:text-[#778DA9]" />
-            <h3 className="text-lg font-semibold text-[#29335C] dark:text-white">
-              Minhas Conversas
-            </h3>
-          </div>
-          <Button
-            size="sm"
-            className="bg-[#778DA9] hover:bg-[#778DA9]/90 text-white rounded-full px-4 py-0 h-9 text-sm"
-            onClick={() => {
-              // Iniciar uma nova conversa vazia
-              setMessages(defaultMessages);
-              setIsStartingNewChat(true);
-            }}
-          >
-            <Plus className="h-4 w-4 mr-1" /> Nova
-          </Button>
-        </div>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar conversas..."
-            className="pl-10 py-2 h-10 text-sm rounded-full border-[#E0E1DD] dark:border-[#E0E1DD]/30 bg-white dark:bg-[#29335C]/50"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-      </div>
-
-      {isStartingNewChat ? (
-        renderChatContent()
-      ) : (
-        <ScrollArea
-          className="flex-1 custom-scrollbar"
-          style={{ maxHeight: "calc(100% - 60px)" }}
-        >
-          <div className="p-4 space-y-4">
-            {filteredConversations.length > 0 ? (
-              filteredConversations.map((conversation) => (
-                <div
-                  key={conversation.id}
-                  className="border border-[#e1e8f0] dark:border-white/10 rounded-xl p-4 hover:bg-[#f8f9fa] dark:hover:bg-white/5 transition-all duration-300 cursor-pointer hover:shadow-md hover:translate-y-[-2px]"
-                  onClick={() => {
-                    // Carregar mensagens desta conversa, se existirem
-                    if (conversation.messages && conversation.messages.length > 0) {
-                      // Converter datas de string para objeto Date, se necessário
-                      const processedMessages = conversation.messages.map(msg => ({
-                        ...msg,
-                        timestamp: msg.timestamp instanceof Date ? msg.timestamp : new Date(msg.timestamp)
-                      }));
-                      setMessages(processedMessages);
-                    } else {
-                      // Se não houver mensagens salvas, começar um novo chat
-                      setMessages(defaultMessages);
-                    }
-                    setIsStartingNewChat(true);
-                  }}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center gap-2">
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage
-                          src={conversation.avatar || "https://apiapi.dicebear.com/7.x/avataaars/svg?seed=Support"}
-                          alt={conversation.title}
-                        />
-                        <AvatarFallback className="bg-[#f0f4f8] text-[#29335C]">
-                          {conversation.title.substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <h4 className="font-medium text-[#29335C] dark:text-white">
-                        {conversation.title}
-                      </h4>
-                    </div>
-                    <div className="text-xs text-muted-foreground bg-[#f0f4f8] dark:bg-white/10 px-2 py-1 rounded-full">
-                      {conversation.timestamp.toLocaleDateString()}
-                    </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2 pl-10">
-                    {conversation.lastMessage}
-                  </p>
-                  <div className="flex items-center text-xs text-muted-foreground pl-10">
-                    <Clock className="h-3 w-3 mr-1" />
-                    {conversation.timestamp.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-8 px-4">
-                <div className="w-14 h-14 rounded-full bg-[#f0f4f8] dark:bg-white/5 flex items-center justify-center mx-auto mb-3">
-                  <MessageCircle className="h-8 w-8 text-[#778DA9] dark:text-[#778DA9]" />
-                </div>
-                <p className="text-[#29335C] dark:text-white font-medium mb-2">
-                  Nenhuma conversa encontrada
-                </p>
-                <p className="text-sm text-muted-foreground mb-6">
-                  Inicie uma nova conversa com nosso suporte
-                </p>
-                <Button
-                  className="bg-[#778DA9] hover:bg-[#778DA9]/90 text-white rounded-full px-6"
-                  onClick={() => setIsStartingNewChat(true)}
-                >
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  Iniciar uma nova conversa
-                </Button>
-              </div>
-            )}
-          </div>
-        </ScrollArea>
-      )}
-    </div>
-  );
+  // Função de renderização da lista de mensagens removida
 
   const renderChatContent = () => (
     <div className="flex flex-col h-full">
@@ -1653,12 +1404,7 @@ const SupportChat: React.FC = () => {
                 {renderHomeContent()}
               </TabsContent>
 
-              <TabsContent
-                value="messages"
-                className="m-0 flex-1 flex flex-col overflow-hidden"
-              >
-                {renderMessagesListContent()}
-              </TabsContent>
+              {/* TabContent de mensagens removido */}
 
               <TabsContent
                 value="tickets"
@@ -1694,14 +1440,7 @@ const SupportChat: React.FC = () => {
                 <Home className="h-5 w-5" />
                 <span className="text-sm">Início</span>
               </Button>
-              <Button
-                variant="ghost"
-                className={`flex-1 flex flex-col items-center gap-1 py-3 rounded-none ${activeTab === "messages" ? "text-[#778DA9] dark:text-[#778DA9]" : "text-muted-foreground"}`}
-                onClick={() => setActiveTab("messages")}
-              >
-                <MessageCircle className="h-5 w-5" />
-                <span className="text-sm">Mensagens</span>
-              </Button>
+              {/* Seção de mensagens removida */}
               <Button
                 variant="ghost"
                 className={`flex-1 flex flex-col items-center gap-1 py-3 rounded-none ${activeTab === "tickets" ? "text-[#778DA9] dark:text-[#778DA9]" : "text-muted-foreground"}`}
