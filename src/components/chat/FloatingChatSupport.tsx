@@ -2248,7 +2248,7 @@ Exemplo de formato da resposta:
                             </button>
                             
                             <button 
-                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-orange-100 dark:hover:bg-orange-800/40 hover:text-orange-600 dark:hover:text-orange-400 transition-colors flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 // Implementar escrita no caderno
@@ -2274,7 +2274,7 @@ Exemplo de formato da resposta:
                             </button>
                             
                             <button 
-                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-orange-100 dark:hover:bg-orange-800/40 hover:text-orange-600 dark:hover:text-orange-400 transition-colors flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 // Implementar simulação de apresentação
@@ -4282,7 +4282,7 @@ Exemplo de formato da resposta:
             {showAttachmentOptions && (
               <div className="fixed bottom-[80px] left-14 mb-2 w-64 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-gray-100 dark:border-gray-700 shadow-lg z-[200] overflow-hidden">
                 <div className="py-1">
-                  <label htmlFor="image-upload" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer w-full">
+                  <label htmlFor="image-upload" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-orange-100 dark:hover:bg-orange-800/40 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer w-full">
                     <Image className="h-4 w-4 text-[#FF6B00]" />
                     Imagem
                   </label>
@@ -4294,7 +4294,7 @@ Exemplo de formato da resposta:
                     onChange={handleFileUpload}
                   />
 
-                  <label htmlFor="document-upload" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer w-full">
+                  <label htmlFor="document-upload" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-orange-100 dark:hover:bg-orange-800/40 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer w-full">
                     <FileText className="h-4 w-4 text-[#FF6B00]" />
                     Documento
                   </label>
@@ -4306,7 +4306,7 @@ Exemplo de formato da resposta:
                     onChange={handleFileUpload}
                   />
 
-                  <label htmlFor="video-upload" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer w-full">
+                  <label htmlFor="video-upload" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-orange-100 dark:hover:bg-orange-800/40 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer w-full">
                     <Video className="h-4 w-4 text-[#FF6B00]" />
                     Vídeo
                   </label>
@@ -4319,7 +4319,7 @@ Exemplo de formato da resposta:
                   />
 
                   <button
-                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left"
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-orange-100 dark:hover:bg-orange-800/40 hover:text-orange-600 dark:hover:text-orange-400 transition-colors w-full text-left"
                     onClick={startVoiceRecording}
                   >
                     <Mic className="h-4 w-4 text-[#FF6B00]" />
