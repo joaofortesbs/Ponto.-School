@@ -27,6 +27,7 @@ router.post('/enviar-email', async (req, res) => {
 
   try {
     await sgMail.send(msg);
+    console.log('E-mail enviado com sucesso para:', para);
     res.status(200).json({ sucesso: true });
   } catch (error) {
     console.error('Erro ao enviar e-mail:', error);

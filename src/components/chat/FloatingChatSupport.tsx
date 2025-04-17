@@ -2495,8 +2495,8 @@ Exemplo de formato da resposta:
                                             html: emailHTML
                                           };
                                           
-                                          // Importar o serviço de e-mail dinamicamente
-                                          const emailService = await import('@/services/emailService');
+                                          // Importar o serviço de e-mail
+                                          const emailService = await import('../../services/emailService')vice = await import('@/services/emailService');
                                           const result = await emailService.sendEmail(emailData);
                                           
                                           // Remover o modal após o envio

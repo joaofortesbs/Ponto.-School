@@ -19,6 +19,6 @@ app.get('/api/status', (req, res) => {
 });
 
 // Iniciar servidor
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Servidor de API rodando na porta ${PORT}`);
 });
