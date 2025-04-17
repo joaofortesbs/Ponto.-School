@@ -61,6 +61,7 @@ import {
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { generateAIResponse, getConversationHistory, clearConversationHistory } from "@/services/aiChatService";
+import { sendEmail } from "@/services/emailService";
 import { Checkbox } from "@/components/ui/checkbox";
 
 // Interface para arquivos em mensagens
@@ -80,10 +81,12 @@ interface ChatMessage {
   files?: MessageFile[];
   feedback?: 'positive' | 'negative';
   needsImprovement?: boolean;
-  isEdited?: boolean; // Adicione a propriedade isEdited
+  isEdited?: boolean; // Propriedade para mensagens editadas
   showExportOptions?: boolean; // Controla a visibilidade do popup de exportação principal
   showExportFormats?: boolean; // Controla a visibilidade do popup de formatos de exportação
   showShareOptions?: boolean; // Controla a visibilidade do popup de opções de compartilhamento
+  isBeingShared?: boolean; // Indica se a mensagem está em processo de compartilhamento
+  shareError?: string; // Armazena erros de compartilhamento
 }
 
 interface Ticket {
@@ -2394,6 +2397,8 @@ Exemplo de formato da resposta:
                                   prevMessages.map(msg => ({...msg, showExportOptions: false, showExportFormats: false, showShareOptions: false}))
                                 );
                                 
+                                // Usar o serviço de e-mail já importado
+
                                 // Criar e adicionar o modal diretamente ao DOM
                                 const modalHTML = `
                                   <div id="custom-email-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
@@ -2475,60 +2480,56 @@ Exemplo de formato da resposta:
                                   const sendButton = document.getElementById('send-email-button');
                                   
                                   if (sendButton && input && modal) {
-                                    sendButton.addEventListener('click', () => {
+                                    sendButton.addEventListener('click', async () => {
                                       const email = input.value;
                                       if (email && email.includes('@')) {
-                                        // Remover o modal
-                                        modal.remove();
-                                      
-                                      // Tentar enviar o e-mail
-                                      try {
-                                        if (window.Email && typeof window.Email.send === 'function') {
-                                          // Usando EmailJS (precisaria ser configurado com credenciais)
-                                          window.Email.send({
-                                            SecureToken: "seu-token-securizado",
-                                            To: email,
-                                            From: "noreply@ponto.school",
-                                            Subject: "Material compartilhado da Ponto.School",
-                                            Body: emailHTML
-                                          }).then(
-                                            message => {
-                                              if (message === "OK") {
-                                                toast({
-                                                  title: "E-mail enviado com sucesso!",
-                                                  description: `Conteúdo enviado para ${email}`,
-                                                  duration: 3000,
-                                                });
-                                              } else {
-                                                // Fallback para método mailto
-                                                window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-                                                toast({
-                                                  title: "Redirecionando para seu cliente de e-mail",
-                                                  description: "Seu cliente de e-mail será aberto para enviar o conteúdo",
-                                                  duration: 3000,
-                                                });
-                                              }
-                                            }
-                                          );
-                                        } else {
-                                          // Método de fallback usando mailto
+                                        // Mostrar indicador de carregamento
+                                        sendButton.innerHTML = '<div class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent mr-1"></div> Enviando...';
+                                        sendButton.disabled = true;
+                                        
+                                        try {
+                                          // Usar o serviço de e-mail para enviar a mensagem
+                                          const emailData = {
+                                            to: email,
+                                            subject: "Material compartilhado da Ponto.School",
+                                            html: emailHTML
+                                          };
+                                          
+                                          // Importar o serviço de e-mail dinamicamente
+                                          const emailService = await import('@/services/emailService');
+                                          const result = await emailService.sendEmail(emailData);
+                                          
+                                          // Remover o modal após o envio
+                                          modal.remove();
+                                          
+                                          if (result) {
+                                            toast({
+                                              title: "E-mail enviado com sucesso!",
+                                              description: `Conteúdo enviado para ${email}`,
+                                              duration: 3000,
+                                            });
+                                          } else {
+                                            // Fallback para método mailto em caso de falha do serviço
+                                            window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+                                            toast({
+                                              title: "Usando cliente de e-mail local",
+                                              description: "Não foi possível enviar pelo servidor, abrindo seu cliente de e-mail",
+                                              duration: 3000,
+                                            });
+                                          }
+                                        } catch (error) {
+                                          console.error("Erro ao enviar e-mail:", error);
+                                          // Fallback para método mailto em caso de erro
                                           window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
                                           toast({
-                                            title: "Redirecionando para seu cliente de e-mail",
-                                            description: "Seu cliente de e-mail será aberto para enviar o conteúdo",
+                                            title: "Usando cliente de e-mail local",
+                                            description: "Ocorreu um erro ao enviar, abrindo seu cliente de e-mail",
                                             duration: 3000,
                                           });
+                                          
+                                          // Remover o modal após o erro
+                                          modal.remove();
                                         }
-                                      } catch (error) {
-                                        console.error("Erro ao compartilhar por e-mail:", error);
-                                        // Fallback para método mailto em caso de erro
-                                        window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-                                        toast({
-                                          title: "Redirecionando para seu cliente de e-mail",
-                                          description: "Seu cliente de e-mail será aberto para enviar o conteúdo",
-                                          duration: 3000,
-                                        });
-                                      }
                                     } else {
                                       // Mostrar erro se o e-mail for inválido
                                       const errorMessage = document.createElement('p');
