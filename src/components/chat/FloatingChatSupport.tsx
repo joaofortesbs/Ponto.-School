@@ -2198,7 +2198,7 @@ Exemplo de formato da resposta:
                         
                         {/* Context tools dropdown */}
                         {message.showContextTools && (
-                          <div className="absolute z-50 top-full right-0 mt-1 w-44 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
+                          <div className="absolute z-50 top-full right-0 mt-1 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
                             <button 
                               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
                               onClick={(e) => {
@@ -4230,7 +4230,7 @@ Exemplo de formato da resposta:
             </Button>
 
             {showAttachmentOptions && (
-              <div className="absolute bottom-full left-0 mb-2 w-48 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-gray-100 dark:border-gray-700 shadow-lg z-50 overflow-hidden">
+              <div className="absolute bottom-full left-0 mb-2 w-64 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-gray-100 dark:border-gray-700 shadow-lg z-50 overflow-hidden">
                 <div className="py-1">
                   <label htmlFor="image-upload" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer w-full">
                     <Image className="h-4 w-4 text-[#FF6B00]" />
