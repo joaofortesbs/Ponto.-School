@@ -394,7 +394,7 @@ const SupportChat: React.FC = () => {
       const updatedMessages = [...messages, userMessage, aiMessage];
       setMessages(updatedMessages);
       setIsTyping(false);
-      
+
       // Salvar conversa no histórico
       saveConversationToHistory(updatedMessages);
     }, 1500);
@@ -403,23 +403,23 @@ const SupportChat: React.FC = () => {
   // Função para salvar conversa no histórico
   const saveConversationToHistory = (conversationMessages: Message[]) => {
     if (conversationMessages.length < 2) return;
-    
+
     try {
       // Determinar um título para a conversa baseado no primeiro input do usuário
       const firstUserMessage = conversationMessages.find(msg => msg.sender === "user");
       const lastMessage = conversationMessages[conversationMessages.length - 1];
-      
+
       if (!firstUserMessage || !lastMessage) return;
-      
+
       // Criar um título com base na primeira mensagem do usuário (limitado a 30 caracteres)
       let conversationTitle = firstUserMessage.text.substring(0, 30);
       if (firstUserMessage.text.length > 30) conversationTitle += "...";
-      
+
       // Se a conversa for muito curta, use um título genérico
       if (conversationTitle.length < 10) {
         conversationTitle = "Conversa com Suporte";
       }
-      
+
       // Criar objeto de conversa
       const conversationId = `conv_${Date.now()}`;
       const newConversation: SavedConversation = {
@@ -427,26 +427,28 @@ const SupportChat: React.FC = () => {
         title: conversationTitle,
         lastMessage: lastMessage.text.substring(0, 100) + (lastMessage.text.length > 100 ? "..." : ""),
         timestamp: new Date(),
+        messages: conversationMessages // Adicionando mensagens à conversa salva
       };
-      
+
       // Verificar se já existe uma conversa com título semelhante
       const existingConversations = [...savedConversations];
       const existingIndex = existingConversations.findIndex(
         conv => conv.title.toLowerCase() === conversationTitle.toLowerCase()
       );
-      
+
       if (existingIndex >= 0) {
         // Atualizar conversa existente
         existingConversations[existingIndex] = {
           ...existingConversations[existingIndex],
           lastMessage: newConversation.lastMessage,
-          timestamp: newConversation.timestamp
+          timestamp: newConversation.timestamp,
+          messages: newConversation.messages // Atualizando as mensagens
         };
       } else {
         // Adicionar nova conversa
         existingConversations.unshift(newConversation);
       }
-      
+
       // Atualizar estado e salvar no localStorage
       setSavedConversations(existingConversations);
       localStorage.setItem('chat_conversations', JSON.stringify(existingConversations));
@@ -696,13 +698,14 @@ const SupportChat: React.FC = () => {
     </div>
   );
 
-  // Interface para conversas salvas
+  // Interface para conversas salvas - ATUALIZADO
   interface SavedConversation {
     id: string;
     title: string;
     lastMessage: string;
     timestamp: Date;
     avatar?: string;
+    messages?: Message[]; // Adicionando o campo messages
   }
 
   const [savedConversations, setSavedConversations] = useState<SavedConversation[]>([
@@ -711,18 +714,31 @@ const SupportChat: React.FC = () => {
       title: "Suporte Técnico",
       lastMessage: "Obrigado por sua mensagem. Como posso ajudar você hoje?",
       timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 dias atrás
+      messages: defaultMessages, // Adicionando mensagens exemplo
     },
     {
       id: "duvidas-curso",
       title: "Dúvidas sobre Curso",
       lastMessage: "Os certificados são emitidos automaticamente após a conclusão do curso.",
       timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 dia atrás
+      messages: [...defaultMessages, ...[{
+        id: "2",
+        text: "Eu não consigo acessar o certificado, o que eu faço?",
+        sender: "user",
+        timestamp: new Date(),
+      }, {
+        id: "3",
+        text: "Por favor, verifique sua caixa de entrada e spam. Se ainda não encontrar, abra um ticket de suporte.",
+        sender: "ai",
+        timestamp: new Date(),
+      }]],
     },
     {
       id: "problemas-pagamento",
       title: "Problemas de Pagamento",
       lastMessage: "Seu pagamento foi confirmado com sucesso!",
       timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12), // 12 horas atrás
+      messages: defaultMessages,
     },
   ]);
 
@@ -797,7 +813,16 @@ const SupportChat: React.FC = () => {
                 <div
                   key={conversation.id}
                   className="border border-[#e1e8f0] dark:border-white/10 rounded-xl p-4 hover:bg-[#f8f9fa] dark:hover:bg-white/5 transition-all duration-300 cursor-pointer hover:shadow-md hover:translate-y-[-2px]"
-                  onClick={() => setIsStartingNewChat(true)}
+                  onClick={() => {
+                    // Carregar mensagens desta conversa, se existirem
+                    if (conversation.messages && conversation.messages.length > 0) {
+                      setMessages(conversation.messages);
+                    } else {
+                      // Se não houver mensagens salvas, começar um novo chat
+                      setMessages(defaultMessages);
+                    }
+                    setIsStartingNewChat(true);
+                  }}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2">
@@ -1464,7 +1489,7 @@ const SupportChat: React.FC = () => {
                     >
                       <Vote className="h-4 w-4 mr-1" />
                       {suggestion.votes} votos
-                    </Button>
+                    </</Button>
                     <div className="text-xs text-muted-foreground bg-[#E0E1DD]/30 dark:bg-[#E0E1DD]/10 px-2 py-1 rounded-full">
                       {new Date(suggestion.createdAt).toLocaleDateString()}
                     </div>
