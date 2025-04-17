@@ -394,7 +394,7 @@ const SupportChat: React.FC = () => {
       const updatedMessages = [...messages, userMessage, aiMessage];
       setMessages(updatedMessages);
       setIsTyping(false);
-      
+
       // Função de salvar conversa no histórico removida
     }, 1500);
   };
@@ -642,9 +642,6 @@ const SupportChat: React.FC = () => {
     </div>
   );
 
-  // Estado e interfaces relacionados ao histórico de conversas removidos
-
-  // Função de renderização da lista de mensagens removida
 
   const renderChatContent = () => (
     <div className="flex flex-col h-full">
@@ -808,7 +805,7 @@ const SupportChat: React.FC = () => {
       </div>
 
       {isCreatingTicket ? (
-        <div className="p-4 space-y-4 overflow-y-auto max-h-[calc(100vh-150px)]">
+        <div className="p-4 space-y4 overflow-y-auto max-h-[calc(100vh-150px)]">
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <Plus className="h-5 w-5 text-[#778DA9]" />
             Novo Ticket
@@ -1404,8 +1401,6 @@ const SupportChat: React.FC = () => {
                 {renderHomeContent()}
               </TabsContent>
 
-              {/* TabContent de mensagens removido */}
-
               <TabsContent
                 value="tickets"
                 className="m-0 flex-1 flex flex-col overflow-hidden"
@@ -1440,7 +1435,6 @@ const SupportChat: React.FC = () => {
                 <Home className="h-5 w-5" />
                 <span className="text-sm">Início</span>
               </Button>
-              {/* Seção de mensagens removida */}
               <Button
                 variant="ghost"
                 className={`flex-1 flex flex-col items-center gap-1 py-3 rounded-none ${activeTab === "tickets" ? "text-[#778DA9] dark:text-[#778DA9]" : "text-muted-foreground"}`}
@@ -1502,8 +1496,7 @@ const SupportChat: React.FC = () => {
         /* Fix for mobile responsiveness */
         @media (max-width: 640px) {
           .fixed.z-40 {
-            width: 90% !important;
-            right: 5% !important;
+            width: 90% !important;            right: 5% !important;
             left: 5% !important;
             max-height: 80vh !important;
           }
