@@ -44,6 +44,17 @@ export const sendEmail = async (emailData: EmailData): Promise<boolean> => {
         console.log('E-mail enviado com sucesso via API para:', emailData.to);
         return true;
       }
+      
+      // Se o servidor indicar para usar o cliente local como fallback
+      if (resultado.useClientFallback) {
+        console.log('Usando cliente de e-mail local como fallback');
+        
+        // Usar método mailto
+        const subject = encodeURIComponent(emailData.subject || 'Mensagem compartilhada da Ponto.School');
+        const body = encodeURIComponent(emailData.text || stripHtml(emailData.html));
+        window.location.href = `mailto:${emailData.to}?subject=${subject}&body=${body}`;
+        return true;
+      }
     } catch (apiError) {
       console.warn('Erro ao enviar via API, tentando SendGrid:', apiError);
     }
@@ -63,11 +74,26 @@ export const sendEmail = async (emailData: EmailData): Promise<boolean> => {
       return true;
     } else {
       console.error('Não foi possível enviar o e-mail: nenhum método disponível');
-      return false;
+      
+      // Fallback final: abrir cliente de e-mail local
+      const subject = encodeURIComponent(emailData.subject || 'Mensagem compartilhada da Ponto.School');
+      const body = encodeURIComponent(emailData.text || stripHtml(emailData.html));
+      window.location.href = `mailto:${emailData.to}?subject=${subject}&body=${body}`;
+      return true;
     }
   } catch (error) {
     console.error('Erro ao enviar e-mail:', error);
-    return false;
+    
+    // Em caso de erro, tenta abrir o cliente de e-mail local
+    try {
+      const subject = encodeURIComponent(emailData.subject || 'Mensagem compartilhada da Ponto.School');
+      const body = encodeURIComponent(emailData.text || stripHtml(emailData.html));
+      window.location.href = `mailto:${emailData.to}?subject=${subject}&body=${body}`;
+      return true;
+    } catch (mailtoError) {
+      console.error('Erro ao tentar abrir cliente de e-mail local:', mailtoError);
+      return false;
+    }
   }
 };
 
