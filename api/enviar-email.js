@@ -1,8 +1,11 @@
 
-require('dotenv').config();
-const express = require('express');
+import dotenv from 'dotenv';
+import express from 'express';
+import sgMail from '@sendgrid/mail';
+
+dotenv.config();
+
 const router = express.Router();
-const sgMail = require('@sendgrid/mail');
 
 // Configurar a chave da API SendGrid
 sgMail.setApiKey(process.env.VITE_SENDGRID_API_KEY || process.env.SENDGRID_API_KEY);
@@ -38,4 +41,4 @@ router.post('/enviar-email', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

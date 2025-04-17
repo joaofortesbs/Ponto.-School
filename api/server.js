@@ -1,7 +1,10 @@
 
-const express = require('express');
-const cors = require('cors');
-const emailRoutes = require('./enviar-email');
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import emailRoutes from './enviar-email.js';
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
