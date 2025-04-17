@@ -626,7 +626,7 @@ const SupportChat: React.FC = () => {
           variant="outline"
           className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20 mb-5 flex justify-between items-center group p-4 h-auto rounded-lg backdrop-blur-sm"
           onClick={() => {
-            setActiveTab("messages");
+            setActiveTab("chat");
             setIsStartingNewChat(true);
           }}
         >
@@ -652,10 +652,10 @@ const SupportChat: React.FC = () => {
                 variant="outline"
                 className="w-full bg-white/5 backdrop-blur-sm border-white/10 text-white hover:bg-white/10 flex justify-between items-center text-left p-4 h-auto rounded-lg transition-all duration-300 hover:translate-x-1"
                 onClick={() => {
-                  setActiveTab("messages");
-                  setInputMessage(q.question);
-                  setTimeout(() => handleSendMessage(), 100);
-                }}
+                    setActiveTab("chat");
+                    setInputMessage(q.question);
+                    setTimeout(() => handleSendMessage(), 100);
+                  }}
               >
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full flex items-center justify-center">
@@ -842,7 +842,7 @@ const SupportChat: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <Avatar className="w-8 h-8">
                         <AvatarImage
-                          src={conversation.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=Support"}
+                          src={conversation.avatar || "https://apiapi.dicebear.com/7.x/avataaars/svg?seed=Support"}
                           alt={conversation.title}
                         />
                         <AvatarFallback className="bg-[#f0f4f8] text-[#29335C]">
@@ -1492,8 +1492,7 @@ const SupportChat: React.FC = () => {
                   </p>
                   <div className="flex justify-between items-center">
                     <Button
-                      variant={suggestion.userVoted ? "default" : "outline"}
-                      size="sm"
+                      variant={suggestion.userVoted ? "default" : "outline"}                      size="sm"
                       className={
                         suggestion.userVoted
                           ? "bg-[#778DA9] hover:bg-[#778DA9]/90 text-white rounded-full"
@@ -1503,7 +1502,7 @@ const SupportChat: React.FC = () => {
                     >
                       <Vote className="h-4 w-4 mr-1" />
                       {suggestion.votes} votos
-                    </</Button>
+                    </Button>
                     <div className="text-xs text-muted-foreground bg-[#E0E1DD]/30 dark:bg-[#E0E1DD]/10 px-2 py-1 rounded-full">
                       {new Date(suggestion.createdAt).toLocaleDateString()}
                     </div>
