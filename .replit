@@ -9,6 +9,10 @@ run = ["sh", "-c", "npm run dev"]
 deploymentTarget = "cloudrun"
 
 [[ports]]
+localPort = 3001
+externalPort = 5000
+
+[[ports]]
 localPort = 5173
 externalPort = 80
 
@@ -33,7 +37,7 @@ localPort = 5178
 externalPort = 4200
 
 [workflows]
-runButton = "API Server"
+runButton = "Run App"
 
 [[workflows.workflow]]
 name = "Run App"
