@@ -21,28 +21,50 @@ export interface EmailData {
 }
 
 /**
- * Envia um e-mail usando SendGrid
+ * Envia um e-mail usando SendGrid ou API personalizada
  * @returns Promise<boolean> - True se o email foi enviado com sucesso
  */
 export const sendEmail = async (emailData: EmailData): Promise<boolean> => {
   try {
-    // Verificar se a chave API está configurada
-    if (!SENDGRID_API_KEY) {
-      console.error('SendGrid API key não configurada');
+    // Primeiro, tente usar a API de e-mail personalizada
+    try {
+      const response = await fetch('/api/enviar-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          para: emailData.to,
+          conteudo: emailData.html,
+          assunto: emailData.subject || 'Mensagem compartilhada da IA'
+        }),
+      });
+
+      const resultado = await response.json();
+      
+      if (resultado.sucesso) {
+        console.log('E-mail enviado com sucesso via API para:', emailData.to);
+        return true;
+      }
+    } catch (apiError) {
+      console.warn('Erro ao enviar via API, tentando SendGrid:', apiError);
+    }
+    
+    // Fallback para SendGrid se a API falhar
+    if (SENDGRID_API_KEY) {
+      const msg = {
+        to: emailData.to,
+        from: emailData.from || 'no-reply@ponto.school', // Use o from fornecido ou o padrão
+        subject: emailData.subject || 'Mensagem compartilhada da Ponto.School',
+        html: emailData.html,
+        text: emailData.text || stripHtml(emailData.html) // Versão texto do email
+      };
+
+      await sgMail.send(msg);
+      console.log('E-mail enviado com sucesso via SendGrid para:', emailData.to);
+      return true;
+    } else {
+      console.error('Não foi possível enviar o e-mail: nenhum método disponível');
       return false;
     }
-
-    const msg = {
-      to: emailData.to,
-      from: emailData.from || 'no-reply@ponto.school', // Use o from fornecido ou o padrão
-      subject: emailData.subject,
-      html: emailData.html,
-      text: emailData.text || stripHtml(emailData.html) // Versão texto do email
-    };
-
-    await sgMail.send(msg);
-    console.log('E-mail enviado com sucesso para:', emailData.to);
-    return true;
   } catch (error) {
     console.error('Erro ao enviar e-mail:', error);
     return false;
