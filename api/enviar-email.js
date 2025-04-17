@@ -45,48 +45,34 @@ router.post('/enviar-email', async (req, res) => {
   };
 
   try {
-    if (!apiKey) {
-      console.warn('Tentativa de envio sem API key configurada');
-      // Se não temos API key, não tente enviar, retorne para usar o fallback
-      return res.status(503).json({ 
-        sucesso: false, 
-        erro: 'Serviço de e-mail não configurado corretamente no servidor', 
-        useClientFallback: true,
-        detalhe: 'SENDGRID_API_KEY não configurada'
-      });
-    }
-    
-    console.log(`Tentando enviar e-mail para ${para} via SendGrid...`);
-    
+    console.log(`Tentando enviar e-mail para: ${para} via SendGrid`);
     const [response] = await sgMail.send(msg);
-    console.log('Resposta do SendGrid:', response.statusCode);
-    
+
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      console.log('✅ E-mail enviado com sucesso para:', para);
+      console.log(`E-mail enviado com sucesso para: ${para} (status: ${response.statusCode})`);
       res.status(200).json({ 
         sucesso: true,
-        mensagem: 'E-mail enviado com sucesso' 
+        message: 'E-mail enviado com sucesso'
       });
     } else {
       throw new Error(`SendGrid retornou status code ${response.statusCode}`);
     }
   } catch (error) {
-    console.error('❌ Erro ao enviar e-mail:', error);
-    
-    // Log detalhado do erro
-    if (error.response) {
-      console.error('Detalhes do erro SendGrid:', {
-        statusCode: error.response.statusCode,
-        body: error.response.body,
-        headers: error.response.headers
-      });
-    }
-    
+    console.error('Erro ao enviar e-mail:', error);
+
+    // Informações mais detalhadas do erro
+    const errorDetails = error.response ? {
+      statusCode: error.response.statusCode,
+      body: error.response.body,
+    } : { message: error.message };
+
+    console.error('Detalhes do erro:', JSON.stringify(errorDetails, null, 2));
+
     res.status(500).json({ 
       sucesso: false, 
       erro: error.message || 'Erro ao enviar e-mail', 
-      useClientFallback: true,
-      detalhe: error.response?.body?.errors?.map(e => e.message).join(', ') || 'Erro desconhecido'
+      detalhes: errorDetails,
+      useClientFallback: true 
     });
   }
 });

@@ -182,3 +182,200 @@ export const EmailModal: React.FC<EmailModalProps> = ({
 };
 
 export default EmailModal;
+import React, { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../ui/dialog";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
+import { Label } from "../ui/label";
+import { sendEmail } from "../../services/emailService";
+import { Mail, Send, CheckCircle, AlertCircle, X } from "lucide-react";
+import { toast } from "../ui/use-toast";
+
+interface EmailModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  initialRecipient?: string;
+  initialSubject?: string;
+  initialMessage?: string;
+}
+
+const EmailModal: React.FC<EmailModalProps> = ({
+  open,
+  onOpenChange,
+  initialRecipient = "",
+  initialSubject = "",
+  initialMessage = "",
+}) => {
+  const [recipient, setRecipient] = useState(initialRecipient);
+  const [subject, setSubject] = useState(initialSubject);
+  const [message, setMessage] = useState(initialMessage);
+  const [sending, setSending] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const handleSend = async () => {
+    if (!recipient || !subject || !message) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha todos os campos.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSending(true);
+    try {
+      const result = await sendEmail({
+        to: recipient,
+        subject: subject,
+        html: message,
+      });
+
+      if (result) {
+        setShowSuccess(true);
+        setTimeout(() => {
+          setShowSuccess(false);
+          onOpenChange(false);
+          // Limpar os campos após fechar
+          setRecipient("");
+          setSubject("");
+          setMessage("");
+        }, 2000);
+      } else {
+        toast({
+          title: "Erro ao enviar e-mail",
+          description: "Tente novamente mais tarde ou use seu cliente de e-mail.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao enviar e-mail:", error);
+      toast({
+        title: "Erro ao enviar e-mail",
+        description: "Ocorreu um erro inesperado.",
+        variant: "destructive",
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px] bg-gradient-to-br from-[#f8f9fa] to-[#e9ecef] dark:from-[#1a1a2e] dark:to-[#16213e] border-none shadow-xl rounded-xl overflow-hidden">
+        {showSuccess ? (
+          <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-green-400 to-green-500 flex items-center justify-center mb-4">
+              <CheckCircle className="h-10 w-10 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
+              E-mail enviado com sucesso!
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300">
+              Seu e-mail foi enviado para {recipient}
+            </p>
+          </div>
+        ) : (
+          <>
+            <DialogHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] flex items-center justify-center">
+                  <Mail className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <DialogTitle className="text-xl font-bold text-gray-800 dark:text-white">
+                    Enviar E-mail
+                  </DialogTitle>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    Preencha os campos para enviar sua mensagem
+                  </div>
+                </div>
+              </div>
+              <Button 
+                variant="ghost" 
+                className="absolute right-4 top-4 rounded-full h-8 w-8 p-0"
+                onClick={() => onOpenChange(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="grid gap-2">
+                <Label htmlFor="recipient" className="font-medium">
+                  Destinatário
+                </Label>
+                <Input
+                  id="recipient"
+                  placeholder="email@exemplo.com"
+                  value={recipient}
+                  onChange={(e) => setRecipient(e.target.value)}
+                  className="bg-white/70 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="subject" className="font-medium">
+                  Assunto
+                </Label>
+                <Input
+                  id="subject"
+                  placeholder="Assunto do e-mail"
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  className="bg-white/70 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="message" className="font-medium">
+                  Mensagem
+                </Label>
+                <Textarea
+                  id="message"
+                  placeholder="Digite sua mensagem aqui..."
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  rows={6}
+                  className="resize-none bg-white/70 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700"
+                />
+              </div>
+            </div>
+            <DialogFooter className="flex justify-between sm:justify-between gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                className="border-[#29335C] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                type="button" 
+                onClick={handleSend}
+                disabled={sending}
+                className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white"
+              >
+                {sending ? (
+                  <div className="flex items-center">
+                    <span className="animate-spin mr-2">
+                      <svg className="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </span>
+                    Enviando...
+                  </div>
+                ) : (
+                  <div className="flex items-center">
+                    <Send className="h-4 w-4 mr-2" />
+                    Enviar e-mail
+                  </div>
+                )}
+              </Button>
+            </DialogFooter>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default EmailModal;
