@@ -56,7 +56,8 @@ import {
   Check,
   Edit,
   CheckCircle,
-  Share2
+  Share2,
+  School
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
