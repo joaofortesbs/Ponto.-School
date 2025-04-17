@@ -409,6 +409,15 @@ const FloatingChatSupport: React.FC = () => {
     makeTransfers: false
   });
   
+  // Interface para dados do formulário
+  interface FormData {
+    institution: string;
+    grade: string;
+    classGroup: string;
+    customClassGroup: string;
+    customGrade: string;
+  }
+  
   // Estado para controlar modal de personalização do Epictus IA
   const [showEpictusPersonalizeModal, setShowEpictusPersonalizeModal] = useState(false);
   const [epictusNickname, setEpictusNickname] = useState(userName || "Usuário");
@@ -419,6 +428,15 @@ const FloatingChatSupport: React.FC = () => {
   const [tempProfileImage, setTempProfileImage] = useState<File | null>(null);
   const [isUploadingProfileImage, setIsUploadingProfileImage] = useState(false);
   const profileImageInputRef = useRef<HTMLInputElement>(null);
+  
+  // Estado para informações acadêmicas
+  const [formData, setFormData] = useState<FormData>({
+    institution: "",
+    grade: "",
+    classGroup: "",
+    customClassGroup: "",
+    customGrade: ""
+  });
 
   // Funções para lidar com feedback das mensagens
   const handleMessageFeedback = (messageId: number, feedback: 'positive' | 'negative') => {
@@ -3169,6 +3187,63 @@ Exemplo de formato da resposta:
                 </div>
                 
                 <div className="bg-white/70 dark:bg-gray-800/40 p-4 rounded-xl border border-gray-100/80 dark:border-gray-700/30 backdrop-filter backdrop-blur-sm shadow-sm">
+                  <h5 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-1.5">
+                    <School className="h-4 w-4 text-orange-500" />
+                    Informações Acadêmicas
+                  </h5>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs font-medium mb-1 block text-gray-700 dark:text-gray-300">
+                        Instituição de Ensino
+                      </label>
+                      <Input
+                        placeholder="Digite o nome da sua instituição"
+                        className="bg-white/80 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 text-sm"
+                        value={formData && formData.institution || ""}
+                        onChange={(e) => {
+                          if (setFormData) {
+                            setFormData(prev => ({...prev, institution: e.target.value}));
+                          }
+                        }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="text-xs font-medium mb-1 block text-gray-700 dark:text-gray-300">
+                        Série/Turma
+                      </label>
+                      <select
+                        className="w-full h-9 px-3 py-2 bg-white/80 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-md text-sm text-gray-800 dark:text-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+                        value={formData && formData.grade || ""}
+                        onChange={(e) => {
+                          if (setFormData) {
+                            setFormData(prev => ({...prev, grade: e.target.value}));
+                          }
+                        }}
+                      >
+                        <option value="">Selecione sua série/turma</option>
+                        <option value="1º Ano - Ensino Fundamental">1º Ano - Ensino Fundamental</option>
+                        <option value="2º Ano - Ensino Fundamental">2º Ano - Ensino Fundamental</option>
+                        <option value="3º Ano - Ensino Fundamental">3º Ano - Ensino Fundamental</option>
+                        <option value="4º Ano - Ensino Fundamental">4º Ano - Ensino Fundamental</option>
+                        <option value="5º Ano - Ensino Fundamental">5º Ano - Ensino Fundamental</option>
+                        <option value="6º Ano - Ensino Fundamental">6º Ano - Ensino Fundamental</option>
+                        <option value="7º Ano - Ensino Fundamental">7º Ano - Ensino Fundamental</option>
+                        <option value="8º Ano - Ensino Fundamental">8º Ano - Ensino Fundamental</option>
+                        <option value="9º Ano - Ensino Fundamental">9º Ano - Ensino Fundamental</option>
+                        <option value="1º Ano - Ensino Médio">1º Ano - Ensino Médio</option>
+                        <option value="2º Ano - Ensino Médio">2º Ano - Ensino Médio</option>
+                        <option value="3º Ano - Ensino Médio">3º Ano - Ensino Médio</option>
+                        <option value="Ensino Superior">Ensino Superior</option>
+                        <option value="Pós-Graduação">Pós-Graduação</option>
+                        <option value="Outro">Outro</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-white/70 dark:bg-gray-800/40 p-4 rounded-xl border border-gray-100/80 dark:border-gray-700/30 backdrop-filter backdrop-blur-sm shadow-sm">
                   <div className="flex items-center justify-between mb-2">
                     <h5 className="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
                       <Bell className="h-4 w-4 text-orange-500" />
@@ -3253,6 +3328,42 @@ Exemplo de formato da resposta:
                         }
                       } catch (error) {
                         console.error('Erro ao atualizar ocupação no perfil:', error);
+                      }
+                    }
+                    
+                    // Atualiza os dados acadêmicos se foram preenchidos
+                    if (formData.institution.trim() || formData.grade) {
+                      let acadInfoText = "";
+                      
+                      if (formData.institution.trim()) {
+                        acadInfoText += `você estuda na instituição "${formData.institution}"`;
+                      }
+                      
+                      if (formData.grade) {
+                        if (acadInfoText) acadInfoText += " e ";
+                        acadInfoText += `está no "${formData.grade}"`;
+                      }
+                      
+                      if (acadInfoText) {
+                        confirmationMessage += `Registrei que ${acadInfoText}. `;
+                        hasChanges = true;
+                      }
+                      
+                      // Atualizar informações acadêmicas no banco de dados
+                      try {
+                        const { data: sessionData } = await supabase.auth.getSession();
+                        if (sessionData.session) {
+                          await supabase
+                            .from('profiles')
+                            .update({ 
+                              school: formData.institution.trim(),
+                              grade: formData.grade,
+                              updated_at: new Date().toISOString()
+                            })
+                            .eq('id', sessionData.session.user.id);
+                        }
+                      } catch (error) {
+                        console.error('Erro ao atualizar informações acadêmicas:', error);
                       }
                     }
                     
