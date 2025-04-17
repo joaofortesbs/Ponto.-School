@@ -28,6 +28,15 @@ if (!fs.existsSync(emailPath)) {
 // Executar o servidor
 try {
   console.log('Comando: node api/server.js');
+  console.log('Acesse o servidor em: http://0.0.0.0:3001');
+  
+  // Adicionando mais informações úteis
+  console.log('\nEndpoints disponíveis:');
+  console.log('- GET  / - Página inicial da API');
+  console.log('- GET  /api/status - Verificar status do servidor');
+  console.log('- POST /api/enviar-email - Enviar email');
+  console.log('\n======================================');
+  
   execSync('node api/server.js', { stdio: 'inherit' });
 } catch (error) {
   console.error('Erro ao iniciar o servidor API:', error.message);
