@@ -750,10 +750,15 @@ const SupportChat: React.FC = () => {
         const storedConversations = localStorage.getItem('chat_conversations');
         if (storedConversations) {
           const parsedConversations = JSON.parse(storedConversations);
-          // Converter as strings de data em objetos Date
+          // Converter as strings de data em objetos Date (tanto para a conversa quanto para as mensagens)
           const formattedConversations = parsedConversations.map(conv => ({
             ...conv,
-            timestamp: new Date(conv.timestamp)
+            timestamp: new Date(conv.timestamp),
+            // Processar também as mensagens dentro de cada conversa, se existirem
+            messages: conv.messages ? conv.messages.map(msg => ({
+              ...msg,
+              timestamp: new Date(msg.timestamp)
+            })) : undefined
           }));
           setSavedConversations(formattedConversations);
         }
@@ -784,7 +789,11 @@ const SupportChat: React.FC = () => {
           <Button
             size="sm"
             className="bg-[#778DA9] hover:bg-[#778DA9]/90 text-white rounded-full px-4 py-0 h-9 text-sm"
-            onClick={() => setIsStartingNewChat(true)}
+            onClick={() => {
+              // Iniciar uma nova conversa vazia
+              setMessages(defaultMessages);
+              setIsStartingNewChat(true);
+            }}
           >
             <Plus className="h-4 w-4 mr-1" /> Nova
           </Button>
@@ -816,7 +825,12 @@ const SupportChat: React.FC = () => {
                   onClick={() => {
                     // Carregar mensagens desta conversa, se existirem
                     if (conversation.messages && conversation.messages.length > 0) {
-                      setMessages(conversation.messages);
+                      // Converter datas de string para objeto Date, se necessário
+                      const processedMessages = conversation.messages.map(msg => ({
+                        ...msg,
+                        timestamp: msg.timestamp instanceof Date ? msg.timestamp : new Date(msg.timestamp)
+                      }));
+                      setMessages(processedMessages);
                     } else {
                       // Se não houver mensagens salvas, começar um novo chat
                       setMessages(defaultMessages);
