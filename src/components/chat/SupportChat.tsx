@@ -805,7 +805,7 @@ const SupportChat: React.FC = () => {
       </div>
 
       {isCreatingTicket ? (
-        <div className="p-4 space-y4 overflow-y-auto max-h-[calc(100vh-150px)]">
+        <div className="p-4 spacey-4 overflow-y-auto max-h-[calc(100vh-150px)]">
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <Plus className="h-5 w-5 text-[#778DA9]" />
             Novo Ticket
@@ -1240,7 +1240,8 @@ const SupportChat: React.FC = () => {
                   </p>
                   <div className="flex justify-between items-center">
                     <Button
-                      variant={suggestion.userVoted ? "default" : "outline"}                      size="sm"
+                      variant={suggestion.userVoted ? "default" : "outline"}
+                      size="sm"
                       className={
                         suggestion.userVoted
                           ? "bg-[#778DA9] hover:bg-[#778DA9]/90 text-white rounded-full"
@@ -1398,7 +1399,7 @@ const SupportChat: React.FC = () => {
                 value="chat"
                 className="m-0 flex-1 flex flex-col overflow-hidden"
               >
-                {renderHomeContent()}
+                {renderChatContent()}
               </TabsContent>
 
               <TabsContent
@@ -1496,7 +1497,7 @@ const SupportChat: React.FC = () => {
         /* Fix for mobile responsiveness */
         @media (max-width: 640px) {
           .fixed.z-40 {
-            width: 90% !important;            right: 5% !important;
+            width: 90% important;            right: 5% !important;
             left: 5% !important;
             max-height: 80vh !important;
           }
