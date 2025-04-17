@@ -4280,7 +4280,7 @@ Exemplo de formato da resposta:
             </Button>
 
             {showAttachmentOptions && (
-              <div className="absolute bottom-full left-0 mb-2 w-64 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-gray-100 dark:border-gray-700 shadow-lg z-50 overflow-hidden">
+              <div className="fixed bottom-[80px] left-14 mb-2 w-64 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-gray-100 dark:border-gray-700 shadow-lg z-[200] overflow-hidden">
                 <div className="py-1">
                   <label htmlFor="image-upload" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer w-full">
                     <Image className="h-4 w-4 text-[#FF6B00]" />
@@ -4330,7 +4330,7 @@ Exemplo de formato da resposta:
             )}
 
             {isRecordingAudio && (
-              <div className="absolute bottom-full left-0 mb-2 p-3 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-red-100 dark:border-red-900/50 shadow-lg z-50 animate-pulse-subtle">
+              <div className="fixed bottom-[80px] left-14 mb-2 p-3 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-red-100 dark:border-red-900/50 shadow-lg z-[200] animate-pulse-subtle">
                 <div className="flex items-center gap-2">
                   <div className="relative">
                     <Mic className="h-5 w-5 text-red-500" />
