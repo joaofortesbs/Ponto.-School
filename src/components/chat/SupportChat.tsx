@@ -382,17 +382,77 @@ const SupportChat: React.FC = () => {
 
     // Simulate AI response after a delay
     setTimeout(() => {
+      const aiResponse = getAIResponse(inputMessage);
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: getAIResponse(inputMessage),
+        text: aiResponse,
         sender: "ai",
         timestamp: new Date(),
         status: "delivered",
       };
 
-      setMessages((prev) => [...prev, aiMessage]);
+      const updatedMessages = [...messages, userMessage, aiMessage];
+      setMessages(updatedMessages);
       setIsTyping(false);
+      
+      // Salvar conversa no histórico
+      saveConversationToHistory(updatedMessages);
     }, 1500);
+  };
+
+  // Função para salvar conversa no histórico
+  const saveConversationToHistory = (conversationMessages: Message[]) => {
+    if (conversationMessages.length < 2) return;
+    
+    try {
+      // Determinar um título para a conversa baseado no primeiro input do usuário
+      const firstUserMessage = conversationMessages.find(msg => msg.sender === "user");
+      const lastMessage = conversationMessages[conversationMessages.length - 1];
+      
+      if (!firstUserMessage || !lastMessage) return;
+      
+      // Criar um título com base na primeira mensagem do usuário (limitado a 30 caracteres)
+      let conversationTitle = firstUserMessage.text.substring(0, 30);
+      if (firstUserMessage.text.length > 30) conversationTitle += "...";
+      
+      // Se a conversa for muito curta, use um título genérico
+      if (conversationTitle.length < 10) {
+        conversationTitle = "Conversa com Suporte";
+      }
+      
+      // Criar objeto de conversa
+      const conversationId = `conv_${Date.now()}`;
+      const newConversation: SavedConversation = {
+        id: conversationId,
+        title: conversationTitle,
+        lastMessage: lastMessage.text.substring(0, 100) + (lastMessage.text.length > 100 ? "..." : ""),
+        timestamp: new Date(),
+      };
+      
+      // Verificar se já existe uma conversa com título semelhante
+      const existingConversations = [...savedConversations];
+      const existingIndex = existingConversations.findIndex(
+        conv => conv.title.toLowerCase() === conversationTitle.toLowerCase()
+      );
+      
+      if (existingIndex >= 0) {
+        // Atualizar conversa existente
+        existingConversations[existingIndex] = {
+          ...existingConversations[existingIndex],
+          lastMessage: newConversation.lastMessage,
+          timestamp: newConversation.timestamp
+        };
+      } else {
+        // Adicionar nova conversa
+        existingConversations.unshift(newConversation);
+      }
+      
+      // Atualizar estado e salvar no localStorage
+      setSavedConversations(existingConversations);
+      localStorage.setItem('chat_conversations', JSON.stringify(existingConversations));
+    } catch (error) {
+      console.error("Erro ao salvar conversa no histórico:", error);
+    }
   };
 
   const getAIResponse = (message: string): string => {
@@ -636,6 +696,65 @@ const SupportChat: React.FC = () => {
     </div>
   );
 
+  // Interface para conversas salvas
+  interface SavedConversation {
+    id: string;
+    title: string;
+    lastMessage: string;
+    timestamp: Date;
+    avatar?: string;
+  }
+
+  const [savedConversations, setSavedConversations] = useState<SavedConversation[]>([
+    {
+      id: "suporte-tecnico",
+      title: "Suporte Técnico",
+      lastMessage: "Obrigado por sua mensagem. Como posso ajudar você hoje?",
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 dias atrás
+    },
+    {
+      id: "duvidas-curso",
+      title: "Dúvidas sobre Curso",
+      lastMessage: "Os certificados são emitidos automaticamente após a conclusão do curso.",
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 dia atrás
+    },
+    {
+      id: "problemas-pagamento",
+      title: "Problemas de Pagamento",
+      lastMessage: "Seu pagamento foi confirmado com sucesso!",
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12), // 12 horas atrás
+    },
+  ]);
+
+  // Efeito para carregar conversas salvas
+  useEffect(() => {
+    // Aqui você pode implementar a lógica para carregar conversas do localStorage ou serviço
+    const loadSavedConversations = () => {
+      try {
+        const storedConversations = localStorage.getItem('chat_conversations');
+        if (storedConversations) {
+          const parsedConversations = JSON.parse(storedConversations);
+          // Converter as strings de data em objetos Date
+          const formattedConversations = parsedConversations.map(conv => ({
+            ...conv,
+            timestamp: new Date(conv.timestamp)
+          }));
+          setSavedConversations(formattedConversations);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar histórico de conversas:", error);
+      }
+    };
+
+    loadSavedConversations();
+  }, []);
+
+  // Filtrar conversas de acordo com a busca
+  const filteredConversations = savedConversations.filter(
+    conv => conv.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            conv.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const renderMessagesListContent = () => (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b bg-gradient-to-r from-[#E0E1DD] to-[#E0E1DD]/80 dark:from-[#29335C] dark:to-[#29335C]/90">
@@ -673,41 +792,44 @@ const SupportChat: React.FC = () => {
           style={{ maxHeight: "calc(100% - 60px)" }}
         >
           <div className="p-4 space-y-4">
-            {messages.length > 0 ? (
-              <div
-                className="border border-[#e1e8f0] dark:border-white/10 rounded-xl p-4 hover:bg-[#f8f9fa] dark:hover:bg-white/5 transition-all duration-300 cursor-pointer hover:shadow-md hover:translate-y-[-2px]"
-                onClick={() => setIsStartingNewChat(true)}
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <div className="flex items-center gap-2">
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage
-                        src="https://api.dicebear.com/7.x/avataaars/svg?seed=Support"
-                        alt="Support"
-                      />
-                      <AvatarFallback className="bg-[#f0f4f8] text-[#29335C]">
-                        SP
-                      </AvatarFallback>
-                    </Avatar>
-                    <h4 className="font-medium text-[#29335C] dark:text-white">
-                      Conversa com Suporte
-                    </h4>
+            {filteredConversations.length > 0 ? (
+              filteredConversations.map((conversation) => (
+                <div
+                  key={conversation.id}
+                  className="border border-[#e1e8f0] dark:border-white/10 rounded-xl p-4 hover:bg-[#f8f9fa] dark:hover:bg-white/5 transition-all duration-300 cursor-pointer hover:shadow-md hover:translate-y-[-2px]"
+                  onClick={() => setIsStartingNewChat(true)}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex items-center gap-2">
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage
+                          src={conversation.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=Support"}
+                          alt={conversation.title}
+                        />
+                        <AvatarFallback className="bg-[#f0f4f8] text-[#29335C]">
+                          {conversation.title.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <h4 className="font-medium text-[#29335C] dark:text-white">
+                        {conversation.title}
+                      </h4>
+                    </div>
+                    <div className="text-xs text-muted-foreground bg-[#f0f4f8] dark:bg-white/10 px-2 py-1 rounded-full">
+                      {conversation.timestamp.toLocaleDateString()}
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground bg-[#f0f4f8] dark:bg-white/10 px-2 py-1 rounded-full">
-                    {new Date().toLocaleDateString()}
+                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2 pl-10">
+                    {conversation.lastMessage}
+                  </p>
+                  <div className="flex items-center text-xs text-muted-foreground pl-10">
+                    <Clock className="h-3 w-3 mr-1" />
+                    {conversation.timestamp.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground mb-3 line-clamp-2 pl-10">
-                  {messages[messages.length - 1].text}
-                </p>
-                <div className="flex items-center text-xs text-muted-foreground pl-10">
-                  <Clock className="h-3 w-3 mr-1" />
-                  {new Date().toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </div>
-              </div>
+              ))
             ) : (
               <div className="text-center py-8 px-4">
                 <div className="w-14 h-14 rounded-full bg-[#f0f4f8] dark:bg-white/5 flex items-center justify-center mx-auto mb-3">
