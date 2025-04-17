@@ -1955,17 +1955,15 @@ Exemplo de formato da resposta:
           )}
         </div>
       </ScrollArea>
-      </div>
-    );
-  };
+    </div>
+  );
 
-  const renderChatContent = () => {
-    return (
-      <div className="flex flex-col h-full">
-        <ScrollArea
-          className="flex-1 p-4 custom-scrollbar overflow-y-auto relative"
-          style={{ maxHeight: "calc(100% - 90px)" }}
-        >
+  const renderChatContent = () => (
+    <div className="flex flex-col h-full">
+      <ScrollArea
+        className="flex-1 p-4 custom-scrollbar overflow-y-auto relative"
+        style={{ maxHeight: "calc(100% - 90px)" }}
+      >
         {/* Botão flutuante para voltar ao fim da conversa */}
         {showScrollToBottom && (
           <div 
@@ -2399,35 +2397,20 @@ Exemplo de formato da resposta:
                                   prevMessages.map(msg => ({...msg, showExportOptions: false, showExportFormats: false, showShareOptions: false}))
                                 );
                                 
-                                // Importar o componente EmailModal e React
-                                import EmailModal from "@/components/shared/EmailModal";
-                                import ReactDOM from "react-dom";
-                                import React from "react";
+                                // Usar o serviço de e-mail já importado
 
-                                // Preparar o conteúdo do email
-                                const emailContent = {
-                                  subject: "Material compartilhado da Ponto.School",
-                                  html: emailHTML
-                                };
-
-                                // Criar um container para o modal
-                                const modalContainer = document.createElement('div');
-                                document.body.appendChild(modalContainer);
-
-                                // Renderizar o EmailModal no container
-                                const closeEmailModal = () => {
-                                  ReactDOM.unmountComponentAtNode(modalContainer);
-                                  document.body.removeChild(modalContainer);
-                                };
-
-                                ReactDOM.render(
-                                  <EmailModal 
-                                    isOpen={true} 
-                                    onClose={closeEmailModal} 
-                                    emailContent={emailContent}
-                                  />,
-                                  modalContainer
-                                );
+                                // Criar e adicionar o modal diretamente ao DOM
+                                const modalHTML = `
+                                  <div id="custom-email-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+                                    <div class="bg-[#1a1d2d] text-white rounded-lg w-[90%] max-w-md shadow-xl overflow-hidden border border-gray-700">
+                                      <div class="bg-gradient-to-r from-orange-600 to-orange-700 p-4">
+                                        <h3 class="text-lg font-semibold">Compartilhar por E-mail</h3>
+                                      </div>
+                                      <div class="p-5">
+                                        <label class="block text-sm text-gray-200 mb-2">Digite o endereço de e-mail do destinatário:</label>
+                                        <input 
+                                          type="email" 
+                                          id="recipient-email-input"
                                           class="w-full p-3 rounded-md bg-gray-800 border border-gray-600 text-white mb-4 focus:outline-none focus:ring-2 focus:ring-orange-500" 
                                           placeholder="exemplo@email.com"
                                         />
@@ -2450,13 +2433,69 @@ Exemplo de formato da resposta:
                                   </div>
                                 `;
 
-                                // Usando o novo componente EmailModal, não precisamos mais do código antigo
-                                // que manipulava o DOM diretamente.getElementById('send-email-button');
+                                // Remover qualquer modal existente
+                                const existingModal = document.getElementById('custom-email-modal');
+                                if (existingModal) {
+                                  existingModal.remove();
+                                }
+                                
+                                // Adicionar o novo modal ao DOM
+                                document.body.insertAdjacentHTML('beforeend', modalHTML);
+                                
+                                // Adicionar event listeners ao modal com atraso para garantir que o DOM foi atualizado
+                                setTimeout(() => {
+                                  const modal = document.getElementById('custom-email-modal');
+                                  const input = document.getElementById('recipient-email-input');
+                                  const cancelButton = document.getElementById('cancel-email-button');
+                                  const sendButton = document.getElementById('send-email-button');
                                   
-                                  // O componente EmailModal gerencia seu próprio estado e eventos,
-                                // não precisamos adicionar event listeners manualmentenst input = document.getElementById('recipient-email-input');
-                                  // O EmailModal utiliza o serviço de email importado e gerencia 
-                                // o estado de carregamento e feedback de sucesso internamente
+                                  // Focar no input
+                                  if (input) {
+                                    input.focus();
+                                  }
+                                  
+                                  // Adicionar evento de cancelamento
+                                  if (cancelButton) {
+                                    cancelButton.addEventListener('click', () => {
+                                      if (modal) {
+                                        modal.remove();
+                                      }
+                                    });
+                                  }
+                                  
+                                  // Adicionar evento para fechar o modal ao clicar fora
+                                  if (modal) {
+                                    modal.addEventListener('click', (e) => {
+                                      if (e.target === modal) {
+                                        modal.remove();
+                                      }
+                                    });
+                                  }
+                                }, 50);
+                                
+                                // Adicionar evento de envio
+                                setTimeout(() => {
+                                  const modal = document.getElementById('custom-email-modal');
+                                  const input = document.getElementById('recipient-email-input');
+                                  const sendButton = document.getElementById('send-email-button');
+                                  
+                                  if (sendButton && input && modal) {
+                                    sendButton.addEventListener('click', async () => {
+                                      const email = input.value;
+                                      if (email && email.includes('@')) {
+                                        // Mostrar indicador de carregamento
+                                        sendButton.innerHTML = '<div class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent mr-1"></div> Enviando...';
+                                        sendButton.disabled = true;
+                                        
+                                        try {
+                                          // Usar o serviço de e-mail para enviar a mensagem
+                                          const emailData = {
+                                            to: email,
+                                            subject: "Material compartilhado da Ponto.School",
+                                            html: emailHTML
+                                          };
+                                          
+                                          // Importar o serviço de e-mail
                                           const emailService = await import('../../services/emailService')vice = await import('@/services/emailService');
                                           const result = await emailService.sendEmail(emailData);
                                           
