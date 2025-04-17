@@ -15,3 +15,12 @@ interface Window {
 }
 
 /// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+  readonly VITE_SENDGRID_API_KEY: string;
+  // outras variáveis de ambiente...
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
