@@ -4785,7 +4785,7 @@ Exemplo de formato da resposta:
             onClick={() => setIsOpen(true)}
             className="w-14 h-14 rounded-full bg-gradient-to-br from-[#FF8736] to-[#FF6B00] hover:bg-gradient-to-br hover:from-[#FF9856] hover:to-[#FF7B20] shadow-lg shadow-orange-500/20 dark:shadow-orange-700/30 animate-bounce-subtle flex items-center justify-center"
           >
-            <MessageSquare className="h-6 w-6 text-white" />
+            <MessageCircle className="h-6 w-6 text-white" />
             <span className="absolute top-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-900"></span>
           </Button>
         ) : (
