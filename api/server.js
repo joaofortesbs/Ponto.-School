@@ -24,4 +24,10 @@ app.get('/api/status', (req, res) => {
 // Iniciar servidor
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Servidor de API rodando na porta ${PORT}`);
+  console.log(`Acesse em: http://0.0.0.0:${PORT}/api/status`);
+});
+
+// Tratamento global de erros para evitar que o servidor caia
+process.on('uncaughtException', (error) => {
+  console.error('Erro não tratado no servidor:', error);
 });

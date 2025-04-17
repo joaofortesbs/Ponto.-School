@@ -82,7 +82,7 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "node api/server.js"
+args = "node scripts/api-server.js"
 
 [auth]
 pageEnabled = false

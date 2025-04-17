@@ -13,12 +13,36 @@ export const preloadAllComponents = () => {
 // Função para verificar se o servidor de API está rodando
 async function verificarServidorAPI() {
   try {
-    const response = await fetch('/api/status');
-    const data = await response.json();
-    console.log('Status do servidor API:', data.status);
-    return true;
+    // Primeiro tenta no caminho padrão
+    const response = await fetch('/api/status', { 
+      method: 'GET',
+      headers: { 'Accept': 'application/json' },
+      signal: AbortSignal.timeout(2000) // 2 segundos timeout
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      console.log('Status do servidor API:', data.status);
+      return true;
+    }
+    return false;
   } catch (error) {
-    console.error('Servidor API não está rodando:', error);
+    // Tenta na porta específica como fallback
+    try {
+      const altResponse = await fetch('http://localhost:3001/api/status', { 
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(2000)
+      });
+      
+      if (altResponse.ok) {
+        const data = await altResponse.json();
+        console.log('Status do servidor API (porta 3001):', data.status);
+        return true;
+      }
+    } catch (altError) {
+      console.warn('Servidor API não está rodando');
+    }
     return false;
   }
 }

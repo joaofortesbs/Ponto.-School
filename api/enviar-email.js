@@ -7,8 +7,18 @@ dotenv.config();
 
 const router = express.Router();
 
-// Configurar a chave da API SendGrid
-sgMail.setApiKey(process.env.VITE_SENDGRID_API_KEY || process.env.SENDGRID_API_KEY);
+// Configurar a chave da API SendGrid (com validação)
+const apiKey = process.env.VITE_SENDGRID_API_KEY || process.env.SENDGRID_API_KEY;
+if (apiKey) {
+  try {
+    sgMail.setApiKey(apiKey);
+    console.log('SendGrid API configurada com sucesso');
+  } catch (error) {
+    console.warn('Erro ao configurar SendGrid API:', error.message);
+  }
+} else {
+  console.warn('Aviso: SendGrid API key não configurada. Recursos de e-mail estarão limitados.');
+}
 
 // Endpoint para enviar e-mail
 router.post('/enviar-email', async (req, res) => {
