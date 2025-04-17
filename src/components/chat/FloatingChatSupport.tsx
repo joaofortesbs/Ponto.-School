@@ -2198,7 +2198,7 @@ Exemplo de formato da resposta:
                         
                         {/* Context tools dropdown */}
                         {message.showContextTools && (
-                          <div className="absolute z-50 top-full right-0 mt-1 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
+                          <div className="absolute z-[200] top-full right-0 mt-1 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
                             <button 
                               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
                               onClick={(e) => {
@@ -2321,7 +2321,7 @@ Exemplo de formato da resposta:
                         
                         {/* Menu principal com opções Exportar e Compartilhar */}
                         {message.showExportOptions && !message.showExportFormats && (
-                          <div className="absolute z-50 top-full right-0 mt-1 w-28 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
+                          <div className="absolute z-[200] top-full right-0 mt-1 w-28 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
                             <button 
                               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
                               onClick={(e) => {
@@ -2368,7 +2368,7 @@ Exemplo de formato da resposta:
                         
                         {/* Menu secundário com formatos de exportação */}
                         {message.showExportFormats && (
-                          <div className="absolute z-50 top-full right-0 mt-1 w-36 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
+                          <div className="absolute z-[200] top-full right-0 mt-1 w-36 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
                             <button 
                               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
                               onClick={(e) => {
@@ -2456,7 +2456,7 @@ Exemplo de formato da resposta:
                         
                         {/* Menu secundário com opções de compartilhamento */}
                         {message.showShareOptions && (
-                          <div className="absolute z-50 top-full right-0 mt-1 w-64 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
+                          <div className="absolute z-[200] top-full right-0 mt-1 w-64 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
                             <button 
                               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
                               onClick={(e) => {
@@ -2993,7 +2993,7 @@ Exemplo de formato da resposta:
 
       {/* AI Settings Popover */}
       {isShowingAISettings && (
-        <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-xl w-[85%] max-w-sm animate-fadeIn">
+        <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[500] bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-xl w-[85%] max-w-sm animate-fadeIn">
           <div className="flex justify-between items-center mb-3">
             <h4 className="text-sm font-medium flex items-center gap-1">
               <Sparkles className="h-4 w-4 text-orange-500" />
@@ -4280,7 +4280,7 @@ Exemplo de formato da resposta:
             </Button>
 
             {showAttachmentOptions && (
-              <div className="fixed bottom-[80px] left-14 mb-2 w-64 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-gray-100 dark:border-gray-700 shadow-lg z-[200] overflow-hidden">
+              <div className="fixed bottom-[80px] left-14 mb-2 w-64 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-gray-100 dark:border-gray-700 shadow-lg z-[500] overflow-hidden">
                 <div className="py-1">
                   <label htmlFor="image-upload" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-orange-100 dark:hover:bg-orange-800/40 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer w-full">
                     <Image className="h-4 w-4 text-[#FF6B00]" />
@@ -4330,7 +4330,7 @@ Exemplo de formato da resposta:
             )}
 
             {isRecordingAudio && (
-              <div className="fixed bottom-[80px] left-14 mb-2 p-3 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-red-100 dark:border-red-900/50 shadow-lg z-[200] animate-pulse-subtle">
+              <div className="fixed bottom-[80px] left-14 mb-2 p-3 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-red-100 dark:border-red-900/50 shadow-lg z-[500] animate-pulse-subtle">
                 <div className="flex items-center gap-2">
                   <div className="relative">
                     <Mic className="h-5 w-5 text-red-500" />
@@ -4824,12 +4824,12 @@ Exemplo de formato da resposta:
       {isOpen && (
         <div
           ref={overlayRef}
-          className="fixed inset-0 bg-black/5 backdrop-blur-[2px] z-40"
+          className="fixed inset-0 bg-black/5 backdrop-blur-[2px] z-[400]"
           onClick={() => setIsOpen(false)}
         />
       )}
 
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-6 right-6 z-[450]">
         {!isOpen ? (
           <Button
             onClick={() => setIsOpen(true)}
