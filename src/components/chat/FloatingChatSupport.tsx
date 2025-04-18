@@ -2798,6 +2798,7 @@ Exemplo de formato da resposta:
                                                   Quantidade total de questões
                                                 </label>
                                                 <input 
+                                                  id="total-questions-input"
                                                   type="number" 
                                                   min="1" 
                                                   max="50" 
@@ -2814,6 +2815,7 @@ Exemplo de formato da resposta:
                                                   <div class="flex items-center justify-between">
                                                     <span class="text-sm text-gray-700 dark:text-gray-300">Múltipla escolha</span>
                                                     <input 
+                                                      id="multiple-choice-input"
                                                       type="number" 
                                                       min="0" 
                                                       value="6"
@@ -2823,6 +2825,7 @@ Exemplo de formato da resposta:
                                                   <div class="flex items-center justify-between">
                                                     <span class="text-sm text-gray-700 dark:text-gray-300">Discursivas</span>
                                                     <input 
+                                                      id="essay-input"
                                                       type="number" 
                                                       min="0" 
                                                       value="2"
@@ -2832,6 +2835,7 @@ Exemplo de formato da resposta:
                                                   <div class="flex items-center justify-between">
                                                     <span class="text-sm text-gray-700 dark:text-gray-300">Verdadeiro ou Falso</span>
                                                     <input 
+                                                      id="true-false-input"
                                                       type="number" 
                                                       min="0" 
                                                       value="2"
@@ -2845,7 +2849,10 @@ Exemplo de formato da resposta:
                                                 <label class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                                                   Competências BNCC (opcional)
                                                 </label>
-                                                <select class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-white">
+                                                <select 
+                                                  id="bncc-select"
+                                                  class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-white"
+                                                >
                                                   <option>Selecione uma competência</option>
                                                   <option>Competência 1 - Conhecimento</option>
                                                   <option>Competência 2 - Pensamento científico</option>
@@ -2858,8 +2865,7 @@ Exemplo de formato da resposta:
                                             
                                             <button 
                                               id="generate-questions-button"
-                                              class="w-full py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors opacity-50 cursor-not-allowed"
-                                              disabled
+                                              class="w-full py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
                                             >
                                               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                 <circle cx="12" cy="12" r="10"></circle>
@@ -2868,10 +2874,6 @@ Exemplo de formato da resposta:
                                               </svg>
                                               Gerar Questões
                                             </button>
-                                            
-                                            <p class="text-xs text-center text-gray-500 dark:text-gray-400 mt-3 italic">
-                                              Funcionalidade em desenvolvimento
-                                            </p>
                                           </div>
                                         </div>
                                       `;
@@ -2889,6 +2891,11 @@ Exemplo de formato da resposta:
                                       setTimeout(() => {
                                         const questionsModal = document.getElementById('see-questions-modal');
                                         const closeButton = document.getElementById('close-questions-modal');
+                                        const generateButton = document.getElementById('generate-questions-button');
+                                        const totalQuestionsInput = document.getElementById('total-questions-input') as HTMLInputElement;
+                                        const multipleChoiceInput = document.getElementById('multiple-choice-input') as HTMLInputElement;
+                                        const essayInput = document.getElementById('essay-input') as HTMLInputElement;
+                                        const trueFalseInput = document.getElementById('true-false-input') as HTMLInputElement;
                                         
                                         // Função para fechar o modal
                                         const closeQuestionsModal = () => {
@@ -2909,6 +2916,173 @@ Exemplo de formato da resposta:
                                             if (e.target === questionsModal) {
                                               closeQuestionsModal();
                                             }
+                                          });
+                                        }
+                                        
+                                        // Event listener para o botão de gerar questões
+                                        if (generateButton) {
+                                          generateButton.addEventListener('click', () => {
+                                            // Pegar valores dos inputs
+                                            const totalQuestions = parseInt(totalQuestionsInput?.value || '10');
+                                            const multipleChoice = parseInt(multipleChoiceInput?.value || '6');
+                                            const essay = parseInt(essayInput?.value || '2');
+                                            const trueFalse = parseInt(trueFalseInput?.value || '2');
+                                            
+                                            // Criar o modal de resultado com mini-cards
+                                            const resultsModalHTML = `
+                                              <div id="questions-results-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+                                                <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 p-5 shadow-xl w-[90%] max-w-4xl max-h-[80vh] animate-fadeIn">
+                                                  <div class="flex justify-between items-center mb-4">
+                                                    <h3 class="text-lg font-semibold flex items-center gap-2 text-gray-800 dark:text-gray-200">
+                                                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500">
+                                                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                                                      </svg>
+                                                      Questões Geradas
+                                                    </h3>
+                                                    <button 
+                                                      id="close-results-modal"
+                                                      class="h-7 w-7 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                                    >
+                                                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M18 6 6 18"></path>
+                                                        <path d="m6 6 12 12"></path>
+                                                      </svg>
+                                                    </button>
+                                                  </div>
+                                                  
+                                                  <div class="overflow-y-auto max-h-[calc(80vh-120px)] p-2">
+                                                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4" id="questions-container">
+                                                      ${generateQuestionCards(totalQuestions, multipleChoice, essay, trueFalse)}
+                                                    </div>
+                                                  </div>
+                                                  
+                                                  <div class="mt-4 flex justify-end gap-3">
+                                                    <button 
+                                                      id="export-questions-button"
+                                                      class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium flex items-center gap-1.5"
+                                                    >
+                                                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                                      </svg>
+                                                      Exportar Questões
+                                                    </button>
+                                                    <button 
+                                                      id="done-button"
+                                                      class="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg text-sm font-medium"
+                                                    >
+                                                      Concluído
+                                                    </button>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            `;
+                                            
+                                            // Função para gerar os mini-cards das questões
+                                            function generateQuestionCards(total, multipleChoice, essay, trueFalse) {
+                                              let cardsHTML = '';
+                                              
+                                              // Gerar cards de múltipla escolha
+                                              for (let i = 0; i < multipleChoice; i++) {
+                                                if (i < total) {
+                                                  cardsHTML += `
+                                                    <div class="bg-white dark:bg-gray-700 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 p-3 hover:shadow-lg transition-shadow">
+                                                      <div class="flex justify-between items-start mb-2">
+                                                        <h4 class="text-sm font-medium text-gray-800 dark:text-gray-200">Questão ${i + 1}</h4>
+                                                        <span class="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded-full">Múltipla escolha</span>
+                                                      </div>
+                                                      <p class="text-xs text-gray-600 dark:text-gray-300 line-clamp-3">
+                                                        Exemplo de enunciado para questão de múltipla escolha relacionada ao conteúdo estudado.
+                                                      </p>
+                                                    </div>
+                                                  `;
+                                                }
+                                              }
+                                              
+                                              // Gerar cards de questões discursivas
+                                              for (let i = 0; i < essay; i++) {
+                                                if (i + multipleChoice < total) {
+                                                  cardsHTML += `
+                                                    <div class="bg-white dark:bg-gray-700 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 p-3 hover:shadow-lg transition-shadow">
+                                                      <div class="flex justify-between items-start mb-2">
+                                                        <h4 class="text-sm font-medium text-gray-800 dark:text-gray-200">Questão ${i + multipleChoice + 1}</h4>
+                                                        <span class="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs rounded-full">Discursiva</span>
+                                                      </div>
+                                                      <p class="text-xs text-gray-600 dark:text-gray-300 line-clamp-3">
+                                                        Exemplo de questão discursiva para dissertar sobre o tema abordado.
+                                                      </p>
+                                                    </div>
+                                                  `;
+                                                }
+                                              }
+                                              
+                                              // Gerar cards de verdadeiro ou falso
+                                              for (let i = 0; i < trueFalse; i++) {
+                                                if (i + multipleChoice + essay < total) {
+                                                  cardsHTML += `
+                                                    <div class="bg-white dark:bg-gray-700 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 p-3 hover:shadow-lg transition-shadow">
+                                                      <div class="flex justify-between items-start mb-2">
+                                                        <h4 class="text-sm font-medium text-gray-800 dark:text-gray-200">Questão ${i + multipleChoice + essay + 1}</h4>
+                                                        <span class="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs rounded-full">Verdadeiro ou Falso</span>
+                                                      </div>
+                                                      <p class="text-xs text-gray-600 dark:text-gray-300 line-clamp-3">
+                                                        Afirmação sobre o conteúdo para classificar como verdadeira ou falsa.
+                                                      </p>
+                                                    </div>
+                                                  `;
+                                                }
+                                              }
+                                              
+                                              return cardsHTML;
+                                            }
+                                            
+                                            // Fechar o modal de configuração
+                                            closeQuestionsModal();
+                                            
+                                            // Remover qualquer modal de resultados existente
+                                            const existingResultsModal = document.getElementById('questions-results-modal');
+                                            if (existingResultsModal) {
+                                              existingResultsModal.remove();
+                                            }
+                                            
+                                            // Adicionar o modal de resultados ao DOM
+                                            document.body.insertAdjacentHTML('beforeend', resultsModalHTML);
+                                            
+                                            // Adicionar event listeners ao modal de resultados
+                                            setTimeout(() => {
+                                              const resultsModal = document.getElementById('questions-results-modal');
+                                              const closeResultsButton = document.getElementById('close-results-modal');
+                                              const doneButton = document.getElementById('done-button');
+                                              
+                                              // Função para fechar o modal de resultados
+                                              const closeResultsModal = () => {
+                                                if (resultsModal) {
+                                                  resultsModal.classList.add('animate-fadeOut');
+                                                  setTimeout(() => resultsModal.remove(), 200);
+                                                }
+                                              };
+                                              
+                                              // Event listener para fechar o modal
+                                              if (closeResultsButton) {
+                                                closeResultsButton.addEventListener('click', closeResultsModal);
+                                              }
+                                              
+                                              // Event listener para o botão de concluído
+                                              if (doneButton) {
+                                                doneButton.addEventListener('click', closeResultsModal);
+                                              }
+                                              
+                                              // Event listener para clicar fora e fechar
+                                              if (resultsModal) {
+                                                resultsModal.addEventListener('click', (e) => {
+                                                  if (e.target === resultsModal) {
+                                                    closeResultsModal();
+                                                  }
+                                                });
+                                              }
+                                            }, 50);
                                           });
                                         }
                                       }, 50);
