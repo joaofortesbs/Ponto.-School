@@ -100,7 +100,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
         console.error('Erro ao parsear as questões JSON:', jsonError);
         questionsData = [];
       }
-      
+
       // Armazenar as questões geradas em uma variável global para acesso posterior
       window.generatedQuestions = questionsData;
 
@@ -139,13 +139,14 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
     let questionContent = '';
     let questionOptions = '';
     let questionExplanation = '';
+    let showExplanation = false; // Add state to control explanation visibility
 
     // Verificar se temos questões geradas pela IA
     const hasGeneratedQuestions = Array.isArray(questionsData) && questionsData.length > 0;
-    
+
     // Se temos questões geradas, vamos encontrar a questão específica
     let selectedQuestion = null;
-    
+
     if (hasGeneratedQuestions) {
       // Encontrar a questão correspondente ao número e tipo
       selectedQuestion = questionsData.find((q, index) => {
@@ -155,7 +156,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
                (questionType === 'essay' && (q.type === 'essay' || q.type === 'discursive')) || 
                (questionType === 'true-false' && (q.type === 'true-false' || q.type === 'verdadeiro-falso')));
       });
-      
+
       // Se não encontrou pela correspondência exata, pegar pela posição
       if (!selectedQuestion) {
         selectedQuestion = questionsData[questionNumber - 1];
@@ -209,13 +210,13 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
         // Usar a questão gerada pela IA
         questionContent = selectedQuestion.text;
         questionExplanation = selectedQuestion.explanation || '';
-        
+
         // Gerar as opções de múltipla escolha
         const optionsHTML = selectedQuestion.options.map((option, idx) => {
           const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
           const letter = letters[idx % letters.length];
           const isCorrectClass = option.isCorrect ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : '';
-          
+
           return `
             <div class="flex items-center space-x-2 ${isCorrectClass}">
               <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
@@ -225,10 +226,15 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
             </div>
           `;
         }).join('');
-        
+
         questionOptions = `
           <div class="mt-4 space-y-3">
             ${optionsHTML}
+          </div>
+          <div class="mt-4">
+            <button id="show-explanation-btn" class="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors">
+              Ver Resposta
+            </button>
           </div>
         `;
       } else {
@@ -264,6 +270,11 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
               <span class="text-sm text-gray-700 dark:text-gray-300">Exemplifica como o ${terms[3 % terms.length]} pode ser utilizado em diferentes situações.</span>
             </div>
           </div>
+          <div class="mt-4">
+            <button id="show-explanation-btn" class="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors">
+              Ver Resposta
+            </button>
+          </div>
         `;
       }
     } else if (questionType === 'essay') {
@@ -272,17 +283,32 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
       if (selectedQuestion) {
         // Usar a questão gerada pela IA
         questionContent = selectedQuestion.text;
+        questionExplanation = selectedQuestion.explanation || '';
+        questionOptions = `
+          <div class="mt-4">
+            <textarea placeholder="Digite sua resposta aqui..." class="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500"></textarea>
+          </div>
+          <div class="mt-4">
+            <button id="show-explanation-btn" class="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors">
+              Ver Resposta
+            </button>
+          </div>
+        `;
       } else {
         // Fallback para questões pré-definidas
         const questionIndex = (questionNumber - 1) % essayQuestions.length;
         questionContent = essayQuestions[questionIndex];
+        questionOptions = `
+          <div class="mt-4">
+            <textarea placeholder="Digite sua resposta aqui..." class="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500"></textarea>
+          </div>
+          <div class="mt-4">
+            <button id="show-explanation-btn" class="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors">
+              Ver Resposta
+            </button>
+          </div>
+        `;
       }
-
-      questionOptions = `
-        <div class="mt-4">
-          <textarea placeholder="Digite sua resposta aqui..." class="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500"></textarea>
-        </div>
-      `;
     } else if (questionType === 'true-false') {
       questionTag = '<span class="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs rounded-full">Verdadeiro ou Falso</span>';
 
@@ -290,29 +316,51 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
         // Usar a questão gerada pela IA
         questionContent = selectedQuestion.text;
         questionExplanation = selectedQuestion.explanation || '';
+
+        questionOptions = `
+          <div class="mt-4 space-y-3">
+            <div class="flex items-center space-x-4">
+              <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                Verdadeiro
+              </button>
+              <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                Falso
+              </button>
+            </div>
+          </div>
+          <div class="mt-4">
+            <button id="show-explanation-btn" class="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors">
+              Ver Resposta
+            </button>
+          </div>
+        `;
       } else {
         // Fallback para questões pré-definidas
         const questionIndex = (questionNumber - 1) % trueFalseQuestions.length;
         questionContent = trueFalseQuestions[questionIndex];
-      }
-
-      questionOptions = `
-        <div class="mt-4 space-y-3">
-          <div class="flex items-center space-x-4">
-            <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
-              Verdadeiro
-            </button>
-            <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
-              Falso
+        questionOptions = `
+          <div class="mt-4 space-y-3">
+            <div class="flex items-center space-x-4">
+              <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                Verdadeiro
+              </button>
+              <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                Falso
+              </button>
+            </div>
+          </div>
+          <div class="mt-4">
+            <button id="show-explanation-btn" class="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors">
+              Ver Resposta
             </button>
           </div>
-        </div>
-      `;
+        `;
+      }
     }
-    
+
     // Adicionar explicação se disponível
     const explanationHTML = questionExplanation ? `
-      <div class="mt-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+      <div id="explanation-container" class="mt-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 ${showExplanation ? '' : 'hidden'}">
         <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Explicação:</p>
         <p class="text-sm text-gray-700 dark:text-gray-300">${questionExplanation}</p>
       </div>
@@ -401,6 +449,8 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
       const backToListButton = document.getElementById('back-to-list-button');
       const prevQuestionButton = document.getElementById('prev-question-button');
       const nextQuestionButton = document.getElementById('next-question-button');
+      const showExplanationBtn = document.getElementById('show-explanation-btn');
+      const explanationContainer = document.getElementById('explanation-container');
 
       // Função para fechar o modal de detalhes
       const closeDetailModal = () => {
@@ -474,6 +524,19 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
           }
         });
       }
+
+      // Event listener for "Ver Resposta" button
+      if (showExplanationBtn && explanationContainer) {
+        showExplanationBtn.addEventListener('click', () => {
+          showExplanation = !showExplanation;
+          explanationContainer.classList.toggle('hidden');
+          if (showExplanation) {
+            showExplanationBtn.textContent = 'Ocultar Resposta';
+          } else {
+            showExplanationBtn.textContent = 'Ver Resposta';
+          }
+        });
+      }
     }, 50);
   };
 
@@ -482,10 +545,10 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
     // Função para gerar os mini-cards das questões
     const generateQuestionCards = (total: number, multipleChoice: number, essay: number, trueFalse: number) => {
       let cardsHTML = '';
-      
+
       // Verificar se temos questões geradas pela IA
       const hasGeneratedQuestions = Array.isArray(questionsData) && questionsData.length > 0;
-      
+
       // Tentar extrair informações relevantes do conteúdo para gerar questões personalizadas (fallback)
       const extractKeyTopics = (content: string) => {
         // Encontrar títulos ou palavras-chave em negrito
@@ -591,18 +654,18 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
 
       // Contador global de questões
       let questionCounter = 1;
-      
+
       // Filtrar questões por tipo
       const multipleChoiceQuestionsFromAI = hasGeneratedQuestions 
         ? questionsData.filter(q => q.type === 'multiple-choice').slice(0, multipleChoice)
         : [];
-        
+
       const essayQuestionsFromAI = hasGeneratedQuestions 
         ? questionsData.filter(q => q.type === 'essay' || q.type === 'discursive').slice(0, essay)
         : [];
-        
+
       const trueFalseQuestionsFromAI = hasGeneratedQuestions 
-        ? questionsData.filter(q => q.type === 'true-false' || q.type === 'verdadeiro-falso').slice(0, trueFalse)
+        ? questionsData.filter(q => q.type === 'true-false' ||q.type === 'verdadeiro-falso').slice(0, trueFalse)
         : [];
 
       // Gerar cards de múltipla escolha
@@ -610,7 +673,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
       for (let i = 0; i < mcCount; i++) {
         if (questionCounter <= total) {
           let questionText = '';
-          
+
           if (multipleChoiceQuestionsFromAI.length > i) {
             // Usar questão gerada pela IA
             questionText = multipleChoiceQuestionsFromAI[i].text;
@@ -619,7 +682,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
             const questionIndex = i % multipleChoiceQuestions.length;
             questionText = multipleChoiceQuestions[questionIndex];
           }
-          
+
           cardsHTML += `
             <div class="bg-white dark:bg-gray-700 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 p-3 hover:shadow-lg transition-shadow cursor-pointer" 
                  onclick="showQuestionDetails('multiple-choice', ${questionCounter})">
@@ -641,7 +704,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
       for (let i = 0; i < essayCount; i++) {
         if (questionCounter <= total) {
           let questionText = '';
-          
+
           if (essayQuestionsFromAI.length > i) {
             // Usar questão gerada pela IA
             questionText = essayQuestionsFromAI[i].text;
@@ -650,7 +713,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
             const questionIndex = i % essayQuestions.length;
             questionText = essayQuestions[questionIndex];
           }
-          
+
           cardsHTML += `
             <div class="bg-white dark:bg-gray-700 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 p-3 hover:shadow-lg transition-shadow cursor-pointer"
                  onclick="showQuestionDetails('essay', ${questionCounter})">
@@ -672,7 +735,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
       for (let i = 0; i < tfCount; i++) {
         if (questionCounter <= total) {
           let questionText = '';
-          
+
           if (trueFalseQuestionsFromAI.length > i) {
             // Usar questão gerada pela IA
             questionText = trueFalseQuestionsFromAI[i].text;
@@ -681,7 +744,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
             const questionIndex = i % trueFalseQuestions.length;
             questionText = trueFalseQuestions[questionIndex];
           }
-          
+
           cardsHTML += `
             <div class="bg-white dark:bg-gray-700 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 p-3 hover:shadow-lg transition-shadow cursor-pointer"
                  onclick="showQuestionDetails('true-false', ${questionCounter})">
