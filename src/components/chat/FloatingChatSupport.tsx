@@ -3156,7 +3156,7 @@ Exemplo de formato da resposta:
       {showNotebookModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowNotebookModal(false)}></div>
-          <div className="relative bg-[#ffffe0] dark:bg-[#252525] w-[95%] max-w-3xl max-h-[90vh] rounded-lg border border-gray-400 dark:border-gray-600 shadow-2xl overflow-hidden">
+          <div className="relative bg-[#ffffe0] dark:bg-[#252525] w-[95%] max-w-3xl max-h-[80vh] rounded-lg border border-gray-400 dark:border-gray-600 shadow-2xl overflow-hidden">
             {/* Cabeçalho do caderno */}
             <div className="flex justify-between items-center px-4 py-2 bg-amber-100 dark:bg-gray-800 border-b border-gray-400 dark:border-gray-600">
               <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
