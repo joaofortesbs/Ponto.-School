@@ -2441,7 +2441,7 @@ Exemplo de formato da resposta:
                                       {
                                         titulo: "Introdução: " + mainTitle.substring(0, 50),
                                         topicos: extractTopicsFromContent(paragraphs.slice(0, 3).join('\n\n')),
-                                        explicacao: paragraphs.slice(0, 2).join('\n\n').substring(0, 150) + "...",
+                                        explicacao: paragraphs.slice(0, 2).join('\n\n'),
                                         imagemOpcional: ""
                                       }
                                     ];
@@ -2456,7 +2456,7 @@ Exemplo de formato da resposta:
                                       contentSections.push({
                                         titulo: "Principais Conceitos",
                                         topicos: extractTopicsFromContent(section1),
-                                        explicacao: section1.substring(0, 150) + "...",
+                                        explicacao: section1string(0, 150) + "...",
                                         imagemOpcional: ""
                                       });
                                       
@@ -2466,7 +2466,7 @@ Exemplo de formato da resposta:
                                         contentSections.push({
                                           titulo: "Aplicações e Exemplos",
                                           topicos: extractTopicsFromContent(section2),
-                                          explicacao: section2.substring(0, 150) + "...",
+                                          explicacao: section2,
                                           imagemOpcional: ""
                                         });
                                       }

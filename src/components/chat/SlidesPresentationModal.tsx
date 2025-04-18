@@ -61,7 +61,7 @@ const SlidesPresentationModal: React.FC<SlidesPresentationModalProps> = ({
           </div>
           
           {/* Content */}
-          <div className="flex-grow p-6 overflow-y-auto">
+          <div className="flex-grow p-6 overflow-y-auto max-h-[60vh]">
             <div className="flex flex-col md:flex-row gap-6 animate-fadeIn transition-all duration-300">
               {/* Main content */}
               <div className={`flex-1 ${currentSlide?.imagemOpcional ? 'md:w-1/2' : 'w-full'}`}>
@@ -81,9 +81,9 @@ const SlidesPresentationModal: React.FC<SlidesPresentationModalProps> = ({
                   </div>
                 )}
                 
-                <div className="mt-4">
+                <div className="mt-4 overflow-y-auto">
                   <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Explicação:</h4>
-                  <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">{currentSlide?.explicacao}</p>
+                  <div className="text-gray-700 dark:text-gray-300 whitespace-pre-line">{currentSlide?.explicacao}</div>
                 </div>
               </div>
               
