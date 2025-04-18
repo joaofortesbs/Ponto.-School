@@ -3092,7 +3092,7 @@ Use exatamente os termos e conceitos explicados na resposta da IA. Não invente 
                                                       </div>
                                                       
                                                       <div class="overflow-y-auto flex-1 p-4">
-                                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div class="space-y-4">
                                                           ${questionsArray.map((q, index) => {
                                                             // Determinar o tipo de questão e a classe de cor associada
                                                             let questionType = "";
