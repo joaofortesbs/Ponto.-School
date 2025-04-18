@@ -12,6 +12,7 @@ import {
   ArrowRight,
   RotateCcw,
   Trophy,
+  FileText,
 } from "lucide-react";
 
 interface Question {
