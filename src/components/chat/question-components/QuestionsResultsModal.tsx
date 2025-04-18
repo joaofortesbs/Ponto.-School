@@ -295,7 +295,167 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
             
             {showExportOptions && (
               <div className="absolute right-0 bottom-12 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 w-48 py-1 z-50 animate-fadeIn">
-                <button className="w-full px-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 opacity-70 cursor-not-allowed">
+                <button 
+                  className="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Exportar para PDF usando HTML para PDF
+                    const now = new Date();
+                    const dateStr = now.toLocaleDateString('pt-BR');
+                    
+                    // Criar o conteúdo do documento PDF (HTML)
+                    let pdfContent = `
+                      <html>
+                      <head>
+                        <meta charset="utf-8">
+                        <title>Prova Gerada - Epictus IA</title>
+                        <style>
+                          body { font-family: 'Arial', sans-serif; padding: 40px; }
+                          .header { text-align: center; margin-bottom: 30px; }
+                          .question { margin-bottom: 25px; page-break-inside: avoid; }
+                          .question-header { font-weight: bold; margin-bottom: 10px; }
+                          .option { margin: 5px 0; }
+                          .answer-space { height: 150px; border: 1px solid #ddd; margin: 10px 0; }
+                          .answer-key { margin-top: 30px; border-top: 1px solid #aaa; padding-top: 20px; page-break-before: always; }
+                          .explanation { font-style: italic; color: #555; margin-top: 10px; border-left: 3px solid #ddd; padding-left: 10px; }
+                        </style>
+                      </head>
+                      <body>
+                        <div class="header">
+                          <h1>Prova Gerada - Epictus IA</h1>
+                          <p>Data: ${dateStr}</p>
+                          <p>Nome do aluno: ______________________________</p>
+                        </div>
+                    `;
+                    
+                    // Função para obter questões pelo tipo
+                    const getQuestionsByType = (type) => {
+                      if (Array.isArray(questionsData) && questionsData.length > 0) {
+                        return questionsData.filter(q => q.type === type);
+                      }
+                      return [];
+                    };
+                    
+                    const multipleChoiceQuestions = getQuestionsByType('multiple-choice');
+                    const essayQuestions = getQuestionsByType('essay') || getQuestionsByType('discursive');
+                    const trueFalseQuestions = getQuestionsByType('true-false') || getQuestionsByType('verdadeiro-falso');
+                    
+                    // Contador de questões
+                    let questionNumber = 1;
+                    
+                    // Adicionar questões de múltipla escolha
+                    multipleChoiceQuestions.forEach(question => {
+                      pdfContent += `
+                        <div class="question">
+                          <div class="question-header">Questão ${questionNumber} (Múltipla escolha):</div>
+                          <p>${question.text}</p>
+                      `;
+                      
+                      if (question.options && question.options.length) {
+                        question.options.forEach((option, index) => {
+                          const letter = String.fromCharCode(97 + index); // a, b, c, d...
+                          pdfContent += `<div class="option">${letter}) ${option.text}</div>`;
+                        });
+                      }
+                      
+                      pdfContent += `</div>`;
+                      questionNumber++;
+                    });
+                    
+                    // Adicionar questões discursivas
+                    essayQuestions.forEach(question => {
+                      pdfContent += `
+                        <div class="question">
+                          <div class="question-header">Questão ${questionNumber} (Discursiva):</div>
+                          <p>${question.text}</p>
+                          <div class="answer-space"></div>
+                        </div>
+                      `;
+                      questionNumber++;
+                    });
+                    
+                    // Adicionar questões de verdadeiro ou falso
+                    trueFalseQuestions.forEach(question => {
+                      pdfContent += `
+                        <div class="question">
+                          <div class="question-header">Questão ${questionNumber} (Verdadeiro ou Falso):</div>
+                          <p>${question.text}</p>
+                          <div class="option">( ) Verdadeiro</div>
+                          <div class="option">( ) Falso</div>
+                        </div>
+                      `;
+                      questionNumber++;
+                    });
+                    
+                    // Adicionar gabarito
+                    pdfContent += `
+                      <div class="answer-key">
+                        <h2>Gabarito</h2>
+                    `;
+                    
+                    // Resetar contador
+                    questionNumber = 1;
+                    
+                    // Gabarito para múltipla escolha
+                    multipleChoiceQuestions.forEach(question => {
+                      const correctOption = question.options ? question.options.find(opt => opt.isCorrect) : null;
+                      const correctLetter = correctOption ? 
+                        String.fromCharCode(97 + question.options.indexOf(correctOption)) : 
+                        'N/A';
+                      
+                      pdfContent += `
+                        <div class="question">
+                          <p>Questão ${questionNumber}: ${correctLetter}) ${correctOption ? correctOption.text : ''}</p>
+                          ${question.explanation ? `<div class="explanation">Explicação: ${question.explanation}</div>` : ''}
+                        </div>
+                      `;
+                      questionNumber++;
+                    });
+                    
+                    // Gabarito para discursivas
+                    essayQuestions.forEach(question => {
+                      pdfContent += `
+                        <div class="question">
+                          <p>Questão ${questionNumber}: Resposta livre</p>
+                          ${question.explanation ? `<div class="explanation">Pontos esperados: ${question.explanation}</div>` : ''}
+                        </div>
+                      `;
+                      questionNumber++;
+                    });
+                    
+                    // Gabarito para verdadeiro ou falso
+                    trueFalseQuestions.forEach(question => {
+                      const isCorrect = question.answer === true || 
+                                        question.answer === 'true' || 
+                                        question.answer === 'verdadeiro';
+                      
+                      pdfContent += `
+                        <div class="question">
+                          <p>Questão ${questionNumber}: ${isCorrect ? 'Verdadeiro' : 'Falso'}</p>
+                          ${question.explanation ? `<div class="explanation">Explicação: ${question.explanation}</div>` : ''}
+                        </div>
+                      `;
+                      questionNumber++;
+                    });
+                    
+                    pdfContent += `
+                        </div>
+                      </body>
+                      </html>
+                    `;
+                    
+                    // Usar html2pdf.js ou similar para converter HTML em PDF
+                    // Para simplicidade, abriremos em uma nova janela para impressão como PDF
+                    const printWindow = window.open('', '_blank');
+                    printWindow.document.write(pdfContent);
+                    printWindow.document.close();
+                    printWindow.onload = function() {
+                      printWindow.print();
+                    };
+                    
+                    setShowExportOptions(false);
+                  }}
+                >
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                     <polyline points="14 2 14 8 20 8"></polyline>
@@ -326,6 +486,8 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
                           .question-header { font-weight: bold; margin-bottom: 10px; }
                           .option { margin: 5px 0; }
                           .answer-space { height: 150px; border: 1px solid #ddd; margin: 10px 0; }
+                          .explanation { font-style: italic; color: #555; margin: 10px 0; border-left: 3px solid #ddd; padding-left: 10px; }
+                          .answer { font-weight: bold; margin-top: 10px; }
                           .answer-key { margin-top: 30px; border-top: 1px solid #aaa; padding-top: 20px; }
                         </style>
                       </head>
@@ -367,6 +529,17 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
                         });
                       }
                       
+                      // Adicionar resposta e explicação logo abaixo da questão
+                      const correctOption = question.options ? question.options.find(opt => opt.isCorrect) : null;
+                      const correctLetter = correctOption ? 
+                        String.fromCharCode(97 + question.options.indexOf(correctOption)) : 
+                        'N/A';
+                      
+                      docContent += `
+                        <div class="answer">Resposta: ${correctLetter}) ${correctOption ? correctOption.text : ''}</div>
+                        ${question.explanation ? `<div class="explanation">Explicação: ${question.explanation}</div>` : ''}
+                      `;
+                      
                       docContent += `</div>`;
                       questionNumber++;
                     });
@@ -378,6 +551,9 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
                           <div class="question-header">Questão ${questionNumber} (Discursiva):</div>
                           <p>${question.text}</p>
                           <div class="answer-space"></div>
+                          
+                          <div class="answer">Resposta: Dissertativa</div>
+                          ${question.explanation ? `<div class="explanation">Pontos esperados: ${question.explanation}</div>` : ''}
                         </div>
                       `;
                       questionNumber++;
@@ -385,27 +561,34 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
                     
                     // Adicionar questões de verdadeiro ou falso
                     trueFalseQuestions.forEach(question => {
+                      const isCorrect = question.answer === true || 
+                                        question.answer === 'true' || 
+                                        question.answer === 'verdadeiro';
+                                        
                       docContent += `
                         <div class="question">
                           <div class="question-header">Questão ${questionNumber} (Verdadeiro ou Falso):</div>
                           <p>${question.text}</p>
                           <div class="option">( ) Verdadeiro</div>
                           <div class="option">( ) Falso</div>
+                          
+                          <div class="answer">Resposta: ${isCorrect ? 'Verdadeiro' : 'Falso'}</div>
+                          ${question.explanation ? `<div class="explanation">Explicação: ${question.explanation}</div>` : ''}
                         </div>
                       `;
                       questionNumber++;
                     });
                     
-                    // Adicionar gabarito
+                    // Adicionar gabarito resumido no final
                     docContent += `
                       <div class="answer-key">
-                        <h2>Gabarito</h2>
+                        <h2>Gabarito Resumido</h2>
                     `;
                     
                     // Resetar contador
                     questionNumber = 1;
                     
-                    // Gabarito para múltipla escolha
+                    // Gabarito simplificado para múltipla escolha
                     multipleChoiceQuestions.forEach(question => {
                       const correctOption = question.options ? question.options.find(opt => opt.isCorrect) : null;
                       const correctLetter = correctOption ? 
@@ -413,30 +596,27 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
                         'N/A';
                       
                       docContent += `
-                        <p>Questão ${questionNumber}: ${correctLetter}) ${correctOption ? correctOption.text : ''}</p>
-                        ${question.explanation ? `<p><i>Explicação: ${question.explanation}</i></p>` : ''}
+                        <p>Questão ${questionNumber}: ${correctLetter}</p>
                       `;
                       questionNumber++;
                     });
                     
-                    // Gabarito para discursivas
-                    essayQuestions.forEach(question => {
+                    // Gabarito simplificado para discursivas
+                    essayQuestions.forEach(_ => {
                       docContent += `
-                        <p>Questão ${questionNumber}: Resposta livre</p>
-                        ${question.explanation ? `<p><i>Pontos esperados: ${question.explanation}</i></p>` : ''}
+                        <p>Questão ${questionNumber}: Dissertativa</p>
                       `;
                       questionNumber++;
                     });
                     
-                    // Gabarito para verdadeiro ou falso
+                    // Gabarito simplificado para verdadeiro ou falso
                     trueFalseQuestions.forEach(question => {
                       const isCorrect = question.answer === true || 
                                         question.answer === 'true' || 
                                         question.answer === 'verdadeiro';
                       
                       docContent += `
-                        <p>Questão ${questionNumber}: ${isCorrect ? 'Verdadeiro' : 'Falso'}</p>
-                        ${question.explanation ? `<p><i>Explicação: ${question.explanation}</i></p>` : ''}
+                        <p>Questão ${questionNumber}: ${isCorrect ? 'V' : 'F'}</p>
                       `;
                       questionNumber++;
                     });
@@ -467,7 +647,137 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
                   </svg>
                   Exportar para Word
                 </button>
-                <button className="w-full px-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 opacity-70 cursor-not-allowed">
+                <button 
+                  className="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Exportar para Texto
+                    const now = new Date();
+                    const dateStr = now.toLocaleDateString('pt-BR');
+                    
+                    let textContent = `PROVA GERADA - EPICTUS IA\n`;
+                    textContent += `Data: ${dateStr}\n`;
+                    textContent += `Nome do aluno: ______________________________\n\n`;
+                    
+                    // Função para obter questões pelo tipo
+                    const getQuestionsByType = (type) => {
+                      if (Array.isArray(questionsData) && questionsData.length > 0) {
+                        return questionsData.filter(q => q.type === type);
+                      }
+                      return [];
+                    };
+                    
+                    const multipleChoiceQuestions = getQuestionsByType('multiple-choice');
+                    const essayQuestions = getQuestionsByType('essay') || getQuestionsByType('discursive');
+                    const trueFalseQuestions = getQuestionsByType('true-false') || getQuestionsByType('verdadeiro-falso');
+                    
+                    // Contador de questões
+                    let questionNumber = 1;
+                    
+                    // Adicionar questões de múltipla escolha
+                    multipleChoiceQuestions.forEach(question => {
+                      textContent += `QUESTÃO ${questionNumber} (Múltipla escolha):\n`;
+                      textContent += `${question.text}\n\n`;
+                      
+                      if (question.options && question.options.length) {
+                        question.options.forEach((option, index) => {
+                          const letter = String.fromCharCode(97 + index); // a, b, c, d...
+                          textContent += `${letter}) ${option.text}\n`;
+                        });
+                      }
+                      
+                      // Adicionar resposta e explicação logo abaixo da questão
+                      const correctOption = question.options ? question.options.find(opt => opt.isCorrect) : null;
+                      const correctLetter = correctOption ? 
+                        String.fromCharCode(97 + question.options.indexOf(correctOption)) : 
+                        'N/A';
+                      
+                      textContent += `\nResposta: ${correctLetter}) ${correctOption ? correctOption.text : ''}\n`;
+                      if (question.explanation) {
+                        textContent += `Explicação: ${question.explanation}\n`;
+                      }
+                      
+                      textContent += `\n${'='.repeat(50)}\n\n`;
+                      questionNumber++;
+                    });
+                    
+                    // Adicionar questões discursivas
+                    essayQuestions.forEach(question => {
+                      textContent += `QUESTÃO ${questionNumber} (Discursiva):\n`;
+                      textContent += `${question.text}\n\n`;
+                      textContent += `[Espaço para resposta]\n\n`;
+                      
+                      textContent += `Resposta esperada: Dissertativa\n`;
+                      if (question.explanation) {
+                        textContent += `Pontos esperados: ${question.explanation}\n`;
+                      }
+                      
+                      textContent += `\n${'='.repeat(50)}\n\n`;
+                      questionNumber++;
+                    });
+                    
+                    // Adicionar questões de verdadeiro ou falso
+                    trueFalseQuestions.forEach(question => {
+                      textContent += `QUESTÃO ${questionNumber} (Verdadeiro ou Falso):\n`;
+                      textContent += `${question.text}\n\n`;
+                      textContent += `( ) Verdadeiro\n( ) Falso\n\n`;
+                      
+                      const isCorrect = question.answer === true || 
+                                        question.answer === 'true' || 
+                                        question.answer === 'verdadeiro';
+                                        
+                      textContent += `Resposta: ${isCorrect ? 'Verdadeiro' : 'Falso'}\n`;
+                      if (question.explanation) {
+                        textContent += `Explicação: ${question.explanation}\n`;
+                      }
+                      
+                      textContent += `\n${'='.repeat(50)}\n\n`;
+                      questionNumber++;
+                    });
+                    
+                    // Adicionar gabarito resumido no final
+                    textContent += `GABARITO RESUMIDO\n\n`;
+                    
+                    // Resetar contador
+                    questionNumber = 1;
+                    
+                    // Gabarito simplificado para todas as questões
+                    multipleChoiceQuestions.forEach(question => {
+                      const correctOption = question.options ? question.options.find(opt => opt.isCorrect) : null;
+                      const correctLetter = correctOption ? 
+                        String.fromCharCode(97 + question.options.indexOf(correctOption)) : 
+                        'N/A';
+                      
+                      textContent += `Questão ${questionNumber}: ${correctLetter}\n`;
+                      questionNumber++;
+                    });
+                    
+                    essayQuestions.forEach(_ => {
+                      textContent += `Questão ${questionNumber}: Dissertativa\n`;
+                      questionNumber++;
+                    });
+                    
+                    trueFalseQuestions.forEach(question => {
+                      const isCorrect = question.answer === true || 
+                                        question.answer === 'true' || 
+                                        question.answer === 'verdadeiro';
+                      
+                      textContent += `Questão ${questionNumber}: ${isCorrect ? 'V' : 'F'}\n`;
+                      questionNumber++;
+                    });
+                    
+                    // Criar Blob e download
+                    const blob = new Blob([textContent], {type: 'text/plain;charset=utf-8'});
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `Prova_Epictus_${dateStr.replace(/\//g, '-')}.txt`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    setShowExportOptions(false);
+                  }}
+                >
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z"></path>
                   </svg>
