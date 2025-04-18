@@ -218,7 +218,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
 
           return `
             <div class="flex items-center space-x-2 cursor-pointer option-selection" data-correct="${option.isCorrect}" data-letter="${letter}">
-              <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
+              <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 option-letter-container">
                 <span class="text-xs font-medium">${letter}</span>
               </div>
               <span class="text-sm text-gray-700 dark:text-gray-300">${option.text}</span>
@@ -246,12 +246,21 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
               // Remover destaque de todas as opções
               document.querySelectorAll('.option-selection').forEach(opt => {
                 opt.classList.remove('bg-orange-50', 'dark:bg-orange-900/20', 'border', 'border-orange-300', 'dark:border-orange-700');
+                opt.querySelector('.option-letter-container')?.classList.remove('bg-orange-500', 'text-white');
+                opt.querySelector('.option-letter-container')?.classList.add('bg-white', 'dark:bg-gray-800');
                 opt.style.fontWeight = 'normal';
               });
 
               // Destacar a opção clicada
               element.classList.add('bg-orange-50', 'dark:bg-orange-900/20', 'border', 'border-orange-300', 'dark:border-orange-700');
               element.style.fontWeight = 'bold';
+
+              // Destacar o indicador de letra
+              const letterContainer = element.querySelector('.option-letter-container');
+              if (letterContainer) {
+                letterContainer.classList.remove('bg-white', 'dark:bg-gray-800');
+                letterContainer.classList.add('bg-orange-500', 'text-white');
+              }
 
               // Guardar a referência da opção selecionada
               window.selectedOption = element;
@@ -347,25 +356,25 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
         questionOptions = `
           <div class="mt-4 space-y-3">
             <div class="flex items-center space-x-2 cursor-pointer option-selection" data-correct="false" data-letter="A">
-              <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
+              <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 option-letter-container">
                 <span class="text-xs font-medium">A</span>
               </div>
               <span class="text-sm text-gray-700 dark:text-gray-300">É um ${terms[0 % terms.length]} fundamental para compreensão do tema.</span>
             </div>
             <div class="flex items-center space-x-2 cursor-pointer option-selection" data-correct="true" data-letter="B">
-              <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
+              <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 option-letter-container">
                 <span class="text-xs font-medium">B</span>
               </div>
               <span class="text-sm text-gray-700 dark:text-gray-300">Representa uma abordagem inovadora sobre o ${terms[1 % terms.length]}.</span>
             </div>
             <div class="flex items-center space-x-2 cursor-pointer option-selection" data-correct="false" data-letter="C">
-              <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
+              <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 option-letter-container">
                 <span class="text-xs font-medium">C</span>
               </div>
               <span class="text-sm text-gray-700 dark:text-gray-300">Demonstra a aplicação prática do ${terms[2 % terms.length]} em contextos reais.</span>
             </div>
             <div class="flex items-center space-x-2 cursor-pointer option-selection" data-correct="false" data-letter="D">
-              <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
+              <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 option-letter-container">
                 <span class="text-xs font-medium">D</span>
               </div>
               <span class="text-sm text-gray-700 dark:text-gray-300">Exemplifica como o ${terms[3 % terms.length]} pode ser utilizado em diferentes situações.</span>
@@ -387,12 +396,21 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
               // Remover destaque de todas as opções
               document.querySelectorAll('.option-selection').forEach(opt => {
                 opt.classList.remove('bg-orange-50', 'dark:bg-orange-900/20', 'border', 'border-orange-300', 'dark:border-orange-700');
+                opt.querySelector('.option-letter-container')?.classList.remove('bg-orange-500', 'text-white');
+                opt.querySelector('.option-letter-container')?.classList.add('bg-white', 'dark:bg-gray-800');
                 opt.style.fontWeight = 'normal';
               });
 
               // Destacar a opção clicada
               element.classList.add('bg-orange-50', 'dark:bg-orange-900/20', 'border', 'border-orange-300', 'dark:border-orange-700');
               element.style.fontWeight = 'bold';
+
+              // Destacar o indicador de letra
+              const letterContainer = element.querySelector('.option-letter-container');
+              if (letterContainer) {
+                letterContainer.classList.remove('bg-white', 'dark:bg-gray-800');
+                letterContainer.classList.add('bg-orange-500', 'text-white');
+              }
 
               // Guardar a referência da opção selecionada
               window.selectedOption = element;
@@ -631,7 +649,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
 
           // Adicionar event listeners após criação do DOM
           setTimeout(() => {
-            // Adicionar listeners para todas as opções
+            //            // Adicionar listeners para todas as opções
             document.querySelectorAll('.option-selection').forEach(opt => {
               opt.addEventListener('click', function() {
                 window.selectOption(this);
