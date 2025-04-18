@@ -1,5 +1,4 @@
-
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { extractKeyTopics, generatePersonalizedQuestions } from "./questionUtils";
 
 interface QuestionsResultsModalProps {
@@ -12,6 +11,16 @@ interface QuestionsResultsModalProps {
   onClose: () => void;
 }
 
+interface QuizHistory {
+  date: Date;
+  type: string;
+  topic: string;
+  totalQuestions: number;
+  correctAnswers: number;
+  settings: any;
+  bnccCompetence?: string;
+}
+
 const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
   totalQuestions,
   multipleChoice,
@@ -21,6 +30,9 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
   questionsData,
   onClose
 }) => {
+  const [showProgressView, setShowProgressView] = useState(false);
+  const [quizHistory, setQuizHistory] = useState<QuizHistory[]>([]);
+
   useEffect(() => {
     // Adicionar event listeners quando o componente for montado
     const closeButton = document.getElementById('close-results-modal');
@@ -30,11 +42,11 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
 
     const handleModalClose = () => {
       onClose();
+      setShowProgressView(false); // added to close progress view on main modal close
     };
 
     const handleMyProgressClick = () => {
-      // Redirecionar para a aba "Meu Progresso"
-      window.location.href = '/meu-progresso';
+      setShowProgressView(true);
     };
 
     if (closeButton) {
@@ -73,6 +85,20 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
       }
     };
   }, [onClose]);
+
+  useEffect(() => {
+    if (showProgressView && messageContent) {
+      const keyTopics = extractKeyTopics(messageContent);
+      // Placeholder - Replace with actual API call to fetch quiz history
+      const mockHistory: QuizHistory[] = [
+          { date: new Date(), type: "Quiz", topic: keyTopics[0] || "Geral", totalQuestions: 10, correctAnswers: 8, settings: {}, bnccCompetence: "EM13MAT301" },
+          { date: new Date(Date.now() - 86400000), type: "Quiz", topic: keyTopics[0] || "Geral", totalQuestions: 10, correctAnswers: 6, settings: {}, bnccCompetence: "EM13MAT301" },
+          { date: new Date(Date.now() - 172800000), type: "Quiz", topic: keyTopics[0] || "Geral", totalQuestions: 10, correctAnswers: 7, settings: {}, bnccCompetence: "EM13MAT301" }
+      ];
+
+      setQuizHistory(mockHistory);
+    }
+  }, [showProgressView, messageContent]);
 
   // Gerar os mini-cards das questões
   const generateQuestionCards = () => {
@@ -234,6 +260,53 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
     return cardsHTML;
   };
 
+  const QuizProgressView = ({ quizHistory, currentQuiz }: { quizHistory: QuizHistory[], currentQuiz: QuizHistory }) => {
+    return (
+      <div>
+        <h2>My Progress</h2>
+        {/* Add your logic to display quizHistory and compare with currentQuiz here */}
+        <pre>{JSON.stringify(quizHistory, null, 2)}</pre> {/* Temporary display of quizHistory */}
+        <pre>{JSON.stringify(currentQuiz, null, 2)}</pre> {/* Temporary display of currentQuiz */}
+      </div>
+    );
+  };
+
+
+  if (showProgressView) {
+    return (
+      <div id="questions-results-modal" className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+        <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 p-5 shadow-xl w-[90%] max-w-4xl max-h-[80vh] animate-fadeIn">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-800 dark:text-gray-200">
+              Meu Progresso
+            </h3>
+            <button 
+              id="close-results-modal"
+              className="h-7 w-7 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              onClick={() => setShowProgressView(false)}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 6 6 18"></path>
+                <path d="m6 6 12 12"></path>
+              </svg>
+            </button>
+          </div>
+
+          <QuizProgressView quizHistory={quizHistory} currentQuiz={{ date: new Date(), type: "Quiz", topic: "Geral", totalQuestions, correctAnswers: 0, settings: {}, bnccCompetence: "" }} />
+
+          <div className="mt-6 flex justify-end">
+            <button 
+              onClick={() => setShowProgressView(false)}
+              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+            >
+              Voltar
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div id="questions-results-modal" className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
       <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 p-5 shadow-xl w-[90%] max-w-4xl max-h-[80vh] animate-fadeIn">
@@ -278,6 +351,7 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
           <button 
             id="my-progress-button"
             className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium flex items-center gap-1.5"
+            onClick={handleMyProgressClick}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
