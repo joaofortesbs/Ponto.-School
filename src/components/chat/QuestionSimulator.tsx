@@ -100,7 +100,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
         console.error('Erro ao parsear as questões JSON:', jsonError);
         questionsData = [];
       }
-      
+
       // Armazenar as questões geradas em uma variável global para acesso posterior
       window.generatedQuestions = questionsData;
 
@@ -142,10 +142,10 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
 
     // Verificar se temos questões geradas pela IA
     const hasGeneratedQuestions = Array.isArray(questionsData) && questionsData.length > 0;
-    
+
     // Se temos questões geradas, vamos encontrar a questão específica
     let selectedQuestion = null;
-    
+
     if (hasGeneratedQuestions) {
       // Encontrar a questão correspondente ao número e tipo
       selectedQuestion = questionsData.find((q, index) => {
@@ -155,7 +155,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
                (questionType === 'essay' && (q.type === 'essay' || q.type === 'discursive')) || 
                (questionType === 'true-false' && (q.type === 'true-false' || q.type === 'verdadeiro-falso')));
       });
-      
+
       // Se não encontrou pela correspondência exata, pegar pela posição
       if (!selectedQuestion) {
         selectedQuestion = questionsData[questionNumber - 1];
@@ -209,15 +209,15 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
         // Usar a questão gerada pela IA
         questionContent = selectedQuestion.text;
         questionExplanation = selectedQuestion.explanation || '';
-        
+
         // Gerar as opções de múltipla escolha
         const optionsHTML = selectedQuestion.options.map((option, idx) => {
           const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
           const letter = letters[idx % letters.length];
           const isCorrectClass = option.isCorrect ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : '';
-          
+
           return `
-            <div class="flex items-center space-x-2 ${isCorrectClass}">
+            <div class="flex items-center space-x-2 ${isCorrectClass} cursor-pointer option-btn" data-correct="${option.isCorrect}" onclick="checkAnswer(this)">
               <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
                 <span class="text-xs font-medium">${letter}</span>
               </div>
@@ -225,45 +225,134 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
             </div>
           `;
         }).join('');
-        
+
         questionOptions = `
           <div class="mt-4 space-y-3">
             ${optionsHTML}
           </div>
+          <script>
+            function checkAnswer(element) {
+              // Desativar todos os botões após uma resposta
+              document.querySelectorAll('.option-btn').forEach(btn => {
+                btn.style.pointerEvents = 'none';
+                btn.style.opacity = '0.7';
+              });
+
+              // Destacar o botão clicado
+              element.style.opacity = '1';
+              element.style.fontWeight = 'bold';
+
+              // Verificar se a resposta está correta
+              const isCorrect = element.getAttribute('data-correct') === 'true';
+              const resultContainer = document.getElementById('answer-result');
+              const explanationContainer = document.getElementById('explanation-container');
+
+              // Mostrar o resultado
+              if (resultContainer) {
+                resultContainer.classList.remove('hidden');
+
+                if (isCorrect) {
+                  resultContainer.innerHTML = '<p class="text-green-600 dark:text-green-400 font-medium">✓ Resposta correta!</p>';
+                  resultContainer.classList.add('bg-green-100', 'dark:bg-green-900/20', 'border', 'border-green-200', 'dark:border-green-700');
+                } else {
+                  resultContainer.innerHTML = '<p class="text-red-600 dark:text-red-400 font-medium">✗ Resposta incorreta!</p>';
+                  resultContainer.classList.add('bg-red-100', 'dark:bg-red-900/20', 'border', 'border-red-200', 'dark:border-red-700');
+
+                  // Destacar a opção correta
+                  document.querySelectorAll('.option-btn').forEach(btn => {
+                    if (btn.getAttribute('data-correct') === 'true') {
+                      btn.style.opacity = '1';
+                      btn.style.fontWeight = 'bold';
+                      btn.style.color = '#10b981';
+                    }
+                  });
+                }
+              }
+
+              // Mostrar a explicação
+              if (explanationContainer) {
+                explanationContainer.classList.remove('hidden');
+              }
+            }
+          </script>
         `;
       } else {
         // Fallback para questões pré-definidas
         const questionIndex = (questionNumber - 1) % multipleChoiceQuestions.length;
         questionContent = multipleChoiceQuestions[questionIndex];
 
-        // Gerar alternativas baseadas no contexto
         questionOptions = `
           <div class="mt-4 space-y-3">
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-2 cursor-pointer option-btn" data-correct="false" onclick="checkAnswer(this)">
               <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
                 <span class="text-xs font-medium">A</span>
               </div>
               <span class="text-sm text-gray-700 dark:text-gray-300">É um ${terms[0 % terms.length]} fundamental para compreensão do tema.</span>
             </div>
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-2 cursor-pointer option-btn" data-correct="true" onclick="checkAnswer(this)">
               <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
                 <span class="text-xs font-medium">B</span>
               </div>
               <span class="text-sm text-gray-700 dark:text-gray-300">Representa uma abordagem inovadora sobre o ${terms[1 % terms.length]}.</span>
             </div>
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-2 cursor-pointer option-btn" data-correct="false" onclick="checkAnswer(this)">
               <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
                 <span class="text-xs font-medium">C</span>
               </div>
               <span class="text-sm text-gray-700 dark:text-gray-300">Demonstra a aplicação prática do ${terms[2 % terms.length]} em contextos reais.</span>
             </div>
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-2 cursor-pointer option-btn" data-correct="false" onclick="checkAnswer(this)">
               <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
                 <span class="text-xs font-medium">D</span>
               </div>
               <span class="text-sm text-gray-700 dark:text-gray-300">Exemplifica como o ${terms[3 % terms.length]} pode ser utilizado em diferentes situações.</span>
             </div>
           </div>
+          <script>
+            function checkAnswer(element) {
+              // Desativar todos os botões após uma resposta
+              document.querySelectorAll('.option-btn').forEach(btn => {
+                btn.style.pointerEvents = 'none';
+                btn.style.opacity = '0.7';
+              });
+
+              // Destacar o botão clicado
+              element.style.opacity = '1';
+              element.style.fontWeight = 'bold';
+
+              // Verificar se a resposta está correta
+              const isCorrect = element.getAttribute('data-correct') === 'true';
+              const resultContainer = document.getElementById('answer-result');
+              const explanationContainer = document.getElementById('explanation-container');
+
+              // Mostrar o resultado
+              if (resultContainer) {
+                resultContainer.classList.remove('hidden');
+
+                if (isCorrect) {
+                  resultContainer.innerHTML = '<p class="text-green-600 dark:text-green-400 font-medium">✓ Resposta correta!</p>';
+                  resultContainer.classList.add('bg-green-100', 'dark:bg-green-900/20', 'border', 'border-green-200', 'dark:border-green-700');
+                } else {
+                  resultContainer.innerHTML = '<p class="text-red-600 dark:text-red-400 font-medium">✗ Resposta incorreta!</p>';
+                  resultContainer.classList.add('bg-red-100', 'dark:bg-red-900/20', 'border', 'border-red-200', 'dark:border-red-700');
+
+                  // Destacar a opção correta
+                  document.querySelectorAll('.option-btn').forEach(btn => {
+                    if (btn.getAttribute('data-correct') === 'true') {
+                      btn.style.opacity = '1';
+                      btn.style.fontWeight = 'bold';
+                      btn.style.color = '#10b981';
+                    }
+                  });
+                }
+              }
+
+              // Mostrar a explicação
+              if (explanationContainer) {
+                explanationContainer.classList.remove('hidden');
+              }
+            }
+          </script>
         `;
       }
     } else if (questionType === 'essay') {
@@ -298,23 +387,64 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
 
       questionOptions = `
         <div class="mt-4 space-y-3">
-          <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-4 cursor-pointer option-btn" data-correct="false" onclick="checkAnswer(this)">
             <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
               Verdadeiro
             </button>
+          </div>
+          <div class="flex items-center space-x-4 cursor-pointer option-btn" data-correct="true" onclick="checkAnswer(this)">
             <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
               Falso
             </button>
           </div>
         </div>
+        <script>
+          function checkAnswer(element) {
+            // Desativar todos os botões após uma resposta
+            document.querySelectorAll('.option-btn').forEach(btn => {
+              btn.style.pointerEvents = 'none';
+              btn.style.opacity = '0.7';
+            });
+
+            // Destacar o botão clicado
+            element.style.opacity = '1';
+            element.style.fontWeight = 'bold';
+
+            // Verificar se a resposta está correta
+            const isCorrect = element.getAttribute('data-correct') === 'true';
+            const resultContainer = document.getElementById('answer-result');
+            const explanationContainer = document.getElementById('explanation-container');
+
+            // Mostrar o resultado
+            if (resultContainer) {
+              resultContainer.classList.remove('hidden');
+
+              if (isCorrect) {
+                resultContainer.innerHTML = '<p class="text-green-600 dark:text-green-400 font-medium">✓ Resposta correta!</p>';
+                resultContainer.classList.add('bg-green-100', 'dark:bg-green-900/20', 'border', 'border-green-200', 'dark:border-green-700');
+              } else {
+                resultContainer.innerHTML = '<p class="text-red-600 dark:text-red-400 font-medium">✗ Resposta incorreta!</p>';
+                resultContainer.classList.add('bg-red-100', 'dark:bg-red-900/20', 'border', 'border-red-200', 'dark:border-red-700');
+              }
+            }
+
+            // Mostrar a explicação
+            if (explanationContainer) {
+              explanationContainer.classList.remove('hidden');
+            }
+          }
+        </script>
       `;
     }
-    
-    // Adicionar explicação se disponível
+
+    // A explicação será mostrada apenas após a resposta
     const explanationHTML = questionExplanation ? `
-      <div class="mt-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Explicação:</p>
-        <p class="text-sm text-gray-700 dark:text-gray-300">${questionExplanation}</p>
+      <div id="explanation-container" class="mt-4 hidden">
+        <div class="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div id="answer-result" class="mb-2 p-2 rounded-lg hidden"></div>
+          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Explicação:</p>
+          <p class="text-sm text-gray-700 dark:text-gray-300">${questionExplanation}</p>
+        </div>
       </div>
     ` : '';
 
@@ -482,10 +612,10 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
     // Função para gerar os mini-cards das questões
     const generateQuestionCards = (total: number, multipleChoice: number, essay: number, trueFalse: number) => {
       let cardsHTML = '';
-      
+
       // Verificar se temos questões geradas pela IA
       const hasGeneratedQuestions = Array.isArray(questionsData) && questionsData.length > 0;
-      
+
       // Tentar extrair informações relevantes do conteúdo para gerar questões personalizadas (fallback)
       const extractKeyTopics = (content: string) => {
         // Encontrar títulos ou palavras-chave em negrito
@@ -591,16 +721,16 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
 
       // Contador global de questões
       let questionCounter = 1;
-      
+
       // Filtrar questões por tipo
       const multipleChoiceQuestionsFromAI = hasGeneratedQuestions 
         ? questionsData.filter(q => q.type === 'multiple-choice').slice(0, multipleChoice)
         : [];
-        
+
       const essayQuestionsFromAI = hasGeneratedQuestions 
         ? questionsData.filter(q => q.type === 'essay' || q.type === 'discursive').slice(0, essay)
         : [];
-        
+
       const trueFalseQuestionsFromAI = hasGeneratedQuestions 
         ? questionsData.filter(q => q.type === 'true-false' || q.type === 'verdadeiro-falso').slice(0, trueFalse)
         : [];
@@ -610,7 +740,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
       for (let i = 0; i < mcCount; i++) {
         if (questionCounter <= total) {
           let questionText = '';
-          
+
           if (multipleChoiceQuestionsFromAI.length > i) {
             // Usar questão gerada pela IA
             questionText = multipleChoiceQuestionsFromAI[i].text;
@@ -619,7 +749,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
             const questionIndex = i % multipleChoiceQuestions.length;
             questionText = multipleChoiceQuestions[questionIndex];
           }
-          
+
           cardsHTML += `
             <div class="bg-white dark:bg-gray-700 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 p-3 hover:shadow-lg transition-shadow cursor-pointer" 
                  onclick="showQuestionDetails('multiple-choice', ${questionCounter})">
@@ -641,7 +771,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
       for (let i = 0; i < essayCount; i++) {
         if (questionCounter <= total) {
           let questionText = '';
-          
+
           if (essayQuestionsFromAI.length > i) {
             // Usar questão gerada pela IA
             questionText = essayQuestionsFromAI[i].text;
@@ -650,7 +780,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
             const questionIndex = i % essayQuestions.length;
             questionText = essayQuestions[questionIndex];
           }
-          
+
           cardsHTML += `
             <div class="bg-white dark:bg-gray-700 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 p-3 hover:shadow-lg transition-shadow cursor-pointer"
                  onclick="showQuestionDetails('essay', ${questionCounter})">
@@ -672,7 +802,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
       for (let i = 0; i < tfCount; i++) {
         if (questionCounter <= total) {
           let questionText = '';
-          
+
           if (trueFalseQuestionsFromAI.length > i) {
             // Usar questão gerada pela IA
             questionText = trueFalseQuestionsFromAI[i].text;
@@ -681,7 +811,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
             const questionIndex = i % trueFalseQuestions.length;
             questionText = trueFalseQuestions[questionIndex];
           }
-          
+
           cardsHTML += `
             <div class="bg-white dark:bg-gray-700 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 p-3 hover:shadow-lg transition-shadow cursor-pointer"
                  onclick="showQuestionDetails('true-false', ${questionCounter})">
