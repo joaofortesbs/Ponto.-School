@@ -2387,11 +2387,119 @@ Exemplo de formato da resposta:
                                 const messageToPresent = messages.find(msg => msg.showContextTools);
                                 
                                 if (messageToPresent && messageToPresent.content) {
-                                  // Para demonstração rápida, vamos criar slides de exemplo diretamente
-                                  const demoSlides = [
-                                    {
-                                      "titulo": "Introdução ao Tema",
-                                      "topicos": ["Conceitos principais", "Importância do tema", "Aplicações práticas"],
+                                  // Função para extrair tópicos do conteúdo
+                                  const extractTopicsFromContent = (content) => {
+                                    // Divide o conteúdo em parágrafos
+                                    const paragraphs = content.split('\n\n').filter(p => p.trim().length > 0);
+                                    
+                                    // Tenta identificar tópicos principais (frases curtas, pontos-chave)
+                                    const topics = paragraphs
+                                      .filter(p => p.length < 100 && !p.includes('.'))
+                                      .slice(0, 3);
+                                    
+                                    // Se não encontrou tópicos suficientes, usa as primeiras frases de parágrafos
+                                    if (topics.length < 3) {
+                                      const sentences = paragraphs
+                                        .flatMap(p => p.split('. '))
+                                        .filter(s => s.trim().length > 15 && s.trim().length < 80)
+                                        .map(s => s.trim())
+                                        .slice(0, 3 - topics.length);
+                                      
+                                      return [...topics, ...sentences];
+                                    }
+                                    
+                                    return topics;
+                                  };
+                                  
+                                  // Função para gerar slides a partir do conteúdo
+                                  const generateSlidesFromContent = (content) => {
+                                    // Verifica se o conteúdo existe
+                                    if (!content || content.trim().length < 100) {
+                                      console.error("Conteúdo insuficiente para gerar apresentação");
+                                      return [];
+                                    }
+                                    
+                                    // Divide o conteúdo em seções
+                                    const paragraphs = content.split('\n\n').filter(p => p.trim().length > 0);
+                                    
+                                    // Tenta identificar um título principal
+                                    let mainTitle = paragraphs[0];
+                                    if (mainTitle.length > 60) {
+                                      // Se o primeiro parágrafo for muito longo, procura por algo mais parecido com um título
+                                      const potentialTitles = paragraphs.filter(p => p.length < 60 && !p.includes('.'));
+                                      if (potentialTitles.length > 0) {
+                                        mainTitle = potentialTitles[0];
+                                      } else {
+                                        // Caso não encontre, usa as primeiras palavras do conteúdo
+                                        mainTitle = content.split('.')[0].substring(0, 50) + "...";
+                                      }
+                                    }
+                                    
+                                    // Prepara os slides
+                                    const slides = [
+                                      // Slide de introdução
+                                      {
+                                        titulo: "Introdução: " + mainTitle.substring(0, 50),
+                                        topicos: extractTopicsFromContent(paragraphs.slice(0, 3).join('\n\n')),
+                                        explicacao: paragraphs.slice(0, 2).join('\n\n').substring(0, 150) + "...",
+                                        imagemOpcional: ""
+                                      }
+                                    ];
+                                    
+                                    // Divide o restante do conteúdo em seções para slides adicionais
+                                    const contentSections = [];
+                                    const sectionLength = Math.ceil((paragraphs.length - 3) / 2);
+                                    
+                                    if (paragraphs.length > 3) {
+                                      // Slide de desenvolvimento 1
+                                      const section1 = paragraphs.slice(3, 3 + sectionLength).join('\n\n');
+                                      contentSections.push({
+                                        titulo: "Principais Conceitos",
+                                        topicos: extractTopicsFromContent(section1),
+                                        explicacao: section1.substring(0, 150) + "...",
+                                        imagemOpcional: ""
+                                      });
+                                      
+                                      // Slide de desenvolvimento 2 (se houver conteúdo suficiente)
+                                      if (paragraphs.length > 3 + sectionLength) {
+                                        const section2 = paragraphs.slice(3 + sectionLength).join('\n\n');
+                                        contentSections.push({
+                                          titulo: "Aplicações e Exemplos",
+                                          topicos: extractTopicsFromContent(section2),
+                                          explicacao: section2.substring(0, 150) + "...",
+                                          imagemOpcional: ""
+                                        });
+                                      }
+                                    }
+                                    
+                                    // Slide de conclusão
+                                    contentSections.push({
+                                      titulo: "Resumo e Conclusão",
+                                      topicos: [
+                                        "Síntese dos conceitos apresentados",
+                                        "Aplicações práticas",
+                                        "Próximos passos"
+                                      ],
+                                      explicacao: "Esta apresentação abordou os principais aspectos sobre " + 
+                                                  mainTitle.substring(0, 40) + 
+                                                  ". Esperamos que os conceitos e exemplos ajudem na compreensão do tema.",
+                                      imagemOpcional: ""
+                                    });
+                                    
+                                    return [...slides, ...contentSections];
+                                  };
+                                  
+                                  // Gerar slides a partir do conteúdo da resposta da IA
+                                  const contentSlides = generateSlidesFromContent(messageToPresent.content);
+                                  
+                                  // Definir slides e abrir o modal
+                                  setPresentationSlides(contentSlides);
+                                  setShowPresentationModal(true);
+                                  
+                                  // Versão com processamento de IA avançado (comentada por enquanto)
+                                  /*
+                                  // Gerar prompt para conversão para formato de apresentação
+                                  constpicos": ["Conceitos principais", "Importância do tema", "Aplicações práticas"],
                                       "explicacao": "Esta apresentação aborda os principais aspectos do tema discutido, destacando sua relevância no contexto educacional e aplicações no dia a dia. Vamos explorar juntos os conceitos fundamentais e como eles se relacionam.",
                                       "imagemOpcional": ""
                                     },

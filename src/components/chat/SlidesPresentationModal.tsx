@@ -24,8 +24,18 @@ const SlidesPresentationModal: React.FC<SlidesPresentationModalProps> = ({
 }) => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
+  // Verificar se temos slides válidos
+  const validSlides = Array.isArray(slides) && slides.length > 0 ? slides : [
+    {
+      titulo: "Não foi possível gerar a apresentação",
+      topicos: ["Conteúdo insuficiente para criar slides"],
+      explicacao: "Não foi possível gerar slides com o conteúdo fornecido. Por favor, tente novamente com um conteúdo mais extenso ou entre em contato com o suporte.",
+      imagemOpcional: ""
+    }
+  ];
+
   const goToNextSlide = () => {
-    if (currentSlideIndex < slides.length - 1) {
+    if (currentSlideIndex < validSlides.length - 1) {
       setCurrentSlideIndex(currentSlideIndex + 1);
     }
   };
@@ -36,7 +46,7 @@ const SlidesPresentationModal: React.FC<SlidesPresentationModalProps> = ({
     }
   };
 
-  const currentSlide = slides[currentSlideIndex];
+  const currentSlide = validSlides[currentSlideIndex];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -52,7 +62,7 @@ const SlidesPresentationModal: React.FC<SlidesPresentationModalProps> = ({
           
           {/* Content */}
           <div className="flex-grow p-6 overflow-y-auto">
-            <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex flex-col md:flex-row gap-6 animate-fadeIn transition-all duration-300">
               {/* Main content */}
               <div className={`flex-1 ${currentSlide?.imagemOpcional ? 'md:w-1/2' : 'w-full'}`}>
                 <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4">{currentSlide?.titulo}</h3>
@@ -103,13 +113,13 @@ const SlidesPresentationModal: React.FC<SlidesPresentationModalProps> = ({
             </Button>
             
             <div className="text-sm text-gray-500 dark:text-gray-400">
-              Slide {currentSlideIndex + 1} de {slides.length}
+              Slide {currentSlideIndex + 1} de {validSlides.length}
             </div>
             
             <Button
               variant="default"
               onClick={goToNextSlide}
-              disabled={currentSlideIndex === slides.length - 1}
+              disabled={currentSlideIndex === validSlides.length - 1}
               className="bg-orange-500 hover:bg-orange-600 text-white flex items-center gap-1"
             >
               Próximo
