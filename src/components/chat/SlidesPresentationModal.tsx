@@ -30,6 +30,8 @@ const SlidesPresentationModal: React.FC<SlidesPresentationModalProps> = ({
 
   // Processar slides quando disponíveis
   useEffect(() => {
+    console.log("SlidesPresentationModal: Processando slides", { isLoading, slidesLength: slides?.length });
+    
     // Verificar se temos slides válidos
     if (isLoading) {
       setProcessingSlides(true);
@@ -37,9 +39,13 @@ const SlidesPresentationModal: React.FC<SlidesPresentationModalProps> = ({
     }
     
     if (Array.isArray(slides) && slides.length > 0) {
+      console.log("SlidesPresentationModal: Slides válidos encontrados", slides);
       setValidSlides(slides);
       setProcessingSlides(false);
+      // Garantir que o índice atual seja válido
+      setCurrentSlideIndex(0);
     } else {
+      console.log("SlidesPresentationModal: Usando slides de fallback");
       // Slides de fallback
       setValidSlides([
         {

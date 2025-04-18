@@ -2491,7 +2491,11 @@ Exemplo de formato da resposta:
                                   
                                   // Mostrar o modal com estado de carregamento primeiro
                                   setPresentationSlides([]);
+                                  setIsLoading(true);
                                   setShowPresentationModal(true);
+                                  
+                                  // Log para debug
+                                  console.log("Iniciando geração de slides da apresentação");
                                   
                                   // Função para processar texto em tópicos
                                   const processTextIntoTopics = (text, maxTopics = 4) => {
@@ -2586,6 +2590,8 @@ Exemplo de formato da resposta:
                                       
                                       // Atualizar slides no estado
                                       setPresentationSlides(betterSlides);
+                                      setIsLoading(false);
+                                      console.log("Slides gerados com sucesso:", betterSlides);
                                     } catch (error) {
                                       console.error("Erro ao gerar slides:", error);
                                       // Em caso de erro, criar slides básicos
