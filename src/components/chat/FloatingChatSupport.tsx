@@ -710,10 +710,82 @@ const FloatingChatSupport: React.FC = () => {
       );
     };
     
+    // Ouvinte para transformar conteúdo do quiz em caderno
+    const handleTransformToNotebook = (event: CustomEvent) => {
+      if (event.detail && event.detail.content) {
+        // Mostrar notificação de processamento
+        toast({
+          title: "Transformando em caderno",
+          description: "Convertendo o resultado do quiz para formato de caderno...",
+          duration: 2000,
+        });
+        
+        // Gerar prompt para conversão para formato de caderno
+        const notebookPrompt = `
+        A partir do resumo do quiz abaixo, crie uma versão em formato de caderno de anotações estudantil.
+        
+        Siga estas diretrizes OBRIGATÓRIAS:
+        - Comece com um título direto sobre o tema do quiz
+        - Liste os pontos principais usando marcadores (•)
+        - Destaque palavras-chave usando **asteriscos duplos**
+        - Organize o conteúdo com títulos em maiúsculas seguidos de dois pontos
+        - Use uma linguagem técnica e direta
+        - Inclua um resumo dos pontos principais do quiz
+        - Transforme as perguntas e respostas em formato de estudo
+        - NÃO INCLUA LINKS PARA NENHUM SITE OU PLATAFORMA
+        - NÃO FAÇA REFERÊNCIAS A RECURSOS EXTERNOS
+        - NÃO MENCIONE A PONTO.SCHOOL
+        - NÃO INCLUA SAUDAÇÕES, INTRODUÇÕES OU CONCLUSÕES
+        - FOQUE APENAS NO CONTEÚDO EDUCACIONAL
+        
+        Conteúdo do quiz:
+        "${event.detail.content}"
+        `;
+        
+        // Configurar estado de carregamento
+        setIsLoading(true);
+        
+        // Chamar serviço para converter conteúdo
+        generateAIResponse(notebookPrompt, sessionId || 'default_session', {
+          intelligenceLevel: 'advanced',
+          languageStyle: 'formal'
+        })
+        .then(notebookContent => {
+          // Mostrar modal de caderno com o conteúdo gerado
+          openNotebookModal(notebookContent);
+          
+          // Adicionar mensagem no chat sobre a transformação
+          setMessages(prevMessages => [
+            ...prevMessages,
+            {
+              id: Date.now(),
+              content: "📝 **Quiz transformado em caderno de anotações!**\n\nGerei um resumo do quiz em formato de caderno para facilitar seus estudos. Você pode exportar esse conteúdo para revisão futura.",
+              sender: "assistant",
+              timestamp: new Date()
+            }
+          ]);
+        })
+        .catch(error => {
+          console.error("Erro ao converter para formato de caderno:", error);
+          toast({
+            title: "Erro",
+            description: "Não foi possível converter o conteúdo para o formato de caderno.",
+            variant: "destructive",
+            duration: 3000,
+          });
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+      }
+    };
+    
     document.addEventListener('click', handleGlobalClick);
+    document.addEventListener('transform-to-notebook', handleTransformToNotebook as EventListener);
     
     return () => {
       document.removeEventListener('click', handleGlobalClick);
+      document.removeEventListener('transform-to-notebook', handleTransformToNotebook as EventListener);
     };
   }, []);
 

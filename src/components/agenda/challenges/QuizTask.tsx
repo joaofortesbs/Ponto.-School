@@ -264,42 +264,101 @@ const QuizTask: React.FC<QuizTaskProps> = ({
             </div>
           </div>
         ) : (
-          <div className="text-center py-6">
-            <div className="w-20 h-20 mx-auto bg-[#FF6B00]/10 rounded-full flex items-center justify-center mb-4">
-              <Trophy className="h-10 w-10 text-[#FF6B00]" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Quiz Concluído!
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
-              Você acertou {score} de {questions.length} questões.
-            </p>
-
-            <div className="mb-6">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Pontuação
-                </span>
-                <span className="text-sm font-bold text-[#FF6B00]">
-                  {Math.round((score / questions.length) * 100)}%
-                </span>
+          <div className="py-6">
+            <div className="text-center">
+              <div className="w-20 h-20 mx-auto bg-[#FF6B00]/10 rounded-full flex items-center justify-center mb-4">
+                <Trophy className="h-10 w-10 text-[#FF6B00]" />
               </div>
-              <Progress
-                value={(score / questions.length) * 100}
-                className="h-2 bg-[#FF6B00]/10"
-              />
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                Quiz Concluído!
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                Você acertou {score} de {questions.length} questões.
+              </p>
+
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Pontuação
+                  </span>
+                  <span className="text-sm font-bold text-[#FF6B00]">
+                    {Math.round((score / questions.length) * 100)}%
+                  </span>
+                </div>
+                <Progress
+                  value={(score / questions.length) * 100}
+                  className="h-2 bg-[#FF6B00]/10"
+                />
+              </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            {/* Lista de perguntas com resultados */}
+            <div className="mt-6 mb-8 border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white/50 dark:bg-gray-800/50 max-h-60 overflow-auto">
+              <h4 className="text-sm font-semibold mb-3 text-gray-700 dark:text-gray-300">Resumo das respostas:</h4>
+              <div className="space-y-3">
+                {questions.map((question, index) => {
+                  const userAnswer = answers[question.id];
+                  const correctOption = question.options.find(opt => opt.isCorrect);
+                  const isCorrect = userAnswer === correctOption?.id;
+                  
+                  return (
+                    <div key={question.id} className="flex items-start gap-2 text-sm border-b border-gray-100 dark:border-gray-700 pb-2">
+                      {isCorrect ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+                      )}
+                      <div>
+                        <p className="font-medium text-gray-800 dark:text-gray-200">
+                          {index + 1}. {question.text.length > 70 ? question.text.substring(0, 70) + '...' : question.text}
+                        </p>
+                        {!isCorrect && correctOption && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Resposta correta: {correctOption.text}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
               <Button
                 variant="outline"
                 className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
                 onClick={handleRetry}
               >
-                <RotateCcw className="h-4 w-4 mr-2" /> Tentar Novamente
+                <RotateCcw className="h-4 w-4 mr-2" /> Refazer com novas perguntas
               </Button>
               <Button
-                className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
+                variant="outline"
+                className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
+                onClick={() => {
+                  // Criar conteúdo para o caderno
+                  const notebookContent = `# Resumo do Quiz\n\n**Pontuação:** ${score}/${questions.length} (${Math.round((score / questions.length) * 100)}%)\n\n## Perguntas e Respostas:\n\n${questions.map((q, idx) => {
+                    const userAnswer = answers[q.id];
+                    const correctOption = q.options.find(opt => opt.isCorrect);
+                    const isCorrect = userAnswer === correctOption?.id;
+                    
+                    return `${idx + 1}. ${q.text}\n   - Resposta correta: ${correctOption?.text}\n   - Resultado: ${isCorrect ? 'Correto ✓' : 'Incorreto ✗'}\n`;
+                  }).join('\n')}`;
+                  
+                  // Solicita à IA para transformar em formato de caderno
+                  const event = new CustomEvent('transform-to-notebook', { 
+                    detail: { content: notebookContent } 
+                  });
+                  document.dispatchEvent(event);
+                  
+                  // Informar ao usuário
+                  onComplete(score, questions.length);
+                }}
+              >
+                <FileText className="h-4 w-4 mr-2" /> Transformar em Caderno
+              </Button>
+              <Button
+                className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white sm:col-span-2"
                 onClick={handleComplete}
               >
                 Marcar como Concluído
