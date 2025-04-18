@@ -78,6 +78,13 @@ interface MessageFile {
 }
 
 // Interface para mensagens
+// Declaração global para a função showQuestionDetails
+declare global {
+  interface Window {
+    showQuestionDetails: (questionType: string, questionNumber: number) => void;
+  }
+}
+
 interface ChatMessage {
   id: number;
   content: string;
@@ -2988,7 +2995,8 @@ Exemplo de formato da resposta:
                                               for (let i = 0; i < multipleChoice; i++) {
                                                 if (i < total) {
                                                   cardsHTML += `
-                                                    <div class="bg-white dark:bg-gray-700 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 p-3 hover:shadow-lg transition-shadow">
+                                                    <div class="bg-white dark:bg-gray-700 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 p-3 hover:shadow-lg transition-shadow cursor-pointer" 
+                                                         onclick="showQuestionDetails('multiple-choice', ${i + 1})">
                                                       <div class="flex justify-between items-start mb-2">
                                                         <h4 class="text-sm font-medium text-gray-800 dark:text-gray-200">Questão ${i + 1}</h4>
                                                         <span class="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded-full">Múltipla escolha</span>
@@ -3005,7 +3013,8 @@ Exemplo de formato da resposta:
                                               for (let i = 0; i < essay; i++) {
                                                 if (i + multipleChoice < total) {
                                                   cardsHTML += `
-                                                    <div class="bg-white dark:bg-gray-700 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 p-3 hover:shadow-lg transition-shadow">
+                                                    <div class="bg-white dark:bg-gray-700 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 p-3 hover:shadow-lg transition-shadow cursor-pointer"
+                                                         onclick="showQuestionDetails('essay', ${i + multipleChoice + 1})">
                                                       <div class="flex justify-between items-start mb-2">
                                                         <h4 class="text-sm font-medium text-gray-800 dark:text-gray-200">Questão ${i + multipleChoice + 1}</h4>
                                                         <span class="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs rounded-full">Discursiva</span>
@@ -3022,7 +3031,8 @@ Exemplo de formato da resposta:
                                               for (let i = 0; i < trueFalse; i++) {
                                                 if (i + multipleChoice + essay < total) {
                                                   cardsHTML += `
-                                                    <div class="bg-white dark:bg-gray-700 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 p-3 hover:shadow-lg transition-shadow">
+                                                    <div class="bg-white dark:bg-gray-700 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 p-3 hover:shadow-lg transition-shadow cursor-pointer"
+                                                         onclick="showQuestionDetails('true-false', ${i + multipleChoice + essay + 1})">
                                                       <div class="flex justify-between items-start mb-2">
                                                         <h4 class="text-sm font-medium text-gray-800 dark:text-gray-200">Questão ${i + multipleChoice + essay + 1}</h4>
                                                         <span class="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs rounded-full">Verdadeiro ou Falso</span>
@@ -3049,6 +3059,234 @@ Exemplo de formato da resposta:
                                             
                                             // Adicionar o modal de resultados ao DOM
                                             document.body.insertAdjacentHTML('beforeend', resultsModalHTML);
+                                            
+                                            // Adicionar a função global para mostrar detalhes da questão
+                                            window.showQuestionDetails = (questionType, questionNumber) => {
+                                              // Remover qualquer modal de detalhes de questão existente
+                                              const existingDetailModal = document.getElementById('question-detail-modal');
+                                              if (existingDetailModal) {
+                                                existingDetailModal.remove();
+                                              }
+                                              
+                                              // Determinar o título e conteúdo com base no tipo de questão
+                                              let questionTitle = `Questão ${questionNumber}`;
+                                              let questionTag = '';
+                                              let questionContent = '';
+                                              let questionOptions = '';
+                                              
+                                              if (questionType === 'multiple-choice') {
+                                                questionTag = '<span class="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded-full">Múltipla escolha</span>';
+                                                questionContent = 'Considerando o conteúdo estudado sobre o tema, analise as seguintes afirmações e escolha a alternativa correta.';
+                                                questionOptions = `
+                                                  <div class="mt-4 space-y-3">
+                                                    <div class="flex items-center space-x-2">
+                                                      <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
+                                                        <span class="text-xs font-medium">A</span>
+                                                      </div>
+                                                      <span class="text-sm text-gray-700 dark:text-gray-300">Primeira alternativa relacionada ao tema estudado.</span>
+                                                    </div>
+                                                    <div class="flex items-center space-x-2">
+                                                      <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
+                                                        <span class="text-xs font-medium">B</span>
+                                                      </div>
+                                                      <span class="text-sm text-gray-700 dark:text-gray-300">Segunda alternativa relacionada ao tema estudado.</span>
+                                                    </div>
+                                                    <div class="flex items-center space-x-2">
+                                                      <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
+                                                        <span class="text-xs font-medium">C</span>
+                                                      </div>
+                                                      <span class="text-sm text-gray-700 dark:text-gray-300">Terceira alternativa relacionada ao tema estudado.</span>
+                                                    </div>
+                                                    <div class="flex items-center space-x-2">
+                                                      <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
+                                                        <span class="text-xs font-medium">D</span>
+                                                      </div>
+                                                      <span class="text-sm text-gray-700 dark:text-gray-300">Quarta alternativa relacionada ao tema estudado.</span>
+                                                    </div>
+                                                  </div>
+                                                `;
+                                              } else if (questionType === 'essay') {
+                                                questionTag = '<span class="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs rounded-full">Discursiva</span>';
+                                                questionContent = 'Com base no conteúdo estudado, elabore uma resposta dissertativa para a seguinte questão, abordando os principais conceitos e aplicações.';
+                                                questionOptions = `
+                                                  <div class="mt-4">
+                                                    <textarea placeholder="Digite sua resposta aqui..." class="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500"></textarea>
+                                                  </div>
+                                                `;
+                                              } else if (questionType === 'true-false') {
+                                                questionTag = '<span class="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs rounded-full">Verdadeiro ou Falso</span>';
+                                                questionContent = 'Indique se a seguinte afirmação é verdadeira ou falsa, considerando o contexto do tema estudado.';
+                                                questionOptions = `
+                                                  <div class="mt-4 space-y-3">
+                                                    <div class="flex items-center space-x-4">
+                                                      <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                                                        Verdadeiro
+                                                      </button>
+                                                      <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                                                        Falso
+                                                      </button>
+                                                    </div>
+                                                  </div>
+                                                `;
+                                              }
+                                              
+                                              // Criar HTML para o modal de detalhes da questão
+                                              const detailModalHTML = `
+                                                <div id="question-detail-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+                                                  <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 p-5 shadow-xl w-[90%] max-w-xl animate-fadeIn">
+                                                    <div class="flex justify-between items-center mb-4">
+                                                      <div class="flex flex-col">
+                                                        <div class="flex items-center gap-2">
+                                                          <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                                                            ${questionTitle}
+                                                          </h3>
+                                                          ${questionTag}
+                                                        </div>
+                                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                          Baseado no conteúdo estudado
+                                                        </p>
+                                                      </div>
+                                                      <button 
+                                                        id="close-detail-modal"
+                                                        class="h-7 w-7 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                                      >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                          <path d="M18 6 6 18"></path>
+                                                          <path d="m6 6 12 12"></path>
+                                                        </svg>
+                                                      </button>
+                                                    </div>
+                                                    
+                                                    <div class="border-t border-b border-gray-200 dark:border-gray-700 py-4 my-2">
+                                                      <p class="text-sm text-gray-700 dark:text-gray-300">
+                                                        ${questionContent}
+                                                      </p>
+                                                      ${questionOptions}
+                                                    </div>
+                                                    
+                                                    <div class="flex justify-between mt-4">
+                                                      <button 
+                                                        id="back-to-list-button"
+                                                        class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+                                                      >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                          <polyline points="15 18 9 12 15 6"></polyline>
+                                                        </svg>
+                                                        Voltar para lista
+                                                      </button>
+                                                      
+                                                      <div class="flex gap-2">
+                                                        <button 
+                                                          id="prev-question-button" 
+                                                          class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg text-sm font-medium transition-colors flex items-center"
+                                                          ${questionNumber === 1 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}
+                                                        >
+                                                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <polyline points="15 18 9 12 15 6"></polyline>
+                                                          </svg>
+                                                          Anterior
+                                                        </button>
+                                                        
+                                                        <button 
+                                                          id="next-question-button" 
+                                                          class="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center"
+                                                        >
+                                                          Próxima
+                                                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <polyline points="9 18 15 12 9 6"></polyline>
+                                                          </svg>
+                                                        </button>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              `;
+                                              
+                                              // Adicionar o modal ao DOM
+                                              document.body.insertAdjacentHTML('beforeend', detailModalHTML);
+                                              
+                                              // Adicionar event listeners ao modal de detalhes
+                                              setTimeout(() => {
+                                                const detailModal = document.getElementById('question-detail-modal');
+                                                const closeDetailButton = document.getElementById('close-detail-modal');
+                                                const backToListButton = document.getElementById('back-to-list-button');
+                                                const prevQuestionButton = document.getElementById('prev-question-button');
+                                                const nextQuestionButton = document.getElementById('next-question-button');
+                                                
+                                                // Função para fechar o modal de detalhes
+                                                const closeDetailModal = () => {
+                                                  if (detailModal) {
+                                                    detailModal.classList.add('animate-fadeOut');
+                                                    setTimeout(() => detailModal.remove(), 200);
+                                                  }
+                                                };
+                                                
+                                                // Event listener para fechar o modal
+                                                if (closeDetailButton) {
+                                                  closeDetailButton.addEventListener('click', closeDetailModal);
+                                                }
+                                                
+                                                // Event listener para o botão de voltar para a lista
+                                                if (backToListButton) {
+                                                  backToListButton.addEventListener('click', closeDetailModal);
+                                                }
+                                                
+                                                // Event listener para o botão de questão anterior
+                                                if (prevQuestionButton && questionNumber > 1) {
+                                                  prevQuestionButton.addEventListener('click', () => {
+                                                    closeDetailModal();
+                                                    // Determinar o tipo da questão anterior com base no número
+                                                    let prevType = questionType;
+                                                    let prevNumber = questionNumber - 1;
+                                                    
+                                                    if (questionType === 'true-false' && prevNumber === multipleChoice + essay) {
+                                                      prevType = 'essay';
+                                                    } else if (questionType === 'essay' && prevNumber === multipleChoice) {
+                                                      prevType = 'multiple-choice';
+                                                    }
+                                                    
+                                                    // Mostrar a questão anterior
+                                                    setTimeout(() => {
+                                                      window.showQuestionDetails(prevType, prevNumber);
+                                                    }, 210);
+                                                  });
+                                                }
+                                                
+                                                // Event listener para o botão de próxima questão
+                                                if (nextQuestionButton) {
+                                                  nextQuestionButton.addEventListener('click', () => {
+                                                    const totalQuestions = multipleChoice + essay + trueFalse;
+                                                    
+                                                    if (questionNumber < totalQuestions) {
+                                                      closeDetailModal();
+                                                      // Determinar o tipo da próxima questão com base no número
+                                                      let nextType = questionType;
+                                                      let nextNumber = questionNumber + 1;
+                                                      
+                                                      if (questionType === 'multiple-choice' && nextNumber > multipleChoice) {
+                                                        nextType = 'essay';
+                                                      } else if (questionType === 'essay' && nextNumber > multipleChoice + essay) {
+                                                        nextType = 'true-false';
+                                                      }
+                                                      
+                                                      // Mostrar a próxima questão
+                                                      setTimeout(() => {
+                                                        window.showQuestionDetails(nextType, nextNumber);
+                                                      }, 210);
+                                                    }
+                                                  });
+                                                }
+                                                
+                                                // Event listener para clicar fora e fechar
+                                                if (detailModal) {
+                                                  detailModal.addEventListener('click', (e) => {
+                                                    if (e.target === detailModal) {
+                                                      closeDetailModal();
+                                                    }
+                                                  });
+                                                }
+                                              }, 50);
+                                            };
                                             
                                             // Adicionar event listeners ao modal de resultados
                                             setTimeout(() => {
