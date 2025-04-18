@@ -35,14 +35,14 @@ export const EssayQuestion: React.FC<EssayQuestionProps> = ({
     : essayQuestions[(questionNumber - 1) % essayQuestions.length];
 
   useEffect(() => {
-    // Mostrar botão de envio apenas quando o usuário começar a digitar
-    if (userAnswer.trim().length > 10 && !showSubmitButton) {
+    // Mostrar botão de envio assim que o usuário começar a digitar qualquer coisa
+    if (userAnswer.trim().length > 0 && !showSubmitButton) {
       setShowSubmitButton(true);
     }
   }, [userAnswer]);
 
   const handleSubmit = async () => {
-    if (userAnswer.trim().length < 10) return;
+    if (userAnswer.trim().length < 1) return;
     
     setIsSubmitting(true);
     
@@ -126,7 +126,7 @@ export const EssayQuestion: React.FC<EssayQuestionProps> = ({
               disabled={isSubmitting}
               className="bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-md transition-colors"
             >
-              {isSubmitting ? "Analisando..." : "Enviar resposta para análise"}
+              {isSubmitting ? "Analisando..." : "Enviar!"}
             </Button>
           </div>
         )}
