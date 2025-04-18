@@ -233,7 +233,8 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
           <div id="check-answer-btn-container" class="mt-4 hidden">
             <button 
               id="check-answer-btn" 
-              class="w-full py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors"
+              class="w-full py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors cursor-pointer"
+              onclick="window.checkSelectedAnswer()"
             >
               Ver resposta
             </button>
@@ -337,7 +338,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
             // Função para aplicar os event listeners necessários
             function applyEventListeners() {
               console.log("Aplicando event listeners às alternativas");
-              
+
               // Adicionar listeners para todas as opções
               const options = document.querySelectorAll('.option-selection');
               if (options.length > 0) {
@@ -346,7 +347,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
                   opt.removeEventListener('click', function() {
                     window.selectOption(this);
                   });
-                  
+
                   // Adicionar o evento de clique
                   opt.style.cursor = 'pointer';
                   opt.addEventListener('click', function() {
@@ -370,14 +371,14 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
 
             // Aplicar os event listeners após criação do DOM
             setTimeout(applyEventListeners, 100);
-            
+
             // Se o DOM já estiver carregado, aplicar imediatamente
             if (document.readyState === 'complete' || document.readyState === 'interactive') {
               applyEventListeners();
             } else {
               document.addEventListener('DOMContentLoaded', applyEventListeners);
             }
-            
+
             // Aplicar novamente após um tempo maior para garantir
             setTimeout(applyEventListeners, 500);
           </script>
@@ -417,7 +418,8 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
           <div id="check-answer-btn-container" class="mt-4 hidden">
             <button 
               id="check-answer-btn" 
-              class="w-full py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors"
+              class="w-full py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors cursor-pointer"
+              onclick="window.checkSelectedAnswer()"
             >
               Ver resposta
             </button>
@@ -579,7 +581,8 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
         <div id="check-answer-btn-container" class="mt-4 hidden">
           <button 
             id="check-answer-btn" 
-            class="w-full py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors"
+            class="w-full py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors cursor-pointer"
+            onclick="window.checkSelectedAnswer()"
           >
             Ver resposta
           </button>
@@ -1266,8 +1269,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
                 />
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-700 dark:text-gray-300">Verdadeiro ou Falso</span>
-                <input 
+                <span className="text-sm text-gray-700 dark:text-gray-300">Verdadeiro ou Falso</span                <input 
                   id="true-false-input"
                   type="number" 
                   min="0" 
