@@ -1,10 +1,11 @@
+
 import React from "react";
 
 interface TrueFalseQuestionProps {
   selectedQuestion: any;
   questionNumber: number;
   messageContent: string;
-  onOptionSelect: (option: string) => void;
+  onOptionSelect: (optionId: string) => void;
   selectedOption: string | null;
 }
 
@@ -15,95 +16,63 @@ export const TrueFalseQuestion: React.FC<TrueFalseQuestionProps> = ({
   onOptionSelect,
   selectedOption
 }) => {
-  // Verificar se temos uma questão gerada pela IA
-  const hasGeneratedQuestion = selectedQuestion && selectedQuestion.text;
+  // Questões padrão por tipo (para fallback)
+  const trueFalseQuestions = [
+    "Os conceitos apresentados são aplicáveis apenas em contextos teóricos.",
+    "Este tema é considerado fundamental na área de estudo.",
+    "Existem diferentes abordagens para este assunto.",
+    "A aplicação prática deste conteúdo é limitada.",
+    "Os princípios discutidos são universalmente aceitos na comunidade acadêmica."
+  ];
 
-  // Gerar texto de questão padrão se não tiver da IA
-  const questionText = hasGeneratedQuestion 
+  const questionContent = selectedQuestion 
     ? selectedQuestion.text 
-    : `Os conceitos apresentados são aplicáveis em diferentes contextos? (Questão ${questionNumber})`;
-
-  // Verificar se temos resposta gerada pela IA
-  const correctAnswer = hasGeneratedQuestion && typeof selectedQuestion.answer === 'boolean'
-    ? selectedQuestion.answer
-    : true; // valor padrão
-
-  // Função auxiliar para determinar classe de estilo com base na seleção
-  const getOptionClass = (isTrue: boolean) => {
-    const optionValue = isTrue ? 'true' : 'false';
-
-    if (!selectedOption) {
-      return "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600";
-    }
-
-    if (selectedOption === optionValue) {
-      return (isTrue === correctAnswer)
-        ? "border-green-500 bg-green-50 dark:bg-green-900/20" 
-        : "border-red-500 bg-red-50 dark:bg-red-900/20";
-    }
-
-    if (isTrue === correctAnswer && selectedOption) {
-      return "border-green-500 bg-green-50 dark:bg-green-900/20";
-    }
-
-    return "border-gray-200 dark:border-gray-700 opacity-70";
-  };
-
-  // Garantir que temos uma explicação válida
-  const explanation = (hasGeneratedQuestion && selectedQuestion.explanation) 
-    ? selectedQuestion.explanation
-    : correctAnswer 
-      ? "Esta afirmação é verdadeira pois os conceitos fundamentais discutidos possuem aplicações diversas em diferentes contextos."
-      : "Esta afirmação é falsa pois os conceitos apresentados têm aplicabilidade limitada apenas a contextos específicos.";
+    : trueFalseQuestions[(questionNumber - 1) % trueFalseQuestions.length];
+    
+  // Verificar se o usuário já selecionou uma opção e se temos informação sobre a resposta correta
+  const showCorrectAnswer = selectedOption !== null && selectedQuestion?.answer !== undefined;
+  const trueIsCorrect = selectedQuestion?.answer === true;
+  const falseIsCorrect = selectedQuestion?.answer === false;
 
   return (
     <div>
       <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
-        {questionText}
+        {questionContent}
       </p>
-
-      <div className="space-y-2 mt-2">
-        <div 
-          className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${getOptionClass(true)}`}
-          onClick={() => onOptionSelect('true')}
-        >
-          <div className="w-5 h-5 border rounded-full mr-3 flex items-center justify-center">
-            {selectedOption === 'true' && (
-              <div className="w-3 h-3 bg-blue-500 dark:bg-blue-400 rounded-full"></div>
-            )}
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Verdadeiro
-            </p>
-          </div>
-        </div>
-
-        <div 
-          className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${getOptionClass(false)}`}
-          onClick={() => onOptionSelect('false')}
-        >
-          <div className="w-5 h-5 border rounded-full mr-3 flex items-center justify-center">
-            {selectedOption === 'false' && (
-              <div className="w-3 h-3 bg-blue-500 dark:bg-blue-400 rounded-full"></div>
-            )}
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Falso
-            </p>
-          </div>
+      <div className="mt-4 space-y-3">
+        <div className="flex items-center space-x-4">
+          <button 
+            className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
+              selectedOption === "true" 
+                ? "bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300" 
+                : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
+            } ${
+              showCorrectAnswer && trueIsCorrect
+                ? "bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700 text-green-700 dark:text-green-300"
+                : ""
+            }`}
+            onClick={() => onOptionSelect("true")}
+            disabled={selectedOption !== null}
+          >
+            Verdadeiro
+          </button>
+          <button 
+            className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
+              selectedOption === "false" 
+                ? "bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300" 
+                : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
+            } ${
+              showCorrectAnswer && falseIsCorrect
+                ? "bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700 text-green-700 dark:text-green-300"
+                : ""
+            }`}
+            onClick={() => onOptionSelect("false")}
+            disabled={selectedOption !== null}
+          >
+            Falso
+          </button>
         </div>
       </div>
-
-      {selectedOption && (
-        <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Explicação:</p>
-          <p className="text-sm text-gray-700 dark:text-gray-300">
-            {explanation}
-          </p>
-        </div>
-      )}
     </div>
   );
 };

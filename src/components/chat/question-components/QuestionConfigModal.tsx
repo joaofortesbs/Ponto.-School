@@ -1,5 +1,12 @@
-
-import React from "react";
+import React, { useState, memo } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Check, X, BookText, List, ToggleLeft, Lightbulb, BookOpen, Clock } from "lucide-react";
+import QuizProgressView from "@/components/chat/QuizProgressView"; // Assumed import path
 
 interface QuestionConfigModalProps {
   isLoading: boolean;
@@ -7,7 +14,7 @@ interface QuestionConfigModalProps {
   onGenerateQuestions: (totalQuestions: number, multipleChoice: number, essay: number, trueFalse: number) => void;
 }
 
-const QuestionConfigModal: React.FC<QuestionConfigModalProps> = ({
+const QuestionConfigModal: React.FC<QuestionConfigModalProps> = memo(({
   isLoading,
   onClose,
   onGenerateQuestions
@@ -15,14 +22,13 @@ const QuestionConfigModal: React.FC<QuestionConfigModalProps> = ({
   return (
     <div id="see-questions-modal" className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
       <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 p-5 shadow-xl w-[90%] max-w-sm animate-fadeIn">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-800 dark:text-gray-200">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-orange-500">
-              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-            </svg>
-            Ver possíveis questões
-          </h3>
+        <div className="flex items-center justify-between border-b pb-4">
+          <Tabs defaultValue="config" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="config">Configurar</TabsTrigger>
+              <TabsTrigger value="progress">Meu Progresso</TabsTrigger>
+            </TabsList>
+          </Tabs>
           <button 
             onClick={onClose}
             className="h-7 w-7 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
@@ -34,77 +40,81 @@ const QuestionConfigModal: React.FC<QuestionConfigModalProps> = ({
           </button>
         </div>
 
-        <div className="space-y-4 mb-5">
-          <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-              Quantidade total de questões
-            </label>
-            <input 
-              id="total-questions-input"
-              type="number" 
-              min="1" 
-              max="50" 
-              defaultValue="10"
-              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-white"
-            />
-          </div>
+        <div className="flex-grow overflow-y-auto py-4">
+          <Tabs.Content value="config" className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                Quantidade total de questões
+              </label>
+              <input 
+                id="total-questions-input"
+                type="number" 
+                min="1" 
+                max="50" 
+                defaultValue="10"
+                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-white"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-              Tipos de questões
-            </label>
-            <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-700 dark:text-gray-300">Múltipla escolha</span>
-                <input 
-                  id="multiple-choice-input"
-                  type="number" 
-                  min="0" 
-                  defaultValue="6"
-                  className="w-16 p-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-white text-center"
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-700 dark:text-gray-300">Discursivas</span>
-                <input 
-                  id="essay-input"
-                  type="number" 
-                  min="0" 
-                  defaultValue="2"
-                  className="w-16 p-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-white text-center"
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-700 dark:text-gray-300">Verdadeiro ou Falso</span>
-                <input 
-                  id="true-false-input"
-                  type="number" 
-                  min="0" 
-                  defaultValue="2"
-                  className="w-16 p-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-white text-center"
-                />
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                Tipos de questões
+              </label>
+              <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Múltipla escolha</span>
+                  <input 
+                    id="multiple-choice-input"
+                    type="number" 
+                    min="0" 
+                    defaultValue="6"
+                    className="w-16 p-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-white text-center"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Discursivas</span>
+                  <input 
+                    id="essay-input"
+                    type="number" 
+                    min="0" 
+                    defaultValue="2"
+                    className="w-16 p-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-white text-center"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Verdadeiro ou Falso</span>
+                  <input 
+                    id="true-false-input"
+                    type="number" 
+                    min="0" 
+                    defaultValue="2"
+                    className="w-16 p-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-white text-center"
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-              Competências BNCC (opcional)
-            </label>
-            <select 
-              id="bncc-select"
-              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-white"
-            >
-              <option>Selecione uma competência</option>
-              <option>Competência 1 - Conhecimento</option>
-              <option>Competência 2 - Pensamento científico</option>
-              <option>Competência 3 - Repertório cultural</option>
-              <option>Competência 4 - Comunicação</option>
-              <option>Competência 5 - Cultura digital</option>
-            </select>
-          </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                Competências BNCC (opcional)
+              </label>
+              <select 
+                id="bncc-select"
+                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-white"
+              >
+                <option>Selecione uma competência</option>
+                <option>Competência 1 - Conhecimento</option>
+                <option>Competência 2 - Pensamento científico</option>
+                <option>Competência 3 - Repertório cultural</option>
+                <option>Competência 4 - Comunicação</option>
+                <option>Competência 5 - Cultura digital</option>
+              </select>
+            </div>
+          </Tabs.Content>
+          <Tabs.Content value="progress" className="mt-0">
+            <QuizProgressView />
+          </Tabs.Content>
         </div>
-
         <button 
           onClick={() => {
             const totalQuestionsInput = document.getElementById('total-questions-input') as HTMLInputElement;
@@ -146,6 +156,6 @@ const QuestionConfigModal: React.FC<QuestionConfigModalProps> = ({
       </div>
     </div>
   );
-};
+});
 
 export default QuestionConfigModal;

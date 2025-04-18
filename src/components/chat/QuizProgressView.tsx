@@ -1,221 +1,299 @@
-import React, { useMemo } from "react";
-import { QuizHistory } from "../../types/quiz-history";
 
-interface QuizProgressViewProps {
-  quizHistory: QuizHistory[];
-  currentQuiz: {
-    date: Date;
-    type: string;
-    topic: string;
-    totalQuestions: number;
-    correctAnswers: number;
-    settings: Record<string, boolean>;
-    bnccCompetence?: string;
+import React, { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import { QuizAttempt, QuizProgress } from "@/types/quiz-history";
+import { getQuizHistory, analyzeQuizProgress } from "@/services/quizHistoryService";
+import { ArrowUpIcon, ArrowDownIcon, MinusIcon, BookOpenIcon, CalendarIcon, CheckCircleIcon, ClockIcon } from "lucide-react";
+
+export default function QuizProgressView() {
+  const [history, setHistory] = useState<QuizAttempt[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
+  const [progress, setProgress] = useState<QuizProgress | null>(null);
+  const [uniqueThemes, setUniqueThemes] = useState<string[]>([]);
+
+  useEffect(() => {
+    loadHistory();
+  }, []);
+
+  useEffect(() => {
+    if (selectedTheme) {
+      analyzeProgress(selectedTheme);
+    }
+  }, [selectedTheme]);
+
+  const loadHistory = async () => {
+    setLoading(true);
+    try {
+      const attempts = await getQuizHistory();
+      setHistory(attempts);
+      
+      // Extrair temas únicos
+      const themes = [...new Set(attempts.map(a => a.theme))];
+      setUniqueThemes(themes);
+      
+      // Selecionar o primeiro tema se existir
+      if (themes.length > 0 && !selectedTheme) {
+        setSelectedTheme(themes[0]);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar histórico:", error);
+    } finally {
+      setLoading(false);
+    }
   };
-}
 
-export const QuizProgressView: React.FC<QuizProgressViewProps> = ({ quizHistory, currentQuiz }) => {
-  // Combine current quiz with history for display
-  const allHistory = useMemo(() => {
-    const combinedHistory = [...quizHistory];
-
-    // Add current quiz if it's not already in the history
-    const currentQuizExists = combinedHistory.some(
-      quiz => 
-        quiz.date.getTime() === currentQuiz.date.getTime() &&
-        quiz.type === currentQuiz.type &&
-        quiz.topic === currentQuiz.topic &&
-        quiz.totalQuestions === currentQuiz.totalQuestions &&
-        quiz.correctAnswers === currentQuiz.correctAnswers
-    );
-
-    if (!currentQuizExists) {
-      combinedHistory.unshift({
-        id: "current",
-        userId: "current",
-        date: currentQuiz.date,
-        type: currentQuiz.type,
-        topic: currentQuiz.topic,
-        totalQuestions: currentQuiz.totalQuestions,
-        correctAnswers: currentQuiz.correctAnswers,
-        settings: currentQuiz.settings,
-        bnccCompetence: currentQuiz.bnccCompetence,
-      });
+  const analyzeProgress = async (theme: string) => {
+    try {
+      const progressData = await analyzeQuizProgress(theme);
+      setProgress(progressData);
+    } catch (error) {
+      console.error("Erro ao analisar progresso:", error);
     }
+  };
 
-    // Sort by date (newest first)
-    return combinedHistory.sort((a, b) => b.date.getTime() - a.date.getTime());
-  }, [quizHistory, currentQuiz]);
-
-  // Get recent attempts with the same topic for evolution analysis
-  const recentSameTopicAttempts = useMemo(() => {
-    return allHistory
-      .filter(quiz => quiz.topic === currentQuiz.topic)
-      .slice(0, 4); // Current + up to 3 previous
-  }, [allHistory, currentQuiz.topic]);
-
-  // Calculate evolution trend
-  const evolutionTrend = useMemo(() => {
-    if (recentSameTopicAttempts.length <= 1) {
-      return null; // Not enough data for trend
-    }
-
-    // Get percentages from recent attempts (excluding current)
-    const percentages = recentSameTopicAttempts.map(
-      quiz => (quiz.correctAnswers / quiz.totalQuestions) * 100
-    );
-
-    const currentPercentage = percentages[0];
-    const previousPercentages = percentages.slice(1);
-    const averagePreviousPercentage = 
-      previousPercentages.reduce((sum, p) => sum + p, 0) / previousPercentages.length;
-
-    const difference = currentPercentage - averagePreviousPercentage;
-
-    if (difference > 5) return { trend: "up", difference };
-    if (difference < -5) return { trend: "down", difference };
-    return { trend: "stable", difference };
-  }, [recentSameTopicAttempts]);
-
-  const formatDate = (date: Date) => {
-    return date.toLocaleString('pt-BR', { 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('pt-BR', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
-    });
+    }).format(date);
   };
 
-  const renderSettings = (settings: Record<string, boolean>) => {
-    const enabledSettings = Object.entries(settings)
-      .filter(([_, isEnabled]) => isEnabled)
-      .map(([key]) => {
-        switch(key) {
-          case "studyMode": return "Modo Estudo";
-          case "smartDifficulty": return "Dificuldade Inteligente";
-          default: return key;
-        }
-      });
-
-    return enabledSettings.length ? enabledSettings.join(", ") : "Nenhuma";
+  const calculateSuccessRate = (correct: number, total: number) => {
+    return Math.round((correct / total) * 100);
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return "text-green-600 dark:text-green-400";
-    if (score >= 60) return "text-yellow-600 dark:text-yellow-400";
-    return "text-red-600 dark:text-red-400";
+  const getEvolutionIcon = () => {
+    if (!progress?.evolution) return null;
+    
+    switch (progress.evolution.trend) {
+      case 'up':
+        return <ArrowUpIcon className="h-5 w-5 text-green-500" />;
+      case 'down':
+        return <ArrowDownIcon className="h-5 w-5 text-red-500" />;
+      default:
+        return <MinusIcon className="h-5 w-5 text-yellow-500" />;
+    }
+  };
+
+  const getEvolutionText = () => {
+    if (!progress?.evolution) return "Sem dados suficientes";
+    
+    const { trend, percentage } = progress.evolution;
+    switch (trend) {
+      case 'up':
+        return `Melhorando ${percentage}%`;
+      case 'down':
+        return `Piorou ${percentage}%`;
+      default:
+        return "Desempenho estável";
+    }
   };
 
   return (
-    <div className="space-y-6">
-      <h3 className="text-xl font-semibold">Progresso de Aprendizagem</h3>
-
-      {/* Current quiz details */}
-      <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
-        <h4 className="text-lg font-medium mb-2">Tentativa Atual</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <p><span className="font-medium">Tipo:</span> {currentQuiz.type}</p>
-            <p><span className="font-medium">Tema:</span> {currentQuiz.topic}</p>
-            <p><span className="font-medium">Data:</span> {formatDate(currentQuiz.date)}</p>
-            <p><span className="font-medium">Total de Questões:</span> {currentQuiz.totalQuestions}</p>
-          </div>
-          <div>
-            <p>
-              <span className="font-medium">Acertos:</span> 
-              <span className={getScoreColor(currentQuiz.correctAnswers / currentQuiz.totalQuestions * 100)}>
-                {" "}{currentQuiz.correctAnswers} ({Math.round(currentQuiz.correctAnswers / currentQuiz.totalQuestions * 100)}%)
-              </span>
-            </p>
-            <p><span className="font-medium">Configurações:</span> {renderSettings(currentQuiz.settings)}</p>
-            {currentQuiz.bnccCompetence && (
-              <p><span className="font-medium">Competência BNCC:</span> {currentQuiz.bnccCompetence}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Evolution trend */}
-        {evolutionTrend && (
-          <div className="mt-4 p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600">
-            <h5 className="font-medium mb-1">Análise de Evolução</h5>
-            <div className="flex items-center gap-2">
-              {evolutionTrend.trend === "up" && (
-                <>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-green-600 dark:text-green-400">
-                    Evolução positiva! Melhorou {Math.abs(evolutionTrend.difference).toFixed(1)}% em relação às tentativas anteriores.
-                  </span>
-                </>
-              )}
-              {evolutionTrend.trend === "down" && (
-                <>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M12 13a1 1 0 100 2h5a1 1 0 001-1v-5a1 1 0 10-2 0v2.586l-4.293-4.293a1 1 0 00-1.414 0L8 9.586l-4.293-4.293a1 1 0 00-1.414 1.414l5 5a1 1 0 001.414 0L11 9.414 14.586 13H12z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-red-600 dark:text-red-400">
-                    Evolução negativa. Caiu {Math.abs(evolutionTrend.difference).toFixed(1)}% em relação às tentativas anteriores.
-                  </span>
-                </>
-              )}
-              {evolutionTrend.trend === "stable" && (
-                <>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-yellow-600 dark:text-yellow-400">
-                    Desempenho estável. Variação de apenas {Math.abs(evolutionTrend.difference).toFixed(1)}% em relação às tentativas anteriores.
-                  </span>
-                </>
-              )}
-            </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Baseado em {recentSameTopicAttempts.length - 1} tentativa(s) anterior(es) neste tema.
-            </p>
-          </div>
-        )}
+    <div className="w-full space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Meu Progresso</h2>
+        <Button variant="outline" onClick={loadHistory} disabled={loading}>
+          {loading ? "Carregando..." : "Atualizar"}
+        </Button>
       </div>
 
-      {/* Previous attempts */}
-      {allHistory.length > 1 ? (
-        <div>
-          <h4 className="text-lg font-medium mb-3">Histórico de Tentativas</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {allHistory.slice(1).map((quiz, index) => (
-              <div key={quiz.id || index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                <div className="flex justify-between">
-                  <h5 className="font-medium">{quiz.topic}</h5>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">{formatDate(new Date(quiz.date))}</span>
-                </div>
-                <p>
-                  <span className="font-medium">Tipo:</span> {quiz.type}
-                </p>
-                <p>
-                  <span className="font-medium">Resultado:</span> 
-                  <span className={getScoreColor(quiz.correctAnswers / quiz.totalQuestions * 100)}>
-                    {" "}{quiz.correctAnswers}/{quiz.totalQuestions} ({Math.round(quiz.correctAnswers / quiz.totalQuestions * 100)}%)
-                  </span>
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  <span className="font-medium">Configurações:</span> {renderSettings(quiz.settings || {})}
-                </p>
-                {quiz.bnccCompetence && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    <span className="font-medium">BNCC:</span> {quiz.bnccCompetence}
-                  </p>
-                )}
-              </div>
+      {history.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-10">
+            <BookOpenIcon className="h-16 w-16 text-gray-300 mb-4" />
+            <p className="text-center text-gray-500">
+              Você ainda não realizou nenhuma tentativa de quiz ou prova.
+              <br />
+              Complete um quiz para ver seu progresso aqui.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {uniqueThemes.map((theme) => (
+              <Badge 
+                key={theme} 
+                variant={selectedTheme === theme ? "default" : "outline"}
+                className="cursor-pointer"
+                onClick={() => setSelectedTheme(theme)}
+              >
+                {theme}
+              </Badge>
             ))}
           </div>
-        </div>
-      ) : (
-        <div className="text-center py-4 text-gray-500 dark:text-gray-400">
-          <p>Nenhum histórico de tentativas anteriores.</p>
-          <p className="text-sm mt-1">Complete mais quizzes ou provas para acompanhar sua evolução!</p>
-        </div>
+
+          {progress && (
+            <Card className="mb-4">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <CardTitle>{selectedTheme}</CardTitle>
+                  <div className="flex items-center gap-2">
+                    {getEvolutionIcon()}
+                    <span className="text-sm font-medium">{getEvolutionText()}</span>
+                  </div>
+                </div>
+                <CardDescription>
+                  {progress.attempts.length} {progress.attempts.length === 1 ? 'tentativa' : 'tentativas'} realizadas
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="history">
+                  <TabsList className="mb-4">
+                    <TabsTrigger value="history">Histórico</TabsTrigger>
+                    <TabsTrigger value="analytics">Análise</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="history">
+                    <div className="space-y-4">
+                      {progress.attempts.map((attempt) => (
+                        <Card key={attempt.id}>
+                          <CardHeader className="pb-2">
+                            <div className="flex justify-between items-center">
+                              <CardTitle className="text-base">
+                                {attempt.type} - {attempt.theme}
+                              </CardTitle>
+                              <Badge variant={attempt.type === 'Quiz' ? "default" : "secondary"}>
+                                {attempt.type}
+                              </Badge>
+                            </div>
+                            <CardDescription className="flex items-center gap-1">
+                              <CalendarIcon className="h-3 w-3" />
+                              {formatDate(attempt.date)}
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent className="pb-2">
+                            <div className="flex flex-col gap-2">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm">Taxa de acerto:</span>
+                                <span className="font-medium">
+                                  {attempt.correctAnswers} de {attempt.totalQuestions} ({calculateSuccessRate(attempt.correctAnswers, attempt.totalQuestions)}%)
+                                </span>
+                              </div>
+                              <Progress value={calculateSuccessRate(attempt.correctAnswers, attempt.totalQuestions)} />
+                              
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {attempt.settings.studyMode && (
+                                  <Badge variant="outline" className="bg-blue-50 dark:bg-blue-900/20">
+                                    Modo Estudo
+                                  </Badge>
+                                )}
+                                {attempt.settings.smartDifficulty && (
+                                  <Badge variant="outline" className="bg-purple-50 dark:bg-purple-900/20">
+                                    Dificuldade Inteligente
+                                  </Badge>
+                                )}
+                                {attempt.bnccCompetence && (
+                                  <Badge variant="outline" className="bg-green-50 dark:bg-green-900/20">
+                                    BNCC: {attempt.bnccCompetence}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="analytics">
+                    <div className="space-y-4">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-base">Evolução de desempenho</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {progress.attempts.length >= 2 ? (
+                            <div className="space-y-4">
+                              <div className="flex items-center gap-4">
+                                <div className="flex-1 space-y-1">
+                                  <div className="flex justify-between text-sm">
+                                    <span>Primeira tentativa</span>
+                                    <span>{calculateSuccessRate(
+                                      progress.attempts[progress.attempts.length-1].correctAnswers, 
+                                      progress.attempts[progress.attempts.length-1].totalQuestions
+                                    )}%</span>
+                                  </div>
+                                  <Progress value={calculateSuccessRate(
+                                    progress.attempts[progress.attempts.length-1].correctAnswers, 
+                                    progress.attempts[progress.attempts.length-1].totalQuestions
+                                  )} />
+                                </div>
+                                <div className="flex-1 space-y-1">
+                                  <div className="flex justify-between text-sm">
+                                    <span>Última tentativa</span>
+                                    <span>{calculateSuccessRate(
+                                      progress.attempts[0].correctAnswers, 
+                                      progress.attempts[0].totalQuestions
+                                    )}%</span>
+                                  </div>
+                                  <Progress value={calculateSuccessRate(
+                                    progress.attempts[0].correctAnswers, 
+                                    progress.attempts[0].totalQuestions
+                                  )} />
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                                {getEvolutionIcon()}
+                                <span>{getEvolutionText()} em relação às tentativas anteriores</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center py-4">
+                              <p className="text-center text-gray-500">
+                                Realize mais tentativas para ver uma análise detalhada.
+                              </p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                      
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-base">Estatísticas</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                              <CheckCircleIcon className="h-8 w-8 text-green-500 mb-2" />
+                              <span className="text-2xl font-bold">
+                                {calculateSuccessRate(
+                                  progress.attempts.reduce((sum, a) => sum + a.correctAnswers, 0),
+                                  progress.attempts.reduce((sum, a) => sum + a.totalQuestions, 0)
+                                )}%
+                              </span>
+                              <span className="text-sm text-gray-500">Taxa média de acerto</span>
+                            </div>
+                            
+                            <div className="flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                              <ClockIcon className="h-8 w-8 text-blue-500 mb-2" />
+                              <span className="text-2xl font-bold">
+                                {progress.attempts.length}
+                              </span>
+                              <span className="text-sm text-gray-500">Tentativas realizadas</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
     </div>
   );
-};
+}

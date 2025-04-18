@@ -1,15 +1,6 @@
-
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { generateAIResponse } from "@/services/aiChatService";
-// Estender a interface Window para incluir função de mostrar progresso
-declare global {
-  interface Window {
-    showQuestionDetails: (questionType: string, questionNumber: number) => void;
-    generatedQuestions: Question[];
-    handleMyProgressClick?: () => void;
-  }
-}
 import QuestionConfigModal from "./question-components/QuestionConfigModal";
 import QuestionsResultsModal from "./question-components/QuestionsResultsModal";
 import QuestionDetailModal from "./question-components/QuestionDetailModal";
@@ -44,66 +35,6 @@ interface QuestionSimulatorProps {
   messages: any[];
 }
 
-// Função para gerar questões fallback em caso de erro
-const generateFallbackQuestions = (
-  totalQuestions: number,
-  multipleChoice: number,
-  essay: number,
-  trueFalse: number
-): Question[] => {
-  const questions: Question[] = [];
-  let questionId = 1;
-  
-  // Gerar questões de múltipla escolha
-  for (let i = 0; i < multipleChoice; i++) {
-    if (questions.length < totalQuestions) {
-      questions.push({
-        id: `q${questionId}`,
-        type: 'multiple-choice',
-        text: `Qual é o principal conceito abordado no conteúdo apresentado? (Questão ${questionId})`,
-        options: [
-          { id: `q${questionId}-a`, text: 'Primeiro conceito importante', isCorrect: false },
-          { id: `q${questionId}-b`, text: 'Segundo conceito relevante', isCorrect: true },
-          { id: `q${questionId}-c`, text: 'Terceiro conceito relacionado', isCorrect: false },
-          { id: `q${questionId}-d`, text: 'Quarto conceito mencionado', isCorrect: false },
-          { id: `q${questionId}-e`, text: 'Quinto conceito complementar', isCorrect: false }
-        ],
-        explanation: 'Esta questão avalia sua compreensão sobre o tema principal discutido.'
-      });
-      questionId++;
-    }
-  }
-  
-  // Gerar questões discursivas
-  for (let i = 0; i < essay; i++) {
-    if (questions.length < totalQuestions) {
-      questions.push({
-        id: `q${questionId}`,
-        type: 'essay',
-        text: `Explique com suas palavras os principais conceitos abordados neste tema. (Questão ${questionId})`,
-        explanation: 'Esta questão avalia sua capacidade de explicar o conteúdo com suas próprias palavras.'
-      });
-      questionId++;
-    }
-  }
-  
-  // Gerar questões de verdadeiro ou falso
-  for (let i = 0; i < trueFalse; i++) {
-    if (questions.length < totalQuestions) {
-      questions.push({
-        id: `q${questionId}`,
-        type: 'true-false',
-        text: `Os conceitos abordados neste tema são aplicáveis em diferentes contextos. (Questão ${questionId})`,
-        answer: true,
-        explanation: 'Esta afirmação é verdadeira pois os conceitos fundamentais discutidos possuem aplicações diversas.'
-      });
-      questionId++;
-    }
-  }
-  
-  return questions;
-};
-
 const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionId, messages }) => {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -112,243 +43,94 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
     setIsLoading(true);
 
     try {
-      // Preparar o conteúdo da mensagem para a API
-      const messagesContent = messages.map(msg => msg.content).join("\n\n");
+      // Encontrar a última mensagem do assistente para usar como contexto
+      const lastAIMessage = messages
+        .filter(msg => msg.sender === 'assistant')
+        .pop();
 
-      // Construir prompt para a API
-      const prompt = `Com base no conteúdo da conversa a seguir, gere um conjunto de questões para avaliação:
+      const messageContent = lastAIMessage?.content || 'Conteúdo sobre o tema estudado';
 
-${messagesContent}
+      // Analisar a resposta que a IA gerou e o contexto da pergunta
+      const analysisPrompt = `
+      Analise a seguinte conversa:
 
-Gere exatamente ${totalQuestions} questões no total, sendo:
-- ${multipleChoice} questões de múltipla escolha (cada uma com 5 alternativas)
-- ${essay} questões discursivas
-- ${trueFalse} questões de verdadeiro ou falso
+      Minha resposta anterior: "${messageContent}"
 
-Para cada questão, forneça uma explicação detalhada da resposta correta.
+      Com base nesta resposta e no contexto da conversa, gere ${totalQuestions} questões de avaliação, sendo:
+      - ${multipleChoice} questões de múltipla escolha
+      - ${essay} questões discursivas
+      - ${trueFalse} questões de verdadeiro ou falso
 
-Retorne as questões em formato JSON conforme este exemplo:
-[
-  {
-    "id": "q1",
-    "type": "multiple-choice",
-    "text": "Qual é a capital do Brasil?",
-    "options": [
-      { "id": "a", "text": "Rio de Janeiro", "isCorrect": false },
-      { "id": "b", "text": "São Paulo", "isCorrect": false },
-      { "id": "c", "text": "Brasília", "isCorrect": true },
-      { "id": "d", "text": "Salvador", "isCorrect": false },
-      { "id": "e", "text": "Belo Horizonte", "isCorrect": false }
-    ],
-    "explanation": "Brasília é a capital federal do Brasil desde 21 de abril de 1960."
-  },
-  {
-    "id": "q2",
-    "type": "essay",
-    "text": "Explique o processo de fotossíntese e sua importância para o ecossistema.",
-    "explanation": "A fotossíntese é o processo pelo qual plantas, algas e algumas bactérias convertem luz solar, água e dióxido de carbono em glicose e oxigênio..."
-  },
-  {
-    "id": "q3",
-    "type": "true-false",
-    "text": "O nitrogênio é o elemento mais abundante na atmosfera terrestre.",
-    "answer": true,
-    "explanation": "O nitrogênio constitui aproximadamente 78% da atmosfera terrestre, sendo o elemento mais abundante, seguido pelo oxigênio com 21%."
-  }
-]`;
-
-      // Fazer a chamada à API
-      const response = await generateAIResponse({
-        sessionId,
-        messages: [{ role: 'user', content: prompt }],
-        saveHistory: false
-      });
-
-      // Extrair as questões da resposta
-      const questionsText = response.message?.content || '';
-      console.log("Resposta da API:", questionsText);
-
-      // Tentar extrair o JSON de questões com uma regex mais robusta
-      let questionsData: Question[] = [];
-      
-      // Procurar por um JSON válido na resposta usando diferentes estratégias
-      const findJson = (text: string) => {
-        // Tenta encontrar um array JSON entre colchetes
-        const jsonRegex = /\[\s*\{[\s\S]*?\}\s*\]/g;
-        const matches = text.match(jsonRegex);
-        
-        if (matches && matches.length > 0) {
-          // Tenta cada correspondência encontrada
-          for (const match of matches) {
-            try {
-              const parsed = JSON.parse(match);
-              if (Array.isArray(parsed) && parsed.length > 0) {
-                return parsed;
-              }
-            } catch (e) {
-              console.log("Falha ao analisar match:", match);
-            }
-          }
+      As questões devem avaliar os conceitos principais abordados na conversa e estar diretamente relacionadas ao tema.
+      Formate a saída em JSON com a seguinte estrutura:
+      [
+        {
+          "id": "q1",
+          "type": "multiple-choice",
+          "text": "Enunciado da pergunta",
+          "options": [
+            { "id": "q1-a", "text": "Alternativa A", "isCorrect": false },
+            { "id": "q1-b", "text": "Alternativa B", "isCorrect": true },
+            { "id": "q1-c", "text": "Alternativa C", "isCorrect": false },
+            { "id": "q1-d", "text": "Alternativa D", "isCorrect": false }
+          ],
+          "explanation": "Explicação da resposta correta"
         }
-        
-        // Tenta encontrar o JSON inteiro (fallback)
-        try {
-          // Verifica se o texto inteiro é um JSON válido
-          const parsed = JSON.parse(text);
-          if (Array.isArray(parsed)) return parsed;
-        } catch (e) {
-          console.log("Texto completo não é um JSON válido");
+      ]
+      `;
+
+      // Chamar a API para gerar as questões
+      const questionsResponse = await generateAIResponse(
+        analysisPrompt,
+        sessionId || 'default_session',
+        {
+          intelligenceLevel: 'advanced',
+          languageStyle: 'formal'
         }
-        
-        return null;
-      };
-      
-      const parsedQuestions = findJson(questionsText);
-      
-      if (parsedQuestions) {
-        // Processar e validar as questões antes de usar
-        questionsData = parsedQuestions.map((question, index) => {
-          // Garantir que todas as questões tenham propriedades necessárias
-          const processedQuestion = {
-            ...question,
-            id: question.id || `q${index + 1}`,
-            text: question.text || `Questão ${index + 1} gerada automaticamente`,
-            type: question.type || (
-              // Inferir tipo da questão se não estiver especificado
-              question.options && Array.isArray(question.options) ? 'multiple-choice' :
-              typeof question.answer === 'boolean' ? 'true-false' : 'essay'
-            ),
-            explanation: question.explanation || "Explicação não disponível para esta questão."
-          };
-          
-          // Para questões de múltipla escolha, garantir que as opções estão corretas
-          if (processedQuestion.type === 'multiple-choice' && (!processedQuestion.options || !Array.isArray(processedQuestion.options))) {
-            processedQuestion.options = [
-              { id: `${processedQuestion.id}-a`, text: "Primeira opção", isCorrect: true },
-              { id: `${processedQuestion.id}-b`, text: "Segunda opção", isCorrect: false },
-              { id: `${processedQuestion.id}-c`, text: "Terceira opção", isCorrect: false },
-              { id: `${processedQuestion.id}-d`, text: "Quarta opção", isCorrect: false },
-              { id: `${processedQuestion.id}-e`, text: "Quinta opção", isCorrect: false }
-            ];
-          } else if (processedQuestion.type === 'multiple-choice') {
-            // Verificar se pelo menos uma opção está marcada como correta
-            const hasCorrect = processedQuestion.options.some(opt => opt.isCorrect);
-            if (!hasCorrect && processedQuestion.options.length > 0) {
-              processedQuestion.options[0].isCorrect = true;
-            }
-            
-            // Garantir que todas as opções tenham IDs
-            processedQuestion.options = processedQuestion.options.map((opt, i) => ({
-              ...opt,
-              id: opt.id || `${processedQuestion.id}-${String.fromCharCode(97 + i)}`,
-              text: opt.text || `Opção ${i + 1}`
-            }));
-          }
-          
-          return processedQuestion;
-        });
-        
-        console.log("Questões processadas com sucesso:", questionsData);
-        
-        // Salvar as questões para acesso global
-        window.generatedQuestions = questionsData;
-        
-        // Fechar o modal de configuração antes de mostrar o resultado
-        onClose();
-        
-        // Pequeno delay para garantir que o modal anterior seja fechado primeiro
-        setTimeout(() => {
-          // Mostrar o modal com as questões geradas
-          showResultsModal(
-            totalQuestions,
-            multipleChoice,
-            essay,
-            trueFalse,
-            messagesContent,
-            questionsData
-          );
-        }, 100);
-      } else {
-        console.error("Resposta não contém JSON válido:", questionsText);
-        
-        // Gerar questões fallback para garantir que o modal apareça mesmo com erro
-        const fallbackQuestions: Question[] = generateFallbackQuestions(
-          totalQuestions,
-          multipleChoice, 
-          essay, 
-          trueFalse
-        );
-        
-        console.log("Usando questões de fallback:", fallbackQuestions);
-        
-        // Salvar as questões fallback para acesso global
-        window.generatedQuestions = fallbackQuestions;
-        
-        // Fechar o modal de configuração
-        onClose();
-        
-        // Mostrar o modal mesmo com questões fallback
-        setTimeout(() => {
-          showResultsModal(
-            totalQuestions,
-            multipleChoice,
-            essay,
-            trueFalse,
-            messagesContent,
-            fallbackQuestions
-          );
-          
-          // Notificar o usuário sobre o problema, mas mostrar o resultado mesmo assim
-          toast({
-            title: "Aviso sobre as questões",
-            description: "Algumas questões foram geradas automaticamente devido a um erro de formato.",
-            variant: "default",
-            duration: 5000
-          });
-        }, 100);
-      }
-    } catch (error) {
-      console.error("Erro ao gerar questões:", error);
-      
-      // Mesmo com erro, gerar questões fallback
-      const fallbackQuestions: Question[] = generateFallbackQuestions(
-        totalQuestions,
-        multipleChoice, 
-        essay, 
-        trueFalse
       );
-      
-      // Salvar as questões fallback para acesso global
-      window.generatedQuestions = fallbackQuestions;
-      
-      // Fechar o modal de configuração
-      onClose();
-      
-      // Mostrar o modal mesmo com questões fallback
-      setTimeout(() => {
-        showResultsModal(
-          totalQuestions,
-          multipleChoice,
-          essay,
-          trueFalse,
-          messagesContent,
-          fallbackQuestions
-        );
-        
-        toast({
-          title: "Erro ao gerar questões",
-          description: "Algumas questões foram geradas automaticamente devido a um erro.",
-          variant: "destructive",
-          duration: 5000
-        });
-      }, 100);
+
+      // Tentar extrair o JSON de questões da resposta
+      let questionsData = [];
+      try {
+        // Extrair apenas o JSON da resposta (que pode conter texto adicional)
+        const jsonMatch = questionsResponse.match(/\[\s*\{.*\}\s*\]/s);
+        if (jsonMatch) {
+          questionsData = JSON.parse(jsonMatch[0]);
+          console.log('Questões geradas com sucesso:', questionsData);
+        } else {
+          throw new Error('Formato de resposta inválido');
+        }
+      } catch (jsonError) {
+        console.error('Erro ao parsear as questões JSON:', jsonError);
+        questionsData = [];
+      }
+
+      // Armazenar as questões geradas em uma variável global para acesso posterior
+      window.generatedQuestions = questionsData;
+
+      // Criar função global para mostrar detalhes das questões
+      window.showQuestionDetails = (questionType, questionNumber) => {
+        showQuestionDetailModal(questionType, questionNumber, totalQuestions, multipleChoice, essay, trueFalse, messageContent, questionsData);
+      };
+
+      // Criar o modal de resultados
+      showResultsModal(totalQuestions, multipleChoice, essay, trueFalse, messageContent, questionsData);
+
+    } catch (error) {
+      console.error('Erro ao gerar questões de prova:', error);
+      toast({
+        title: "Erro ao gerar questões",
+        description: "Ocorreu um problema ao gerar as questões da prova.",
+        variant: "destructive",
+        duration: 3000,
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   // Função para mostrar o modal de detalhes da questão
-  const showQuestionDetailModal = (
+  const showQuestionDetailModal = useCallback((
     questionType: string, 
     questionNumber: number, 
     totalQuestions: number, 
@@ -389,10 +171,10 @@ Retorne as questões em formato JSON conforme este exemplo:
         />
       );
     });
-  };
+  }, []);
 
   // Função para mostrar o modal de resultados com questões geradas
-  const showResultsModal = (
+  const showResultsModal = useCallback((
     totalQuestions: number, 
     multipleChoice: number, 
     essay: number, 
@@ -410,20 +192,6 @@ Retorne as questões em formato JSON conforme este exemplo:
     const modalRoot = document.createElement('div');
     modalRoot.id = 'questions-results-modal-root';
     document.body.appendChild(modalRoot);
-
-    // Definir globalmente a função para mostrar detalhes da questão
-    window.showQuestionDetails = (questionType: string, questionNumber: number) => {
-      showQuestionDetailModal(
-        questionType,
-        questionNumber,
-        totalQuestions,
-        multipleChoice,
-        essay,
-        trueFalse,
-        messageContent,
-        questionsData
-      );
-    };
 
     // Renderizar o componente QuestionsResultsModal
     import('react-dom/client').then((ReactDOMClient) => {
@@ -443,7 +211,7 @@ Retorne as questões em formato JSON conforme este exemplo:
         />
       );
     });
-  };
+  }, []);
 
   return (
     <QuestionConfigModal
