@@ -33,10 +33,13 @@ const NotebookSimulation: React.FC<NotebookSimulationProps> = ({ content }) => {
       /(?:recursos adicionais|para mais|para saber mais|para aprofundar|veja também|consulte|recomendo)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
       
       // Engagement and summary phrases
-      /(?:espero|desejo|tomara|que|isso|ajude|ajudei|auxilie|contribua|dúvidas|perguntar|contato|feedback)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
+      /(?:espero|desejo|tomara|que|isso|ajude|ajudei|auxilie|contribua|dúvidas|perguntar|contato|feedback|curtiu)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
       
       // Opening sentences patterns
-      /(?:^|\n)(?:recebi seu pedido|preparei um resumo|dá uma olhada|aqui está|segue abaixo|conforme solicitado)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
+      /(?:^|\n)(?:recebi seu pedido|preparei um resumo|dá uma olhada|aqui está|segue abaixo|conforme solicitado|bora nessa|tipo|umas anotações de caderno|né|sem problemas)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
+      
+      // Farewell patterns
+      /(?:^|\n)(?:e aí, curtiu|se precisar|só chamar|até mais|até a próxima|até logo|até breve|tchau|adeus)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
       
       // Casual expressions
       /(?:super|hiper|mega|ultra|clean|maneiro|legal|bacana|show|top|incrível)/gi
@@ -48,6 +51,12 @@ const NotebookSimulation: React.FC<NotebookSimulationProps> = ({ content }) => {
     
     // Remove references to the platform
     cleaned = cleaned.replace(/ponto\.school|ponto school|plataforma|site|ambiente|interface|sistema/gi, '');
+    
+    // Additional cleaning for specific greeting patterns
+    cleaned = cleaned.replace(/e aí! tudo sussa\?/gi, '');
+    cleaned = cleaned.replace(/tipo umas anotações de caderno, né\? sem problemas, bora nessa!/gi, '');
+    cleaned = cleaned.replace(/## e aí, curtiu\?/gi, '');
+    cleaned = cleaned.replace(/se precisar de mais alguma coisa, é só chamar!/gi, '');
     
     // Trim any extra whitespace created by the removals
     cleaned = cleaned.replace(/\n\s*\n\s*\n/g, '\n\n');
