@@ -43,86 +43,114 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
     setIsLoading(true);
 
     try {
-      // Encontrar a última mensagem do assistente para usar como contexto
-      const lastAIMessage = messages
-        .filter(msg => msg.sender === 'assistant')
-        .pop();
+      // Preparar o conteúdo da mensagem para a API
+      const messagesContent = messages.map(msg => msg.content).join("\n\n");
 
-      const messageContent = lastAIMessage?.content || 'Conteúdo sobre o tema estudado';
+      // Construir prompt para a API
+      const prompt = `Com base no conteúdo da conversa a seguir, gere um conjunto de questões para avaliação:
 
-      // Analisar a resposta que a IA gerou e o contexto da pergunta
-      const analysisPrompt = `
-      Analise a seguinte conversa:
+${messagesContent}
 
-      Minha resposta anterior: "${messageContent}"
+Gere exatamente ${totalQuestions} questões no total, sendo:
+- ${multipleChoice} questões de múltipla escolha (cada uma com 5 alternativas)
+- ${essay} questões discursivas
+- ${trueFalse} questões de verdadeiro ou falso
 
-      Com base nesta resposta e no contexto da conversa, gere ${totalQuestions} questões de avaliação, sendo:
-      - ${multipleChoice} questões de múltipla escolha
-      - ${essay} questões discursivas
-      - ${trueFalse} questões de verdadeiro ou falso
+Para cada questão, forneça uma explicação detalhada da resposta correta.
 
-      As questões devem avaliar os conceitos principais abordados na conversa e estar diretamente relacionadas ao tema.
-      Formate a saída em JSON com a seguinte estrutura:
-      [
-        {
-          "id": "q1",
-          "type": "multiple-choice",
-          "text": "Enunciado da pergunta",
-          "options": [
-            { "id": "q1-a", "text": "Alternativa A", "isCorrect": false },
-            { "id": "q1-b", "text": "Alternativa B", "isCorrect": true },
-            { "id": "q1-c", "text": "Alternativa C", "isCorrect": false },
-            { "id": "q1-d", "text": "Alternativa D", "isCorrect": false }
-          ],
-          "explanation": "Explicação da resposta correta"
-        }
-      ]
-      `;
+Retorne as questões em formato JSON conforme este exemplo:
+[
+  {
+    "id": "q1",
+    "type": "multiple-choice",
+    "text": "Qual é a capital do Brasil?",
+    "options": [
+      { "id": "a", "text": "Rio de Janeiro", "isCorrect": false },
+      { "id": "b", "text": "São Paulo", "isCorrect": false },
+      { "id": "c", "text": "Brasília", "isCorrect": true },
+      { "id": "d", "text": "Salvador", "isCorrect": false },
+      { "id": "e", "text": "Belo Horizonte", "isCorrect": false }
+    ],
+    "explanation": "Brasília é a capital federal do Brasil desde 21 de abril de 1960."
+  },
+  {
+    "id": "q2",
+    "type": "essay",
+    "text": "Explique o processo de fotossíntese e sua importância para o ecossistema.",
+    "explanation": "A fotossíntese é o processo pelo qual plantas, algas e algumas bactérias convertem luz solar, água e dióxido de carbono em glicose e oxigênio..."
+  },
+  {
+    "id": "q3",
+    "type": "true-false",
+    "text": "O nitrogênio é o elemento mais abundante na atmosfera terrestre.",
+    "answer": true,
+    "explanation": "O nitrogênio constitui aproximadamente 78% da atmosfera terrestre, sendo o elemento mais abundante, seguido pelo oxigênio com 21%."
+  }
+]`;
 
-      // Chamar a API para gerar as questões
-      const questionsResponse = await generateAIResponse(
-        analysisPrompt,
-        sessionId || 'default_session',
-        {
-          intelligenceLevel: 'advanced',
-          languageStyle: 'formal'
-        }
-      );
+      // Fazer a chamada à API
+      const response = await generateAIResponse({
+        sessionId,
+        messages: [{ role: 'user', content: prompt }],
+        saveHistory: false
+      });
 
-      // Tentar extrair o JSON de questões da resposta
-      let questionsData = [];
-      try {
-        // Extrair apenas o JSON da resposta (que pode conter texto adicional)
-        const jsonMatch = questionsResponse.match(/\[\s*\{.*\}\s*\]/s);
-        if (jsonMatch) {
+      // Extrair as questões da resposta
+      const questionsText = response.message?.content || '';
+
+      // Tentar extrair o JSON de questões
+      let questionsData: Question[] = [];
+      const jsonMatch = questionsText.match(/\[\s*\{[\s\S]*\}\s*\]/);
+
+      if (jsonMatch) {
+        try {
           questionsData = JSON.parse(jsonMatch[0]);
-          console.log('Questões geradas com sucesso:', questionsData);
-        } else {
-          throw new Error('Formato de resposta inválido');
+
+          // Verificar se temos questões
+          if (questionsData.length === 0) {
+            throw new Error("Nenhuma questão foi gerada");
+          }
+
+          // Salvar as questões para acesso global
+          window.generatedQuestions = questionsData;
+
+          // Fechar o modal de configuração antes de mostrar o resultado
+          onClose();
+
+          // Pequeno delay para garantir que o modal anterior seja fechado primeiro
+          setTimeout(() => {
+            // Mostrar o modal com as questões geradas
+            showResultsModal(
+              totalQuestions,
+              multipleChoice,
+              essay,
+              trueFalse,
+              messagesContent,
+              questionsData
+            );
+          }, 100);
+        } catch (error) {
+          console.error("Erro ao parsear JSON de questões:", error);
+          toast({
+            title: "Erro ao gerar questões",
+            description: "Não foi possível processar a resposta da IA. Tente novamente.",
+            variant: "destructive"
+          });
         }
-      } catch (jsonError) {
-        console.error('Erro ao parsear as questões JSON:', jsonError);
-        questionsData = [];
+      } else {
+        console.error("Resposta não contém JSON válido:", questionsText);
+        toast({
+          title: "Erro no formato de resposta",
+          description: "A IA não retornou um formato válido. Tente novamente.",
+          variant: "destructive"
+        });
       }
-
-      // Armazenar as questões geradas em uma variável global para acesso posterior
-      window.generatedQuestions = questionsData;
-
-      // Criar função global para mostrar detalhes das questões
-      window.showQuestionDetails = (questionType, questionNumber) => {
-        showQuestionDetailModal(questionType, questionNumber, totalQuestions, multipleChoice, essay, trueFalse, messageContent, questionsData);
-      };
-
-      // Criar o modal de resultados
-      showResultsModal(totalQuestions, multipleChoice, essay, trueFalse, messageContent, questionsData);
-
     } catch (error) {
-      console.error('Erro ao gerar questões de prova:', error);
+      console.error("Erro ao gerar questões:", error);
       toast({
         title: "Erro ao gerar questões",
-        description: "Ocorreu um problema ao gerar as questões da prova.",
-        variant: "destructive",
-        duration: 3000,
+        description: "Ocorreu um erro ao comunicar com a IA. Tente novamente mais tarde.",
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
