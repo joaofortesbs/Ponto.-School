@@ -244,25 +244,22 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
             window.selectedOption = null;
 
             window.selectOption = function(element) {
-              // Remover destaque de todas as opções
+              // Remover a classe de todas as alternativas
               document.querySelectorAll('.option-selection').forEach(opt => {
-                opt.classList.remove('bg-orange-50', 'dark:bg-orange-900/20');
-                opt.classList.remove('border-orange-300', 'dark:border-orange-700');
-                opt.classList.add('border-transparent');
-                const letterContainerInOpt = opt.querySelector('.option-letter-container');
-                if (letterContainerInOpt) {
-                  letterContainerInOpt.classList.remove('bg-orange-500', 'text-white');
-                  letterContainerInOpt.classList.add('bg-white', 'dark:bg-gray-800');
+                opt.classList.remove('bg-orange-50', 'dark:bg-orange-900/20', 'border-orange-300', 'dark:border-orange-700'); 
+                const letterContainer = opt.querySelector('.option-letter-container');
+                if (letterContainer) {
+                  letterContainer.classList.remove('bg-orange-500', 'text-white'); // Remover destaque do letra
+                  letterContainer.classList.add('bg-white', 'dark:bg-gray-800');
                 }
                 opt.style.fontWeight = 'normal';
               });
 
-              // Destacar a opção clicada com classes permanentes (não apenas hover)
+              // Destacar a opção clicada
               element.classList.add('bg-orange-50', 'dark:bg-orange-900/20');
-              element.classList.remove('border-transparent');
               element.classList.add('border-orange-300', 'dark:border-orange-700');
               element.style.fontWeight = 'bold';
-
+              
               // Destacar o indicador de letra
               const letterContainer = element.querySelector('.option-letter-container');
               if (letterContainer) {
