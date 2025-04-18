@@ -3073,10 +3073,10 @@ ${multipleChoice} alternativas, ${discursive} discursivas, ${trueFalse} V/F. ${b
                                                       <div class="overflow-y-auto flex-1 p-4">
                                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                           ${questionsArray.map((q, index) => `
-                                                            <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden" id="question-card-${index}">
-                                                              <div class="bg-gray-50 dark:bg-gray-800 p-3 flex justify-between items-center">
+                                                            <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 shadow-md overflow-hidden" id="question-card-${index}">
+                                                              <div class="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/10 p-3 flex justify-between items-center">
                                                                 <div class="flex items-center gap-2">
-                                                                  <div class="w-7 h-7 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-800 dark:text-orange-300 font-semibold text-sm">
+                                                                  <div class="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white font-semibold text-sm">
                                                                     ${q.number}
                                                                   </div>
                                                                   <div>
@@ -3088,17 +3088,9 @@ ${multipleChoice} alternativas, ${discursive} discursivas, ${trueFalse} V/F. ${b
                                                                     </span>
                                                                   </div>
                                                                 </div>
-                                                                <div class="flex gap-1">
-                                                                  <button class="text-xs px-2 py-1 rounded bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-orange-900/30 transition-colors question-gabarito-btn" data-index="${index}">
-                                                                    Ver Gabarito
-                                                                  </button>
-                                                                  <button class="text-xs px-2 py-1 rounded bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/30 transition-colors question-caderno-btn" data-index="${index}">
-                                                                    Transformar em Caderno
-                                                                  </button>
-                                                                </div>
                                                               </div>
-                                                              <div class="p-3">
-                                                                <div class="text-sm text-gray-800 dark:text-gray-200 mb-3 question-text">
+                                                              <div class="p-4">
+                                                                <div class="text-sm text-gray-800 dark:text-gray-200 mb-4 question-text">
                                                                   ${q.statement.replace(/\n/g, '<br>')}
                                                                 </div>
                                                                 
@@ -3115,6 +3107,15 @@ ${multipleChoice} alternativas, ${discursive} discursivas, ${trueFalse} V/F. ${b
                                                                       </div>
                                                                     </div>
                                                                   ` : ''}
+                                                                </div>
+                                                                
+                                                                <div class="flex justify-between items-center mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                                                  <button class="w-[48%] px-3 py-2 rounded bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-orange-900/30 transition-colors question-gabarito-btn font-medium text-sm" data-index="${index}">
+                                                                    Ver Gabarito
+                                                                  </button>
+                                                                  <button class="w-[48%] px-3 py-2 rounded bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/30 transition-colors question-caderno-btn font-medium text-sm" data-index="${index}">
+                                                                    Transformar em Caderno
+                                                                  </button>
                                                                 </div>
                                                               </div>
                                                             </div>
