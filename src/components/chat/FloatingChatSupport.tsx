@@ -3074,22 +3074,19 @@ ${multipleChoice} alternativas, ${discursive} discursivas, ${trueFalse} V/F. ${b
                                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                           ${questionsArray.map((q, index) => `
                                                             <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 shadow-md overflow-hidden" id="question-card-${index}">
-                                                              <div class="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/10 p-3 flex justify-between items-center">
-                                                                <div class="flex items-center gap-2">
+                                                              <div class="p-4">
+                                                                <div class="flex items-center gap-2 mb-2">
                                                                   <div class="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white font-semibold text-sm">
                                                                     ${q.number}
                                                                   </div>
-                                                                  <div>
-                                                                    <span class="text-xs font-medium text-gray-800 dark:text-gray-200">
-                                                                      ${q.type.includes("alternativa") || q.type.includes("múltipla") ? "Múltipla Escolha" : 
-                                                                        q.type.includes("discursiva") ? "Discursiva" : 
-                                                                        q.type.includes("V/F") || q.type.includes("verdadeiro") || q.type.includes("falso") ? "Verdadeiro/Falso" : 
-                                                                        q.type}
-                                                                    </span>
-                                                                  </div>
+                                                                  <span class="text-xs font-medium px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
+                                                                    ${q.type.includes("alternativa") || q.type.includes("múltipla") ? "Múltipla Escolha" : 
+                                                                      q.type.includes("discursiva") ? "Discursiva" : 
+                                                                      q.type.includes("V/F") || q.type.includes("verdadeiro") || q.type.includes("falso") ? "Verdadeiro/Falso" : 
+                                                                      q.type}
+                                                                  </span>
                                                                 </div>
-                                                              </div>
-                                                              <div class="p-4">
+                                                                
                                                                 <div class="text-sm text-gray-800 dark:text-gray-200 mb-4 question-text">
                                                                   ${q.statement.replace(/\n/g, '<br>')}
                                                                 </div>
