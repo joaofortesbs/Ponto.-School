@@ -3073,8 +3073,8 @@ ${multipleChoice} alternativas, ${discursive} discursivas, ${trueFalse} V/F. ${b
                                                       <div class="overflow-y-auto flex-1 p-4">
                                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                           ${questionsArray.map((q, index) => `
-                                                            <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 shadow-md overflow-hidden" id="question-card-${index}">
-                                                              <div class="p-4">
+                                                            <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 shadow-md overflow-hidden cursor-pointer hover:border-orange-400 dark:hover:border-orange-500 transition-all duration-200 transform hover:scale-[1.02]" id="question-card-${index}">
+                                                              <div class="p-4" data-question-index="${index}">
                                                                 <div class="flex items-center gap-2 mb-2">
                                                                   <div class="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white font-semibold text-sm">
                                                                     ${q.number}
@@ -3117,6 +3117,70 @@ ${multipleChoice} alternativas, ${discursive} discursivas, ${trueFalse} V/F. ${b
                                                               </div>
                                                             </div>
                                                           `).join('')}
+                                                        </div>
+                                                        
+                                                        <!-- Modal para visualizar questão individual -->
+                                                        <div id="question-detail-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000] hidden">
+                                                          <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 shadow-xl w-[95%] max-w-2xl max-h-[80vh] animate-fadeIn flex flex-col">
+                                                            <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center sticky top-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg z-10">
+                                                              <div class="flex items-center gap-2">
+                                                                <button id="back-to-questions" class="h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                                                                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                    <path d="m15 18-6-6 6-6"></path>
+                                                                  </svg>
+                                                                </button>
+                                                                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                                                                  <span id="question-detail-number" class="w-7 h-7 rounded-full bg-orange-500 flex items-center justify-center text-white font-semibold text-sm">1</span>
+                                                                  <span id="question-detail-type" class="text-xs font-medium px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
+                                                                    Múltipla Escolha
+                                                                  </span>
+                                                                </h3>
+                                                              </div>
+                                                              <button 
+                                                                id="close-question-detail-modal"
+                                                                class="h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                                                              >
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                  <path d="M18 6 6 18"></path>
+                                                                  <path d="m6 6 12 12"></path>
+                                                                </svg>
+                                                              </button>
+                                                            </div>
+                                                            
+                                                            <div class="overflow-y-auto flex-1 p-6">
+                                                              <div id="question-detail-content" class="text-base text-gray-800 dark:text-gray-200 mb-6">
+                                                                <!-- Conteúdo da questão será inserido aqui -->
+                                                              </div>
+                                                              
+                                                              <div id="question-detail-gabarito" class="bg-green-50 dark:bg-green-900/10 p-4 rounded-lg border border-green-100 dark:border-green-900/30 mt-4 hidden">
+                                                                <div class="text-sm font-semibold text-green-800 dark:text-green-300 mb-2">Gabarito:</div>
+                                                                <div id="question-detail-answer" class="text-base text-gray-800 dark:text-gray-200">
+                                                                  <!-- Gabarito será inserido aqui -->
+                                                                </div>
+                                                                <div id="question-detail-explanation-container" class="mt-3 pt-3 border-t border-green-200 dark:border-green-800 hidden">
+                                                                  <div class="text-sm font-semibold text-green-800 dark:text-green-300 mb-2">Explicação:</div>
+                                                                  <div id="question-detail-explanation" class="text-base text-gray-800 dark:text-gray-200">
+                                                                    <!-- Explicação será inserida aqui -->
+                                                                  </div>
+                                                                </div>
+                                                              </div>
+                                                            </div>
+                                                            
+                                                            <div class="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                                                              <button 
+                                                                id="show-gabarito-btn"
+                                                                class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"
+                                                              >
+                                                                Ver Gabarito
+                                                              </button>
+                                                              <button 
+                                                                id="question-to-notebook-btn"
+                                                                class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                                                              >
+                                                                Transformar em Caderno
+                                                              </button>
+                                                            </div>
+                                                          </div>
                                                         </div>
                                                       </div>
                                                       
@@ -3164,10 +3228,166 @@ ${multipleChoice} alternativas, ${discursive} discursivas, ${trueFalse} V/F. ${b
                                                     });
                                                   }
                                                   
-                                                  // Botões de ver gabarito
+                                                  // Adicionar evento de clique aos cards de questões
+                                                  const questionCards = document.querySelectorAll('[id^="question-card-"]');
+                                                  questionCards.forEach(card => {
+                                                    card.addEventListener('click', (e) => {
+                                                      // Evitar que o clique em botões específicos abra o modal
+                                                      if (e.target.closest('.question-gabarito-btn') || e.target.closest('.question-caderno-btn')) {
+                                                        return;
+                                                      }
+                                                      
+                                                      const questionDiv = card.querySelector('[data-question-index]');
+                                                      if (questionDiv) {
+                                                        const index = questionDiv.getAttribute('data-question-index');
+                                                        if (index !== null) {
+                                                          const questionData = questionsArray[parseInt(index)];
+                                                          
+                                                          // Preencher dados no modal de detalhe da questão
+                                                          const numberElement = document.getElementById('question-detail-number');
+                                                          const typeElement = document.getElementById('question-detail-type');
+                                                          const contentElement = document.getElementById('question-detail-content');
+                                                          const answerElement = document.getElementById('question-detail-answer');
+                                                          const explanationElement = document.getElementById('question-detail-explanation');
+                                                          const explanationContainer = document.getElementById('question-detail-explanation-container');
+                                                          
+                                                          if (numberElement) numberElement.textContent = questionData.number;
+                                                          
+                                                          if (typeElement) {
+                                                            let typeText = "Questão";
+                                                            if (questionData.type.includes("alternativa") || questionData.type.includes("múltipla")) {
+                                                              typeText = "Múltipla Escolha";
+                                                            } else if (questionData.type.includes("discursiva")) {
+                                                              typeText = "Discursiva";
+                                                            } else if (questionData.type.includes("V/F") || questionData.type.includes("verdadeiro") || questionData.type.includes("falso")) {
+                                                              typeText = "Verdadeiro/Falso";
+                                                            } else {
+                                                              typeText = questionData.type;
+                                                            }
+                                                            typeElement.textContent = typeText;
+                                                          }
+                                                          
+                                                          if (contentElement) contentElement.innerHTML = questionData.statement.replace(/\n/g, '<br>');
+                                                          if (answerElement) answerElement.innerHTML = questionData.answer.replace(/\n/g, '<br>');
+                                                          
+                                                          // Mostrar ou ocultar explicação com base em se há conteúdo
+                                                          if (explanationElement && explanationContainer) {
+                                                            if (questionData.explanation && questionData.explanation.trim()) {
+                                                              explanationElement.innerHTML = questionData.explanation.replace(/\n/g, '<br>');
+                                                              explanationContainer.classList.remove('hidden');
+                                                            } else {
+                                                              explanationContainer.classList.add('hidden');
+                                                            }
+                                                          }
+                                                          
+                                                          // Resetar visibilidade do gabarito
+                                                          const gabaritoContainer = document.getElementById('question-detail-gabarito');
+                                                          if (gabaritoContainer) {
+                                                            gabaritoContainer.classList.add('hidden');
+                                                          }
+                                                          
+                                                          const showGabaritoBtn = document.getElementById('show-gabarito-btn');
+                                                          if (showGabaritoBtn) {
+                                                            showGabaritoBtn.textContent = "Ver Gabarito";
+                                                          }
+                                                          
+                                                          // Armazenar o índice da questão no botão de transformar em caderno
+                                                          const toNotebookBtn = document.getElementById('question-to-notebook-btn');
+                                                          if (toNotebookBtn) {
+                                                            toNotebookBtn.setAttribute('data-question-index', index);
+                                                          }
+                                                          
+                                                          // Mostrar o modal
+                                                          const detailModal = document.getElementById('question-detail-modal');
+                                                          if (detailModal) {
+                                                            detailModal.classList.remove('hidden');
+                                                          }
+                                                        }
+                                                      }
+                                                    });
+                                                  });
+                                                  
+                                                  // Configurar interações do modal de detalhes
+                                                  const detailModal = document.getElementById('question-detail-modal');
+                                                  const closeDetailBtn = document.getElementById('close-question-detail-modal');
+                                                  const backToQuestionsBtn = document.getElementById('back-to-questions');
+                                                  const showGabaritoBtn = document.getElementById('show-gabarito-btn');
+                                                  const toNotebookBtn = document.getElementById('question-to-notebook-btn');
+                                                  
+                                                  // Fechar modal ao clicar no X
+                                                  if (closeDetailBtn && detailModal) {
+                                                    closeDetailBtn.addEventListener('click', () => {
+                                                      detailModal.classList.add('hidden');
+                                                    });
+                                                  }
+                                                  
+                                                  // Voltar para a lista de questões
+                                                  if (backToQuestionsBtn && detailModal) {
+                                                    backToQuestionsBtn.addEventListener('click', () => {
+                                                      detailModal.classList.add('hidden');
+                                                    });
+                                                  }
+                                                  
+                                                  // Clicar fora do modal para fechar
+                                                  if (detailModal) {
+                                                    detailModal.addEventListener('click', (e) => {
+                                                      if (e.target === detailModal) {
+                                                        detailModal.classList.add('hidden');
+                                                      }
+                                                    });
+                                                  }
+                                                  
+                                                  // Mostrar/ocultar gabarito
+                                                  if (showGabaritoBtn) {
+                                                    showGabaritoBtn.addEventListener('click', () => {
+                                                      const gabaritoContainer = document.getElementById('question-detail-gabarito');
+                                                      if (gabaritoContainer) {
+                                                        if (gabaritoContainer.classList.contains('hidden')) {
+                                                          gabaritoContainer.classList.remove('hidden');
+                                                          showGabaritoBtn.textContent = "Ocultar Gabarito";
+                                                        } else {
+                                                          gabaritoContainer.classList.add('hidden');
+                                                          showGabaritoBtn.textContent = "Ver Gabarito";
+                                                        }
+                                                      }
+                                                    });
+                                                  }
+                                                  
+                                                  // Transformar questão em caderno
+                                                  if (toNotebookBtn) {
+                                                    toNotebookBtn.addEventListener('click', () => {
+                                                      const index = toNotebookBtn.getAttribute('data-question-index');
+                                                      if (index !== null) {
+                                                        const questionData = questionsArray[parseInt(index)];
+                                                        
+                                                        // Disparar evento para transformar em caderno
+                                                        const transformEvent = new CustomEvent('transform-to-notebook', {
+                                                          detail: {
+                                                            content: `Questão ${questionData.number}: ${questionData.statement}\n\nGabarito: ${questionData.answer}\n\nExplicação: ${questionData.explanation || 'Não disponível'}`
+                                                          }
+                                                        });
+                                                        
+                                                        document.dispatchEvent(transformEvent);
+                                                        
+                                                        // Fechar o modal de detalhes
+                                                        if (detailModal) {
+                                                          detailModal.classList.add('hidden');
+                                                        }
+                                                        
+                                                        // Fechar o modal principal de questões
+                                                        const questionsModal = document.getElementById('questions-result-modal');
+                                                        if (questionsModal) {
+                                                          questionsModal.remove();
+                                                        }
+                                                      }
+                                                    });
+                                                  }
+                                                  
+                                                  // Botões de ver gabarito (na visualização em lista)
                                                   const gabaritoButtons = document.querySelectorAll('.question-gabarito-btn');
                                                   gabaritoButtons.forEach(btn => {
-                                                    btn.addEventListener('click', () => {
+                                                    btn.addEventListener('click', (e) => {
+                                                      e.stopPropagation(); // Evita que o card seja clicado
                                                       const index = btn.getAttribute('data-index');
                                                       const gabarito = document.getElementById(`gabarito-${index}`);
                                                       
@@ -3215,7 +3435,8 @@ ${multipleChoice} alternativas, ${discursive} discursivas, ${trueFalse} V/F. ${b
                                                   // Botões para transformar questão individual em caderno
                                                   const cadernoButtons = document.querySelectorAll('.question-caderno-btn');
                                                   cadernoButtons.forEach(btn => {
-                                                    btn.addEventListener('click', () => {
+                                                    btn.addEventListener('click', (e) => {
+                                                      e.stopPropagation(); // Evita que o card seja clicado
                                                       const index = btn.getAttribute('data-index');
                                                       const question = questionsArray[index];
                                                       
@@ -3223,7 +3444,7 @@ ${multipleChoice} alternativas, ${discursive} discursivas, ${trueFalse} V/F. ${b
                                                         // Disparar evento para transformar em caderno
                                                         const transformEvent = new CustomEvent('transform-to-notebook', {
                                                           detail: {
-                                                            content: `Questão ${question.number}: ${question.statement}\n\nGabarito: ${question.answer}\n\nExplicação: ${question.explanation}`
+                                                            content: `Questão ${question.number}: ${question.statement}\n\nGabarito: ${question.answer}\n\nExplicação: ${question.explanation || 'Não disponível'}`
                                                           }
                                                         });
                                                         
