@@ -217,7 +217,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
           const isCorrectClass = option.isCorrect ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : '';
 
           return `
-            <div class="flex items-center space-x-2 cursor-pointer option-selection p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors" data-correct="${option.isCorrect}" data-letter="${letter}" onclick="window.selectOption(this)">
+            <div class="flex items-center space-x-2 cursor-pointer option-selection p-2 rounded-md hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:border hover:border-orange-300 dark:hover:border-orange-700 transition-colors" data-correct="${option.isCorrect}" data-letter="${letter}" onclick="window.selectOption(this)">
               <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 option-letter-container">
                 <span class="text-xs font-medium">${letter}</span>
               </div>
@@ -343,17 +343,16 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
               const options = document.querySelectorAll('.option-selection');
               if (options.length > 0) {
                 options.forEach(opt => {
-                  // Remover qualquer listener anterior para evitar duplicação
-                  opt.removeEventListener('click', function() {
-                    window.selectOption(this);
-                  });
-
-                  // Adicionar o evento de clique
-                  opt.style.cursor = 'pointer';
-                  opt.addEventListener('click', function() {
+                  // Remover eventos antigos (se existirem)
+                  const newOpt = opt.cloneNode(true);
+                  opt.parentNode.replaceChild(newOpt, opt);
+                  
+                  // Adicionar o evento de clique diretamente no elemento
+                  newOpt.style.cursor = 'pointer';
+                  newOpt.onclick = function() {
                     console.log("Alternativa clicada", this);
                     window.selectOption(this);
-                  });
+                  };
                 });
                 console.log("Event listeners aplicados a", options.length, "alternativas");
               } else {
@@ -363,8 +362,9 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
               // Adicionar listener para o botão de verificar resposta
               const checkAnswerBtn = document.getElementById('check-answer-btn');
               if (checkAnswerBtn) {
-                checkAnswerBtn.removeEventListener('click', window.checkSelectedAnswer);
-                checkAnswerBtn.addEventListener('click', window.checkSelectedAnswer);
+                const newBtn = checkAnswerBtn.cloneNode(true);
+                checkAnswerBtn.parentNode.replaceChild(newBtn, checkAnswerBtn);
+                newBtn.onclick = window.checkSelectedAnswer;
                 console.log("Event listener aplicado ao botão de verificar resposta");
               }
             }
@@ -381,6 +381,8 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
 
             // Aplicar novamente após um tempo maior para garantir
             setTimeout(applyEventListeners, 500);
+            // Aplicar mais uma vez depois de 1 segundo para ter certeza
+            setTimeout(applyEventListeners, 1000);
           </script>
         `;
       } else {
