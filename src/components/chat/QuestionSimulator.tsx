@@ -217,7 +217,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
           const isCorrectClass = option.isCorrect ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : '';
 
           return `
-            <div class="flex items-center space-x-2 cursor-pointer option-selection" data-correct="${option.isCorrect}" data-letter="${letter}">
+            <div class="flex items-center space-x-2 cursor-pointer option-selection p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors" data-correct="${option.isCorrect}" data-letter="${letter}" onclick="window.selectOption(this)">
               <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 option-letter-container">
                 <span class="text-xs font-medium">${letter}</span>
               </div>
@@ -246,8 +246,11 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
               // Remover destaque de todas as opções
               document.querySelectorAll('.option-selection').forEach(opt => {
                 opt.classList.remove('bg-orange-50', 'dark:bg-orange-900/20', 'border', 'border-orange-300', 'dark:border-orange-700');
-                opt.querySelector('.option-letter-container')?.classList.remove('bg-orange-500', 'text-white');
-                opt.querySelector('.option-letter-container')?.classList.add('bg-white', 'dark:bg-gray-800');
+                const letterContainerInOpt = opt.querySelector('.option-letter-container');
+                if (letterContainerInOpt) {
+                  letterContainerInOpt.classList.remove('bg-orange-500', 'text-white');
+                  letterContainerInOpt.classList.add('bg-white', 'dark:bg-gray-800');
+                }
                 opt.style.fontWeight = 'normal';
               });
 
@@ -331,21 +334,52 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
               }
             };
 
-            // Adicionar event listeners após criação do DOM
-            setTimeout(() => {
+            // Função para aplicar os event listeners necessários
+            function applyEventListeners() {
+              console.log("Aplicando event listeners às alternativas");
+              
               // Adicionar listeners para todas as opções
-              document.querySelectorAll('.option-selection').forEach(opt => {
-                opt.addEventListener('click', function() {
-                  window.selectOption(this);
+              const options = document.querySelectorAll('.option-selection');
+              if (options.length > 0) {
+                options.forEach(opt => {
+                  // Remover qualquer listener anterior para evitar duplicação
+                  opt.removeEventListener('click', function() {
+                    window.selectOption(this);
+                  });
+                  
+                  // Adicionar o evento de clique
+                  opt.style.cursor = 'pointer';
+                  opt.addEventListener('click', function() {
+                    console.log("Alternativa clicada", this);
+                    window.selectOption(this);
+                  });
                 });
-              });
+                console.log("Event listeners aplicados a", options.length, "alternativas");
+              } else {
+                console.log("Nenhuma alternativa encontrada para aplicar event listeners");
+              }
 
               // Adicionar listener para o botão de verificar resposta
               const checkAnswerBtn = document.getElementById('check-answer-btn');
               if (checkAnswerBtn) {
+                checkAnswerBtn.removeEventListener('click', window.checkSelectedAnswer);
                 checkAnswerBtn.addEventListener('click', window.checkSelectedAnswer);
+                console.log("Event listener aplicado ao botão de verificar resposta");
               }
-            }, 100);
+            }
+
+            // Aplicar os event listeners após criação do DOM
+            setTimeout(applyEventListeners, 100);
+            
+            // Se o DOM já estiver carregado, aplicar imediatamente
+            if (document.readyState === 'complete' || document.readyState === 'interactive') {
+              applyEventListeners();
+            } else {
+              document.addEventListener('DOMContentLoaded', applyEventListeners);
+            }
+            
+            // Aplicar novamente após um tempo maior para garantir
+            setTimeout(applyEventListeners, 500);
           </script>
         `;
       } else {
@@ -355,25 +389,25 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
 
         questionOptions = `
           <div class="mt-4 space-y-3">
-            <div class="flex items-center space-x-2 cursor-pointer option-selection" data-correct="false" data-letter="A">
+            <div class="flex items-center space-x-2 cursor-pointer option-selection p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors" data-correct="false" data-letter="A" onclick="window.selectOption(this)">
               <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 option-letter-container">
                 <span class="text-xs font-medium">A</span>
               </div>
               <span class="text-sm text-gray-700 dark:text-gray-300">É um ${terms[0 % terms.length]} fundamental para compreensão do tema.</span>
             </div>
-            <div class="flex items-center space-x-2 cursor-pointer option-selection" data-correct="true" data-letter="B">
+            <div class="flex items-center space-x-2 cursor-pointer option-selection p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors" data-correct="true" data-letter="B" onclick="window.selectOption(this)">
               <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 option-letter-container">
                 <span class="text-xs font-medium">B</span>
               </div>
               <span class="text-sm text-gray-700 dark:text-gray-300">Representa uma abordagem inovadora sobre o ${terms[1 % terms.length]}.</span>
             </div>
-            <div class="flex items-center space-x-2 cursor-pointer option-selection" data-correct="false" data-letter="C">
+            <div class="flex items-center space-x-2 cursor-pointer option-selection p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors" data-correct="false" data-letter="C" onclick="window.selectOption(this)">
               <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 option-letter-container">
                 <span class="text-xs font-medium">C</span>
               </div>
               <span class="text-sm text-gray-700 dark:text-gray-300">Demonstra a aplicação prática do ${terms[2 % terms.length]} em contextos reais.</span>
             </div>
-            <div class="flex items-center space-x-2 cursor-pointer option-selection" data-correct="false" data-letter="D">
+            <div class="flex items-center space-x-2 cursor-pointer option-selection p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors" data-correct="false" data-letter="D" onclick="window.selectOption(this)">
               <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 option-letter-container">
                 <span class="text-xs font-medium">D</span>
               </div>
@@ -531,13 +565,13 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
 
       questionOptions = `
         <div class="mt-4 space-y-3">
-          <div class="flex items-center space-x-4 cursor-pointer option-selection" data-correct="false" data-option="verdadeiro">
-            <button class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+          <div class="flex items-center space-x-4 cursor-pointer option-selection" data-correct="false" data-option="verdadeiro" onclick="window.selectOption(this)">
+            <button class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors" onclick="event.preventDefault(); window.selectOption(this.parentNode);">
               Verdadeiro
             </button>
           </div>
-          <div class="flex items-center space-x-4 cursor-pointer option-selection" data-correct="true" data-option="falso">
-            <button class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+          <div class="flex items-center space-x-4 cursor-pointer option-selection" data-correct="true" data-option="falso" onclick="window.selectOption(this)">
+            <button class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors" onclick="event.preventDefault(); window.selectOption(this.parentNode);">
               Falso
             </button>
           </div>
