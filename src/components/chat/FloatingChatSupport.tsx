@@ -2798,7 +2798,6 @@ Exemplo de formato da resposta:
                                                   Quantidade total de questões
                                                 </label>
                                                 <input 
-                                                  id="total-questions"
                                                   type="number" 
                                                   min="1" 
                                                   max="50" 
@@ -2815,7 +2814,6 @@ Exemplo de formato da resposta:
                                                   <div class="flex items-center justify-between">
                                                     <span class="text-sm text-gray-700 dark:text-gray-300">Múltipla escolha</span>
                                                     <input 
-                                                      id="multiple-choice"
                                                       type="number" 
                                                       min="0" 
                                                       value="6"
@@ -2825,7 +2823,6 @@ Exemplo de formato da resposta:
                                                   <div class="flex items-center justify-between">
                                                     <span class="text-sm text-gray-700 dark:text-gray-300">Discursivas</span>
                                                     <input 
-                                                      id="discursive"
                                                       type="number" 
                                                       min="0" 
                                                       value="2"
@@ -2835,7 +2832,6 @@ Exemplo de formato da resposta:
                                                   <div class="flex items-center justify-between">
                                                     <span class="text-sm text-gray-700 dark:text-gray-300">Verdadeiro ou Falso</span>
                                                     <input 
-                                                      id="true-false"
                                                       type="number" 
                                                       min="0" 
                                                       value="2"
@@ -2849,23 +2845,21 @@ Exemplo de formato da resposta:
                                                 <label class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                                                   Competências BNCC (opcional)
                                                 </label>
-                                                <select 
-                                                  id="bncc-competence"
-                                                  class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-white"
-                                                >
+                                                <select class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-white">
                                                   <option>Selecione uma competência</option>
-                                                  <option value="EM13LGG101">EM13LGG101</option>
-                                                  <option value="EM13MAT101">EM13MAT101</option>
-                                                  <option value="EM13CNT101">EM13CNT101</option>
-                                                  <option value="EM13CHS101">EM13CHS101</option>
-                                                  <option value="EM13LP01">EM13LP01</option>
+                                                  <option>Competência 1 - Conhecimento</option>
+                                                  <option>Competência 2 - Pensamento científico</option>
+                                                  <option>Competência 3 - Repertório cultural</option>
+                                                  <option>Competência 4 - Comunicação</option>
+                                                  <option>Competência 5 - Cultura digital</option>
                                                 </select>
                                               </div>
                                             </div>
                                             
                                             <button 
                                               id="generate-questions-button"
-                                              class="w-full py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
+                                              class="w-full py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors opacity-50 cursor-not-allowed"
+                                              disabled
                                             >
                                               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                 <circle cx="12" cy="12" r="10"></circle>
@@ -2874,6 +2868,10 @@ Exemplo de formato da resposta:
                                               </svg>
                                               Gerar Questões
                                             </button>
+                                            
+                                            <p class="text-xs text-center text-gray-500 dark:text-gray-400 mt-3 italic">
+                                              Funcionalidade em desenvolvimento
+                                            </p>
                                           </div>
                                         </div>
                                       `;
@@ -2917,21 +2915,25 @@ Exemplo de formato da resposta:
 
                                         // Event listener para gerar questões
                                         if (generateQuestionsButton) {
+                                          // Habilitar o botão
+                                          generateQuestionsButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                                          generateQuestionsButton.removeAttribute('disabled');
+                                          
                                           generateQuestionsButton.addEventListener('click', async () => {
                                             closeQuestionsModal();
                                             
                                             // Obter valores dos inputs
-                                            const totalQuestionsInput = document.getElementById('total-questions') as HTMLInputElement;
-                                            const multiplesChoiceInput = document.getElementById('multiple-choice') as HTMLInputElement;
-                                            const discursiveInput = document.getElementById('discursive') as HTMLInputElement;
-                                            const trueFalseInput = document.getElementById('true-false') as HTMLInputElement;
-                                            const bnccSelect = document.getElementById('bncc-competence') as HTMLSelectElement;
+                                            const totalQuestionsInput = document.querySelector('#see-questions-modal input[type="number"]') as HTMLInputElement;
+                                            const multiplesChoiceInput = document.querySelectorAll('#see-questions-modal .bg-gray-50 input[type="number"]')[0] as HTMLInputElement;
+                                            const discursiveInput = document.querySelectorAll('#see-questions-modal .bg-gray-50 input[type="number"]')[1] as HTMLInputElement;
+                                            const trueFalseInput = document.querySelectorAll('#see-questions-modal .bg-gray-50 input[type="number"]')[2] as HTMLInputElement;
+                                            const bnccSelect = document.querySelector('#see-questions-modal select') as HTMLSelectElement;
                                             
                                             const totalQuestions = totalQuestionsInput?.value || "10";
                                             const multipleChoice = multiplesChoiceInput?.value || "6";
                                             const discursive = discursiveInput?.value || "2";
                                             const trueFalse = trueFalseInput?.value || "2";
-                                            const bnccCompetence = bnccSelect?.value !== "Selecione uma competência" ? bnccSelect?.value : "";
+                                            const bnccCompetence = bnccSelect?.value || "";
                                             
                                             // Mostrar indicação de carregamento
                                             setIsLoading(true);
@@ -2951,632 +2953,238 @@ Exemplo de formato da resposta:
                                                 throw new Error("Nenhuma mensagem encontrada para basear as questões");
                                               }
                                               
-                                              // Mostrar modal de carregamento
-                                              const loadingModalHTML = `
-                                                <div id="questions-loading-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
-                                                  <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 p-5 shadow-xl w-[90%] max-w-sm animate-fadeIn flex flex-col items-center">
-                                                    <div class="w-16 h-16 mb-4">
-                                                      <div class="w-full h-full rounded-full border-4 border-orange-100 dark:border-orange-900/30 border-t-orange-500 animate-spin"></div>
+                                              // Criar prompt para gerar questões
+                                              const prompt = `Gere ${totalQuestions} questões sobre o conteúdo anterior. Sendo:
+${multipleChoice} alternativas, ${discursive} discursivas, ${trueFalse} V/F. ${bnccCompetence !== "Selecione uma competência" ? `Se possível, alinhe com a competência BNCC selecionada: ${bnccCompetence}.` : ""} Para cada questão, gere: enunciado, tipo, gabarito (se aplicável), explicação.
+
+Conteúdo de referência:
+"${lastAIMessage.content}"
+
+Formato da resposta: JSON com um array de objetos, cada um representando uma questão com os campos: numero, tipo, texto, gabarito, explicacao.`;
+                                              
+                                              // Chamar a IA para gerar as questões
+                                              const response = await generateAIResponse(
+                                                prompt,
+                                                sessionId || 'default_session',
+                                                {
+                                                  intelligenceLevel: 'advanced',
+                                                  languageStyle: 'formal'
+                                                }
+                                              );
+                                              
+                                              // Adicionar a resposta ao chat como uma mensagem da IA
+                                              // Primeiro, extrair apenas o JSON (se existir)
+                                              let jsonText = response;
+                                              let questions = [];
+                                              
+                                              try {
+                                                // Tentar encontrar JSON no texto
+                                                if (response.includes('[') && response.includes(']')) {
+                                                  const startIdx = response.indexOf('[');
+                                                  const endIdx = response.lastIndexOf(']') + 1;
+                                                  jsonText = response.substring(startIdx, endIdx);
+                                                  questions = JSON.parse(jsonText);
+                                                } else {
+                                                  // Se não encontrar, tentar usar toda a resposta
+                                                  questions = JSON.parse(response);
+                                                }
+                                              } catch (error) {
+                                                console.error('Erro ao analisar JSON das questões:', error);
+                                                questions = [];
+                                              }
+                                              
+                                              // Criar conteúdo HTML para as questões
+                                              let questionsHTML = `<div class="space-y-6">
+                                                <h2 class="text-xl font-bold mb-4">Questões Geradas</h2>`;
+                                              
+                                              if (questions.length > 0) {
+                                                questions.forEach((q, index) => {
+                                                  questionsHTML += `
+                                                  <div class="bg-white dark:bg-gray-800 border border-orange-200 dark:border-orange-700 rounded-lg overflow-hidden shadow-md">
+                                                    <div class="bg-orange-500 text-white p-2 flex justify-between items-center">
+                                                      <span class="font-bold">Questão ${q.numero || index + 1}</span>
+                                                      <span class="text-xs px-2 py-1 bg-white/20 rounded-full">${q.tipo || 'Múltipla escolha'}</span>
                                                     </div>
-                                                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">Gerando questões</h3>
-                                                    <p class="text-sm text-gray-600 dark:text-gray-400 text-center">
-                                                      Aguarde enquanto criamos questões personalizadas com base no conteúdo estudado...
-                                                    </p>
+                                                    <div class="p-4">
+                                                      <p class="mb-4">${q.texto || 'Texto da questão'}</p>
+                                                      <div class="flex gap-2 mt-3">
+                                                        <button class="show-answer-btn bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-3 py-1.5 rounded text-sm font-medium" 
+                                                                data-gabarito="${q.gabarito || ''}" 
+                                                                data-explicacao="${q.explicacao || ''}">
+                                                          Ver Gabarito
+                                                        </button>
+                                                        <button class="to-notebook-btn bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-3 py-1.5 rounded text-sm font-medium"
+                                                                data-content="${encodeURIComponent(q.texto || '')}">
+                                                          Transformar em Caderno
+                                                        </button>
+                                                      </div>
+                                                      <div class="answer-container mt-3 hidden"></div>
+                                                    </div>
+                                                  </div>`;
+                                                });
+                                              } else {
+                                                questionsHTML += `<p class="text-center py-6 text-gray-500 dark:text-gray-400">Não foi possível gerar questões. Por favor, tente novamente.</p>`;
+                                              }
+                                              
+                                              questionsHTML += `</div>`;
+                                              
+                                              // Criar o modal para mostrar as questões
+                                              const questionsModalHTML = `
+                                                <div id="questions-display-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+                                                  <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 p-5 shadow-xl w-[90%] max-w-2xl max-h-[80vh] overflow-y-auto animate-fadeIn">
+                                                    <div class="flex justify-between items-center mb-4">
+                                                      <h3 class="text-lg font-semibold flex items-center gap-2 text-gray-800 dark:text-gray-200">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500">
+                                                          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                                          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                                                        </svg>
+                                                        Possíveis Questões de Prova
+                                                      </h3>
+                                                      <button 
+                                                        id="close-questions-display-modal"
+                                                        class="h-7 w-7 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                                      >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                          <path d="M18 6 6 18"></path>
+                                                          <path d="m6 6 12 12"></path>
+                                                        </svg>
+                                                      </button>
+                                                    </div>
+                                                    
+                                                    <div class="questions-container">
+                                                      ${questionsHTML}
+                                                    </div>
                                                   </div>
                                                 </div>
                                               `;
                                               
-                                              // Adicionar modal de carregamento ao DOM
-                                              document.body.insertAdjacentHTML('beforeend', loadingModalHTML);
+                                              // Adicionar mensagem no chat mostrando que as questões foram geradas
+                                              setMessages(prev => [
+                                                ...prev,
+                                                {
+                                                  id: Date.now(),
+                                                  content: "📝 **Questões de prova geradas com sucesso!**\n\nForam criadas questões baseadas no nosso diálogo anterior para ajudar no seu estudo e preparação para avaliações. Você pode visualizar o gabarito de cada questão e também transformá-las em formato de caderno para estudo.",
+                                                  sender: "assistant",
+                                                  timestamp: new Date()
+                                                }
+                                              ]);
                                               
-                                              // Criar prompt específico para geração de questões
-                                              const promptText = `Com base na última resposta da IA sobre "${lastAIMessage?.content.substring(0, 100)}...", gere ${totalQuestions} questões diretamente relacionadas ao conteúdo explicado na resposta. Sendo:
-${multipleChoice} questões de múltipla escolha, ${discursive} questões discursivas, ${trueFalse} questões de verdadeiro ou falso. ${bnccCompetence ? `Se possível, alinhe com a competência BNCC selecionada: ${bnccCompetence}.` : ""}
-
-IMPORTANTE: 
-1. Cada questão DEVE abordar especificamente os conceitos, temas e exemplos mencionados na resposta da IA
-2. Para cada questão, forneça:
-   - Um título curto e descritivo sobre o tema principal da questão
-   - O tipo de questão (múltipla escolha, discursiva ou verdadeiro/falso)
-   - Enunciado completo
-   - Alternativas (para múltipla escolha) ou afirmações (para V/F)
-   - Gabarito com a resposta correta
-   - Uma explicação detalhada da resposta
-
-REGRAS OBRIGATÓRIAS:
-- NÃO INCLUA SAUDAÇÕES AO USUÁRIO (como "Olá", "Oi", "Bom dia", etc)
-- NÃO INCLUA NENHUM TIPO DE LINK em nenhuma questão
-- NÃO FAÇA REFERÊNCIAS A NENHUMA PLATAFORMA ou recurso externo
-- NÃO INCLUA LEMBRETES DA PLATAFORMA - APENAS AS QUESTÕES
-- NÃO FAÇA REFERÊNCIA A NENHUMA SEÇÃO OU PÁGINA DA PLATAFORMA
-- APRESENTE APENAS AS QUESTÕES sem textos introdutórios ou conclusivos
-- NÃO USE EMOJIS ou elementos decorativos
-
-Use exatamente os termos e conceitos explicados na resposta da IA. Não invente tópicos não abordados.`;
+                                              // Adicionar o modal ao DOM
+                                              document.body.insertAdjacentHTML('beforeend', questionsModalHTML);
                                               
-                                              try {
-                                                // Chamar a IA para gerar as questões
-                                                const response = await generateAIResponse(
-                                                  promptText,
-                                                  sessionId || 'default_session',
-                                                  {
-                                                    intelligenceLevel: 'advanced',
-                                                    languageStyle: 'formal'
-                                                  }
-                                                );
+                                              // Adicionar event listeners para o modal
+                                              setTimeout(() => {
+                                                const modal = document.getElementById('questions-display-modal');
+                                                const closeButton = document.getElementById('close-questions-display-modal');
+                                                const showAnswerButtons = document.querySelectorAll('.show-answer-btn');
+                                                const toNotebookButtons = document.querySelectorAll('.to-notebook-btn');
                                                 
-                                                // Remover modal de carregamento
-                                                const loadingModal = document.getElementById('questions-loading-modal');
-                                                if (loadingModal) {
-                                                  loadingModal.remove();
+                                                // Fechar modal
+                                                if (closeButton) {
+                                                  closeButton.addEventListener('click', () => {
+                                                    if (modal) {
+                                                      modal.classList.add('animate-fadeOut');
+                                                      setTimeout(() => modal.remove(), 200);
+                                                    }
+                                                  });
                                                 }
                                                 
-                                                // Processar as questões para o formato de exibição
-                                                const processQuestions = (text) => {
-                                                  // Dividir o texto em questões individuais
-                                                  let questions = [];
-                                                  
-                                                  // Padrão para identificar questões numeradas 
-                                                  const questionRegex = /(?:^|\n)(?:Questão\s*)?(\d+)[\.:\)]\s*(.*?)(?=(?:\n(?:Questão\s*)?(?:\d+)[\.:\)])|$)/gs;
-                                                  
-                                                  let match;
-                                                  while ((match = questionRegex.exec(text)) !== null) {
-                                                    const fullContent = match[2].trim();
-                                                    
-                                                    // Tentar identificar tipo, enunciado, gabarito e explicação
-                                                    const typeMatch = fullContent.match(/^(?:Tipo|Tipo de questão):\s*(.*?)(?:\n|$)/i);
-                                                    const type = typeMatch ? typeMatch[1].trim() : "Não especificado";
-                                                    
-                                                    const questionContent = fullContent.replace(/^(?:Tipo|Tipo de questão):\s*(.*?)(?:\n|$)/i, '').trim();
-                                                    
-                                                    // Separar gabarito e explicação
-                                                    const answerMatch = questionContent.match(/(?:Gabarito|Resposta):\s*(.*?)(?:\n|$)/i);
-                                                    const answer = answerMatch ? answerMatch[1].trim() : "";
-                                                    
-                                                    const explanationMatch = questionContent.match(/(?:Explicação|Justificativa):\s*([\s\S]*?)$/i);
-                                                    const explanation = explanationMatch ? explanationMatch[1].trim() : "";
-                                                    
-                                                    // O enunciado é o que resta após remover tipo, gabarito e explicação
-                                                    let statement = questionContent
-                                                      .replace(/(?:Gabarito|Resposta):\s*(.*?)(?:\n|$)/i, '')
-                                                      .replace(/(?:Explicação|Justificativa):\s*([\s\S]*?)$/i, '')
-                                                      .trim();
-                                                    
-                                                    // Adicionar à lista de questões
-                                                    questions.push({
-                                                      number: match[1],
-                                                      type,
-                                                      statement,
-                                                      answer,
-                                                      explanation
-                                                    });
-                                                  }
-                                                  
-                                                  // Se não encontrou nenhuma questão com o regex, considerar o texto completo
-                                                  if (questions.length === 0) {
-                                                    questions.push({
-                                                      number: "1",
-                                                      type: "Não especificado",
-                                                      statement: text,
-                                                      answer: "",
-                                                      explanation: ""
-                                                    });
-                                                  }
-                                                  
-                                                  return questions;
-                                                };
+                                                // Clicar fora para fechar
+                                                if (modal) {
+                                                  modal.addEventListener('click', (e) => {
+                                                    if (e.target === modal) {
+                                                      modal.classList.add('animate-fadeOut');
+                                                      setTimeout(() => modal.remove(), 200);
+                                                    }
+                                                  });
+                                                }
                                                 
-                                                const questionsArray = processQuestions(response);
-                                                
-                                                // Criar HTML para o modal de questões
-                                                const questionsModalHTML = `
-                                                  <div id="questions-result-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
-                                                    <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 shadow-xl w-[95%] max-w-4xl h-[90vh] animate-fadeIn flex flex-col">
-                                                      <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center sticky top-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg z-10">
-                                                        <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                                                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500">
-                                                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                                                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-                                                          </svg>
-                                                          Questões Geradas (${questionsArray.length})
-                                                        </h3>
-                                                        <button 
-                                                          id="close-questions-result-modal"
-                                                          class="h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                                                        >
-                                                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                            <path d="M18 6 6 18"></path>
-                                                            <path d="m6 6 12 12"></path>
-                                                          </svg>
-                                                        </button>
-                                                      </div>
+                                                // Mostrar gabarito
+                                                showAnswerButtons.forEach(btn => {
+                                                  btn.addEventListener('click', (e) => {
+                                                    const button = e.currentTarget as HTMLButtonElement;
+                                                    const container = button.closest('div')?.nextElementSibling as HTMLElement;
+                                                    
+                                                    if (container) {
+                                                      const gabarito = button.getAttribute('data-gabarito') || 'Não disponível';
+                                                      const explicacao = button.getAttribute('data-explicacao') || 'Explicação não disponível';
                                                       
-                                                      <div class="overflow-y-auto flex-1 p-4">
-                                                        <div class="space-y-4">
-                                                          ${questionsArray.map((q, index) => {
-                                                            // Determinar o tipo de questão e a classe de cor associada
-                                                            let questionType = "";
-                                                            let tagColorClass = "";
-                                                            
-                                                            if (q.type.includes("alternativa") || q.type.includes("múltipla") || q.type.includes("escolha")) {
-                                                              questionType = "MÚLTIPLA ESCOLHA";
-                                                              tagColorClass = "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300";
-                                                            } else if (q.type.includes("discursiva")) {
-                                                              questionType = "DISCURSIVA";
-                                                              tagColorClass = "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300";
-                                                            } else if (q.type.includes("V/F") || q.type.includes("verdadeiro") || q.type.includes("falso")) {
-                                                              questionType = "VERDADEIRO OU FALSO";
-                                                              tagColorClass = "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300";
-                                                            } else {
-                                                              questionType = q.type.toUpperCase();
-                                                              tagColorClass = "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200";
-                                                            }
-                                                            
-                                                            // Extrair um título da questão (primeiras 5-7 palavras do enunciado)
-                                                            const words = q.statement.split(' ');
-                                                            const titleLength = Math.min(7, Math.max(5, Math.floor(words.length / 3)));
-                                                            const questionTitle = words.slice(0, titleLength).join(' ') + (words.length > titleLength ? '...' : '');
-                                                            
-                                                            return `
-                                                            <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 shadow-md overflow-hidden cursor-pointer hover:border-orange-400 dark:hover:border-orange-500 transition-all duration-200 transform hover:scale-[1.02]" id="question-card-${index}">
-                                                              <div class="p-4" data-question-index="${index}">
-                                                                <div class="flex items-center gap-2 mb-1">
-                                                                  <div class="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white font-semibold text-sm">
-                                                                    ${q.number}
-                                                                  </div>
-                                                                  <span class="text-xs font-medium px-2 py-1 rounded-full ${tagColorClass}">
-                                                                    ${questionType}
-                                                                  </span>
-                                                                </div>
-                                                                
-                                                                <h4 class="font-semibold text-gray-900 dark:text-gray-100 text-sm mb-2 mt-2 border-b pb-1 border-gray-200 dark:border-gray-700">
-                                                                  ${questionTitle}
-                                                                </h4>
-                                                                
-                                                                <div class="text-sm text-gray-800 dark:text-gray-200 mb-4 question-text">
-                                                                  ${q.statement.replace(/\n/g, '<br>')}
-                                                                </div>
-                                                                
-                                                                <div class="hidden bg-green-50 dark:bg-green-900/10 p-3 rounded-lg border border-green-100 dark:border-green-900/30 mt-3 question-gabarito" id="gabarito-${index}">
-                                                                  <div class="text-xs font-semibold text-green-800 dark:text-green-300 mb-1">Gabarito:</div>
-                                                                  <div class="text-sm text-gray-800 dark:text-gray-200">
-                                                                    ${q.answer.replace(/\n/g, '<br>')}
-                                                                  </div>
-                                                                  ${q.explanation ? `
-                                                                    <div class="mt-2 pt-2 border-t border-green-200 dark:border-green-800">
-                                                                      <div class="text-xs font-semibold text-green-800 dark:text-green-300 mb-1">Explicação:</div>
-                                                                      <div class="text-sm text-gray-800 dark:text-gray-200">
-                                                                        ${q.explanation.replace(/\n/g, '<br>')}
-                                                                      </div>
-                                                                    </div>
-                                                                  ` : ''}
-                                                                </div>
-                                                                
-                                                                <div class="flex justify-between items-center mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                                                                  <button class="w-[48%] px-3 py-2 rounded bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-orange-900/30 transition-colors question-gabarito-btn font-medium text-sm" data-index="${index}">
-                                                                    Ver Gabarito
-                                                                  </button>
-                                                                  <button class="w-[48%] px-3 py-2 rounded bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/30 transition-colors question-caderno-btn font-medium text-sm" data-index="${index}">
-                                                                    Transformar em Caderno
-                                                                  </button>
-                                                                </div>
-                                                              </div>
-                                                            </div>
-                                                            `;
-                                                          }).join('')}
-                                                        </div>
-                                                        
-                                                        <!-- Modal para visualizar questão individual -->
-                                                        <div id="question-detail-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000] hidden">
-                                                          <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 shadow-xl w-[95%] max-w-2xl max-h-[80vh] animate-fadeIn flex flex-col">
-                                                            <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center sticky top-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg z-10">
-                                                              <div class="flex items-center gap-2">
-                                                                <button id="back-to-questions" class="h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                                                                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                                    <path d="m15 18-6-6 6-6"></path>
-                                                                  </svg>
-                                                                </button>
-                                                                <div>
-                                                                  <div class="flex items-center gap-2 mb-1">
-                                                                    <span id="question-detail-number" class="w-7 h-7 rounded-full bg-orange-500 flex items-center justify-center text-white font-semibold text-sm">1</span>
-                                                                    <span id="question-detail-type" class="text-xs font-medium px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
-                                                                      MÚLTIPLA ESCOLHA
-                                                                    </span>
-                                                                  </div>
-                                                                  <h3 id="question-detail-title" class="text-sm font-semibold text-gray-800 dark:text-gray-200">Título da Questão</h3>
-                                                                </div>
-                                                              </div>
-                                                              <button 
-                                                                id="close-question-detail-modal"
-                                                                class="h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                                                              >
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                                  <path d="M18 6 6 18"></path>
-                                                                  <path d="m6 6 12 12"></path>
-                                                                </svg>
-                                                              </button>
-                                                            </div>
-                                                            
-                                                            <div class="overflow-y-auto flex-1 p-6">
-                                                              <div id="question-detail-content" class="text-base text-gray-800 dark:text-gray-200 mb-6">
-                                                                <!-- Conteúdo da questão será inserido aqui -->
-                                                              </div>
-                                                              
-                                                              <div id="question-detail-gabarito" class="bg-green-50 dark:bg-green-900/10 p-4 rounded-lg border border-green-100 dark:border-green-900/30 mt-4 hidden">
-                                                                <div class="text-sm font-semibold text-green-800 dark:text-green-300 mb-2">Gabarito:</div>
-                                                                <div id="question-detail-answer" class="text-base text-gray-800 dark:text-gray-200">
-                                                                  <!-- Gabarito será inserido aqui -->
-                                                                </div>
-                                                                <div id="question-detail-explanation-container" class="mt-3 pt-3 border-t border-green-200 dark:border-green-800 hidden">
-                                                                  <div class="text-sm font-semibold text-green-800 dark:text-green-300 mb-2">Explicação:</div>
-                                                                  <div id="question-detail-explanation" class="text-base text-gray-800 dark:text-gray-200">
-                                                                    <!-- Explicação será inserida aqui -->
-                                                                  </div>
-                                                                </div>
-                                                              </div>
-                                                            </div>
-                                                            
-                                                            <div class="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                                                              <button 
-                                                                id="show-gabarito-btn"
-                                                                class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"
-                                                              >
-                                                                Ver Gabarito
-                                                              </button>
-                                                              <button 
-                                                                id="question-to-notebook-btn"
-                                                                class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
-                                                              >
-                                                                Transformar em Caderno
-                                                              </button>
-                                                            </div>
+                                                      if (container.classList.contains('hidden')) {
+                                                        container.innerHTML = `
+                                                          <div class="mt-4 bg-orange-50 dark:bg-orange-900/20 p-3 rounded-md border border-orange-200 dark:border-orange-800">
+                                                            <div class="font-semibold mb-1">Gabarito:</div>
+                                                            <div class="text-sm mb-3">${gabarito}</div>
+                                                            <div class="font-semibold mb-1">Explicação:</div>
+                                                            <div class="text-sm">${explicacao}</div>
                                                           </div>
-                                                        </div>
-                                                      </div>
-                                                      
-                                                      <div class="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                                                        <button 
-                                                          id="add-to-chat-btn"
-                                                          class="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg transition-colors"
-                                                        >
-                                                          Adicionar ao Chat
-                                                        </button>
-                                                        <button 
-                                                          id="transform-all-btn"
-                                                          class="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg transition-colors"
-                                                        >
-                                                          Transformar em Caderno
-                                                        </button>
-                                                      </div>
-                                                    </div>
-                                                  </div>
-                                                `;
-                                                
-                                                // Adicionar modal de questões ao DOM
-                                                document.body.insertAdjacentHTML('beforeend', questionsModalHTML);
-                                                
-                                                // Adicionar comportamento aos botões
-                                                setTimeout(() => {
-                                                  // Botão de fechar
-                                                  const closeButton = document.getElementById('close-questions-result-modal');
-                                                  if (closeButton) {
-                                                    closeButton.addEventListener('click', () => {
-                                                      const modal = document.getElementById('questions-result-modal');
-                                                      if (modal) {
-                                                        modal.remove();
+                                                        `;
+                                                        container.classList.remove('hidden');
+                                                        button.textContent = 'Ocultar Gabarito';
+                                                      } else {
+                                                        container.classList.add('hidden');
+                                                        container.innerHTML = '';
+                                                        button.textContent = 'Ver Gabarito';
                                                       }
-                                                    });
-                                                  }
-                                                  
-                                                  // Clicar fora para fechar
-                                                  const modal = document.getElementById('questions-result-modal');
-                                                  if (modal) {
-                                                    modal.addEventListener('click', (e) => {
-                                                      if (e.target === modal) {
-                                                        modal.remove();
-                                                      }
-                                                    });
-                                                  }
-                                                  
-                                                  // Adicionar evento de clique aos cards de questões
-                                                  const questionCards = document.querySelectorAll('[id^="question-card-"]');
-                                                  questionCards.forEach(card => {
-                                                    card.addEventListener('click', (e) => {
-                                                      // Evitar que o clique em botões específicos abra o modal
-                                                      if (e.target.closest('.question-gabarito-btn') || e.target.closest('.question-caderno-btn')) {
-                                                        return;
-                                                      }
-                                                      
-                                                      const questionDiv = card.querySelector('[data-question-index]');
-                                                      if (questionDiv) {
-                                                        const index = questionDiv.getAttribute('data-question-index');
-                                                        if (index !== null) {
-                                                          const questionData = questionsArray[parseInt(index)];
-                                                          
-                                                          // Preencher dados no modal de detalhe da questão
-                                                          const numberElement = document.getElementById('question-detail-number');
-                                                          const typeElement = document.getElementById('question-detail-type');
-                                                          const titleElement = document.getElementById('question-detail-title');
-                                                          const contentElement = document.getElementById('question-detail-content');
-                                                          const answerElement = document.getElementById('question-detail-answer');
-                                                          const explanationElement = document.getElementById('question-detail-explanation');
-                                                          const explanationContainer = document.getElementById('question-detail-explanation-container');
-                                                          
-                                                          if (numberElement) numberElement.textContent = questionData.number;
-                                                          
-                                                          // Extrair um título da questão (primeiras palavras do enunciado)
-                                                          if (titleElement) {
-                                                            const words = questionData.statement.split(' ');
-                                                            const titleLength = Math.min(7, Math.max(5, Math.floor(words.length / 3)));
-                                                            titleElement.textContent = words.slice(0, titleLength).join(' ') + (words.length > titleLength ? '...' : '');
-                                                          }
-                                                          
-                                                          if (typeElement) {
-                                                            let typeText = "QUESTÃO";
-                                                            let tagColorClass = "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200";
-                                                            
-                                                            if (questionData.type.includes("alternativa") || questionData.type.includes("múltipla") || questionData.type.includes("escolha")) {
-                                                              typeText = "MÚLTIPLA ESCOLHA";
-                                                              tagColorClass = "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300";
-                                                            } else if (questionData.type.includes("discursiva")) {
-                                                              typeText = "DISCURSIVA";
-                                                              tagColorClass = "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300";
-                                                            } else if (questionData.type.includes("V/F") || questionData.type.includes("verdadeiro") || questionData.type.includes("falso")) {
-                                                              typeText = "VERDADEIRO OU FALSO";
-                                                              tagColorClass = "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300";
-                                                            } else {
-                                                              typeText = questionData.type.toUpperCase();
-                                                            }
-                                                            
-                                                            typeElement.textContent = typeText;
-                                                            typeElement.className = `text-xs font-medium px-2 py-1 rounded-full ${tagColorClass}`;
-                                                          }
-                                                          
-                                                          if (contentElement) contentElement.innerHTML = questionData.statement.replace(/\n/g, '<br>');
-                                                          if (answerElement) answerElement.innerHTML = questionData.answer.replace(/\n/g, '<br>');
-                                                          
-                                                          // Mostrar ou ocultar explicação com base em se há conteúdo
-                                                          if (explanationElement && explanationContainer) {
-                                                            if (questionData.explanation && questionData.explanation.trim()) {
-                                                              explanationElement.innerHTML = questionData.explanation.replace(/\n/g, '<br>');
-                                                              explanationContainer.classList.remove('hidden');
-                                                            } else {
-                                                              explanationContainer.classList.add('hidden');
-                                                            }
-                                                          }
-                                                          
-                                                          // Resetar visibilidade do gabarito
-                                                          const gabaritoContainer = document.getElementById('question-detail-gabarito');
-                                                          if (gabaritoContainer) {
-                                                            gabaritoContainer.classList.add('hidden');
-                                                          }
-                                                          
-                                                          const showGabaritoBtn = document.getElementById('show-gabarito-btn');
-                                                          if (showGabaritoBtn) {
-                                                            showGabaritoBtn.textContent = "Ver Gabarito";
-                                                          }
-                                                          
-                                                          // Armazenar o índice da questão no botão de transformar em caderno
-                                                          const toNotebookBtn = document.getElementById('question-to-notebook-btn');
-                                                          if (toNotebookBtn) {
-                                                            toNotebookBtn.setAttribute('data-question-index', index);
-                                                          }
-                                                          
-                                                          // Mostrar o modal
-                                                          const detailModal = document.getElementById('question-detail-modal');
-                                                          if (detailModal) {
-                                                            detailModal.classList.remove('hidden');
-                                                          }
-                                                        }
-                                                      }
-                                                    });
+                                                    }
                                                   });
-                                                  
-                                                  // Configurar interações do modal de detalhes
-                                                  const detailModal = document.getElementById('question-detail-modal');
-                                                  const closeDetailBtn = document.getElementById('close-question-detail-modal');
-                                                  const backToQuestionsBtn = document.getElementById('back-to-questions');
-                                                  const showGabaritoBtn = document.getElementById('show-gabarito-btn');
-                                                  const toNotebookBtn = document.getElementById('question-to-notebook-btn');
-                                                  
-                                                  // Fechar modal ao clicar no X
-                                                  if (closeDetailBtn && detailModal) {
-                                                    closeDetailBtn.addEventListener('click', () => {
-                                                      detailModal.classList.add('hidden');
-                                                    });
-                                                  }
-                                                  
-                                                  // Voltar para a lista de questões
-                                                  if (backToQuestionsBtn && detailModal) {
-                                                    backToQuestionsBtn.addEventListener('click', () => {
-                                                      detailModal.classList.add('hidden');
-                                                    });
-                                                  }
-                                                  
-                                                  // Clicar fora do modal para fechar
-                                                  if (detailModal) {
-                                                    detailModal.addEventListener('click', (e) => {
-                                                      if (e.target === detailModal) {
-                                                        detailModal.classList.add('hidden');
-                                                      }
-                                                    });
-                                                  }
-                                                  
-                                                  // Mostrar/ocultar gabarito
-                                                  if (showGabaritoBtn) {
-                                                    showGabaritoBtn.addEventListener('click', () => {
-                                                      const gabaritoContainer = document.getElementById('question-detail-gabarito');
-                                                      if (gabaritoContainer) {
-                                                        if (gabaritoContainer.classList.contains('hidden')) {
-                                                          gabaritoContainer.classList.remove('hidden');
-                                                          showGabaritoBtn.textContent = "Ocultar Gabarito";
-                                                        } else {
-                                                          gabaritoContainer.classList.add('hidden');
-                                                          showGabaritoBtn.textContent = "Ver Gabarito";
-                                                        }
-                                                      }
-                                                    });
-                                                  }
-                                                  
-                                                  // Transformar questão em caderno
-                                                  if (toNotebookBtn) {
-                                                    toNotebookBtn.addEventListener('click', () => {
-                                                      const index = toNotebookBtn.getAttribute('data-question-index');
-                                                      if (index !== null) {
-                                                        const questionData = questionsArray[parseInt(index)];
-                                                        
-                                                        // Disparar evento para transformar em caderno
-                                                        const transformEvent = new CustomEvent('transform-to-notebook', {
-                                                          detail: {
-                                                            content: `Questão ${questionData.number}: ${questionData.statement}\n\nGabarito: ${questionData.answer}\n\nExplicação: ${questionData.explanation || 'Não disponível'}`
-                                                          }
-                                                        });
-                                                        
-                                                        document.dispatchEvent(transformEvent);
-                                                        
-                                                        // Fechar o modal de detalhes
-                                                        if (detailModal) {
-                                                          detailModal.classList.add('hidden');
-                                                        }
-                                                        
-                                                        // Fechar o modal principal de questões
-                                                        const questionsModal = document.getElementById('questions-result-modal');
-                                                        if (questionsModal) {
-                                                          questionsModal.remove();
-                                                        }
-                                                      }
-                                                    });
-                                                  }
-                                                  
-                                                  // Botões de ver gabarito (na visualização em lista)
-                                                  const gabaritoButtons = document.querySelectorAll('.question-gabarito-btn');
-                                                  gabaritoButtons.forEach(btn => {
-                                                    btn.addEventListener('click', (e) => {
-                                                      e.stopPropagation(); // Evita que o card seja clicado
-                                                      const index = btn.getAttribute('data-index');
-                                                      const gabarito = document.getElementById(`gabarito-${index}`);
-                                                      
-                                                      if (gabarito) {
-                                                        if (gabarito.classList.contains('hidden')) {
-                                                          gabarito.classList.remove('hidden');
-                                                          btn.textContent = 'Ocultar Gabarito';
-                                                        } else {
-                                                          gabarito.classList.add('hidden');
-                                                          btn.textContent = 'Ver Gabarito';
-                                                        }
-                                                      }
-                                                    });
-                                                  });
-                                                  
-                                                  // Botão para adicionar ao chat
-                                                  const addToChatBtn = document.getElementById('add-to-chat-btn');
-                                                  if (addToChatBtn) {
-                                                    addToChatBtn.addEventListener('click', () => {
-                                                      // Adicionar a resposta ao chat como uma mensagem da IA
-                                                      setMessages(prev => [
-                                                        ...prev,
-                                                        {
-                                                          id: Date.now(),
-                                                          content: response,
-                                                          sender: "assistant",
-                                                          timestamp: new Date()
-                                                        }
-                                                      ]);
-                                                      
-                                                      // Fechar o modal
-                                                      const modal = document.getElementById('questions-result-modal');
-                                                      if (modal) {
-                                                        modal.remove();
-                                                      }
-                                                      
-                                                      toast({
-                                                        title: "Questões adicionadas ao chat",
-                                                        description: "As questões foram adicionadas à conversa",
-                                                        duration: 3000,
-                                                      });
-                                                    });
-                                                  }
-                                                  
-                                                  // Botões para transformar questão individual em caderno
-                                                  const cadernoButtons = document.querySelectorAll('.question-caderno-btn');
-                                                  cadernoButtons.forEach(btn => {
-                                                    btn.addEventListener('click', (e) => {
-                                                      e.stopPropagation(); // Evita que o card seja clicado
-                                                      const index = btn.getAttribute('data-index');
-                                                      const question = questionsArray[index];
-                                                      
-                                                      if (question) {
-                                                        // Disparar evento para transformar em caderno
-                                                        const transformEvent = new CustomEvent('transform-to-notebook', {
-                                                          detail: {
-                                                            content: `Questão ${question.number}: ${question.statement}\n\nGabarito: ${question.answer}\n\nExplicação: ${question.explanation || 'Não disponível'}`
-                                                          }
-                                                        });
-                                                        
-                                                        document.dispatchEvent(transformEvent);
-                                                        
-                                                        // Fechar o modal
-                                                        const modal = document.getElementById('questions-result-modal');
-                                                        if (modal) {
-                                                          modal.remove();
-                                                        }
-                                                      }
-                                                    });
-                                                  });
-                                                  
-                                                  // Botão para transformar todas as questões em caderno
-                                                  const transformAllBtn = document.getElementById('transform-all-btn');
-                                                  if (transformAllBtn) {
-                                                    transformAllBtn.addEventListener('click', () => {
-                                                      // Preparar todo o conteúdo
-                                                      const fullContent = questionsArray.map(q => 
-                                                        `Questão ${q.number} (${q.type}): ${q.statement}\n\nGabarito: ${q.answer}\n\nExplicação: ${q.explanation}`
-                                                      ).join('\n\n---\n\n');
-                                                      
-                                                      // Disparar evento para transformar em caderno
-                                                      const transformEvent = new CustomEvent('transform-to-notebook', {
-                                                        detail: {
-                                                          content: fullContent
-                                                        }
-                                                      });
-                                                      
-                                                      document.dispatchEvent(transformEvent);
-                                                      
-                                                      // Fechar o modal
-                                                      const modal = document.getElementById('questions-result-modal');
-                                                      if (modal) {
-                                                        modal.remove();
-                                                      }
-                                                    });
-                                                  }
-                                                }, 100);
-                                              } catch (error) {
-                                                console.error('Erro ao gerar questões:', error);
-                                                
-                                                // Remover modal de carregamento
-                                                const loadingModal = document.getElementById('questions-loading-modal');
-                                                if (loadingModal) {
-                                                  loadingModal.remove();
-                                                }
-                                                
-                                                toast({
-                                                  title: "Erro ao gerar questões",
-                                                  description: "Não foi possível gerar as questões. Por favor, tente novamente.",
-                                                  variant: "destructive",
-                                                  duration: 3000,
                                                 });
                                                 
-                                                // Adicionar mensagem de erro ao chat
-                                                setMessages(prev => [
-                                                  ...prev,
-                                                  {
-                                                    id: Date.now(),
-                                                    content: "Desculpe, ocorreu um erro ao gerar as questões. Por favor, tente novamente mais tarde.",
-                                                    sender: "assistant",
-                                                    timestamp: new Date()
-                                                  }
-                                                ]);
-                                              }
+                                                // Transformar em caderno
+                                                toNotebookButtons.forEach(btn => {
+                                                  btn.addEventListener('click', (e) => {
+                                                    const button = e.currentTarget as HTMLButtonElement;
+                                                    const content = decodeURIComponent(button.getAttribute('data-content') || '');
+                                                    
+                                                    if (content) {
+                                                      // Gerar prompt para conversão para formato de caderno
+                                                      const notebookPrompt = `
+                                                      A partir da questão abaixo, crie uma versão em formato de caderno de anotações estudantil.
+                                                      
+                                                      Siga estas diretrizes OBRIGATÓRIAS:
+                                                      - Comece com um título direto sobre o tema da questão
+                                                      - Liste os pontos principais usando marcadores (•)
+                                                      - Destaque palavras-chave usando **asteriscos duplos**
+                                                      - Organize o conteúdo com títulos em maiúsculas seguidos de dois pontos
+                                                      - Use uma linguagem técnica e direta
+                                                      - Inclua um resumo dos pontos principais da questão
+                                                      - NÃO INCLUA LINKS PARA NENHUM SITE OU PLATAFORMA
+                                                      - NÃO FAÇA REFERÊNCIAS A RECURSOS EXTERNOS
+                                                      - NÃO MENCIONE A PONTO.SCHOOL
+                                                      - NÃO INCLUA SAUDAÇÕES, INTRODUÇÕES OU CONCLUSÕES
+                                                      - FOQUE APENAS NO CONTEÚDO EDUCACIONAL
+                                                      
+                                                      Questão:
+                                                      "${content}"
+                                                      `;
+                                                      
+                                                      // Configurar estado de carregamento
+                                                      setIsLoading(true);
+                                                      
+                                                      // Chamar serviço para converter conteúdo
+                                                      generateAIResponse(notebookPrompt, sessionId || 'default_session', {
+                                                        intelligenceLevel: 'advanced',
+                                                        languageStyle: 'formal'
+                                                      })
+                                                      .then(notebookContent => {
+                                                        // Mostrar modal de caderno com o conteúdo gerado
+                                                        openNotebookModal(notebookContent);
+                                                      })
+                                                      .catch(error => {
+                                                        console.error("Erro ao converter para formato de caderno:", error);
+                                                        toast({
+                                                          title: "Erro",
+                                                          description: "Não foi possível converter o conteúdo para o formato de caderno.",
+                                                          variant: "destructive",
+                                                          duration: 3000,
+                                                        });
+                                                      })
+                                                      .finally(() => {
+                                                        setIsLoading(false);
+                                                      });
+                                                    }
+                                                  });
+                                                });
+                                              }, 100);
                                               
                                             } catch (error) {
                                               console.error('Erro ao gerar questões:', error);
