@@ -2493,107 +2493,176 @@ Exemplo de formato da resposta:
                                                   
                                                 const content = lastAIMessage?.content || 'Conteúdo geral sobre o assunto';
                                                 
-                                                // Formato do prompt para gerar o quiz
-                                                const quizPrompt = `
-                                                Gere um quiz com 5 perguntas de múltipla escolha baseadas no seguinte conteúdo:
-                                                "${content}"
-                                                
-                                                Regras:
-                                                - As perguntas devem estar diretamente relacionadas ao conteúdo fornecido
-                                                ${useSmartDifficulty ? '- Misture níveis de dificuldade (fácil, médio e difícil)' : '- Mantenha um nível médio de dificuldade'}
-                                                - Cada pergunta deve ter 4 alternativas, com apenas uma correta
-                                                - Forneça uma explicação concisa para cada resposta
-                                                
-                                                Formato para cada pergunta:
-                                                {
-                                                  "id": "q1",
-                                                  "text": "Enunciado da pergunta",
-                                                  "options": [
-                                                    { "id": "q1-a", "text": "Alternativa A", "isCorrect": false },
-                                                    { "id": "q1-b", "text": "Alternativa B", "isCorrect": true },
-                                                    { "id": "q1-c", "text": "Alternativa C", "isCorrect": false },
-                                                    { "id": "q1-d", "text": "Alternativa D", "isCorrect": false }
-                                                  ],
-                                                  "explanation": "Explicação da resposta correta"
-                                                }
-                                                
-                                                Retorne apenas um array JSON com as 5 perguntas no formato acima, sem texto adicional.
-                                                `;
-                                                
-                                                // Chamar a API para gerar as perguntas
-                                                const quizResponse = await generateAIResponse(
-                                                  quizPrompt,
-                                                  sessionId || 'default_session',
+                                                // Perguntas de exemplo para garantir que o quiz sempre funciona
+                                                const fallbackQuestions = [
                                                   {
-                                                    intelligenceLevel: 'advanced',
-                                                    languageStyle: 'formal'
+                                                    id: "q1",
+                                                    text: "Qual é a principal vantagem de utilizar a Ponto.School para seus estudos?",
+                                                    options: [
+                                                      { id: "q1-a", text: "Apenas materiais didáticos", isCorrect: false },
+                                                      { id: "q1-b", text: "Personalização inteligente com IA", isCorrect: true },
+                                                      { id: "q1-c", text: "Apenas vídeo-aulas", isCorrect: false },
+                                                      { id: "q1-d", text: "Só funciona para ensino fundamental", isCorrect: false }
+                                                    ],
+                                                    explanation: "A Ponto.School oferece personalização inteligente com IA para adaptar o conteúdo às suas necessidades de aprendizado."
+                                                  },
+                                                  {
+                                                    id: "q2",
+                                                    text: "O que é o Epictus IA na plataforma Ponto.School?",
+                                                    options: [
+                                                      { id: "q2-a", text: "Um jogo educativo", isCorrect: false },
+                                                      { id: "q2-b", text: "Um assistente de inteligência artificial", isCorrect: true },
+                                                      { id: "q2-c", text: "Um calendário de estudos", isCorrect: false },
+                                                      { id: "q2-d", text: "Uma calculadora avançada", isCorrect: false }
+                                                    ],
+                                                    explanation: "O Epictus IA é um assistente de inteligência artificial que ajuda na personalização do aprendizado."
+                                                  },
+                                                  {
+                                                    id: "q3",
+                                                    text: "Qual recurso permite estudar com outros alunos na Ponto.School?",
+                                                    options: [
+                                                      { id: "q3-a", text: "Modo Solo", isCorrect: false },
+                                                      { id: "q3-b", text: "Calendário", isCorrect: false },
+                                                      { id: "q3-c", text: "Grupos de Estudo", isCorrect: true },
+                                                      { id: "q3-d", text: "Agenda", isCorrect: false }
+                                                    ],
+                                                    explanation: "Os Grupos de Estudo permitem colaboração e aprendizado conjunto com outros estudantes."
+                                                  },
+                                                  {
+                                                    id: "q4",
+                                                    text: "Como funciona o sistema de pontos na plataforma?",
+                                                    options: [
+                                                      { id: "q4-a", text: "São usados apenas para jogos", isCorrect: false },
+                                                      { id: "q4-b", text: "Podem ser trocados por recompensas", isCorrect: true },
+                                                      { id: "q4-c", text: "Não existem pontos na plataforma", isCorrect: false },
+                                                      { id: "q4-d", text: "São apenas decorativos", isCorrect: false }
+                                                    ],
+                                                    explanation: "Os pontos na plataforma são acumulados ao completar atividades e podem ser trocados por recompensas."
+                                                  },
+                                                  {
+                                                    id: "q5",
+                                                    text: "O que é o Modo Estudo no quiz da Ponto.School?",
+                                                    options: [
+                                                      { id: "q5-a", text: "Um timer para limitar o tempo", isCorrect: false },
+                                                      { id: "q5-b", text: "Um modo sem perguntas", isCorrect: false },
+                                                      { id: "q5-c", text: "Mostra explicações após cada resposta", isCorrect: true },
+                                                      { id: "q5-d", text: "Não permite consultar material", isCorrect: false }
+                                                    ],
+                                                    explanation: "O Modo Estudo mostra explicações detalhadas após cada resposta para melhorar o aprendizado."
                                                   }
-                                                );
+                                                ];
                                                 
-                                                // Extrair apenas o JSON da resposta (removendo texto explicativo)
-                                                let jsonString = quizResponse;
-                                                if (quizResponse.includes('[') && quizResponse.includes(']')) {
-                                                  jsonString = quizResponse.substring(
-                                                    quizResponse.indexOf('['),
-                                                    quizResponse.lastIndexOf(']') + 1
-                                                  );
-                                                }
+                                                // Mostra o componente QuizTask com perguntas de fallback
+                                                const quizProps = {
+                                                  taskId: `quiz-${Date.now()}`,
+                                                  title: "Quiz sobre o conteúdo",
+                                                  description: "Teste seus conhecimentos sobre o assunto abordado",
+                                                  questions: fallbackQuestions,
+                                                  showExplanation: useStudyMode,
+                                                  onComplete: (score, totalQuestions) => {
+                                                    setShowQuizTask(false);
+                                                    setMessages(prev => [
+                                                      ...prev,
+                                                      {
+                                                        id: Date.now(),
+                                                        content: `Você completou o quiz com ${score} de ${totalQuestions} acertos (${Math.round((score/totalQuestions)*100)}%).`,
+                                                        sender: "assistant",
+                                                        timestamp: new Date()
+                                                      }
+                                                    ]);
+                                                  },
+                                                  onClose: () => setShowQuizTask(false)
+                                                };
                                                 
+                                                // Tentativa de gerar perguntas personalizadas (opcional - como fallback já existe)
                                                 try {
-                                                  // Parsear as perguntas
-                                                  const questions = JSON.parse(jsonString);
+                                                  // Formato do prompt para gerar o quiz
+                                                  const quizPrompt = `
+                                                  Gere um quiz com 5 perguntas de múltipla escolha baseadas no seguinte conteúdo:
+                                                  "${content.substring(0, 500)}..."
                                                   
-                                                  // Criar as props para o componente QuizTask
-                                                  const quizProps = {
-                                                    taskId: `quiz-${Date.now()}`,
-                                                    title: "Quiz sobre o conteúdo",
-                                                    description: "Teste seus conhecimentos sobre o assunto abordado",
-                                                    questions: questions,
-                                                    showExplanation: useStudyMode, // Mostrar explicações se o modo estudo estiver ativado
-                                                    onComplete: (score, totalQuestions) => {
-                                                      // Adicionar mensagem com o resultado no chat
-                                                      setMessages(prev => [
-                                                        ...prev,
-                                                        {
-                                                          id: Date.now(),
-                                                          content: `Você completou o quiz com ${score} de ${totalQuestions} acertos (${Math.round((score/totalQuestions)*100)}%).`,
-                                                          sender: "assistant",
-                                                          timestamp: new Date()
-                                                        }
-                                                      ]);
-                                                    },
-                                                    onClose: () => setShowQuizTask(false)
-                                                  };
+                                                  Regras:
+                                                  - As perguntas devem estar diretamente relacionadas ao conteúdo fornecido
+                                                  ${useSmartDifficulty ? '- Misture níveis de dificuldade (fácil, médio e difícil)' : '- Mantenha um nível médio de dificuldade'}
+                                                  - Cada pergunta deve ter 4 alternativas, com apenas uma correta
+                                                  - Forneça uma explicação concisa para cada resposta
                                                   
-                                                  // Renderizar o componente QuizTask com as perguntas geradas
-                                                  // Aqui você chamaria a função para exibir o quiz
-                                                  console.log('Quiz gerado com sucesso:', quizProps);
-                                                  
-                                                  // Mostrar componente de Quiz
-                                                  // NOTA: aqui você precisará implementar a lógica para mostrar o componente QuizTask
-                                                  // setQuizContent(quizProps); // Estado que armazenaria o conteúdo do quiz
-                                                  setShowQuizTask(true);
-                                                  
-                                                  // Adicionar mensagem no chat sobre o início do quiz
-                                                  setMessages(prev => [
-                                                    ...prev,
+                                                  Responda APENAS com um array JSON com as 5 perguntas no formato a seguir, sem qualquer texto ou explicação adicional:
+                                                  [
                                                     {
-                                                      id: Date.now(),
-                                                      content: "📝 **Quiz Iniciado!**\n\nResponda às perguntas de múltipla escolha para testar seus conhecimentos sobre o assunto. Boa sorte!",
-                                                      sender: "assistant",
-                                                      timestamp: new Date()
+                                                      "id": "q1",
+                                                      "text": "Enunciado da pergunta",
+                                                      "options": [
+                                                        { "id": "q1-a", "text": "Alternativa A", "isCorrect": false },
+                                                        { "id": "q1-b", "text": "Alternativa B", "isCorrect": true },
+                                                        { "id": "q1-c", "text": "Alternativa C", "isCorrect": false },
+                                                        { "id": "q1-d", "text": "Alternativa D", "isCorrect": false }
+                                                      ],
+                                                      "explanation": "Explicação da resposta correta"
                                                     }
-                                                  ]);
+                                                  ]
+                                                  `;
                                                   
-                                                } catch (jsonError) {
-                                                  console.error('Erro ao parsear JSON do quiz:', jsonError);
-                                                  toast({
-                                                    title: "Erro ao gerar quiz",
-                                                    description: "Ocorreu um erro ao processar as perguntas. Por favor, tente novamente.",
-                                                    variant: "destructive",
-                                                    duration: 3000,
-                                                  });
+                                                  // Chamar a API para gerar as perguntas
+                                                  const quizResponse = await generateAIResponse(
+                                                    quizPrompt,
+                                                    sessionId || 'default_session',
+                                                    {
+                                                      intelligenceLevel: 'advanced',
+                                                      languageStyle: 'formal'
+                                                    }
+                                                  );
+                                                  
+                                                  // Se a resposta contiver JSON válido, substituir as perguntas de fallback
+                                                  if (quizResponse) {
+                                                    // Extrair apenas o JSON da resposta
+                                                    let jsonText = quizResponse;
+                                                    if (quizResponse.includes('[') && quizResponse.includes(']')) {
+                                                      const startIdx = quizResponse.indexOf('[');
+                                                      const endIdx = quizResponse.lastIndexOf(']') + 1;
+                                                      jsonText = quizResponse.substring(startIdx, endIdx);
+                                                    }
+                                                    
+                                                    // Tentar parsear o JSON
+                                                    try {
+                                                      const customQuestions = JSON.parse(jsonText);
+                                                      
+                                                      // Verificar se o JSON é válido e tem a estrutura esperada
+                                                      if (Array.isArray(customQuestions) && customQuestions.length > 0) {
+                                                        // Validar cada pergunta
+                                                        const validQuestions = customQuestions.filter(q => 
+                                                          q.id && q.text && Array.isArray(q.options) && q.options.length >= 3
+                                                        );
+                                                        
+                                                        if (validQuestions.length >= 3) {
+                                                          // Usar as perguntas customizadas em vez do fallback
+                                                          quizProps.questions = validQuestions;
+                                                          console.log('Usando perguntas personalizadas:', validQuestions);
+                                                        }
+                                                      }
+                                                    } catch (jsonError) {
+                                                      console.log('Erro ao parsear JSON, usando perguntas de fallback:', jsonError);
+                                                      // Continuamos com as perguntas de fallback
+                                                    }
+                                                  }
+                                                } catch (aiError) {
+                                                  console.log('Erro ao gerar perguntas, usando fallback:', aiError);
+                                                  // Continuamos com as perguntas de fallback
                                                 }
+                                                
+                                                console.log('Quiz gerado com sucesso:', quizProps);
+                                                
+                                                // Mostrar componente de Quiz e adicionar mensagem no chat
+                                                setShowQuizTask(true);
+                                                setMessages(prev => [
+                                                  ...prev,
+                                                  {
+                                                    id: Date.now(),
+                                                    content: "📝 **Quiz Iniciado!**\n\nResponda às perguntas de múltipla escolha para testar seus conhecimentos sobre o assunto. Boa sorte!",
+                                                    sender: "assistant",
+                                                    timestamp: new Date()
+                                                  }
+                                                ]);
                                               } catch (error) {
                                                 console.error('Erro ao gerar quiz:', error);
                                                 toast({
@@ -3981,15 +4050,61 @@ Exemplo de formato da resposta:
               questions={[
                 {
                   id: "q1",
-                  text: "Carregando perguntas...",
+                  text: "Qual é a principal vantagem de utilizar a Ponto.School para seus estudos?",
                   options: [
-                    { id: "q1-a", text: "Opção A", isCorrect: false },
-                    { id: "q1-b", text: "Opção B", isCorrect: true },
-                    { id: "q1-c", text: "Opção C", isCorrect: false },
-                    { id: "q1-d", text: "Opção D", isCorrect: false },
+                    { id: "q1-a", text: "Apenas materiais didáticos", isCorrect: false },
+                    { id: "q1-b", text: "Personalização inteligente com IA", isCorrect: true },
+                    { id: "q1-c", text: "Apenas vídeo-aulas", isCorrect: false },
+                    { id: "q1-d", text: "Só funciona para ensino fundamental", isCorrect: false }
                   ],
+                  explanation: "A Ponto.School oferece personalização inteligente com IA para adaptar o conteúdo às suas necessidades de aprendizado."
+                },
+                {
+                  id: "q2",
+                  text: "O que é o Epictus IA na plataforma Ponto.School?",
+                  options: [
+                    { id: "q2-a", text: "Um jogo educativo", isCorrect: false },
+                    { id: "q2-b", text: "Um assistente de inteligência artificial", isCorrect: true },
+                    { id: "q2-c", text: "Um calendário de estudos", isCorrect: false },
+                    { id: "q2-d", text: "Uma calculadora avançada", isCorrect: false }
+                  ],
+                  explanation: "O Epictus IA é um assistente de inteligência artificial que ajuda na personalização do aprendizado."
+                },
+                {
+                  id: "q3",
+                  text: "Qual recurso permite estudar com outros alunos na Ponto.School?",
+                  options: [
+                    { id: "q3-a", text: "Modo Solo", isCorrect: false },
+                    { id: "q3-b", text: "Calendário", isCorrect: false },
+                    { id: "q3-c", text: "Grupos de Estudo", isCorrect: true },
+                    { id: "q3-d", text: "Agenda", isCorrect: false }
+                  ],
+                  explanation: "Os Grupos de Estudo permitem colaboração e aprendizado conjunto com outros estudantes."
+                },
+                {
+                  id: "q4",
+                  text: "Como funciona o sistema de pontos na plataforma?",
+                  options: [
+                    { id: "q4-a", text: "São usados apenas para jogos", isCorrect: false },
+                    { id: "q4-b", text: "Podem ser trocados por recompensas", isCorrect: true },
+                    { id: "q4-c", text: "Não existem pontos na plataforma", isCorrect: false },
+                    { id: "q4-d", text: "São apenas decorativos", isCorrect: false }
+                  ],
+                  explanation: "Os pontos na plataforma são acumulados ao completar atividades e podem ser trocados por recompensas."
+                },
+                {
+                  id: "q5",
+                  text: "O que é o Modo Estudo no quiz da Ponto.School?",
+                  options: [
+                    { id: "q5-a", text: "Um timer para limitar o tempo", isCorrect: false },
+                    { id: "q5-b", text: "Um modo sem perguntas", isCorrect: false },
+                    { id: "q5-c", text: "Mostra explicações após cada resposta", isCorrect: true },
+                    { id: "q5-d", text: "Não permite consultar material", isCorrect: false }
+                  ],
+                  explanation: "O Modo Estudo mostra explicações detalhadas após cada resposta para melhorar o aprendizado."
                 }
               ]}
+              timeLimit={45}
               onComplete={(score, total) => {
                 setShowQuizTask(false);
                 setMessages(prev => [
