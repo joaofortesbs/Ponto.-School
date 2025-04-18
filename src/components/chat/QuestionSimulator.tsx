@@ -1269,7 +1269,8 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
                 />
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-700 dark:text-gray-300">Verdadeiro ou Falso</span                <input 
+                <span className="text-sm text-gray-700 dark:text-gray-300">Verdadeiro ou Falso</span>
+                <input 
                   id="true-false-input"
                   type="number" 
                   min="0" 
