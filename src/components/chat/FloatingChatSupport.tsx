@@ -2845,15 +2845,69 @@ Exemplo de formato da resposta:
                                                 <label class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                                                   Competências BNCC (opcional)
                                                 </label>
-                                                <select class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-white">
-                                                  <option>Selecione uma competência</option>
-                                                  <option>Competência 1 - Conhecimento</option>
-                                                  <option>Competência 2 - Pensamento científico</option>
-                                                  <option>Competência 3 - Repertório cultural</option>
-                                                  <option>Competência 4 - Comunicação</option>
-                                                  <option>Competência 5 - Cultura digital</option>
+                                                <select 
+                                                  id="bncc-competencia" 
+                                                  class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-white"
+                                                >
+                                                  <option value="">Selecione uma competência</option>
+                                                  <option value="BNCC-C01">Competência 1 - Conhecimento</option>
+                                                  <option value="BNCC-C02">Competência 2 - Pensamento científico</option>
+                                                  <option value="BNCC-C03">Competência 3 - Repertório cultural</option>
+                                                  <option value="BNCC-C04">Competência 4 - Comunicação</option>
+                                                  <option value="BNCC-C05">Competência 5 - Cultura digital</option>
                                                 </select>
                                               </div>
+
+                                              <div class="mt-4">
+                                                <button 
+                                                  id="gerar-questoes-btn" 
+                                                  class="w-full p-2 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-md transition-colors"
+                                                  onclick="gerarQuestoes()"
+                                                >
+                                                  Gerar Questões
+                                                </button>
+                                              </div>
+
+                                              <script>
+                                                function gerarQuestoes() {
+                                                  // Obter valores do formulário
+                                                  const totalQuestoes = document.getElementById('total-questoes').value || 5;
+                                                  const multiplaEscolha = document.getElementById('multipla-escolha').value || 2;
+                                                  const discursivas = document.getElementById('discursivas').value || 2;
+                                                  const verdadeiroFalso = document.getElementById('verdadeiro-falso').value || 1;
+                                                  const competencia = document.getElementById('bncc-competencia').value || '';
+                                                  
+                                                  // Fechar o modal
+                                                  document.getElementById('close-question-simulator-modal').click();
+                                                  
+                                                  // Montar o prompt para a IA
+                                                  const prompt = `Gere ${totalQuestoes} questões sobre o conteúdo anterior. Sendo:
+${multiplaEscolha} alternativas, ${discursivas} discursivas, ${verdadeiroFalso} V/F. Se possível, alinhe com a competência BNCC selecionada: ${competencia}. Para cada questão, gere: enunciado, tipo, gabarito (se aplicável), explicação.`;
+                                                  
+                                                  // Enviar o prompt para o chat (utilizando método existente)
+                                                  const textarea = document.querySelector('.chat-input') || document.querySelector('textarea[placeholder*="Digite"]');
+                                                  if (textarea) {
+                                                    textarea.value = prompt;
+                                                    // Simular pressionar Enter para enviar
+                                                    const enterEvent = new KeyboardEvent('keydown', {
+                                                      key: 'Enter',
+                                                      code: 'Enter',
+                                                      keyCode: 13,
+                                                      which: 13,
+                                                      bubbles: true
+                                                    });
+                                                    textarea.dispatchEvent(enterEvent);
+                                                    
+                                                    // Backup: se o evento não funcionar, tentar clicar no botão de enviar
+                                                    setTimeout(() => {
+                                                      const sendButton = document.querySelector('button[aria-label*="Send"]') || 
+                                                                         document.querySelector('button[aria-label*="Enviar"]') ||
+                                                                         document.querySelector('button svg[data-lucide="send"]')?.closest('button');
+                                                      if (sendButton) sendButton.click();
+                                                    }, 100);
+                                                  }
+                                                }
+                                              </script>
                                             </div>
                                             
                                             <button 
