@@ -217,7 +217,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
           const isCorrectClass = option.isCorrect ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : '';
 
           return `
-            <div class="flex items-center space-x-2 cursor-pointer option-selection p-2 rounded-md hover:bg-orange-50 dark:hover:bg-orange-900/20 border border-transparent hover:border-orange-300 dark:hover:border-orange-700 transition-colors" data-correct="${option.isCorrect}" data-letter="${letter}" onclick="window.selectOption(this)">
+            <div class="flex items-center space-x-2 cursor-pointer option-selection p-2 rounded-md hover:bg-orange-50 dark:hover:bg-orange-900/20 border border-transparent hover:border-orange-300 dark:hover:border-orange-700 transition-colors active:bg-orange-50 active:dark:bg-orange-900/20 active:border-orange-300 active:dark:border-orange-700" data-correct="${option.isCorrect}" data-letter="${letter}" onclick="window.selectOption(this)">
               <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 option-letter-container">
                 <span class="text-xs font-medium">${letter}</span>
               </div>
@@ -257,7 +257,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
                 opt.style.fontWeight = 'normal';
               });
 
-              // Destacar a opção clicada
+              // Destacar a opção clicada com classes permanentes (não apenas hover)
               element.classList.add('bg-orange-50', 'dark:bg-orange-900/20');
               element.classList.remove('border-transparent');
               element.classList.add('border-orange-300', 'dark:border-orange-700');
@@ -351,12 +351,25 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
                   const newOpt = opt.cloneNode(true);
                   opt.parentNode.replaceChild(newOpt, opt);
                   
-                  // Adicionar o evento de clique diretamente no elemento
+                  // Adicionar múltiplos eventos para garantir a interatividade
                   newOpt.style.cursor = 'pointer';
-                  newOpt.onclick = function() {
+                  
+                  // Função para selecionar a opção
+                  const selectThisOption = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
                     console.log("Alternativa clicada", this);
                     window.selectOption(this);
+                    return false;
                   };
+                  
+                  // Adicionar eventos múltiplos para maior compatibilidade
+                  newOpt.onclick = selectThisOption;
+                  newOpt.addEventListener('click', selectThisOption);
+                  newOpt.addEventListener('mousedown', function(e) {
+                    e.preventDefault(); // Prevenir comportamento padrão
+                  });
+                  newOpt.addEventListener('touchstart', selectThisOption, {passive: false});
                 });
                 console.log("Event listeners aplicados a", options.length, "alternativas");
               } else {
