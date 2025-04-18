@@ -73,6 +73,17 @@ const QuestionDetailModal: React.FC<QuestionDetailModalProps> = ({
       }
     };
 
+    // Função para determinar o tipo de questão com base no número
+    const getQuestionTypeByNumber = (num: number) => {
+      if (num <= multipleChoice) {
+        return 'multiple-choice';
+      } else if (num <= multipleChoice + essay) {
+        return 'essay';
+      } else {
+        return 'true-false';
+      }
+    };
+
     // Event listener para fechar o modal
     if (closeDetailButton) {
       closeDetailButton.addEventListener('click', closeDetailModal);
@@ -84,23 +95,18 @@ const QuestionDetailModal: React.FC<QuestionDetailModalProps> = ({
     }
 
     // Event listener para o botão de questão anterior
-    if (prevQuestionButton && questionNumber > 1) {
+    if (prevQuestionButton) {
       prevQuestionButton.addEventListener('click', () => {
-        closeDetailModal();
-        // Determinar o tipo da questão anterior com base no número
-        let prevType = questionType;
-        let prevNumber = questionNumber - 1;
-
-        if (questionType === 'true-false' && prevNumber === multipleChoice + essay) {
-          prevType = 'essay';
-        } else if (questionType === 'essay' && prevNumber === multipleChoice) {
-          prevType = 'multiple-choice';
+        if (questionNumber > 1) {
+          closeDetailModal();
+          const prevNumber = questionNumber - 1;
+          const prevType = getQuestionTypeByNumber(prevNumber);
+          
+          // Mostrar a questão anterior
+          setTimeout(() => {
+            window.showQuestionDetails(prevType, prevNumber);
+          }, 210);
         }
-
-        // Mostrar a questão anterior
-        setTimeout(() => {
-          window.showQuestionDetails(prevType, prevNumber);
-        }, 210);
       });
     }
 
@@ -111,15 +117,8 @@ const QuestionDetailModal: React.FC<QuestionDetailModalProps> = ({
 
         if (questionNumber < totalQuestionsCount) {
           closeDetailModal();
-          // Determinar o tipo da próxima questão com base no número
-          let nextType = questionType;
-          let nextNumber = questionNumber + 1;
-
-          if (questionType === 'multiple-choice' && nextNumber > multipleChoice) {
-            nextType = 'essay';
-          } else if (questionType === 'essay' && nextNumber > multipleChoice + essay) {
-            nextType = 'true-false';
-          }
+          const nextNumber = questionNumber + 1;
+          const nextType = getQuestionTypeByNumber(nextNumber);
 
           // Mostrar a próxima questão
           setTimeout(() => {

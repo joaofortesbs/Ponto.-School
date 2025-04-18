@@ -225,33 +225,3 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
 };
 
 export default QuestionSimulator;
-
-// Dummy components for compilation - REPLACE THESE WITH ACTUAL COMPONENTS
-const QuestionConfigModal = ({isLoading, onClose, onGenerateQuestions, sessionId, messages}: any) => (
-  <div>
-    <h1>Configure Questions</h1>
-    <button onClick={() => onGenerateQuestions(10, 5, 3, 2)}>Generate</button>
-    {isLoading && <p>Loading...</p>}
-    <button onClick={onClose}>Close</button>
-  </div>
-);
-
-const QuestionsResultsModal = ({onClose, totalQuestions, multipleChoice, essay, trueFalse, messageContent, questionsData}: any) => (
-  <div>
-    <h1>Results</h1>
-    <p>Total Questions: {totalQuestions}</p>
-    <p>Multiple Choice: {multipleChoice}</p>
-    <p>Essay: {essay}</p>
-    <p>True/False: {trueFalse}</p>
-    <button onClick={onClose}>Close</button>
-  </div>
-);
-
-const QuestionDetailModal = ({onClose, questionType, questionNumber, totalQuestions, multipleChoice, essay, trueFalse, messageContent, questionsData}: any) => (
-    <div>
-        <h1>Question Details</h1>
-        <p>Type: {questionType}</p>
-        <p>Number: {questionNumber}</p>
-        <button onClick={onClose}>Close</button>
-    </div>
-);
