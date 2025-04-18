@@ -2383,6 +2383,9 @@ Exemplo de formato da resposta:
                                   duration: 3000,
                                 });
                                 
+                                // Ativar estado de carregamento
+                                setIsLoading(true);
+                                
                                 // Obter a mensagem para converter para formato de apresentação
                                 const messageToPresent = messages.find(msg => msg.showContextTools);
                                 
@@ -2456,7 +2459,7 @@ Exemplo de formato da resposta:
                                       contentSections.push({
                                         titulo: "Principais Conceitos",
                                         topicos: extractTopicsFromContent(section1),
-                                        explicacao: section1string(0, 150) + "...",
+                                        explicacao: section1.substring(0, 150) + "...",
                                         imagemOpcional: ""
                                       });
                                       
@@ -2489,12 +2492,16 @@ Exemplo de formato da resposta:
                                     return [...slides, ...contentSections];
                                   };
                                   
-                                  // Gerar slides a partir do conteúdo da resposta da IA
-                                  const contentSlides = generateSlidesFromContent(messageToPresent.content);
-                                  
-                                  // Definir slides e abrir o modal
-                                  setPresentationSlides(contentSlides);
-                                  setShowPresentationModal(true);
+                                  // Emular um pequeno delay para mostrar o loading
+                                  setTimeout(() => {
+                                    // Gerar slides a partir do conteúdo da resposta da IA
+                                    const contentSlides = generateSlidesFromContent(messageToPresent.content);
+                                    
+                                    // Definir slides e abrir o modal
+                                    setPresentationSlides(contentSlides);
+                                    setShowPresentationModal(true);
+                                    setIsLoading(false);
+                                  }, 1000);
                                   
                                   // Versão com processamento de IA avançado (comentada por enquanto)
                                   /*
