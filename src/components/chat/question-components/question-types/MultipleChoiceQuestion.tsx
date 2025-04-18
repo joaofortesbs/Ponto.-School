@@ -1,4 +1,3 @@
-
 import React from "react";
 import { extractTerms } from "../questionUtils";
 
@@ -56,12 +55,12 @@ export const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
     return selectedQuestion.options.map((option: any, idx: number) => {
       const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
       const letter = letters[idx % letters.length];
-      
+
       // Verificar se esta opção é a correta
       const isCorrect = option.isCorrect === true;
       // Mostrar a resposta correta apenas se o usuário clicou em "Ver resposta"
       const showCorrectAnswer = showExplanation && selectedOption !== null;
-      
+
       return (
         <div 
           key={option.id}
@@ -74,7 +73,7 @@ export const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
               ? 'bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700' 
               : ''
           }`}
-          onClick={() => selectedOption === null && onOptionSelect(letter)}
+          onClick={() => onOptionSelect(letter)}
         >
           <div className={`flex items-center justify-center w-6 h-6 rounded-full border ${
             selectedOption === letter 
