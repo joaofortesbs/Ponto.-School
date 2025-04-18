@@ -25,10 +25,16 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
     // Adicionar event listeners quando o componente for montado
     const closeButton = document.getElementById('close-results-modal');
     const doneButton = document.getElementById('done-button');
+    const myProgressButton = document.getElementById('my-progress-button');
     const modal = document.getElementById('questions-results-modal');
 
     const handleModalClose = () => {
       onClose();
+    };
+
+    const handleMyProgressClick = () => {
+      // Redirecionar para a aba "Meu Progresso"
+      window.location.href = '/meu-progresso';
     };
 
     if (closeButton) {
@@ -37,6 +43,10 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
 
     if (doneButton) {
       doneButton.addEventListener('click', handleModalClose);
+    }
+
+    if (myProgressButton) {
+      myProgressButton.addEventListener('click', handleMyProgressClick);
     }
 
     if (modal) {
@@ -54,6 +64,9 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
       }
       if (doneButton) {
         doneButton.removeEventListener('click', handleModalClose);
+      }
+      if (myProgressButton) {
+        myProgressButton.removeEventListener('click', handleMyProgressClick);
       }
       if (modal) {
         modal.removeEventListener('click', handleModalClose);
@@ -261,6 +274,15 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
               <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
             Exportar Questões
+          </button>
+          <button 
+            id="my-progress-button"
+            className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium flex items-center gap-1.5"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+            </svg>
+            Meu Progresso
           </button>
           <button 
             id="done-button"
