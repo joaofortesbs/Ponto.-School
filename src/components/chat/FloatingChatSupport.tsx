@@ -445,7 +445,7 @@ const FloatingChatSupport: React.FC = () => {
   const [notebookContent, setNotebookContent] = useState("");
   
   // Função para mostrar o modal de caderno
-  const showNotebookModal = (content: string) => {
+  const openNotebookModal = (content: string) => {
     setNotebookContent(content);
     setShowNotebookModal(true);
   };
@@ -2314,7 +2314,7 @@ Exemplo de formato da resposta:
                                   })
                                   .then(notebookContent => {
                                     // Mostrar modal de caderno com o conteúdo gerado
-                                    showNotebookModal(notebookContent);
+                                    openNotebookModal(notebookContent);
                                   })
                                   .catch(error => {
                                     console.error("Erro ao converter para formato de caderno:", error);
