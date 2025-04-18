@@ -2416,7 +2416,7 @@ Exemplo de formato da resposta:
                                   
                                   // Função para gerar slides a partir do conteúdo
                                   const generateSlidesFromContent = (content) => {
-                                    // Extrair tópicos do conteúdo da mensagem
+                                    // Extrair tópicos do conteúdo da mensagem com análise mais profunda
                                     const extractTopics = (text) => {
                                       // Procurar por marcadores de lista ou numeração
                                       const bulletPoints = text.match(/[•\-\*]\s+([^\n]+)/g) || [];
@@ -2450,48 +2450,153 @@ Exemplo de formato da resposta:
                                       return "Apresentação do Tema";
                                     };
                                     
-                                    // Extrair um parágrafo explicativo da mensagem
+                                    // Extrair exemplos do conteúdo
+                                    const getExamples = (text) => {
+                                      const examplePatterns = [
+                                        /exemplo[s]?:?\s*([^.!?]+[.!?])/gi,
+                                        /por exemplo,?\s*([^.!?]+[.!?])/gi,
+                                        /como\s+([^.!?]+[.!?])/gi,
+                                        /caso[s]?:?\s*([^.!?]+[.!?])/gi
+                                      ];
+                                      
+                                      let examples = [];
+                                      
+                                      for (const pattern of examplePatterns) {
+                                        const matches = text.matchAll(pattern);
+                                        for (const match of matches) {
+                                          if (match[1] && match[1].length > 10) {
+                                            examples.push(match[1].trim());
+                                          }
+                                        }
+                                      }
+                                      
+                                      // Se não encontrou exemplos específicos, gerar alguns baseados no contexto
+                                      if (examples.length === 0) {
+                                        const paragraphs = text.split(/\n\n+/);
+                                        const potentialExamples = paragraphs
+                                          .filter(p => p.length > 30 && p.length < 200)
+                                          .slice(1, 3); // Pegar alguns parágrafos do meio do texto
+                                        
+                                        if (potentialExamples.length > 0) {
+                                          examples = potentialExamples.map(ex => "Exemplo: " + ex.trim());
+                                        } else {
+                                          examples = ["Exemplo ilustrativo (elabore com casos específicos durante a apresentação)"];
+                                        }
+                                      }
+                                      
+                                      return examples.slice(0, 2);
+                                    };
+                                    
+                                    // Extrair um parágrafo explicativo mais detalhado
                                     const getExplanation = (text) => {
                                       const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 30 && p.trim().length < 300);
                                       if (paragraphs.length > 0) {
                                         return paragraphs[0].trim();
                                       }
-                                      return "Este tema apresenta conceitos importantes que serão explorados nesta apresentação.";
+                                      return "Este tema apresenta conceitos importantes que serão explorados nesta apresentação. Durante esta exposição, analisaremos tanto os fundamentos teóricos quanto as aplicações práticas, proporcionando exemplos concretos para facilitar a compreensão.";
                                     };
                                     
-                                    // Extrair conclusão (último parágrafo ou resumo)
+                                    // Extrair aplicações práticas do conteúdo
+                                    const getApplications = (text) => {
+                                      const applicationPatterns = [
+                                        /aplicaç[ãõ]o[õe]?s:?\s*([^.!?]+[.!?])/gi,
+                                        /utiliza[çc][ãõ]o[õe]?s:?\s*([^.!?]+[.!?])/gi,
+                                        /pratic[ao][s]?:?\s*([^.!?]+[.!?])/gi,
+                                        /implica[çc][ãõ]o[õe]?s:?\s*([^.!?]+[.!?])/gi
+                                      ];
+                                      
+                                      let applications = [];
+                                      
+                                      for (const pattern of applicationPatterns) {
+                                        const matches = text.matchAll(pattern);
+                                        for (const match of matches) {
+                                          if (match[1] && match[1].length > 10) {
+                                            applications.push(match[1].trim());
+                                          }
+                                        }
+                                      }
+                                      
+                                      if (applications.length === 0) {
+                                        applications = ["Aplicação na resolução de problemas reais", "Uso em diferentes contextos educacionais"];
+                                      }
+                                      
+                                      return applications.slice(0, 2);
+                                    };
+                                    
+                                    // Extrair conclusão mais elaborada
                                     const getConclusion = (text) => {
                                       const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 30);
                                       if (paragraphs.length > 2) {
                                         return paragraphs[paragraphs.length - 1].trim();
                                       }
-                                      return "Vimos os principais aspectos deste tema. É importante continuar explorando estes conceitos para aprofundar o conhecimento.";
+                                      return "Vimos os principais aspectos deste tema. É importante continuar explorando estes conceitos para aprofundar o conhecimento. A compreensão desse conteúdo fornece ferramentas valiosas tanto para o desenvolvimento acadêmico quanto para aplicações práticas no cotidiano.";
                                     };
                                     
-                                    // Usar o conteúdo da mensagem para gerar slides significativos
+                                    // Gerar roteiro de apresentação
+                                    const generatePresentationOutline = () => {
+                                      return [
+                                        "1. Introdução (2-3 min)",
+                                        "   - Apresente o tema e sua relevância",
+                                        "   - Estabeleça conexão com o público",
+                                        "2. Conceitos principais (5-7 min)",
+                                        "   - Explique cada tópico com exemplos",
+                                        "   - Use analogias para facilitar compreensão",
+                                        "3. Aplicações práticas (3-5 min)",
+                                        "   - Demonstre casos de uso reais",
+                                        "   - Conecte teoria à prática",
+                                        "4. Conclusão (2 min)",
+                                        "   - Recapitule pontos principais",
+                                        "   - Destaque a importância do tema",
+                                        "5. Perguntas & Respostas (2-3 min)"
+                                      ].join("\n");
+                                    };
+                                    
+                                    // Usar o conteúdo da mensagem para gerar slides mais detalhados
                                     const title = getTitle(content);
                                     const topics = extractTopics(content);
                                     const explanation = getExplanation(content);
+                                    const examples = getExamples(content);
+                                    const applications = getApplications(content);
                                     const conclusion = getConclusion(content);
+                                    const presentationOutline = generatePresentationOutline();
                                     
-                                    // Gerar slides com base no conteúdo extraído
+                                    // Gerar slides com conteúdo mais detalhado
                                     const slides = [
                                       {
                                         titulo: title,
                                         topicos: topics.slice(0, 3),
-                                        explicacao: explanation,
+                                        explicacao: explanation + "\n\nEsta apresentação explorará os conceitos fundamentais, exemplos práticos e aplicações no mundo real. Siga o roteiro para uma exposição clara e didática.",
                                         imagemOpcional: ""
                                       },
                                       {
-                                        titulo: "Desenvolvimento",
-                                        topicos: topics.slice(0, 3).map(t => `Detalhes sobre: ${t}`),
-                                        explicacao: "Estes conceitos se aplicam em situações reais através de exemplos concretos que podemos explorar em profundidade.",
+                                        titulo: "Conceitos Fundamentais",
+                                        topicos: topics.slice(0, 3).map(t => t),
+                                        explicacao: "Os conceitos centrais desta apresentação formam a base para compreensão do tema:\n\n" + 
+                                                    topics.map((t, i) => `${i+1}. ${t}: Representa um aspecto essencial que será detalhado com exemplos.`).join("\n\n") +
+                                                    "\n\nAo compreender estes conceitos, será possível aplicá-los em diferentes contextos e situações práticas.",
                                         imagemOpcional: ""
                                       },
                                       {
-                                        titulo: "Conclusão",
-                                        topicos: ["Principais aprendizados", "Aplicações práticas", "Próximos passos"],
-                                        explicacao: conclusion,
+                                        titulo: "Exemplos e Aplicações",
+                                        topicos: ["Exemplos ilustrativos", "Casos práticos", "Contextos de aplicação"],
+                                        explicacao: "Para melhor compreensão, vamos analisar alguns exemplos:\n\n" +
+                                                    examples.map((ex, i) => `• ${ex}`).join("\n\n") +
+                                                    "\n\nAplicações práticas deste conhecimento:\n\n" +
+                                                    applications.map((app, i) => `• ${app}`).join("\n\n"),
+                                        imagemOpcional: ""
+                                      },
+                                      {
+                                        titulo: "Conclusão e Reflexões",
+                                        topicos: ["Síntese dos conceitos", "Importância do tema", "Próximos passos"],
+                                        explicacao: conclusion + "\n\nPerguntas para reflexão:\n\n" +
+                                                    "• Como este conhecimento pode ser aplicado no seu contexto?\n" +
+                                                    "• Quais desdobramentos futuros podemos antecipar nesta área?",
+                                        imagemOpcional: ""
+                                      },
+                                      {
+                                        titulo: "Roteiro de Apresentação",
+                                        topicos: ["Estrutura sugerida", "Tempos aproximados", "Dicas para exposição"],
+                                        explicacao: "Para uma apresentação eficaz deste conteúdo, sugere-se o seguinte roteiro:\n\n" + presentationOutline,
                                         imagemOpcional: ""
                                       }
                                     ];
