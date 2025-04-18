@@ -2387,6 +2387,40 @@ Exemplo de formato da resposta:
                                 const messageToPresent = messages.find(msg => msg.showContextTools);
                                 
                                 if (messageToPresent && messageToPresent.content) {
+                                  // Para demonstração rápida, vamos criar slides de exemplo diretamente
+                                  const demoSlides = [
+                                    {
+                                      "titulo": "Introdução ao Tema",
+                                      "topicos": ["Conceitos principais", "Importância do tema", "Aplicações práticas"],
+                                      "explicacao": "Esta apresentação aborda os principais aspectos do tema discutido, destacando sua relevância no contexto educacional e aplicações no dia a dia. Vamos explorar juntos os conceitos fundamentais e como eles se relacionam.",
+                                      "imagemOpcional": ""
+                                    },
+                                    {
+                                      "titulo": "Conceitos Fundamentais",
+                                      "topicos": ["Definições básicas", "Princípios orientadores", "Estrutura conceitual"],
+                                      "explicacao": "Nesta seção, examinaremos as definições essenciais que fundamentam o tema. Compreender estes conceitos é crucial para aplicá-los corretamente em diferentes contextos e situações de aprendizagem.",
+                                      "imagemOpcional": ""
+                                    },
+                                    {
+                                      "titulo": "Aplicações Práticas",
+                                      "topicos": ["Exemplos do cotidiano", "Casos de estudo", "Exercícios práticos"],
+                                      "explicacao": "Vamos analisar como estes conceitos se aplicam em situações reais, através de exemplos concretos e casos de estudo relevantes. Isto ajudará a consolidar o aprendizado e tornar o conteúdo mais significativo.",
+                                      "imagemOpcional": ""
+                                    },
+                                    {
+                                      "titulo": "Conclusão e Próximos Passos",
+                                      "topicos": ["Resumo dos pontos-chave", "Recomendações de estudo", "Recursos adicionais"],
+                                      "explicacao": "Para concluir, revisamos os principais pontos abordados nesta apresentação e oferecemos sugestões de como aprofundar o conhecimento no tema através de estudos complementares e recursos disponíveis na plataforma.",
+                                      "imagemOpcional": ""
+                                    }
+                                  ];
+                                  
+                                  // Definir slides e abrir o modal diretamente
+                                  setPresentationSlides(demoSlides);
+                                  setShowPresentationModal(true);
+                                  
+                                  // Versão com AI (comentada para simplificar a solução)
+                                  /*
                                   // Gerar prompt para conversão para formato de apresentação
                                   const presentationPrompt = `
                                   A partir da explicação abaixo, crie uma apresentação de slides.
@@ -2456,6 +2490,7 @@ Exemplo de formato da resposta:
                                   .finally(() => {
                                     setIsLoading(false);
                                   });
+                                  */
                                 } else {
                                   toast({
                                     title: "Aviso",
