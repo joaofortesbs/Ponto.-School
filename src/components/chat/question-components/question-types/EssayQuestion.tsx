@@ -131,7 +131,7 @@ export const EssayQuestion: React.FC<EssayQuestionProps> = ({
         )}
 
         {feedback && (
-          <div className={`mt-4 p-4 rounded-lg border max-h-[80vh] overflow-y-auto flex flex-col` +
+          <div className={`mt-4 p-4 rounded-lg border max-h-[50vh] max-w-[90%] mx-auto overflow-y-auto flex flex-col` +
           ` ${
             evaluation === "correct" 
               ? "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800" 
