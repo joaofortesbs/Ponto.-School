@@ -2,6 +2,14 @@
 import React, { useState } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { generateAIResponse } from "@/services/aiChatService";
+// Estender a interface Window para incluir função de mostrar progresso
+declare global {
+  interface Window {
+    showQuestionDetails: (questionType: string, questionNumber: number) => void;
+    generatedQuestions: Question[];
+    handleMyProgressClick?: () => void;
+  }
+}
 import QuestionConfigModal from "./question-components/QuestionConfigModal";
 import QuestionsResultsModal from "./question-components/QuestionsResultsModal";
 import QuestionDetailModal from "./question-components/QuestionDetailModal";
@@ -361,6 +369,20 @@ Retorne as questões em formato JSON conforme este exemplo:
     const modalRoot = document.createElement('div');
     modalRoot.id = 'questions-results-modal-root';
     document.body.appendChild(modalRoot);
+
+    // Definir globalmente a função para mostrar detalhes da questão
+    window.showQuestionDetails = (questionType: string, questionNumber: number) => {
+      showQuestionDetailModal(
+        questionType,
+        questionNumber,
+        totalQuestions,
+        multipleChoice,
+        essay,
+        trueFalse,
+        messageContent,
+        questionsData
+      );
+    };
 
     // Renderizar o componente QuestionsResultsModal
     import('react-dom/client').then((ReactDOMClient) => {

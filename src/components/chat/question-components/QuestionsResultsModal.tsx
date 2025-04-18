@@ -11,6 +11,16 @@ interface QuestionsResultsModalProps {
   onClose: () => void;
 }
 
+// Definir função global para visualizar progresso
+if (typeof window !== 'undefined') {
+  window.handleMyProgressClick = () => {
+    const progressButton = document.getElementById('my-progress-button');
+    if (progressButton) {
+      progressButton.click();
+    }
+  };
+}
+
 interface QuizHistory {
   date: Date;
   type: string;
