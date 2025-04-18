@@ -43,6 +43,46 @@
   top: 3px;
   height: 14px;
   width: 6px;
+
+/* Notebook Lines Styling */
+.notebook-lines {
+  padding: 0;
+  position: relative;
+}
+
+.notebook-lines::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 28px;
+  width: 1px;
+  height: 100%;
+  background: rgba(255, 0, 0, 0.2);
+  z-index: 1;
+}
+
+/* Custom scrollbar for notebook */
+.notebook-lines::-webkit-scrollbar {
+  width: 8px;
+}
+
+.notebook-lines::-webkit-scrollbar-track {
+  background: rgba(255, 240, 200, 0.5);
+}
+
+.notebook-lines::-webkit-scrollbar-thumb {
+  background-color: rgba(205, 133, 63, 0.5);
+  border-radius: 10px;
+}
+
+@font-face {
+  font-family: 'Architects Daughter';
+  font-style: normal;
+  font-weight: 400;
+  src: url('https://fonts.gstatic.com/s/architectsdaughter/v18/KtkxAKiDZI_td1Lkx62xHZHDtgO_Y-bvTYlg4w.woff2') format('woff2');
+  font-display: swap;
+}
+
   border-radius: 3px;
 }
 

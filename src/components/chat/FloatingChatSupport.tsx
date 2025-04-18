@@ -440,6 +440,16 @@ const FloatingChatSupport: React.FC = () => {
     customGrade: ""
   });
 
+  // Estado para modal de caderno
+  const [showNotebookModal, setShowNotebookModal] = useState(false);
+  const [notebookContent, setNotebookContent] = useState("");
+  
+  // Função para mostrar o modal de caderno
+  const showNotebookModal = (content: string) => {
+    setNotebookContent(content);
+    setShowNotebookModal(true);
+  };
+
   // Funções para lidar com feedback das mensagens
   const handleMessageFeedback = (messageId: number, feedback: 'positive' | 'negative') => {
     setMessages(prevMessages => {
@@ -2251,16 +2261,80 @@ Exemplo de formato da resposta:
                               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // Implementar escrita no caderno
+                                
+                                // Fechar menus de contexto
                                 setMessages(prevMessages => 
                                   prevMessages.map(msg => ({...msg, showContextTools: false}))
                                 );
                                 
-                                toast({
-                                  title: "Caderno de Anotações",
-                                  description: "Salvando conteúdo em seu caderno digital...",
-                                  duration: 3000,
-                                });
+                                // Obter a mensagem para converter para formato de caderno
+                                const messageToConvert = messages.find(msg => msg.showContextTools);
+                                
+                                if (messageToConvert && messageToConvert.content) {
+                                  // Mostrar notificação de processamento
+                                  toast({
+                                    title: "Caderno de Anotações",
+                                    description: "Convertendo conteúdo para formato de caderno...",
+                                    duration: 2000,
+                                  });
+                                  
+                                  // Gerar prompt para conversão para formato de caderno
+                                  const notebookPrompt = `
+                                  A partir da explicação abaixo, crie uma versão resumida no formato de caderno de anotações.
+                                  
+                                  Siga estas diretrizes:
+                                  - Comece com um título claro sobre o tema
+                                  - Liste apenas os pontos principais usando marcadores (•)
+                                  - Inclua fórmulas, regras, dicas de memorização e termos importantes
+                                  - Use frases curtas e objetivas
+                                  - Não use explicações longas ou formatação HTML
+                                  - Termine com uma mensagem "👉 Anotação pronta! Agora é só revisar no modo caderno :)"
+                                  
+                                  Explicação original:
+                                  "${messageToConvert.content}"
+                                  
+                                  Formato exemplo:
+                                  Matemática - Equação do 2º grau
+                                  • Forma geral: ax² + bx + c = 0
+                                  • Δ = b² - 4ac
+                                  • Bhaskara: x = (-b ± √Δ) / 2a
+                                  • Se Δ < 0 → sem raízes reais
+                                  • Se Δ = 0 → uma raiz real
+                                  • Se Δ > 0 → duas raízes reais
+                                  👉 Anotação pronta! Agora é só revisar no modo caderno :)
+                                  `;
+                                  
+                                  // Configurar estado de carregamento
+                                  setIsLoading(true);
+                                  
+                                  // Chamar serviço para converter conteúdo
+                                  generateAIResponse(notebookPrompt, sessionId || 'default_session', {
+                                    intelligenceLevel: 'advanced',
+                                    languageStyle: 'formal'
+                                  })
+                                  .then(notebookContent => {
+                                    // Mostrar modal de caderno com o conteúdo gerado
+                                    showNotebookModal(notebookContent);
+                                  })
+                                  .catch(error => {
+                                    console.error("Erro ao converter para formato de caderno:", error);
+                                    toast({
+                                      title: "Erro",
+                                      description: "Não foi possível converter o conteúdo para o formato de caderno.",
+                                      variant: "destructive",
+                                      duration: 3000,
+                                    });
+                                  })
+                                  .finally(() => {
+                                    setIsLoading(false);
+                                  });
+                                } else {
+                                  toast({
+                                    title: "Aviso",
+                                    description: "Nenhum conteúdo disponível para converter.",
+                                    duration: 3000,
+                                  });
+                                }
                               }}
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 mr-1.5 text-green-500 dark:text-green-400">
@@ -3073,6 +3147,92 @@ Exemplo de formato da resposta:
                   <span className="text-xs font-medium">{enableNotificationSounds ? 'Sons ativados' : 'Sons desativados'}</span>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Caderno para anotações */}
+      {showNotebookModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowNotebookModal(false)}></div>
+          <div className="relative bg-[#ffffe0] dark:bg-[#252525] w-[95%] max-w-3xl max-h-[90vh] rounded-lg border border-gray-400 dark:border-gray-600 shadow-2xl overflow-hidden">
+            {/* Cabeçalho do caderno */}
+            <div className="flex justify-between items-center px-4 py-2 bg-amber-100 dark:bg-gray-800 border-b border-gray-400 dark:border-gray-600">
+              <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                <FileText className="h-5 w-5 text-[#FF6B00]" />
+                Caderno de Anotações
+              </h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+                onClick={() => setShowNotebookModal(false)}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            
+            {/* Conteúdo do caderno com linhas */}
+            <ScrollArea className="h-[70vh] bg-[#ffffe0] dark:bg-[#252525] p-4 notebook-lines">
+              <div
+                className="w-full text-gray-800 dark:text-gray-200 whitespace-pre-line leading-loose px-3"
+                style={{
+                  backgroundImage: 'linear-gradient(#999 1px, transparent 1px)',
+                  backgroundSize: '100% 28px',
+                  lineHeight: '28px',
+                  fontFamily: "'Architects Daughter', cursive, system-ui"
+                }}
+                dangerouslySetInnerHTML={{ __html: notebookContent
+                  .replace(/•/g, '<span class="text-[#FF6B00]">•</span>')
+                  .replace(/👉/g, '<span class="text-blue-600 dark:text-blue-400">👉</span>')
+                }}
+              />
+            </ScrollArea>
+            
+            {/* Rodapé com ações */}
+            <div className="p-3 border-t border-gray-400 dark:border-gray-600 bg-amber-100 dark:bg-gray-800 flex justify-between">
+              <Button 
+                variant="outline"
+                className="text-gray-800 dark:text-gray-200 border-gray-400 dark:border-gray-600 hover:bg-amber-200 dark:hover:bg-gray-700"
+                onClick={() => {
+                  // Copiar conteúdo para a área de transferência
+                  navigator.clipboard.writeText(notebookContent);
+                  toast({
+                    title: "Conteúdo copiado!",
+                    description: "As anotações foram copiadas para a área de transferência",
+                    duration: 3000,
+                  });
+                }}
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                Copiar texto
+              </Button>
+              
+              <Button 
+                className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+                onClick={() => {
+                  // Simular download/exportação
+                  const blob = new Blob([notebookContent], { type: 'text/plain' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `anotacoes_${new Date().toISOString().split('T')[0]}.txt`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                  
+                  toast({
+                    title: "Anotações exportadas",
+                    description: "Arquivo de texto baixado com sucesso",
+                    duration: 3000,
+                  });
+                }}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Exportar anotações
+              </Button>
             </div>
           </div>
         </div>
