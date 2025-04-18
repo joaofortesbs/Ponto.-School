@@ -2951,37 +2951,348 @@ Exemplo de formato da resposta:
                                                 throw new Error("Nenhuma mensagem encontrada para basear as questões");
                                               }
                                               
+                                              // Mostrar modal de carregamento
+                                              const loadingModalHTML = `
+                                                <div id="questions-loading-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+                                                  <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 p-5 shadow-xl w-[90%] max-w-sm animate-fadeIn flex flex-col items-center">
+                                                    <div class="w-16 h-16 mb-4">
+                                                      <div class="w-full h-full rounded-full border-4 border-orange-100 dark:border-orange-900/30 border-t-orange-500 animate-spin"></div>
+                                                    </div>
+                                                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">Gerando questões</h3>
+                                                    <p class="text-sm text-gray-600 dark:text-gray-400 text-center">
+                                                      Aguarde enquanto criamos questões personalizadas com base no conteúdo estudado...
+                                                    </p>
+                                                  </div>
+                                                </div>
+                                              `;
+                                              
+                                              // Adicionar modal de carregamento ao DOM
+                                              document.body.insertAdjacentHTML('beforeend', loadingModalHTML);
+                                              
                                               // Criar prompt específico para geração de questões
                                               const promptText = `Gere ${totalQuestions} questões sobre o conteúdo anterior. Sendo:
 ${multipleChoice} alternativas, ${discursive} discursivas, ${trueFalse} V/F. ${bnccCompetence ? `Se possível, alinhe com a competência BNCC selecionada: ${bnccCompetence}.` : ""} Para cada questão, gere: enunciado, tipo, gabarito (se aplicável), explicação.`;
                                               
-                                              // Chamar a IA para gerar as questões
-                                              const response = await generateAIResponse(
-                                                promptText,
-                                                sessionId || 'default_session',
-                                                {
-                                                  intelligenceLevel: 'advanced',
-                                                  languageStyle: 'formal'
+                                              try {
+                                                // Chamar a IA para gerar as questões
+                                                const response = await generateAIResponse(
+                                                  promptText,
+                                                  sessionId || 'default_session',
+                                                  {
+                                                    intelligenceLevel: 'advanced',
+                                                    languageStyle: 'formal'
+                                                  }
+                                                );
+                                                
+                                                // Remover modal de carregamento
+                                                const loadingModal = document.getElementById('questions-loading-modal');
+                                                if (loadingModal) {
+                                                  loadingModal.remove();
                                                 }
-                                              );
-                                              
-                                              // Adicionar a resposta ao chat como uma mensagem da IA
-                                              setMessages(prev => [
-                                                ...prev,
-                                                {
-                                                  id: Date.now(),
-                                                  content: response,
-                                                  sender: "assistant",
-                                                  timestamp: new Date()
+                                                
+                                                // Processar as questões para o formato de exibição
+                                                const processQuestions = (text) => {
+                                                  // Dividir o texto em questões individuais
+                                                  let questions = [];
+                                                  
+                                                  // Padrão para identificar questões numeradas 
+                                                  const questionRegex = /(?:^|\n)(?:Questão\s*)?(\d+)[\.:\)]\s*(.*?)(?=(?:\n(?:Questão\s*)?(?:\d+)[\.:\)])|$)/gs;
+                                                  
+                                                  let match;
+                                                  while ((match = questionRegex.exec(text)) !== null) {
+                                                    const fullContent = match[2].trim();
+                                                    
+                                                    // Tentar identificar tipo, enunciado, gabarito e explicação
+                                                    const typeMatch = fullContent.match(/^(?:Tipo|Tipo de questão):\s*(.*?)(?:\n|$)/i);
+                                                    const type = typeMatch ? typeMatch[1].trim() : "Não especificado";
+                                                    
+                                                    const questionContent = fullContent.replace(/^(?:Tipo|Tipo de questão):\s*(.*?)(?:\n|$)/i, '').trim();
+                                                    
+                                                    // Separar gabarito e explicação
+                                                    const answerMatch = questionContent.match(/(?:Gabarito|Resposta):\s*(.*?)(?:\n|$)/i);
+                                                    const answer = answerMatch ? answerMatch[1].trim() : "";
+                                                    
+                                                    const explanationMatch = questionContent.match(/(?:Explicação|Justificativa):\s*([\s\S]*?)$/i);
+                                                    const explanation = explanationMatch ? explanationMatch[1].trim() : "";
+                                                    
+                                                    // O enunciado é o que resta após remover tipo, gabarito e explicação
+                                                    let statement = questionContent
+                                                      .replace(/(?:Gabarito|Resposta):\s*(.*?)(?:\n|$)/i, '')
+                                                      .replace(/(?:Explicação|Justificativa):\s*([\s\S]*?)$/i, '')
+                                                      .trim();
+                                                    
+                                                    // Adicionar à lista de questões
+                                                    questions.push({
+                                                      number: match[1],
+                                                      type,
+                                                      statement,
+                                                      answer,
+                                                      explanation
+                                                    });
+                                                  }
+                                                  
+                                                  // Se não encontrou nenhuma questão com o regex, considerar o texto completo
+                                                  if (questions.length === 0) {
+                                                    questions.push({
+                                                      number: "1",
+                                                      type: "Não especificado",
+                                                      statement: text,
+                                                      answer: "",
+                                                      explanation: ""
+                                                    });
+                                                  }
+                                                  
+                                                  return questions;
+                                                };
+                                                
+                                                const questionsArray = processQuestions(response);
+                                                
+                                                // Criar HTML para o modal de questões
+                                                const questionsModalHTML = `
+                                                  <div id="questions-result-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+                                                    <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 shadow-xl w-[95%] max-w-4xl h-[90vh] animate-fadeIn flex flex-col">
+                                                      <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center sticky top-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg z-10">
+                                                        <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                                                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500">
+                                                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                                                          </svg>
+                                                          Questões Geradas (${questionsArray.length})
+                                                        </h3>
+                                                        <button 
+                                                          id="close-questions-result-modal"
+                                                          class="h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                                                        >
+                                                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path d="M18 6 6 18"></path>
+                                                            <path d="m6 6 12 12"></path>
+                                                          </svg>
+                                                        </button>
+                                                      </div>
+                                                      
+                                                      <div class="overflow-y-auto flex-1 p-4">
+                                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                          ${questionsArray.map((q, index) => `
+                                                            <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden" id="question-card-${index}">
+                                                              <div class="bg-gray-50 dark:bg-gray-800 p-3 flex justify-between items-center">
+                                                                <div class="flex items-center gap-2">
+                                                                  <div class="w-7 h-7 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-800 dark:text-orange-300 font-semibold text-sm">
+                                                                    ${q.number}
+                                                                  </div>
+                                                                  <div>
+                                                                    <span class="text-xs font-medium text-gray-800 dark:text-gray-200">
+                                                                      ${q.type.includes("alternativa") || q.type.includes("múltipla") ? "Múltipla Escolha" : 
+                                                                        q.type.includes("discursiva") ? "Discursiva" : 
+                                                                        q.type.includes("V/F") || q.type.includes("verdadeiro") || q.type.includes("falso") ? "Verdadeiro/Falso" : 
+                                                                        q.type}
+                                                                    </span>
+                                                                  </div>
+                                                                </div>
+                                                                <div class="flex gap-1">
+                                                                  <button class="text-xs px-2 py-1 rounded bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-orange-900/30 transition-colors question-gabarito-btn" data-index="${index}">
+                                                                    Ver Gabarito
+                                                                  </button>
+                                                                  <button class="text-xs px-2 py-1 rounded bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/30 transition-colors question-caderno-btn" data-index="${index}">
+                                                                    Transformar em Caderno
+                                                                  </button>
+                                                                </div>
+                                                              </div>
+                                                              <div class="p-3">
+                                                                <div class="text-sm text-gray-800 dark:text-gray-200 mb-3 question-text">
+                                                                  ${q.statement.replace(/\n/g, '<br>')}
+                                                                </div>
+                                                                
+                                                                <div class="hidden bg-green-50 dark:bg-green-900/10 p-3 rounded-lg border border-green-100 dark:border-green-900/30 mt-3 question-gabarito" id="gabarito-${index}">
+                                                                  <div class="text-xs font-semibold text-green-800 dark:text-green-300 mb-1">Gabarito:</div>
+                                                                  <div class="text-sm text-gray-800 dark:text-gray-200">
+                                                                    ${q.answer.replace(/\n/g, '<br>')}
+                                                                  </div>
+                                                                  ${q.explanation ? `
+                                                                    <div class="mt-2 pt-2 border-t border-green-200 dark:border-green-800">
+                                                                      <div class="text-xs font-semibold text-green-800 dark:text-green-300 mb-1">Explicação:</div>
+                                                                      <div class="text-sm text-gray-800 dark:text-gray-200">
+                                                                        ${q.explanation.replace(/\n/g, '<br>')}
+                                                                      </div>
+                                                                    </div>
+                                                                  ` : ''}
+                                                                </div>
+                                                              </div>
+                                                            </div>
+                                                          `).join('')}
+                                                        </div>
+                                                      </div>
+                                                      
+                                                      <div class="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                                                        <button 
+                                                          id="add-to-chat-btn"
+                                                          class="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg transition-colors"
+                                                        >
+                                                          Adicionar ao Chat
+                                                        </button>
+                                                        <button 
+                                                          id="transform-all-btn"
+                                                          class="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg transition-colors"
+                                                        >
+                                                          Transformar em Caderno
+                                                        </button>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                `;
+                                                
+                                                // Adicionar modal de questões ao DOM
+                                                document.body.insertAdjacentHTML('beforeend', questionsModalHTML);
+                                                
+                                                // Adicionar comportamento aos botões
+                                                setTimeout(() => {
+                                                  // Botão de fechar
+                                                  const closeButton = document.getElementById('close-questions-result-modal');
+                                                  if (closeButton) {
+                                                    closeButton.addEventListener('click', () => {
+                                                      const modal = document.getElementById('questions-result-modal');
+                                                      if (modal) {
+                                                        modal.remove();
+                                                      }
+                                                    });
+                                                  }
+                                                  
+                                                  // Clicar fora para fechar
+                                                  const modal = document.getElementById('questions-result-modal');
+                                                  if (modal) {
+                                                    modal.addEventListener('click', (e) => {
+                                                      if (e.target === modal) {
+                                                        modal.remove();
+                                                      }
+                                                    });
+                                                  }
+                                                  
+                                                  // Botões de ver gabarito
+                                                  const gabaritoButtons = document.querySelectorAll('.question-gabarito-btn');
+                                                  gabaritoButtons.forEach(btn => {
+                                                    btn.addEventListener('click', () => {
+                                                      const index = btn.getAttribute('data-index');
+                                                      const gabarito = document.getElementById(`gabarito-${index}`);
+                                                      
+                                                      if (gabarito) {
+                                                        if (gabarito.classList.contains('hidden')) {
+                                                          gabarito.classList.remove('hidden');
+                                                          btn.textContent = 'Ocultar Gabarito';
+                                                        } else {
+                                                          gabarito.classList.add('hidden');
+                                                          btn.textContent = 'Ver Gabarito';
+                                                        }
+                                                      }
+                                                    });
+                                                  });
+                                                  
+                                                  // Botão para adicionar ao chat
+                                                  const addToChatBtn = document.getElementById('add-to-chat-btn');
+                                                  if (addToChatBtn) {
+                                                    addToChatBtn.addEventListener('click', () => {
+                                                      // Adicionar a resposta ao chat como uma mensagem da IA
+                                                      setMessages(prev => [
+                                                        ...prev,
+                                                        {
+                                                          id: Date.now(),
+                                                          content: response,
+                                                          sender: "assistant",
+                                                          timestamp: new Date()
+                                                        }
+                                                      ]);
+                                                      
+                                                      // Fechar o modal
+                                                      const modal = document.getElementById('questions-result-modal');
+                                                      if (modal) {
+                                                        modal.remove();
+                                                      }
+                                                      
+                                                      toast({
+                                                        title: "Questões adicionadas ao chat",
+                                                        description: "As questões foram adicionadas à conversa",
+                                                        duration: 3000,
+                                                      });
+                                                    });
+                                                  }
+                                                  
+                                                  // Botões para transformar questão individual em caderno
+                                                  const cadernoButtons = document.querySelectorAll('.question-caderno-btn');
+                                                  cadernoButtons.forEach(btn => {
+                                                    btn.addEventListener('click', () => {
+                                                      const index = btn.getAttribute('data-index');
+                                                      const question = questionsArray[index];
+                                                      
+                                                      if (question) {
+                                                        // Disparar evento para transformar em caderno
+                                                        const transformEvent = new CustomEvent('transform-to-notebook', {
+                                                          detail: {
+                                                            content: `Questão ${question.number}: ${question.statement}\n\nGabarito: ${question.answer}\n\nExplicação: ${question.explanation}`
+                                                          }
+                                                        });
+                                                        
+                                                        document.dispatchEvent(transformEvent);
+                                                        
+                                                        // Fechar o modal
+                                                        const modal = document.getElementById('questions-result-modal');
+                                                        if (modal) {
+                                                          modal.remove();
+                                                        }
+                                                      }
+                                                    });
+                                                  });
+                                                  
+                                                  // Botão para transformar todas as questões em caderno
+                                                  const transformAllBtn = document.getElementById('transform-all-btn');
+                                                  if (transformAllBtn) {
+                                                    transformAllBtn.addEventListener('click', () => {
+                                                      // Preparar todo o conteúdo
+                                                      const fullContent = questionsArray.map(q => 
+                                                        `Questão ${q.number} (${q.type}): ${q.statement}\n\nGabarito: ${q.answer}\n\nExplicação: ${q.explanation}`
+                                                      ).join('\n\n---\n\n');
+                                                      
+                                                      // Disparar evento para transformar em caderno
+                                                      const transformEvent = new CustomEvent('transform-to-notebook', {
+                                                        detail: {
+                                                          content: fullContent
+                                                        }
+                                                      });
+                                                      
+                                                      document.dispatchEvent(transformEvent);
+                                                      
+                                                      // Fechar o modal
+                                                      const modal = document.getElementById('questions-result-modal');
+                                                      if (modal) {
+                                                        modal.remove();
+                                                      }
+                                                    });
+                                                  }
+                                                }, 100);
+                                              } catch (error) {
+                                                console.error('Erro ao gerar questões:', error);
+                                                
+                                                // Remover modal de carregamento
+                                                const loadingModal = document.getElementById('questions-loading-modal');
+                                                if (loadingModal) {
+                                                  loadingModal.remove();
                                                 }
-                                              ]);
-                                              
-                                              // Notificar sucesso
-                                              toast({
-                                                title: "Questões geradas com sucesso",
-                                                description: "As questões foram adicionadas ao chat.",
-                                                duration: 3000,
-                                              });
+                                                
+                                                toast({
+                                                  title: "Erro ao gerar questões",
+                                                  description: "Não foi possível gerar as questões. Por favor, tente novamente.",
+                                                  variant: "destructive",
+                                                  duration: 3000,
+                                                });
+                                                
+                                                // Adicionar mensagem de erro ao chat
+                                                setMessages(prev => [
+                                                  ...prev,
+                                                  {
+                                                    id: Date.now(),
+                                                    content: "Desculpe, ocorreu um erro ao gerar as questões. Por favor, tente novamente mais tarde.",
+                                                    sender: "assistant",
+                                                    timestamp: new Date()
+                                                  }
+                                                ]);
+                                              }
                                               
                                             } catch (error) {
                                               console.error('Erro ao gerar questões:', error);
