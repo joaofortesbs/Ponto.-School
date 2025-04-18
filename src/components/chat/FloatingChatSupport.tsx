@@ -2970,8 +2970,20 @@ Exemplo de formato da resposta:
                                               document.body.insertAdjacentHTML('beforeend', loadingModalHTML);
                                               
                                               // Criar prompt específico para geração de questões
-                                              const promptText = `Gere ${totalQuestions} questões sobre o conteúdo anterior. Sendo:
-${multipleChoice} alternativas, ${discursive} discursivas, ${trueFalse} V/F. ${bnccCompetence ? `Se possível, alinhe com a competência BNCC selecionada: ${bnccCompetence}.` : ""} Para cada questão, gere: enunciado, tipo, gabarito (se aplicável), explicação.`;
+                                              const promptText = `Com base na última resposta da IA sobre "${lastAIMessage?.content.substring(0, 100)}...", gere ${totalQuestions} questões diretamente relacionadas ao conteúdo explicado na resposta. Sendo:
+${multipleChoice} questões de múltipla escolha, ${discursive} questões discursivas, ${trueFalse} questões de verdadeiro ou falso. ${bnccCompetence ? `Se possível, alinhe com a competência BNCC selecionada: ${bnccCompetence}.` : ""}
+
+IMPORTANTE: 
+1. Cada questão DEVE abordar especificamente os conceitos, temas e exemplos mencionados na resposta da IA
+2. Para cada questão, forneça:
+   - Um título curto e descritivo sobre o tema principal da questão
+   - O tipo de questão (múltipla escolha, discursiva ou verdadeiro/falso)
+   - Enunciado completo
+   - Alternativas (para múltipla escolha) ou afirmações (para V/F)
+   - Gabarito com a resposta correta
+   - Uma explicação detalhada da resposta
+
+Use exatamente os termos e conceitos explicados na resposta da IA. Não invente tópicos não abordados.`;
                                               
                                               try {
                                                 // Chamar a IA para gerar as questões
@@ -3072,20 +3084,45 @@ ${multipleChoice} alternativas, ${discursive} discursivas, ${trueFalse} V/F. ${b
                                                       
                                                       <div class="overflow-y-auto flex-1 p-4">
                                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                          ${questionsArray.map((q, index) => `
+                                                          ${questionsArray.map((q, index) => {
+                                                            // Determinar o tipo de questão e a classe de cor associada
+                                                            let questionType = "";
+                                                            let tagColorClass = "";
+                                                            
+                                                            if (q.type.includes("alternativa") || q.type.includes("múltipla") || q.type.includes("escolha")) {
+                                                              questionType = "MÚLTIPLA ESCOLHA";
+                                                              tagColorClass = "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300";
+                                                            } else if (q.type.includes("discursiva")) {
+                                                              questionType = "DISCURSIVA";
+                                                              tagColorClass = "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300";
+                                                            } else if (q.type.includes("V/F") || q.type.includes("verdadeiro") || q.type.includes("falso")) {
+                                                              questionType = "VERDADEIRO OU FALSO";
+                                                              tagColorClass = "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300";
+                                                            } else {
+                                                              questionType = q.type.toUpperCase();
+                                                              tagColorClass = "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200";
+                                                            }
+                                                            
+                                                            // Extrair um título da questão (primeiras 5-7 palavras do enunciado)
+                                                            const words = q.statement.split(' ');
+                                                            const titleLength = Math.min(7, Math.max(5, Math.floor(words.length / 3)));
+                                                            const questionTitle = words.slice(0, titleLength).join(' ') + (words.length > titleLength ? '...' : '');
+                                                            
+                                                            return `
                                                             <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 shadow-md overflow-hidden cursor-pointer hover:border-orange-400 dark:hover:border-orange-500 transition-all duration-200 transform hover:scale-[1.02]" id="question-card-${index}">
                                                               <div class="p-4" data-question-index="${index}">
-                                                                <div class="flex items-center gap-2 mb-2">
+                                                                <div class="flex items-center gap-2 mb-1">
                                                                   <div class="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white font-semibold text-sm">
                                                                     ${q.number}
                                                                   </div>
-                                                                  <span class="text-xs font-medium px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
-                                                                    ${q.type.includes("alternativa") || q.type.includes("múltipla") ? "Múltipla Escolha" : 
-                                                                      q.type.includes("discursiva") ? "Discursiva" : 
-                                                                      q.type.includes("V/F") || q.type.includes("verdadeiro") || q.type.includes("falso") ? "Verdadeiro/Falso" : 
-                                                                      q.type}
+                                                                  <span class="text-xs font-medium px-2 py-1 rounded-full ${tagColorClass}">
+                                                                    ${questionType}
                                                                   </span>
                                                                 </div>
+                                                                
+                                                                <h4 class="font-semibold text-gray-900 dark:text-gray-100 text-sm mb-2 mt-2 border-b pb-1 border-gray-200 dark:border-gray-700">
+                                                                  ${questionTitle}
+                                                                </h4>
                                                                 
                                                                 <div class="text-sm text-gray-800 dark:text-gray-200 mb-4 question-text">
                                                                   ${q.statement.replace(/\n/g, '<br>')}
@@ -3116,7 +3153,8 @@ ${multipleChoice} alternativas, ${discursive} discursivas, ${trueFalse} V/F. ${b
                                                                 </div>
                                                               </div>
                                                             </div>
-                                                          `).join('')}
+                                                            `;
+                                                          }).join('')}
                                                         </div>
                                                         
                                                         <!-- Modal para visualizar questão individual -->
@@ -3129,12 +3167,15 @@ ${multipleChoice} alternativas, ${discursive} discursivas, ${trueFalse} V/F. ${b
                                                                     <path d="m15 18-6-6 6-6"></path>
                                                                   </svg>
                                                                 </button>
-                                                                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                                                                  <span id="question-detail-number" class="w-7 h-7 rounded-full bg-orange-500 flex items-center justify-center text-white font-semibold text-sm">1</span>
-                                                                  <span id="question-detail-type" class="text-xs font-medium px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
-                                                                    Múltipla Escolha
-                                                                  </span>
-                                                                </h3>
+                                                                <div>
+                                                                  <div class="flex items-center gap-2 mb-1">
+                                                                    <span id="question-detail-number" class="w-7 h-7 rounded-full bg-orange-500 flex items-center justify-center text-white font-semibold text-sm">1</span>
+                                                                    <span id="question-detail-type" class="text-xs font-medium px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                                                                      MÚLTIPLA ESCOLHA
+                                                                    </span>
+                                                                  </div>
+                                                                  <h3 id="question-detail-title" class="text-sm font-semibold text-gray-800 dark:text-gray-200">Título da Questão</h3>
+                                                                </div>
                                                               </div>
                                                               <button 
                                                                 id="close-question-detail-modal"
@@ -3246,6 +3287,7 @@ ${multipleChoice} alternativas, ${discursive} discursivas, ${trueFalse} V/F. ${b
                                                           // Preencher dados no modal de detalhe da questão
                                                           const numberElement = document.getElementById('question-detail-number');
                                                           const typeElement = document.getElementById('question-detail-type');
+                                                          const titleElement = document.getElementById('question-detail-title');
                                                           const contentElement = document.getElementById('question-detail-content');
                                                           const answerElement = document.getElementById('question-detail-answer');
                                                           const explanationElement = document.getElementById('question-detail-explanation');
@@ -3253,18 +3295,32 @@ ${multipleChoice} alternativas, ${discursive} discursivas, ${trueFalse} V/F. ${b
                                                           
                                                           if (numberElement) numberElement.textContent = questionData.number;
                                                           
+                                                          // Extrair um título da questão (primeiras palavras do enunciado)
+                                                          if (titleElement) {
+                                                            const words = questionData.statement.split(' ');
+                                                            const titleLength = Math.min(7, Math.max(5, Math.floor(words.length / 3)));
+                                                            titleElement.textContent = words.slice(0, titleLength).join(' ') + (words.length > titleLength ? '...' : '');
+                                                          }
+                                                          
                                                           if (typeElement) {
-                                                            let typeText = "Questão";
-                                                            if (questionData.type.includes("alternativa") || questionData.type.includes("múltipla")) {
-                                                              typeText = "Múltipla Escolha";
+                                                            let typeText = "QUESTÃO";
+                                                            let tagColorClass = "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200";
+                                                            
+                                                            if (questionData.type.includes("alternativa") || questionData.type.includes("múltipla") || questionData.type.includes("escolha")) {
+                                                              typeText = "MÚLTIPLA ESCOLHA";
+                                                              tagColorClass = "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300";
                                                             } else if (questionData.type.includes("discursiva")) {
-                                                              typeText = "Discursiva";
+                                                              typeText = "DISCURSIVA";
+                                                              tagColorClass = "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300";
                                                             } else if (questionData.type.includes("V/F") || questionData.type.includes("verdadeiro") || questionData.type.includes("falso")) {
-                                                              typeText = "Verdadeiro/Falso";
+                                                              typeText = "VERDADEIRO OU FALSO";
+                                                              tagColorClass = "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300";
                                                             } else {
-                                                              typeText = questionData.type;
+                                                              typeText = questionData.type.toUpperCase();
                                                             }
+                                                            
                                                             typeElement.textContent = typeText;
+                                                            typeElement.className = `text-xs font-medium px-2 py-1 rounded-full ${tagColorClass}`;
                                                           }
                                                           
                                                           if (contentElement) contentElement.innerHTML = questionData.statement.replace(/\n/g, '<br>');
