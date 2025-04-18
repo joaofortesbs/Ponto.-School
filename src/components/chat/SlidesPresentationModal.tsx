@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -73,7 +72,7 @@ const SlidesPresentationModal: React.FC<SlidesPresentationModalProps> = ({
               <X size={24} />
             </Button>
           </div>
-          
+
           {/* Content */}
           <div className="flex-grow p-6 overflow-y-auto max-h-[60vh]">
             {isLoading ? (
@@ -86,7 +85,7 @@ const SlidesPresentationModal: React.FC<SlidesPresentationModalProps> = ({
                 {/* Main content */}
                 <div className={`flex-1 ${currentSlide?.imagemOpcional ? 'md:w-1/2' : 'w-full'}`}>
                   <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4">{currentSlide?.titulo}</h3>
-                  
+
                   {currentSlide?.topicos && currentSlide.topicos.length > 0 && (
                     <div className="mb-4">
                       <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Principais tópicos:</h4>
@@ -100,13 +99,13 @@ const SlidesPresentationModal: React.FC<SlidesPresentationModalProps> = ({
                       </ul>
                     </div>
                   )}
-                  
+
                   <div className="mt-4 overflow-y-auto">
                     <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Explicação:</h4>
                     <div className="text-gray-700 dark:text-gray-300 whitespace-pre-line">{currentSlide?.explicacao}</div>
                   </div>
                 </div>
-                
+
                 {/* Image (if available) */}
                 {currentSlide?.imagemOpcional && (
                   <div className="md:w-1/2 flex items-center justify-center">
@@ -120,7 +119,7 @@ const SlidesPresentationModal: React.FC<SlidesPresentationModalProps> = ({
               </div>
             )}
           </div>
-          
+
           {/* Footer with navigation */}
           <div className="border-t border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between bg-gray-50 dark:bg-gray-900">
             <Button
@@ -132,11 +131,11 @@ const SlidesPresentationModal: React.FC<SlidesPresentationModalProps> = ({
               <ChevronLeft size={16} />
               Anterior
             </Button>
-            
+
             <div className="text-sm text-gray-500 dark:text-gray-400">
               Slide {currentSlideIndex + 1} de {validSlides.length}
             </div>
-            
+
             <Button
               variant="default"
               onClick={goToNextSlide}

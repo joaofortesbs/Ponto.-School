@@ -2422,6 +2422,34 @@ Exemplo de formato da resposta:
                                       return [];
                                     }
                                     
+                                    // Filtrar e remover saudações, expressões informais e conversacionais
+                                    const cleanContent = (text) => {
+                                      // Padrões para remoção
+                                      const patternsToRemove = [
+                                        // Saudações e expressões informais
+                                        /(?:e aí|olá|oi|hey|hello|hi|bom dia|boa tarde|boa noite|tudo bem|tranquilo|beleza|como vai)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
+                                        /(?:😉|😊|🙂|😄|😃)/, // Emojis de sorriso típicos de saudação
+                                        // Expressões de fechamento
+                                        /(?:até mais|até logo|tchau|abraços|fique bem)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
+                                        // Perguntas diretas ao usuário
+                                        /(?:você|vocês|tu|entendeu|sacou|percebeu)(?:\s+[^,\.!?]*?)(?:[,\.!?\?])/gi,
+                                        // Expressões informais
+                                        /(?:né|bora|tipo|show|top|maneiro|legal|bacana|valeu|tranquilo)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi
+                                      ];
+                                      
+                                      let cleaned = text;
+                                      patternsToRemove.forEach(pattern => {
+                                        cleaned = cleaned.replace(pattern, '');
+                                      });
+                                      
+                                      // Limpar múltiplas quebras de linha e espaços extras criados pela remoção
+                                      cleaned = cleaned.replace(/\n{3,}/g, '\n\n').replace(/\s{2,}/g, ' ').trim();
+                                      return cleaned;
+                                    };
+                                    
+                                    // Limpar o conteúdo antes de processar
+                                    content = cleanContent(content);
+                                    
                                     // Divide o conteúdo em seções
                                     const paragraphs = content.split('\n\n').filter(p => p.trim().length > 0);
                                     
@@ -2483,9 +2511,9 @@ Exemplo de formato da resposta:
                                         "Aplicações práticas",
                                         "Próximos passos"
                                       ],
-                                      explicacao: "Esta apresentação abordou os principais aspectos sobre " + 
+                                      explicacao: "Principais aspectos sobre " + 
                                                   mainTitle.substring(0, 40) + 
-                                                  ". Esperamos que os conceitos e exemplos ajudem na compreensão do tema.",
+                                                  ". Conceitos fundamentais e aplicações do tema.",
                                       imagemOpcional: ""
                                     });
                                     
