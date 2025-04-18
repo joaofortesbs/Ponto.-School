@@ -8,6 +8,7 @@ interface MultipleChoiceQuestionProps {
   messageContent: string;
   onOptionSelect: (optionId: string) => void;
   selectedOption: string | null;
+  showExplanation?: boolean;
 }
 
 export const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
@@ -15,7 +16,8 @@ export const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
   questionNumber,
   messageContent,
   onOptionSelect,
-  selectedOption
+  selectedOption,
+  showExplanation = false
 }) => {
   const renderDefaultOptions = () => {
     const terms = extractTerms(messageContent);
@@ -57,8 +59,8 @@ export const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
       
       // Verificar se esta opção é a correta
       const isCorrect = option.isCorrect === true;
-      // Verificar se o usuário já selecionou uma opção e podemos mostrar qual é a correta
-      const showCorrectAnswer = selectedOption !== null;
+      // Mostrar a resposta correta apenas se o usuário clicou em "Ver resposta"
+      const showCorrectAnswer = showExplanation && selectedOption !== null;
       
       return (
         <div 

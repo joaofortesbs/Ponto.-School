@@ -178,6 +178,7 @@ const QuestionDetailModal: React.FC<QuestionDetailModalProps> = ({
           messageContent={messageContent}
           onOptionSelect={setSelectedOption}
           selectedOption={selectedOption}
+          showExplanation={showExplanation}
         />
       );
     } else if (questionType === 'essay') {
