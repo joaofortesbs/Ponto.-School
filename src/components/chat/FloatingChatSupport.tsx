@@ -2371,11 +2371,132 @@ Exemplo de formato da resposta:
                                   if (doQuizButton) {
                                     doQuizButton.addEventListener('click', () => {
                                       closeModal();
-                                      toast({
-                                        title: "Funcionalidade em desenvolvimento",
-                                        description: "O modo Quiz estará disponível em breve!",
-                                        duration: 3000,
-                                      });
+                                      
+                                      // Criar e adicionar o modal de configuração do quiz
+                                      const quizConfigModalHTML = `
+                                        <div id="quiz-config-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+                                          <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 p-5 shadow-xl w-[90%] max-w-sm animate-fadeIn">
+                                            <div class="flex justify-between items-center mb-4">
+                                              <h3 class="text-lg font-semibold flex items-center gap-2 text-gray-800 dark:text-gray-200">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500">
+                                                  <circle cx="12" cy="12" r="10"></circle>
+                                                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                                </svg>
+                                                Configurações do Quiz
+                                              </h3>
+                                              <button 
+                                                id="close-quiz-config-modal"
+                                                class="h-7 w-7 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                              >
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                  <path d="M18 6 6 18"></path>
+                                                  <path d="m6 6 12 12"></path>
+                                                </svg>
+                                              </button>
+                                            </div>
+                                            
+                                            <div class="space-y-4 mb-6">
+                                              <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
+                                                <div>
+                                                  <p class="font-medium text-sm text-gray-800 dark:text-gray-200">Dificuldade Inteligente</p>
+                                                  <p class="text-xs text-gray-500 dark:text-gray-400">Ajusta o nível das perguntas com base nas suas respostas</p>
+                                                </div>
+                                                <label class="relative inline-flex items-center cursor-pointer">
+                                                  <input type="checkbox" id="smart-difficulty" class="sr-only peer" checked>
+                                                  <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-orange-500"></div>
+                                                </label>
+                                              </div>
+                                              
+                                              <div class="flex items-center p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                                                <input type="checkbox" id="study-mode" class="h-4 w-4 rounded text-orange-500 border-gray-300 focus:ring-orange-500 cursor-pointer">
+                                                <label for="study-mode" class="ml-2 block cursor-pointer">
+                                                  <p class="font-medium text-sm text-gray-800 dark:text-gray-200">Modo Estudo</p>
+                                                  <p class="text-xs text-gray-500 dark:text-gray-400">Mostra explicações após cada pergunta</p>
+                                                </label>
+                                              </div>
+                                            </div>
+                                            
+                                            <button 
+                                              id="start-quiz-button"
+                                              class="w-full py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
+                                            >
+                                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                              </svg>
+                                              Iniciar Quiz
+                                            </button>
+                                          </div>
+                                        </div>
+                                      `;
+                                      
+                                      // Adicionar o modal ao DOM
+                                      document.body.insertAdjacentHTML('beforeend', quizConfigModalHTML);
+                                      
+                                      // Adicionar event listeners ao modal
+                                      setTimeout(() => {
+                                        const quizConfigModal = document.getElementById('quiz-config-modal');
+                                        const closeQuizConfigButton = document.getElementById('close-quiz-config-modal');
+                                        const startQuizButton = document.getElementById('start-quiz-button');
+                                        
+                                        // Função para fechar o modal
+                                        const closeQuizConfigModal = () => {
+                                          if (quizConfigModal) {
+                                            quizConfigModal.classList.add('animate-fadeOut');
+                                            setTimeout(() => quizConfigModal.remove(), 200);
+                                          }
+                                        };
+                                        
+                                        // Event listener para fechar o modal
+                                        if (closeQuizConfigButton) {
+                                          closeQuizConfigButton.addEventListener('click', closeQuizConfigModal);
+                                        }
+                                        
+                                        // Event listener para clicar fora e fechar
+                                        if (quizConfigModal) {
+                                          quizConfigModal.addEventListener('click', (e) => {
+                                            if (e.target === quizConfigModal) {
+                                              closeQuizConfigModal();
+                                            }
+                                          });
+                                        }
+                                        
+                                        // Event listener para iniciar o quiz
+                                        if (startQuizButton) {
+                                          startQuizButton.addEventListener('click', () => {
+                                            // Obter as configurações selecionadas
+                                            const smartDifficulty = document.getElementById('smart-difficulty') as HTMLInputElement;
+                                            const studyMode = document.getElementById('study-mode') as HTMLInputElement;
+                                            
+                                            const useSmartDifficulty = smartDifficulty?.checked || false;
+                                            const useStudyMode = studyMode?.checked || false;
+                                            
+                                            closeQuizConfigModal();
+                                            
+                                            // Encontrar a última mensagem da IA para criar o quiz com base nela
+                                            const lastAIMessage = document.querySelector('.message-content:last-of-type');
+                                            const content = lastAIMessage?.textContent || 'Conteúdo geral sobre o assunto';
+                                            
+                                            // Mostrar modal de quiz com as configurações selecionadas
+                                            setShowQuizTask(true);
+                                            
+                                            // Mensagem de log com as configurações
+                                            console.log('Iniciando Quiz com:', {
+                                              smartDifficulty: useSmartDifficulty,
+                                              studyMode: useStudyMode,
+                                              baseContent: content.substring(0, 50) + '...' // Mostrar apenas parte do conteúdo
+                                            });
+                                            
+                                            // Notificação ao usuário
+                                            toast({
+                                              title: "Quiz iniciado",
+                                              description: `Quiz com ${useSmartDifficulty ? 'dificuldade inteligente' : 'dificuldade padrão'} e ${useStudyMode ? 'modo estudo ativado' : 'modo estudo desativado'}`,
+                                              duration: 3000,
+                                            });
+                                          });
+                                        }
+                                        
+                                      }, 50);
                                     });
                                   }
                                   
