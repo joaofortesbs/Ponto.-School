@@ -169,19 +169,85 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
     let trueFalseQuestionsFromAI = [];
     
     if (hasGeneratedQuestions) {
-      // Tentativa 1: Usar a classificação por tipo
-      multipleChoiceQuestionsFromAI = questionsData.filter(q => 
+      // Garantir que estamos trabalhando com um array real
+      const questionsArray = Array.isArray(questionsData) ? questionsData : [];
+      
+      // Log para verificar as questões recebidas
+      console.log("Processando questões:", questionsArray);
+      
+      // Verificar cada questão para garantir que tenha os campos necessários
+      const processedQuestions = questionsArray.map((q, idx) => {
+        // Se a questão for undefined ou null, criar uma questão de fallback
+        if (!q) {
+          return {
+            id: `q${idx+1}`,
+            type: 'multiple-choice',
+            text: `Questão ${idx+1} (gerada automaticamente)`,
+            options: [
+              { id: `q${idx+1}-a`, text: "Primeira opção", isCorrect: true },
+              { id: `q${idx+1}-b`, text: "Segunda opção", isCorrect: false },
+              { id: `q${idx+1}-c`, text: "Terceira opção", isCorrect: false },
+              { id: `q${idx+1}-d`, text: "Quarta opção", isCorrect: false },
+              { id: `q${idx+1}-e`, text: "Quinta opção", isCorrect: false }
+            ],
+            explanation: "Explicação padrão para esta questão."
+          };
+        }
+        
+        // Garantir que a questão tenha um tipo definido
+        const questionType = q.type || 
+          (q.options && Array.isArray(q.options) && q.options.length > 0 
+            ? 'multiple-choice' 
+            : typeof q.answer === 'boolean' 
+              ? 'true-false' 
+              : 'essay');
+        
+        // Garantir que a questão tenha um texto
+        const questionText = q.text || `Questão ${idx+1}`;
+        
+        // Criar um objeto de questão completo
+        return {
+          ...q,
+          id: q.id || `q${idx+1}`,
+          type: questionType,
+          text: questionText,
+          options: questionType === 'multiple-choice' 
+            ? (Array.isArray(q.options) && q.options.length > 0 
+                ? q.options.map((opt, i) => ({
+                    id: opt.id || `q${idx+1}-${String.fromCharCode(97+i)}`,
+                    text: opt.text || `Opção ${i+1}`,
+                    isCorrect: typeof opt.isCorrect === 'boolean' ? opt.isCorrect : i === 0
+                  }))
+                : [
+                    { id: `q${idx+1}-a`, text: "Primeira opção", isCorrect: true },
+                    { id: `q${idx+1}-b`, text: "Segunda opção", isCorrect: false },
+                    { id: `q${idx+1}-c`, text: "Terceira opção", isCorrect: false },
+                    { id: `q${idx+1}-d`, text: "Quarta opção", isCorrect: false },
+                    { id: `q${idx+1}-e`, text: "Quinta opção", isCorrect: false }
+                  ]
+            ) : undefined,
+          answer: questionType === 'true-false' 
+            ? (typeof q.answer === 'boolean' ? q.answer : true) 
+            : undefined,
+          explanation: q.explanation || "Explicação não disponível para esta questão."
+        };
+      });
+      
+      console.log("Questões processadas:", processedQuestions);
+      
+      // Classificar as questões processadas por tipo
+      multipleChoiceQuestionsFromAI = processedQuestions.filter(q => 
         q.type === 'multiple-choice' || 
         (q.options && Array.isArray(q.options) && q.options.length > 0)
       ).slice(0, multipleChoice);
       
-      essayQuestionsFromAI = questionsData.filter(q => 
+      essayQuestionsFromAI = processedQuestions.filter(q => 
         q.type === 'essay' || 
         q.type === 'discursive' || 
-        (!q.options && !q.answer)
+        (!q.options && q.type !== 'true-false')
       ).slice(0, essay);
       
-      trueFalseQuestionsFromAI = questionsData.filter(q => 
+      trueFalseQuestionsFromAI = processedQuestions.filter(q => 
         q.type === 'true-false' || 
         q.type === 'verdadeiro-falso' || 
         (typeof q.answer === 'boolean')
@@ -189,20 +255,85 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
       
       // Se não conseguimos encontrar suficientes pelo tipo, vamos distribuir as questões disponíveis
       if (multipleChoiceQuestionsFromAI.length === 0 && essayQuestionsFromAI.length === 0 && trueFalseQuestionsFromAI.length === 0) {
-        // Tentar distribuir as questões disponíveis pelos tipos necessários
-        questionsData.forEach((question, index) => {
-          const remaining = totalQuestions - (multipleChoiceQuestionsFromAI.length + essayQuestionsFromAI.length + trueFalseQuestionsFromAI.length);
-          if (remaining <= 0) return;
-          
-          if (multipleChoiceQuestionsFromAI.length < multipleChoice) {
-            multipleChoiceQuestionsFromAI.push({...question, type: 'multiple-choice'});
-          } else if (essayQuestionsFromAI.length < essay) {
-            essayQuestionsFromAI.push({...question, type: 'essay'});
-          } else if (trueFalseQuestionsFromAI.length < trueFalse) {
-            trueFalseQuestionsFromAI.push({...question, type: 'true-false'});
+        // Distribuir questões disponíveis baseado na configuração solicitada
+        processedQuestions.forEach((question, index) => {
+          if (index < totalQuestions) {
+            if (index < multipleChoice) {
+              multipleChoiceQuestionsFromAI.push({
+                ...question, 
+                type: 'multiple-choice',
+                options: question.options || [
+                  { id: `q${index+1}-a`, text: "Primeira opção", isCorrect: true },
+                  { id: `q${index+1}-b`, text: "Segunda opção", isCorrect: false },
+                  { id: `q${index+1}-c`, text: "Terceira opção", isCorrect: false },
+                  { id: `q${index+1}-d`, text: "Quarta opção", isCorrect: false },
+                  { id: `q${index+1}-e`, text: "Quinta opção", isCorrect: false }
+                ]
+              });
+            } else if (index < multipleChoice + essay) {
+              essayQuestionsFromAI.push({...question, type: 'essay'});
+            } else {
+              trueFalseQuestionsFromAI.push({
+                ...question, 
+                type: 'true-false',
+                answer: typeof question.answer === 'boolean' ? question.answer : true
+              });
+            }
           }
         });
       }
+      
+      // Se ainda não temos questões suficientes, criar algumas de fallback
+      if (multipleChoiceQuestionsFromAI.length < multipleChoice) {
+        for (let i = multipleChoiceQuestionsFromAI.length; i < multipleChoice; i++) {
+          multipleChoiceQuestionsFromAI.push({
+            id: `q${questionCounter}`,
+            type: 'multiple-choice',
+            text: multipleChoiceQuestions[i % multipleChoiceQuestions.length],
+            options: [
+              { id: `q${questionCounter}-a`, text: "Primeira opção", isCorrect: true },
+              { id: `q${questionCounter}-b`, text: "Segunda opção", isCorrect: false },
+              { id: `q${questionCounter}-c`, text: "Terceira opção", isCorrect: false },
+              { id: `q${questionCounter}-d`, text: "Quarta opção", isCorrect: false },
+              { id: `q${questionCounter}-e`, text: "Quinta opção", isCorrect: false }
+            ],
+            explanation: "Explicação padrão para esta questão."
+          });
+          questionCounter++;
+        }
+      }
+      
+      if (essayQuestionsFromAI.length < essay) {
+        for (let i = essayQuestionsFromAI.length; i < essay; i++) {
+          essayQuestionsFromAI.push({
+            id: `q${questionCounter}`,
+            type: 'essay',
+            text: essayQuestions[i % essayQuestions.length],
+            explanation: "Esta é uma questão discursiva para testar sua compreensão do tema."
+          });
+          questionCounter++;
+        }
+      }
+      
+      if (trueFalseQuestionsFromAI.length < trueFalse) {
+        for (let i = trueFalseQuestionsFromAI.length; i < trueFalse; i++) {
+          trueFalseQuestionsFromAI.push({
+            id: `q${questionCounter}`,
+            type: 'true-false',
+            text: trueFalseQuestions[i % trueFalseQuestions.length],
+            answer: i % 2 === 0,
+            explanation: "Esta é uma afirmação para você avaliar com base no conteúdo estudado."
+          });
+          questionCounter++;
+        }
+      }
+      
+      // Atualizar window.generatedQuestions para garantir que todas as questões estão disponíveis globalmente
+      window.generatedQuestions = [
+        ...multipleChoiceQuestionsFromAI,
+        ...essayQuestionsFromAI,
+        ...trueFalseQuestionsFromAI
+      ];
     }
 
     // Processar questões para garantir que elas estão em um formato utilizável
@@ -225,32 +356,69 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
         if (multipleChoiceQuestionsFromAI.length > i) {
           // Usar questão gerada pela IA
           const question = multipleChoiceQuestionsFromAI[i];
-          questionText = sanitizeText(question.text);
+          questionText = sanitizeText(question.text || `Questão de múltipla escolha ${questionCounter}`);
           
-          // Garantir que existe um ID para cada questão
-          if (!question.id) {
-            question.id = questionId;
-          }
+          // Garantir que a questão tenha um ID e esteja na coleção global de questões
+          window.generatedQuestions = window.generatedQuestions || [];
           
-          // Garantir que existem opções para questões de múltipla escolha
-          if (!question.options || !Array.isArray(question.options) || question.options.length === 0) {
-            question.options = [
-              { id: `${questionId}-a`, text: "Primeira opção", isCorrect: true },
-              { id: `${questionId}-b`, text: "Segunda opção", isCorrect: false },
-              { id: `${questionId}-c`, text: "Terceira opção", isCorrect: false },
-              { id: `${questionId}-d`, text: "Quarta opção", isCorrect: false },
-              { id: `${questionId}-e`, text: "Quinta opção", isCorrect: false }
-            ];
-          }
+          // Encontrar a questão na coleção global ou adicionar se não existir
+          const existingQuestionIndex = window.generatedQuestions.findIndex(q => q.id === question.id);
           
-          // Garantir que há uma explicação
-          if (!question.explanation) {
-            question.explanation = "Explicação para esta questão não disponível.";
+          if (existingQuestionIndex >= 0) {
+            // Atualizar a questão existente
+            window.generatedQuestions[existingQuestionIndex] = {
+              ...question,
+              text: questionText,
+              options: Array.isArray(question.options) && question.options.length > 0 
+                ? question.options
+                : [
+                    { id: `${questionId}-a`, text: "Primeira opção", isCorrect: true },
+                    { id: `${questionId}-b`, text: "Segunda opção", isCorrect: false },
+                    { id: `${questionId}-c`, text: "Terceira opção", isCorrect: false },
+                    { id: `${questionId}-d`, text: "Quarta opção", isCorrect: false },
+                    { id: `${questionId}-e`, text: "Quinta opção", isCorrect: false }
+                  ],
+              explanation: question.explanation || "Explicação para esta questão não disponível."
+            };
+          } else {
+            // Adicionar à coleção global
+            window.generatedQuestions.push({
+              ...question,
+              id: question.id || questionId,
+              type: 'multiple-choice',
+              text: questionText,
+              options: Array.isArray(question.options) && question.options.length > 0 
+                ? question.options
+                : [
+                    { id: `${questionId}-a`, text: "Primeira opção", isCorrect: true },
+                    { id: `${questionId}-b`, text: "Segunda opção", isCorrect: false },
+                    { id: `${questionId}-c`, text: "Terceira opção", isCorrect: false },
+                    { id: `${questionId}-d`, text: "Quarta opção", isCorrect: false },
+                    { id: `${questionId}-e`, text: "Quinta opção", isCorrect: false }
+                  ],
+              explanation: question.explanation || "Explicação para esta questão não disponível."
+            });
           }
         } else {
           // Fallback para questão pré-definida
           const questionIndex = i % multipleChoiceQuestions.length;
           questionText = multipleChoiceQuestions[questionIndex];
+          
+          // Adicionar à coleção global
+          window.generatedQuestions = window.generatedQuestions || [];
+          window.generatedQuestions.push({
+            id: questionId,
+            type: 'multiple-choice',
+            text: questionText,
+            options: [
+              { id: `${questionId}-a`, text: "Primeira opção", isCorrect: true },
+              { id: `${questionId}-b`, text: "Segunda opção", isCorrect: false },
+              { id: `${questionId}-c`, text: "Terceira opção", isCorrect: false },
+              { id: `${questionId}-d`, text: "Quarta opção", isCorrect: false },
+              { id: `${questionId}-e`, text: "Quinta opção", isCorrect: false }
+            ],
+            explanation: "Explicação para esta questão não disponível."
+          });
         }
 
         cardsHTML += `
@@ -279,21 +447,44 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
         if (essayQuestionsFromAI.length > i) {
           // Usar questão gerada pela IA
           const question = essayQuestionsFromAI[i];
-          questionText = sanitizeText(question.text);
+          questionText = sanitizeText(question.text || `Questão discursiva ${questionCounter}`);
           
-          // Garantir que existe um ID para cada questão
-          if (!question.id) {
-            question.id = questionId;
-          }
+          // Garantir que a questão tenha um ID e esteja na coleção global de questões
+          window.generatedQuestions = window.generatedQuestions || [];
           
-          // Garantir que há uma explicação
-          if (!question.explanation) {
-            question.explanation = "Esta é uma questão discursiva onde você deve apresentar sua compreensão sobre o tema.";
+          // Encontrar a questão na coleção global ou adicionar se não existir
+          const existingQuestionIndex = window.generatedQuestions.findIndex(q => q.id === question.id);
+          
+          if (existingQuestionIndex >= 0) {
+            // Atualizar a questão existente
+            window.generatedQuestions[existingQuestionIndex] = {
+              ...question,
+              text: questionText,
+              explanation: question.explanation || "Esta é uma questão discursiva onde você deve apresentar sua compreensão sobre o tema."
+            };
+          } else {
+            // Adicionar à coleção global
+            window.generatedQuestions.push({
+              ...question,
+              id: question.id || questionId,
+              type: 'essay',
+              text: questionText,
+              explanation: question.explanation || "Esta é uma questão discursiva onde você deve apresentar sua compreensão sobre o tema."
+            });
           }
         } else {
           // Fallback para questão pré-definida
           const questionIndex = i % essayQuestions.length;
           questionText = essayQuestions[questionIndex];
+          
+          // Adicionar à coleção global
+          window.generatedQuestions = window.generatedQuestions || [];
+          window.generatedQuestions.push({
+            id: questionId,
+            type: 'essay',
+            text: questionText,
+            explanation: "Esta é uma questão discursiva onde você deve apresentar sua compreensão sobre o tema."
+          });
         }
 
         cardsHTML += `
@@ -322,28 +513,57 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
         if (trueFalseQuestionsFromAI.length > i) {
           // Usar questão gerada pela IA
           const question = trueFalseQuestionsFromAI[i];
-          questionText = sanitizeText(question.text);
+          questionText = sanitizeText(question.text || `Afirmação ${questionCounter}`);
           
-          // Garantir que existe um ID para cada questão
-          if (!question.id) {
-            question.id = questionId;
-          }
+          // Determinar o valor verdadeiro/falso
+          const isTrue = typeof question.answer === 'boolean' ? question.answer : true;
           
-          // Garantir que existe um valor de resposta (verdadeiro/falso)
-          if (typeof question.answer !== 'boolean') {
-            question.answer = true; // valor padrão
-          }
+          // Garantir que a questão tenha um ID e esteja na coleção global de questões
+          window.generatedQuestions = window.generatedQuestions || [];
           
-          // Garantir que há uma explicação
-          if (!question.explanation) {
-            question.explanation = question.answer 
-              ? "Esta afirmação é verdadeira com base no conteúdo estudado."
-              : "Esta afirmação é falsa de acordo com o conteúdo estudado.";
+          // Encontrar a questão na coleção global ou adicionar se não existir
+          const existingQuestionIndex = window.generatedQuestions.findIndex(q => q.id === question.id);
+          
+          if (existingQuestionIndex >= 0) {
+            // Atualizar a questão existente
+            window.generatedQuestions[existingQuestionIndex] = {
+              ...question,
+              text: questionText,
+              answer: isTrue,
+              explanation: question.explanation || (isTrue 
+                ? "Esta afirmação é verdadeira com base no conteúdo estudado."
+                : "Esta afirmação é falsa de acordo com o conteúdo estudado.")
+            };
+          } else {
+            // Adicionar à coleção global
+            window.generatedQuestions.push({
+              ...question,
+              id: question.id || questionId,
+              type: 'true-false',
+              text: questionText,
+              answer: isTrue,
+              explanation: question.explanation || (isTrue
+                ? "Esta afirmação é verdadeira com base no conteúdo estudado."
+                : "Esta afirmação é falsa de acordo com o conteúdo estudado.")
+            });
           }
         } else {
           // Fallback para questão pré-definida
           const questionIndex = i % trueFalseQuestions.length;
           questionText = trueFalseQuestions[questionIndex];
+          const isTrue = i % 2 === 0; // alternar entre verdadeiro e falso
+          
+          // Adicionar à coleção global
+          window.generatedQuestions = window.generatedQuestions || [];
+          window.generatedQuestions.push({
+            id: questionId,
+            type: 'true-false',
+            text: questionText,
+            answer: isTrue,
+            explanation: isTrue
+              ? "Esta afirmação é verdadeira com base no conteúdo estudado."
+              : "Esta afirmação é falsa de acordo com o conteúdo estudado."
+          });
         }
 
         cardsHTML += `

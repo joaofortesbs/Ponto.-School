@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { MultipleChoiceQuestion } from "./question-types/MultipleChoiceQuestion";
 import { EssayQuestion } from "./question-types/EssayQuestion";
@@ -57,6 +56,118 @@ const QuestionDetailModal: React.FC<QuestionDetailModalProps> = ({
     }
   }
 
+
+  // Buscar a questão selecionada
+  const findSelectedQuestion = () => {
+    console.log("Buscando questão:", questionType, questionNumber);
+    console.log("Questões disponíveis:", questionsData);
+
+    if (!questionsData || !Array.isArray(questionsData)) {
+      console.error("Questões não encontradas ou formato inválido");
+      return null;
+    }
+
+    // Primeiro, tentar encontrar a questão pelo número diretamente
+    // (questionNumber começa em 1, mas array começa em 0)
+    const indexBasedQuestion = questionsData[questionNumber - 1];
+
+    // Se a questão existe e corresponde ao tipo, retornar
+    if (indexBasedQuestion && (
+      (questionType === 'multiple-choice' && indexBasedQuestion.type === 'multiple-choice') ||
+      (questionType === 'essay' && indexBasedQuestion.type === 'essay') ||
+      (questionType === 'true-false' && indexBasedQuestion.type === 'true-false')
+    )) {
+      console.log("Questão encontrada pelo índice:", indexBasedQuestion);
+      return indexBasedQuestion;
+    }
+
+    // Se não encontrou pelo índice direto ou o tipo não corresponde,
+    // filtrar todas as questões do tipo desejado
+    const typeQuestions = questionsData.filter(q => {
+      if (questionType === 'multiple-choice') {
+        return q.type === 'multiple-choice' || (q.options && Array.isArray(q.options));
+      } else if (questionType === 'essay') {
+        return q.type === 'essay' || q.type === 'discursive' || (!q.options && !q.answer);
+      } else if (questionType === 'true-false') {
+        return q.type === 'true-false' || q.type === 'verdadeiro-falso' || (typeof q.answer === 'boolean');
+      }
+      return false;
+    });
+
+    // Buscar por questões que tenham um texto que inclua o número da questão
+    const questionByNumber = questionsData.find(q => 
+      q.text && q.text.includes(`${questionNumber}`) || 
+      q.id && q.id.includes(`${questionNumber}`)
+    );
+
+    if (questionByNumber && questionByNumber.type === questionType) {
+      console.log("Questão encontrada pelo número no texto/id:", questionByNumber);
+      return questionByNumber;
+    }
+
+    // Se existem questões do tipo desejado, pegar pela ordem
+    let relativeIndex = 0;
+    let countByType = 0;
+
+    // Contar quantas questões de cada tipo já passamos até chegar no questionNumber
+    for (let i = 0; i < questionsData.length && i < questionNumber; i++) {
+      const q = questionsData[i];
+      if ((questionType === 'multiple-choice' && (q.type === 'multiple-choice' || (q.options && Array.isArray(q.options)))) || 
+          (questionType === 'essay' && (q.type === 'essay' || q.type === 'discursive' || (!q.options && !q.answer))) ||
+          (questionType === 'true-false' && (q.type === 'true-false' || q.type === 'verdadeiro-falso' || (typeof q.answer === 'boolean')))) {
+        countByType++;
+      }
+    }
+
+    // Pegar a questão pelo índice relativo ao tipo
+    if (typeQuestions.length > 0 && countByType <= typeQuestions.length) {
+      console.log("Questão encontrada pelo tipo e contagem:", typeQuestions[countByType - 1]);
+      return typeQuestions[Math.min(countByType - 1, typeQuestions.length - 1)];
+    }
+
+    // Se ainda não encontrou, usar a primeira questão do tipo
+    if (typeQuestions.length > 0) {
+      console.log("Usando primeira questão do tipo:", typeQuestions[0]);
+      return typeQuestions[0];
+    }
+
+    // Em último caso, criar uma questão fallback
+    console.warn(`Questão ${questionNumber} (${questionType}) não encontrada, criando fallback`);
+
+    if (questionType === 'multiple-choice') {
+      return {
+        id: `q${questionNumber}`,
+        type: 'multiple-choice',
+        text: `Questão de múltipla escolha ${questionNumber}`,
+        options: [
+          { id: `q${questionNumber}-a`, text: "Primeira opção", isCorrect: true },
+          { id: `q${questionNumber}-b`, text: "Segunda opção", isCorrect: false },
+          { id: `q${questionNumber}-c`, text: "Terceira opção", isCorrect: false },
+          { id: `q${questionNumber}-d`, text: "Quarta opção", isCorrect: false },
+          { id: `q${questionNumber}-e`, text: "Quinta opção", isCorrect: false }
+        ],
+        explanation: "Explicação para esta questão não disponível."
+      };
+    } else if (questionType === 'essay') {
+      return {
+        id: `q${questionNumber}`,
+        type: 'essay',
+        text: `Questão discursiva ${questionNumber}: Explique com suas palavras os principais conceitos abordados neste tema.`,
+        explanation: "Esta questão avalia sua capacidade de explicar o conteúdo com suas próprias palavras."
+      };
+    } else { // true-false
+      return {
+        id: `q${questionNumber}`,
+        type: 'true-false',
+        text: `Afirmação ${questionNumber}: Os conceitos abordados neste tema são aplicáveis em diferentes contextos.`,
+        answer: true,
+        explanation: "Esta afirmação é verdadeira pois os conceitos fundamentais discutidos possuem aplicações diversas."
+      };
+    }
+  };
+
+  selectedQuestion = findSelectedQuestion();
+
   useEffect(() => {
     // Adicionar event listeners depois que o componente é montado
     const closeDetailButton = document.getElementById('close-detail-modal');
@@ -101,7 +212,7 @@ const QuestionDetailModal: React.FC<QuestionDetailModalProps> = ({
           closeDetailModal();
           const prevNumber = questionNumber - 1;
           const prevType = getQuestionTypeByNumber(prevNumber);
-          
+
           // Mostrar a questão anterior
           setTimeout(() => {
             window.showQuestionDetails(prevType, prevNumber);
@@ -231,7 +342,7 @@ const QuestionDetailModal: React.FC<QuestionDetailModalProps> = ({
 
         <div className="border-t border-b border-gray-200 dark:border-gray-700 py-4 my-2">
           {renderQuestionType()}
-          
+
           {selectedOption && (
             <div className="mt-4">
               <button 
@@ -242,7 +353,7 @@ const QuestionDetailModal: React.FC<QuestionDetailModalProps> = ({
               </button>
             </div>
           )}
-          
+
           {showExplanation && selectedOption && (
             <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
               <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Explicação:</p>
