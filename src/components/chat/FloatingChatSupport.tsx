@@ -2416,108 +2416,28 @@ Exemplo de formato da resposta:
                                   
                                   // Função para gerar slides a partir do conteúdo
                                   const generateSlidesFromContent = (content) => {
-                                    // Verifica se o conteúdo existe
-                                    if (!content || content.trim().length < 100) {
-                                      console.error("Conteúdo insuficiente para gerar apresentação");
-                                      return [];
-                                    }
-                                    
-                                    // Filtrar e remover saudações, expressões informais e conversacionais
-                                    const cleanContent = (text) => {
-                                      // Padrões para remoção
-                                      const patternsToRemove = [
-                                        // Saudações e expressões informais
-                                        /(?:e aí|olá|oi|hey|hello|hi|bom dia|boa tarde|boa noite|tudo bem|tranquilo|beleza|como vai)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
-                                        /(?:😉|😊|🙂|😄|😃)/, // Emojis de sorriso típicos de saudação
-                                        // Expressões de fechamento
-                                        /(?:até mais|até logo|tchau|abraços|fique bem)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
-                                        // Perguntas diretas ao usuário
-                                        /(?:você|vocês|tu|entendeu|sacou|percebeu)(?:\s+[^,\.!?]*?)(?:[,\.!?\?])/gi,
-                                        // Expressões informais
-                                        /(?:né|bora|tipo|show|top|maneiro|legal|bacana|valeu|tranquilo)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi
-                                      ];
-                                      
-                                      let cleaned = text;
-                                      patternsToRemove.forEach(pattern => {
-                                        cleaned = cleaned.replace(pattern, '');
-                                      });
-                                      
-                                      // Limpar múltiplas quebras de linha e espaços extras criados pela remoção
-                                      cleaned = cleaned.replace(/\n{3,}/g, '\n\n').replace(/\s{2,}/g, ' ').trim();
-                                      return cleaned;
-                                    };
-                                    
-                                    // Limpar o conteúdo antes de processar
-                                    content = cleanContent(content);
-                                    
-                                    // Divide o conteúdo em seções
-                                    const paragraphs = content.split('\n\n').filter(p => p.trim().length > 0);
-                                    
-                                    // Tenta identificar um título principal
-                                    let mainTitle = paragraphs[0];
-                                    if (mainTitle.length > 60) {
-                                      // Se o primeiro parágrafo for muito longo, procura por algo mais parecido com um título
-                                      const potentialTitles = paragraphs.filter(p => p.length < 60 && !p.includes('.'));
-                                      if (potentialTitles.length > 0) {
-                                        mainTitle = potentialTitles[0];
-                                      } else {
-                                        // Caso não encontre, usa as primeiras palavras do conteúdo
-                                        mainTitle = content.split('.')[0].substring(0, 50) + "...";
-                                      }
-                                    }
-                                    
-                                    // Prepara os slides
                                     const slides = [
-                                      // Slide de introdução
                                       {
-                                        titulo: "Introdução: " + mainTitle.substring(0, 50),
-                                        topicos: extractTopicsFromContent(paragraphs.slice(0, 3).join('\n\n')),
-                                        explicacao: paragraphs.slice(0, 2).join('\n\n'),
+                                        titulo: "Introdução",
+                                        topicos: ["Definição do tema", "Importância do tema"],
+                                        explicacao: "Esta apresentação aborda os conceitos fundamentais do tema.",
+                                        imagemOpcional: ""
+                                      },
+                                      {
+                                        titulo: "Desenvolvimento",
+                                        topicos: ["Aspectos principais", "Aplicações práticas"],
+                                        explicacao: "Os conceitos se aplicam em situações reais, através de exemplos concretos.",
+                                        imagemOpcional: ""
+                                      },
+                                      {
+                                        titulo: "Conclusão e Próximos Passos",
+                                        topicos: ["Resumo dos pontos-chave", "Recomendações de estudo"],
+                                        explicacao: "Revisamos os principais pontos abordados. Sugestões de como aprofundar o conhecimento.",
                                         imagemOpcional: ""
                                       }
                                     ];
-                                    
-                                    // Divide o restante do conteúdo em seções para slides adicionais
-                                    const contentSections = [];
-                                    const sectionLength = Math.ceil((paragraphs.length - 3) / 2);
-                                    
-                                    if (paragraphs.length > 3) {
-                                      // Slide de desenvolvimento 1
-                                      const section1 = paragraphs.slice(3, 3 + sectionLength).join('\n\n');
-                                      contentSections.push({
-                                        titulo: "Principais Conceitos",
-                                        topicos: extractTopicsFromContent(section1),
-                                        explicacao: section1.substring(0, 150) + "...",
-                                        imagemOpcional: ""
-                                      });
-                                      
-                                      // Slide de desenvolvimento 2 (se houver conteúdo suficiente)
-                                      if (paragraphs.length > 3 + sectionLength) {
-                                        const section2 = paragraphs.slice(3 + sectionLength).join('\n\n');
-                                        contentSections.push({
-                                          titulo: "Aplicações e Exemplos",
-                                          topicos: extractTopicsFromContent(section2),
-                                          explicacao: section2,
-                                          imagemOpcional: ""
-                                        });
-                                      }
-                                    }
-                                    
-                                    // Slide de conclusão
-                                    contentSections.push({
-                                      titulo: "Resumo e Conclusão",
-                                      topicos: [
-                                        "Síntese dos conceitos apresentados",
-                                        "Aplicações práticas",
-                                        "Próximos passos"
-                                      ],
-                                      explicacao: "Principais aspectos sobre " + 
-                                                  mainTitle.substring(0, 40) + 
-                                                  ". Conceitos fundamentais e aplicações do tema.",
-                                      imagemOpcional: ""
-                                    });
-                                    
-                                    return [...slides, ...contentSections];
+
+                                    return slides; // Retorna apenas os slides sem mensagens desnecessárias
                                   };
                                   
                                   // Emular um pequeno delay para mostrar o loading
