@@ -2486,6 +2486,13 @@ Exemplo de formato da resposta:
                                               setIsLoading(true);
                                               
                                               try {
+                                                // Encontrar a última mensagem do assistente para usar como base do quiz
+                                                const lastAIMessage = messages
+                                                  .filter(msg => msg.sender === 'assistant')
+                                                  .pop();
+                                                  
+                                                const content = lastAIMessage?.content || 'Conteúdo geral sobre o assunto';
+                                                
                                                 // Formato do prompt para gerar o quiz
                                                 const quizPrompt = `
                                                 Gere um quiz com 5 perguntas de múltipla escolha baseadas no seguinte conteúdo:
