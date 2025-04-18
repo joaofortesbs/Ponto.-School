@@ -79,8 +79,7 @@ const SlidesPresentationModal: React.FC<SlidesPresentationModalProps> = ({
             {isLoading ? (
               <div className="flex flex-col items-center justify-center h-full">
                 <Loader2 className="h-12 w-12 text-orange-500 animate-spin mb-4" />
-                <p className="text-gray-600 dark:text-gray-300 text-center font-medium">Gerando slides, por favor aguarde...</p>
-                <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">Estamos preparando uma apresentação incrível!</p>
+                <p className="text-gray-600 dark:text-gray-300 text-center">Gerando slides, por favor aguarde...</p>
               </div>
             ) : (
               <div className="flex flex-col md:flex-row gap-6 animate-fadeIn transition-all duration-300">

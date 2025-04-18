@@ -450,7 +450,6 @@ const FloatingChatSupport: React.FC = () => {
   // Estado para modal de apresentação
   const [showPresentationModal, setShowPresentationModal] = useState(false);
   const [presentationSlides, setPresentationSlides] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   
   // Função para mostrar o modal de caderno
   const openNotebookModal = (content: string) => {
@@ -2501,11 +2500,7 @@ Exemplo de formato da resposta:
                                     // Definir slides e abrir o modal
                                     setPresentationSlides(contentSlides);
                                     setShowPresentationModal(true);
-                                    
-                                    // Manter o carregamento até que o modal seja totalmente aberto
-                                    setTimeout(() => {
-                                      setIsLoading(false);
-                                    }, 500);
+                                    setIsLoading(false);
                                   }, 1000);
                                   
                                   // Versão com processamento de IA avançado (comentada por enquanto)
