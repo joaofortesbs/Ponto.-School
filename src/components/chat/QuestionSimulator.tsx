@@ -217,7 +217,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
           const isCorrectClass = option.isCorrect ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : '';
 
           return `
-            <div class="flex items-center space-x-2 cursor-pointer option-selection" data-correct="${option.isCorrect}" data-letter="${letter}" onclick="selectOption(this)">
+            <div class="flex items-center space-x-2 cursor-pointer option-selection" data-correct="${option.isCorrect}" data-letter="${letter}">
               <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
                 <span class="text-xs font-medium">${letter}</span>
               </div>
@@ -234,62 +234,60 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
             <button 
               id="check-answer-btn" 
               class="w-full py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors"
-              onclick="checkSelectedAnswer()">
+            >
               Ver resposta
             </button>
           </div>
           <script>
-            // Variável para armazenar a opção selecionada
-            let selectedOption = null;
+            // Definir as funções no escopo global para acessibilidade
+            window.selectedOption = null;
 
-            // Função para selecionar uma opção
-            function selectOption(element) {
+            window.selectOption = function(element) {
               // Remover destaque de todas as opções
               document.querySelectorAll('.option-selection').forEach(opt => {
                 opt.classList.remove('bg-orange-50', 'dark:bg-orange-900/20', 'border', 'border-orange-300', 'dark:border-orange-700');
                 opt.style.fontWeight = 'normal';
               });
-              
+
               // Destacar a opção clicada
               element.classList.add('bg-orange-50', 'dark:bg-orange-900/20', 'border', 'border-orange-300', 'dark:border-orange-700');
               element.style.fontWeight = 'bold';
-              
+
               // Guardar a referência da opção selecionada
-              selectedOption = element;
-              
+              window.selectedOption = element;
+
               // Mostrar o botão de verificar resposta
               const checkAnswerBtn = document.getElementById('check-answer-btn-container');
               if (checkAnswerBtn) {
                 checkAnswerBtn.classList.remove('hidden');
               }
-            }
-            
-            // Função para verificar a resposta selecionada
-            function checkSelectedAnswer() {
-              if (!selectedOption) return;
-              
+            };
+
+            window.checkSelectedAnswer = function() {
+              if (!window.selectedOption) return;
+
               // Desativar todas as opções para evitar mudanças após verificação
               document.querySelectorAll('.option-selection').forEach(opt => {
                 opt.style.pointerEvents = 'none';
                 opt.style.opacity = '0.7';
               });
-              
+
               // Destacar a opção selecionada
-              selectedOption.style.opacity = '1';
-              
+              window.selectedOption.style.opacity = '1';
+
               // Verificar se a resposta está correta
-              const isCorrect = selectedOption.getAttribute('data-correct') === 'true';
+              const isCorrect = window.selectedOption.getAttribute('data-correct') === 'true';
               const resultContainer = document.getElementById('answer-result');
               const explanationContainer = document.getElementById('explanation-container');
-              
+
               // Aplicar cores baseadas na resposta
               if (isCorrect) {
-                selectedOption.classList.remove('bg-orange-50', 'dark:bg-orange-900/20', 'border-orange-300', 'dark:border-orange-700');
-                selectedOption.classList.add('bg-green-50', 'dark:bg-green-900/20', 'border', 'border-green-300', 'dark:border-green-700');
+                window.selectedOption.classList.remove('bg-orange-50', 'dark:bg-orange-900/20', 'border-orange-300', 'dark:border-orange-700');
+                window.selectedOption.classList.add('bg-green-50', 'dark:bg-green-900/20', 'border', 'border-green-300', 'dark:border-green-700');
               } else {
-                selectedOption.classList.remove('bg-orange-50', 'dark:bg-orange-900/20', 'border-orange-300', 'dark:border-orange-700');
-                selectedOption.classList.add('bg-red-50', 'dark:bg-red-900/20', 'border', 'border-red-300', 'dark:border-red-700');
-                
+                window.selectedOption.classList.remove('bg-orange-50', 'dark:bg-orange-900/20', 'border-orange-300', 'dark:border-orange-700');
+                window.selectedOption.classList.add('bg-red-50', 'dark:bg-red-900/20', 'border', 'border-red-300', 'dark:border-red-700');
+
                 // Destacar a opção correta
                 document.querySelectorAll('.option-selection').forEach(opt => {
                   if (opt.getAttribute('data-correct') === 'true') {
@@ -298,11 +296,11 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
                   }
                 });
               }
-              
+
               // Mostrar o resultado
               if (resultContainer) {
                 resultContainer.classList.remove('hidden');
-                
+
                 if (isCorrect) {
                   resultContainer.innerHTML = '<p class="text-green-600 dark:text-green-400 font-medium">✓ Resposta correta!</p>';
                   resultContainer.classList.add('bg-green-100', 'dark:bg-green-900/20', 'border', 'border-green-200', 'dark:border-green-700');
@@ -311,18 +309,34 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
                   resultContainer.classList.add('bg-red-100', 'dark:bg-red-900/20', 'border', 'border-red-200', 'dark:border-red-700');
                 }
               }
-              
+
               // Mostrar a explicação
               if (explanationContainer) {
                 explanationContainer.classList.remove('hidden');
               }
-              
+
               // Esconder o botão de verificar resposta
               const checkAnswerBtn = document.getElementById('check-answer-btn-container');
               if (checkAnswerBtn) {
                 checkAnswerBtn.classList.add('hidden');
               }
-            }
+            };
+
+            // Adicionar event listeners após criação do DOM
+            setTimeout(() => {
+              // Adicionar listeners para todas as opções
+              document.querySelectorAll('.option-selection').forEach(opt => {
+                opt.addEventListener('click', function() {
+                  window.selectOption(this);
+                });
+              });
+
+              // Adicionar listener para o botão de verificar resposta
+              const checkAnswerBtn = document.getElementById('check-answer-btn');
+              if (checkAnswerBtn) {
+                checkAnswerBtn.addEventListener('click', window.checkSelectedAnswer);
+              }
+            }, 100);
           </script>
         `;
       } else {
@@ -332,25 +346,25 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
 
         questionOptions = `
           <div class="mt-4 space-y-3">
-            <div class="flex items-center space-x-2 cursor-pointer option-selection" data-correct="false" data-letter="A" onclick="selectOption(this)">
+            <div class="flex items-center space-x-2 cursor-pointer option-selection" data-correct="false" data-letter="A">
               <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
                 <span class="text-xs font-medium">A</span>
               </div>
               <span class="text-sm text-gray-700 dark:text-gray-300">É um ${terms[0 % terms.length]} fundamental para compreensão do tema.</span>
             </div>
-            <div class="flex items-center space-x-2 cursor-pointer option-selection" data-correct="true" data-letter="B" onclick="selectOption(this)">
+            <div class="flex items-center space-x-2 cursor-pointer option-selection" data-correct="true" data-letter="B">
               <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
                 <span class="text-xs font-medium">B</span>
               </div>
               <span class="text-sm text-gray-700 dark:text-gray-300">Representa uma abordagem inovadora sobre o ${terms[1 % terms.length]}.</span>
             </div>
-            <div class="flex items-center space-x-2 cursor-pointer option-selection" data-correct="false" data-letter="C" onclick="selectOption(this)">
+            <div class="flex items-center space-x-2 cursor-pointer option-selection" data-correct="false" data-letter="C">
               <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
                 <span class="text-xs font-medium">C</span>
               </div>
               <span class="text-sm text-gray-700 dark:text-gray-300">Demonstra a aplicação prática do ${terms[2 % terms.length]} em contextos reais.</span>
             </div>
-            <div class="flex items-center space-x-2 cursor-pointer option-selection" data-correct="false" data-letter="D" onclick="selectOption(this)">
+            <div class="flex items-center space-x-2 cursor-pointer option-selection" data-correct="false" data-letter="D">
               <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
                 <span class="text-xs font-medium">D</span>
               </div>
@@ -361,62 +375,60 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
             <button 
               id="check-answer-btn" 
               class="w-full py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors"
-              onclick="checkSelectedAnswer()">
+            >
               Ver resposta
             </button>
           </div>
           <script>
-            // Variável para armazenar a opção selecionada
-            let selectedOption = null;
+            // Definir as funções no escopo global para acessibilidade
+            window.selectedOption = null;
 
-            // Função para selecionar uma opção
-            function selectOption(element) {
+            window.selectOption = function(element) {
               // Remover destaque de todas as opções
               document.querySelectorAll('.option-selection').forEach(opt => {
                 opt.classList.remove('bg-orange-50', 'dark:bg-orange-900/20', 'border', 'border-orange-300', 'dark:border-orange-700');
                 opt.style.fontWeight = 'normal';
               });
-              
+
               // Destacar a opção clicada
               element.classList.add('bg-orange-50', 'dark:bg-orange-900/20', 'border', 'border-orange-300', 'dark:border-orange-700');
               element.style.fontWeight = 'bold';
-              
+
               // Guardar a referência da opção selecionada
-              selectedOption = element;
-              
+              window.selectedOption = element;
+
               // Mostrar o botão de verificar resposta
               const checkAnswerBtn = document.getElementById('check-answer-btn-container');
               if (checkAnswerBtn) {
                 checkAnswerBtn.classList.remove('hidden');
               }
-            }
-            
-            // Função para verificar a resposta selecionada
-            function checkSelectedAnswer() {
-              if (!selectedOption) return;
-              
+            };
+
+            window.checkSelectedAnswer = function() {
+              if (!window.selectedOption) return;
+
               // Desativar todas as opções para evitar mudanças após verificação
               document.querySelectorAll('.option-selection').forEach(opt => {
                 opt.style.pointerEvents = 'none';
                 opt.style.opacity = '0.7';
               });
-              
+
               // Destacar a opção selecionada
-              selectedOption.style.opacity = '1';
-              
+              window.selectedOption.style.opacity = '1';
+
               // Verificar se a resposta está correta
-              const isCorrect = selectedOption.getAttribute('data-correct') === 'true';
+              const isCorrect = window.selectedOption.getAttribute('data-correct') === 'true';
               const resultContainer = document.getElementById('answer-result');
               const explanationContainer = document.getElementById('explanation-container');
-              
+
               // Aplicar cores baseadas na resposta
               if (isCorrect) {
-                selectedOption.classList.remove('bg-orange-50', 'dark:bg-orange-900/20', 'border-orange-300', 'dark:border-orange-700');
-                selectedOption.classList.add('bg-green-50', 'dark:bg-green-900/20', 'border', 'border-green-300', 'dark:border-green-700');
+                window.selectedOption.classList.remove('bg-orange-50', 'dark:bg-orange-900/20', 'border-orange-300', 'dark:border-orange-700');
+                window.selectedOption.classList.add('bg-green-50', 'dark:bg-green-900/20', 'border', 'border-green-300', 'dark:border-green-700');
               } else {
-                selectedOption.classList.remove('bg-orange-50', 'dark:bg-orange-900/20', 'border-orange-300', 'dark:border-orange-700');
-                selectedOption.classList.add('bg-red-50', 'dark:bg-red-900/20', 'border', 'border-red-300', 'dark:border-red-700');
-                
+                window.selectedOption.classList.remove('bg-orange-50', 'dark:bg-orange-900/20', 'border-orange-300', 'dark:border-orange-700');
+                window.selectedOption.classList.add('bg-red-50', 'dark:bg-red-900/20', 'border', 'border-red-300', 'dark:border-red-700');
+
                 // Destacar a opção correta
                 document.querySelectorAll('.option-selection').forEach(opt => {
                   if (opt.getAttribute('data-correct') === 'true') {
@@ -425,11 +437,11 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
                   }
                 });
               }
-              
+
               // Mostrar o resultado
               if (resultContainer) {
                 resultContainer.classList.remove('hidden');
-                
+
                 if (isCorrect) {
                   resultContainer.innerHTML = '<p class="text-green-600 dark:text-green-400 font-medium">✓ Resposta correta!</p>';
                   resultContainer.classList.add('bg-green-100', 'dark:bg-green-900/20', 'border', 'border-green-200', 'dark:border-green-700');
@@ -438,18 +450,34 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
                   resultContainer.classList.add('bg-red-100', 'dark:bg-red-900/20', 'border', 'border-red-200', 'dark:border-red-700');
                 }
               }
-              
+
               // Mostrar a explicação
               if (explanationContainer) {
                 explanationContainer.classList.remove('hidden');
               }
-              
+
               // Esconder o botão de verificar resposta
               const checkAnswerBtn = document.getElementById('check-answer-btn-container');
               if (checkAnswerBtn) {
                 checkAnswerBtn.classList.add('hidden');
               }
-            }
+            };
+
+            // Adicionar event listeners após criação do DOM
+            setTimeout(() => {
+              // Adicionar listeners para todas as opções
+              document.querySelectorAll('.option-selection').forEach(opt => {
+                opt.addEventListener('click', function() {
+                  window.selectOption(this);
+                });
+              });
+
+              // Adicionar listener para o botão de verificar resposta
+              const checkAnswerBtn = document.getElementById('check-answer-btn');
+              if (checkAnswerBtn) {
+                checkAnswerBtn.addEventListener('click', window.checkSelectedAnswer);
+              }
+            }, 100);
           </script>
         `;
       }
@@ -485,12 +513,12 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
 
       questionOptions = `
         <div class="mt-4 space-y-3">
-          <div class="flex items-center space-x-4 cursor-pointer option-selection" data-correct="false" data-option="verdadeiro" onclick="selectOption(this)">
+          <div class="flex items-center space-x-4 cursor-pointer option-selection" data-correct="false" data-option="verdadeiro">
             <button class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
               Verdadeiro
             </button>
           </div>
-          <div class="flex items-center space-x-4 cursor-pointer option-selection" data-correct="true" data-option="falso" onclick="selectOption(this)">
+          <div class="flex items-center space-x-4 cursor-pointer option-selection" data-correct="true" data-option="falso">
             <button class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
               Falso
             </button>
@@ -500,16 +528,15 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
           <button 
             id="check-answer-btn" 
             class="w-full py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors"
-            onclick="checkSelectedAnswer()">
+          >
             Ver resposta
           </button>
         </div>
         <script>
-          // Variável para armazenar a opção selecionada
-          let selectedOption = null;
+          // Definir as funções no escopo global para acessibilidade
+          window.selectedOption = null;
 
-          // Função para selecionar uma opção
-          function selectOption(element) {
+          window.selectOption = function(element) {
             // Remover destaque de todas as opções
             document.querySelectorAll('.option-selection').forEach(opt => {
               const btn = opt.querySelector('button');
@@ -518,44 +545,43 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
                 btn.classList.add('bg-white', 'dark:bg-gray-700');
               }
             });
-            
+
             // Destacar a opção clicada
             const selectedBtn = element.querySelector('button');
             if (selectedBtn) {
               selectedBtn.classList.remove('bg-white', 'dark:bg-gray-700');
               selectedBtn.classList.add('bg-orange-100', 'dark:bg-orange-900/30');
             }
-            
+
             // Guardar a referência da opção selecionada
-            selectedOption = element;
-            
+            window.selectedOption = element;
+
             // Mostrar o botão de verificar resposta
             const checkAnswerBtn = document.getElementById('check-answer-btn-container');
             if (checkAnswerBtn) {
               checkAnswerBtn.classList.remove('hidden');
             }
-          }
-          
-          // Função para verificar a resposta selecionada
-          function checkSelectedAnswer() {
-            if (!selectedOption) return;
-            
+          };
+
+          window.checkSelectedAnswer = function() {
+            if (!window.selectedOption) return;
+
             // Desativar todas as opções para evitar mudanças após verificação
             document.querySelectorAll('.option-selection').forEach(opt => {
               opt.style.pointerEvents = 'none';
               opt.style.opacity = '0.7';
             });
-            
+
             // Destacar a opção selecionada
-            selectedOption.style.opacity = '1';
-            
+            window.selectedOption.style.opacity = '1';
+
             // Verificar se a resposta está correta
-            const isCorrect = selectedOption.getAttribute('data-correct') === 'true';
+            const isCorrect = window.selectedOption.getAttribute('data-correct') === 'true';
             const resultContainer = document.getElementById('answer-result');
             const explanationContainer = document.getElementById('explanation-container');
-            
+
             // Aplicar cores baseadas na resposta
-            const selectedBtn = selectedOption.querySelector('button');
+            const selectedBtn = window.selectedOption.querySelector('button');
             if (selectedBtn) {
               if (isCorrect) {
                 selectedBtn.classList.remove('bg-orange-100', 'dark:bg-orange-900/30');
@@ -563,7 +589,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
               } else {
                 selectedBtn.classList.remove('bg-orange-100', 'dark:bg-orange-900/30');
                 selectedBtn.classList.add('bg-red-100', 'dark:bg-red-900/30', 'border-red-300', 'dark:border-red-700');
-                
+
                 // Destacar a opção correta
                 document.querySelectorAll('.option-selection').forEach(opt => {
                   if (opt.getAttribute('data-correct') === 'true') {
@@ -577,11 +603,11 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
                 });
               }
             }
-            
+
             // Mostrar o resultado
             if (resultContainer) {
               resultContainer.classList.remove('hidden');
-              
+
               if (isCorrect) {
                 resultContainer.innerHTML = '<p class="text-green-600 dark:text-green-400 font-medium">✓ Resposta correta!</p>';
                 resultContainer.classList.add('bg-green-100', 'dark:bg-green-900/20', 'border', 'border-green-200', 'dark:border-green-700');
@@ -590,18 +616,34 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
                 resultContainer.classList.add('bg-red-100', 'dark:bg-red-900/20', 'border', 'border-red-200', 'dark:border-red-700');
               }
             }
-            
+
             // Mostrar a explicação
             if (explanationContainer) {
               explanationContainer.classList.remove('hidden');
             }
-            
+
             // Esconder o botão de verificar resposta
             const checkAnswerBtn = document.getElementById('check-answer-btn-container');
             if (checkAnswerBtn) {
               checkAnswerBtn.classList.add('hidden');
             }
-          }
+          };
+
+          // Adicionar event listeners após criação do DOM
+          setTimeout(() => {
+            // Adicionar listeners para todas as opções
+            document.querySelectorAll('.option-selection').forEach(opt => {
+              opt.addEventListener('click', function() {
+                window.selectOption(this);
+              });
+            });
+
+            // Adicionar listener para o botão de verificar resposta
+            const checkAnswerBtn = document.getElementById('check-answer-btn');
+            if (checkAnswerBtn) {
+              checkAnswerBtn.addEventListener('click', window.checkSelectedAnswer);
+            }
+          }, 100);
         </script>
       `;
     }
