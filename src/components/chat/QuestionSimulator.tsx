@@ -2,6 +2,29 @@ import React, { useState } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { generateAIResponse } from "@/services/aiChatService";
 
+// Tipos para as questões geradas
+type QuestionOption = {
+  id: string;
+  text: string;
+  isCorrect: boolean;
+};
+
+type Question = {
+  id: string;
+  type: string;
+  text: string;
+  options?: QuestionOption[];
+  explanation?: string;
+};
+
+// Estender a interface Window para incluir funções globais necessárias
+declare global {
+  interface Window {
+    showQuestionDetails: (questionType: string, questionNumber: number) => void;
+    generatedQuestions: Question[];
+  }
+}
+
 interface QuestionSimulatorProps {
   onClose: () => void;
   sessionId: string;
@@ -62,13 +85,32 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
         }
       );
 
+      // Tentar extrair o JSON de questões da resposta
+      let questionsData = [];
+      try {
+        // Extrair apenas o JSON da resposta (que pode conter texto adicional)
+        const jsonMatch = questionsResponse.match(/\[\s*\{.*\}\s*\]/s);
+        if (jsonMatch) {
+          questionsData = JSON.parse(jsonMatch[0]);
+          console.log('Questões geradas com sucesso:', questionsData);
+        } else {
+          throw new Error('Formato de resposta inválido');
+        }
+      } catch (jsonError) {
+        console.error('Erro ao parsear as questões JSON:', jsonError);
+        questionsData = [];
+      }
+      
+      // Armazenar as questões geradas em uma variável global para acesso posterior
+      window.generatedQuestions = questionsData;
+
       // Criar função global para mostrar detalhes das questões
       window.showQuestionDetails = (questionType, questionNumber) => {
-        showQuestionDetailModal(questionType, questionNumber, totalQuestions, multipleChoice, essay, trueFalse, messageContent);
+        showQuestionDetailModal(questionType, questionNumber, totalQuestions, multipleChoice, essay, trueFalse, messageContent, questionsData);
       };
 
       // Criar o modal de resultados
-      showResultsModal(totalQuestions, multipleChoice, essay, trueFalse, messageContent);
+      showResultsModal(totalQuestions, multipleChoice, essay, trueFalse, messageContent, questionsData);
 
     } catch (error) {
       console.error('Erro ao gerar questões de prova:', error);
@@ -84,7 +126,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
   };
 
   // Função para mostrar o modal de detalhes da questão
-  const showQuestionDetailModal = (questionType: string, questionNumber: number, totalQuestions: number, multipleChoice: number, essay: number, trueFalse: number, messageContent: string) => {
+  const showQuestionDetailModal = (questionType: string, questionNumber: number, totalQuestions: number, multipleChoice: number, essay: number, trueFalse: number, messageContent: string, questionsData = []) => {
     // Remover qualquer modal de detalhes de questão existente
     const existingDetailModal = document.getElementById('question-detail-modal');
     if (existingDetailModal) {
@@ -96,8 +138,31 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
     let questionTag = '';
     let questionContent = '';
     let questionOptions = '';
+    let questionExplanation = '';
 
-    // Questões de múltipla escolha
+    // Verificar se temos questões geradas pela IA
+    const hasGeneratedQuestions = Array.isArray(questionsData) && questionsData.length > 0;
+    
+    // Se temos questões geradas, vamos encontrar a questão específica
+    let selectedQuestion = null;
+    
+    if (hasGeneratedQuestions) {
+      // Encontrar a questão correspondente ao número e tipo
+      selectedQuestion = questionsData.find((q, index) => {
+        // O número da questão começa em 1, por isso (questionNumber - 1) para o índice
+        return ((index + 1) === questionNumber) && 
+              ((questionType === 'multiple-choice' && q.type === 'multiple-choice') || 
+               (questionType === 'essay' && (q.type === 'essay' || q.type === 'discursive')) || 
+               (questionType === 'true-false' && (q.type === 'true-false' || q.type === 'verdadeiro-falso')));
+      });
+      
+      // Se não encontrou pela correspondência exata, pegar pela posição
+      if (!selectedQuestion) {
+        selectedQuestion = questionsData[questionNumber - 1];
+      }
+    }
+
+    // Questões padrão por tipo (para fallback)
     const multipleChoiceQuestions = [
       "Qual é o principal conceito abordado no texto?",
       "De acordo com o conteúdo, qual alternativa está correta?",
@@ -107,7 +172,6 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
       "Com base na explicação, qual é a melhor definição para o tema?"
     ];
 
-    // Questões discursivas
     const essayQuestions = [
       "Explique com suas palavras os principais aspectos do tema apresentado.",
       "Disserte sobre a importância deste conteúdo para sua área de estudo.",
@@ -116,7 +180,6 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
       "Compare os diferentes aspectos apresentados no material."
     ];
 
-    // Questões de verdadeiro ou falso
     const trueFalseQuestions = [
       "Os conceitos apresentados são aplicáveis apenas em contextos teóricos.",
       "Este tema é considerado fundamental na área de estudo.",
@@ -125,7 +188,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
       "Os princípios discutidos são universalmente aceitos na comunidade acadêmica."
     ];
 
-    // Extrai possíveis termos e conceitos do conteúdo
+    // Extrair possíveis termos e conceitos do conteúdo (para fallback)
     const extractTerms = (content: string) => {
       const terms: string[] = [];
       const words = content.split(/\s+/);
@@ -142,45 +205,78 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
     if (questionType === 'multiple-choice') {
       questionTag = '<span class="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded-full">Múltipla escolha</span>';
 
-      // Usar uma das questões pré-definidas ou gerar uma baseada no contexto
-      const questionIndex = (questionNumber - 1) % multipleChoiceQuestions.length;
-      questionContent = multipleChoiceQuestions[questionIndex];
+      if (selectedQuestion) {
+        // Usar a questão gerada pela IA
+        questionContent = selectedQuestion.text;
+        questionExplanation = selectedQuestion.explanation || '';
+        
+        // Gerar as opções de múltipla escolha
+        const optionsHTML = selectedQuestion.options.map((option, idx) => {
+          const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+          const letter = letters[idx % letters.length];
+          const isCorrectClass = option.isCorrect ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : '';
+          
+          return `
+            <div class="flex items-center space-x-2 ${isCorrectClass}">
+              <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
+                <span class="text-xs font-medium">${letter}</span>
+              </div>
+              <span class="text-sm text-gray-700 dark:text-gray-300">${option.text}</span>
+            </div>
+          `;
+        }).join('');
+        
+        questionOptions = `
+          <div class="mt-4 space-y-3">
+            ${optionsHTML}
+          </div>
+        `;
+      } else {
+        // Fallback para questões pré-definidas
+        const questionIndex = (questionNumber - 1) % multipleChoiceQuestions.length;
+        questionContent = multipleChoiceQuestions[questionIndex];
 
-      // Gerar alternativas baseadas no contexto
-      questionOptions = `
-        <div class="mt-4 space-y-3">
-          <div class="flex items-center space-x-2">
-            <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
-              <span class="text-xs font-medium">A</span>
+        // Gerar alternativas baseadas no contexto
+        questionOptions = `
+          <div class="mt-4 space-y-3">
+            <div class="flex items-center space-x-2">
+              <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
+                <span class="text-xs font-medium">A</span>
+              </div>
+              <span class="text-sm text-gray-700 dark:text-gray-300">É um ${terms[0 % terms.length]} fundamental para compreensão do tema.</span>
             </div>
-            <span class="text-sm text-gray-700 dark:text-gray-300">É um ${terms[0 % terms.length]} fundamental para compreensão do tema.</span>
-          </div>
-          <div class="flex items-center space-x-2">
-            <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
-              <span class="text-xs font-medium">B</span>
+            <div class="flex items-center space-x-2">
+              <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
+                <span class="text-xs font-medium">B</span>
+              </div>
+              <span class="text-sm text-gray-700 dark:text-gray-300">Representa uma abordagem inovadora sobre o ${terms[1 % terms.length]}.</span>
             </div>
-            <span class="text-sm text-gray-700 dark:text-gray-300">Representa uma abordagem inovadora sobre o ${terms[1 % terms.length]}.</span>
-          </div>
-          <div class="flex items-center space-x-2">
-            <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
-              <span class="text-xs font-medium">C</span>
+            <div class="flex items-center space-x-2">
+              <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
+                <span class="text-xs font-medium">C</span>
+              </div>
+              <span class="text-sm text-gray-700 dark:text-gray-300">Demonstra a aplicação prática do ${terms[2 % terms.length]} em contextos reais.</span>
             </div>
-            <span class="text-sm text-gray-700 dark:text-gray-300">Demonstra a aplicação prática do ${terms[2 % terms.length]} em contextos reais.</span>
-          </div>
-          <div class="flex items-center space-x-2">
-            <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
-              <span class="text-xs font-medium">D</span>
+            <div class="flex items-center space-x-2">
+              <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
+                <span class="text-xs font-medium">D</span>
+              </div>
+              <span class="text-sm text-gray-700 dark:text-gray-300">Exemplifica como o ${terms[3 % terms.length]} pode ser utilizado em diferentes situações.</span>
             </div>
-            <span class="text-sm text-gray-700 dark:text-gray-300">Exemplifica como o ${terms[3 % terms.length]} pode ser utilizado em diferentes situações.</span>
           </div>
-        </div>
-      `;
+        `;
+      }
     } else if (questionType === 'essay') {
       questionTag = '<span class="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs rounded-full">Discursiva</span>';
 
-      // Usar uma das questões pré-definidas ou gerar uma baseada no contexto
-      const questionIndex = (questionNumber - 1) % essayQuestions.length;
-      questionContent = essayQuestions[questionIndex];
+      if (selectedQuestion) {
+        // Usar a questão gerada pela IA
+        questionContent = selectedQuestion.text;
+      } else {
+        // Fallback para questões pré-definidas
+        const questionIndex = (questionNumber - 1) % essayQuestions.length;
+        questionContent = essayQuestions[questionIndex];
+      }
 
       questionOptions = `
         <div class="mt-4">
@@ -190,9 +286,15 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
     } else if (questionType === 'true-false') {
       questionTag = '<span class="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs rounded-full">Verdadeiro ou Falso</span>';
 
-      // Usar uma das questões pré-definidas ou gerar uma baseada no contexto
-      const questionIndex = (questionNumber - 1) % trueFalseQuestions.length;
-      questionContent = trueFalseQuestions[questionIndex];
+      if (selectedQuestion) {
+        // Usar a questão gerada pela IA
+        questionContent = selectedQuestion.text;
+        questionExplanation = selectedQuestion.explanation || '';
+      } else {
+        // Fallback para questões pré-definidas
+        const questionIndex = (questionNumber - 1) % trueFalseQuestions.length;
+        questionContent = trueFalseQuestions[questionIndex];
+      }
 
       questionOptions = `
         <div class="mt-4 space-y-3">
@@ -207,6 +309,14 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
         </div>
       `;
     }
+    
+    // Adicionar explicação se disponível
+    const explanationHTML = questionExplanation ? `
+      <div class="mt-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Explicação:</p>
+        <p class="text-sm text-gray-700 dark:text-gray-300">${questionExplanation}</p>
+      </div>
+    ` : '';
 
     // Criar HTML para o modal de detalhes da questão
     const detailModalHTML = `
@@ -240,6 +350,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
               ${questionContent}
             </p>
             ${questionOptions}
+            ${explanationHTML}
           </div>
 
           <div class="flex justify-between mt-4">
@@ -367,12 +478,15 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
   };
 
   // Função para mostrar o modal de resultados com questões geradas
-  const showResultsModal = (totalQuestions: number, multipleChoice: number, essay: number, trueFalse: number, messageContent: string) => {
+  const showResultsModal = (totalQuestions: number, multipleChoice: number, essay: number, trueFalse: number, messageContent: string, questionsData = []) => {
     // Função para gerar os mini-cards das questões
     const generateQuestionCards = (total: number, multipleChoice: number, essay: number, trueFalse: number) => {
       let cardsHTML = '';
-
-      // Tentar extrair informações relevantes do conteúdo para gerar questões personalizadas
+      
+      // Verificar se temos questões geradas pela IA
+      const hasGeneratedQuestions = Array.isArray(questionsData) && questionsData.length > 0;
+      
+      // Tentar extrair informações relevantes do conteúdo para gerar questões personalizadas (fallback)
       const extractKeyTopics = (content: string) => {
         // Encontrar títulos ou palavras-chave em negrito
         const boldPattern = /\*\*(.*?)\*\*/g;
@@ -407,9 +521,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
         return matches.slice(0, 10); // Limitar a 10 tópicos
       };
 
-      const keyTopics = extractKeyTopics(messageContent);
-
-      // Questões de múltipla escolha personalizadas baseadas no conteúdo
+      // Questões personalizadas baseadas no conteúdo (fallback)
       const generatePersonalizedQuestions = (topics: string[], type: string) => {
         const questions = [];
 
@@ -462,6 +574,8 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
         ]
       };
 
+      const keyTopics = extractKeyTopics(messageContent);
+
       // Usar questões personalizadas se tiver tópicos-chave, senão usar as padrões
       const multipleChoiceQuestions = keyTopics.length > 2 
         ? generatePersonalizedQuestions(keyTopics, 'multiple-choice') 
@@ -475,60 +589,112 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
         ? generatePersonalizedQuestions(keyTopics, 'true-false') 
         : defaultQuestions['true-false'];
 
+      // Contador global de questões
+      let questionCounter = 1;
+      
+      // Filtrar questões por tipo
+      const multipleChoiceQuestionsFromAI = hasGeneratedQuestions 
+        ? questionsData.filter(q => q.type === 'multiple-choice').slice(0, multipleChoice)
+        : [];
+        
+      const essayQuestionsFromAI = hasGeneratedQuestions 
+        ? questionsData.filter(q => q.type === 'essay' || q.type === 'discursive').slice(0, essay)
+        : [];
+        
+      const trueFalseQuestionsFromAI = hasGeneratedQuestions 
+        ? questionsData.filter(q => q.type === 'true-false' || q.type === 'verdadeiro-falso').slice(0, trueFalse)
+        : [];
+
       // Gerar cards de múltipla escolha
-      for (let i = 0; i < multipleChoice; i++) {
-        if (i < total) {
-          const questionIndex = i % multipleChoiceQuestions.length;
+      const mcCount = multipleChoiceQuestionsFromAI.length > 0 ? multipleChoiceQuestionsFromAI.length : multipleChoice;
+      for (let i = 0; i < mcCount; i++) {
+        if (questionCounter <= total) {
+          let questionText = '';
+          
+          if (multipleChoiceQuestionsFromAI.length > i) {
+            // Usar questão gerada pela IA
+            questionText = multipleChoiceQuestionsFromAI[i].text;
+          } else {
+            // Fallback para questão pré-definida
+            const questionIndex = i % multipleChoiceQuestions.length;
+            questionText = multipleChoiceQuestions[questionIndex];
+          }
+          
           cardsHTML += `
             <div class="bg-white dark:bg-gray-700 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 p-3 hover:shadow-lg transition-shadow cursor-pointer" 
-                 onclick="showQuestionDetails('multiple-choice', ${i + 1})">
+                 onclick="showQuestionDetails('multiple-choice', ${questionCounter})">
               <div class="flex justify-between items-start mb-2">
-                <h4 class="text-sm font-medium text-gray-800 dark:text-gray-200">Questão ${i + 1}</h4>
+                <h4 class="text-sm font-medium text-gray-800 dark:text-gray-200">Questão ${questionCounter}</h4>
                 <span class="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded-full">Múltipla escolha</span>
               </div>
               <p class="text-xs text-gray-600 dark:text-gray-300 line-clamp-3">
-                ${multipleChoiceQuestions[questionIndex]}
+                ${questionText}
               </p>
             </div>
           `;
+          questionCounter++;
         }
       }
 
       // Gerar cards de questões discursivas
-      for (let i = 0; i < essay; i++) {
-        if (i + multipleChoice < total) {
-          const questionIndex = i % essayQuestions.length;
+      const essayCount = essayQuestionsFromAI.length > 0 ? essayQuestionsFromAI.length : essay;
+      for (let i = 0; i < essayCount; i++) {
+        if (questionCounter <= total) {
+          let questionText = '';
+          
+          if (essayQuestionsFromAI.length > i) {
+            // Usar questão gerada pela IA
+            questionText = essayQuestionsFromAI[i].text;
+          } else {
+            // Fallback para questão pré-definida
+            const questionIndex = i % essayQuestions.length;
+            questionText = essayQuestions[questionIndex];
+          }
+          
           cardsHTML += `
             <div class="bg-white dark:bg-gray-700 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 p-3 hover:shadow-lg transition-shadow cursor-pointer"
-                 onclick="showQuestionDetails('essay', ${i + multipleChoice + 1})">
+                 onclick="showQuestionDetails('essay', ${questionCounter})">
               <div class="flex justify-between items-start mb-2">
-                <h4 class="text-sm font-medium text-gray-800 dark:text-gray-200">Questão ${i + multipleChoice + 1}</h4>
+                <h4 class="text-sm font-medium text-gray-800 dark:text-gray-200">Questão ${questionCounter}</h4>
                 <span class="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs rounded-full">Discursiva</span>
               </div>
               <p class="text-xs text-gray-600 dark:text-gray-300 line-clamp-3">
-                ${essayQuestions[questionIndex]}
+                ${questionText}
               </p>
             </div>
           `;
+          questionCounter++;
         }
       }
 
       // Gerar cards de verdadeiro ou falso
-      for (let i = 0; i < trueFalse; i++) {
-        if (i + multipleChoice + essay < total) {
-          const questionIndex = i % trueFalseQuestions.length;
+      const tfCount = trueFalseQuestionsFromAI.length > 0 ? trueFalseQuestionsFromAI.length : trueFalse;
+      for (let i = 0; i < tfCount; i++) {
+        if (questionCounter <= total) {
+          let questionText = '';
+          
+          if (trueFalseQuestionsFromAI.length > i) {
+            // Usar questão gerada pela IA
+            questionText = trueFalseQuestionsFromAI[i].text;
+          } else {
+            // Fallback para questão pré-definida
+            const questionIndex = i % trueFalseQuestions.length;
+            questionText = trueFalseQuestions[questionIndex];
+          }
+          
           cardsHTML += `
             <div class="bg-white dark:bg-gray-700 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 p-3 hover:shadow-lg transition-shadow cursor-pointer"
-                 onclick="showQuestionDetails('true-false', ${i + multipleChoice + essay + 1})">
+                 onclick="showQuestionDetails('true-false', ${questionCounter})">
               <div class="flex justify-between items-start mb-2">
-                <h4 class="text-sm font-medium text-gray-800 dark:text-gray-200">Questão ${i + multipleChoice + essay + 1}</h4>
+                <h4 class="text-sm font-medium text-gray-800 dark:text-gray-200">Questão ${questionCounter}</h4>
                 <span class="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs rounded-full">Verdadeiro ou Falso</span>
               </div>
               <p class="text-xs text-gray-600 dark:text-gray-300 line-clamp-3">
-                ${trueFalseQuestions[questionIndex]}
+                ${questionText}
               </p>
             </div>
           `;
+          questionCounter++;
         }
       }
 
