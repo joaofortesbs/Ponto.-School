@@ -1,13 +1,6 @@
 
-import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { 
-  Search,
-  Bookmark,
-  Lightbulb,
-  FileText,
-  AlertTriangle
-} from "lucide-react";
+import React from "react";
+import { X } from "lucide-react";
 
 interface AprofundarModalProps {
   isOpen: boolean;
@@ -15,40 +8,45 @@ interface AprofundarModalProps {
 }
 
 const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) => {
+  if (!isOpen) return null;
+  
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Aprofundar no tema</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3 mt-2">
-          <div className="flex items-center p-3 rounded-lg border cursor-not-allowed opacity-70">
-            <Search className="h-5 w-5 mr-3 text-blue-500" />
-            <span className="font-medium">🔍 Explicação Avançada</span>
-          </div>
-          
-          <div className="flex items-center p-3 rounded-lg border cursor-not-allowed opacity-70">
-            <Bookmark className="h-5 w-5 mr-3 text-purple-500" />
-            <span className="font-medium">📌 Tópicos Relacionados</span>
-          </div>
-          
-          <div className="flex items-center p-3 rounded-lg border cursor-not-allowed opacity-70">
-            <FileText className="h-5 w-5 mr-3 text-green-500" />
-            <span className="font-medium">📖 Exemplos Práticos</span>
-          </div>
-          
-          <div className="flex items-center p-3 rounded-lg border cursor-not-allowed opacity-70">
-            <AlertTriangle className="h-5 w-5 mr-3 text-amber-500" />
-            <span className="font-medium">⚠️ Erros Comuns e Dicas</span>
-          </div>
-          
-          <div className="flex items-center p-3 rounded-lg border cursor-not-allowed opacity-70">
-            <Lightbulb className="h-5 w-5 mr-3 text-yellow-500" />
-            <span className="font-medium">📚 Explore Fontes</span>
-          </div>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999]" onClick={onClose}>
+      <div 
+        className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 p-4 shadow-xl w-[280px] animate-fadeIn"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="text-base font-semibold text-gray-800 dark:text-gray-200">
+            Aprofundar no tema
+          </h3>
+          <button 
+            onClick={onClose}
+            className="h-6 w-6 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            <X size={16} />
+          </button>
         </div>
-      </DialogContent>
-    </Dialog>
+        
+        <div className="space-y-2">
+          <button className="w-full text-left p-2 flex items-center gap-2 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors opacity-70 cursor-not-allowed">
+            <span className="text-blue-500">🔍</span> Explicação Avançada
+          </button>
+          <button className="w-full text-left p-2 flex items-center gap-2 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors opacity-70 cursor-not-allowed">
+            <span className="text-orange-500">📌</span> Tópicos Relacionados
+          </button>
+          <button className="w-full text-left p-2 flex items-center gap-2 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors opacity-70 cursor-not-allowed">
+            <span className="text-green-500">📖</span> Exemplos Práticos
+          </button>
+          <button className="w-full text-left p-2 flex items-center gap-2 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors opacity-70 cursor-not-allowed">
+            <span className="text-amber-500">⚠️</span> Erros Comuns e Dicas
+          </button>
+          <button className="w-full text-left p-2 flex items-center gap-2 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors opacity-70 cursor-not-allowed">
+            <span className="text-purple-500">📚</span> Explore Fontes
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 

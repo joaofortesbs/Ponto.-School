@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { MultipleChoiceQuestion } from "./question-types/MultipleChoiceQuestion";
 import { EssayQuestion } from "./question-types/EssayQuestion";
@@ -102,7 +103,7 @@ const QuestionDetailModal: React.FC<QuestionDetailModalProps> = ({
           closeDetailModal();
           const prevNumber = questionNumber - 1;
           const prevType = getQuestionTypeByNumber(prevNumber);
-
+          
           // Mostrar a questão anterior
           setTimeout(() => {
             window.showQuestionDetails(prevType, prevNumber);
@@ -236,7 +237,7 @@ const QuestionDetailModal: React.FC<QuestionDetailModalProps> = ({
 
         <div className="border-t border-b border-gray-200 dark:border-gray-700 py-4 my-2">
           {renderQuestionType()}
-
+          
           {selectedOption && (
             <div className="mt-4">
               <button 
@@ -247,7 +248,7 @@ const QuestionDetailModal: React.FC<QuestionDetailModalProps> = ({
               </button>
             </div>
           )}
-
+          
           {showExplanation && selectedOption && (
             <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
               <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Explicação:</p>
