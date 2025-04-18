@@ -305,7 +305,160 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
                   </svg>
                   Exportar em PDF
                 </button>
-                <button className="w-full px-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 opacity-70 cursor-not-allowed">
+                <button 
+                  className="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Exportar para Word
+                    const now = new Date();
+                    const dateStr = now.toLocaleDateString('pt-BR');
+                    
+                    // Criar o conteúdo do documento do Word
+                    let docContent = `
+                      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'>
+                      <head>
+                        <meta charset="utf-8">
+                        <title>Prova Gerada - Epictus IA</title>
+                        <style>
+                          body { font-family: 'Arial', sans-serif; }
+                          .header { text-align: center; margin-bottom: 30px; }
+                          .question { margin-bottom: 20px; }
+                          .question-header { font-weight: bold; margin-bottom: 10px; }
+                          .option { margin: 5px 0; }
+                          .answer-space { height: 150px; border: 1px solid #ddd; margin: 10px 0; }
+                          .answer-key { margin-top: 30px; border-top: 1px solid #aaa; padding-top: 20px; }
+                        </style>
+                      </head>
+                      <body>
+                        <div class="header">
+                          <h1>Prova Gerada - Epictus IA</h1>
+                          <p>Data: ${dateStr}</p>
+                          <p>Nome do aluno: ______________________________</p>
+                        </div>
+                    `;
+                    
+                    // Função para obter questões pelo tipo
+                    const getQuestionsByType = (type) => {
+                      if (Array.isArray(questionsData) && questionsData.length > 0) {
+                        return questionsData.filter(q => q.type === type);
+                      }
+                      return [];
+                    };
+                    
+                    const multipleChoiceQuestions = getQuestionsByType('multiple-choice');
+                    const essayQuestions = getQuestionsByType('essay') || getQuestionsByType('discursive');
+                    const trueFalseQuestions = getQuestionsByType('true-false') || getQuestionsByType('verdadeiro-falso');
+                    
+                    // Contador de questões
+                    let questionNumber = 1;
+                    
+                    // Adicionar questões de múltipla escolha
+                    multipleChoiceQuestions.forEach(question => {
+                      docContent += `
+                        <div class="question">
+                          <div class="question-header">Questão ${questionNumber} (Múltipla escolha):</div>
+                          <p>${question.text}</p>
+                      `;
+                      
+                      if (question.options && question.options.length) {
+                        question.options.forEach((option, index) => {
+                          const letter = String.fromCharCode(97 + index); // a, b, c, d...
+                          docContent += `<div class="option">${letter}) ${option.text}</div>`;
+                        });
+                      }
+                      
+                      docContent += `</div>`;
+                      questionNumber++;
+                    });
+                    
+                    // Adicionar questões discursivas
+                    essayQuestions.forEach(question => {
+                      docContent += `
+                        <div class="question">
+                          <div class="question-header">Questão ${questionNumber} (Discursiva):</div>
+                          <p>${question.text}</p>
+                          <div class="answer-space"></div>
+                        </div>
+                      `;
+                      questionNumber++;
+                    });
+                    
+                    // Adicionar questões de verdadeiro ou falso
+                    trueFalseQuestions.forEach(question => {
+                      docContent += `
+                        <div class="question">
+                          <div class="question-header">Questão ${questionNumber} (Verdadeiro ou Falso):</div>
+                          <p>${question.text}</p>
+                          <div class="option">( ) Verdadeiro</div>
+                          <div class="option">( ) Falso</div>
+                        </div>
+                      `;
+                      questionNumber++;
+                    });
+                    
+                    // Adicionar gabarito
+                    docContent += `
+                      <div class="answer-key">
+                        <h2>Gabarito</h2>
+                    `;
+                    
+                    // Resetar contador
+                    questionNumber = 1;
+                    
+                    // Gabarito para múltipla escolha
+                    multipleChoiceQuestions.forEach(question => {
+                      const correctOption = question.options ? question.options.find(opt => opt.isCorrect) : null;
+                      const correctLetter = correctOption ? 
+                        String.fromCharCode(97 + question.options.indexOf(correctOption)) : 
+                        'N/A';
+                      
+                      docContent += `
+                        <p>Questão ${questionNumber}: ${correctLetter}) ${correctOption ? correctOption.text : ''}</p>
+                        ${question.explanation ? `<p><i>Explicação: ${question.explanation}</i></p>` : ''}
+                      `;
+                      questionNumber++;
+                    });
+                    
+                    // Gabarito para discursivas
+                    essayQuestions.forEach(question => {
+                      docContent += `
+                        <p>Questão ${questionNumber}: Resposta livre</p>
+                        ${question.explanation ? `<p><i>Pontos esperados: ${question.explanation}</i></p>` : ''}
+                      `;
+                      questionNumber++;
+                    });
+                    
+                    // Gabarito para verdadeiro ou falso
+                    trueFalseQuestions.forEach(question => {
+                      const isCorrect = question.answer === true || 
+                                        question.answer === 'true' || 
+                                        question.answer === 'verdadeiro';
+                      
+                      docContent += `
+                        <p>Questão ${questionNumber}: ${isCorrect ? 'Verdadeiro' : 'Falso'}</p>
+                        ${question.explanation ? `<p><i>Explicação: ${question.explanation}</i></p>` : ''}
+                      `;
+                      questionNumber++;
+                    });
+                    
+                    docContent += `
+                        </div>
+                      </body>
+                      </html>
+                    `;
+                    
+                    // Criar Blob e download
+                    const blob = new Blob([docContent], {type: 'application/msword'});
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `Prova_Epictus_${dateStr.replace(/\//g, '-')}.doc`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    setShowExportOptions(false);
+                  }}
+                >
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4"></path>
                     <polyline points="14 2 14 8 20 8"></polyline>
@@ -318,7 +471,7 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z"></path>
                   </svg>
-                  Exportar em Bloco de Notas
+                  Exportar em Texto
                 </button>
               </div>
             )}
