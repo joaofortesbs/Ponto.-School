@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
 import NotebookSimulation from "./NotebookSimulation";
 import SlidesPresentationModal from "./SlidesPresentationModal";
+import QuizTask from "../agenda/challenges/QuizTask";
 import {
   MessageSquare,
   Send,
@@ -450,6 +451,9 @@ const FloatingChatSupport: React.FC = () => {
   // Estado para modal de apresentação
   const [showPresentationModal, setShowPresentationModal] = useState(false);
   const [presentationSlides, setPresentationSlides] = useState<any[]>([]);
+  
+  // Estado para mostrar quiz
+  const [showQuizTask, setShowQuizTask] = useState(false);
   
   // Função para mostrar o modal de caderno
   const openNotebookModal = (content: string) => {
@@ -2477,15 +2481,127 @@ Exemplo de formato da resposta:
                                             const lastAIMessage = document.querySelector('.message-content:last-of-type');
                                             const content = lastAIMessage?.textContent || 'Conteúdo geral sobre o assunto';
                                             
-                                            // Mostrar modal de quiz com as configurações selecionadas
-                                            setShowQuizTask(true);
+                                            // Gerar perguntas do quiz com base no conteúdo da última resposta da IA
+                                            const generateQuizQuestions = async () => {
+                                              setIsLoading(true);
+                                              
+                                              try {
+                                                // Formato do prompt para gerar o quiz
+                                                const quizPrompt = `
+                                                Gere um quiz com 5 perguntas de múltipla escolha baseadas no seguinte conteúdo:
+                                                "${content}"
+                                                
+                                                Regras:
+                                                - As perguntas devem estar diretamente relacionadas ao conteúdo fornecido
+                                                ${useSmartDifficulty ? '- Misture níveis de dificuldade (fácil, médio e difícil)' : '- Mantenha um nível médio de dificuldade'}
+                                                - Cada pergunta deve ter 4 alternativas, com apenas uma correta
+                                                - Forneça uma explicação concisa para cada resposta
+                                                
+                                                Formato para cada pergunta:
+                                                {
+                                                  "id": "q1",
+                                                  "text": "Enunciado da pergunta",
+                                                  "options": [
+                                                    { "id": "q1-a", "text": "Alternativa A", "isCorrect": false },
+                                                    { "id": "q1-b", "text": "Alternativa B", "isCorrect": true },
+                                                    { "id": "q1-c", "text": "Alternativa C", "isCorrect": false },
+                                                    { "id": "q1-d", "text": "Alternativa D", "isCorrect": false }
+                                                  ],
+                                                  "explanation": "Explicação da resposta correta"
+                                                }
+                                                
+                                                Retorne apenas um array JSON com as 5 perguntas no formato acima, sem texto adicional.
+                                                `;
+                                                
+                                                // Chamar a API para gerar as perguntas
+                                                const quizResponse = await generateAIResponse(
+                                                  quizPrompt,
+                                                  sessionId || 'default_session',
+                                                  {
+                                                    intelligenceLevel: 'advanced',
+                                                    languageStyle: 'formal'
+                                                  }
+                                                );
+                                                
+                                                // Extrair apenas o JSON da resposta (removendo texto explicativo)
+                                                let jsonString = quizResponse;
+                                                if (quizResponse.includes('[') && quizResponse.includes(']')) {
+                                                  jsonString = quizResponse.substring(
+                                                    quizResponse.indexOf('['),
+                                                    quizResponse.lastIndexOf(']') + 1
+                                                  );
+                                                }
+                                                
+                                                try {
+                                                  // Parsear as perguntas
+                                                  const questions = JSON.parse(jsonString);
+                                                  
+                                                  // Criar as props para o componente QuizTask
+                                                  const quizProps = {
+                                                    taskId: `quiz-${Date.now()}`,
+                                                    title: "Quiz sobre o conteúdo",
+                                                    description: "Teste seus conhecimentos sobre o assunto abordado",
+                                                    questions: questions,
+                                                    showExplanation: useStudyMode, // Mostrar explicações se o modo estudo estiver ativado
+                                                    onComplete: (score, totalQuestions) => {
+                                                      // Adicionar mensagem com o resultado no chat
+                                                      setMessages(prev => [
+                                                        ...prev,
+                                                        {
+                                                          id: Date.now(),
+                                                          content: `Você completou o quiz com ${score} de ${totalQuestions} acertos (${Math.round((score/totalQuestions)*100)}%).`,
+                                                          sender: "assistant",
+                                                          timestamp: new Date()
+                                                        }
+                                                      ]);
+                                                    },
+                                                    onClose: () => setShowQuizTask(false)
+                                                  };
+                                                  
+                                                  // Renderizar o componente QuizTask com as perguntas geradas
+                                                  // Aqui você chamaria a função para exibir o quiz
+                                                  console.log('Quiz gerado com sucesso:', quizProps);
+                                                  
+                                                  // Mostrar componente de Quiz
+                                                  // NOTA: aqui você precisará implementar a lógica para mostrar o componente QuizTask
+                                                  // setQuizContent(quizProps); // Estado que armazenaria o conteúdo do quiz
+                                                  setShowQuizTask(true);
+                                                  
+                                                  // Adicionar mensagem no chat sobre o início do quiz
+                                                  setMessages(prev => [
+                                                    ...prev,
+                                                    {
+                                                      id: Date.now(),
+                                                      content: "📝 **Quiz Iniciado!**\n\nResponda às perguntas de múltipla escolha para testar seus conhecimentos sobre o assunto. Boa sorte!",
+                                                      sender: "assistant",
+                                                      timestamp: new Date()
+                                                    }
+                                                  ]);
+                                                  
+                                                } catch (jsonError) {
+                                                  console.error('Erro ao parsear JSON do quiz:', jsonError);
+                                                  toast({
+                                                    title: "Erro ao gerar quiz",
+                                                    description: "Ocorreu um erro ao processar as perguntas. Por favor, tente novamente.",
+                                                    variant: "destructive",
+                                                    duration: 3000,
+                                                  });
+                                                }
+                                              } catch (error) {
+                                                console.error('Erro ao gerar quiz:', error);
+                                                toast({
+                                                  title: "Erro ao gerar quiz",
+                                                  description: "Não foi possível gerar as perguntas. Por favor, tente novamente.",
+                                                  variant: "destructive",
+                                                  duration: 3000,
+                                                });
+                                              } finally {
+                                                setIsLoading(false);
+                                              }
+                                            };
                                             
-                                            // Mensagem de log com as configurações
-                                            console.log('Iniciando Quiz com:', {
-                                              smartDifficulty: useSmartDifficulty,
-                                              studyMode: useStudyMode,
-                                              baseContent: content.substring(0, 50) + '...' // Mostrar apenas parte do conteúdo
-                                            });
+                                            // Iniciar a geração do quiz
+                                            generateQuizQuestions();
                                             
                                             // Notificação ao usuário
                                             toast({
@@ -3845,6 +3961,44 @@ Exemplo de formato da resposta:
           onOpenChange={setShowPresentationModal}
           slides={presentationSlides}
         />
+      )}
+      
+      {/* Quiz Task */}
+      {showQuizTask && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-3xl max-h-[90vh] overflow-auto p-2">
+            <QuizTask
+              taskId={`quiz-${Date.now()}`}
+              title="Quiz de Conhecimentos"
+              description="Teste seus conhecimentos sobre o conteúdo discutido"
+              questions={[
+                {
+                  id: "q1",
+                  text: "Carregando perguntas...",
+                  options: [
+                    { id: "q1-a", text: "Opção A", isCorrect: false },
+                    { id: "q1-b", text: "Opção B", isCorrect: true },
+                    { id: "q1-c", text: "Opção C", isCorrect: false },
+                    { id: "q1-d", text: "Opção D", isCorrect: false },
+                  ],
+                }
+              ]}
+              onComplete={(score, total) => {
+                setShowQuizTask(false);
+                setMessages(prev => [
+                  ...prev,
+                  {
+                    id: Date.now(),
+                    content: `Você completou o quiz com ${score} de ${total} acertos (${Math.round((score/total)*100)}%).`,
+                    sender: "assistant",
+                    timestamp: new Date()
+                  }
+                ]);
+              }}
+              onClose={() => setShowQuizTask(false)}
+            />
+          </div>
+        </div>
       )}
 
       {/* Modal de Personalização do Epictus IA */}
