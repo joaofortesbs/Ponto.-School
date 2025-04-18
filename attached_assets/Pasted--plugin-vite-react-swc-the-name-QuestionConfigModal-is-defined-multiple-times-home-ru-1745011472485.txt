@@ -1,0 +1,753 @@
+[plugin:vite:react-swc] × the name `QuestionConfigModal` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/chat/QuestionSimulator.tsx:1:1]
+   1 │ import React, { useState } from "react";
+   2 │ import { toast } from "@/components/ui/use-toast";
+   3 │ import { generateAIResponse } from "@/services/aiChatService";
+   4 │ import QuestionConfigModal from "./question-components/QuestionConfigModal";
+     ·        ─────────┬─────────
+     ·                 ╰── previous definition of `QuestionConfigModal` here
+   5 │ import QuestionsResultsModal from "./question-components/QuestionsResultsModal";
+   6 │ import QuestionDetailModal from "./question-components/QuestionDetailModal";
+   7 │ 
+   8 │ // Tipos para as questões geradas
+   9 │ type QuestionOption = {
+  10 │   id: string;
+  11 │   text: string;
+  12 │   isCorrect: boolean;
+  13 │ };
+  14 │ 
+  15 │ type Question = {
+  16 │   id: string;
+  17 │   type: string;
+  18 │   text: string;
+  19 │   options?: QuestionOption[];
+  20 │   explanation?: string;
+  21 │   answer?: boolean; // Added answer property for true/false questions
+  22 │ };
+  23 │ 
+  24 │ // Estender a interface Window para incluir funções globais necessárias
+  25 │ declare global {
+  26 │   interface Window {
+  27 │     showQuestionDetails: (questionType: string, questionNumber: number) => void;
+  28 │     generatedQuestions: Question[];
+  29 │   }
+  30 │ }
+  31 │ 
+  32 │ interface QuestionSimulatorProps {
+  33 │   onClose: () => void;
+  34 │   sessionId: string;
+  35 │   messages: any[];
+  36 │ }
+  37 │ 
+  38 │ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionId, messages }) => {
+  39 │   const [isLoading, setIsLoading] = useState(false);
+  40 │ 
+  41 │   // Função para gerar questões de prova
+  42 │   const generateExamQuestions = async (totalQuestions: number, multipleChoice: number, essay: number, trueFalse: number) => {
+  43 │     setIsLoading(true);
+  44 │ 
+  45 │     try {
+  46 │       // Encontrar a última mensagem do assistente para usar como contexto
+  47 │       const lastAIMessage = messages
+  48 │         .filter(msg => msg.sender === 'assistant')
+  49 │         .pop();
+  50 │ 
+  51 │       const messageContent = lastAIMessage?.content || 'Conteúdo sobre o tema estudado';
+  52 │ 
+  53 │       // Analisar a resposta que a IA gerou e o contexto da pergunta
+  54 │       const analysisPrompt = `
+  55 │       Analise a seguinte conversa:
+  56 │ 
+  57 │       Minha resposta anterior: "${messageContent}"
+  58 │ 
+  59 │       Com base nesta resposta e no contexto da conversa, gere ${totalQuestions} questões de avaliação, sendo:
+  60 │       - ${multipleChoice} questões de múltipla escolha
+  61 │       - ${essay} questões discursivas
+  62 │       - ${trueFalse} questões de verdadeiro ou falso
+  63 │ 
+  64 │       As questões devem avaliar os conceitos principais abordados na conversa e estar diretamente relacionadas ao tema.
+  65 │       Formate a saída em JSON com a seguinte estrutura:
+  66 │       [
+  67 │         {
+  68 │           "id": "q1",
+  69 │           "type": "multiple-choice",
+  70 │           "text": "Enunciado da pergunta",
+  71 │           "options": [
+  72 │             { "id": "q1-a", "text": "Alternativa A", "isCorrect": false },
+  73 │             { "id": "q1-b", "text": "Alternativa B", "isCorrect": true },
+  74 │             { "id": "q1-c", "text": "Alternativa C", "isCorrect": false },
+  75 │             { "id": "q1-d", "text": "Alternativa D", "isCorrect": false }
+  76 │           ],
+  77 │           "explanation": "Explicação da resposta correta"
+  78 │         }
+  79 │       ]
+  80 │       `;
+  81 │ 
+  82 │       // Chamar a API para gerar as questões
+  83 │       const questionsResponse = await generateAIResponse(
+  84 │         analysisPrompt,
+  85 │         sessionId || 'default_session',
+  86 │         {
+  87 │           intelligenceLevel: 'advanced',
+  88 │           languageStyle: 'formal'
+  89 │         }
+  90 │       );
+  91 │ 
+  92 │       // Tentar extrair o JSON de questões da resposta
+  93 │       let questionsData = [];
+  94 │       try {
+  95 │         // Extrair apenas o JSON da resposta (que pode conter texto adicional)
+  96 │         const jsonMatch = questionsResponse.match(/\[\s*\{.*\}\s*\]/s);
+  97 │         if (jsonMatch) {
+  98 │           questionsData = JSON.parse(jsonMatch[0]);
+  99 │           console.log('Questões geradas com sucesso:', questionsData);
+ 100 │         } else {
+ 101 │           throw new Error('Formato de resposta inválido');
+ 102 │         }
+ 103 │       } catch (jsonError) {
+ 104 │         console.error('Erro ao parsear as questões JSON:', jsonError);
+ 105 │         questionsData = [];
+ 106 │       }
+ 107 │ 
+ 108 │       // Armazenar as questões geradas em uma variável global para acesso posterior
+ 109 │       window.generatedQuestions = questionsData;
+ 110 │ 
+ 111 │       // Criar função global para mostrar detalhes das questões
+ 112 │       window.showQuestionDetails = (questionType, questionNumber) => {
+ 113 │         showQuestionDetailModal(questionType, questionNumber, totalQuestions, multipleChoice, essay, trueFalse, messageContent, questionsData);
+ 114 │       };
+ 115 │ 
+ 116 │       // Criar o modal de resultados
+ 117 │       showResultsModal(totalQuestions, multipleChoice, essay, trueFalse, messageContent, questionsData);
+ 118 │ 
+ 119 │     } catch (error) {
+ 120 │       console.error('Erro ao gerar questões de prova:', error);
+ 121 │       toast({
+ 122 │         title: "Erro ao gerar questões",
+ 123 │         description: "Ocorreu um problema ao gerar as questões da prova.",
+ 124 │         variant: "destructive",
+ 125 │         duration: 3000,
+ 126 │       });
+ 127 │     } finally {
+ 128 │       setIsLoading(false);
+ 129 │     }
+ 130 │   };
+ 131 │ 
+ 132 │   // Função para mostrar o modal de detalhes da questão
+ 133 │   const showQuestionDetailModal = (
+ 134 │     questionType: string, 
+ 135 │     questionNumber: number, 
+ 136 │     totalQuestions: number, 
+ 137 │     multipleChoice: number, 
+ 138 │     essay: number, 
+ 139 │     trueFalse: number, 
+ 140 │     messageContent: string, 
+ 141 │     questionsData: Question[]
+ 142 │   ) => {
+ 143 │     // Remover qualquer modal de detalhes de questão existente
+ 144 │     const existingDetailModal = document.getElementById('question-detail-modal-root');
+ 145 │     if (existingDetailModal) {
+ 146 │       existingDetailModal.remove();
+ 147 │     }
+ 148 │ 
+ 149 │     // Criar um elemento raiz para o modal
+ 150 │     const modalRoot = document.createElement('div');
+ 151 │     modalRoot.id = 'question-detail-modal-root';
+ 152 │     document.body.appendChild(modalRoot);
+ 153 │ 
+ 154 │     // Renderizar o componente QuestionDetailModal
+ 155 │     import('react-dom/client').then((ReactDOMClient) => {
+ 156 │       const reactRoot = ReactDOMClient.createRoot(modalRoot);
+ 157 │       reactRoot.render(
+ 158 │         <QuestionDetailModal
+ 159 │           questionType={questionType}
+ 160 │           questionNumber={questionNumber}
+ 161 │           totalQuestions={totalQuestions}
+ 162 │           multipleChoice={multipleChoice}
+ 163 │           essay={essay}
+ 164 │           trueFalse={trueFalse}
+ 165 │           messageContent={messageContent}
+ 166 │           questionsData={questionsData}
+ 167 │           onClose={() => {
+ 168 │             reactRoot.unmount();
+ 169 │             modalRoot.remove();
+ 170 │           }}
+ 171 │         />
+ 172 │       );
+ 173 │     });
+ 174 │   };
+ 175 │ 
+ 176 │   // Função para mostrar o modal de resultados com questões geradas
+ 177 │   const showResultsModal = (
+ 178 │     totalQuestions: number, 
+ 179 │     multipleChoice: number, 
+ 180 │     essay: number, 
+ 181 │     trueFalse: number, 
+ 182 │     messageContent: string, 
+ 183 │     questionsData: Question[]
+ 184 │   ) => {
+ 185 │     // Remover qualquer modal de resultados existente
+ 186 │     const existingResultsModal = document.getElementById('questions-results-modal-root');
+ 187 │     if (existingResultsModal) {
+ 188 │       existingResultsModal.remove();
+ 189 │     }
+ 190 │ 
+ 191 │     // Criar um elemento raiz para o modal
+ 192 │     const modalRoot = document.createElement('div');
+ 193 │     modalRoot.id = 'questions-results-modal-root';
+ 194 │     document.body.appendChild(modalRoot);
+ 195 │ 
+ 196 │     // Renderizar o componente QuestionsResultsModal
+ 197 │     import('react-dom/client').then((ReactDOMClient) => {
+ 198 │       const reactRoot = ReactDOMClient.createRoot(modalRoot);
+ 199 │       reactRoot.render(
+ 200 │         <QuestionsResultsModal
+ 201 │           totalQuestions={totalQuestions}
+ 202 │           multipleChoice={multipleChoice}
+ 203 │           essay={essay}
+ 204 │           trueFalse={trueFalse}
+ 205 │           messageContent={messageContent}
+ 206 │           questionsData={questionsData}
+ 207 │           onClose={() => {
+ 208 │             reactRoot.unmount();
+ 209 │             modalRoot.remove();
+ 210 │           }}
+ 211 │         />
+ 212 │       );
+ 213 │     });
+ 214 │   };
+ 215 │ 
+ 216 │   return (
+ 217 │     <QuestionConfigModal
+ 218 │       isLoading={isLoading}
+ 219 │       onClose={onClose}
+ 220 │       onGenerateQuestions={generateExamQuestions}
+ 221 │       sessionId={sessionId}
+ 222 │       messages={messages}
+ 223 │     />
+ 224 │   );
+ 225 │ };
+ 226 │ 
+ 227 │ export default QuestionSimulator;
+ 228 │ 
+ 229 │ // Dummy components for compilation - REPLACE THESE WITH ACTUAL COMPONENTS
+ 230 │ const QuestionConfigModal = ({isLoading, onClose, onGenerateQuestions, sessionId, messages}: any) => (
+     ·       ─────────┬─────────
+     ·                ╰── `QuestionConfigModal` redefined here
+ 231 │   <div>
+ 232 │     <h1>Configure Questions</h1>
+ 233 │     <button onClick={() => onGenerateQuestions(10, 5, 3, 2)}>Generate</button>
+     ╰────
+
+  × the name `QuestionsResultsModal` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/chat/QuestionSimulator.tsx:2:1]
+   2 │ import { toast } from "@/components/ui/use-toast";
+   3 │ import { generateAIResponse } from "@/services/aiChatService";
+   4 │ import QuestionConfigModal from "./question-components/QuestionConfigModal";
+   5 │ import QuestionsResultsModal from "./question-components/QuestionsResultsModal";
+     ·        ──────────┬──────────
+     ·                  ╰── previous definition of `QuestionsResultsModal` here
+   6 │ import QuestionDetailModal from "./question-components/QuestionDetailModal";
+   7 │ 
+   8 │ // Tipos para as questões geradas
+   9 │ type QuestionOption = {
+  10 │   id: string;
+  11 │   text: string;
+  12 │   isCorrect: boolean;
+  13 │ };
+  14 │ 
+  15 │ type Question = {
+  16 │   id: string;
+  17 │   type: string;
+  18 │   text: string;
+  19 │   options?: QuestionOption[];
+  20 │   explanation?: string;
+  21 │   answer?: boolean; // Added answer property for true/false questions
+  22 │ };
+  23 │ 
+  24 │ // Estender a interface Window para incluir funções globais necessárias
+  25 │ declare global {
+  26 │   interface Window {
+  27 │     showQuestionDetails: (questionType: string, questionNumber: number) => void;
+  28 │     generatedQuestions: Question[];
+  29 │   }
+  30 │ }
+  31 │ 
+  32 │ interface QuestionSimulatorProps {
+  33 │   onClose: () => void;
+  34 │   sessionId: string;
+  35 │   messages: any[];
+  36 │ }
+  37 │ 
+  38 │ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionId, messages }) => {
+  39 │   const [isLoading, setIsLoading] = useState(false);
+  40 │ 
+  41 │   // Função para gerar questões de prova
+  42 │   const generateExamQuestions = async (totalQuestions: number, multipleChoice: number, essay: number, trueFalse: number) => {
+  43 │     setIsLoading(true);
+  44 │ 
+  45 │     try {
+  46 │       // Encontrar a última mensagem do assistente para usar como contexto
+  47 │       const lastAIMessage = messages
+  48 │         .filter(msg => msg.sender === 'assistant')
+  49 │         .pop();
+  50 │ 
+  51 │       const messageContent = lastAIMessage?.content || 'Conteúdo sobre o tema estudado';
+  52 │ 
+  53 │       // Analisar a resposta que a IA gerou e o contexto da pergunta
+  54 │       const analysisPrompt = `
+  55 │       Analise a seguinte conversa:
+  56 │ 
+  57 │       Minha resposta anterior: "${messageContent}"
+  58 │ 
+  59 │       Com base nesta resposta e no contexto da conversa, gere ${totalQuestions} questões de avaliação, sendo:
+  60 │       - ${multipleChoice} questões de múltipla escolha
+  61 │       - ${essay} questões discursivas
+  62 │       - ${trueFalse} questões de verdadeiro ou falso
+  63 │ 
+  64 │       As questões devem avaliar os conceitos principais abordados na conversa e estar diretamente relacionadas ao tema.
+  65 │       Formate a saída em JSON com a seguinte estrutura:
+  66 │       [
+  67 │         {
+  68 │           "id": "q1",
+  69 │           "type": "multiple-choice",
+  70 │           "text": "Enunciado da pergunta",
+  71 │           "options": [
+  72 │             { "id": "q1-a", "text": "Alternativa A", "isCorrect": false },
+  73 │             { "id": "q1-b", "text": "Alternativa B", "isCorrect": true },
+  74 │             { "id": "q1-c", "text": "Alternativa C", "isCorrect": false },
+  75 │             { "id": "q1-d", "text": "Alternativa D", "isCorrect": false }
+  76 │           ],
+  77 │           "explanation": "Explicação da resposta correta"
+  78 │         }
+  79 │       ]
+  80 │       `;
+  81 │ 
+  82 │       // Chamar a API para gerar as questões
+  83 │       const questionsResponse = await generateAIResponse(
+  84 │         analysisPrompt,
+  85 │         sessionId || 'default_session',
+  86 │         {
+  87 │           intelligenceLevel: 'advanced',
+  88 │           languageStyle: 'formal'
+  89 │         }
+  90 │       );
+  91 │ 
+  92 │       // Tentar extrair o JSON de questões da resposta
+  93 │       let questionsData = [];
+  94 │       try {
+  95 │         // Extrair apenas o JSON da resposta (que pode conter texto adicional)
+  96 │         const jsonMatch = questionsResponse.match(/\[\s*\{.*\}\s*\]/s);
+  97 │         if (jsonMatch) {
+  98 │           questionsData = JSON.parse(jsonMatch[0]);
+  99 │           console.log('Questões geradas com sucesso:', questionsData);
+ 100 │         } else {
+ 101 │           throw new Error('Formato de resposta inválido');
+ 102 │         }
+ 103 │       } catch (jsonError) {
+ 104 │         console.error('Erro ao parsear as questões JSON:', jsonError);
+ 105 │         questionsData = [];
+ 106 │       }
+ 107 │ 
+ 108 │       // Armazenar as questões geradas em uma variável global para acesso posterior
+ 109 │       window.generatedQuestions = questionsData;
+ 110 │ 
+ 111 │       // Criar função global para mostrar detalhes das questões
+ 112 │       window.showQuestionDetails = (questionType, questionNumber) => {
+ 113 │         showQuestionDetailModal(questionType, questionNumber, totalQuestions, multipleChoice, essay, trueFalse, messageContent, questionsData);
+ 114 │       };
+ 115 │ 
+ 116 │       // Criar o modal de resultados
+ 117 │       showResultsModal(totalQuestions, multipleChoice, essay, trueFalse, messageContent, questionsData);
+ 118 │ 
+ 119 │     } catch (error) {
+ 120 │       console.error('Erro ao gerar questões de prova:', error);
+ 121 │       toast({
+ 122 │         title: "Erro ao gerar questões",
+ 123 │         description: "Ocorreu um problema ao gerar as questões da prova.",
+ 124 │         variant: "destructive",
+ 125 │         duration: 3000,
+ 126 │       });
+ 127 │     } finally {
+ 128 │       setIsLoading(false);
+ 129 │     }
+ 130 │   };
+ 131 │ 
+ 132 │   // Função para mostrar o modal de detalhes da questão
+ 133 │   const showQuestionDetailModal = (
+ 134 │     questionType: string, 
+ 135 │     questionNumber: number, 
+ 136 │     totalQuestions: number, 
+ 137 │     multipleChoice: number, 
+ 138 │     essay: number, 
+ 139 │     trueFalse: number, 
+ 140 │     messageContent: string, 
+ 141 │     questionsData: Question[]
+ 142 │   ) => {
+ 143 │     // Remover qualquer modal de detalhes de questão existente
+ 144 │     const existingDetailModal = document.getElementById('question-detail-modal-root');
+ 145 │     if (existingDetailModal) {
+ 146 │       existingDetailModal.remove();
+ 147 │     }
+ 148 │ 
+ 149 │     // Criar um elemento raiz para o modal
+ 150 │     const modalRoot = document.createElement('div');
+ 151 │     modalRoot.id = 'question-detail-modal-root';
+ 152 │     document.body.appendChild(modalRoot);
+ 153 │ 
+ 154 │     // Renderizar o componente QuestionDetailModal
+ 155 │     import('react-dom/client').then((ReactDOMClient) => {
+ 156 │       const reactRoot = ReactDOMClient.createRoot(modalRoot);
+ 157 │       reactRoot.render(
+ 158 │         <QuestionDetailModal
+ 159 │           questionType={questionType}
+ 160 │           questionNumber={questionNumber}
+ 161 │           totalQuestions={totalQuestions}
+ 162 │           multipleChoice={multipleChoice}
+ 163 │           essay={essay}
+ 164 │           trueFalse={trueFalse}
+ 165 │           messageContent={messageContent}
+ 166 │           questionsData={questionsData}
+ 167 │           onClose={() => {
+ 168 │             reactRoot.unmount();
+ 169 │             modalRoot.remove();
+ 170 │           }}
+ 171 │         />
+ 172 │       );
+ 173 │     });
+ 174 │   };
+ 175 │ 
+ 176 │   // Função para mostrar o modal de resultados com questões geradas
+ 177 │   const showResultsModal = (
+ 178 │     totalQuestions: number, 
+ 179 │     multipleChoice: number, 
+ 180 │     essay: number, 
+ 181 │     trueFalse: number, 
+ 182 │     messageContent: string, 
+ 183 │     questionsData: Question[]
+ 184 │   ) => {
+ 185 │     // Remover qualquer modal de resultados existente
+ 186 │     const existingResultsModal = document.getElementById('questions-results-modal-root');
+ 187 │     if (existingResultsModal) {
+ 188 │       existingResultsModal.remove();
+ 189 │     }
+ 190 │ 
+ 191 │     // Criar um elemento raiz para o modal
+ 192 │     const modalRoot = document.createElement('div');
+ 193 │     modalRoot.id = 'questions-results-modal-root';
+ 194 │     document.body.appendChild(modalRoot);
+ 195 │ 
+ 196 │     // Renderizar o componente QuestionsResultsModal
+ 197 │     import('react-dom/client').then((ReactDOMClient) => {
+ 198 │       const reactRoot = ReactDOMClient.createRoot(modalRoot);
+ 199 │       reactRoot.render(
+ 200 │         <QuestionsResultsModal
+ 201 │           totalQuestions={totalQuestions}
+ 202 │           multipleChoice={multipleChoice}
+ 203 │           essay={essay}
+ 204 │           trueFalse={trueFalse}
+ 205 │           messageContent={messageContent}
+ 206 │           questionsData={questionsData}
+ 207 │           onClose={() => {
+ 208 │             reactRoot.unmount();
+ 209 │             modalRoot.remove();
+ 210 │           }}
+ 211 │         />
+ 212 │       );
+ 213 │     });
+ 214 │   };
+ 215 │ 
+ 216 │   return (
+ 217 │     <QuestionConfigModal
+ 218 │       isLoading={isLoading}
+ 219 │       onClose={onClose}
+ 220 │       onGenerateQuestions={generateExamQuestions}
+ 221 │       sessionId={sessionId}
+ 222 │       messages={messages}
+ 223 │     />
+ 224 │   );
+ 225 │ };
+ 226 │ 
+ 227 │ export default QuestionSimulator;
+ 228 │ 
+ 229 │ // Dummy components for compilation - REPLACE THESE WITH ACTUAL COMPONENTS
+ 230 │ const QuestionConfigModal = ({isLoading, onClose, onGenerateQuestions, sessionId, messages}: any) => (
+ 231 │   <div>
+ 232 │     <h1>Configure Questions</h1>
+ 233 │     <button onClick={() => onGenerateQuestions(10, 5, 3, 2)}>Generate</button>
+ 234 │     {isLoading && <p>Loading...</p>}
+ 235 │     <button onClick={onClose}>Close</button>
+ 236 │   </div>
+ 237 │ );
+ 238 │ 
+ 239 │ const QuestionsResultsModal = ({onClose, totalQuestions, multipleChoice, essay, trueFalse, messageContent, questionsData}: any) => (
+     ·       ──────────┬──────────
+     ·                 ╰── `QuestionsResultsModal` redefined here
+ 240 │   <div>
+ 241 │     <h1>Results</h1>
+ 242 │     <p>Total Questions: {totalQuestions}</p>
+     ╰────
+
+  × the name `QuestionDetailModal` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/chat/QuestionSimulator.tsx:3:1]
+   3 │ import { generateAIResponse } from "@/services/aiChatService";
+   4 │ import QuestionConfigModal from "./question-components/QuestionConfigModal";
+   5 │ import QuestionsResultsModal from "./question-components/QuestionsResultsModal";
+   6 │ import QuestionDetailModal from "./question-components/QuestionDetailModal";
+     ·        ─────────┬─────────
+     ·                 ╰── previous definition of `QuestionDetailModal` here
+   7 │ 
+   8 │ // Tipos para as questões geradas
+   9 │ type QuestionOption = {
+  10 │   id: string;
+  11 │   text: string;
+  12 │   isCorrect: boolean;
+  13 │ };
+  14 │ 
+  15 │ type Question = {
+  16 │   id: string;
+  17 │   type: string;
+  18 │   text: string;
+  19 │   options?: QuestionOption[];
+  20 │   explanation?: string;
+  21 │   answer?: boolean; // Added answer property for true/false questions
+  22 │ };
+  23 │ 
+  24 │ // Estender a interface Window para incluir funções globais necessárias
+  25 │ declare global {
+  26 │   interface Window {
+  27 │     showQuestionDetails: (questionType: string, questionNumber: number) => void;
+  28 │     generatedQuestions: Question[];
+  29 │   }
+  30 │ }
+  31 │ 
+  32 │ interface QuestionSimulatorProps {
+  33 │   onClose: () => void;
+  34 │   sessionId: string;
+  35 │   messages: any[];
+  36 │ }
+  37 │ 
+  38 │ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionId, messages }) => {
+  39 │   const [isLoading, setIsLoading] = useState(false);
+  40 │ 
+  41 │   // Função para gerar questões de prova
+  42 │   const generateExamQuestions = async (totalQuestions: number, multipleChoice: number, essay: number, trueFalse: number) => {
+  43 │     setIsLoading(true);
+  44 │ 
+  45 │     try {
+  46 │       // Encontrar a última mensagem do assistente para usar como contexto
+  47 │       const lastAIMessage = messages
+  48 │         .filter(msg => msg.sender === 'assistant')
+  49 │         .pop();
+  50 │ 
+  51 │       const messageContent = lastAIMessage?.content || 'Conteúdo sobre o tema estudado';
+  52 │ 
+  53 │       // Analisar a resposta que a IA gerou e o contexto da pergunta
+  54 │       const analysisPrompt = `
+  55 │       Analise a seguinte conversa:
+  56 │ 
+  57 │       Minha resposta anterior: "${messageContent}"
+  58 │ 
+  59 │       Com base nesta resposta e no contexto da conversa, gere ${totalQuestions} questões de avaliação, sendo:
+  60 │       - ${multipleChoice} questões de múltipla escolha
+  61 │       - ${essay} questões discursivas
+  62 │       - ${trueFalse} questões de verdadeiro ou falso
+  63 │ 
+  64 │       As questões devem avaliar os conceitos principais abordados na conversa e estar diretamente relacionadas ao tema.
+  65 │       Formate a saída em JSON com a seguinte estrutura:
+  66 │       [
+  67 │         {
+  68 │           "id": "q1",
+  69 │           "type": "multiple-choice",
+  70 │           "text": "Enunciado da pergunta",
+  71 │           "options": [
+  72 │             { "id": "q1-a", "text": "Alternativa A", "isCorrect": false },
+  73 │             { "id": "q1-b", "text": "Alternativa B", "isCorrect": true },
+  74 │             { "id": "q1-c", "text": "Alternativa C", "isCorrect": false },
+  75 │             { "id": "q1-d", "text": "Alternativa D", "isCorrect": false }
+  76 │           ],
+  77 │           "explanation": "Explicação da resposta correta"
+  78 │         }
+  79 │       ]
+  80 │       `;
+  81 │ 
+  82 │       // Chamar a API para gerar as questões
+  83 │       const questionsResponse = await generateAIResponse(
+  84 │         analysisPrompt,
+  85 │         sessionId || 'default_session',
+  86 │         {
+  87 │           intelligenceLevel: 'advanced',
+  88 │           languageStyle: 'formal'
+  89 │         }
+  90 │       );
+  91 │ 
+  92 │       // Tentar extrair o JSON de questões da resposta
+  93 │       let questionsData = [];
+  94 │       try {
+  95 │         // Extrair apenas o JSON da resposta (que pode conter texto adicional)
+  96 │         const jsonMatch = questionsResponse.match(/\[\s*\{.*\}\s*\]/s);
+  97 │         if (jsonMatch) {
+  98 │           questionsData = JSON.parse(jsonMatch[0]);
+  99 │           console.log('Questões geradas com sucesso:', questionsData);
+ 100 │         } else {
+ 101 │           throw new Error('Formato de resposta inválido');
+ 102 │         }
+ 103 │       } catch (jsonError) {
+ 104 │         console.error('Erro ao parsear as questões JSON:', jsonError);
+ 105 │         questionsData = [];
+ 106 │       }
+ 107 │ 
+ 108 │       // Armazenar as questões geradas em uma variável global para acesso posterior
+ 109 │       window.generatedQuestions = questionsData;
+ 110 │ 
+ 111 │       // Criar função global para mostrar detalhes das questões
+ 112 │       window.showQuestionDetails = (questionType, questionNumber) => {
+ 113 │         showQuestionDetailModal(questionType, questionNumber, totalQuestions, multipleChoice, essay, trueFalse, messageContent, questionsData);
+ 114 │       };
+ 115 │ 
+ 116 │       // Criar o modal de resultados
+ 117 │       showResultsModal(totalQuestions, multipleChoice, essay, trueFalse, messageContent, questionsData);
+ 118 │ 
+ 119 │     } catch (error) {
+ 120 │       console.error('Erro ao gerar questões de prova:', error);
+ 121 │       toast({
+ 122 │         title: "Erro ao gerar questões",
+ 123 │         description: "Ocorreu um problema ao gerar as questões da prova.",
+ 124 │         variant: "destructive",
+ 125 │         duration: 3000,
+ 126 │       });
+ 127 │     } finally {
+ 128 │       setIsLoading(false);
+ 129 │     }
+ 130 │   };
+ 131 │ 
+ 132 │   // Função para mostrar o modal de detalhes da questão
+ 133 │   const showQuestionDetailModal = (
+ 134 │     questionType: string, 
+ 135 │     questionNumber: number, 
+ 136 │     totalQuestions: number, 
+ 137 │     multipleChoice: number, 
+ 138 │     essay: number, 
+ 139 │     trueFalse: number, 
+ 140 │     messageContent: string, 
+ 141 │     questionsData: Question[]
+ 142 │   ) => {
+ 143 │     // Remover qualquer modal de detalhes de questão existente
+ 144 │     const existingDetailModal = document.getElementById('question-detail-modal-root');
+ 145 │     if (existingDetailModal) {
+ 146 │       existingDetailModal.remove();
+ 147 │     }
+ 148 │ 
+ 149 │     // Criar um elemento raiz para o modal
+ 150 │     const modalRoot = document.createElement('div');
+ 151 │     modalRoot.id = 'question-detail-modal-root';
+ 152 │     document.body.appendChild(modalRoot);
+ 153 │ 
+ 154 │     // Renderizar o componente QuestionDetailModal
+ 155 │     import('react-dom/client').then((ReactDOMClient) => {
+ 156 │       const reactRoot = ReactDOMClient.createRoot(modalRoot);
+ 157 │       reactRoot.render(
+ 158 │         <QuestionDetailModal
+ 159 │           questionType={questionType}
+ 160 │           questionNumber={questionNumber}
+ 161 │           totalQuestions={totalQuestions}
+ 162 │           multipleChoice={multipleChoice}
+ 163 │           essay={essay}
+ 164 │           trueFalse={trueFalse}
+ 165 │           messageContent={messageContent}
+ 166 │           questionsData={questionsData}
+ 167 │           onClose={() => {
+ 168 │             reactRoot.unmount();
+ 169 │             modalRoot.remove();
+ 170 │           }}
+ 171 │         />
+ 172 │       );
+ 173 │     });
+ 174 │   };
+ 175 │ 
+ 176 │   // Função para mostrar o modal de resultados com questões geradas
+ 177 │   const showResultsModal = (
+ 178 │     totalQuestions: number, 
+ 179 │     multipleChoice: number, 
+ 180 │     essay: number, 
+ 181 │     trueFalse: number, 
+ 182 │     messageContent: string, 
+ 183 │     questionsData: Question[]
+ 184 │   ) => {
+ 185 │     // Remover qualquer modal de resultados existente
+ 186 │     const existingResultsModal = document.getElementById('questions-results-modal-root');
+ 187 │     if (existingResultsModal) {
+ 188 │       existingResultsModal.remove();
+ 189 │     }
+ 190 │ 
+ 191 │     // Criar um elemento raiz para o modal
+ 192 │     const modalRoot = document.createElement('div');
+ 193 │     modalRoot.id = 'questions-results-modal-root';
+ 194 │     document.body.appendChild(modalRoot);
+ 195 │ 
+ 196 │     // Renderizar o componente QuestionsResultsModal
+ 197 │     import('react-dom/client').then((ReactDOMClient) => {
+ 198 │       const reactRoot = ReactDOMClient.createRoot(modalRoot);
+ 199 │       reactRoot.render(
+ 200 │         <QuestionsResultsModal
+ 201 │           totalQuestions={totalQuestions}
+ 202 │           multipleChoice={multipleChoice}
+ 203 │           essay={essay}
+ 204 │           trueFalse={trueFalse}
+ 205 │           messageContent={messageContent}
+ 206 │           questionsData={questionsData}
+ 207 │           onClose={() => {
+ 208 │             reactRoot.unmount();
+ 209 │             modalRoot.remove();
+ 210 │           }}
+ 211 │         />
+ 212 │       );
+ 213 │     });
+ 214 │   };
+ 215 │ 
+ 216 │   return (
+ 217 │     <QuestionConfigModal
+ 218 │       isLoading={isLoading}
+ 219 │       onClose={onClose}
+ 220 │       onGenerateQuestions={generateExamQuestions}
+ 221 │       sessionId={sessionId}
+ 222 │       messages={messages}
+ 223 │     />
+ 224 │   );
+ 225 │ };
+ 226 │ 
+ 227 │ export default QuestionSimulator;
+ 228 │ 
+ 229 │ // Dummy components for compilation - REPLACE THESE WITH ACTUAL COMPONENTS
+ 230 │ const QuestionConfigModal = ({isLoading, onClose, onGenerateQuestions, sessionId, messages}: any) => (
+ 231 │   <div>
+ 232 │     <h1>Configure Questions</h1>
+ 233 │     <button onClick={() => onGenerateQuestions(10, 5, 3, 2)}>Generate</button>
+ 234 │     {isLoading && <p>Loading...</p>}
+ 235 │     <button onClick={onClose}>Close</button>
+ 236 │   </div>
+ 237 │ );
+ 238 │ 
+ 239 │ const QuestionsResultsModal = ({onClose, totalQuestions, multipleChoice, essay, trueFalse, messageContent, questionsData}: any) => (
+ 240 │   <div>
+ 241 │     <h1>Results</h1>
+ 242 │     <p>Total Questions: {totalQuestions}</p>
+ 243 │     <p>Multiple Choice: {multipleChoice}</p>
+ 244 │     <p>Essay: {essay}</p>
+ 245 │     <p>True/False: {trueFalse}</p>
+ 246 │     <button onClick={onClose}>Close</button>
+ 247 │   </div>
+ 248 │ );
+ 249 │ 
+ 250 │ const QuestionDetailModal = ({onClose, questionType, questionNumber, totalQuestions, multipleChoice, essay, trueFalse, messageContent, questionsData}: any) => (
+     ·       ─────────┬─────────
+     ·                ╰── `QuestionDetailModal` redefined here
+ 251 │     <div>
+ 252 │         <h1>Question Details</h1>
+ 253 │         <p>Type: {questionType}</p>
+     ╰────
+/home/runner/workspace/src/components/chat/QuestionSimulator.tsx:1:1
+1  |  import React, { useState } from "react";
+   |   ^
+2  |  import { toast } from "@/components/ui/use-toast";
+3  |  import { generateAIResponse } from "@/services/aiChatService";
