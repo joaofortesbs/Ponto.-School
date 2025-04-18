@@ -15,20 +15,24 @@ const TrueFalseQuestion: React.FC<TrueFalseQuestionProps> = ({ question }) => {
       window.selectedOption = null;
 
       window.selectOption = function(element) {
+        if (!element) return;
+        
         // Remover destaque de todas as opções
         document.querySelectorAll('.option-selection').forEach(opt => {
           const btn = opt.querySelector('button');
           if (btn) {
-            btn.classList.remove('bg-orange-100', 'dark:bg-orange-900/30');
-            btn.classList.add('bg-white', 'dark:bg-gray-700');
+            btn.classList.remove('bg-orange-100', 'dark:bg-orange-900/30', 'border-orange-300', 'dark:border-orange-700');
+            btn.classList.add('bg-white', 'dark:bg-gray-700', 'border-gray-300', 'dark:border-gray-600');
+            btn.style.fontWeight = 'normal';
           }
         });
 
         // Destacar a opção clicada
         const selectedBtn = element.querySelector('button');
         if (selectedBtn) {
-          selectedBtn.classList.remove('bg-white', 'dark:bg-gray-700');
-          selectedBtn.classList.add('bg-orange-100', 'dark:bg-orange-900/30');
+          selectedBtn.classList.remove('bg-white', 'dark:bg-gray-700', 'border-gray-300', 'dark:border-gray-600');
+          selectedBtn.classList.add('bg-orange-100', 'dark:bg-orange-900/30', 'border-orange-300', 'dark:border-orange-700');
+          selectedBtn.style.fontWeight = 'bold';
         }
 
         // Guardar a referência da opção selecionada

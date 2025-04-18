@@ -20,12 +20,18 @@ const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({ questio
       window.selectedOption = null;
 
       window.selectOption = function(element) {
+        if (!element) return;
+        
         // Remover a classe de todas as alternativas
         document.querySelectorAll('.option-selection').forEach(opt => {
-          opt.classList.remove('bg-orange-50', 'dark:bg-orange-900/20', 'border-orange-300', 'dark:border-orange-700'); 
+          // Remover todos os estilos de seleção
+          opt.classList.remove('bg-orange-50', 'dark:bg-orange-900/20', 'border-orange-300', 'dark:border-orange-700');
+          // Garantir que a borda transparente seja aplicada às opções não selecionadas
+          opt.classList.add('border-transparent');
+          
           const letterContainer = opt.querySelector('.option-letter-container');
           if (letterContainer) {
-            letterContainer.classList.remove('bg-orange-500', 'text-white'); // Remover destaque do letra
+            letterContainer.classList.remove('bg-orange-500', 'text-white'); // Remover destaque da letra
             letterContainer.classList.add('bg-white', 'dark:bg-gray-800');
           }
           opt.style.fontWeight = 'normal';
@@ -33,6 +39,7 @@ const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({ questio
 
         // Destacar a opção clicada
         element.classList.add('bg-orange-50', 'dark:bg-orange-900/20');
+        element.classList.remove('border-transparent');
         element.classList.add('border-orange-300', 'dark:border-orange-700');
         element.style.fontWeight = 'bold';
         
@@ -182,25 +189,25 @@ const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({ questio
       
       return `
         <div class="mt-4 space-y-3">
-          <div class="flex items-center space-x-2 cursor-pointer option-selection p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors" data-correct="false" data-letter="A" onclick="window.selectOption(this)">
+          <div class="flex items-center space-x-2 cursor-pointer option-selection p-2 rounded-md border border-transparent hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:border-orange-300 dark:hover:border-orange-700 transition-colors" data-correct="false" data-letter="A" onclick="window.selectOption(this)">
             <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 option-letter-container">
               <span class="text-xs font-medium">A</span>
             </div>
             <span class="text-sm text-gray-700 dark:text-gray-300">É um ${terms[0]} fundamental para compreensão do tema.</span>
           </div>
-          <div class="flex items-center space-x-2 cursor-pointer option-selection p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors" data-correct="true" data-letter="B" onclick="window.selectOption(this)">
+          <div class="flex items-center space-x-2 cursor-pointer option-selection p-2 rounded-md border border-transparent hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:border-orange-300 dark:hover:border-orange-700 transition-colors" data-correct="true" data-letter="B" onclick="window.selectOption(this)">
             <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 option-letter-container">
               <span class="text-xs font-medium">B</span>
             </div>
             <span class="text-sm text-gray-700 dark:text-gray-300">Representa uma abordagem inovadora sobre o ${terms[1]}.</span>
           </div>
-          <div class="flex items-center space-x-2 cursor-pointer option-selection p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors" data-correct="false" data-letter="C" onclick="window.selectOption(this)">
+          <div class="flex items-center space-x-2 cursor-pointer option-selection p-2 rounded-md border border-transparent hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:border-orange-300 dark:hover:border-orange-700 transition-colors" data-correct="false" data-letter="C" onclick="window.selectOption(this)">
             <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 option-letter-container">
               <span class="text-xs font-medium">C</span>
             </div>
             <span class="text-sm text-gray-700 dark:text-gray-300">Demonstra a aplicação prática do ${terms[2]} em contextos reais.</span>
           </div>
-          <div class="flex items-center space-x-2 cursor-pointer option-selection p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors" data-correct="false" data-letter="D" onclick="window.selectOption(this)">
+          <div class="flex items-center space-x-2 cursor-pointer option-selection p-2 rounded-md border border-transparent hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:border-orange-300 dark:hover:border-orange-700 transition-colors" data-correct="false" data-letter="D" onclick="window.selectOption(this)">
             <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 option-letter-container">
               <span class="text-xs font-medium">D</span>
             </div>
@@ -217,7 +224,7 @@ const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({ questio
           const letter = letters[idx % letters.length];
           
           return `
-            <div class="flex items-center space-x-2 cursor-pointer option-selection p-2 rounded-md hover:bg-orange-50 dark:hover:bg-orange-900/20 border border-transparent hover:border-orange-300 dark:hover:border-orange-700 transition-colors active:bg-orange-50 active:dark:bg-orange-900/20 active:border-orange-300 active:dark:border-orange-700" data-correct="${option.isCorrect}" data-letter="${letter}" onclick="window.selectOption(this)">
+            <div class="flex items-center space-x-2 cursor-pointer option-selection p-2 rounded-md border border-transparent hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:border-orange-300 dark:hover:border-orange-700 transition-colors" data-correct="${option.isCorrect}" data-letter="${letter}" onclick="window.selectOption(this)">
               <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 option-letter-container">
                 <span class="text-xs font-medium">${letter}</span>
               </div>
