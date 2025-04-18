@@ -217,7 +217,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
           const isCorrectClass = option.isCorrect ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : '';
 
           return `
-            <div class="flex items-center space-x-2 cursor-pointer option-selection p-2 rounded-md hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:border hover:border-orange-300 dark:hover:border-orange-700 transition-colors" data-correct="${option.isCorrect}" data-letter="${letter}" onclick="window.selectOption(this)">
+            <div class="flex items-center space-x-2 cursor-pointer option-selection p-2 rounded-md hover:bg-orange-50 dark:hover:bg-orange-900/20 border border-transparent hover:border-orange-300 dark:hover:border-orange-700 transition-colors" data-correct="${option.isCorrect}" data-letter="${letter}" onclick="window.selectOption(this)">
               <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 option-letter-container">
                 <span class="text-xs font-medium">${letter}</span>
               </div>
@@ -246,7 +246,9 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
             window.selectOption = function(element) {
               // Remover destaque de todas as opções
               document.querySelectorAll('.option-selection').forEach(opt => {
-                opt.classList.remove('bg-orange-50', 'dark:bg-orange-900/20', 'border', 'border-orange-300', 'dark:border-orange-700');
+                opt.classList.remove('bg-orange-50', 'dark:bg-orange-900/20');
+                opt.classList.remove('border-orange-300', 'dark:border-orange-700');
+                opt.classList.add('border-transparent');
                 const letterContainerInOpt = opt.querySelector('.option-letter-container');
                 if (letterContainerInOpt) {
                   letterContainerInOpt.classList.remove('bg-orange-500', 'text-white');
@@ -256,7 +258,9 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
               });
 
               // Destacar a opção clicada
-              element.classList.add('bg-orange-50', 'dark:bg-orange-900/20', 'border', 'border-orange-300', 'dark:border-orange-700');
+              element.classList.add('bg-orange-50', 'dark:bg-orange-900/20');
+              element.classList.remove('border-transparent');
+              element.classList.add('border-orange-300', 'dark:border-orange-700');
               element.style.fontWeight = 'bold';
 
               // Destacar o indicador de letra
