@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { generateAIResponse } from "@/services/aiChatService";
 import QuestionConfigModal from "./question-components/QuestionConfigModal";
@@ -130,7 +130,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
   };
 
   // Função para mostrar o modal de detalhes da questão
-  const showQuestionDetailModal = useCallback((
+  const showQuestionDetailModal = (
     questionType: string, 
     questionNumber: number, 
     totalQuestions: number, 
@@ -171,10 +171,10 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
         />
       );
     });
-  }, []);
+  };
 
   // Função para mostrar o modal de resultados com questões geradas
-  const showResultsModal = useCallback((
+  const showResultsModal = (
     totalQuestions: number, 
     multipleChoice: number, 
     essay: number, 
@@ -211,7 +211,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
         />
       );
     });
-  }, []);
+  };
 
   return (
     <QuestionConfigModal
