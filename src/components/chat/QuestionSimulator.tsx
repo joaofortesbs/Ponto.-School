@@ -15,6 +15,7 @@ type Question = {
   text: string;
   options?: QuestionOption[];
   explanation?: string;
+  answer?: boolean; // Added answer property for true/false questions
 };
 
 // Estender a interface Window para incluir funções globais necessárias
@@ -392,16 +393,16 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
         questionOptions = `
           <div class="mt-4 space-y-3">
             <div class="flex items-center space-x-4">
-              <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+              <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors option-item" data-option-id="true" data-is-correct="${selectedQuestion?.answer === true}">
                 Verdadeiro
               </button>
-              <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+              <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors option-item" data-option-id="false" data-is-correct="${selectedQuestion?.answer === false}">
                 Falso
               </button>
             </div>
           </div>
           <div class="mt-4">
-            <button id="show-explanation-btn" class="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors">
+            <button id="show-explanation-btn" class="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors" style="display: none;">
               Ver Resposta
             </button>
           </div>
@@ -413,16 +414,16 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
         questionOptions = `
           <div class="mt-4 space-y-3">
             <div class="flex items-center space-x-4">
-              <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+              <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors option-item" data-option-id="true" data-is-correct="false">
                 Verdadeiro
               </button>
-              <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+              <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors option-item" data-option-id="false" data-is-correct="false">
                 Falso
               </button>
             </div>
           </div>
           <div class="mt-4">
-            <button id="show-explanation-btn" class="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors">
+            <button id="show-explanation-btn" class="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors" style="display: none;">
               Ver Resposta
             </button>
           </div>
@@ -645,7 +646,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
 
       // Tentar extrair informações relevantes do conteúdo para gerar questões personalizadas (fallback)
       const extractKeyTopics = (content: string) => {
-        // Encontrar títulos ou palavras-chave em negrito
+                // Encontrar títulos ou palavras-chave em negrito
         const boldPattern = /\*\*(.*?)\*\*/g;
         const headingPattern = /^#+\s+(.+)$/gm;
 
