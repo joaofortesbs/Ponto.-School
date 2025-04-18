@@ -2983,6 +2983,13 @@ IMPORTANTE:
    - Gabarito com a resposta correta
    - Uma explicação detalhada da resposta
 
+REGRAS OBRIGATÓRIAS:
+- NÃO INCLUA SAUDAÇÕES AO USUÁRIO (como "Olá", "Oi", "Bom dia", etc)
+- NÃO INCLUA NENHUM TIPO DE LINK em nenhuma questão
+- NÃO FAÇA REFERÊNCIAS A NENHUMA PLATAFORMA ou recurso externo
+- APRESENTE APENAS AS QUESTÕES sem textos introdutórios ou conclusivos
+- NÃO USE EMOJIS ou elementos decorativos
+
 Use exatamente os termos e conceitos explicados na resposta da IA. Não invente tópicos não abordados.`;
                                               
                                               try {
