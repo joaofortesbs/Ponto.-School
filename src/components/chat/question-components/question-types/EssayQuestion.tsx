@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { generateAIResponse } from "@/services/aiChatService";
@@ -43,25 +42,25 @@ export const EssayQuestion: React.FC<EssayQuestionProps> = ({
 
   const handleSubmit = async () => {
     if (userAnswer.trim().length < 1) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
       // Construir o prompt para a IA analisar a resposta
       const analysisPrompt = `
       Você é um professor especialista em avaliação de respostas discursivas. 
       Analise a resposta do aluno em relação à questão proposta.
-      
+
       Questão: ${questionContent}
-      
+
       Resposta do aluno: ${userAnswer}
-      
+
       Por favor, avalie nos seguintes critérios:
       1. Aderência ao tema principal da questão
       2. Profundidade do conhecimento demonstrado
       3. Clareza e coerência da argumentação
       4. Precisão das informações apresentadas
-      
+
       Forneça:
       1. Uma avaliação sucinta (máximo 3 parágrafos)
       2. Pontos fortes da resposta
@@ -70,7 +69,7 @@ export const EssayQuestion: React.FC<EssayQuestionProps> = ({
 
       Faça sua resposta direta, profissional e educativa, sem introduções como "Claro" ou "Vamos analisar".
       `;
-      
+
       // Chamar a API para obter a análise da IA
       const response = await generateAIResponse(
         analysisPrompt,
@@ -80,11 +79,11 @@ export const EssayQuestion: React.FC<EssayQuestionProps> = ({
           languageStyle: 'formal'
         }
       );
-      
+
       // Processar classificação (extraindo da resposta)
       const lowerResponse = response.toLowerCase();
       let evaluationResult: "pending" | "correct" | "partially" | "incorrect" = "pending";
-      
+
       if (lowerResponse.includes("correta") && !lowerResponse.includes("parcialmente correta") && !lowerResponse.includes("incorreta")) {
         evaluationResult = "correct";
       } else if (lowerResponse.includes("parcialmente correta")) {
@@ -92,7 +91,7 @@ export const EssayQuestion: React.FC<EssayQuestionProps> = ({
       } else if (lowerResponse.includes("incorreta")) {
         evaluationResult = "incorrect";
       }
-      
+
       // Atualizar estados
       setFeedback(response);
       setEvaluation(evaluationResult);
@@ -118,7 +117,7 @@ export const EssayQuestion: React.FC<EssayQuestionProps> = ({
           onChange={(e) => setUserAnswer(e.target.value)}
           disabled={isSubmitting || feedback !== null}
         ></textarea>
-        
+
         {showSubmitButton && !feedback && (
           <div className="mt-3 flex justify-end">
             <Button 
@@ -130,9 +129,10 @@ export const EssayQuestion: React.FC<EssayQuestionProps> = ({
             </Button>
           </div>
         )}
-        
+
         {feedback && (
-          <div className={`mt-4 p-4 rounded-lg border ${
+          <div className={`mt-4 p-4 rounded-lg border max-h-[80vh] overflow-y-auto flex flex-col` +
+          ` ${
             evaluation === "correct" 
               ? "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800" 
               : evaluation === "partially" 
@@ -152,7 +152,7 @@ export const EssayQuestion: React.FC<EssayQuestionProps> = ({
                   ? "⚠ Parcialmente Correta"
                   : "✗ Resposta Incorreta"}
             </h3>
-            <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">
+            <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line flex-grow">
               {feedback}
             </div>
             <div className="mt-3 flex justify-end">
