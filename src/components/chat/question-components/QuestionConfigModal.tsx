@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, memo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -14,7 +14,7 @@ interface QuestionConfigModalProps {
   onGenerateQuestions: (totalQuestions: number, multipleChoice: number, essay: number, trueFalse: number) => void;
 }
 
-const QuestionConfigModal: React.FC<QuestionConfigModalProps> = ({
+const QuestionConfigModal: React.FC<QuestionConfigModalProps> = memo(({
   isLoading,
   onClose,
   onGenerateQuestions
@@ -156,6 +156,6 @@ const QuestionConfigModal: React.FC<QuestionConfigModalProps> = ({
       </div>
     </div>
   );
-};
+});
 
 export default QuestionConfigModal;
