@@ -15,7 +15,6 @@ type Question = {
   text: string;
   options?: QuestionOption[];
   explanation?: string;
-  answer?: boolean; // Added answer property for true/false questions
 };
 
 // Estender a interface Window para incluir funções globais necessárias
@@ -287,49 +286,13 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
         questionExplanation = selectedQuestion.explanation || '';
         questionOptions = `
           <div class="mt-4">
-            <textarea placeholder="Digite sua resposta aqui..." class="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500" id="essay-answer"></textarea>
+            <textarea placeholder="Digite sua resposta aqui..." class="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500"></textarea>
           </div>
           <div class="mt-4">
-            <button id="essay-show-explanation-btn" class="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors">
+            <button id="show-explanation-btn" class="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors">
               Ver Resposta
             </button>
           </div>
-          <div id="essay-explanation-container" class="mt-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 hidden">
-            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Explicação:</p>
-            <p class="text-sm text-gray-700 dark:text-gray-300">${questionExplanation}</p>
-          </div>
-
-          <script>
-            // Configurar o textarea para mostrar o botão automaticamente quando começar a digitar
-            document.getElementById('essay-answer').addEventListener('input', function() {
-              if (this.value.trim().length > 0) {
-                document.getElementById('essay-show-explanation-btn').style.display = 'block';
-              }
-            });
-
-            // Função para mostrar a explicação
-            function showEssayExplanation() {
-              document.getElementById('essay-explanation-container').classList.remove('hidden');
-
-              // Atualizar o texto do botão
-              const button = document.getElementById('essay-show-explanation-btn');
-              button.textContent = 'Ocultar Resposta';
-              button.onclick = hideEssayExplanation;
-            }
-
-            // Função para ocultar a explicação
-            function hideEssayExplanation() {
-              document.getElementById('essay-explanation-container').classList.add('hidden');
-
-              // Atualizar o texto do botão
-              const button = document.getElementById('essay-show-explanation-btn');
-              button.textContent = 'Ver Resposta';
-              button.onclick = showEssayExplanation;
-            }
-
-            // Configurar o botão de ver resposta para questões discursivas
-            document.getElementById('essay-show-explanation-btn').onclick = showEssayExplanation;
-          </script>
         `;
       } else {
         // Fallback para questões pré-definidas
@@ -337,49 +300,13 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
         questionContent = essayQuestions[questionIndex];
         questionOptions = `
           <div class="mt-4">
-            <textarea placeholder="Digite sua resposta aqui..." class="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500" id="essay-answer"></textarea>
+            <textarea placeholder="Digite sua resposta aqui..." class="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500"></textarea>
           </div>
           <div class="mt-4">
-            <button id="essay-show-explanation-btn" class="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors">
+            <button id="show-explanation-btn" class="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors">
               Ver Resposta
             </button>
           </div>
-          <div id="essay-explanation-container" class="mt-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 hidden">
-            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Explicação:</p>
-            <p class="text-sm text-gray-700 dark:text-gray-300">${questionExplanation}</p>
-          </div>
-
-          <script>
-            // Configurar o textarea para mostrar o botão automaticamente quando começar a digitar
-            document.getElementById('essay-answer').addEventListener('input', function() {
-              if (this.value.trim().length > 0) {
-                document.getElementById('essay-show-explanation-btn').style.display = 'block';
-              }
-            });
-
-            // Função para mostrar a explicação
-            function showEssayExplanation() {
-              document.getElementById('essay-explanation-container').classList.remove('hidden');
-
-              // Atualizar o texto do botão
-              const button = document.getElementById('essay-show-explanation-btn');
-              button.textContent = 'Ocultar Resposta';
-              button.onclick = hideEssayExplanation;
-            }
-
-            // Função para ocultar a explicação
-            function hideEssayExplanation() {
-              document.getElementById('essay-explanation-container').classList.add('hidden');
-
-              // Atualizar o texto do botão
-              const button = document.getElementById('essay-show-explanation-btn');
-              button.textContent = 'Ver Resposta';
-              button.onclick = showEssayExplanation;
-            }
-
-            // Configurar o botão de ver resposta para questões discursivas
-            document.getElementById('essay-show-explanation-btn').onclick = showEssayExplanation;
-          </script>
         `;
       }
     } else if (questionType === 'true-false') {
@@ -393,16 +320,16 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
         questionOptions = `
           <div class="mt-4 space-y-3">
             <div class="flex items-center space-x-4">
-              <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors option-item" data-option-id="true" data-is-correct="${selectedQuestion?.answer === true}">
+              <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
                 Verdadeiro
               </button>
-              <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors option-item" data-option-id="false" data-is-correct="${selectedQuestion?.answer === false}">
+              <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
                 Falso
               </button>
             </div>
           </div>
           <div class="mt-4">
-            <button id="show-explanation-btn" class="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors" style="display: none;">
+            <button id="show-explanation-btn" class="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors">
               Ver Resposta
             </button>
           </div>
@@ -414,16 +341,16 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
         questionOptions = `
           <div class="mt-4 space-y-3">
             <div class="flex items-center space-x-4">
-              <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors option-item" data-option-id="true" data-is-correct="false">
+              <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
                 Verdadeiro
               </button>
-              <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors option-item" data-option-id="false" data-is-correct="false">
+              <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
                 Falso
               </button>
             </div>
           </div>
           <div class="mt-4">
-            <button id="show-explanation-btn" class="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors" style="display: none;">
+            <button id="show-explanation-btn" class="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors">
               Ver Resposta
             </button>
           </div>
@@ -524,10 +451,6 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
       const nextQuestionButton = document.getElementById('next-question-button');
       const showExplanationBtn = document.getElementById('show-explanation-btn');
       const explanationContainer = document.getElementById('explanation-container');
-      const essayAnswer = document.getElementById('essay-answer');
-      const essayShowExplanationBtn = document.getElementById('essay-show-explanation-btn');
-      const essayExplanationContainer = document.getElementById('essay-explanation-container');
-
 
       // Função para fechar o modal de detalhes
       const closeDetailModal = () => {
@@ -614,24 +537,6 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
           }
         });
       }
-
-      // Event listeners for essay question
-      if (essayAnswer && essayShowExplanationBtn && essayExplanationContainer) {
-        essayAnswer.addEventListener('input', function() {
-          if (this.value.trim().length > 0) {
-            essayShowExplanationBtn.style.display = 'block';
-          }
-        });
-
-        essayShowExplanationBtn.addEventListener('click', () => {
-          essayExplanationContainer.classList.toggle('hidden');
-          if (!essayExplanationContainer.classList.contains('hidden')) {
-            essayShowExplanationBtn.textContent = 'Ocultar Resposta';
-          } else {
-            essayShowExplanationBtn.textContent = 'Ver Resposta';
-          }
-        });
-      }
     }, 50);
   };
 
@@ -646,7 +551,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
 
       // Tentar extrair informações relevantes do conteúdo para gerar questões personalizadas (fallback)
       const extractKeyTopics = (content: string) => {
-                // Encontrar títulos ou palavras-chave em negrito
+        // Encontrar títulos ou palavras-chave em negrito
         const boldPattern = /\*\*(.*?)\*\*/g;
         const headingPattern = /^#+\s+(.+)$/gm;
 
