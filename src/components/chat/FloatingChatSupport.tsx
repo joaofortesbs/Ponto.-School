@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
 import NotebookSimulation from "./NotebookSimulation";
+import SlidesPresentationModal from "./SlidesPresentationModal";
 import {
   MessageSquare,
   Send,
@@ -58,7 +59,8 @@ import {
   Edit,
   CheckCircle,
   Share2,
-  School
+  School,
+  MonitorPlay
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
@@ -445,10 +447,20 @@ const FloatingChatSupport: React.FC = () => {
   const [showNotebookModal, setShowNotebookModal] = useState(false);
   const [notebookContent, setNotebookContent] = useState("");
   
+  // Estado para modal de apresentação
+  const [showPresentationModal, setShowPresentationModal] = useState(false);
+  const [presentationSlides, setPresentationSlides] = useState<any[]>([]);
+  
   // Função para mostrar o modal de caderno
   const openNotebookModal = (content: string) => {
     setNotebookContent(content);
     setShowNotebookModal(true);
+  };
+  
+  // Função para mostrar o modal de apresentação
+  const openPresentationModal = (slides: any[]) => {
+    setPresentationSlides(slides);
+    setShowPresentationModal(true);
   };
 
   // Funções para lidar com feedback das mensagens
@@ -2358,23 +2370,102 @@ Exemplo de formato da resposta:
                               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // Implementar simulação de apresentação
+                                
+                                // Fechar menu de contexto
                                 setMessages(prevMessages => 
                                   prevMessages.map(msg => ({...msg, showContextTools: false}))
                                 );
                                 
+                                // Mostrar notificação
                                 toast({
                                   title: "Modo Apresentação",
                                   description: "Iniciando simulação de apresentação deste conteúdo...",
                                   duration: 3000,
                                 });
+                                
+                                // Obter a mensagem para converter para formato de apresentação
+                                const messageToPresent = messages.find(msg => msg.showContextTools);
+                                
+                                if (messageToPresent && messageToPresent.content) {
+                                  // Gerar prompt para conversão para formato de apresentação
+                                  const presentationPrompt = `
+                                  A partir da explicação abaixo, crie uma apresentação de slides.
+                                  
+                                  Crie uma estrutura de apresentação com os seguintes slides:
+                                  1. Slide de introdução com o título principal e 2-3 tópicos chave
+                                  2. 2-4 slides de desenvolvimento, cada um com um subtema específico do conteúdo
+                                  3. Um slide final de conclusão/resumo
+                                  
+                                  Para cada slide, forneça:
+                                  - Um título claro
+                                  - 3-4 tópicos em formato de bullet points
+                                  - Uma explicação sucinta (máximo 150 palavras)
+                                  - Uma imagem sugestiva (URL opcional - deixe em branco se não tiver ideia)
+                                  
+                                  Formate a saída como um array JSON com cada slide tendo a estrutura:
+                                  [
+                                    {
+                                      "titulo": "Título do slide",
+                                      "topicos": ["Tópico 1", "Tópico 2", "Tópico 3"],
+                                      "explicacao": "Texto explicativo...",
+                                      "imagemOpcional": ""
+                                    },
+                                    ...mais slides...
+                                  ]
+                                  
+                                  O conteúdo a ser transformado em apresentação é:
+                                  "${messageToPresent.content}"
+                                  
+                                  IMPORTANTE: A saída deve ser APENAS o array JSON, sem qualquer texto antes ou depois.
+                                  `;
+                                  
+                                  // Configurar estado de carregamento
+                                  setIsLoading(true);
+                                  
+                                  // Chamar serviço para converter conteúdo em apresentação
+                                  generateAIResponse(presentationPrompt, sessionId || 'default_session', {
+                                    intelligenceLevel: 'advanced',
+                                    languageStyle: 'formal'
+                                  })
+                                  .then(presentationContent => {
+                                    try {
+                                      // Tentar processar a resposta como JSON
+                                      const presentationData = JSON.parse(presentationContent.trim());
+                                      
+                                      // Abrir o modal de apresentação com os slides
+                                      openPresentationModal(presentationData);
+                                    } catch (error) {
+                                      console.error("Erro ao processar dados da apresentação:", error);
+                                      toast({
+                                        title: "Erro",
+                                        description: "Não foi possível processar a apresentação. Por favor, tente novamente.",
+                                        variant: "destructive",
+                                        duration: 3000,
+                                      });
+                                    }
+                                  })
+                                  .catch(error => {
+                                    console.error("Erro ao converter para formato de apresentação:", error);
+                                    toast({
+                                      title: "Erro",
+                                      description: "Não foi possível criar a apresentação. Por favor, tente novamente.",
+                                      variant: "destructive",
+                                      duration: 3000,
+                                    });
+                                  })
+                                  .finally(() => {
+                                    setIsLoading(false);
+                                  });
+                                } else {
+                                  toast({
+                                    title: "Aviso",
+                                    description: "Nenhum conteúdo disponível para apresentação.",
+                                    duration: 3000,
+                                  });
+                                }
                               }}
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 mr-1.5 text-purple-500 dark:text-purple-400">
-                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                                <line x1="8" y1="21" x2="16" y2="21"></line>
-                                <line x1="12" y1="17" x2="12" y2="21"></line>
-                              </svg>
+                              <MonitorPlay className="h-3.5 w-3.5 mr-1.5 text-purple-500 dark:text-purple-400" />
                               Simular Apresentação
                             </button>
                           </div>
@@ -3231,6 +3322,15 @@ Exemplo de formato da resposta:
             </div>
           </div>
         </div>
+      )}
+      
+      {/* Modal de Apresentação */}
+      {showPresentationModal && presentationSlides.length > 0 && (
+        <SlidesPresentationModal
+          open={showPresentationModal}
+          onOpenChange={setShowPresentationModal}
+          slides={presentationSlides}
+        />
       )}
 
       {/* Modal de Personalização do Epictus IA */}
