@@ -2768,11 +2768,150 @@ Exemplo de formato da resposta:
                                   if (seeQuestionsButton) {
                                     seeQuestionsButton.addEventListener('click', () => {
                                       closeModal();
-                                      toast({
-                                        title: "Funcionalidade em desenvolvimento",
-                                        description: "A visualização de possíveis questões de prova estará disponível em breve!",
-                                        duration: 3000,
-                                      });
+                                      
+                                      // Criar e adicionar o modal para ver possíveis questões
+                                      const seeQuestionsModalHTML = `
+                                        <div id="see-questions-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+                                          <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 p-5 shadow-xl w-[90%] max-w-sm animate-fadeIn">
+                                            <div class="flex justify-between items-center mb-4">
+                                              <h3 class="text-lg font-semibold flex items-center gap-2 text-gray-800 dark:text-gray-200">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500">
+                                                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                                                </svg>
+                                                Ver possíveis questões
+                                              </h3>
+                                              <button 
+                                                id="close-questions-modal"
+                                                class="h-7 w-7 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                              >
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                  <path d="M18 6 6 18"></path>
+                                                  <path d="m6 6 12 12"></path>
+                                                </svg>
+                                              </button>
+                                            </div>
+                                            
+                                            <div class="space-y-4 mb-5">
+                                              <div>
+                                                <label class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                                                  Quantidade total de questões
+                                                </label>
+                                                <input 
+                                                  type="number" 
+                                                  min="1" 
+                                                  max="50" 
+                                                  value="10"
+                                                  class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-white"
+                                                />
+                                              </div>
+                                              
+                                              <div>
+                                                <label class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                                                  Tipos de questões
+                                                </label>
+                                                <div class="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg space-y-3">
+                                                  <div class="flex items-center justify-between">
+                                                    <span class="text-sm text-gray-700 dark:text-gray-300">Múltipla escolha</span>
+                                                    <input 
+                                                      type="number" 
+                                                      min="0" 
+                                                      value="6"
+                                                      class="w-16 p-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-white text-center"
+                                                    />
+                                                  </div>
+                                                  <div class="flex items-center justify-between">
+                                                    <span class="text-sm text-gray-700 dark:text-gray-300">Discursivas</span>
+                                                    <input 
+                                                      type="number" 
+                                                      min="0" 
+                                                      value="2"
+                                                      class="w-16 p-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-white text-center"
+                                                    />
+                                                  </div>
+                                                  <div class="flex items-center justify-between">
+                                                    <span class="text-sm text-gray-700 dark:text-gray-300">Verdadeiro ou Falso</span>
+                                                    <input 
+                                                      type="number" 
+                                                      min="0" 
+                                                      value="2"
+                                                      class="w-16 p-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-white text-center"
+                                                    />
+                                                  </div>
+                                                </div>
+                                              </div>
+                                              
+                                              <div>
+                                                <label class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                                                  Competências BNCC (opcional)
+                                                </label>
+                                                <select class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-white">
+                                                  <option>Selecione uma competência</option>
+                                                  <option>Competência 1 - Conhecimento</option>
+                                                  <option>Competência 2 - Pensamento científico</option>
+                                                  <option>Competência 3 - Repertório cultural</option>
+                                                  <option>Competência 4 - Comunicação</option>
+                                                  <option>Competência 5 - Cultura digital</option>
+                                                </select>
+                                              </div>
+                                            </div>
+                                            
+                                            <button 
+                                              id="generate-questions-button"
+                                              class="w-full py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors opacity-50 cursor-not-allowed"
+                                              disabled
+                                            >
+                                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <line x1="12" y1="8" x2="12" y2="16"></line>
+                                                <line x1="8" y1="12" x2="16" y2="12"></line>
+                                              </svg>
+                                              Gerar Questões
+                                            </button>
+                                            
+                                            <p class="text-xs text-center text-gray-500 dark:text-gray-400 mt-3 italic">
+                                              Funcionalidade em desenvolvimento
+                                            </p>
+                                          </div>
+                                        </div>
+                                      `;
+                                      
+                                      // Remover qualquer modal existente
+                                      const existingModal = document.getElementById('see-questions-modal');
+                                      if (existingModal) {
+                                        existingModal.remove();
+                                      }
+                                      
+                                      // Adicionar o novo modal ao DOM
+                                      document.body.insertAdjacentHTML('beforeend', seeQuestionsModalHTML);
+                                      
+                                      // Adicionar event listeners ao modal
+                                      setTimeout(() => {
+                                        const questionsModal = document.getElementById('see-questions-modal');
+                                        const closeButton = document.getElementById('close-questions-modal');
+                                        
+                                        // Função para fechar o modal
+                                        const closeQuestionsModal = () => {
+                                          if (questionsModal) {
+                                            questionsModal.classList.add('animate-fadeOut');
+                                            setTimeout(() => questionsModal.remove(), 200);
+                                          }
+                                        };
+                                        
+                                        // Event listener para fechar o modal
+                                        if (closeButton) {
+                                          closeButton.addEventListener('click', closeQuestionsModal);
+                                        }
+                                        
+                                        // Event listener para clicar fora e fechar
+                                        if (questionsModal) {
+                                          questionsModal.addEventListener('click', (e) => {
+                                            if (e.target === questionsModal) {
+                                              closeQuestionsModal();
+                                            }
+                                          });
+                                        }
+                                      }, 50);
                                     });
                                   }
                                 }, 50);
