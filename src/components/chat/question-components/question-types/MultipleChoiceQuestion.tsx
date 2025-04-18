@@ -55,6 +55,11 @@ export const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
       const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
       const letter = letters[idx % letters.length];
       
+      // Verificar se esta opção é a correta
+      const isCorrect = option.isCorrect === true;
+      // Verificar se o usuário já selecionou uma opção e podemos mostrar qual é a correta
+      const showCorrectAnswer = selectedOption !== null;
+      
       return (
         <div 
           key={option.id}
@@ -63,16 +68,16 @@ export const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
               ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700' 
               : ''
           } ${
-            selectedOption && option.isCorrect 
+            showCorrectAnswer && isCorrect 
               ? 'bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700' 
               : ''
           }`}
-          onClick={() => onOptionSelect(letter)}
+          onClick={() => selectedOption === null && onOptionSelect(letter)}
         >
           <div className={`flex items-center justify-center w-6 h-6 rounded-full border ${
             selectedOption === letter 
               ? 'border-blue-500 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' 
-              : selectedOption && option.isCorrect
+              : showCorrectAnswer && isCorrect
                 ? 'border-green-500 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300'
                 : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
           }`}>

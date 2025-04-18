@@ -237,15 +237,17 @@ const QuestionDetailModal: React.FC<QuestionDetailModalProps> = ({
                 className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
                 onClick={() => setShowExplanation(!showExplanation)}
               >
-                {showExplanation ? 'Ocultar Resposta' : 'Ver Resposta'}
+                {showExplanation ? 'Ocultar Explicação' : 'Ver Resposta'}
               </button>
             </div>
           )}
           
-          {showExplanation && questionExplanation && (
+          {showExplanation && selectedOption && (
             <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
               <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Explicação:</p>
-              <p className="text-sm text-gray-700 dark:text-gray-300">{questionExplanation}</p>
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                {questionExplanation || "Esta é a resposta correta de acordo com o conteúdo apresentado."}
+              </p>
             </div>
           )}
         </div>

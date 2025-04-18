@@ -28,6 +28,11 @@ export const TrueFalseQuestion: React.FC<TrueFalseQuestionProps> = ({
   const questionContent = selectedQuestion 
     ? selectedQuestion.text 
     : trueFalseQuestions[(questionNumber - 1) % trueFalseQuestions.length];
+    
+  // Verificar se o usuário já selecionou uma opção e se temos informação sobre a resposta correta
+  const showCorrectAnswer = selectedOption !== null && selectedQuestion?.answer !== undefined;
+  const trueIsCorrect = selectedQuestion?.answer === true;
+  const falseIsCorrect = selectedQuestion?.answer === false;
 
   return (
     <div>
@@ -41,10 +46,13 @@ export const TrueFalseQuestion: React.FC<TrueFalseQuestionProps> = ({
               selectedOption === "true" 
                 ? "bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300" 
                 : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
+            } ${
+              showCorrectAnswer && trueIsCorrect
+                ? "bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700 text-green-700 dark:text-green-300"
+                : ""
             }`}
             onClick={() => onOptionSelect("true")}
-            data-option-id="true"
-            data-is-correct={selectedQuestion?.answer === true}
+            disabled={selectedOption !== null}
           >
             Verdadeiro
           </button>
@@ -53,10 +61,13 @@ export const TrueFalseQuestion: React.FC<TrueFalseQuestionProps> = ({
               selectedOption === "false" 
                 ? "bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300" 
                 : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
+            } ${
+              showCorrectAnswer && falseIsCorrect
+                ? "bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700 text-green-700 dark:text-green-300"
+                : ""
             }`}
             onClick={() => onOptionSelect("false")}
-            data-option-id="false"
-            data-is-correct={selectedQuestion?.answer === false}
+            disabled={selectedOption !== null}
           >
             Falso
           </button>
