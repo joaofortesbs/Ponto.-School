@@ -2987,6 +2987,8 @@ REGRAS OBRIGATÓRIAS:
 - NÃO INCLUA SAUDAÇÕES AO USUÁRIO (como "Olá", "Oi", "Bom dia", etc)
 - NÃO INCLUA NENHUM TIPO DE LINK em nenhuma questão
 - NÃO FAÇA REFERÊNCIAS A NENHUMA PLATAFORMA ou recurso externo
+- NÃO INCLUA LEMBRETES DA PLATAFORMA - APENAS AS QUESTÕES
+- NÃO FAÇA REFERÊNCIA A NENHUMA SEÇÃO OU PÁGINA DA PLATAFORMA
 - APRESENTE APENAS AS QUESTÕES sem textos introdutórios ou conclusivos
 - NÃO USE EMOJIS ou elementos decorativos
 
