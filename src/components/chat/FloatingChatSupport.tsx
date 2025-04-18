@@ -2798,6 +2798,7 @@ Exemplo de formato da resposta:
                                                   Quantidade total de questões
                                                 </label>
                                                 <input 
+                                                  id="total-questions"
                                                   type="number" 
                                                   min="1" 
                                                   max="50" 
@@ -2814,6 +2815,7 @@ Exemplo de formato da resposta:
                                                   <div class="flex items-center justify-between">
                                                     <span class="text-sm text-gray-700 dark:text-gray-300">Múltipla escolha</span>
                                                     <input 
+                                                      id="multiple-choice"
                                                       type="number" 
                                                       min="0" 
                                                       value="6"
@@ -2823,6 +2825,7 @@ Exemplo de formato da resposta:
                                                   <div class="flex items-center justify-between">
                                                     <span class="text-sm text-gray-700 dark:text-gray-300">Discursivas</span>
                                                     <input 
+                                                      id="discursive"
                                                       type="number" 
                                                       min="0" 
                                                       value="2"
@@ -2832,6 +2835,7 @@ Exemplo de formato da resposta:
                                                   <div class="flex items-center justify-between">
                                                     <span class="text-sm text-gray-700 dark:text-gray-300">Verdadeiro ou Falso</span>
                                                     <input 
+                                                      id="true-false"
                                                       type="number" 
                                                       min="0" 
                                                       value="2"
@@ -2845,21 +2849,23 @@ Exemplo de formato da resposta:
                                                 <label class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                                                   Competências BNCC (opcional)
                                                 </label>
-                                                <select class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-white">
+                                                <select 
+                                                  id="bncc-competence"
+                                                  class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-800 dark:text-white"
+                                                >
                                                   <option>Selecione uma competência</option>
-                                                  <option>Competência 1 - Conhecimento</option>
-                                                  <option>Competência 2 - Pensamento científico</option>
-                                                  <option>Competência 3 - Repertório cultural</option>
-                                                  <option>Competência 4 - Comunicação</option>
-                                                  <option>Competência 5 - Cultura digital</option>
+                                                  <option value="EM13LGG101">EM13LGG101</option>
+                                                  <option value="EM13MAT101">EM13MAT101</option>
+                                                  <option value="EM13CNT101">EM13CNT101</option>
+                                                  <option value="EM13CHS101">EM13CHS101</option>
+                                                  <option value="EM13LP01">EM13LP01</option>
                                                 </select>
                                               </div>
                                             </div>
                                             
                                             <button 
                                               id="generate-questions-button"
-                                              class="w-full py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors opacity-50 cursor-not-allowed"
-                                              disabled
+                                              class="w-full py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
                                             >
                                               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                 <circle cx="12" cy="12" r="10"></circle>
@@ -2868,10 +2874,6 @@ Exemplo de formato da resposta:
                                               </svg>
                                               Gerar Questões
                                             </button>
-                                            
-                                            <p class="text-xs text-center text-gray-500 dark:text-gray-400 mt-3 italic">
-                                              Funcionalidade em desenvolvimento
-                                            </p>
                                           </div>
                                         </div>
                                       `;
@@ -2915,25 +2917,21 @@ Exemplo de formato da resposta:
 
                                         // Event listener para gerar questões
                                         if (generateQuestionsButton) {
-                                          // Habilitar o botão
-                                          generateQuestionsButton.classList.remove('opacity-50', 'cursor-not-allowed');
-                                          generateQuestionsButton.removeAttribute('disabled');
-                                          
                                           generateQuestionsButton.addEventListener('click', async () => {
                                             closeQuestionsModal();
                                             
                                             // Obter valores dos inputs
-                                            const totalQuestionsInput = document.querySelector('#see-questions-modal input[type="number"]') as HTMLInputElement;
-                                            const multiplesChoiceInput = document.querySelectorAll('#see-questions-modal .bg-gray-50 input[type="number"]')[0] as HTMLInputElement;
-                                            const discursiveInput = document.querySelectorAll('#see-questions-modal .bg-gray-50 input[type="number"]')[1] as HTMLInputElement;
-                                            const trueFalseInput = document.querySelectorAll('#see-questions-modal .bg-gray-50 input[type="number"]')[2] as HTMLInputElement;
-                                            const bnccSelect = document.querySelector('#see-questions-modal select') as HTMLSelectElement;
+                                            const totalQuestionsInput = document.getElementById('total-questions') as HTMLInputElement;
+                                            const multiplesChoiceInput = document.getElementById('multiple-choice') as HTMLInputElement;
+                                            const discursiveInput = document.getElementById('discursive') as HTMLInputElement;
+                                            const trueFalseInput = document.getElementById('true-false') as HTMLInputElement;
+                                            const bnccSelect = document.getElementById('bncc-competence') as HTMLSelectElement;
                                             
                                             const totalQuestions = totalQuestionsInput?.value || "10";
                                             const multipleChoice = multiplesChoiceInput?.value || "6";
                                             const discursive = discursiveInput?.value || "2";
                                             const trueFalse = trueFalseInput?.value || "2";
-                                            const bnccCompetence = bnccSelect?.value || "";
+                                            const bnccCompetence = bnccSelect?.value !== "Selecione uma competência" ? bnccSelect?.value : "";
                                             
                                             // Mostrar indicação de carregamento
                                             setIsLoading(true);
@@ -2953,18 +2951,13 @@ Exemplo de formato da resposta:
                                                 throw new Error("Nenhuma mensagem encontrada para basear as questões");
                                               }
                                               
-                                              // Criar prompt para gerar questões
-                                              const prompt = `Gere ${totalQuestions} questões sobre o conteúdo anterior. Sendo:
-${multipleChoice} alternativas, ${discursive} discursivas, ${trueFalse} V/F. ${bnccCompetence !== "Selecione uma competência" ? `Se possível, alinhe com a competência BNCC selecionada: ${bnccCompetence}.` : ""} Para cada questão, gere: enunciado, tipo, gabarito (se aplicável), explicação.
-
-Conteúdo de referência:
-"${lastAIMessage.content}"
-
-Formato da resposta: JSON com um array de objetos, cada um representando uma questão com os campos: numero, tipo, texto, gabarito, explicacao.`;
+                                              // Criar prompt específico para geração de questões
+                                              const promptText = `Gere ${totalQuestions} questões sobre o conteúdo anterior. Sendo:
+${multipleChoice} alternativas, ${discursive} discursivas, ${trueFalse} V/F. ${bnccCompetence ? `Se possível, alinhe com a competência BNCC selecionada: ${bnccCompetence}.` : ""} Para cada questão, gere: enunciado, tipo, gabarito (se aplicável), explicação.`;
                                               
                                               // Chamar a IA para gerar as questões
                                               const response = await generateAIResponse(
-                                                prompt,
+                                                promptText,
                                                 sessionId || 'default_session',
                                                 {
                                                   intelligenceLevel: 'advanced',
@@ -2973,218 +2966,22 @@ Formato da resposta: JSON com um array de objetos, cada um representando uma que
                                               );
                                               
                                               // Adicionar a resposta ao chat como uma mensagem da IA
-                                              // Primeiro, extrair apenas o JSON (se existir)
-                                              let jsonText = response;
-                                              let questions = [];
-                                              
-                                              try {
-                                                // Tentar encontrar JSON no texto
-                                                if (response.includes('[') && response.includes(']')) {
-                                                  const startIdx = response.indexOf('[');
-                                                  const endIdx = response.lastIndexOf(']') + 1;
-                                                  jsonText = response.substring(startIdx, endIdx);
-                                                  questions = JSON.parse(jsonText);
-                                                } else {
-                                                  // Se não encontrar, tentar usar toda a resposta
-                                                  questions = JSON.parse(response);
-                                                }
-                                              } catch (error) {
-                                                console.error('Erro ao analisar JSON das questões:', error);
-                                                questions = [];
-                                              }
-                                              
-                                              // Criar conteúdo HTML para as questões
-                                              let questionsHTML = `<div class="space-y-6">
-                                                <h2 class="text-xl font-bold mb-4">Questões Geradas</h2>`;
-                                              
-                                              if (questions.length > 0) {
-                                                questions.forEach((q, index) => {
-                                                  questionsHTML += `
-                                                  <div class="bg-white dark:bg-gray-800 border border-orange-200 dark:border-orange-700 rounded-lg overflow-hidden shadow-md">
-                                                    <div class="bg-orange-500 text-white p-2 flex justify-between items-center">
-                                                      <span class="font-bold">Questão ${q.numero || index + 1}</span>
-                                                      <span class="text-xs px-2 py-1 bg-white/20 rounded-full">${q.tipo || 'Múltipla escolha'}</span>
-                                                    </div>
-                                                    <div class="p-4">
-                                                      <p class="mb-4">${q.texto || 'Texto da questão'}</p>
-                                                      <div class="flex gap-2 mt-3">
-                                                        <button class="show-answer-btn bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-3 py-1.5 rounded text-sm font-medium" 
-                                                                data-gabarito="${q.gabarito || ''}" 
-                                                                data-explicacao="${q.explicacao || ''}">
-                                                          Ver Gabarito
-                                                        </button>
-                                                        <button class="to-notebook-btn bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-3 py-1.5 rounded text-sm font-medium"
-                                                                data-content="${encodeURIComponent(q.texto || '')}">
-                                                          Transformar em Caderno
-                                                        </button>
-                                                      </div>
-                                                      <div class="answer-container mt-3 hidden"></div>
-                                                    </div>
-                                                  </div>`;
-                                                });
-                                              } else {
-                                                questionsHTML += `<p class="text-center py-6 text-gray-500 dark:text-gray-400">Não foi possível gerar questões. Por favor, tente novamente.</p>`;
-                                              }
-                                              
-                                              questionsHTML += `</div>`;
-                                              
-                                              // Criar o modal para mostrar as questões
-                                              const questionsModalHTML = `
-                                                <div id="questions-display-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
-                                                  <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 p-5 shadow-xl w-[90%] max-w-2xl max-h-[80vh] overflow-y-auto animate-fadeIn">
-                                                    <div class="flex justify-between items-center mb-4">
-                                                      <h3 class="text-lg font-semibold flex items-center gap-2 text-gray-800 dark:text-gray-200">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500">
-                                                          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                                                          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-                                                        </svg>
-                                                        Possíveis Questões de Prova
-                                                      </h3>
-                                                      <button 
-                                                        id="close-questions-display-modal"
-                                                        class="h-7 w-7 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                                      >
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                          <path d="M18 6 6 18"></path>
-                                                          <path d="m6 6 12 12"></path>
-                                                        </svg>
-                                                      </button>
-                                                    </div>
-                                                    
-                                                    <div class="questions-container">
-                                                      ${questionsHTML}
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                              `;
-                                              
-                                              // Adicionar mensagem no chat mostrando que as questões foram geradas
                                               setMessages(prev => [
                                                 ...prev,
                                                 {
                                                   id: Date.now(),
-                                                  content: "📝 **Questões de prova geradas com sucesso!**\n\nForam criadas questões baseadas no nosso diálogo anterior para ajudar no seu estudo e preparação para avaliações. Você pode visualizar o gabarito de cada questão e também transformá-las em formato de caderno para estudo.",
+                                                  content: response,
                                                   sender: "assistant",
                                                   timestamp: new Date()
                                                 }
                                               ]);
                                               
-                                              // Adicionar o modal ao DOM
-                                              document.body.insertAdjacentHTML('beforeend', questionsModalHTML);
-                                              
-                                              // Adicionar event listeners para o modal
-                                              setTimeout(() => {
-                                                const modal = document.getElementById('questions-display-modal');
-                                                const closeButton = document.getElementById('close-questions-display-modal');
-                                                const showAnswerButtons = document.querySelectorAll('.show-answer-btn');
-                                                const toNotebookButtons = document.querySelectorAll('.to-notebook-btn');
-                                                
-                                                // Fechar modal
-                                                if (closeButton) {
-                                                  closeButton.addEventListener('click', () => {
-                                                    if (modal) {
-                                                      modal.classList.add('animate-fadeOut');
-                                                      setTimeout(() => modal.remove(), 200);
-                                                    }
-                                                  });
-                                                }
-                                                
-                                                // Clicar fora para fechar
-                                                if (modal) {
-                                                  modal.addEventListener('click', (e) => {
-                                                    if (e.target === modal) {
-                                                      modal.classList.add('animate-fadeOut');
-                                                      setTimeout(() => modal.remove(), 200);
-                                                    }
-                                                  });
-                                                }
-                                                
-                                                // Mostrar gabarito
-                                                showAnswerButtons.forEach(btn => {
-                                                  btn.addEventListener('click', (e) => {
-                                                    const button = e.currentTarget as HTMLButtonElement;
-                                                    const container = button.closest('div')?.nextElementSibling as HTMLElement;
-                                                    
-                                                    if (container) {
-                                                      const gabarito = button.getAttribute('data-gabarito') || 'Não disponível';
-                                                      const explicacao = button.getAttribute('data-explicacao') || 'Explicação não disponível';
-                                                      
-                                                      if (container.classList.contains('hidden')) {
-                                                        container.innerHTML = `
-                                                          <div class="mt-4 bg-orange-50 dark:bg-orange-900/20 p-3 rounded-md border border-orange-200 dark:border-orange-800">
-                                                            <div class="font-semibold mb-1">Gabarito:</div>
-                                                            <div class="text-sm mb-3">${gabarito}</div>
-                                                            <div class="font-semibold mb-1">Explicação:</div>
-                                                            <div class="text-sm">${explicacao}</div>
-                                                          </div>
-                                                        `;
-                                                        container.classList.remove('hidden');
-                                                        button.textContent = 'Ocultar Gabarito';
-                                                      } else {
-                                                        container.classList.add('hidden');
-                                                        container.innerHTML = '';
-                                                        button.textContent = 'Ver Gabarito';
-                                                      }
-                                                    }
-                                                  });
-                                                });
-                                                
-                                                // Transformar em caderno
-                                                toNotebookButtons.forEach(btn => {
-                                                  btn.addEventListener('click', (e) => {
-                                                    const button = e.currentTarget as HTMLButtonElement;
-                                                    const content = decodeURIComponent(button.getAttribute('data-content') || '');
-                                                    
-                                                    if (content) {
-                                                      // Gerar prompt para conversão para formato de caderno
-                                                      const notebookPrompt = `
-                                                      A partir da questão abaixo, crie uma versão em formato de caderno de anotações estudantil.
-                                                      
-                                                      Siga estas diretrizes OBRIGATÓRIAS:
-                                                      - Comece com um título direto sobre o tema da questão
-                                                      - Liste os pontos principais usando marcadores (•)
-                                                      - Destaque palavras-chave usando **asteriscos duplos**
-                                                      - Organize o conteúdo com títulos em maiúsculas seguidos de dois pontos
-                                                      - Use uma linguagem técnica e direta
-                                                      - Inclua um resumo dos pontos principais da questão
-                                                      - NÃO INCLUA LINKS PARA NENHUM SITE OU PLATAFORMA
-                                                      - NÃO FAÇA REFERÊNCIAS A RECURSOS EXTERNOS
-                                                      - NÃO MENCIONE A PONTO.SCHOOL
-                                                      - NÃO INCLUA SAUDAÇÕES, INTRODUÇÕES OU CONCLUSÕES
-                                                      - FOQUE APENAS NO CONTEÚDO EDUCACIONAL
-                                                      
-                                                      Questão:
-                                                      "${content}"
-                                                      `;
-                                                      
-                                                      // Configurar estado de carregamento
-                                                      setIsLoading(true);
-                                                      
-                                                      // Chamar serviço para converter conteúdo
-                                                      generateAIResponse(notebookPrompt, sessionId || 'default_session', {
-                                                        intelligenceLevel: 'advanced',
-                                                        languageStyle: 'formal'
-                                                      })
-                                                      .then(notebookContent => {
-                                                        // Mostrar modal de caderno com o conteúdo gerado
-                                                        openNotebookModal(notebookContent);
-                                                      })
-                                                      .catch(error => {
-                                                        console.error("Erro ao converter para formato de caderno:", error);
-                                                        toast({
-                                                          title: "Erro",
-                                                          description: "Não foi possível converter o conteúdo para o formato de caderno.",
-                                                          variant: "destructive",
-                                                          duration: 3000,
-                                                        });
-                                                      })
-                                                      .finally(() => {
-                                                        setIsLoading(false);
-                                                      });
-                                                    }
-                                                  });
-                                                });
-                                              }, 100);
+                                              // Notificar sucesso
+                                              toast({
+                                                title: "Questões geradas com sucesso",
+                                                description: "As questões foram adicionadas ao chat.",
+                                                duration: 3000,
+                                              });
                                               
                                             } catch (error) {
                                               console.error('Erro ao gerar questões:', error);
