@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { extractKeyTopics, generatePersonalizedQuestions } from "./questionUtils";
 
 interface QuestionsResultsModalProps {
@@ -21,11 +21,17 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
   questionsData,
   onClose
 }) => {
+  const [showExportOptions, setShowExportOptions] = useState(false);
+  
+  const handleExportClick = () => {
+    setShowExportOptions(prev => !prev);
+  };
   useEffect(() => {
     // Adicionar event listeners quando o componente for montado
     const closeButton = document.getElementById('close-results-modal');
     const doneButton = document.getElementById('done-button');
     const myProgressButton = document.getElementById('my-progress-button');
+    const exportQuestionsButton = document.getElementById('export-questions-button');
     const modal = document.getElementById('questions-results-modal');
 
     const handleModalClose = () => {
@@ -48,11 +54,18 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
     if (myProgressButton) {
       myProgressButton.addEventListener('click', handleMyProgressClick);
     }
+    
+    if (exportQuestionsButton) {
+      exportQuestionsButton.addEventListener('click', handleExportClick);
+    }
 
     if (modal) {
       modal.addEventListener('click', (e) => {
         if (e.target === modal) {
           handleModalClose();
+        }
+        if (showExportOptions) {
+          setShowExportOptions(false);
         }
       });
     }
@@ -67,6 +80,9 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
       }
       if (myProgressButton) {
         myProgressButton.removeEventListener('click', handleMyProgressClick);
+      }
+      if (exportQuestionsButton) {
+        exportQuestionsButton.removeEventListener('click', handleExportClick);
       }
       if (modal) {
         modal.removeEventListener('click', handleModalClose);
@@ -264,17 +280,49 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
         </div>
 
         <div className="mt-4 flex justify-end gap-3">
-          <button 
-            id="export-questions-button"
-            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium flex items-center gap-1.5"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 15 17 10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
-            Exportar Questões
-          </button>
+          <div className="relative">
+            <button 
+              id="export-questions-button"
+              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium flex items-center gap-1.5"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Exportar Questões
+            </button>
+            
+            {showExportOptions && (
+              <div className="absolute right-0 bottom-12 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 w-48 py-1 z-50 animate-fadeIn">
+                <button className="w-full px-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 opacity-70 cursor-not-allowed">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                  </svg>
+                  Exportar em PDF
+                </button>
+                <button className="w-full px-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 opacity-70 cursor-not-allowed">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <path d="M2 15h10"></path>
+                    <path d="M9 18l3-3-3-3"></path>
+                  </svg>
+                  Exportar para Word
+                </button>
+                <button className="w-full px-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 opacity-70 cursor-not-allowed">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z"></path>
+                  </svg>
+                  Exportar em Bloco de Notas
+                </button>
+              </div>
+            )}
+          </div>
           <button 
             id="my-progress-button"
             className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium flex items-center gap-1.5"
