@@ -1,13 +1,13 @@
 import React from "react";
-import { extractTerms } from "../questionUtils";
+import { extractKeyTopics } from "../questionUtils";
 
 interface MultipleChoiceQuestionProps {
   selectedQuestion: any;
   questionNumber: number;
   messageContent: string;
-  onOptionSelect: (optionId: string) => void;
+  onOptionSelect: (option: string) => void;
   selectedOption: string | null;
-  showExplanation?: boolean;
+  showExplanation: boolean;
 }
 
 export const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
@@ -16,101 +16,109 @@ export const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
   messageContent,
   onOptionSelect,
   selectedOption,
-  showExplanation = false
+  showExplanation
 }) => {
-  const renderDefaultOptions = () => {
-    const terms = extractTerms(messageContent);
-    const defaultOptions = [
-      { id: "A", text: `É um ${terms[0 % terms.length]} fundamental para compreensão do tema.` },
-      { id: "B", text: `Representa uma abordagem inovadora sobre o ${terms[1 % terms.length]}.` },
-      { id: "C", text: `Demonstra a aplicação prática do ${terms[2 % terms.length]} em contextos reais.` },
-      { id: "D", text: `Exemplifica como o ${terms[3 % terms.length]} pode ser utilizado em diferentes situações.` }
-    ];
+  // Verificar se temos uma questão gerada pela IA
+  const hasGeneratedQuestion = selectedQuestion && selectedQuestion.text;
 
-    return defaultOptions.map(option => (
-      <div 
-        key={option.id}
-        className={`flex items-center space-x-2 p-2 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 ${
-          selectedOption === option.id ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700' : ''
-        }`}
-        onClick={() => onOptionSelect(option.id)}
-      >
-        <div className={`flex items-center justify-center w-6 h-6 rounded-full border ${
-          selectedOption === option.id 
-            ? 'border-blue-500 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' 
-            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
-        }`}>
-          <span className="text-xs font-medium">{option.id}</span>
-        </div>
-        <span className="text-sm text-gray-700 dark:text-gray-300">{option.text}</span>
-      </div>
-    ));
-  };
+  // Gerar texto de questão padrão se não tiver da IA
+  const questionText = hasGeneratedQuestion 
+    ? selectedQuestion.text 
+    : `Qual é o principal conceito abordado nos tópicos? (Questão ${questionNumber})`;
 
-  const renderGeneratedOptions = () => {
-    if (!selectedQuestion || !selectedQuestion.options) {
-      return renderDefaultOptions();
-    }
+  // Verificar se temos opções geradas pela IA
+  const hasGeneratedOptions = hasGeneratedQuestion && selectedQuestion.options && selectedQuestion.options.length > 0;
 
-    return selectedQuestion.options.map((option: any, idx: number) => {
-      const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
-      const letter = letters[idx % letters.length];
-
-      // Verificar se esta opção é a correta
-      const isCorrect = option.isCorrect === true;
-      // Mostrar a resposta correta apenas se o usuário clicou em "Ver resposta"
-      const showCorrectAnswer = showExplanation && selectedOption !== null;
-
-      return (
-        <div 
-          key={option.id}
-          className={`flex items-center space-x-2 p-2 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 ${
-            selectedOption === letter 
-              ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700' 
-              : ''
-          } ${
-            showCorrectAnswer && isCorrect 
-              ? 'bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700' 
-              : ''
-          }`}
-          onClick={() => onOptionSelect(letter)}
-        >
-          <div className={`flex items-center justify-center w-6 h-6 rounded-full border ${
-            selectedOption === letter 
-              ? 'border-blue-500 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' 
-              : showCorrectAnswer && isCorrect
-                ? 'border-green-500 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300'
-                : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
-          }`}>
-            <span className="text-xs font-medium">{letter}</span>
-          </div>
-          <span className="text-sm text-gray-700 dark:text-gray-300">{option.text}</span>
-        </div>
-      );
-    });
-  };
-
-  // Questões padrão por tipo (para fallback)
-  const multipleChoiceQuestions = [
-    "Qual é o principal conceito abordado no texto?",
-    "De acordo com o conteúdo, qual alternativa está correta?",
-    "Qual das seguintes afirmações melhor representa o tema estudado?",
-    "Baseado no texto, qual opção descreve corretamente o assunto?",
-    "Considerando o material apresentado, qual item é verdadeiro?",
-    "Com base na explicação, qual é a melhor definição para o tema?"
+  // Gerar opções padrão se não tiver da IA
+  const fallbackOptions = [
+    { id: `q${questionNumber}-a`, text: "Primeiro conceito-chave mencionado", isCorrect: true },
+    { id: `q${questionNumber}-b`, text: "Segundo conceito relacionado ao tema", isCorrect: false },
+    { id: `q${questionNumber}-c`, text: "Terceiro aspecto relevante discutido", isCorrect: false },
+    { id: `q${questionNumber}-d`, text: "Quarto elemento importante do conteúdo", isCorrect: false },
+    { id: `q${questionNumber}-e`, text: "Quinto componente significativo da discussão", isCorrect: false }
   ];
 
-  const questionContent = selectedQuestion 
-    ? selectedQuestion.text 
-    : multipleChoiceQuestions[(questionNumber - 1) % multipleChoiceQuestions.length];
+  // Personalizar opções com base no conteúdo, se disponível
+  const keyTopics = extractKeyTopics(messageContent);
+  if (keyTopics.length > 2 && !hasGeneratedOptions) {
+    fallbackOptions.forEach((option, index) => {
+      if (index < keyTopics.length) {
+        option.text = `${keyTopics[index]} e seus principais aspectos`;
+      }
+    });
+  }
+
+  // Validar e corrigir as opções geradas pela IA
+  let options = hasGeneratedOptions ? [...selectedQuestion.options] : fallbackOptions;
+
+  // Verificar se as opções têm as propriedades necessárias
+  options = options.map((option, index) => {
+    // Garantir que cada opção tenha um ID
+    if (!option.id) {
+      option.id = `q${questionNumber}-${String.fromCharCode(97 + index)}`;
+    }
+
+    // Garantir que cada opção tenha o campo isCorrect
+    if (typeof option.isCorrect !== 'boolean') {
+      option.isCorrect = index === 0; // Primeira opção é a correta por padrão
+    }
+
+    // Garantir que cada opção tenha um texto
+    if (!option.text) {
+      option.text = `Opção ${index + 1}`;
+    }
+
+    return option;
+  });
+
+  // Garantir que há pelo menos uma opção correta
+  const hasCorrectOption = options.some(option => option.isCorrect);
+  if (!hasCorrectOption && options.length > 0) {
+    options[0].isCorrect = true;
+  }
+
+  // Função auxiliar para determinar classe de estilo com base na seleção
+  const getOptionClass = (optionId: string, isCorrect: boolean) => {
+    if (!selectedOption) {
+      return "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600";
+    }
+
+    if (selectedOption === optionId) {
+      return isCorrect 
+        ? "border-green-500 bg-green-50 dark:bg-green-900/20" 
+        : "border-red-500 bg-red-50 dark:bg-red-900/20";
+    }
+
+    if (isCorrect && showExplanation) {
+      return "border-green-500 bg-green-50 dark:bg-green-900/20";
+    }
+
+    return "border-gray-200 dark:border-gray-700 opacity-70";
+  };
 
   return (
     <div>
       <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
-        {questionContent}
+        {questionText}
       </p>
-      <div className="mt-4 space-y-3">
-        {selectedQuestion ? renderGeneratedOptions() : renderDefaultOptions()}
+
+      <div className="space-y-2 mt-2">
+        {options.map((option: any, index: number) => (
+          <div 
+            key={option.id || `option-${index}`}
+            className={`flex items-start p-3 border rounded-lg cursor-pointer transition-colors ${getOptionClass(option.id, option.isCorrect)}`}
+            onClick={() => onOptionSelect(option.id)}
+          >
+            <div className="mr-3 font-medium mt-0.5">
+              {String.fromCharCode(65 + index)}.
+            </div>
+            <div className="flex-1">
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                {option.text}
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -206,8 +206,49 @@ Retorne as questões em formato JSON conforme este exemplo:
       const parsedQuestions = findJson(questionsText);
       
       if (parsedQuestions) {
-        questionsData = parsedQuestions;
-        console.log("Questões extraídas com sucesso:", questionsData);
+        // Processar e validar as questões antes de usar
+        questionsData = parsedQuestions.map((question, index) => {
+          // Garantir que todas as questões tenham propriedades necessárias
+          const processedQuestion = {
+            ...question,
+            id: question.id || `q${index + 1}`,
+            text: question.text || `Questão ${index + 1} gerada automaticamente`,
+            type: question.type || (
+              // Inferir tipo da questão se não estiver especificado
+              question.options && Array.isArray(question.options) ? 'multiple-choice' :
+              typeof question.answer === 'boolean' ? 'true-false' : 'essay'
+            ),
+            explanation: question.explanation || "Explicação não disponível para esta questão."
+          };
+          
+          // Para questões de múltipla escolha, garantir que as opções estão corretas
+          if (processedQuestion.type === 'multiple-choice' && (!processedQuestion.options || !Array.isArray(processedQuestion.options))) {
+            processedQuestion.options = [
+              { id: `${processedQuestion.id}-a`, text: "Primeira opção", isCorrect: true },
+              { id: `${processedQuestion.id}-b`, text: "Segunda opção", isCorrect: false },
+              { id: `${processedQuestion.id}-c`, text: "Terceira opção", isCorrect: false },
+              { id: `${processedQuestion.id}-d`, text: "Quarta opção", isCorrect: false },
+              { id: `${processedQuestion.id}-e`, text: "Quinta opção", isCorrect: false }
+            ];
+          } else if (processedQuestion.type === 'multiple-choice') {
+            // Verificar se pelo menos uma opção está marcada como correta
+            const hasCorrect = processedQuestion.options.some(opt => opt.isCorrect);
+            if (!hasCorrect && processedQuestion.options.length > 0) {
+              processedQuestion.options[0].isCorrect = true;
+            }
+            
+            // Garantir que todas as opções tenham IDs
+            processedQuestion.options = processedQuestion.options.map((opt, i) => ({
+              ...opt,
+              id: opt.id || `${processedQuestion.id}-${String.fromCharCode(97 + i)}`,
+              text: opt.text || `Opção ${i + 1}`
+            }));
+          }
+          
+          return processedQuestion;
+        });
+        
+        console.log("Questões processadas com sucesso:", questionsData);
         
         // Salvar as questões para acesso global
         window.generatedQuestions = questionsData;

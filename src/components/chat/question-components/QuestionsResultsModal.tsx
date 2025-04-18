@@ -116,6 +116,8 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
 
     // Verificar se temos questões geradas pela IA
     const hasGeneratedQuestions = Array.isArray(questionsData) && questionsData.length > 0;
+    
+    console.log("Questões geradas:", questionsData);
 
     // Questões padronizadas como fallback
     const defaultQuestions = {
@@ -161,28 +163,90 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
     // Contador global de questões
     let questionCounter = 1;
 
-    // Filtrar questões por tipo
-    const multipleChoiceQuestionsFromAI = hasGeneratedQuestions 
-      ? questionsData.filter(q => q.type === 'multiple-choice').slice(0, multipleChoice)
-      : [];
+    // Filtrar questões por tipo ou usar todas as questões disponíveis
+    let multipleChoiceQuestionsFromAI = [];
+    let essayQuestionsFromAI = [];
+    let trueFalseQuestionsFromAI = [];
+    
+    if (hasGeneratedQuestions) {
+      // Tentativa 1: Usar a classificação por tipo
+      multipleChoiceQuestionsFromAI = questionsData.filter(q => 
+        q.type === 'multiple-choice' || 
+        (q.options && Array.isArray(q.options) && q.options.length > 0)
+      ).slice(0, multipleChoice);
+      
+      essayQuestionsFromAI = questionsData.filter(q => 
+        q.type === 'essay' || 
+        q.type === 'discursive' || 
+        (!q.options && !q.answer)
+      ).slice(0, essay);
+      
+      trueFalseQuestionsFromAI = questionsData.filter(q => 
+        q.type === 'true-false' || 
+        q.type === 'verdadeiro-falso' || 
+        (typeof q.answer === 'boolean')
+      ).slice(0, trueFalse);
+      
+      // Se não conseguimos encontrar suficientes pelo tipo, vamos distribuir as questões disponíveis
+      if (multipleChoiceQuestionsFromAI.length === 0 && essayQuestionsFromAI.length === 0 && trueFalseQuestionsFromAI.length === 0) {
+        // Tentar distribuir as questões disponíveis pelos tipos necessários
+        questionsData.forEach((question, index) => {
+          const remaining = totalQuestions - (multipleChoiceQuestionsFromAI.length + essayQuestionsFromAI.length + trueFalseQuestionsFromAI.length);
+          if (remaining <= 0) return;
+          
+          if (multipleChoiceQuestionsFromAI.length < multipleChoice) {
+            multipleChoiceQuestionsFromAI.push({...question, type: 'multiple-choice'});
+          } else if (essayQuestionsFromAI.length < essay) {
+            essayQuestionsFromAI.push({...question, type: 'essay'});
+          } else if (trueFalseQuestionsFromAI.length < trueFalse) {
+            trueFalseQuestionsFromAI.push({...question, type: 'true-false'});
+          }
+        });
+      }
+    }
 
-    const essayQuestionsFromAI = hasGeneratedQuestions 
-      ? questionsData.filter(q => q.type === 'essay' || q.type === 'discursive').slice(0, essay)
-      : [];
-
-    const trueFalseQuestionsFromAI = hasGeneratedQuestions 
-      ? questionsData.filter(q => q.type === 'true-false' || q.type === 'verdadeiro-falso').slice(0, trueFalse)
-      : [];
+    // Processar questões para garantir que elas estão em um formato utilizável
+    // Função para processar e sanitizar o texto
+    const sanitizeText = (text) => {
+      if (!text) return "Questão não disponível";
+      // Remove caracteres especiais e limita o comprimento para evitar problemas de renderização
+      return String(text)
+        .replace(/[<>]/g, '')  // Remove tags HTML por segurança
+        .trim();
+    };
 
     // Gerar cards de múltipla escolha
     const mcCount = multipleChoiceQuestionsFromAI.length > 0 ? multipleChoiceQuestionsFromAI.length : multipleChoice;
     for (let i = 0; i < mcCount; i++) {
       if (questionCounter <= totalQuestions) {
         let questionText = '';
+        let questionId = `q${questionCounter}`;
 
         if (multipleChoiceQuestionsFromAI.length > i) {
           // Usar questão gerada pela IA
-          questionText = multipleChoiceQuestionsFromAI[i].text;
+          const question = multipleChoiceQuestionsFromAI[i];
+          questionText = sanitizeText(question.text);
+          
+          // Garantir que existe um ID para cada questão
+          if (!question.id) {
+            question.id = questionId;
+          }
+          
+          // Garantir que existem opções para questões de múltipla escolha
+          if (!question.options || !Array.isArray(question.options) || question.options.length === 0) {
+            question.options = [
+              { id: `${questionId}-a`, text: "Primeira opção", isCorrect: true },
+              { id: `${questionId}-b`, text: "Segunda opção", isCorrect: false },
+              { id: `${questionId}-c`, text: "Terceira opção", isCorrect: false },
+              { id: `${questionId}-d`, text: "Quarta opção", isCorrect: false },
+              { id: `${questionId}-e`, text: "Quinta opção", isCorrect: false }
+            ];
+          }
+          
+          // Garantir que há uma explicação
+          if (!question.explanation) {
+            question.explanation = "Explicação para esta questão não disponível.";
+          }
         } else {
           // Fallback para questão pré-definida
           const questionIndex = i % multipleChoiceQuestions.length;
@@ -210,10 +274,22 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
     for (let i = 0; i < essayCount; i++) {
       if (questionCounter <= totalQuestions) {
         let questionText = '';
+        let questionId = `q${questionCounter}`;
 
         if (essayQuestionsFromAI.length > i) {
           // Usar questão gerada pela IA
-          questionText = essayQuestionsFromAI[i].text;
+          const question = essayQuestionsFromAI[i];
+          questionText = sanitizeText(question.text);
+          
+          // Garantir que existe um ID para cada questão
+          if (!question.id) {
+            question.id = questionId;
+          }
+          
+          // Garantir que há uma explicação
+          if (!question.explanation) {
+            question.explanation = "Esta é uma questão discursiva onde você deve apresentar sua compreensão sobre o tema.";
+          }
         } else {
           // Fallback para questão pré-definida
           const questionIndex = i % essayQuestions.length;
@@ -241,10 +317,29 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
     for (let i = 0; i < tfCount; i++) {
       if (questionCounter <= totalQuestions) {
         let questionText = '';
+        let questionId = `q${questionCounter}`;
 
         if (trueFalseQuestionsFromAI.length > i) {
           // Usar questão gerada pela IA
-          questionText = trueFalseQuestionsFromAI[i].text;
+          const question = trueFalseQuestionsFromAI[i];
+          questionText = sanitizeText(question.text);
+          
+          // Garantir que existe um ID para cada questão
+          if (!question.id) {
+            question.id = questionId;
+          }
+          
+          // Garantir que existe um valor de resposta (verdadeiro/falso)
+          if (typeof question.answer !== 'boolean') {
+            question.answer = true; // valor padrão
+          }
+          
+          // Garantir que há uma explicação
+          if (!question.explanation) {
+            question.explanation = question.answer 
+              ? "Esta afirmação é verdadeira com base no conteúdo estudado."
+              : "Esta afirmação é falsa de acordo com o conteúdo estudado.";
+          }
         } else {
           // Fallback para questão pré-definida
           const questionIndex = i % trueFalseQuestions.length;
@@ -265,6 +360,11 @@ const QuestionsResultsModal: React.FC<QuestionsResultsModalProps> = ({
         `;
         questionCounter++;
       }
+    }
+
+    // Verificar se conseguimos gerar todas as questões solicitadas
+    if (questionCounter <= totalQuestions) {
+      console.log(`Aviso: Foram geradas apenas ${questionCounter-1} questões das ${totalQuestions} solicitadas.`);
     }
 
     return cardsHTML;
