@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { generateAIResponse } from "@/services/aiChatService";
@@ -31,6 +32,9 @@ declare global {
 
 interface QuestionSimulatorProps {
   onClose: () => void;
+  sessionId: string;
+  messages: any[];
+}
 
 // Função para gerar questões fallback em caso de erro
 const generateFallbackQuestions = (
@@ -91,10 +95,6 @@ const generateFallbackQuestions = (
   
   return questions;
 };
-
-  sessionId: string;
-  messages: any[];
-}
 
 const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionId, messages }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -219,14 +219,6 @@ Retorne as questões em formato JSON conforme este exemplo:
             questionsData
           );
         }, 100);
-        } catch (error) {
-          console.error("Erro ao parsear JSON de questões:", error);
-          toast({
-            title: "Erro ao gerar questões",
-            description: "Não foi possível processar a resposta da IA. Tente novamente.",
-            variant: "destructive"
-          });
-        }
       } else {
         console.error("Resposta não contém JSON válido:", questionsText);
         
