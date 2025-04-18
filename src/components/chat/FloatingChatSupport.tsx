@@ -2416,28 +2416,87 @@ Exemplo de formato da resposta:
                                   
                                   // Função para gerar slides a partir do conteúdo
                                   const generateSlidesFromContent = (content) => {
+                                    // Extrair tópicos do conteúdo da mensagem
+                                    const extractTopics = (text) => {
+                                      // Procurar por marcadores de lista ou numeração
+                                      const bulletPoints = text.match(/[•\-\*]\s+([^\n]+)/g) || [];
+                                      const numberedPoints = text.match(/\d+\.\s+([^\n]+)/g) || [];
+                                      
+                                      // Extrair os textos dos marcadores
+                                      const topics = [...bulletPoints, ...numberedPoints]
+                                        .map(point => point.replace(/^[•\-\*\d+\.]\s+/, '').trim())
+                                        .filter(point => point.length > 0 && point.length < 100)
+                                        .slice(0, 3);
+                                      
+                                      // Se não encontrou suficientes, procurar por frases curtas
+                                      if (topics.length < 3) {
+                                        const sentences = text.split(/[.!?]/)
+                                          .map(s => s.trim())
+                                          .filter(s => s.length > 10 && s.length < 80)
+                                          .slice(0, 3 - topics.length);
+                                        
+                                        return [...topics, ...sentences];
+                                      }
+                                      
+                                      return topics.length > 0 ? topics : ["Aspectos principais", "Conceitos fundamentais", "Aplicações práticas"];
+                                    };
+                                    
+                                    // Extrair possível título da mensagem (primeira linha ou primeiro título markdown)
+                                    const getTitle = (text) => {
+                                      const titleMatch = text.match(/^#\s+(.+)$/m) || text.match(/^(.+)$/m);
+                                      if (titleMatch && titleMatch[1]) {
+                                        return titleMatch[1].trim().replace(/^#+\s+/, '');
+                                      }
+                                      return "Apresentação do Tema";
+                                    };
+                                    
+                                    // Extrair um parágrafo explicativo da mensagem
+                                    const getExplanation = (text) => {
+                                      const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 30 && p.trim().length < 300);
+                                      if (paragraphs.length > 0) {
+                                        return paragraphs[0].trim();
+                                      }
+                                      return "Este tema apresenta conceitos importantes que serão explorados nesta apresentação.";
+                                    };
+                                    
+                                    // Extrair conclusão (último parágrafo ou resumo)
+                                    const getConclusion = (text) => {
+                                      const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 30);
+                                      if (paragraphs.length > 2) {
+                                        return paragraphs[paragraphs.length - 1].trim();
+                                      }
+                                      return "Vimos os principais aspectos deste tema. É importante continuar explorando estes conceitos para aprofundar o conhecimento.";
+                                    };
+                                    
+                                    // Usar o conteúdo da mensagem para gerar slides significativos
+                                    const title = getTitle(content);
+                                    const topics = extractTopics(content);
+                                    const explanation = getExplanation(content);
+                                    const conclusion = getConclusion(content);
+                                    
+                                    // Gerar slides com base no conteúdo extraído
                                     const slides = [
                                       {
-                                        titulo: "Introdução",
-                                        topicos: ["Definição do tema", "Importância do tema"],
-                                        explicacao: "Esta apresentação aborda os conceitos fundamentais do tema.",
+                                        titulo: title,
+                                        topicos: topics.slice(0, 3),
+                                        explicacao: explanation,
                                         imagemOpcional: ""
                                       },
                                       {
                                         titulo: "Desenvolvimento",
-                                        topicos: ["Aspectos principais", "Aplicações práticas"],
-                                        explicacao: "Os conceitos se aplicam em situações reais, através de exemplos concretos.",
+                                        topicos: topics.slice(0, 3).map(t => `Detalhes sobre: ${t}`),
+                                        explicacao: "Estes conceitos se aplicam em situações reais através de exemplos concretos que podemos explorar em profundidade.",
                                         imagemOpcional: ""
                                       },
                                       {
-                                        titulo: "Conclusão e Próximos Passos",
-                                        topicos: ["Resumo dos pontos-chave", "Recomendações de estudo"],
-                                        explicacao: "Revisamos os principais pontos abordados. Sugestões de como aprofundar o conhecimento.",
+                                        titulo: "Conclusão",
+                                        topicos: ["Principais aprendizados", "Aplicações práticas", "Próximos passos"],
+                                        explicacao: conclusion,
                                         imagemOpcional: ""
                                       }
                                     ];
 
-                                    return slides; // Retorna apenas os slides sem mensagens desnecessárias
+                                    return slides;
                                   };
                                   
                                   // Emular um pequeno delay para mostrar o loading
