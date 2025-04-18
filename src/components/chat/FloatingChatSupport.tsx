@@ -2289,10 +2289,12 @@ Exemplo de formato da resposta:
                                   - Organize o conteúdo com títulos em maiúsculas seguidos de dois pontos
                                   - Use uma linguagem técnica e direta
                                   - Inclua fórmulas, regras e definições com linguagem precisa
-                                  - NÃO inclua links para nenhum site ou plataforma
-                                  - NÃO faça referências a recursos externos ou plataformas específicas
-                                  - NÃO inclua saudações, introduções ou conclusões
-                                  - NÃO termine com mensagens motivacionais ou chamadas para ação
+                                  - NÃO INCLUA LINKS PARA NENHUM SITE OU PLATAFORMA
+                                  - NÃO FAÇA REFERÊNCIAS A RECURSOS EXTERNOS OU PLATAFORMAS ESPECÍFICAS
+                                  - NÃO MENCIONE A PONTO.SCHOOL OU QUALQUER OUTRA PLATAFORMA
+                                  - NÃO INCLUA SAUDAÇÕES, INTRODUÇÕES OU CONCLUSÕES
+                                  - NÃO TERMINE COM MENSAGENS MOTIVACIONAIS OU CHAMADAS PARA AÇÃO
+                                  - FOQUE APENAS NO CONTEÚDO EDUCACIONAL
                                   - Limite a explicação a no máximo 250 palavras
                                   
                                   Explicação original:
