@@ -2991,9 +2991,55 @@ Exemplo de formato da resposta:
                                             function generateQuestionCards(total, multipleChoice, essay, trueFalse) {
                                               let cardsHTML = '';
                                               
+                                              // Encontrar a última mensagem do assistente para usar como contexto
+                                              const lastAIMessage = messages
+                                                .filter(msg => msg.sender === 'assistant')
+                                                .pop();
+                                                
+                                              const messageContent = lastAIMessage?.content || 'Conteúdo sobre o tema estudado';
+                                              
+                                              // Extrai possíveis tópicos da mensagem
+                                              const extractTopics = (content) => {
+                                                // Simplifica para obter apenas o começo da mensagem para títulos
+                                                const firstParagraph = content.split('\n\n')[0];
+                                                return firstParagraph.substring(0, 40) + '...';
+                                              };
+                                              
+                                              // Gerar títulos para as questões baseados no contexto
+                                              const context = extractTopics(messageContent);
+                                              
+                                              // Questões de múltipla escolha
+                                              const multipleChoiceQuestions = [
+                                                "Qual é o principal conceito abordado no texto?",
+                                                "De acordo com o conteúdo, qual alternativa está correta?",
+                                                "Qual das seguintes afirmações melhor representa o tema estudado?",
+                                                "Baseado no texto, qual opção descreve corretamente o assunto?",
+                                                "Considerando o material apresentado, qual item é verdadeiro?",
+                                                "Com base na explicação, qual é a melhor definição para o tema?"
+                                              ];
+                                              
+                                              // Questões discursivas
+                                              const essayQuestions = [
+                                                "Explique com suas palavras os principais aspectos do tema apresentado.",
+                                                "Disserte sobre a importância deste conteúdo para sua área de estudo.",
+                                                "Descreva como você aplicaria estes conceitos em uma situação prática.",
+                                                "Elabore uma análise crítica sobre o tema abordado.",
+                                                "Compare os diferentes aspectos apresentados no material."
+                                              ];
+                                              
+                                              // Questões de verdadeiro ou falso
+                                              const trueFalseQuestions = [
+                                                "Os conceitos apresentados são aplicáveis apenas em contextos teóricos.",
+                                                "Este tema é considerado fundamental na área de estudo.",
+                                                "Existem diferentes abordagens para este assunto.",
+                                                "A aplicação prática deste conteúdo é limitada.",
+                                                "Os princípios discutidos são universalmente aceitos na comunidade acadêmica."
+                                              ];
+                                              
                                               // Gerar cards de múltipla escolha
                                               for (let i = 0; i < multipleChoice; i++) {
                                                 if (i < total) {
+                                                  const questionIndex = i % multipleChoiceQuestions.length;
                                                   cardsHTML += `
                                                     <div class="bg-white dark:bg-gray-700 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 p-3 hover:shadow-lg transition-shadow cursor-pointer" 
                                                          onclick="showQuestionDetails('multiple-choice', ${i + 1})">
@@ -3002,7 +3048,7 @@ Exemplo de formato da resposta:
                                                         <span class="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded-full">Múltipla escolha</span>
                                                       </div>
                                                       <p class="text-xs text-gray-600 dark:text-gray-300 line-clamp-3">
-                                                        Exemplo de enunciado para questão de múltipla escolha relacionada ao conteúdo estudado.
+                                                        ${multipleChoiceQuestions[questionIndex]}
                                                       </p>
                                                     </div>
                                                   `;
@@ -3012,6 +3058,7 @@ Exemplo de formato da resposta:
                                               // Gerar cards de questões discursivas
                                               for (let i = 0; i < essay; i++) {
                                                 if (i + multipleChoice < total) {
+                                                  const questionIndex = i % essayQuestions.length;
                                                   cardsHTML += `
                                                     <div class="bg-white dark:bg-gray-700 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 p-3 hover:shadow-lg transition-shadow cursor-pointer"
                                                          onclick="showQuestionDetails('essay', ${i + multipleChoice + 1})">
@@ -3020,7 +3067,7 @@ Exemplo de formato da resposta:
                                                         <span class="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs rounded-full">Discursiva</span>
                                                       </div>
                                                       <p class="text-xs text-gray-600 dark:text-gray-300 line-clamp-3">
-                                                        Exemplo de questão discursiva para dissertar sobre o tema abordado.
+                                                        ${essayQuestions[questionIndex]}
                                                       </p>
                                                     </div>
                                                   `;
@@ -3030,6 +3077,7 @@ Exemplo de formato da resposta:
                                               // Gerar cards de verdadeiro ou falso
                                               for (let i = 0; i < trueFalse; i++) {
                                                 if (i + multipleChoice + essay < total) {
+                                                  const questionIndex = i % trueFalseQuestions.length;
                                                   cardsHTML += `
                                                     <div class="bg-white dark:bg-gray-700 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 p-3 hover:shadow-lg transition-shadow cursor-pointer"
                                                          onclick="showQuestionDetails('true-false', ${i + multipleChoice + essay + 1})">
@@ -3038,7 +3086,7 @@ Exemplo de formato da resposta:
                                                         <span class="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs rounded-full">Verdadeiro ou Falso</span>
                                                       </div>
                                                       <p class="text-xs text-gray-600 dark:text-gray-300 line-clamp-3">
-                                                        Afirmação sobre o conteúdo para classificar como verdadeira ou falsa.
+                                                        ${trueFalseQuestions[questionIndex]}
                                                       </p>
                                                     </div>
                                                   `;
@@ -3068,46 +3116,104 @@ Exemplo de formato da resposta:
                                                 existingDetailModal.remove();
                                               }
                                               
-                                              // Determinar o título e conteúdo com base no tipo de questão
+                                              // Encontrar a última mensagem do assistente para usar como contexto
+                                              const lastAIMessage = messages
+                                                .filter(msg => msg.sender === 'assistant')
+                                                .pop();
+                                                
+                                              const messageContent = lastAIMessage?.content || 'Conteúdo sobre o tema estudado';
+                                              
+                                              // Determinar o título e conteúdo com base no tipo de questão e no contexto da mensagem
                                               let questionTitle = `Questão ${questionNumber}`;
                                               let questionTag = '';
                                               let questionContent = '';
                                               let questionOptions = '';
                                               
+                                              // Questões de múltipla escolha
+                                              const multipleChoiceQuestions = [
+                                                "Qual é o principal conceito abordado no texto?",
+                                                "De acordo com o conteúdo, qual alternativa está correta?",
+                                                "Qual das seguintes afirmações melhor representa o tema estudado?",
+                                                "Baseado no texto, qual opção descreve corretamente o assunto?",
+                                                "Considerando o material apresentado, qual item é verdadeiro?",
+                                                "Com base na explicação, qual é a melhor definição para o tema?"
+                                              ];
+                                              
+                                              // Questões discursivas
+                                              const essayQuestions = [
+                                                "Explique com suas palavras os principais aspectos do tema apresentado.",
+                                                "Disserte sobre a importância deste conteúdo para sua área de estudo.",
+                                                "Descreva como você aplicaria estes conceitos em uma situação prática.",
+                                                "Elabore uma análise crítica sobre o tema abordado.",
+                                                "Compare os diferentes aspectos apresentados no material."
+                                              ];
+                                              
+                                              // Questões de verdadeiro ou falso
+                                              const trueFalseQuestions = [
+                                                "Os conceitos apresentados são aplicáveis apenas em contextos teóricos.",
+                                                "Este tema é considerado fundamental na área de estudo.",
+                                                "Existem diferentes abordagens para este assunto.",
+                                                "A aplicação prática deste conteúdo é limitada.",
+                                                "Os princípios discutidos são universalmente aceitos na comunidade acadêmica."
+                                              ];
+                                              
+                                              // Extrai possíveis termos e conceitos do conteúdo
+                                              const extractTerms = (content) => {
+                                                const terms = [];
+                                                const words = content.split(/\s+/);
+                                                for (let i = 0; i < words.length; i++) {
+                                                  if (words[i].length > 5 && /^[A-Z]/.test(words[i])) {
+                                                    terms.push(words[i].replace(/[,.;:?!]$/g, ''));
+                                                  }
+                                                }
+                                                return terms.length > 0 ? terms : ["conceito", "tema", "assunto", "método", "técnica"];
+                                              };
+                                              
+                                              const terms = extractTerms(messageContent);
+                                              
                                               if (questionType === 'multiple-choice') {
                                                 questionTag = '<span class="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded-full">Múltipla escolha</span>';
-                                                questionContent = 'Considerando o conteúdo estudado sobre o tema, analise as seguintes afirmações e escolha a alternativa correta.';
+                                                
+                                                // Usar uma das questões pré-definidas ou gerar uma baseada no contexto
+                                                const questionIndex = (questionNumber - 1) % multipleChoiceQuestions.length;
+                                                questionContent = multipleChoiceQuestions[questionIndex];
+                                                
+                                                // Gerar alternativas baseadas no contexto
                                                 questionOptions = `
                                                   <div class="mt-4 space-y-3">
                                                     <div class="flex items-center space-x-2">
                                                       <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
                                                         <span class="text-xs font-medium">A</span>
                                                       </div>
-                                                      <span class="text-sm text-gray-700 dark:text-gray-300">Primeira alternativa relacionada ao tema estudado.</span>
+                                                      <span class="text-sm text-gray-700 dark:text-gray-300">É um ${terms[0 % terms.length]} fundamental para compreensão do tema.</span>
                                                     </div>
                                                     <div class="flex items-center space-x-2">
                                                       <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
                                                         <span class="text-xs font-medium">B</span>
                                                       </div>
-                                                      <span class="text-sm text-gray-700 dark:text-gray-300">Segunda alternativa relacionada ao tema estudado.</span>
+                                                      <span class="text-sm text-gray-700 dark:text-gray-300">Representa uma abordagem inovadora sobre o ${terms[1 % terms.length]}.</span>
                                                     </div>
                                                     <div class="flex items-center space-x-2">
                                                       <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
                                                         <span class="text-xs font-medium">C</span>
                                                       </div>
-                                                      <span class="text-sm text-gray-700 dark:text-gray-300">Terceira alternativa relacionada ao tema estudado.</span>
+                                                      <span class="text-sm text-gray-700 dark:text-gray-300">Demonstra a aplicação prática do ${terms[2 % terms.length]} em contextos reais.</span>
                                                     </div>
                                                     <div class="flex items-center space-x-2">
                                                       <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
                                                         <span class="text-xs font-medium">D</span>
                                                       </div>
-                                                      <span class="text-sm text-gray-700 dark:text-gray-300">Quarta alternativa relacionada ao tema estudado.</span>
+                                                      <span class="text-sm text-gray-700 dark:text-gray-300">Exemplifica como o ${terms[3 % terms.length]} pode ser utilizado em diferentes situações.</span>
                                                     </div>
                                                   </div>
                                                 `;
                                               } else if (questionType === 'essay') {
                                                 questionTag = '<span class="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs rounded-full">Discursiva</span>';
-                                                questionContent = 'Com base no conteúdo estudado, elabore uma resposta dissertativa para a seguinte questão, abordando os principais conceitos e aplicações.';
+                                                
+                                                // Usar uma das questões pré-definidas ou gerar uma baseada no contexto
+                                                const questionIndex = (questionNumber - 1) % essayQuestions.length;
+                                                questionContent = essayQuestions[questionIndex];
+                                                
                                                 questionOptions = `
                                                   <div class="mt-4">
                                                     <textarea placeholder="Digite sua resposta aqui..." class="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500"></textarea>
@@ -3115,7 +3221,11 @@ Exemplo de formato da resposta:
                                                 `;
                                               } else if (questionType === 'true-false') {
                                                 questionTag = '<span class="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs rounded-full">Verdadeiro ou Falso</span>';
-                                                questionContent = 'Indique se a seguinte afirmação é verdadeira ou falsa, considerando o contexto do tema estudado.';
+                                                
+                                                // Usar uma das questões pré-definidas ou gerar uma baseada no contexto
+                                                const questionIndex = (questionNumber - 1) % trueFalseQuestions.length;
+                                                questionContent = trueFalseQuestions[questionIndex];
+                                                
                                                 questionOptions = `
                                                   <div class="mt-4 space-y-3">
                                                     <div class="flex items-center space-x-4">
