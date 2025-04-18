@@ -2280,15 +2280,20 @@ Exemplo de formato da resposta:
                                   
                                   // Gerar prompt para conversão para formato de caderno
                                   const notebookPrompt = `
-                                  A partir da explicação abaixo, crie uma versão resumida no formato de caderno de anotações.
+                                  A partir da explicação abaixo, crie uma versão resumida no formato de caderno de anotações pessoal e criativo.
                                   
                                   Siga estas diretrizes:
-                                  - Comece com um título claro sobre o tema
-                                  - Liste apenas os pontos principais usando marcadores (•)
-                                  - Inclua fórmulas, regras, dicas de memorização e termos importantes
-                                  - Use frases curtas e objetivas
-                                  - Não use explicações longas ou formatação HTML
-                                  - Termine com uma mensagem "👉 Anotação pronta! Agora é só revisar no modo caderno :)"
+                                  - Comece com um título criativo sobre o tema usando emojis relacionados
+                                  - Liste os pontos principais usando marcadores (•) que serão convertidos em ícones de lápis
+                                  - Destaque palavras-chave usando **asteriscos duplos** para enfatizar (serão exibidas com sublinhado ondulado)
+                                  - Organize seções com títulos capitalizados seguidos de dois pontos (ex: "CONCEITO CHAVE:")
+                                  - Use uma linguagem mais pessoal e informal, como se fosse um estudante escrevendo suas próprias anotações
+                                  - Inclua pequenas observações pessoais entre parênteses
+                                  - Inclua fórmulas, regras, dicas de memorização com linguagem simples
+                                  - Termine com uma mensagem "👉 Consegui anotar isso! Pronto para revisar :)"
+                                  - Limite a explicação a no máximo 250 palavras
+                                  
+                                  Importante: Mantenha o tom pessoal como se fossem anotações feitas à mão por um estudante animado!a é só revisar no modo caderno :)"
                                   
                                   Explicação original:
                                   "${messageToConvert.content}"
@@ -3174,18 +3179,23 @@ Exemplo de formato da resposta:
             </div>
             
             {/* Conteúdo do caderno com linhas */}
-            <ScrollArea className="h-[55vh] bg-[#ffffe0] dark:bg-[#252525] p-4 notebook-lines">
+            <ScrollArea className="h-[50vh] bg-[#fffdf0] dark:bg-[#1e1e18] p-4 notebook-lines">
               <div
                 className="w-full text-gray-800 dark:text-gray-200 whitespace-pre-line leading-loose px-3"
                 style={{
-                  backgroundImage: 'linear-gradient(#999 1px, transparent 1px)',
+                  backgroundImage: 'linear-gradient(#aaa 1px, transparent 1px)',
                   backgroundSize: '100% 28px',
                   lineHeight: '28px',
-                  fontFamily: "'Architects Daughter', cursive, system-ui"
+                  fontFamily: "'Architects Daughter', cursive, system-ui",
+                  letterSpacing: '0.5px',
+                  fontSize: '1.05rem',
+                  textShadow: '0px 0px 0.3px rgba(0,0,0,0.3)'
                 }}
                 dangerouslySetInnerHTML={{ __html: notebookContent
-                  .replace(/•/g, '<span class="text-[#FF6B00]">•</span>')
-                  .replace(/👉/g, '<span class="text-blue-600 dark:text-blue-400">👉</span>')
+                  .replace(/•/g, '<span class="text-[#FF6B00] text-lg">✎</span>')
+                  .replace(/👉/g, '<span class="text-blue-600 dark:text-blue-400">✓</span>')
+                  .replace(/(\*\*|__)([^*_]+)(\*\*|__)/g, '<span class="underline decoration-wavy decoration-[#FF6B00]/70 font-bold">$2</span>')
+                  .replace(/(^|\n)([A-Z][^:\n]+:)/g, '$1<span class="text-[#3a86ff] dark:text-[#4cc9f0] font-bold">$2</span>')
                 }}
               />
             </ScrollArea>
