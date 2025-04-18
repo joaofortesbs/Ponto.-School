@@ -217,7 +217,7 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
           const isCorrectClass = option.isCorrect ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : '';
 
           return `
-            <div class="flex items-center space-x-2 ${isCorrectClass} cursor-pointer option-btn" data-correct="${option.isCorrect}" onclick="checkAnswer(this)">
+            <div class="flex items-center space-x-2 cursor-pointer option-selection" data-correct="${option.isCorrect}" data-letter="${letter}" onclick="selectOption(this)">
               <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
                 <span class="text-xs font-medium">${letter}</span>
               </div>
@@ -230,48 +230,97 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
           <div class="mt-4 space-y-3">
             ${optionsHTML}
           </div>
+          <div id="check-answer-btn-container" class="mt-4 hidden">
+            <button 
+              id="check-answer-btn" 
+              class="w-full py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors"
+              onclick="checkSelectedAnswer()">
+              Ver resposta
+            </button>
+          </div>
           <script>
-            function checkAnswer(element) {
-              // Desativar todos os botões após uma resposta
-              document.querySelectorAll('.option-btn').forEach(btn => {
-                btn.style.pointerEvents = 'none';
-                btn.style.opacity = '0.7';
+            // Variável para armazenar a opção selecionada
+            let selectedOption = null;
+
+            // Função para selecionar uma opção
+            function selectOption(element) {
+              // Remover destaque de todas as opções
+              document.querySelectorAll('.option-selection').forEach(opt => {
+                opt.classList.remove('bg-orange-50', 'dark:bg-orange-900/20', 'border', 'border-orange-300', 'dark:border-orange-700');
+                opt.style.fontWeight = 'normal';
               });
-
-              // Destacar o botão clicado
-              element.style.opacity = '1';
+              
+              // Destacar a opção clicada
+              element.classList.add('bg-orange-50', 'dark:bg-orange-900/20', 'border', 'border-orange-300', 'dark:border-orange-700');
               element.style.fontWeight = 'bold';
-
+              
+              // Guardar a referência da opção selecionada
+              selectedOption = element;
+              
+              // Mostrar o botão de verificar resposta
+              const checkAnswerBtn = document.getElementById('check-answer-btn-container');
+              if (checkAnswerBtn) {
+                checkAnswerBtn.classList.remove('hidden');
+              }
+            }
+            
+            // Função para verificar a resposta selecionada
+            function checkSelectedAnswer() {
+              if (!selectedOption) return;
+              
+              // Desativar todas as opções para evitar mudanças após verificação
+              document.querySelectorAll('.option-selection').forEach(opt => {
+                opt.style.pointerEvents = 'none';
+                opt.style.opacity = '0.7';
+              });
+              
+              // Destacar a opção selecionada
+              selectedOption.style.opacity = '1';
+              
               // Verificar se a resposta está correta
-              const isCorrect = element.getAttribute('data-correct') === 'true';
+              const isCorrect = selectedOption.getAttribute('data-correct') === 'true';
               const resultContainer = document.getElementById('answer-result');
               const explanationContainer = document.getElementById('explanation-container');
-
+              
+              // Aplicar cores baseadas na resposta
+              if (isCorrect) {
+                selectedOption.classList.remove('bg-orange-50', 'dark:bg-orange-900/20', 'border-orange-300', 'dark:border-orange-700');
+                selectedOption.classList.add('bg-green-50', 'dark:bg-green-900/20', 'border', 'border-green-300', 'dark:border-green-700');
+              } else {
+                selectedOption.classList.remove('bg-orange-50', 'dark:bg-orange-900/20', 'border-orange-300', 'dark:border-orange-700');
+                selectedOption.classList.add('bg-red-50', 'dark:bg-red-900/20', 'border', 'border-red-300', 'dark:border-red-700');
+                
+                // Destacar a opção correta
+                document.querySelectorAll('.option-selection').forEach(opt => {
+                  if (opt.getAttribute('data-correct') === 'true') {
+                    opt.style.opacity = '1';
+                    opt.classList.add('bg-green-50', 'dark:bg-green-900/20', 'border', 'border-green-300', 'dark:border-green-700');
+                  }
+                });
+              }
+              
               // Mostrar o resultado
               if (resultContainer) {
                 resultContainer.classList.remove('hidden');
-
+                
                 if (isCorrect) {
                   resultContainer.innerHTML = '<p class="text-green-600 dark:text-green-400 font-medium">✓ Resposta correta!</p>';
                   resultContainer.classList.add('bg-green-100', 'dark:bg-green-900/20', 'border', 'border-green-200', 'dark:border-green-700');
                 } else {
                   resultContainer.innerHTML = '<p class="text-red-600 dark:text-red-400 font-medium">✗ Resposta incorreta!</p>';
                   resultContainer.classList.add('bg-red-100', 'dark:bg-red-900/20', 'border', 'border-red-200', 'dark:border-red-700');
-
-                  // Destacar a opção correta
-                  document.querySelectorAll('.option-btn').forEach(btn => {
-                    if (btn.getAttribute('data-correct') === 'true') {
-                      btn.style.opacity = '1';
-                      btn.style.fontWeight = 'bold';
-                      btn.style.color = '#10b981';
-                    }
-                  });
                 }
               }
-
+              
               // Mostrar a explicação
               if (explanationContainer) {
                 explanationContainer.classList.remove('hidden');
+              }
+              
+              // Esconder o botão de verificar resposta
+              const checkAnswerBtn = document.getElementById('check-answer-btn-container');
+              if (checkAnswerBtn) {
+                checkAnswerBtn.classList.add('hidden');
               }
             }
           </script>
@@ -283,73 +332,122 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
 
         questionOptions = `
           <div class="mt-4 space-y-3">
-            <div class="flex items-center space-x-2 cursor-pointer option-btn" data-correct="false" onclick="checkAnswer(this)">
+            <div class="flex items-center space-x-2 cursor-pointer option-selection" data-correct="false" data-letter="A" onclick="selectOption(this)">
               <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
                 <span class="text-xs font-medium">A</span>
               </div>
               <span class="text-sm text-gray-700 dark:text-gray-300">É um ${terms[0 % terms.length]} fundamental para compreensão do tema.</span>
             </div>
-            <div class="flex items-center space-x-2 cursor-pointer option-btn" data-correct="true" onclick="checkAnswer(this)">
+            <div class="flex items-center space-x-2 cursor-pointer option-selection" data-correct="true" data-letter="B" onclick="selectOption(this)">
               <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
                 <span class="text-xs font-medium">B</span>
               </div>
               <span class="text-sm text-gray-700 dark:text-gray-300">Representa uma abordagem inovadora sobre o ${terms[1 % terms.length]}.</span>
             </div>
-            <div class="flex items-center space-x-2 cursor-pointer option-btn" data-correct="false" onclick="checkAnswer(this)">
+            <div class="flex items-center space-x-2 cursor-pointer option-selection" data-correct="false" data-letter="C" onclick="selectOption(this)">
               <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
                 <span class="text-xs font-medium">C</span>
               </div>
               <span class="text-sm text-gray-700 dark:text-gray-300">Demonstra a aplicação prática do ${terms[2 % terms.length]} em contextos reais.</span>
             </div>
-            <div class="flex items-center space-x-2 cursor-pointer option-btn" data-correct="false" onclick="checkAnswer(this)">
+            <div class="flex items-center space-x-2 cursor-pointer option-selection" data-correct="false" data-letter="D" onclick="selectOption(this)">
               <div class="flex items-center justify-center w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
                 <span class="text-xs font-medium">D</span>
               </div>
               <span class="text-sm text-gray-700 dark:text-gray-300">Exemplifica como o ${terms[3 % terms.length]} pode ser utilizado em diferentes situações.</span>
             </div>
           </div>
+          <div id="check-answer-btn-container" class="mt-4 hidden">
+            <button 
+              id="check-answer-btn" 
+              class="w-full py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors"
+              onclick="checkSelectedAnswer()">
+              Ver resposta
+            </button>
+          </div>
           <script>
-            function checkAnswer(element) {
-              // Desativar todos os botões após uma resposta
-              document.querySelectorAll('.option-btn').forEach(btn => {
-                btn.style.pointerEvents = 'none';
-                btn.style.opacity = '0.7';
+            // Variável para armazenar a opção selecionada
+            let selectedOption = null;
+
+            // Função para selecionar uma opção
+            function selectOption(element) {
+              // Remover destaque de todas as opções
+              document.querySelectorAll('.option-selection').forEach(opt => {
+                opt.classList.remove('bg-orange-50', 'dark:bg-orange-900/20', 'border', 'border-orange-300', 'dark:border-orange-700');
+                opt.style.fontWeight = 'normal';
               });
-
-              // Destacar o botão clicado
-              element.style.opacity = '1';
+              
+              // Destacar a opção clicada
+              element.classList.add('bg-orange-50', 'dark:bg-orange-900/20', 'border', 'border-orange-300', 'dark:border-orange-700');
               element.style.fontWeight = 'bold';
-
+              
+              // Guardar a referência da opção selecionada
+              selectedOption = element;
+              
+              // Mostrar o botão de verificar resposta
+              const checkAnswerBtn = document.getElementById('check-answer-btn-container');
+              if (checkAnswerBtn) {
+                checkAnswerBtn.classList.remove('hidden');
+              }
+            }
+            
+            // Função para verificar a resposta selecionada
+            function checkSelectedAnswer() {
+              if (!selectedOption) return;
+              
+              // Desativar todas as opções para evitar mudanças após verificação
+              document.querySelectorAll('.option-selection').forEach(opt => {
+                opt.style.pointerEvents = 'none';
+                opt.style.opacity = '0.7';
+              });
+              
+              // Destacar a opção selecionada
+              selectedOption.style.opacity = '1';
+              
               // Verificar se a resposta está correta
-              const isCorrect = element.getAttribute('data-correct') === 'true';
+              const isCorrect = selectedOption.getAttribute('data-correct') === 'true';
               const resultContainer = document.getElementById('answer-result');
               const explanationContainer = document.getElementById('explanation-container');
-
+              
+              // Aplicar cores baseadas na resposta
+              if (isCorrect) {
+                selectedOption.classList.remove('bg-orange-50', 'dark:bg-orange-900/20', 'border-orange-300', 'dark:border-orange-700');
+                selectedOption.classList.add('bg-green-50', 'dark:bg-green-900/20', 'border', 'border-green-300', 'dark:border-green-700');
+              } else {
+                selectedOption.classList.remove('bg-orange-50', 'dark:bg-orange-900/20', 'border-orange-300', 'dark:border-orange-700');
+                selectedOption.classList.add('bg-red-50', 'dark:bg-red-900/20', 'border', 'border-red-300', 'dark:border-red-700');
+                
+                // Destacar a opção correta
+                document.querySelectorAll('.option-selection').forEach(opt => {
+                  if (opt.getAttribute('data-correct') === 'true') {
+                    opt.style.opacity = '1';
+                    opt.classList.add('bg-green-50', 'dark:bg-green-900/20', 'border', 'border-green-300', 'dark:border-green-700');
+                  }
+                });
+              }
+              
               // Mostrar o resultado
               if (resultContainer) {
                 resultContainer.classList.remove('hidden');
-
+                
                 if (isCorrect) {
                   resultContainer.innerHTML = '<p class="text-green-600 dark:text-green-400 font-medium">✓ Resposta correta!</p>';
                   resultContainer.classList.add('bg-green-100', 'dark:bg-green-900/20', 'border', 'border-green-200', 'dark:border-green-700');
                 } else {
                   resultContainer.innerHTML = '<p class="text-red-600 dark:text-red-400 font-medium">✗ Resposta incorreta!</p>';
                   resultContainer.classList.add('bg-red-100', 'dark:bg-red-900/20', 'border', 'border-red-200', 'dark:border-red-700');
-
-                  // Destacar a opção correta
-                  document.querySelectorAll('.option-btn').forEach(btn => {
-                    if (btn.getAttribute('data-correct') === 'true') {
-                      btn.style.opacity = '1';
-                      btn.style.fontWeight = 'bold';
-                      btn.style.color = '#10b981';
-                    }
-                  });
                 }
               }
-
+              
               // Mostrar a explicação
               if (explanationContainer) {
                 explanationContainer.classList.remove('hidden');
+              }
+              
+              // Esconder o botão de verificar resposta
+              const checkAnswerBtn = document.getElementById('check-answer-btn-container');
+              if (checkAnswerBtn) {
+                checkAnswerBtn.classList.add('hidden');
               }
             }
           </script>
@@ -387,38 +485,103 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
 
       questionOptions = `
         <div class="mt-4 space-y-3">
-          <div class="flex items-center space-x-4 cursor-pointer option-btn" data-correct="false" onclick="checkAnswer(this)">
-            <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+          <div class="flex items-center space-x-4 cursor-pointer option-selection" data-correct="false" data-option="verdadeiro" onclick="selectOption(this)">
+            <button class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
               Verdadeiro
             </button>
           </div>
-          <div class="flex items-center space-x-4 cursor-pointer option-btn" data-correct="true" onclick="checkAnswer(this)">
-            <button class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+          <div class="flex items-center space-x-4 cursor-pointer option-selection" data-correct="true" data-option="falso" onclick="selectOption(this)">
+            <button class="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
               Falso
             </button>
           </div>
         </div>
+        <div id="check-answer-btn-container" class="mt-4 hidden">
+          <button 
+            id="check-answer-btn" 
+            class="w-full py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors"
+            onclick="checkSelectedAnswer()">
+            Ver resposta
+          </button>
+        </div>
         <script>
-          function checkAnswer(element) {
-            // Desativar todos os botões após uma resposta
-            document.querySelectorAll('.option-btn').forEach(btn => {
-              btn.style.pointerEvents = 'none';
-              btn.style.opacity = '0.7';
+          // Variável para armazenar a opção selecionada
+          let selectedOption = null;
+
+          // Função para selecionar uma opção
+          function selectOption(element) {
+            // Remover destaque de todas as opções
+            document.querySelectorAll('.option-selection').forEach(opt => {
+              const btn = opt.querySelector('button');
+              if (btn) {
+                btn.classList.remove('bg-orange-100', 'dark:bg-orange-900/30');
+                btn.classList.add('bg-white', 'dark:bg-gray-700');
+              }
             });
-
-            // Destacar o botão clicado
-            element.style.opacity = '1';
-            element.style.fontWeight = 'bold';
-
+            
+            // Destacar a opção clicada
+            const selectedBtn = element.querySelector('button');
+            if (selectedBtn) {
+              selectedBtn.classList.remove('bg-white', 'dark:bg-gray-700');
+              selectedBtn.classList.add('bg-orange-100', 'dark:bg-orange-900/30');
+            }
+            
+            // Guardar a referência da opção selecionada
+            selectedOption = element;
+            
+            // Mostrar o botão de verificar resposta
+            const checkAnswerBtn = document.getElementById('check-answer-btn-container');
+            if (checkAnswerBtn) {
+              checkAnswerBtn.classList.remove('hidden');
+            }
+          }
+          
+          // Função para verificar a resposta selecionada
+          function checkSelectedAnswer() {
+            if (!selectedOption) return;
+            
+            // Desativar todas as opções para evitar mudanças após verificação
+            document.querySelectorAll('.option-selection').forEach(opt => {
+              opt.style.pointerEvents = 'none';
+              opt.style.opacity = '0.7';
+            });
+            
+            // Destacar a opção selecionada
+            selectedOption.style.opacity = '1';
+            
             // Verificar se a resposta está correta
-            const isCorrect = element.getAttribute('data-correct') === 'true';
+            const isCorrect = selectedOption.getAttribute('data-correct') === 'true';
             const resultContainer = document.getElementById('answer-result');
             const explanationContainer = document.getElementById('explanation-container');
-
+            
+            // Aplicar cores baseadas na resposta
+            const selectedBtn = selectedOption.querySelector('button');
+            if (selectedBtn) {
+              if (isCorrect) {
+                selectedBtn.classList.remove('bg-orange-100', 'dark:bg-orange-900/30');
+                selectedBtn.classList.add('bg-green-100', 'dark:bg-green-900/30', 'border-green-300', 'dark:border-green-700');
+              } else {
+                selectedBtn.classList.remove('bg-orange-100', 'dark:bg-orange-900/30');
+                selectedBtn.classList.add('bg-red-100', 'dark:bg-red-900/30', 'border-red-300', 'dark:border-red-700');
+                
+                // Destacar a opção correta
+                document.querySelectorAll('.option-selection').forEach(opt => {
+                  if (opt.getAttribute('data-correct') === 'true') {
+                    const correctBtn = opt.querySelector('button');
+                    if (correctBtn) {
+                      opt.style.opacity = '1';
+                      correctBtn.classList.remove('bg-white', 'dark:bg-gray-700');
+                      correctBtn.classList.add('bg-green-100', 'dark:bg-green-900/30', 'border-green-300', 'dark:border-green-700');
+                    }
+                  }
+                });
+              }
+            }
+            
             // Mostrar o resultado
             if (resultContainer) {
               resultContainer.classList.remove('hidden');
-
+              
               if (isCorrect) {
                 resultContainer.innerHTML = '<p class="text-green-600 dark:text-green-400 font-medium">✓ Resposta correta!</p>';
                 resultContainer.classList.add('bg-green-100', 'dark:bg-green-900/20', 'border', 'border-green-200', 'dark:border-green-700');
@@ -427,26 +590,45 @@ const QuestionSimulator: React.FC<QuestionSimulatorProps> = ({ onClose, sessionI
                 resultContainer.classList.add('bg-red-100', 'dark:bg-red-900/20', 'border', 'border-red-200', 'dark:border-red-700');
               }
             }
-
+            
             // Mostrar a explicação
             if (explanationContainer) {
               explanationContainer.classList.remove('hidden');
+            }
+            
+            // Esconder o botão de verificar resposta
+            const checkAnswerBtn = document.getElementById('check-answer-btn-container');
+            if (checkAnswerBtn) {
+              checkAnswerBtn.classList.add('hidden');
             }
           }
         </script>
       `;
     }
 
+    // Criar uma explicação padrão se não tiver uma explicação fornecida
+    let explanation = questionExplanation;
+    if (!explanation) {
+      // Explicações padrão baseadas no tipo de questão
+      if (questionType === 'multiple-choice') {
+        explanation = `Esta questão avalia a compreensão do conceito principal abordado no conteúdo. A resposta correta é aquela que melhor sintetiza as informações apresentadas no material de estudo.`;
+      } else if (questionType === 'true-false') {
+        explanation = `Esta questão verifica seu entendimento sobre a aplicabilidade dos conceitos discutidos. A análise crítica das afirmações é essencial para determinar sua validade no contexto apresentado.`;
+      } else if (questionType === 'essay') {
+        explanation = `Esta questão discursiva permite demonstrar sua compreensão profunda do tema, aplicando conceitos e elaborando conexões entre diferentes aspectos do conteúdo estudado.`;
+      }
+    }
+
     // A explicação será mostrada apenas após a resposta
-    const explanationHTML = questionExplanation ? `
+    const explanationHTML = `
       <div id="explanation-container" class="mt-4 hidden">
         <div class="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
           <div id="answer-result" class="mb-2 p-2 rounded-lg hidden"></div>
           <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Explicação:</p>
-          <p class="text-sm text-gray-700 dark:text-gray-300">${questionExplanation}</p>
+          <p class="text-sm text-gray-700 dark:text-gray-300">${explanation}</p>
         </div>
       </div>
-    ` : '';
+    `;
 
     // Criar HTML para o modal de detalhes da questão
     const detailModalHTML = `
