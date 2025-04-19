@@ -1306,6 +1306,115 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
     }
   };
 
+  const exportAsPDF = async () => {
+    try {
+      // Mostrar indicador visual de carregamento
+      const loadingIndicator = document.createElement('div');
+      loadingIndicator.className = 'fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-[9999]';
+      loadingIndicator.innerHTML = `
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 flex flex-col items-center">
+          <svg class="animate-spin h-8 w-8 text-blue-600 dark:text-blue-400 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span class="text-sm text-gray-700 dark:text-gray-300">Exportando fluxograma em PDF...</span>
+        </div>
+      `;
+      document.body.appendChild(loadingIndicator);
+      
+      // Impedir que o indicador de carregamento feche o modal ao ser clicado
+      loadingIndicator.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+      });
+      
+      // Esperar um momento para garantir que o DOM está estável
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Verificar se o elemento existe
+      const element = document.querySelector('.react-flow') || 
+                      document.querySelector('.react-flow__viewport') ||
+                      document.querySelector('[data-testid="rf__wrapper"]') as HTMLElement;
+      if (!element) {
+        loadingIndicator.remove();
+        alert('Não foi possível encontrar o fluxograma para exportar.');
+        return false;
+      }
+      
+      // Forçar atualização da visualização
+      window.dispatchEvent(new Event('resize'));
+      
+      // Aguardar mais um momento para a renderização
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      try {
+        // Importar as bibliotecas necessárias
+        const html2canvas = (await import('html2canvas')).default;
+        const jsPDF = (await import('jspdf')).default;
+        
+        // Capturar o fluxograma como imagem utilizando html2canvas
+        const canvas = await html2canvas(element, {
+          backgroundColor: document.documentElement.classList.contains('dark') ? '#111827' : '#ffffff',
+          scale: 2,
+          logging: false,
+          useCORS: true,
+          allowTaint: true,
+          ignoreElements: (el) => el.classList.contains('react-flow__minimap') || 
+                                  el.classList.contains('react-flow__attribution') ||
+                                  el.classList.contains('react-flow__panel')
+        });
+        
+        // Converter para imagem para inserir no PDF
+        const imgData = canvas.toDataURL('image/png');
+        
+        // Calcular as dimensões para o PDF
+        const imgWidth = 210; // A4 width in mm (portrait)
+        const imgHeight = canvas.height * imgWidth / canvas.width;
+        
+        // Criar o documento PDF
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        
+        // Se a altura da imagem exceder a altura de uma página A4, ajustamos para a largura máxima
+        if (imgHeight > 297) { // A4 height in mm
+          const scaleFactor = 297 / imgHeight * 0.9; // 90% da altura da página para margens
+          const newWidth = imgWidth * scaleFactor;
+          pdf.addImage(imgData, 'PNG', (210 - newWidth) / 2, 10, newWidth, imgHeight * scaleFactor);
+        } else {
+          // Adicionar a imagem ao centro do PDF
+          pdf.addImage(imgData, 'PNG', 10, 10, imgWidth - 20, imgHeight - 20);
+        }
+        
+        // Salvar o PDF
+        pdf.save(`fluxograma_${new Date().toISOString().replace(/[:.]/g, '-')}.pdf`);
+        
+        // Limpar o indicador de carregamento
+        loadingIndicator.remove();
+        
+        // Mostrar mensagem de sucesso
+        const successMessage = document.createElement('div');
+        successMessage.className = 'fixed bottom-4 right-4 bg-green-50 dark:bg-green-900 text-green-800 dark:text-green-100 px-4 py-2 rounded-md shadow-md border border-green-200 dark:border-green-800 z-50';
+        successMessage.innerHTML = 'Fluxograma exportado como PDF com sucesso!';
+        document.body.appendChild(successMessage);
+        
+        // Remover mensagem após 3 segundos
+        setTimeout(() => {
+          successMessage.remove();
+        }, 3000);
+        
+        return true;
+      } catch (error) {
+        console.error('Erro ao exportar PDF:', error);
+        loadingIndicator.remove();
+        alert('Erro ao exportar o fluxograma como PDF. Por favor, tente novamente.');
+        return false;
+      }
+    } catch (error) {
+      console.error('Erro geral na exportação do PDF:', error);
+      alert('Ocorreu um erro ao exportar o fluxograma como PDF. Por favor, tente novamente.');
+      return false;
+    }
+  };
+
 
   const getFlowchartPrompt = (promptNumber: 1 | 2): string => {
     switch (promptNumber) {
@@ -1617,15 +1726,14 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                     const imgText = document.createTextNode('Exportar em .IMG');
                     exportImgButton.appendChild(imgText);
                     
-                    // Botão PDF (desativado)
+                    // Botão PDF (ativo)
                     const exportPdfButton = document.createElement('button');
-                    exportPdfButton.className = 'text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 opacity-60 cursor-not-allowed';
-                    exportPdfButton.disabled = true;
+                    exportPdfButton.className = 'text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 cursor-pointer';
                     
                     // Ícone para o botão PDF
                     const pdfIcon = document.createElement('svg');
                     pdfIcon.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-                    pdfIcon.setAttribute('class', 'w-4 h-4 mr-2 opacity-60');
+                    pdfIcon.setAttribute('class', 'w-4 h-4 mr-2');
                     pdfIcon.setAttribute('fill', 'none');
                     pdfIcon.setAttribute('viewBox', '0 0 24 24');
                     pdfIcon.setAttribute('stroke', 'currentColor');
@@ -1738,6 +1846,68 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                         }).catch(error => {
                           console.error('Erro ao exportar imagem:', error);
                           alert('Ocorreu um erro ao exportar o fluxograma. Por favor, tente novamente.');
+                        });
+                      }, 50);
+                    };
+                    
+                    // Configurar evento de clique para exportar em PDF
+                    exportPdfButton.onclick = (event) => {
+                      event.stopPropagation();
+                      event.preventDefault();
+                      
+                      // Remover o menu de exportação sem fechar o modal principal
+                      const exportMenu = document.getElementById('export-options-menu');
+                      if (exportMenu) {
+                        exportMenu.remove();
+                      }
+                      
+                      // Indicador de carregamento no botão
+                      exportPdfButton.innerHTML = '';
+                      
+                      // Ícone de loading
+                      const loadingIcon = document.createElement('svg');
+                      loadingIcon.setAttribute('class', 'animate-spin w-4 h-4 mr-2');
+                      loadingIcon.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                      loadingIcon.setAttribute('fill', 'none');
+                      loadingIcon.setAttribute('viewBox', '0 0 24 24');
+                      
+                      const loadingCircle = document.createElement('circle');
+                      loadingCircle.setAttribute('class', 'opacity-25');
+                      loadingCircle.setAttribute('cx', '12');
+                      loadingCircle.setAttribute('cy', '12');
+                      loadingCircle.setAttribute('r', '10');
+                      loadingCircle.setAttribute('stroke', 'currentColor');
+                      loadingCircle.setAttribute('stroke-width', '2');
+                      
+                      const loadingPath = document.createElement('path');
+                      loadingPath.setAttribute('class', 'opacity-75');
+                      loadingPath.setAttribute('fill', 'currentColor');
+                      loadingPath.setAttribute('d', 'M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z');
+                      
+                      loadingIcon.appendChild(loadingCircle);
+                      loadingIcon.appendChild(loadingPath);
+                      exportPdfButton.appendChild(loadingIcon);
+                      
+                      // Texto de carregamento
+                      const loadingText = document.createTextNode('Exportando...');
+                      exportPdfButton.appendChild(loadingText);
+                      
+                      exportPdfButton.disabled = true;
+                      exportPdfButton.className = 'text-left px-3 py-2 text-sm rounded-md transition-colors flex items-center text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700';
+                      
+                      // Remover a escuta do evento de clique para evitar fechamento indesejado
+                      document.removeEventListener('click', closeMenu);
+                      
+                      // Criar uma função que executa a exportação sem fechar o modal principal
+                      setTimeout(() => {
+                        // Exportar PDF
+                        exportAsPDF().then((success) => {
+                          if (!success) {
+                            console.error('Falha ao exportar PDF');
+                          }
+                        }).catch(error => {
+                          console.error('Erro ao exportar PDF:', error);
+                          alert('Ocorreu um erro ao exportar o fluxograma em PDF. Por favor, tente novamente.');
                         });
                       }, 50);
                     };
