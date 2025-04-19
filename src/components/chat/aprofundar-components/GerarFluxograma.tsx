@@ -750,82 +750,79 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                                  response.match(/```\n([\s\S]*?)\n```/) ||
                                  response.match(/{[\s\S]*?}/);
 
-                const jsonString = jsonMatch ? jsonMatch[0].replace(/```json\n|```\n|```/g, '') : response; 
-                                         response.match(/```\n([\s\S]*?)\n```/) ||
-                                         response.match(/{[\s\S]*?}/);
+                try {
+                  // Processar a resposta e extrair o JSON
+                  const jsonString = jsonMatch ? jsonMatch[0].replace(/```json\n|```\n|```/g, '') : response;
+                  extractedData = JSON.parse(jsonString);
 
-                          try {
-                            const jsonString = jsonMatch ? jsonMatch[0].replace(/```json\n|```\n|```/g, '') : response;
-                            extractedData = JSON.parse(jsonString);
-
-                            // Normalize data structure
-                            if (!extractedData.edges && extractedData.connections) {
-                              extractedData.edges = extractedData.connections.map(conn => ({
-                                id: `e${conn.source}-${conn.target}`,
-                                source: conn.source,
-                                target: conn.target,
-                                label: conn.label || '',
-                                type: 'smoothstep',
-                                animated: conn.animated || false
-                              }));
-                            } else if (!extractedData.edges) {
-                              extractedData.edges = [];
-                              if (extractedData.nodes && extractedData.nodes.length > 1) {
-                                for (let i = 0; i < extractedData.nodes.length - 1; i++) {
-                                  extractedData.edges.push({
-                                    id: `e${extractedData.nodes[i].id}-${extractedData.nodes[i+1].id}`,
-                                    source: extractedData.nodes[i].id,
-                                    target: extractedData.nodes[i+1].id,
-                                    label: 'Segue para',
-                                    type: 'smoothstep',
-                                    animated: true
-                                  });
-                                }
-                              }
-                            }
-                          } catch (error) {
-                            console.error('Erro ao extrair JSON da resposta da IA:', error);
-                            // Criar uma estrutura simples de fallback
-                            const paragraphs = contentToProcess.split(/\n\n+/);
-                          const sentences = contentToProcess.split(/[.!?]\s+/);
-                          const mainBlocks = paragraphs.length > 3 ? paragraphs.slice(0, paragraphs.length) : sentences.slice(0, Math.min(8, sentences.length));
-                          const nodes = mainBlocks.map((block, index) => ({
-                            id: (index + 1).toString(),
-                            data: { 
-                              label: `Conceito ${index + 1}`, 
-                              description: block
-                            },
-                            type: index === 0 ? 'start' : index === mainBlocks.length - 1 ? 'end' : 'default',
-                            position: { x: 250, y: 100 * (index + 1) }
-                          }));
-
-                          const edges = [];
-                          for (let i = 0; i < nodes.length - 1; i++) {
-                            edges.push({
-                              id: `e${i+1}-${i+2}`,
-                              source: (i + 1).toString(),
-                              target: (i + 2).toString(),
-                              animated: true,
-                              style: { stroke: '#3b82f6' }
-                            });
-                          }
-
-                          extractedData = { nodes, edges };
-                        }
-
-                        // Salvar os novos dados
-                        localStorage.setItem('fluxogramaData', JSON.stringify(extractedData));
-
-                        // Mostrar o fluxograma
-                        setIsLoading(false);
-                        setFluxogramaGerado(true);
-                        setShowFluxograma(true);
-
-                      } catch (error) {
-                        console.error('Erro ao regenerar o fluxograma:', error);
-                        setIsLoading(false);
-                        alert('Ocorreu um erro ao regenerar o fluxograma. Por favor, tente novamente.');
+                  // Normalize data structure
+                  if (!extractedData.edges && extractedData.connections) {
+                    extractedData.edges = extractedData.connections.map(conn => ({
+                      id: `e${conn.source}-${conn.target}`,
+                      source: conn.source,
+                      target: conn.target,
+                      label: conn.label || '',
+                      type: 'smoothstep',
+                      animated: conn.animated || false
+                    }));
+                  } else if (!extractedData.edges) {
+                    extractedData.edges = [];
+                    if (extractedData.nodes && extractedData.nodes.length > 1) {
+                      for (let i = 0; i < extractedData.nodes.length - 1; i++) {
+                        extractedData.edges.push({
+                          id: `e${extractedData.nodes[i].id}-${extractedData.nodes[i+1].id}`,
+                          source: extractedData.nodes[i].id,
+                          target: extractedData.nodes[i+1].id,
+                          label: 'Segue para',
+                          type: 'smoothstep',
+                          animated: true
+                        });
                       }
+                    }
+                  }
+                } catch (error) {
+                  console.error('Erro ao extrair JSON da resposta da IA:', error);
+                  // Criar uma estrutura simples de fallback
+                  const paragraphs = contentToProcess.split(/\n\n+/);
+                  const sentences = contentToProcess.split(/[.!?]\s+/);
+                  const mainBlocks = paragraphs.length > 3 ? paragraphs.slice(0, paragraphs.length) : sentences.slice(0, Math.min(8, sentences.length));
+                  const nodes = mainBlocks.map((block, index) => ({
+                    id: (index + 1).toString(),
+                    data: { 
+                      label: `Conceito ${index + 1}`, 
+                      description: block
+                    },
+                    type: index === 0 ? 'start' : index === mainBlocks.length - 1 ? 'end' : 'default',
+                    position: { x: 250, y: 100 * (index + 1) }
+                  }));
+
+                  const edges = [];
+                  for (let i = 0; i < nodes.length - 1; i++) {
+                    edges.push({
+                      id: `e${i+1}-${i+2}`,
+                      source: (i + 1).toString(),
+                      target: (i + 2).toString(),
+                      animated: true,
+                      style: { stroke: '#3b82f6' }
+                    });
+                  }
+
+                  extractedData = { nodes, edges };
+                }
+
+                try {
+                  // Salvar os novos dados
+                  localStorage.setItem('fluxogramaData', JSON.stringify(extractedData));
+
+                  // Mostrar o fluxograma
+                  setIsLoading(false);
+                  setFluxogramaGerado(true);
+                  setShowFluxograma(true);
+                } catch (error) {
+                  console.error('Erro ao regenerar o fluxograma:', error);
+                  setIsLoading(false);
+                  alert('Ocorreu um erro ao regenerar o fluxograma. Por favor, tente novamente.');
+                }
                     };
 
                     // Iniciar o processo de regeneração
