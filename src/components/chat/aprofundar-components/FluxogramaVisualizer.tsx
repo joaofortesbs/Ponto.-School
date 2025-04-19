@@ -352,7 +352,16 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => 
   dagreGraph.setDefaultEdgeLabel(() => ({}));
 
   // Define as direções: TB (top to bottom) ou LR (left to right)
-  dagreGraph.setGraph({ rankdir: direction, nodesep: 80, ranksep: 120, marginx: 20, marginy: 20 });
+  // Aumentando os valores de nodesep e ranksep para melhor organização e evitar sobreposição
+  dagreGraph.setGraph({ 
+    rankdir: direction, 
+    nodesep: 120,       // Aumentado para melhor espaçamento horizontal
+    ranksep: 150,       // Aumentado para melhor espaçamento vertical
+    marginx: 40,        // Margem horizontal aumentada
+    marginy: 40,        // Margem vertical aumentada
+    align: 'DL',        // Alinhamento para melhor organização
+    acyclicer: 'greedy' // Previne ciclos e melhora layout
+  });
 
   // Adiciona os nós ao grafo dagre com as dimensões adequadas
   nodes.forEach((node) => {
@@ -363,16 +372,26 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => 
     // Nós de tipo start e end podem ter dimensões diferentes
     if (node.type === 'start' || node.type === 'end') {
       height = 100;
+      width = 220;  // Garantir largura consistente
     } else if (node.type === 'decision') {
       height = 140; // Nós de decisão podem precisar de mais espaço vertical
+      width = 240;  // Ligeiramente mais largos para decisões
+    } else if (node.type === 'process') {
+      width = 230;  // Processos um pouco mais largos
     }
 
     dagreGraph.setNode(node.id, { width, height });
   });
 
-  // Adiciona as arestas ao grafo
+  // Adiciona as arestas ao grafo com configurações para centralização
   edges.forEach((edge) => {
-    dagreGraph.setEdge(edge.source, edge.target);
+    dagreGraph.setEdge(edge.source, edge.target, {
+      weight: 1,             // Peso padrão
+      minlen: 1,             // Comprimento mínimo da aresta
+      labelpos: 'c',         // Posição do label centralizada
+      width: 2,              // Largura da linha
+      height: 2              // Altura da linha
+    });
   });
 
   // Calcula o layout
@@ -381,12 +400,14 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => 
   // Obtem os nós com as posições atualizadas
   const layoutedNodes = nodes.map((node) => {
     const nodeWithPosition = dagreGraph.node(node.id);
-
+    
+    // Arredondar as coordenadas para evitar posicionamento em pixels fracionários
+    // que podem causar linhas borradas ou desalinhadas
     return {
       ...node,
       position: {
-        x: nodeWithPosition.x - nodeWidth / 2,
-        y: nodeWithPosition.y - nodeHeight / 2,
+        x: Math.round(nodeWithPosition.x - nodeWidth / 2),
+        y: Math.round(nodeWithPosition.y - nodeHeight / 2),
       },
     };
   });
@@ -437,15 +458,29 @@ const FluxogramaVisualizer: React.FC<FluxogramaVisualizerProps> = ({
       direction
     );
 
-    setNodes([...layoutedNodes]);
-    setEdges([...layoutedEdges]);
+    // Atualizar estilo de todas as arestas para remover animações e usar linhas sólidas
+    const updatedEdges = layoutedEdges.map(edge => ({
+      ...edge,
+      animated: false,
+      style: {
+        ...edge.style,
+        strokeWidth: 2,
+        strokeDasharray: 'none', // Remover pontilhados
+      },
+      type: 'smoothstep',
+    }));
 
-    // Centralizar o fluxograma após o layout
+    setNodes([...layoutedNodes]);
+    setEdges([...updatedEdges]);
+
+    // Centralizar o fluxograma após o layout com padding maior
     if (reactFlowInstance.current) {
       window.requestAnimationFrame(() => {
         reactFlowInstance.current?.fitView({
-          padding: 0.2,
+          padding: 0.25,
           includeHiddenNodes: false,
+          minZoom: 0.85, // Limitar o zoom mínimo para evitar visualização muito distante
+          maxZoom: 1.5,  // Limitar o zoom máximo para evitar detalhes muito grandes
         });
       });
     }
@@ -497,19 +532,28 @@ const FluxogramaVisualizer: React.FC<FluxogramaVisualizerProps> = ({
         nodeTypes={nodeTypes}
         onInit={(instance) => {
           reactFlowInstance.current = instance;
-          instance.fitView({ padding: 0.2 });
+          instance.fitView({ padding: 0.25 });
         }}
         fitView
         attributionPosition="bottom-right"
         connectionLineType={ConnectionLineType.SmoothStep}
         defaultEdgeOptions={{
           type: 'smoothstep',
-          style: { strokeWidth: 2 },
+          style: { 
+            strokeWidth: 2, 
+            stroke: '#3b82f6',
+            strokeDasharray: 'none' // Remove pontilhados animados
+          },
+          animated: false, // Desliga animação
           labelShowBg: true,
           labelBgPadding: [4, 2],
-          labelBgBorderRadius: 4
+          labelBgBorderRadius: 4,
+          pathOptions: {
+            offset: 15, // Ajuste de offset para evitar sobreposição
+            borderRadius: 8 // Bordas arredondadas para as linhas
+          }
         }}
-      >
+        proOptions={{ hideAttribution: true }} // Remove atribuição para visual mais limpo
         <Controls />
         <MiniMap
           nodeStrokeColor={(n) => {
