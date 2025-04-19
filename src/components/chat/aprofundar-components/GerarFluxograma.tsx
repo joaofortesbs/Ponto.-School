@@ -1314,8 +1314,10 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                       // Posicionar o menu em relação ao botão
                       const buttonRect = e.currentTarget.getBoundingClientRect();
                       exportMenu.style.display = 'block';
-                      exportMenu.style.top = `${buttonRect.bottom + 5}px`;
-                      exportMenu.style.left = `${buttonRect.left - 60}px`;
+                      exportMenu.style.position = 'fixed';
+                      exportMenu.style.zIndex = '9999';
+                      exportMenu.style.top = `${buttonRect.top - 120}px`;
+                      exportMenu.style.left = `${buttonRect.left - 20}px`;
                       
                       // Fechar o menu ao clicar fora dele
                       const closeMenu = (event: MouseEvent) => {
