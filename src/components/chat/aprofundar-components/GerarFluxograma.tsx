@@ -1942,8 +1942,45 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                 </span>
               </Button>
               
-              {/* Card de Pré-visualização ou Card de Processamento do Fluxograma */}
-              {!isLoading ? (
+              {/* Card de Pré-visualização, Processamento, ou Fluxograma Gerado */}
+              {isLoading ? (
+                <div className="mt-6 bg-[#131A2B] rounded-xl p-6 shadow-lg flex flex-col items-center justify-center max-w-xl mx-auto">
+                  <div className="mb-4">
+                    <div className="h-16 w-16 rounded-full bg-[#2C3E87] flex items-center justify-center">
+                      <svg className="animate-spin h-8 w-8 text-[#6B8AFF]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </div>
+                  </div>
+                  <h4 className="text-lg font-medium text-white mb-2">Processando o Fluxograma</h4>
+                  <p className="text-sm text-gray-300 text-center mb-6">
+                    Estamos analisando o conteúdo e construindo um fluxograma visual para facilitar sua compreensão.
+                  </p>
+                  <div className="w-full bg-[#1E2A45] rounded-full h-2.5 overflow-hidden">
+                    <div className="bg-[#4C78FF] h-2.5 rounded-full animate-progress"></div>
+                  </div>
+                </div>
+              ) : fluxogramaGerado ? (
+                <div className="mt-6 bg-[#131A2B] rounded-xl p-6 shadow-lg flex flex-col items-center justify-center max-w-xl mx-auto">
+                  <div className="mb-4">
+                    <div className="h-16 w-16 rounded-full bg-[#19332b] flex items-center justify-center">
+                      <CheckCircle className="h-8 w-8 text-green-500" />
+                    </div>
+                  </div>
+                  <h4 className="text-lg font-medium text-white mb-2">Fluxograma Gerado!</h4>
+                  <p className="text-sm text-gray-300 text-center mb-4">
+                    Seu fluxograma foi criado com base no conteúdo da {selectedOption === 'ia' ? 'IA' : 'personalizado'}.
+                  </p>
+                  <Button 
+                    onClick={handleVisualizarFluxograma}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center justify-center"
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    <span>Visualizar Fluxograma</span>
+                  </Button>
+                </div>
+              ) : (
                 <div className="w-full mt-6 p-6 bg-white/80 dark:bg-gray-800/80 border border-blue-200/80 dark:border-blue-800/30 rounded-2xl shadow-lg backdrop-blur-xl relative overflow-hidden group hover:shadow-xl transition-all duration-500 hover:border-blue-300 dark:hover:border-blue-700">
                   {/* Efeitos decorativos */}
                   <div className="absolute -right-12 -top-12 w-24 h-24 bg-gradient-to-br from-blue-400/10 to-indigo-400/20 dark:from-blue-400/5 dark:to-indigo-400/10 rounded-full blur-md"></div>
@@ -2073,24 +2110,6 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                     </div>
                   </div>
                 </div>
-              ) : (
-                <div className="mt-6 bg-[#131A2B] rounded-xl p-6 shadow-lg flex flex-col items-center justify-center max-w-xl mx-auto">
-                  <div className="mb-4">
-                    <div className="h-16 w-16 rounded-full bg-[#2C3E87] flex items-center justify-center">
-                      <svg className="animate-spin h-8 w-8 text-[#6B8AFF]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                    </div>
-                  </div>
-                  <h4 className="text-lg font-medium text-white mb-2">Processando o Fluxograma</h4>
-                  <p className="text-sm text-gray-300 text-center mb-6">
-                    Estamos analisando o conteúdo e construindo um fluxograma visual para facilitar sua compreensão.
-                  </p>
-                  <div className="w-full bg-[#1E2A45] rounded-full h-2.5 overflow-hidden">
-                    <div className="bg-[#4C78FF] h-2.5 rounded-full animate-progress"></div>
-                  </div>
-                </div>
               )}
               
               <Button
@@ -2176,59 +2195,7 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
 
           {/* Card de processamento agora está integrado diretamente na visualização condicional acima */}
 
-          {selectedOption === 'ia' && !isLoading && fluxogramaGerado && (
-            <div className="mt-6 space-y-6">
-              <div className="bg-white/80 dark:bg-gray-800/80 rounded-xl border border-gray-200/70 dark:border-gray-700/50 p-5 shadow-sm backdrop-blur-sm">
-                <div className="flex items-center justify-center mb-4">
-                  <div className="h-12 w-12 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 rounded-full flex items-center justify-center text-green-600 dark:text-green-400 shadow-sm">
-                    <CheckCircle className="h-6 w-6" />
-                  </div>
-                </div>
-                <h4 className="text-center text-lg font-medium text-gray-900 dark:text-white mb-2">Fluxograma Gerado!</h4>
-                <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-4">
-                  Seu fluxograma foi criado com base no conteúdo da IA.
-                </p>
-                <div className="flex justify-center">
-                  <Button 
-                    onClick={handleVisualizarFluxograma}
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center"
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    <span>Visualizar Fluxograma</span>
-                  </Button>
-                </div>
-              </div>
-
-              {/* Painel de ações removido daqui, pois agora está fixo no topo */}
-            </div>
-          )}
-
-          {selectedOption === 'manual' && !isLoading && fluxogramaGerado && (
-            <div className="mt-6 space-y-6">
-              <div className="bg-white/80 dark:bg-gray-800/80 rounded-xl border border-gray-200/70 dark:border-gray-700/50 p-5 shadow-sm backdrop-blur-sm">
-                <div className="flex items-center justify-center mb-4">
-                  <div className="h-12 w-12 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 rounded-full flex items-center justify-center text-green-600 dark:text-green-400 shadow-sm">
-                    <CheckCircle className="h-6 w-6" />
-                  </div>
-                </div>
-                <h4 className="text-center text-lg font-medium text-gray-900 dark:text-white mb-2">Fluxograma Personalizado</h4>
-                <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-4">
-                  Seu fluxograma foi criado com base no conteúdo personalizado.
-                </p>
-                <div className="flex justify-center">
-                  <Button
-                    onClick={handleVisualizarFluxograma}
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center"
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    <span>Visualizar Fluxograma</span>
-                  </Button>
-                </div>
-              </div>
-
-              {/* Painel de ações removido daqui, pois agora está fixo no topo */}
-            </div>
-          )}
+          {/* Removido cards redundantes de fluxograma gerado, pois agora está integrado no card principal */}
         </ScrollArea>
       )}
 
