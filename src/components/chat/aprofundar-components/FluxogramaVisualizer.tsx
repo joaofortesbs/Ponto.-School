@@ -554,6 +554,7 @@ const FluxogramaVisualizer: React.FC<FluxogramaVisualizerProps> = ({
           }
         }}
         proOptions={{ hideAttribution: true }} // Remove atribuição para visual mais limpo
+      >
         <Controls />
         <MiniMap
           nodeStrokeColor={(n) => {
