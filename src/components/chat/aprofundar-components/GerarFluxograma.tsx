@@ -1274,22 +1274,60 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                   variant="ghost" 
                   size="icon"
                   onClick={(e) => {
-                    const exportMenu = document.getElementById('export-options-menu');
-                    if (exportMenu) {
-                      exportMenu.classList.toggle('hidden');
-                      // Posicionar o menu
+                    e.stopPropagation();
+                    
+                    // Verificar se o menu já existe, se não, criar
+                    let exportMenu = document.getElementById('export-options-menu');
+                    if (!exportMenu) {
+                      exportMenu = document.createElement('div');
+                      exportMenu.id = 'export-options-menu';
+                      exportMenu.className = 'absolute z-50 bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 border border-gray-200 dark:border-gray-700 w-48';
+                      exportMenu.innerHTML = `
+                        <div class="flex flex-col space-y-1">
+                          <button class="text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 opacity-60 cursor-not-allowed" disabled>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            Exportar em Imagem
+                          </button>
+                          <button class="text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 opacity-60 cursor-not-allowed" disabled>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Exportar em PDF
+                          </button>
+                          <button class="text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 opacity-60 cursor-not-allowed" disabled>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Exportar em Texto
+                          </button>
+                        </div>
+                      `;
+                      document.body.appendChild(exportMenu);
+                    }
+                    
+                    // Alternar visibilidade
+                    if (exportMenu.style.display === 'block') {
+                      exportMenu.style.display = 'none';
+                    } else {
+                      // Posicionar o menu em relação ao botão
                       const buttonRect = e.currentTarget.getBoundingClientRect();
+                      exportMenu.style.display = 'block';
                       exportMenu.style.top = `${buttonRect.bottom + 5}px`;
                       exportMenu.style.left = `${buttonRect.left - 60}px`;
                       
                       // Fechar o menu ao clicar fora dele
-                      const closeMenu = (e: MouseEvent) => {
-                        if (!exportMenu.contains(e.target as Node) && 
-                            e.target !== e.currentTarget) {
-                          exportMenu.classList.add('hidden');
+                      const closeMenu = (event: MouseEvent) => {
+                        if (!exportMenu.contains(event.target as Node) && 
+                            event.target !== e.currentTarget) {
+                          exportMenu.style.display = 'none';
                           document.removeEventListener('click', closeMenu);
                         }
                       };
+                      
+                      // Remover listener anterior se existir
+                      document.removeEventListener('click', closeMenu);
                       
                       // Atrasar a adição do listener para evitar que ele feche imediatamente
                       setTimeout(() => {
@@ -1303,33 +1341,6 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                 </Button>
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
                   Exportar
-                </div>
-                
-                {/* Mini-modal para opções de exportação */}
-                <div id="export-options-menu" className="hidden absolute z-50 bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 border border-gray-200 dark:border-gray-700 w-40">
-                  <div className="flex flex-col space-y-1">
-                    <button 
-                      className="text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 opacity-60 cursor-not-allowed"
-                      disabled
-                    >
-                      <img src="/images/png-icon.svg" alt="" className="w-4 h-4 mr-2 opacity-60" />
-                      Exportar em Imagem
-                    </button>
-                    <button 
-                      className="text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 opacity-60 cursor-not-allowed"
-                      disabled
-                    >
-                      <img src="/images/pdf-icon.svg" alt="" className="w-4 h-4 mr-2 opacity-60" />
-                      Exportar em PDF
-                    </button>
-                    <button 
-                      className="text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 opacity-60 cursor-not-allowed"
-                      disabled
-                    >
-                      <img src="/images/txt-icon.svg" alt="" className="w-4 h-4 mr-2 opacity-60" />
-                      Exportar em Texto
-                    </button>
-                  </div>
                 </div>
               </div>
               
