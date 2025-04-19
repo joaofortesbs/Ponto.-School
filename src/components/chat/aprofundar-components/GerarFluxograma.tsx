@@ -1804,10 +1804,49 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                 </span>
               </Button>
               
+              {/* Preview Card */}
+              <div className="w-full mt-4 p-6 bg-white/70 dark:bg-gray-800/30 border border-blue-200 dark:border-blue-800/50 rounded-xl shadow-md backdrop-blur-sm">
+                <h4 className="text-center font-medium text-gray-900 dark:text-white mb-3 flex items-center justify-center">
+                  <Eye className="h-4 w-4 mr-2 text-blue-500" />
+                  Pré-visualização do Fluxograma
+                </h4>
+                
+                <div className="h-[180px] w-full relative overflow-hidden rounded-lg bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-900/50 dark:to-blue-900/20 flex items-center justify-center">
+                  {/* Animated Nodes */}
+                  <div className="absolute flex flex-col items-center">
+                    <div className="w-20 h-10 bg-blue-500 rounded-md flex items-center justify-center text-white text-xs mb-2 animate-pulse shadow-md">
+                      Conceito<br/>Principal
+                    </div>
+                    <div className="w-[1px] h-6 bg-blue-400"></div>
+                    <div className="flex space-x-12 mb-2">
+                      <div className="w-16 h-9 bg-indigo-400 rounded-md flex items-center justify-center text-white text-xs animate-pulse animate-delay-100 shadow-sm">
+                        Contexto
+                      </div>
+                      <div className="w-16 h-9 bg-indigo-400 rounded-md flex items-center justify-center text-white text-xs animate-pulse animate-delay-200 shadow-sm">
+                        Detalhes
+                      </div>
+                    </div>
+                    <div className="w-[1px] h-6 bg-blue-400"></div>
+                    <div className="w-24 h-10 bg-green-500 rounded-md flex items-center justify-center text-white text-xs animate-pulse animate-delay-300 shadow-md">
+                      Conclusão
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-white/40 to-transparent dark:from-gray-800/40 flex items-end justify-center pb-4">
+                    <p className="text-sm text-gray-600 dark:text-gray-300 text-center px-6 animate-bounce animate-delay-700">
+                      O fluxograma gerado aparecerá aqui!
+                    </p>
+                  </div>
+                </div>
+                
+                <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-3">
+                  Organize suas ideias com um fluxograma interativo baseado no conteúdo.
+                </p>
+              </div>
+              
               <Button
                 onClick={() => setShowSavedFluxogramas(!showSavedFluxogramas)}
                 variant="outline"
-                className="w-full py-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/40 dark:to-emerald-900/40 hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-900/60 dark:hover:to-emerald-900/60 shadow-sm border border-green-200 dark:border-green-800 rounded-xl backdrop-blur-sm group relative overflow-hidden flex items-center justify-center"
+                className="w-full py-4 mt-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/40 dark:to-emerald-900/40 hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-900/60 dark:hover:to-emerald-900/60 shadow-sm border border-green-200 dark:border-green-800 rounded-xl backdrop-blur-sm group relative overflow-hidden flex items-center justify-center"
               >
                 <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-green-100/50 to-emerald-100/50 dark:from-green-800/30 dark:to-emerald-800/30 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
                 <span className="relative flex items-center justify-center">
