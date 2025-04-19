@@ -70,12 +70,174 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
     // Processar o conteúdo e gerar o fluxograma
     const processFluxogramaContent = async () => {
       try {
-        // Implementação da lógica de geração de fluxograma
-        const fluxogramaData = await new Promise((resolve) => {
-          setTimeout(() => {
+        // ETAPA 1: Analisar o conteúdo usando a API de IA
+        let fluxogramaData;
+        
+        // Determinar a fonte do conteúdo (IA ou manual)
+        const contentToAnalyze = selectedOption === 'manual' 
+          ? manualContent 
+          : aprofundadoContent?.contexto || '';
+          
+        if (!contentToAnalyze.trim()) {
+          throw new Error('Conteúdo vazio. Por favor, forneça um texto para gerar o fluxograma.');
+        }
+        
+        // Usar a API de IA para gerar o fluxograma
+        try {
+          // Mostrar indicador de carregamento enquanto processa
+          setIsLoading(true);
+          
+          // Importar o serviço de IA
+          const { generateAIResponse } = await import('@/services/aiChatService');
+          
+          // Criar um ID de sessão único para esta solicitação
+          const sessionId = `fluxograma_${Date.now()}`;
+          
+          // Prompt estruturado para a IA
+          const prompt = `
+Analise o seguinte conteúdo e gere um fluxograma estruturado:
+
+${contentToAnalyze}
+
+Crie um fluxograma que:
+1. Identifique os principais blocos conceituais (etapas, partes, causas, consequências, tópicos)
+2. Classifique cada bloco como "início", "processo" ou "conclusão"
+3. Organize os blocos em uma sequência lógica
+4. Forneça uma breve descrição de cada bloco
+5. Retorne o resultado como um objeto JSON com a seguinte estrutura:
+{
+  "nodes": [
+    {
+      "id": "1",
+      "title": "Título do nó",
+      "description": "Descrição detalhada do nó",
+      "type": "start/default/end"
+    }
+  ],
+  "connections": [
+    {
+      "source": "1",
+      "target": "2",
+      "label": "Relação"
+    }
+  ]
+}
+`;
+
+          // Chamar a API de IA com o prompt estruturado
+          const response = await generateAIResponse(prompt, sessionId, {
+            intelligenceLevel: 'advanced',
+            detailedResponse: true
+          });
+          
+          // Extrair o JSON da resposta
+          let extractedData;
+          try {
+            // Tenta encontrar o JSON na resposta
+            const jsonMatch = response.match(/```json\n([\s\S]*?)\n```/) || 
+                             response.match(/```\n([\s\S]*?)\n```/) ||
+                             response.match(/{[\s\S]*?}/);
+                             
+            const jsonString = jsonMatch ? jsonMatch[0].replace(/```json\n|```\n|```/g, '') : response;
+            extractedData = JSON.parse(jsonString);
+          } catch (error) {
+            console.error('Erro ao extrair JSON da resposta da IA:', error);
+            
+            // Se falhar em extrair o JSON, criar uma estrutura padrão baseada no texto
+            // Implementação de fallback similar à original
+            const paragraphs = contentToAnalyze.split(/\n\n+/);
+            const sentences = contentToAnalyze.split(/[.!?]\s+/);
+            
+            const mainBlocks = paragraphs.length > 3 ? paragraphs.slice(0, paragraphs.length) : sentences.slice(0, Math.min(8, sentences.length));
+            
+            const keywords = mainBlocks.map(block => {
+              const words = block.split(/\s+/).filter(word => word.length > 3);
+              const mainWord = words.find(word => word.length > 5) || words[0] || 'Conceito';
+              return {
+                text: block,
+                keyword: mainWord.length > 20 ? mainWord.substring(0, 20) + '...' : mainWord
+              };
+            }).slice(0, 8);
+            
+            // Preparar os dados no formato esperado
+            extractedData = {
+              nodes: keywords.map((item, index) => ({
+                id: (index + 1).toString(),
+                title: item.keyword.charAt(0).toUpperCase() + item.keyword.slice(1),
+                description: item.text,
+                type: index === 0 ? 'start' : index === keywords.length - 1 ? 'end' : 'default'
+              })),
+              connections: keywords.slice(0, -1).map((_, index) => ({
+                source: (index + 1).toString(),
+                target: (index + 2).toString(),
+                label: ''
+              }))
+            };
+          }
+          
+          // ETAPA 2: Converter os dados da IA para o formato do fluxograma
+          const nodes = extractedData.nodes.map((node, index) => {
+            // Determinar o tipo do nó (usando o tipo da IA ou fallback para posição)
+            let nodeType = node.type || 'default';
+            if (!node.type) {
+              if (index === 0) nodeType = 'start';
+              else if (index === extractedData.nodes.length - 1) nodeType = 'end';
+            }
+            
+            // Calcular posicionamento para layout vertical ou horizontal
+            let position;
+            const flowDirection = 'vertical'; // ou 'horizontal'
+            
+            if (flowDirection === 'vertical') {
+              position = { x: 250, y: 100 + (index * 120) };
+            } else {
+              position = { x: 100 + (index * 220), y: 200 };
+            }
+            
+            return {
+              id: node.id,
+              data: { 
+                label: node.title || 'Conceito', 
+                description: node.description || 'Sem descrição disponível'
+              },
+              type: nodeType,
+              position
+            };
+          });
+          
+          // ETAPA 3: Gerar as Conexões (Edges) a partir dos dados da IA
+          const edges = extractedData.connections?.map(conn => ({
+            id: `e${conn.source}-${conn.target}`,
+            source: conn.source,
+            target: conn.target,
+            label: conn.label || '',
+            animated: true,
+            style: { stroke: '#3b82f6' }
+          })) || [];
+          
+          // Se não houver conexões definidas pela IA, criar conexões sequenciais padrão
+          if (edges.length === 0 && nodes.length > 1) {
+            for (let i = 0; i < nodes.length - 1; i++) {
+              edges.push({
+                id: `e${i+1}-${i+2}`,
+                source: nodes[i].id,
+                target: nodes[i+1].id,
+                animated: true,
+                style: { stroke: '#3b82f6' }
+              });
+            }
+          }
+          
+          fluxogramaData = { nodes, edges };
+          
+        } catch (error) {
+          console.error('Erro ao processar com IA:', error);
+          
+          // Fallback para o método original se a IA falhar
+          fluxogramaData = await new Promise((resolve) => {
             // ETAPA 1: Analisar e Estruturar o Conteúdo
-            const paragraphs = manualContent.split(/\n\n+/);
-            const sentences = manualContent.split(/[.!?]\s+/);
+            const paragraphs = contentToAnalyze.split(/\n\n+/);
+            const sentences = contentToAnalyze.split(/[.!?]\s+/);
             
             // Identificar blocos conceituais principais
             const mainBlocks = paragraphs.length > 3 ? paragraphs.slice(0, paragraphs.length) : sentences.slice(0, Math.min(8, sentences.length));
@@ -134,6 +296,10 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
                 style: { stroke: '#3b82f6' }
               });
             }
+            
+            resolve({ nodes, edges });
+          });
+        }
             
             resolve({ nodes, edges });
           }, 3000);
