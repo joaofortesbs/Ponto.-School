@@ -173,15 +173,22 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
       try {
         // Captura o tema atual (última mensagem da conversa)
         let currentTopic = "";
+        let lastUserQuestion = "";
         
         if (messages && messages.length > 0) {
+          // Tenta obter a última pergunta do usuário
+          const userMessages = messages.filter(msg => msg.sender === 'user' || msg.role === 'user');
+          if (userMessages.length > 0) {
+            lastUserQuestion = userMessages[userMessages.length - 1].content;
+          }
+          
           // Tenta obter a última resposta da IA (mais completa)
           const aiMessages = messages.filter(msg => msg.sender === 'ai' || msg.role === 'assistant');
           if (aiMessages.length > 0) {
             currentTopic = aiMessages[aiMessages.length - 1].content;
           } else {
             // Se não houver mensagens da IA, pega a última mensagem do usuário
-            currentTopic = messages[messages.length - 1].content;
+            currentTopic = lastUserQuestion;
           }
           
           // Limita o tamanho do tema para evitar tokens excessivos
@@ -203,37 +210,103 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
         }
         
         console.log("Tema capturado para aprofundamento:", currentTopic.substring(0, 100) + "...");
+        console.log("Última pergunta do usuário:", lastUserQuestion.substring(0, 100) + "...");
         
-        // Prompt para a IA
-        const prompt = `Você é uma IA educacional especializada em aprofundar temas para estudantes. 
-
-Analise o seguinte conteúdo e crie uma explicação aprofundada sobre ele:
-
-"${currentTopic}"
-
-Sua resposta DEVE conter estas três seções claramente delimitadas:
-
-1. CONTEXTO APROFUNDADO: 
-Forneça um contexto histórico, científico e social detalhado sobre o tema. Inclua desenvolvimento histórico, principais teorias, descobertas e impacto social/cultural do tema. Seja específico e informativo.
-
-2. TERMOS TÉCNICOS:
-Liste pelo menos 5 termos técnicos importantes relacionados ao tema, cada um com sua definição completa. 
-Formato: 
-- Termo 1: Definição detalhada...
-- Termo 2: Definição detalhada...
-
-3. APLICAÇÕES EXPANDIDAS:
-Explique como esse conhecimento pode ser aplicado na prática e em diferentes campos ou disciplinas. Inclua exemplos concretos, casos de uso reais e conexões interdisciplinares.
-
-IMPORTANTE: Certifique-se de incluir conteúdo substancial em cada seção, sendo específico e relevante ao tema principal. Use uma linguagem didática com exemplos e analogias quando possível.`;
-
-        // Importar e usar o serviço de IA para gerar o conteúdo
+        // Importar o serviço de IA
         const { generateAIResponse } = await import('@/services/aiChatService');
-        const response = await generateAIResponse(prompt, sessionId || 'default-session');
         
-        // Processar a resposta da IA usando o parser
-        const parsedContent = parseAIResponse(response);
-        setExplainContent(parsedContent);
+        // Inicializa objeto para armazenar os conteúdos gerados
+        const generatedContent = {
+          contexto: "",
+          termos: [],
+          aplicacoes: ""
+        };
+        
+        // Extrai o tema principal da pergunta/resposta
+        const topicForPrompt = lastUserQuestion || currentTopic;
+        const cleanTopic = topicForPrompt.replace(/[?.,;!]/g, '').trim();
+        
+        // 1. Gerar Contexto Aprofundado
+        const contextoPrompt = `Você é um especialista educacional. 
+Forneça um contexto histórico, científico e social detalhado sobre o tema:
+"${cleanTopic}"
+
+Inclua:
+- Desenvolvimento histórico do tema
+- Principais teorias ou descobertas relacionadas
+- Impacto social, cultural ou científico
+- Contextos relevantes para compreensão completa
+
+Seja específico, informativo e didático. Use uma linguagem clara e exemplos quando possível.
+Formate sua resposta em parágrafos bem estruturados, sem títulos ou numerações.`;
+
+        console.log("Gerando contexto aprofundado...");
+        const contextoResponse = await generateAIResponse(contextoPrompt, `${sessionId}-contexto` || 'default-session-contexto');
+        generatedContent.contexto = contextoResponse;
+        
+        // 2. Gerar Termos Técnicos
+        const termosPrompt = `Você é um professor especializado em explicar terminologias técnicas para alunos.
+Liste e explique 5-7 termos técnicos importantes relacionados ao tema:
+"${cleanTopic}"
+
+Para cada termo:
+1. Forneça o nome do termo com clareza
+2. Dê uma definição completa e precisa
+3. Explique sua relevância no contexto do tema principal
+
+Formate sua resposta no seguinte formato exato para cada termo:
+- [Nome do Termo]: [Definição completa e explicação]`;
+
+        console.log("Gerando termos técnicos...");
+        const termosResponse = await generateAIResponse(termosPrompt, `${sessionId}-termos` || 'default-session-termos');
+        
+        // Processar a resposta para extrair os termos e definições
+        const termosList = termosResponse.split('\n-').filter(t => t.trim() !== '');
+        
+        // Transformar em array de objetos {termo, definicao}
+        const termosArray = termosList.map(term => {
+          const parts = term.split(':');
+          if (parts.length > 1) {
+            return {
+              termo: parts[0].replace(/^-/, '').trim(),
+              definicao: parts.slice(1).join(':').trim()
+            };
+          }
+          return { 
+            termo: term.split(' ')[0].trim(), 
+            definicao: term.trim() 
+          };
+        });
+        
+        generatedContent.termos = termosArray.length > 0 ? termosArray : [{ 
+          termo: "Termo Técnico", 
+          definicao: "Para ver termos técnicos específicos deste tema, clique novamente em 'Explicação Avançada'." 
+        }];
+        
+        // 3. Gerar Aplicações Expandidas
+        const aplicacoesPrompt = `Você é um especialista em aplicações práticas do conhecimento.
+Explique como o conhecimento sobre o tema a seguir pode ser aplicado na prática:
+"${cleanTopic}"
+
+Inclua:
+- Aplicações práticas em diferentes campos ou disciplinas
+- Exemplos concretos de uso deste conhecimento no mundo real
+- Como este tema se conecta com outras áreas do conhecimento
+- Relevância deste tema para problemas ou questões contemporâneas
+
+Seja específico com exemplos reais e explicações claras. Use uma linguagem didática e acessível.
+Formate sua resposta em parágrafos bem estruturados sem títulos ou numerações.`;
+
+        console.log("Gerando aplicações expandidas...");
+        const aplicacoesResponse = await generateAIResponse(aplicacoesPrompt, `${sessionId}-aplicacoes` || 'default-session-aplicacoes');
+        generatedContent.aplicacoes = aplicacoesResponse;
+        
+        // Atualizar o conteúdo de explicação com os dados gerados
+        setExplainContent({
+          contexto: generatedContent.contexto,
+          termos: generatedContent.termos,
+          aplicacoes: generatedContent.aplicacoes
+        });
         
         // Atualizar o estado para mostrar o conteúdo
         setActiveContent(option);
