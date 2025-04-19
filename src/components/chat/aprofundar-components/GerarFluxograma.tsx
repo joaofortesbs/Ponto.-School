@@ -269,7 +269,7 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
             }
             
             // Aplicar a transformação
-            node.style.transform = `translate(${currentX}px, ${currentY}px) scale(1.05)`;
+            node.style.transform = "translate(" + currentX + "px, " + currentY + "px) scale(1.05)";
           };
           
           // Função para finalizar o arrasto
@@ -277,7 +277,7 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
             isDragging = false;
             node.classList.remove('scale-105');
             node.classList.remove('shadow-lg');
-            node.style.transform = `translate(${currentX}px, ${currentY}px)`;
+            node.style.transform = "translate(" + currentX + "px, " + currentY + "px)";
             
             // Remover eventos de arrasto
             document.removeEventListener('mousemove', drag);
