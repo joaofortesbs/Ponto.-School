@@ -1888,16 +1888,13 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                   </div>
                 </div>
                 
-                {/* Rodapé com informações e dica de ação */}
-                <div className="mt-4 flex justify-between items-center">
-                  <p className="text-xs text-gray-500 dark:text-gray-400 italic max-w-[70%]">
-                    Organize conceitos complexos em visualizações claras e estruturadas
-                  </p>
-                  <div className="flex items-center text-xs font-medium text-blue-600 dark:text-blue-400">
-                    <span className="mr-1 opacity-70">Selecione uma fonte</span>
-                    <svg className="h-3 w-3 animate-bounce-x" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
+                {/* Rodapé com a mensagem do fluxograma */}
+                <div className="mt-4 flex justify-center items-center">
+                  <div className="bg-white/90 dark:bg-gray-800/90 px-4 py-2 rounded-full shadow-md backdrop-blur-sm border border-blue-100/50 dark:border-blue-900/30">
+                    <p className="text-sm text-blue-600 dark:text-blue-400 font-medium flex items-center">
+                      <span className="animate-blink mr-2 h-2 w-2 rounded-full bg-blue-500"></span>
+                      O fluxograma gerado aparecerá aqui!
+                    </p>
                   </div>
                 </div>
               </div>
