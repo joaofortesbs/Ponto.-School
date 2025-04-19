@@ -13,7 +13,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { generateAIResponse } from '@/services/aiChatService';
-import { TypewriterEffect } from '@/components/ui/typewriter-effect';
 
 interface AprofundarModalProps {
   isOpen: boolean;
@@ -47,11 +46,11 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
   // Obter a última mensagem do assistente (resposta da IA)
   const getLastAIMessage = () => {
     if (!messages || messages.length === 0) return '';
-
+    
     // Filtra para obter apenas mensagens do assistente e pega a última
     const assistantMessages = messages.filter(msg => msg.sender === 'assistant' || msg.role === 'assistant');
     if (assistantMessages.length === 0) return '';
-
+    
     const lastMessage = assistantMessages[assistantMessages.length - 1];
     return lastMessage.content || '';
   };
@@ -59,7 +58,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
   // Gerar conteúdo aprofundado usando a IA
   const generateDeepContent = async () => {
     if (aprofundadoContent.loading) return;
-
+    
     const lastAIMessage = getLastAIMessage();
     if (!lastAIMessage) {
       toast({
@@ -76,21 +75,21 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
     try {
       // Extrair o tema principal da última mensagem
       const extractThemePrompt = `Você é um especialista em análise de conteúdo. Dada a seguinte mensagem, identifique e extraia APENAS o tema principal em uma frase concisa sem introduções ou explicações adicionais:
-
+      
 "${lastAIMessage}"
 
 Formato esperado de resposta: apenas o tema principal, sem frases introdutórias ou explicativas.`;
 
       // Obter o tema principal
       const extractedTheme = await generateAIResponse(extractThemePrompt, sessionId || 'aprofundar_session_theme');
-
+      
       // Limpar qualquer texto adicional para obter apenas o tema
       const cleanTheme = extractedTheme.replace(/^[^a-zA-Z0-9áàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ]*|[^a-zA-Z0-9áàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ]*$/g, '');
       console.log("Tema extraído:", cleanTheme);
 
       // Prompt para o contexto aprofundado
       const contextoPrompt = `Você é um especialista acadêmico. Gere um texto detalhado e aprofundado sobre o tema "${cleanTheme || lastAIMessage}".
-
+      
 Seu texto deve incluir:
 1. Contexto histórico e científico completo
 2. Fundamentos teóricos e evolução dos conceitos principais
@@ -102,7 +101,7 @@ Use uma linguagem acadêmica e didática, estruturando o texto em parágrafos be
 
       // Prompt para os termos técnicos
       const termosPrompt = `Você é um especialista em terminologia técnica. Sobre o tema "${cleanTheme || lastAIMessage}", identifique e explique 3-5 termos técnicos importantes.
-
+      
 Para cada termo, forneça:
 1. O nome do termo
 2. Uma definição clara e precisa
@@ -122,7 +121,7 @@ Formato da resposta: Liste os termos no formato JSON como este exemplo:
 
       // Prompt para as aplicações expandidas
       const aplicacoesPrompt = `Você é um especialista em aplicações práticas do conhecimento. Sobre o tema "${cleanTheme || lastAIMessage}", elabore sobre as aplicações práticas e teóricas.
-
+      
 Inclua:
 1. Como este conhecimento é aplicado em diferentes campos
 2. Exemplos práticos e concretos do mundo real
@@ -134,10 +133,10 @@ Forneça uma explicação detalhada e útil para um estudante que quer entender 
 
       // Primeiro, vamos obter só o contexto para mostrar rapidamente
       const contextoResponse = await generateAIResponse(contextoPrompt, sessionId || 'aprofundar_session');
-
+      
       // Armazenar o contexto gerado para uso posterior
       setLastGeneratedContext(contextoResponse);
-
+      
       // Atualizar o estado imediatamente com o contexto, mantendo loading como true
       // para indicar que ainda estamos buscando os outros dados
       setAprofundadoContent(prev => ({
@@ -202,7 +201,7 @@ Forneça uma explicação detalhada e útil para um estudante que quer entender 
     setTimeout(() => {
       setActiveContent(option);
       setLoading(false);
-
+      
       // Se selecionou explicação e ainda não tem conteúdo, gera
       if (option === 'explicacao' && !aprofundadoContent.contexto && !aprofundadoContent.loading) {
         generateDeepContent();
@@ -315,10 +314,19 @@ Forneça uma explicação detalhada e útil para um estudante que quer entender 
           <div>
             <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Contexto Aprofundado</h4>
             {aprofundadoContent.loading ? (
-              <TypewriterEffect text="Gerando contexto aprofundado..." />
+              <div className="animate-pulse space-y-2">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/6"></div>
+              </div>
             ) : (
               <div className="text-sm text-gray-700 dark:text-gray-300 mb-3 whitespace-pre-line">
-                <TypewriterEffect text={aprofundadoContent.contexto || lastGeneratedContext || "Gerando contexto aprofundado..."} />
+                {aprofundadoContent.contexto || lastGeneratedContext || (
+                  <span className="flex items-center">
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Gerando contexto aprofundado...
+                  </span>
+                )}
               </div>
             )}
           </div>
@@ -363,7 +371,7 @@ Forneça uma explicação detalhada e útil para um estudante que quer entender 
               </div>
             )}
           </div>
-
+          
           {!aprofundadoContent.contexto && !aprofundadoContent.loading && (
             <div className="mt-4 flex justify-center">
               <Button 
