@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   Search,
@@ -23,6 +23,24 @@ type ContentType = 'main' | 'explicacao' | 'topicos' | 'exemplos' | 'erros' | 'f
 const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) => {
   const [activeContent, setActiveContent] = useState<ContentType>('main');
   const [loading, setLoading] = useState(false);
+  
+  // Create all states at the component root level
+  const [isGeneratingExplicacao, setIsGeneratingExplicacao] = useState(true);
+  const [explicacaoContent, setExplicacaoContent] = useState<string | null>(null);
+  
+  const [isGeneratingTopicos, setIsGeneratingTopicos] = useState(true);
+  const [topicosContent, setTopicosContent] = useState<any[] | null>(null);
+  
+  const [isGeneratingExemplos, setIsGeneratingExemplos] = useState(true);
+  const [exemplosContent, setExemplosContent] = useState<any[] | null>(null);
+  
+  const [isGeneratingErros, setIsGeneratingErros] = useState(true);
+  const [errosContent, setErrosContent] = useState<any[] | null>(null);
+  const [dicasContent, setDicasContent] = useState<any[] | null>(null);
+  
+  const [isGeneratingFontes, setIsGeneratingFontes] = useState(true);
+  const [recursosContent, setRecursosContent] = useState<any[] | null>(null);
+  const [exerciciosContent, setExerciciosContent] = useState<any[] | null>(null);
 
   const handleOptionClick = (option: ContentType) => {
     setLoading(true);
@@ -36,6 +54,182 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
   const handleBack = () => {
     setActiveContent('main');
   };
+
+  // Generate content for each tab when it becomes active
+  useEffect(() => {
+    if (activeContent === 'explicacao' && explicacaoContent === null) {
+      setIsGeneratingExplicacao(true);
+      // Simulação de chamada de API para a IA - em um ambiente real, isso seria substituído pela chamada real
+      setTimeout(() => {
+        const generatedContent = `
+          <div class="space-y-6">
+            <div>
+              <h4 class="text-base font-medium text-gray-900 dark:text-white mb-2">Contexto Histórico</h4>
+              <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                Este conceito tem suas origens no século XIX quando pesquisadores começaram a explorar as teorias fundamentais que dariam base ao que conhecemos hoje. Foi apenas no início do século XX que os avanços tecnológicos permitiram uma compreensão mais profunda do tema.
+              </p>
+            </div>
+            
+            <div>
+              <h4 class="text-base font-medium text-gray-900 dark:text-white mb-2">Termos Técnicos Essenciais</h4>
+              <div class="grid grid-cols-1 gap-3">
+                <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <span class="block font-medium text-blue-600 dark:text-blue-400 mb-1">Integridade Referencial</span>
+                  <span class="text-sm text-gray-700 dark:text-gray-300">Conjunto de regras que garantem que os relacionamentos entre registros de tabelas permaneçam consistentes. Quando uma chave estrangeira existe, cada valor dessa chave deve ter um valor correspondente na tabela referenciada.</span>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <span class="block font-medium text-blue-600 dark:text-blue-400 mb-1">Normalização</span>
+                  <span class="text-sm text-gray-700 dark:text-gray-300">Processo de organização de dados em um banco de dados que inclui a criação de tabelas e o estabelecimento de relações entre essas tabelas de acordo com regras projetadas para proteger os dados e tornar o banco de dados mais flexível.</span>
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <h4 class="text-base font-medium text-gray-900 dark:text-white mb-2">Complexidade Conceitual</h4>
+              <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                Quando analisamos a fundo, percebemos que este conceito se relaciona com diversos campos do conhecimento. Na matemática, serve como fundamento para algoritmos complexos. Na física, ajuda a explicar fenômenos naturais. Na computação, é essencial para desenvolvimento de sistemas robustos.
+              </p>
+            </div>
+            
+            <div>
+              <h4 class="text-base font-medium text-gray-900 dark:text-white mb-2">Aplicações Avançadas</h4>
+              <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                Além das aplicações básicas, este conhecimento é fundamental em campos emergentes como inteligência artificial, onde algoritmos sofisticados dependem destes princípios para processar grandes volumes de dados. Na indústria 4.0, sistemas automatizados utilizam estes conceitos para otimizar processos produtivos e reduzir desperdícios.
+              </p>
+            </div>
+          </div>
+        `;
+        setExplicacaoContent(generatedContent);
+        setIsGeneratingExplicacao(false);
+      }, 1500);
+    }
+    
+    if (activeContent === 'topicos' && topicosContent === null) {
+      setIsGeneratingTopicos(true);
+      // Simulação de chamada de API para a IA
+      setTimeout(() => {
+        const generatedContent = [
+          {
+            titulo: "Normalização de Bancos de Dados",
+            descricao: "Entenda como estruturar bancos de dados para maior eficiência e redução de redundâncias. Este tópico é fundamental para o desenvolvimento de sistemas escaláveis.",
+          },
+          {
+            titulo: "Índices e Performance em SQL",
+            descricao: "Aprenda como os índices afetam a performance de consultas SQL e como otimizar seu banco de dados para casos de uso específicos.",
+          },
+          {
+            titulo: "Modelagem de Dados Relacionais",
+            descricao: "Explore técnicas de modelagem de dados e como representar relacionamentos complexos entre entidades em um sistema.",
+          }
+        ];
+        setTopicosContent(generatedContent);
+        setIsGeneratingTopicos(false);
+      }, 1500);
+    }
+    
+    if (activeContent === 'exemplos' && exemplosContent === null) {
+      setIsGeneratingExemplos(true);
+      // Simulação de chamada de API para a IA
+      setTimeout(() => {
+        const generatedContent = [
+          {
+            titulo: "Aplicação em sistema de e-commerce",
+            descricao: "Um e-commerce precisa armazenar dados de produtos, clientes e pedidos. Ao utilizar chaves estrangeiras adequadamente, o sistema garante que não existam pedidos para produtos que não existem no catálogo ou para clientes inexistentes na base.",
+            pergunta: "Como você modificaria este modelo para suportar múltiplos endereços de entrega por cliente?"
+          },
+          {
+            titulo: "Sistema de gestão escolar",
+            descricao: "Uma escola precisa registrar alunos, professores, disciplinas e notas. Usando normalização adequada, podemos evitar redundâncias e garantir que cada aluno esteja matriculado em disciplinas válidas, com professores existentes.",
+            pergunta: "Quais tabelas seriam necessárias para implementar um sistema de frequência integrado a este modelo?"
+          }
+        ];
+        setExemplosContent(generatedContent);
+        setIsGeneratingExemplos(false);
+      }, 1500);
+    }
+    
+    if (activeContent === 'erros' && (errosContent === null || dicasContent === null)) {
+      setIsGeneratingErros(true);
+      // Simulação de chamada de API para a IA
+      setTimeout(() => {
+        const generatedErros = [
+          {
+            titulo: "Desconsiderar a integridade referencial",
+            descricao: "Muitos estudantes ignoram a importância da integridade referencial, resultando em bancos de dados com inconsistências e dados órfãos.",
+            solucao: "Sempre defina constraints de chave estrangeira e planeje cascades de atualização/exclusão adequadamente."
+          },
+          {
+            titulo: "Normalização excessiva ou insuficiente",
+            descricao: "É comum ver modelos super-normalizados (difíceis de trabalhar) ou sub-normalizados (com muita redundância).",
+            solucao: "Busque um equilíbrio, normalmente até a 3ª forma normal, considerando requisitos de performance."
+          },
+          {
+            titulo: "Ignorar os tipos de dados adequados",
+            descricao: "Utilizar tipos de dados inadequados para as colunas pode causar problemas de performance e precisão.",
+            solucao: "Escolha tipos apropriados para cada dado, considerando tamanho, formato e operações necessárias."
+          }
+        ];
+        
+        const generatedDicas = [
+          {
+            descricao: "Pratique modelagem criando diagramas ER para sistemas do cotidiano, como biblioteca, locadora ou aplicativos."
+          },
+          {
+            descricao: "Após criar modelos, implemente-os em um SGBD real e teste seu funcionamento na prática."
+          },
+          {
+            descricao: "Estude casos reais de bancos de dados e analise como empresas resolvem problemas complexos."
+          }
+        ];
+        
+        setErrosContent(generatedErros);
+        setDicasContent(generatedDicas);
+        setIsGeneratingErros(false);
+      }, 1500);
+    }
+    
+    if (activeContent === 'fontes' && (recursosContent === null || exerciciosContent === null)) {
+      setIsGeneratingFontes(true);
+      // Simulação de chamada de API para a IA
+      setTimeout(() => {
+        const generatedRecursos = [
+          {
+            tipo: "Vídeo",
+            titulo: "Curso Completo de Banco de Dados",
+            descricao: "Série de vídeos explicando desde conceitos básicos até avançados de SQL e modelagem"
+          },
+          {
+            tipo: "Livro",
+            titulo: "Sistemas de Banco de Dados - Elmasri & Navathe",
+            descricao: "Referência completa sobre fundamentos teóricos e práticos de bancos de dados"
+          },
+          {
+            tipo: "Artigo",
+            titulo: "Otimização de Consultas em SGBDs Relacionais",
+            descricao: "Estudo detalhado sobre técnicas de otimização de performance"
+          },
+          {
+            tipo: "Podcast",
+            titulo: "SQL Show - Episódio 42: Boas Práticas",
+            descricao: "Discussão sobre práticas recomendadas por especialistas da indústria"
+          }
+        ];
+        
+        const generatedExercicios = [
+          {
+            descricao: "Projete um banco de dados para um sistema de biblioteca universitária que precisa controlar empréstimos, reservas e multas por atraso."
+          },
+          {
+            descricao: "Dado um modelo ER, identifique e corrija problemas de normalização até a 3ª forma normal."
+          }
+        ];
+        
+        setRecursosContent(generatedRecursos);
+        setExerciciosContent(generatedExercicios);
+        setIsGeneratingFontes(false);
+      }, 1500);
+    }
+  }, [activeContent, explicacaoContent, topicosContent, exemplosContent, errosContent, dicasContent, recursosContent, exerciciosContent]);
 
   const renderMainContent = () => (
     <div className="space-y-3 mt-3">
@@ -107,60 +301,6 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
   );
 
   const renderExplicacaoAvancada = () => {
-    const [content, setContent] = useState<string | null>(null);
-    const [isGenerating, setIsGenerating] = useState(true);
-    
-    useEffect(() => {
-      const generateContent = async () => {
-        setIsGenerating(true);
-        // Simulação de chamada de API para a IA - em um ambiente real, isso seria substituído pela chamada real
-        setTimeout(() => {
-          const generatedContent = `
-            <div class="space-y-6">
-              <div>
-                <h4 class="text-base font-medium text-gray-900 dark:text-white mb-2">Contexto Histórico</h4>
-                <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
-                  Este conceito tem suas origens no século XIX quando pesquisadores começaram a explorar as teorias fundamentais que dariam base ao que conhecemos hoje. Foi apenas no início do século XX que os avanços tecnológicos permitiram uma compreensão mais profunda do tema.
-                </p>
-              </div>
-              
-              <div>
-                <h4 class="text-base font-medium text-gray-900 dark:text-white mb-2">Termos Técnicos Essenciais</h4>
-                <div class="grid grid-cols-1 gap-3">
-                  <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <span class="block font-medium text-blue-600 dark:text-blue-400 mb-1">Integridade Referencial</span>
-                    <span class="text-sm text-gray-700 dark:text-gray-300">Conjunto de regras que garantem que os relacionamentos entre registros de tabelas permaneçam consistentes. Quando uma chave estrangeira existe, cada valor dessa chave deve ter um valor correspondente na tabela referenciada.</span>
-                  </div>
-                  <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <span class="block font-medium text-blue-600 dark:text-blue-400 mb-1">Normalização</span>
-                    <span class="text-sm text-gray-700 dark:text-gray-300">Processo de organização de dados em um banco de dados que inclui a criação de tabelas e o estabelecimento de relações entre essas tabelas de acordo com regras projetadas para proteger os dados e tornar o banco de dados mais flexível.</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <h4 class="text-base font-medium text-gray-900 dark:text-white mb-2">Complexidade Conceitual</h4>
-                <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
-                  Quando analisamos a fundo, percebemos que este conceito se relaciona com diversos campos do conhecimento. Na matemática, serve como fundamento para algoritmos complexos. Na física, ajuda a explicar fenômenos naturais. Na computação, é essencial para desenvolvimento de sistemas robustos.
-                </p>
-              </div>
-              
-              <div>
-                <h4 class="text-base font-medium text-gray-900 dark:text-white mb-2">Aplicações Avançadas</h4>
-                <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
-                  Além das aplicações básicas, este conhecimento é fundamental em campos emergentes como inteligência artificial, onde algoritmos sofisticados dependem destes princípios para processar grandes volumes de dados. Na indústria 4.0, sistemas automatizados utilizam estes conceitos para otimizar processos produtivos e reduzir desperdícios.
-                </p>
-              </div>
-            </div>
-          `;
-          setContent(generatedContent);
-          setIsGenerating(false);
-        }, 1500);
-      };
-
-      generateContent();
-    }, []);
-
     return (
       <div className="space-y-4">
         <div className="flex items-center mb-2">
@@ -176,7 +316,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
         </div>
         
         <ScrollArea className="h-[60vh] pr-4">
-          {isGenerating ? (
+          {isGeneratingExplicacao ? (
             <div className="flex flex-col items-center justify-center py-10">
               <div className="w-10 h-10 border-4 border-blue-300 border-t-blue-600 rounded-full animate-spin mb-4"></div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Gerando explicação avançada...</p>
@@ -189,7 +329,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
                 </p>
               </div>
               
-              {content && <div dangerouslySetInnerHTML={{ __html: content }} />}
+              {explicacaoContent && <div dangerouslySetInnerHTML={{ __html: explicacaoContent }} />}
             </>
           )}
         </ScrollArea>
@@ -198,36 +338,6 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
   };
 
   const renderTopicosRelacionados = () => {
-    const [content, setContent] = useState<any[] | null>(null);
-    const [isGenerating, setIsGenerating] = useState(true);
-    
-    useEffect(() => {
-      const generateContent = async () => {
-        setIsGenerating(true);
-        // Simulação de chamada de API para a IA
-        setTimeout(() => {
-          const generatedContent = [
-            {
-              titulo: "Normalização de Bancos de Dados",
-              descricao: "Entenda como estruturar bancos de dados para maior eficiência e redução de redundâncias. Este tópico é fundamental para o desenvolvimento de sistemas escaláveis.",
-            },
-            {
-              titulo: "Índices e Performance em SQL",
-              descricao: "Aprenda como os índices afetam a performance de consultas SQL e como otimizar seu banco de dados para casos de uso específicos.",
-            },
-            {
-              titulo: "Modelagem de Dados Relacionais",
-              descricao: "Explore técnicas de modelagem de dados e como representar relacionamentos complexos entre entidades em um sistema.",
-            }
-          ];
-          setContent(generatedContent);
-          setIsGenerating(false);
-        }, 1500);
-      };
-
-      generateContent();
-    }, []);
-
     return (
       <div className="space-y-4">
         <div className="flex items-center mb-2">
@@ -243,7 +353,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
         </div>
         
         <ScrollArea className="h-[60vh] pr-4">
-          {isGenerating ? (
+          {isGeneratingTopicos ? (
             <div className="flex flex-col items-center justify-center py-10">
               <div className="w-10 h-10 border-4 border-purple-300 border-t-purple-600 rounded-full animate-spin mb-4"></div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Descobrindo tópicos relacionados...</p>
@@ -257,7 +367,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
               </div>
               
               <div className="space-y-4">
-                {content && content.map((item, index) => (
+                {topicosContent && topicosContent.map((item, index) => (
                   <div key={index} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                     <div className="p-4">
                       <h4 className="text-base font-medium text-gray-900 dark:text-white mb-1">{item.titulo}</h4>
@@ -279,34 +389,6 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
   };
 
   const renderExemplosPraticos = () => {
-    const [content, setContent] = useState<any[] | null>(null);
-    const [isGenerating, setIsGenerating] = useState(true);
-    
-    useEffect(() => {
-      const generateContent = async () => {
-        setIsGenerating(true);
-        // Simulação de chamada de API para a IA
-        setTimeout(() => {
-          const generatedContent = [
-            {
-              titulo: "Aplicação em sistema de e-commerce",
-              descricao: "Um e-commerce precisa armazenar dados de produtos, clientes e pedidos. Ao utilizar chaves estrangeiras adequadamente, o sistema garante que não existam pedidos para produtos que não existem no catálogo ou para clientes inexistentes na base.",
-              pergunta: "Como você modificaria este modelo para suportar múltiplos endereços de entrega por cliente?"
-            },
-            {
-              titulo: "Sistema de gestão escolar",
-              descricao: "Uma escola precisa registrar alunos, professores, disciplinas e notas. Usando normalização adequada, podemos evitar redundâncias e garantir que cada aluno esteja matriculado em disciplinas válidas, com professores existentes.",
-              pergunta: "Quais tabelas seriam necessárias para implementar um sistema de frequência integrado a este modelo?"
-            }
-          ];
-          setContent(generatedContent);
-          setIsGenerating(false);
-        }, 1500);
-      };
-
-      generateContent();
-    }, []);
-
     return (
       <div className="space-y-4">
         <div className="flex items-center mb-2">
@@ -322,7 +404,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
         </div>
         
         <ScrollArea className="h-[60vh] pr-4">
-          {isGenerating ? (
+          {isGeneratingExemplos ? (
             <div className="flex flex-col items-center justify-center py-10">
               <div className="w-10 h-10 border-4 border-green-300 border-t-green-600 rounded-full animate-spin mb-4"></div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Elaborando exemplos práticos...</p>
@@ -336,7 +418,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
               </div>
               
               <div className="space-y-6">
-                {content && content.map((item, index) => (
+                {exemplosContent && exemplosContent.map((item, index) => (
                   <div key={index} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                     <div className="p-4">
                       <div className="flex items-center mb-2">
@@ -365,54 +447,6 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
   };
 
   const renderErrosComuns = () => {
-    const [erros, setErros] = useState<any[] | null>(null);
-    const [dicas, setDicas] = useState<any[] | null>(null);
-    const [isGenerating, setIsGenerating] = useState(true);
-    
-    useEffect(() => {
-      const generateContent = async () => {
-        setIsGenerating(true);
-        // Simulação de chamada de API para a IA
-        setTimeout(() => {
-          const generatedErros = [
-            {
-              titulo: "Desconsiderar a integridade referencial",
-              descricao: "Muitos estudantes ignoram a importância da integridade referencial, resultando em bancos de dados com inconsistências e dados órfãos.",
-              solucao: "Sempre defina constraints de chave estrangeira e planeje cascades de atualização/exclusão adequadamente."
-            },
-            {
-              titulo: "Normalização excessiva ou insuficiente",
-              descricao: "É comum ver modelos super-normalizados (difíceis de trabalhar) ou sub-normalizados (com muita redundância).",
-              solucao: "Busque um equilíbrio, normalmente até a 3ª forma normal, considerando requisitos de performance."
-            },
-            {
-              titulo: "Ignorar os tipos de dados adequados",
-              descricao: "Utilizar tipos de dados inadequados para as colunas pode causar problemas de performance e precisão.",
-              solucao: "Escolha tipos apropriados para cada dado, considerando tamanho, formato e operações necessárias."
-            }
-          ];
-          
-          const generatedDicas = [
-            {
-              descricao: "Pratique modelagem criando diagramas ER para sistemas do cotidiano, como biblioteca, locadora ou aplicativos."
-            },
-            {
-              descricao: "Após criar modelos, implemente-os em um SGBD real e teste seu funcionamento na prática."
-            },
-            {
-              descricao: "Estude casos reais de bancos de dados e analise como empresas resolvem problemas complexos."
-            }
-          ];
-          
-          setErros(generatedErros);
-          setDicas(generatedDicas);
-          setIsGenerating(false);
-        }, 1500);
-      };
-
-      generateContent();
-    }, []);
-
     return (
       <div className="space-y-4">
         <div className="flex items-center mb-2">
@@ -428,7 +462,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
         </div>
         
         <ScrollArea className="h-[60vh] pr-4">
-          {isGenerating ? (
+          {isGeneratingErros ? (
             <div className="flex flex-col items-center justify-center py-10">
               <div className="w-10 h-10 border-4 border-amber-300 border-t-amber-600 rounded-full animate-spin mb-4"></div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Analisando erros comuns e preparando dicas...</p>
@@ -444,7 +478,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
               <div className="mb-6">
                 <h4 className="text-base font-medium text-gray-900 dark:text-white mb-3">Erros Frequentes</h4>
                 <div className="space-y-3">
-                  {erros && erros.map((item, index) => (
+                  {errosContent && errosContent.map((item, index) => (
                     <div key={index} className="bg-white dark:bg-gray-800 p-3 rounded-lg border-l-4 border border-amber-300 dark:border-amber-700">
                       <h5 className="font-medium text-gray-900 dark:text-white mb-1">{item.titulo}</h5>
                       <p className="text-sm text-gray-700 dark:text-gray-300">
@@ -463,7 +497,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
               <div>
                 <h4 className="text-base font-medium text-gray-900 dark:text-white mb-3">Dicas de Aprendizado</h4>
                 <div className="space-y-3">
-                  {dicas && dicas.map((item, index) => (
+                  {dicasContent && dicasContent.map((item, index) => (
                     <div key={index} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 flex items-start">
                       <div className="bg-amber-100 dark:bg-amber-900/30 w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 mr-3">
                         <span className="text-amber-600 dark:text-amber-400 text-xs font-medium">{index + 1}</span>
@@ -483,56 +517,6 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
   };
 
   const renderExploreFontes = () => {
-    const [recursos, setRecursos] = useState<any[] | null>(null);
-    const [exercicios, setExercicios] = useState<any[] | null>(null);
-    const [isGenerating, setIsGenerating] = useState(true);
-    
-    useEffect(() => {
-      const generateContent = async () => {
-        setIsGenerating(true);
-        // Simulação de chamada de API para a IA
-        setTimeout(() => {
-          const generatedRecursos = [
-            {
-              tipo: "Vídeo",
-              titulo: "Curso Completo de Banco de Dados",
-              descricao: "Série de vídeos explicando desde conceitos básicos até avançados de SQL e modelagem"
-            },
-            {
-              tipo: "Livro",
-              titulo: "Sistemas de Banco de Dados - Elmasri & Navathe",
-              descricao: "Referência completa sobre fundamentos teóricos e práticos de bancos de dados"
-            },
-            {
-              tipo: "Artigo",
-              titulo: "Otimização de Consultas em SGBDs Relacionais",
-              descricao: "Estudo detalhado sobre técnicas de otimização de performance"
-            },
-            {
-              tipo: "Podcast",
-              titulo: "SQL Show - Episódio 42: Boas Práticas",
-              descricao: "Discussão sobre práticas recomendadas por especialistas da indústria"
-            }
-          ];
-          
-          const generatedExercicios = [
-            {
-              descricao: "Projete um banco de dados para um sistema de biblioteca universitária que precisa controlar empréstimos, reservas e multas por atraso."
-            },
-            {
-              descricao: "Dado um modelo ER, identifique e corrija problemas de normalização até a 3ª forma normal."
-            }
-          ];
-          
-          setRecursos(generatedRecursos);
-          setExercicios(generatedExercicios);
-          setIsGenerating(false);
-        }, 1500);
-      };
-
-      generateContent();
-    }, []);
-
     return (
       <div className="space-y-4">
         <div className="flex items-center mb-2">
@@ -548,7 +532,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
         </div>
         
         <ScrollArea className="h-[60vh] pr-4">
-          {isGenerating ? (
+          {isGeneratingFontes ? (
             <div className="flex flex-col items-center justify-center py-10">
               <div className="w-10 h-10 border-4 border-yellow-300 border-t-yellow-600 rounded-full animate-spin mb-4"></div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Pesquisando recursos complementares...</p>
@@ -564,7 +548,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
               <div className="mb-6">
                 <h4 className="text-base font-medium text-gray-900 dark:text-white mb-3">Recursos Recomendados</h4>
                 <div className="space-y-3">
-                  {recursos && recursos.map((item, index) => (
+                  {recursosContent && recursosContent.map((item, index) => (
                     <a 
                       key={index} 
                       href="#" 
@@ -585,7 +569,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
               <div>
                 <h4 className="text-base font-medium text-gray-900 dark:text-white mb-3">Exercícios Complementares</h4>
                 <div className="space-y-3">
-                  {exercicios && exercicios.map((item, index) => (
+                  {exerciciosContent && exerciciosContent.map((item, index) => (
                     <div key={index} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
                       <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
                         {item.descricao}
