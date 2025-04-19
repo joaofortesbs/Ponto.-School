@@ -243,7 +243,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
       
       // Adicionando parâmetros específicos para garantir uma resposta detalhada
       const contextoResponse = await Promise.race([
-        generateAIResponse(contextPrompt, sessionId || 'default_session', {
+        aprofundarResponse(contextPrompt, sessionId || 'default_session', {
           intelligenceLevel: "advanced", // Força o uso do nível mais alto de inteligência
           detailedResponse: true, // Indicação explícita para resposta detalhada
           maximumLength: true // Indica que desejamos respostas mais longas
@@ -321,8 +321,8 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
 
           // Execute estas chamadas em paralelo
           Promise.all([
-            generateAIResponse(termosPrompt, sessionId || 'default_session'),
-            generateAIResponse(aplicacoesPrompt, sessionId || 'default_session')
+            aprofundarResponse(termosPrompt, sessionId || 'default_session'),
+            aprofundarResponse(aplicacoesPrompt, sessionId || 'default_session')
           ]).then(([termosResponse, aplicacoesResponse]) => {
             console.log("Respostas complementares recebidas!");
             
@@ -464,13 +464,13 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
           
           // Usa uma abordagem mais agressiva de obtenção de resposta
           const fallbackPromises = [
-            generateAIResponse(fallbackPrompt, sessionId || 'default_session', {
+            aprofundarResponse(fallbackPrompt, sessionId || 'default_session', {
               intelligenceLevel: "advanced",
               detailedResponse: true,
               maximumLength: true
             }),
             // Tenta um segundo prompt ligeiramente diferente em paralelo
-            generateAIResponse(`Crie uma análise acadêmica detalhada sobre: "${safeMessageContent}"`, 
+            aprofundarResponse(`Crie uma análise acadêmica detalhada sobre: "${safeMessageContent}"`, 
               sessionId || 'second_attempt_session', {
               intelligenceLevel: "advanced"
             })

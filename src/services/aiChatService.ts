@@ -1102,81 +1102,9 @@ const getResponseForMessage = (message: string): string => {
   }
 };
 
-// Variável para controlar se a resposta está pausada
-let isPaused: Record<string, boolean> = {};
+// Estas funções e variáveis já foram definidas acima, então removemos as duplicações aqui
 
-// Função para pausar a resposta da IA
-export const pauseResponse = async (sessionId: string): Promise<void> => {
-  try {
-    isPaused[sessionId] = true;
-    isCancelled[sessionId] = false; // Garantir que não está cancelada
-    console.log(`Resposta da IA pausada para a sessão ${sessionId}. Estado atual:`, isPaused[sessionId]);
-  } catch (error) {
-    console.error('Erro ao pausar resposta da IA:', error);
-    throw error;
-  }
-};
-
-// Função para verificar se a resposta está pausada
-export const isResponsePaused = (sessionId: string): boolean => {
-  const paused = isPaused[sessionId] || false;
-  // Para debugging
-  if (paused) {
-    console.log(`Verificação de pausa: sessão ${sessionId} está pausada`);
-  }
-  return paused;
-};
-
-// Variável para controlar se a resposta foi cancelada
-let isCancelled: Record<string, boolean> = {};
-
-// Função para cancelar a resposta da IA
-export const cancelResponse = async (sessionId: string): Promise<void> => {
-  try {
-    isCancelled[sessionId] = true;
-    isPaused[sessionId] = false; // Certifique-se de que não está em pausa também
-    console.log(`Resposta da IA cancelada para a sessão ${sessionId}. Estado atual:`, isCancelled[sessionId]);
-  } catch (error) {
-    console.error('Erro ao cancelar resposta da IA:', error);
-    throw error;
-  }
-};
-
-// Função para verificar se a resposta foi cancelada
-export const isResponseCancelled = (sessionId: string): boolean => {
-  const cancelled = isCancelled[sessionId] || false;
-  // Para debugging
-  if (cancelled) {
-    console.log(`Verificação de cancelamento: sessão ${sessionId} está cancelada`);
-  }
-  return cancelled;
-};
-
-// Função para retomar a resposta da IA
-export const resumeResponse = async (sessionId: string): Promise<void> => {
-  try {
-    isPaused[sessionId] = false;
-    console.log(`Resposta da IA retomada para a sessão ${sessionId}. Estado atual:`, isPaused[sessionId]);
-  } catch (error) {
-    console.error('Erro ao retomar resposta da IA:', error);
-    throw error;
-  }
-};
-
-// Função para resetar o estado de cancelamento/pausa (útil ao iniciar novas respostas)
-export const resetResponseState = (sessionId: string): void => {
-  const wasPaused = isPaused[sessionId];
-  const wasCancelled = isCancelled[sessionId];
-
-  isPaused[sessionId] = false;
-  isCancelled[sessionId] = false;
-
-  console.log(`Estados resetados para a sessão ${sessionId}. 
-    Estado anterior: pausado=${wasPaused}, cancelado=${wasCancelled}. 
-    Estado atual: pausado=${isPaused[sessionId]}, cancelado=${isCancelled[sessionId]}`);
-};
-
-export const generateAIResponse = async (
+export const aprofundarResponse = async (
   prompt: string, 
   sessionId?: string,
   options?: {
