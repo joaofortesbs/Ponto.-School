@@ -30,37 +30,60 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
   
   // Função para extrair seções da resposta da IA
   const parseAIResponse = (response: string) => {
-    // Padrões para identificar as seções na resposta
-    const contextoMatch = response.match(/Contexto Aprofundado:(.+?)(?=Termos Técnicos:|Aplicações Expandidas:|$)/s);
+    // Padrões mais rigorosos para identificar as seções na resposta
+    const contextoMatch = response.match(/Contexto Aprofundado:(.+?)(?=Termos Técnicos:|$)/s);
     const termosMatch = response.match(/Termos Técnicos:(.+?)(?=Aplicações Expandidas:|$)/s);
     const aplicacoesMatch = response.match(/Aplicações Expandidas:(.+?)(?=$)/s);
     
+    console.log("Resposta da IA:", response);
+    console.log("Contexto encontrado:", contextoMatch ? "Sim" : "Não");
+    console.log("Termos encontrados:", termosMatch ? "Sim" : "Não");
+    console.log("Aplicações encontradas:", aplicacoesMatch ? "Sim" : "Não");
+    
     // Extrair e processar termos técnicos
     const termosText = termosMatch ? termosMatch[1].trim() : "";
-    const termosArray = termosText.split(/\n\n|\n/).filter(t => t.trim() !== '').map(termo => {
-      const parts = termo.split(':');
-      if (parts.length > 1) {
-        return { 
-          termo: parts[0].trim(), 
-          definicao: parts.slice(1).join(':').trim() 
-        };
-      }
-      return { 
-        termo: "Termo", 
-        definicao: termo.trim() 
-      };
-    });
+    let termosArray = [];
     
-    // Se não encontrou termos no formato esperado, tenta outro formato
+    // Tentar diversos formatos possíveis para os termos técnicos
+    if (termosText) {
+      // Formato 1: Termo: Definição
+      const termFormat1 = termosText.split(/\n(?=[A-Za-z0-9]+:)/g).filter(t => t.trim() !== '');
+      
+      // Formato 2: - Termo: Definição
+      const termFormat2 = termosText.split(/\n- /g).filter(t => t.trim() !== '');
+      
+      // Formato 3: Linha por linha (parágrafos separados)
+      const termFormat3 = termosText.split(/\n\n|\n/).filter(t => t.trim() !== '');
+      
+      // Escolher o formato que parece mais apropriado
+      const formatToUse = termFormat1.length > 1 ? termFormat1 : 
+                          (termFormat2.length > 1 ? termFormat2 : termFormat3);
+      
+      termosArray = formatToUse.map(termo => {
+        const parts = termo.split(/:(.*)/s); // Divide apenas no primeiro ':'
+        if (parts.length > 1) {
+          return { 
+            termo: parts[0].trim().replace(/^- /, ''), 
+            definicao: parts[1].trim() 
+          };
+        }
+        return { 
+          termo: "Termo", 
+          definicao: termo.trim() 
+        };
+      });
+    }
+    
+    // Se não encontrou termos no formato esperado, tenta criar ao menos um item
     const finalTermos = termosArray.length > 0 ? termosArray : [{ 
       termo: "Informação", 
-      definicao: termosText 
+      definicao: termosText || "Nenhuma informação disponível sobre termos técnicos." 
     }];
     
     return {
-      contexto: contextoMatch ? contextoMatch[1].trim() : "Contexto não disponível.",
-      termos: finalTermos.length > 0 ? finalTermos : [{ termo: "Termo técnico", definicao: "Definição não disponível." }],
-      aplicacoes: aplicacoesMatch ? aplicacoesMatch[1].trim() : "Aplicações não disponíveis."
+      contexto: contextoMatch && contextoMatch[1].trim() ? contextoMatch[1].trim() : "Contexto não disponível.",
+      termos: finalTermos,
+      aplicacoes: aplicacoesMatch && aplicacoesMatch[1].trim() ? aplicacoesMatch[1].trim() : "Aplicações não disponíveis."
     };
   };
 
@@ -70,22 +93,44 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
     if (option === 'explicacao') {
       try {
         // Captura o tema atual (última mensagem da conversa)
-        const currentTopic = messages && messages.length > 0 
-          ? messages[messages.length - 1].content 
-          : "tema atual";
+        let currentTopic = "tema atual";
+        
+        if (messages && messages.length > 0) {
+          // Tenta obter a última resposta da IA (mais completa)
+          const aiMessages = messages.filter(msg => msg.sender === 'ai' || msg.role === 'assistant');
+          if (aiMessages.length > 0) {
+            currentTopic = aiMessages[aiMessages.length - 1].content;
+          } else {
+            // Se não houver mensagens da IA, pega a última mensagem do usuário
+            currentTopic = messages[messages.length - 1].content;
+          }
+          
+          // Limita o tamanho do tema para evitar tokens excessivos
+          if (currentTopic.length > 1500) {
+            currentTopic = currentTopic.substring(0, 1500) + "...";
+          }
+        }
+        
+        console.log("Tema capturado para aprofundamento:", currentTopic.substring(0, 100) + "...");
         
         // Prompt para a IA
-        const prompt = `Você está ajudando um estudante a aprofundar um tema específico. Com base no conteúdo original da aula ou pergunta respondida anteriormente, forneça uma versão expandida com:
+        const prompt = `Você é uma IA educacional. Expanda o tema abaixo fornecendo:
 
-Contexto Aprofundado: traga contexto histórico, científico ou social sobre o tema.
+1. Contexto Aprofundado: forneça contexto histórico, científico e social detalhado sobre o tema.
+2. Termos Técnicos: liste e explique claramente os principais termos técnicos relacionados ao tema.
+3. Aplicações Expandidas: explique como esse conhecimento pode ser aplicado na prática e em outras disciplinas.
 
-Termos Técnicos: liste e explique os principais termos técnicos presentes no conteúdo.
+Sua resposta DEVE seguir exatamente este formato, com estas três seções bem definidas:
 
-Aplicações Expandidas: explique como esse conhecimento pode ser aplicado na prática ou em outras disciplinas.
+Contexto Aprofundado: [seu texto aqui]
 
-Seja didático, direto e evite jargões excessivos. Se possível, use exemplos e analogias.
+Termos Técnicos: [liste os termos e suas definições]
 
-Tema/Conteúdo original: ${currentTopic}`;
+Aplicações Expandidas: [seu texto aqui]
+
+Seja didático, use exemplos e analogias quando possível.
+
+Tema: "${currentTopic}"`;
 
         // Importar e usar o serviço de IA para gerar o conteúdo
         const { generateAIResponse } = await import('@/services/aiChatService');
