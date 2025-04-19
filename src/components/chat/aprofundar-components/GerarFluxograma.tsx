@@ -67,7 +67,6 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
   const handleGenerateFlowchart = (option: 'ia' | 'manual') => {
     if (option === 'manual') {
       setSelectedOption(option);
-      setShowManualInput(true);
       return;
     }
 
@@ -135,7 +134,6 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
     }
 
     setIsLoading(true);
-    setShowManualInput(false);
 
     // Processar o conteúdo e gerar o fluxograma
     const processFluxogramaContent = async () => {
@@ -1929,18 +1927,42 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                 </span>
               </Button>
 
-              <Button
-                onClick={() => handleGenerateFlowchart('manual')}
-                variant="outline"
-                className="w-full py-6 bg-white/80 dark:bg-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-700/70 shadow-sm border border-gray-200 dark:border-gray-700 rounded-xl backdrop-blur-sm group relative overflow-hidden flex items-center justify-center"
-                disabled={isLoading || showManualInput}
-              >
-                <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-700/30 dark:to-gray-800/30 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
-                <span className="relative flex items-center justify-center">
-                  <PenLine className="h-5 w-5 mr-2 transform group-hover:translate-y-px transition-transform" />
-                  <span className="font-medium">Inserir meu próprio conteúdo</span>
-                </span>
-              </Button>
+              {!showManualInput ? (
+                <div className="w-full py-2 bg-white/80 dark:bg-gray-800/50 shadow-sm border border-gray-200 dark:border-gray-700 rounded-xl backdrop-blur-sm relative overflow-hidden flex items-center">
+                  <div className="flex-1 px-4">
+                    <Textarea 
+                      value={manualContent}
+                      onChange={(e) => setManualContent(e.target.value)}
+                      placeholder="Inserir meu próprio conteúdo..."
+                      className="border-0 shadow-none resize-none bg-transparent focus-visible:ring-0 p-0 min-h-[52px] max-h-[200px]"
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <Button
+                    onClick={() => handleSubmitManualContent()}
+                    variant="ghost"
+                    className="h-12 w-12 p-0 mr-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
+                    disabled={isLoading || !manualContent.trim()}
+                  >
+                    <span className="sr-only">Enviar conteúdo</span>
+                    <svg
+                      className="h-6 w-6 text-blue-600 dark:text-blue-400"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+                        fill="currentColor"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </Button>
+                </div>
+              ) : null}
               
               {/* Card único de Pré-visualização do Fluxograma */}
               <div className="w-full mt-6 p-6 bg-white/80 dark:bg-gray-800/80 border border-blue-200/80 dark:border-blue-800/30 rounded-2xl shadow-lg backdrop-blur-xl relative overflow-hidden group hover:shadow-xl transition-all duration-500 hover:border-blue-300 dark:hover:border-blue-700">
