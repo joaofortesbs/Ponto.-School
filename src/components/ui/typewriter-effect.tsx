@@ -1,58 +1,65 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 interface TypewriterEffectProps {
   text: string;
-  speed?: number;
-  delay?: number;
+  speed?: number; // milissegundos por caractere
   onComplete?: () => void;
-  className?: string;
 }
 
-const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
-  text,
-  speed = 30,
-  delay = 0,
-  onComplete,
-  className = "",
+const TypewriterEffect: React.FC<TypewriterEffectProps> = ({ 
+  text, 
+  speed = 10,
+  onComplete
 }) => {
-  const [displayText, setDisplayText] = useState("");
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isTyping, setIsTyping] = useState(false);
+  const [displayText, setDisplayText] = useState<string>('');
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const isRunningRef = useRef<boolean>(true);
+  const textRef = useRef<string>(text);
 
+  // Atualizar a referência quando o texto mudar
   useEffect(() => {
-    // Reset when text changes completely
-    setDisplayText("");
+    textRef.current = text;
+    isRunningRef.current = true;
+    setDisplayText('');
     setCurrentIndex(0);
-    setIsTyping(true);
   }, [text]);
 
   useEffect(() => {
-    if (!text || !isTyping) return;
+    if (!textRef.current) {
+      setDisplayText('');
+      setCurrentIndex(0);
+      if (onComplete) onComplete();
+      return;
+    }
 
-    const timer = setTimeout(() => {
-      if (currentIndex < text.length) {
-        setDisplayText((prev) => prev + text[currentIndex]);
-        setCurrentIndex((prev) => prev + 1);
-      } else {
-        setIsTyping(false);
-        if (onComplete) onComplete();
+    if (currentIndex < textRef.current.length && isRunningRef.current) {
+      const timeout = setTimeout(() => {
+        setDisplayText(prev => prev + textRef.current[currentIndex]);
+        setCurrentIndex(prevIndex => prevIndex + 1);
+      }, speed);
+
+      return () => clearTimeout(timeout);
+    } else if (currentIndex >= textRef.current.length && onComplete) {
+      // Garantir que onComplete seja chamado apenas uma vez
+      if (isRunningRef.current) {
+        isRunningRef.current = false;
+        console.log("Typewriter effect completed");
+        onComplete();
       }
-    }, currentIndex === 0 ? delay : speed);
+    }
+  }, [currentIndex, speed, onComplete]);
 
-    return () => clearTimeout(timer);
-  }, [currentIndex, text, speed, delay, isTyping, onComplete]);
+  // Forçar exibição completa se o componente for desmontado
+  useEffect(() => {
+    return () => {
+      if (onComplete && isRunningRef.current) {
+        isRunningRef.current = false;
+        onComplete();
+      }
+    };
+  }, [onComplete]);
 
-  if (!text) return null;
-
-  return (
-    <div className={className}>
-      {displayText}
-      {isTyping && (
-        <span className="inline-block w-1 h-4 ml-0.5 bg-blue-500 dark:bg-blue-400 animate-blink"></span>
-      )}
-    </div>
-  );
+  return <div className="typewriter-text">{displayText || (isRunningRef.current ? '' : textRef.current)}</div>;
 };
 
 export default TypewriterEffect;

@@ -132,30 +132,32 @@ Formato da resposta: Liste os termos no formato JSON como este exemplo:
       // Prompt para as aplicações expandidas - versão simplificada
       const aplicacoesPrompt = `Você é um especialista em aplicações práticas do conhecimento. Sobre o tema "${cleanTheme || lastAIMessage}", elabore sobre as 3 principais aplicações práticas deste conhecimento.`;
 
-      // Iniciar a geração do contexto imediatamente e mostrar em tempo real
+      // Iniciar a geração do contexto imediatamente
       const contextoResponsePromise = generateAIResponse(contextoPrompt, sessionId || 'aprofundar_session');
       
-      // Enquanto aguardamos o contexto completo, vamos mostrar um texto de carregamento
-      // que será substituído gradualmente pelo contexto real usando o efeito de digitação
-      
-      // Iniciar a obtenção dos outros dados em paralelo
-      const outrasPromises = Promise.all([
-        contextoResponsePromise,
-        generateAIResponse(termosPrompt, sessionId || 'aprofundar_session'),
-        generateAIResponse(aplicacoesPrompt, sessionId || 'aprofundar_session')
-      ]);
-      
-      // Aguardar o resultado do contexto para exibição imediata
-      const contextoResponse = await contextoResponsePromise;
-      
-      // Armazenar o contexto gerado para uso posterior
-      setLastGeneratedContext(contextoResponse);
-      
-      // Atualizar o estado com o contexto, ativando o efeito de digitação
-      setAprofundadoContent(prev => ({
-        ...prev,
-        contexto: contextoResponse
-      }));
+      try {
+        // Aguardar o resultado do contexto para exibição imediata
+        const contextoResponse = await contextoResponsePromise;
+        
+        console.log("Contexto gerado com sucesso:", contextoResponse.substring(0, 50) + "...");
+        
+        // Armazenar o contexto gerado para uso posterior
+        setLastGeneratedContext(contextoResponse);
+        
+        // Ativar o efeito de digitação
+        setIsTyping(true);
+        
+        // Atualizar o estado com o contexto para exibição
+        setAprofundadoContent(prev => ({
+          ...prev,
+          contexto: contextoResponse
+        }));
+        
+        // Iniciar a obtenção dos outros dados em paralelo
+        const [termosResponse, aplicacoesResponse] = await Promise.all([
+          generateAIResponse(termosPrompt, sessionId || 'aprofundar_session'),
+          generateAIResponse(aplicacoesPrompt, sessionId || 'aprofundar_session')
+        ]);
       
       // Aguardar o restante dos dados
       const [_, termosResponse, aplicacoesResponse] = await outrasPromises;
@@ -197,11 +199,19 @@ Formato da resposta: Liste os termos no formato JSON como este exemplo:
   };
 
   // Quando o modal abrir na seção de explicação, gerar o conteúdo
+  // Quando o modal abrir, verificar se precisa gerar conteúdo
   useEffect(() => {
-    if (isOpen && activeContent === 'explicacao' && 
-        (!aprofundadoContent.contexto && !aprofundadoContent.loading)) {
-      // Iniciar carregamento imediatamente
-      generateDeepContent();
+    if (isOpen && activeContent === 'explicacao') {
+      // Se não tem conteúdo e não está carregando, gerar o conteúdo
+      if (!aprofundadoContent.contexto && !aprofundadoContent.loading) {
+        console.log("Iniciando geração de conteúdo aprofundado");
+        generateDeepContent();
+      } 
+      // Se já tem conteúdo e não está mais digitando, ativa o efeito de digitação
+      else if (aprofundadoContent.contexto && !isTyping) {
+        console.log("Reativando efeito de digitação para conteúdo existente");
+        setIsTyping(true);
+      }
     }
   }, [isOpen, activeContent, aprofundadoContent.contexto, aprofundadoContent.loading]);
 
@@ -337,11 +347,15 @@ Formato da resposta: Liste os termos no formato JSON como este exemplo:
                     Gerando contexto aprofundado...
                   </span>
                 ) : aprofundadoContent.contexto ? (
-                  <TypewriterEffect 
-                    text={aprofundadoContent.contexto} 
-                    speed={5} 
-                    onComplete={() => setIsTyping(false)}
-                  />
+                  isTyping ? (
+                    <TypewriterEffect 
+                      text={aprofundadoContent.contexto} 
+                      speed={5} 
+                      onComplete={() => setIsTyping(false)}
+                    />
+                  ) : (
+                    <div>{aprofundadoContent.contexto}</div>
+                  )
                 ) : (
                   <span className="flex items-center">
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
