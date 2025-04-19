@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
@@ -16,11 +15,16 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 interface AprofundarModalProps {
   isOpen: boolean;
   onClose: () => void;
+  messages: any[]; // Added messages prop type
+  sessionId?: string; // Added sessionId prop type
+  setShowAprofundarModal: any; // Added setShowAprofundarModal prop type
+  toast: any; // Added toast prop type
+
 }
 
 type ContentType = 'main' | 'explicacao' | 'topicos' | 'exemplos' | 'erros' | 'fontes';
 
-const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) => {
+const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, messages, sessionId, setShowAprofundarModal, toast }) => {
   const [activeContent, setActiveContent] = useState<ContentType>('main');
   const [loading, setLoading] = useState(false);
 
@@ -51,7 +55,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
           <span className="text-xs text-gray-500 dark:text-gray-400">Aprofunde seu conhecimento com detalhes e contexto</span>
         </div>
       </div>
-      
+
       <div 
         className="flex items-center p-4 rounded-xl border border-gray-200/50 dark:border-gray-700/50 bg-gradient-to-r from-white to-purple-50 dark:from-gray-800 dark:to-gray-800/80 hover:shadow-md dark:hover:bg-gray-700/40 transition-all duration-300 cursor-pointer group"
         onClick={() => handleOptionClick('topicos')}
@@ -64,7 +68,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
           <span className="text-xs text-gray-500 dark:text-gray-400">Explore conexões com outros conceitos relevantes</span>
         </div>
       </div>
-      
+
       <div 
         className="flex items-center p-4 rounded-xl border border-gray-200/50 dark:border-gray-700/50 bg-gradient-to-r from-white to-green-50 dark:from-gray-800 dark:to-gray-800/80 hover:shadow-md dark:hover:bg-gray-700/40 transition-all duration-300 cursor-pointer group"
         onClick={() => handleOptionClick('exemplos')}
@@ -77,7 +81,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
           <span className="text-xs text-gray-500 dark:text-gray-400">Veja aplicações reais e situações do dia a dia</span>
         </div>
       </div>
-      
+
       <div 
         className="flex items-center p-4 rounded-xl border border-gray-200/50 dark:border-gray-700/50 bg-gradient-to-r from-white to-amber-50 dark:from-gray-800 dark:to-gray-800/80 hover:shadow-md dark:hover:bg-gray-700/40 transition-all duration-300 cursor-pointer group"
         onClick={() => handleOptionClick('erros')}
@@ -90,7 +94,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
           <span className="text-xs text-gray-500 dark:text-gray-400">Evite armadilhas e acelere seu aprendizado</span>
         </div>
       </div>
-      
+
       <div 
         className="flex items-center p-4 rounded-xl border border-gray-200/50 dark:border-gray-700/50 bg-gradient-to-r from-white to-yellow-50 dark:from-gray-800 dark:to-gray-800/80 hover:shadow-md dark:hover:bg-gray-700/40 transition-all duration-300 cursor-pointer group"
         onClick={() => handleOptionClick('fontes')}
@@ -119,14 +123,14 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
         </Button>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Explicação Avançada</h3>
       </div>
-      
+
       <ScrollArea className="h-[60vh] pr-4">
         <div className="bg-blue-50/50 dark:bg-blue-950/20 rounded-xl p-4 border border-blue-100 dark:border-blue-900/30 mb-4">
           <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
             O conteúdo solicitado está sendo preparado para você. Aqui você encontrará uma versão expandida da resposta original da IA, incluindo explicações mais detalhadas, termos técnicos, aplicações do conteúdo, contexto histórico e comparações com conceitos semelhantes.
           </p>
         </div>
-        
+
         <div className="space-y-6">
           <div>
             <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Contexto Aprofundado</h4>
@@ -134,7 +138,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
               Aqui aparecerá o contexto histórico e científico aprofundado sobre o tema discutido.
             </p>
           </div>
-          
+
           <div>
             <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Termos Técnicos</h4>
             <div className="grid grid-cols-1 gap-3">
@@ -144,7 +148,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
               </div>
             </div>
           </div>
-          
+
           <div>
             <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Aplicações Expandidas</h4>
             <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
@@ -169,14 +173,14 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
         </Button>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Tópicos Relacionados</h3>
       </div>
-      
+
       <ScrollArea className="h-[60vh] pr-4">
         <div className="bg-purple-50/50 dark:bg-purple-950/20 rounded-xl p-4 border border-purple-100 dark:border-purple-900/30 mb-4">
           <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
             Aqui estão alguns tópicos diretamente relacionados com o tema que você está estudando. Explore-os para expandir seu conhecimento.
           </p>
         </div>
-        
+
         <div className="space-y-4">
           {[1, 2, 3].map((item) => (
             <div key={item} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -209,14 +213,14 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
         </Button>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Exemplos Práticos</h3>
       </div>
-      
+
       <ScrollArea className="h-[60vh] pr-4">
         <div className="bg-green-50/50 dark:bg-green-950/20 rounded-xl p-4 border border-green-100 dark:border-green-900/30 mb-4">
           <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
             Veja como o conteúdo se aplica em situações reais ou simuladas. Após cada exemplo, reflita sobre a aplicação prática.
           </p>
         </div>
-        
+
         <div className="space-y-6">
           {[1, 2].map((item) => (
             <div key={item} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -256,14 +260,14 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
         </Button>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Erros Comuns e Dicas</h3>
       </div>
-      
+
       <ScrollArea className="h-[60vh] pr-4">
         <div className="bg-amber-50/50 dark:bg-amber-950/20 rounded-xl p-4 border border-amber-100 dark:border-amber-900/30 mb-4">
           <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
             Conheça os erros mais comuns que os estudantes cometem ao estudar este tema e dicas práticas para melhorar seu aprendizado.
           </p>
         </div>
-        
+
         <div className="mb-6">
           <h4 className="text-base font-medium text-gray-900 dark:text-white mb-3">Erros Frequentes</h4>
           <div className="space-y-3">
@@ -282,7 +286,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
             ))}
           </div>
         </div>
-        
+
         <div>
           <h4 className="text-base font-medium text-gray-900 dark:text-white mb-3">Dicas de Aprendizado</h4>
           <div className="space-y-3">
@@ -315,14 +319,14 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
         </Button>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Explore Mais</h3>
       </div>
-      
+
       <ScrollArea className="h-[60vh] pr-4">
         <div className="bg-yellow-50/50 dark:bg-yellow-950/20 rounded-xl p-4 border border-yellow-100 dark:border-yellow-900/30 mb-4">
           <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
             Recursos adicionais para aprofundar seu conhecimento neste tema, incluindo materiais de referência e exercícios complementares.
           </p>
         </div>
-        
+
         <div className="mb-6">
           <h4 className="text-base font-medium text-gray-900 dark:text-white mb-3">Recursos Recomendados</h4>
           <div className="space-y-3">
@@ -343,7 +347,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
             ))}
           </div>
         </div>
-        
+
         <div>
           <h4 className="text-base font-medium text-gray-900 dark:text-white mb-3">Exercícios Complementares</h4>
           <div className="space-y-3">
@@ -375,7 +379,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
         </div>
       );
     }
-    
+
     switch (activeContent) {
       case 'explicacao':
         return renderExplicacaoAvancada();
