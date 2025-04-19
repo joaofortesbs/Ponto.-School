@@ -27,152 +27,14 @@ type ContentType = 'main' | 'explicacao' | 'topicos' | 'exemplos' | 'erros' | 'f
 const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, messages, sessionId, setShowAprofundarModal, toast }) => {
   const [activeContent, setActiveContent] = useState<ContentType>('main');
   const [loading, setLoading] = useState(false);
-  
-  // Função para extrair seções da resposta da IA
-  const parseAIResponse = (response: string) => {
-    // Padrões mais rigorosos para identificar as seções na resposta
-    const contextoMatch = response.match(/Contexto Aprofundado:(.+?)(?=Termos Técnicos:|$)/s);
-    const termosMatch = response.match(/Termos Técnicos:(.+?)(?=Aplicações Expandidas:|$)/s);
-    const aplicacoesMatch = response.match(/Aplicações Expandidas:(.+?)(?=$)/s);
-    
-    console.log("Resposta da IA:", response);
-    console.log("Contexto encontrado:", contextoMatch ? "Sim" : "Não");
-    console.log("Termos encontrados:", termosMatch ? "Sim" : "Não");
-    console.log("Aplicações encontradas:", aplicacoesMatch ? "Sim" : "Não");
-    
-    // Extrair e processar termos técnicos
-    const termosText = termosMatch ? termosMatch[1].trim() : "";
-    let termosArray = [];
-    
-    // Tentar diversos formatos possíveis para os termos técnicos
-    if (termosText) {
-      // Formato 1: Termo: Definição
-      const termFormat1 = termosText.split(/\n(?=[A-Za-z0-9]+:)/g).filter(t => t.trim() !== '');
-      
-      // Formato 2: - Termo: Definição
-      const termFormat2 = termosText.split(/\n- /g).filter(t => t.trim() !== '');
-      
-      // Formato 3: Linha por linha (parágrafos separados)
-      const termFormat3 = termosText.split(/\n\n|\n/).filter(t => t.trim() !== '');
-      
-      // Escolher o formato que parece mais apropriado
-      const formatToUse = termFormat1.length > 1 ? termFormat1 : 
-                          (termFormat2.length > 1 ? termFormat2 : termFormat3);
-      
-      termosArray = formatToUse.map(termo => {
-        const parts = termo.split(/:(.*)/s); // Divide apenas no primeiro ':'
-        if (parts.length > 1) {
-          return { 
-            termo: parts[0].trim().replace(/^- /, ''), 
-            definicao: parts[1].trim() 
-          };
-        }
-        return { 
-          termo: "Termo", 
-          definicao: termo.trim() 
-        };
-      });
-    }
-    
-    // Se não encontrou termos no formato esperado, tenta criar ao menos um item
-    const finalTermos = termosArray.length > 0 ? termosArray : [{ 
-      termo: "Informação", 
-      definicao: termosText || "Nenhuma informação disponível sobre termos técnicos." 
-    }];
-    
-    return {
-      contexto: contextoMatch && contextoMatch[1].trim() ? contextoMatch[1].trim() : "Contexto não disponível.",
-      termos: finalTermos,
-      aplicacoes: aplicacoesMatch && aplicacoesMatch[1].trim() ? aplicacoesMatch[1].trim() : "Aplicações não disponíveis."
-    };
-  };
 
-  const handleOptionClick = async (option: ContentType) => {
+  const handleOptionClick = (option: ContentType) => {
     setLoading(true);
-    
-    if (option === 'explicacao') {
-      try {
-        // Captura o tema atual (última mensagem da conversa)
-        let currentTopic = "tema atual";
-        
-        if (messages && messages.length > 0) {
-          // Tenta obter a última resposta da IA (mais completa)
-          const aiMessages = messages.filter(msg => msg.sender === 'ai' || msg.role === 'assistant');
-          if (aiMessages.length > 0) {
-            currentTopic = aiMessages[aiMessages.length - 1].content;
-          } else {
-            // Se não houver mensagens da IA, pega a última mensagem do usuário
-            currentTopic = messages[messages.length - 1].content;
-          }
-          
-          // Limita o tamanho do tema para evitar tokens excessivos
-          if (currentTopic.length > 1500) {
-            currentTopic = currentTopic.substring(0, 1500) + "...";
-          }
-        }
-        
-        console.log("Tema capturado para aprofundamento:", currentTopic.substring(0, 100) + "...");
-        
-        // Prompt para a IA
-        const prompt = `Você é uma IA educacional. Expanda o tema abaixo fornecendo:
-
-1. Contexto Aprofundado: forneça contexto histórico, científico e social detalhado sobre o tema.
-2. Termos Técnicos: liste e explique claramente os principais termos técnicos relacionados ao tema.
-3. Aplicações Expandidas: explique como esse conhecimento pode ser aplicado na prática e em outras disciplinas.
-
-Sua resposta DEVE seguir exatamente este formato, com estas três seções bem definidas:
-
-Contexto Aprofundado: [seu texto aqui]
-
-Termos Técnicos: [liste os termos e suas definições]
-
-Aplicações Expandidas: [seu texto aqui]
-
-Seja didático, use exemplos e analogias quando possível.
-
-Tema: "${currentTopic}"`;
-
-        // Importar e usar o serviço de IA para gerar o conteúdo
-        const { generateAIResponse } = await import('@/services/aiChatService');
-        const response = await generateAIResponse(prompt, sessionId || 'default-session');
-        
-        // Processar a resposta da IA usando o parser
-        const parsedContent = parseAIResponse(response);
-        setExplainContent(parsedContent);
-        
-        // Atualizar o estado para mostrar o conteúdo
-        setActiveContent(option);
-        setLoading(false);
-        
-        // Toast de sucesso se implementado
-        if (toast) {
-          toast({
-            title: "Conteúdo gerado com sucesso",
-            description: "O aprofundamento do tema foi gerado pela IA.",
-            variant: "default",
-          });
-        }
-      } catch (error) {
-        console.error('Erro ao gerar explicação avançada:', error);
-        setActiveContent(option);
-        setLoading(false);
-        
-        // Toast de erro se implementado
-        if (toast) {
-          toast({
-            title: "Erro ao gerar conteúdo",
-            description: "Não foi possível gerar o aprofundamento. Tente novamente.",
-            variant: "destructive",
-          });
-        }
-      }
-    } else {
-      // Para outras opções, mantém o comportamento original
-      setTimeout(() => {
-        setActiveContent(option);
-        setLoading(false);
-      }, 500);
-    }
+    // Simula um tempo de carregamento
+    setTimeout(() => {
+      setActiveContent(option);
+      setLoading(false);
+    }, 500);
   };
 
   const handleBack = () => {
@@ -248,12 +110,6 @@ Tema: "${currentTopic}"`;
     </div>
   );
 
-  const [explainContent, setExplainContent] = useState({
-    contexto: "Aqui aparecerá o contexto histórico e científico aprofundado sobre o tema discutido.",
-    termos: [{ termo: "Termo técnico", definicao: "Definição detalhada do termo aparecerá aqui." }],
-    aplicacoes: "Aqui serão listadas as aplicações práticas e teóricas deste conhecimento."
-  });
-
   const renderExplicacaoAvancada = () => (
     <div className="space-y-4">
       <div className="flex items-center mb-2">
@@ -279,26 +135,24 @@ Tema: "${currentTopic}"`;
           <div>
             <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Contexto Aprofundado</h4>
             <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
-              {explainContent.contexto}
+              Aqui aparecerá o contexto histórico e científico aprofundado sobre o tema discutido.
             </p>
           </div>
 
           <div>
             <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Termos Técnicos</h4>
             <div className="grid grid-cols-1 gap-3">
-              {explainContent.termos.map((item, index) => (
-                <div key={index} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <span className="block font-medium text-blue-600 dark:text-blue-400 mb-1">{item.termo}</span>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">{item.definicao}</span>
-                </div>
-              ))}
+              <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                <span className="block font-medium text-blue-600 dark:text-blue-400 mb-1">Termo técnico</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">Definição detalhada do termo aparecerá aqui.</span>
+              </div>
             </div>
           </div>
 
           <div>
             <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Aplicações Expandidas</h4>
             <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
-              {explainContent.aplicacoes}
+              Aqui serão listadas as aplicações práticas e teóricas deste conhecimento.
             </p>
           </div>
         </div>
