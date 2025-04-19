@@ -308,36 +308,6 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
     };
   }, [selectedOption, showManualInput, fluxogramaGerado]);
 
-1. Comece com um CONCEITO CENTRAL (nó inicial):
-   - Defina o tema de forma objetiva e clara
-   - Ex: "O que é fotossíntese?"
-
-2. Adicione CONTEXTUALIZAÇÃO E PRÉ-REQUISITOS:
-   - Conhecimentos prévios necessários
-   - Termos importantes para entender o tema
-   - Base científica/histórica relevante
-
-3. Detalhe o PROCESSO, MECANISMO OU LÓGICA DO TEMA:
-   - Passo a passo da explicação em etapas numeradas
-   - Fluxo de causa e efeito
-   - Ex: "Etapa 1: Captação de luz → Etapa 2: Transformação química → Etapa 3: Liberação de oxigênio"
-
-4. Inclua uma CAMADA DE APLICAÇÃO/PRÁTICA:
-   - Exemplos práticos ou situações-problema
-   - Destaque erros comuns e dicas
-   - Inclua nós de decisão do tipo: "Se o aluno pensar A → Mostrar que está errado" / "Se pensar B → Está correto"
-
-5. Finalize com CONCLUSÃO OU RESULTADO FINAL:
-   - Síntese do aprendizado
-   - Resumo visual
-   - Dica de ouro ou aplicação em provas
-
-Adicione ELEMENTOS EXTRAS distribuídos no fluxograma:
-- Tópicos Relacionados (possíveis conexões para novos fluxos)
-- Comparações entre conceitos (quando aplicável)
-- Aplicações na vida real
-- Alertas sobre equívocos comuns
-
 Para cada nó (node), inclua:
 - id: único (numérico ou string)
 - title: título curto e claro
@@ -1942,12 +1912,12 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                   </span>
                 </Button>
               ) : (
-                <div className="relative w-full">
+                <div className="relative w-full py-3 px-4 bg-white/95 dark:bg-gray-800/95 border border-blue-200 dark:border-blue-800/50 rounded-xl shadow-sm transition-all">
                   <Textarea 
                     value={manualContent}
                     onChange={(e) => setManualContent(e.target.value)}
                     placeholder="Escreva aqui o conteúdo para gerar seu fluxograma..."
-                    className="min-h-[120px] resize-none w-full py-4 px-4 bg-white/95 dark:bg-gray-800/95 border border-blue-200 dark:border-blue-800/50 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/50 dark:focus:ring-blue-600/50 focus:border-blue-300 dark:focus:border-blue-700 transition-all"
+                    className="min-h-[120px] resize-none w-full py-1 px-1 bg-transparent border-none focus:ring-0 focus:outline-none"
                   />
                   <Button
                     onClick={handleSubmitManualContent}
@@ -1957,14 +1927,6 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                     <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-400/20 to-indigo-400/20 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
                     <Sparkles className="h-5 w-5 text-white relative z-10" />
                     <span className="absolute -bottom-10 opacity-0 group-hover:opacity-100 group-hover:-bottom-6 transition-all text-[10px] font-medium">Enviar</span>
-                  </Button>
-                  <Button
-                    onClick={() => setShowManualInput(false)}
-                    variant="ghost"
-                    size="sm"
-                    className="absolute left-3 top-3 h-8 w-8 rounded-full hover:bg-gray-200/50 dark:hover:bg-gray-700/50 p-0"
-                  >
-                    <X className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                   </Button>
                 </div>
               )}
