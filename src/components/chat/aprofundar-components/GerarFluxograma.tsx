@@ -740,11 +740,17 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                     target: processToReview.id,
                     label: 'Incorreto - Revise',
                     animated: false,
-                    style: { stroke: '#fjson\n([\s\S]*?)\n```/) || 
-                                         response.match(/```\n([\s\S]*?)\n```/) ||
-                                         response.match(/{[\s\S]*?}/);
+                    style: { stroke: '#f43f5e' } // Vermelho para caminhos negativos
+                  });
+                  incorrectTargetFound = true;
+                }
 
-                          const jsonString = jsonMatch ? jsonMatch[0].replace(/```json\n|```\n|json\n([\s\S]*?)\n```/) || 
+                // Extrair JSON da resposta
+                const jsonMatch = response.match(/```json\n([\s\S]*?)\n```/) || 
+                                 response.match(/```\n([\s\S]*?)\n```/) ||
+                                 response.match(/{[\s\S]*?}/);
+
+                const jsonString = jsonMatch ? jsonMatch[0].replace(/```json\n|```\n|```/g, '') : response; 
                                          response.match(/```\n([\s\S]*?)\n```/) ||
                                          response.match(/{[\s\S]*?}/);
 
