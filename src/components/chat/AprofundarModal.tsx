@@ -47,33 +47,98 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
   const getLastAIMessage = () => {
     if (!messages || messages.length === 0) return null;
     
-    // Filtra as mensagens para obter apenas as do assistente (IA)
-    // Verifica todos os formatos possíveis de mensagens da IA (sender, role ou type)
+    // Primeiro tenta identificar mensagens por propriedades específicas da IA
     const aiMessages = messages.filter(msg => 
       msg.sender === 'assistant' || 
       msg.role === 'assistant' || 
-      msg.type === 'assistant'
+      msg.type === 'assistant' ||
+      // Propriedades adicionais que podem identificar mensagens da IA
+      msg.isAI === true ||
+      msg.from === 'ai' ||
+      msg.source === 'ai' ||
+      msg.agent === 'assistant'
     );
     
-    // Se não encontrou mensagens da IA pelo método acima, tenta encontrar pelo conteúdo da mensagem
-    if (aiMessages.length === 0) {
-      // Percorre as mensagens na ordem inversa (da mais recente para a mais antiga)
-      for (let i = messages.length - 1; i >= 0; i--) {
-        const msg = messages[i];
-        // Verifica se existe uma propriedade de conteúdo (content, message ou text)
-        if (
+    // Se encontrou mensagens da IA pelo método acima, retorna a mais recente
+    if (aiMessages.length > 0) {
+      return aiMessages[aiMessages.length - 1];
+    }
+    
+    // Método alternativo: busca pela estrutura de conteúdo e comprimento
+    // Percorre as mensagens na ordem inversa (da mais recente para a mais antiga)
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const msg = messages[i];
+      
+      // Se a mensagem não for do usuário (human/user), pode ser da IA
+      if (msg.sender !== 'user' && msg.role !== 'user' && msg.type !== 'user') {
+        // Verifica propriedades de conteúdo comuns
+        const hasContent = 
           (msg.content && typeof msg.content === 'string' && msg.content.length > 20) ||
           (msg.message && typeof msg.message === 'string' && msg.message.length > 20) ||
-          (msg.text && typeof msg.text === 'string' && msg.text.length > 20)
-        ) {
-          // Presume que mensagens substanciais são da IA
+          (msg.text && typeof msg.text === 'string' && msg.text.length > 20) ||
+          (msg.answer && typeof msg.answer === 'string' && msg.answer.length > 20) ||
+          (msg.response && typeof msg.response === 'string' && msg.response.length > 20);
+          
+        if (hasContent) {
+          console.log("Mensagem da IA encontrada por conteúdo substancial");
+          return msg;
+        }
+      }
+      
+      // Verifica se é uma mensagem longa - provavelmente da IA
+      // As mensagens dos usuários tendem a ser perguntas mais curtas
+      if (i > 0) { // Garante que não estamos na primeira mensagem
+        const currentMsgContent = msg.content || msg.message || msg.text || '';
+        const prevMsgContent = messages[i-1].content || messages[i-1].message || messages[i-1].text || '';
+        
+        if (typeof currentMsgContent === 'string' && 
+            currentMsgContent.length > 150 && 
+            currentMsgContent.length > (prevMsgContent?.length || 0) * 2) {
+          console.log("Mensagem da IA encontrada por comprimento de conteúdo");
           return msg;
         }
       }
     }
     
-    // Retorna a última mensagem da IA, se existir
-    return aiMessages.length > 0 ? aiMessages[aiMessages.length - 1] : null;
+    // Último recurso: se houver pelo menos duas mensagens, use a última não-consecutiva
+    // Isso supõe um padrão alternado onde usuário pergunta e IA responde
+    if (messages.length >= 2) {
+      const lastMsg = messages[messages.length - 1];
+      const secondLastMsg = messages[messages.length - 2];
+      
+      // Se a última mensagem for curta e a penúltima for longa, provavelmente a penúltima é da IA
+      const lastContent = lastMsg.content || lastMsg.message || lastMsg.text || '';
+      const secondLastContent = secondLastMsg.content || secondLastMsg.message || secondLastMsg.text || '';
+      
+      if (typeof lastContent === 'string' && 
+          typeof secondLastContent === 'string' && 
+          secondLastContent.length > lastContent.length * 1.5) {
+        console.log("Mensagem da IA encontrada por padrão de conversa");
+        return secondLastMsg;
+      }
+    }
+    
+    // Fallback final: se ainda não encontrou, pega a mensagem mais longa
+    if (messages.length > 0) {
+      let longestMsg = messages[0];
+      let maxLength = 0;
+      
+      for (const msg of messages) {
+        const contentLength = (msg.content || msg.message || msg.text || '').length;
+        if (contentLength > maxLength) {
+          maxLength = contentLength;
+          longestMsg = msg;
+        }
+      }
+      
+      if (maxLength > 100) {
+        console.log("Usando a mensagem mais longa como fallback");
+        return longestMsg;
+      }
+    }
+    
+    // Se chegou até aqui, não encontrou nenhuma mensagem adequada
+    return null;
   };
 
   // Função para gerar conteúdo aprofundado
@@ -91,26 +156,48 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
     }
 
     // Extrai o conteúdo da mensagem, verificando todos os formatos possíveis
-    const messageContent = lastAIMessage.content || lastAIMessage.message || lastAIMessage.text || '';
+    const messageContent = lastAIMessage.content || 
+                          lastAIMessage.message || 
+                          lastAIMessage.text || 
+                          lastAIMessage.answer || 
+                          lastAIMessage.response || '';
+    
+    // Cria uma versão modificada para evitar strings vazias
+    const safeMessageContent = messageContent.trim() || 
+                             "O usuário está buscando mais informações sobre os assuntos discutidos recentemente. " +
+                             "Com base no contexto da conversa, forneça um conteúdo detalhado sobre os tópicos relevantes.";
     
     // Define o tema atual com uma prévia do conteúdo
-    setTemaAtual(messageContent.substring(0, 100) + '...');
+    setTemaAtual(safeMessageContent.substring(0, 100) + '...');
     
-    console.log("Mensagem da IA encontrada:", messageContent.substring(0, 50) + "...");
+    console.log("Mensagem da IA encontrada:", safeMessageContent.substring(0, 50) + "...");
     
     // Configura o estado de carregamento
     setAprofundadoContent(prev => ({...prev, loading: true}));
 
     try {
-      // Gera contexto aprofundado
+      // Gera contexto aprofundado com instruções mais detalhadas
       const contextPrompt = `
-      Explique com profundidade o seguinte tema, detalhando o contexto histórico, 
-      causas, consequências, eventos importantes e aprofundando em partes mais complexas 
-      do assunto. Apresente uma análise avançada e completa sobre o tema. 
-      O conteúdo deve ser muito mais detalhado e extenso que o original, explorando 
-      aspectos complexos e pouco conhecidos do tema:
+      Você é um especialista acadêmico encarregado de expandir consideravelmente o conteúdo abaixo.
       
-      "${messageContent}"
+      Sua tarefa é criar uma versão muito mais elaborada, detalhada e completa do tema apresentado, incluindo:
+      
+      1. Contexto histórico detalhado e desenvolvimento ao longo do tempo
+      2. Conceitos fundamentais e definições essenciais
+      3. Relações de causa e efeito aprofundadas
+      4. Teoria e princípios subjacentes
+      5. Aplicações práticas e relevância contemporânea
+      6. Controvérsias, debates e diferentes perspectivas acadêmicas
+      7. Aspectos complexos e pontos de vista alternativos
+      8. Conexões interdisciplinares e abordagens comparativas
+      
+      O resultado deve ser uma explicação abrangente, acadêmica, bem estruturada e significativamente mais detalhada que a original.
+      Evite simplesmente reformular - busque expandir o tema com informações adicionais relevantes.
+      
+      Conteúdo a ser expandido:
+      "${safeMessageContent}"
+      
+      Importante: Se o conteúdo original não tiver informações suficientes, realize uma análise profunda baseada nas indicações de tópico presentes nele.
       `;
 
       // Chame a API apenas para o contexto inicialmente
@@ -182,17 +269,57 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
       });
     } catch (error) {
       console.error("Erro ao gerar conteúdo aprofundado:", error);
-      setAprofundadoContent(prev => ({ ...prev, loading: false }));
+      
+      // Conteúdo de fallback em caso de erro para garantir que sempre haja algo para mostrar
+      const fallbackContent = {
+        contexto: "Estamos preparando uma análise detalhada sobre este tema. " +
+                 "Enquanto processamos o conteúdo completo, aqui está uma visão inicial: " +
+                 "O tema abordado tem aspectos importantes para explorar, desde seus fundamentos " +
+                 "teóricos até suas aplicações práticas. A análise completa abordará suas origens, " +
+                 "desenvolvimento histórico, princípios fundamentais e implicações contemporâneas. " +
+                 "Tente novamente em alguns instantes para ver a análise completa.",
+        loading: false,
+        termos: [
+          {
+            termo: "Análise Aprofundada", 
+            definicao: "Uma investigação detalhada que vai além da superfície para examinar os componentes e relações subjacentes de um tópico."
+          }
+        ],
+        aplicacoes: "Este conhecimento pode ser aplicado em diversos contextos acadêmicos e profissionais. " +
+                    "A compreensão detalhada do tema permite desenvolver perspectivas mais completas e tomar decisões mais informadas."
+      };
+      
+      setAprofundadoContent(fallbackContent);
+    }
+  };
+
+  // Garante que sempre tenha conteúdo para mostrar ao usuário
+  const ensureContent = () => {
+    // Se não existir conteúdo ou tiver erro, tenta gerar novamente
+    if (isOpen && activeContent === 'explicacao' && 
+       (aprofundadoContent.contexto === '' || 
+        aprofundadoContent.contexto.includes("Não foi possível encontrar"))) {
+      console.log("Iniciando geração proativa de conteúdo");
+      generateAprofundadoContent();
     }
   };
 
   // Quando o modal abrir na seção de explicação, gerar o conteúdo
-  // Quando o modal abrir, verificar se precisa gerar conteúdo
   useEffect(() => {
-    if (isOpen && activeContent === 'explicacao' && aprofundadoContent.contexto === '') {
-      generateAprofundadoContent();
+    if (isOpen && activeContent === 'explicacao') {
+      // Pequeno timeout para garantir que states foram atualizados
+      setTimeout(() => {
+        ensureContent();
+      }, 100);
     }
   }, [isOpen, activeContent]);
+  
+  // Verifica o conteúdo sempre que houver mudança de active content
+  useEffect(() => {
+    if (activeContent === 'explicacao') {
+      ensureContent();
+    }
+  }, [activeContent]);
 
   const handleOptionClick = (option: ContentType) => {
     setLoading(true);
