@@ -1526,6 +1526,12 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                       event.stopPropagation();
                       event.preventDefault();
                       
+                      // Remover o menu de exportação sem fechar o modal principal
+                      const exportMenu = document.getElementById('export-options-menu');
+                      if (exportMenu) {
+                        exportMenu.remove();
+                      }
+                      
                       // Indicador de carregamento no botão
                       exportImgButton.innerHTML = '';
                       
@@ -1560,16 +1566,19 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                       exportImgButton.disabled = true;
                       exportImgButton.className = 'text-left px-3 py-2 text-sm rounded-md transition-colors flex items-center text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700';
                       
-                      // Remover o menu imediatamente
+                      // Remover a escuta do evento de clique para evitar fechamento indesejado
                       document.removeEventListener('click', closeMenu);
                       
-                      // Exportar imagem
-                      exportAsImage().then(() => {
-                        exportMenu.remove();
+                      // Exportar imagem sem fechar o modal principal
+                      exportAsImage().then((success) => {
+                        // O menu já foi removido acima, não precisamos fazer novamente
+                        // Apenas notificar o usuário se houver falha
+                        if (!success) {
+                          console.error('Falha ao exportar imagem');
+                        }
                       }).catch(error => {
                         console.error('Erro ao exportar imagem:', error);
                         alert('Ocorreu um erro ao exportar o fluxograma. Por favor, tente novamente.');
-                        exportMenu.remove();
                       });
                     };
                     
