@@ -1031,6 +1031,12 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
       `;
       document.body.appendChild(loadingIndicator);
       
+      // Impedir que o indicador de carregamento feche o modal ao ser clicado
+      loadingIndicator.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+      });
+      
       // Esperar um momento para garantir que o DOM está estável
       await new Promise(resolve => setTimeout(resolve, 300));
       
@@ -1569,17 +1575,20 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                       // Remover a escuta do evento de clique para evitar fechamento indesejado
                       document.removeEventListener('click', closeMenu);
                       
-                      // Exportar imagem sem fechar o modal principal
-                      exportAsImage().then((success) => {
-                        // O menu já foi removido acima, não precisamos fazer novamente
-                        // Apenas notificar o usuário se houver falha
-                        if (!success) {
-                          console.error('Falha ao exportar imagem');
-                        }
-                      }).catch(error => {
-                        console.error('Erro ao exportar imagem:', error);
-                        alert('Ocorreu um erro ao exportar o fluxograma. Por favor, tente novamente.');
-                      });
+                      // Criar uma função que executa a exportação sem fechar o modal principal
+                      setTimeout(() => {
+                        // Exportar imagem sem fechar o modal principal
+                        exportAsImage().then((success) => {
+                          // O menu já foi removido acima, não precisamos fazer novamente
+                          // Apenas notificar o usuário se houver falha
+                          if (!success) {
+                            console.error('Falha ao exportar imagem');
+                          }
+                        }).catch(error => {
+                          console.error('Erro ao exportar imagem:', error);
+                          alert('Ocorreu um erro ao exportar o fluxograma. Por favor, tente novamente.');
+                        });
+                      }, 50);
                     };
                     
                     // Fechar o menu ao clicar fora dele
