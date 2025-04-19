@@ -28,143 +28,8 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
   const [activeContent, setActiveContent] = useState<ContentType>('main');
   const [loading, setLoading] = useState(false);
   
-  // Função para extrair seções da resposta da IA
-  const parseAIResponse = (response: string) => {
-    console.log("Resposta da IA recebida:", response.substring(0, 200) + "...");
-    
-    // Padrões mais rigorosos para identificar as seções específicas
-    // Busca por diversos formatos possíveis de cabeçalhos de seção
-    const contextoPatterns = [
-      /CONTEXTO APROFUNDADO[:\s]+(.+?)(?=(?:TERMOS TÉCNICOS|TERMOS TECNICOS|Termos Técnicos|Termos|2\.|2\s+TERMOS|$))/is,
-      /Contexto Aprofundado[:\s]+(.+?)(?=(?:TERMOS TÉCNICOS|TERMOS TECNICOS|Termos Técnicos|Termos|2\.|2\s+TERMOS|$))/is,
-      /1\.?\s*(?:CONTEXTO|Contexto)[:\s]+(.+?)(?=(?:TERMOS TÉCNICOS|TERMOS TECNICOS|Termos Técnicos|Termos|2\.|2\s+TERMOS|$))/is,
-      /Contexto[:\s]+(.+?)(?=(?:TERMOS TÉCNICOS|TERMOS TECNICOS|Termos Técnicos|Termos|2\.|2\s+TERMOS|$))/is
-    ];
-    
-    const termosPatterns = [
-      /TERMOS TÉCNICOS[:\s]+(.+?)(?=(?:APLICAÇÕES EXPANDIDAS|APLICACOES EXPANDIDAS|Aplicações|3\.|3\s+APLICAÇÕES|$))/is,
-      /Termos Técnicos[:\s]+(.+?)(?=(?:APLICAÇÕES EXPANDIDAS|APLICACOES EXPANDIDAS|Aplicações|3\.|3\s+APLICAÇÕES|$))/is,
-      /2\.?\s*(?:TERMOS|Termos)[:\s]+(.+?)(?=(?:APLICAÇÕES EXPANDIDAS|APLICACOES EXPANDIDAS|Aplicações|3\.|3\s+APLICAÇÕES|$))/is,
-      /Termos[:\s]+(.+?)(?=(?:APLICAÇÕES EXPANDIDAS|APLICACOES EXPANDIDAS|Aplicações|3\.|3\s+APLICAÇÕES|$))/is
-    ];
-    
-    const aplicacoesPatterns = [
-      /APLICAÇÕES EXPANDIDAS[:\s]+(.+?)(?=$)/is,
-      /Aplicações Expandidas[:\s]+(.+?)(?=$)/is,
-      /3\.?\s*(?:APLICAÇÕES|Aplicações)[:\s]+(.+?)(?=$)/is,
-      /Aplicações[:\s]+(.+?)(?=$)/is
-    ];
-    
-    // Tenta encontrar o contexto usando vários padrões
-    let contextoMatch = null;
-    for (const pattern of contextoPatterns) {
-      contextoMatch = response.match(pattern);
-      if (contextoMatch && contextoMatch[1]) break;
-    }
-    
-    // Tenta encontrar os termos usando vários padrões
-    let termosMatch = null;
-    for (const pattern of termosPatterns) {
-      termosMatch = response.match(pattern);
-      if (termosMatch && termosMatch[1]) break;
-    }
-    
-    // Tenta encontrar as aplicações usando vários padrões
-    let aplicacoesMatch = null;
-    for (const pattern of aplicacoesPatterns) {
-      aplicacoesMatch = response.match(pattern);
-      if (aplicacoesMatch && aplicacoesMatch[1]) break;
-    }
-    
-    console.log("Contexto encontrado:", contextoMatch ? "Sim" : "Não");
-    console.log("Termos encontrados:", termosMatch ? "Sim" : "Não");
-    console.log("Aplicações encontradas:", aplicacoesMatch ? "Sim" : "Não");
-    
-    // Extrair e processar termos técnicos
-    const termosText = termosMatch ? termosMatch[1].trim() : "";
-    let termosArray = [];
-    
-    // Processamento dos termos técnicos - detecção de múltiplos formatos
-    if (termosText) {
-      // Tenta diferentes formatos para cobrir todas as possibilidades de saída da IA
-      
-      // Formato com hífen: - Termo: Definição
-      if (termosText.includes('- ')) {
-        const termsWithDash = termosText.split(/\n- |\r\n- /).filter(t => t.trim() !== '');
-        termosArray = termsWithDash.map(term => {
-          const parts = term.split(/:(.*)/s);
-          if (parts.length > 1) {
-            return {
-              termo: parts[0].trim().replace(/^- /, ''),
-              definicao: parts[1].trim()
-            };
-          }
-          return { 
-            termo: term.split(' ')[0].trim(), 
-            definicao: term.trim() 
-          };
-        });
-      } 
-      // Formato com números ou asteriscos: 1. Termo: / * Termo:
-      else if (termosText.match(/[0-9]+\.|[*•]\s+[A-Z]/)) {
-        const termsWithNumber = termosText.split(/\n[0-9]+\.|\n[*•]\s+/).filter(t => t.trim() !== '');
-        termosArray = termsWithNumber.map(term => {
-          const parts = term.split(/:(.*)/s);
-          if (parts.length > 1) {
-            return {
-              termo: parts[0].trim(),
-              definicao: parts[1].trim()
-            };
-          }
-          return { 
-            termo: term.split(' ')[0].trim(), 
-            definicao: term.trim() 
-          };
-        });
-      }
-      // Formato com cada termo em uma nova linha sem marcadores
-      else {
-        const termLines = termosText.split(/\n{2,}|\n(?=[A-Z])/).filter(t => t.trim() !== '');
-        termosArray = termLines.map(term => {
-          const parts = term.split(/:(.*)/s);
-          if (parts.length > 1) {
-            return {
-              termo: parts[0].trim(),
-              definicao: parts[1].trim()
-            };
-          }
-          // Se não conseguir dividir pelo ":", tenta identificar o termo e definição
-          const firstSentence = term.split('.')[0].trim();
-          const restText = term.substring(firstSentence.length).trim();
-          return { 
-            termo: firstSentence.length < 50 ? firstSentence : "Termo Técnico", 
-            definicao: restText || term.trim() 
-          };
-        });
-      }
-    }
-    
-    // Garantir que temos pelo menos um item para exibir
-    const finalTermos = termosArray.length > 0 ? termosArray : [{ 
-      termo: "Termo Técnico", 
-      definicao: "Para ver termos técnicos específicos deste tema, clique novamente em 'Explicação Avançada'." 
-    }];
-    
-    // Conteúdo de fallback para garantir que sempre tem algo para mostrar
-    const contextoContent = contextoMatch && contextoMatch[1].trim() 
-      ? contextoMatch[1].trim() 
-      : "Para ver o contexto aprofundado deste tema, clique novamente em 'Explicação Avançada'.";
-      
-    const aplicacoesContent = aplicacoesMatch && aplicacoesMatch[1].trim() 
-      ? aplicacoesMatch[1].trim() 
-      : "Para ver aplicações expandidas deste tema, clique novamente em 'Explicação Avançada'.";
-    
-    return {
-      contexto: contextoContent,
-      termos: finalTermos,
-      aplicacoes: aplicacoesContent
-    };
-  };
+  // Removida a função parseAIResponse que não é mais necessária
+  // já que estamos fazendo chamadas separadas para cada seção
 
   const handleOptionClick = async (option: ContentType) => {
     setLoading(true);
@@ -209,56 +74,39 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
           return;
         }
         
-        console.log("Tema capturado para aprofundamento:", currentTopic.substring(0, 100) + "...");
-        console.log("Última pergunta do usuário:", lastUserQuestion.substring(0, 100) + "...");
+        // Define o tema atual para uso nas chamadas da IA
+        const topicForPrompt = lastUserQuestion || currentTopic;
+        const temaAtual = topicForPrompt.replace(/[?.,;!]/g, '').trim();
+        
+        console.log("Tema atual para aprofundamento:", temaAtual);
         
         // Importar o serviço de IA
         const { generateAIResponse } = await import('@/services/aiChatService');
         
-        // Inicializa objeto para armazenar os conteúdos gerados
-        const generatedContent = {
-          contexto: "",
-          termos: [],
-          aplicacoes: ""
+        // Criar prompts separados para cada seção
+        const prompts = {
+          contexto: `Explique com profundidade o tema "${temaAtual}". Inclua contexto histórico, causas, consequências e eventos importantes. Formate sua resposta em parágrafos bem estruturados, sem títulos ou numerações.`,
+          
+          termos: `Liste e explique 5 a 7 principais termos técnicos relacionados ao tema "${temaAtual}". Para cada termo, forneça: definição clara, importância no contexto e, se possível, exemplo. 
+          
+          Formate sua resposta EXATAMENTE neste formato para cada termo (um por linha):
+          - [Nome do Termo]: [Definição completa e explicação]`,
+          
+          aplicacoes: `Mostre como o conhecimento sobre "${temaAtual}" pode ser aplicado em diferentes contextos, como debates atuais, estudos acadêmicos, vida prática ou outros campos relacionados. Inclua exemplos concretos. Formate sua resposta em parágrafos bem estruturados, sem títulos ou numerações.`
         };
         
-        // Extrai o tema principal da pergunta/resposta
-        const topicForPrompt = lastUserQuestion || currentTopic;
-        const cleanTopic = topicForPrompt.replace(/[?.,;!]/g, '').trim();
-        
-        // 1. Gerar Contexto Aprofundado
-        const contextoPrompt = `Você é um especialista educacional. 
-Forneça um contexto histórico, científico e social detalhado sobre o tema:
-"${cleanTopic}"
-
-Inclua:
-- Desenvolvimento histórico do tema
-- Principais teorias ou descobertas relacionadas
-- Impacto social, cultural ou científico
-- Contextos relevantes para compreensão completa
-
-Seja específico, informativo e didático. Use uma linguagem clara e exemplos quando possível.
-Formate sua resposta em parágrafos bem estruturados, sem títulos ou numerações.`;
-
+        // Fazer chamadas separadas para a IA para cada seção
         console.log("Gerando contexto aprofundado...");
-        const contextoResponse = await generateAIResponse(contextoPrompt, `${sessionId}-contexto` || 'default-session-contexto');
-        generatedContent.contexto = contextoResponse;
+        const contextoResponse = await generateAIResponse(
+          prompts.contexto, 
+          `${sessionId}-contexto` || 'default-session-contexto'
+        );
         
-        // 2. Gerar Termos Técnicos
-        const termosPrompt = `Você é um professor especializado em explicar terminologias técnicas para alunos.
-Liste e explique 5-7 termos técnicos importantes relacionados ao tema:
-"${cleanTopic}"
-
-Para cada termo:
-1. Forneça o nome do termo com clareza
-2. Dê uma definição completa e precisa
-3. Explique sua relevância no contexto do tema principal
-
-Formate sua resposta no seguinte formato exato para cada termo:
-- [Nome do Termo]: [Definição completa e explicação]`;
-
         console.log("Gerando termos técnicos...");
-        const termosResponse = await generateAIResponse(termosPrompt, `${sessionId}-termos` || 'default-session-termos');
+        const termosResponse = await generateAIResponse(
+          prompts.termos, 
+          `${sessionId}-termos` || 'default-session-termos'
+        );
         
         // Processar a resposta para extrair os termos e definições
         const termosList = termosResponse.split('\n-').filter(t => t.trim() !== '');
@@ -278,35 +126,27 @@ Formate sua resposta no seguinte formato exato para cada termo:
           };
         });
         
-        generatedContent.termos = termosArray.length > 0 ? termosArray : [{ 
+        // Garantir que há ao menos um termo para exibir
+        const finalTermos = termosArray.length > 0 ? termosArray : [{ 
           termo: "Termo Técnico", 
           definicao: "Para ver termos técnicos específicos deste tema, clique novamente em 'Explicação Avançada'." 
         }];
         
-        // 3. Gerar Aplicações Expandidas
-        const aplicacoesPrompt = `Você é um especialista em aplicações práticas do conhecimento.
-Explique como o conhecimento sobre o tema a seguir pode ser aplicado na prática:
-"${cleanTopic}"
-
-Inclua:
-- Aplicações práticas em diferentes campos ou disciplinas
-- Exemplos concretos de uso deste conhecimento no mundo real
-- Como este tema se conecta com outras áreas do conhecimento
-- Relevância deste tema para problemas ou questões contemporâneas
-
-Seja específico com exemplos reais e explicações claras. Use uma linguagem didática e acessível.
-Formate sua resposta em parágrafos bem estruturados sem títulos ou numerações.`;
-
         console.log("Gerando aplicações expandidas...");
-        const aplicacoesResponse = await generateAIResponse(aplicacoesPrompt, `${sessionId}-aplicacoes` || 'default-session-aplicacoes');
-        generatedContent.aplicacoes = aplicacoesResponse;
+        const aplicacoesResponse = await generateAIResponse(
+          prompts.aplicacoes, 
+          `${sessionId}-aplicacoes` || 'default-session-aplicacoes'
+        );
+        
+        // Armazenar todas as respostas
+        const respostas = {
+          contexto: contextoResponse,
+          termos: finalTermos,
+          aplicacoes: aplicacoesResponse
+        };
         
         // Atualizar o conteúdo de explicação com os dados gerados
-        setExplainContent({
-          contexto: generatedContent.contexto,
-          termos: generatedContent.termos,
-          aplicacoes: generatedContent.aplicacoes
-        });
+        setExplainContent(respostas);
         
         // Atualizar o estado para mostrar o conteúdo
         setActiveContent(option);
