@@ -1,6 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 
+// Simple error boundary component for markdown rendering failures
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback || <div>Something went wrong.</div>;
+    }
+
+    return this.props.children;
+  }
+}
+
 interface TypewriterEffectProps {
   text: string;
   typingSpeed?: number;
@@ -92,9 +112,13 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
       className={`prose prose-sm dark:prose-invert max-w-none cursor-pointer ${className}`}
     >
       {containsMarkdown ? (
-        <ReactMarkdown>
-          {displayText}
-        </ReactMarkdown>
+        <React.Suspense fallback={<div style={{ whiteSpace: 'pre-wrap' }}>{displayText}</div>}>
+          <ErrorBoundary fallback={<div style={{ whiteSpace: 'pre-wrap' }}>{displayText}</div>}>
+            <ReactMarkdown>
+              {displayText}
+            </ReactMarkdown>
+          </ErrorBoundary>
+        </React.Suspense>
       ) : (
         <div style={{ whiteSpace: 'pre-wrap' }}>{displayText}</div>
       )}

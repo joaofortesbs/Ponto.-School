@@ -67,6 +67,7 @@
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.51.5",
+    "react-markdown": "^10.1.0",
     "react-resizable-panels": "^2.0.19",
     "react-router": "^6.23.1",
     "react-router-dom": "^6.23.1",
