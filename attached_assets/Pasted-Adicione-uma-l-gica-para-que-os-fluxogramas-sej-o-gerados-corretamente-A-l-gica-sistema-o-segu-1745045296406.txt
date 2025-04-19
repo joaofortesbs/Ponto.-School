@@ -1,0 +1,135 @@
+Adicione uma lógica para que os fluxogramas sejão gerados corretamente!
+
+A lógica/sistema é o seguinte:
+
+A IA (API) deve transformar a resposta textual que o usuário colocou no campo de Inserir meu próprio conteúdo sobre um tema em uma estrutura hierárquica ou sequencial, seguindo as regras de organização de um fluxograma. Isso envolve 3 etapas principais:
+
+ETAPA 1: Analisar e Estruturar o Conteúdo
+A IA deve:
+
+Identificar os principais blocos conceituais do conteúdo (por exemplo: etapas, partes, causas, consequências, tópicos, etc.).
+
+Classificar esses blocos como:
+
+Início (título do fluxo)
+
+Passo a passo ou ramificações
+
+Conclusões ou resultados
+
+Dividir em nós visuais, com conexões lógicas entre eles.
+
+ETAPA 2: Gerar os Nós (Nodes) do Fluxograma
+Cada nó do fluxograma precisa conter:
+
+id: Identificador único
+
+label: Nome resumido e claro (título curto do ponto)
+
+description: Um mini resumo que aparece ao clicar ou passar o mouse
+
+position: (x, y) calculado ou sugerido
+
+type: (default, decision, start, end, etc.)
+
+Exemplo de estrutura (em JSON-like):
+
+{
+"id": "1",
+"label": "Evaporação",
+"description": "A água evapora com o calor do sol",
+"type": "default",
+"position": { "x": 100, "y": 100 }
+}
+
+ETAPA 3: Gerar as Conexões (Edges)
+A IA deve dizer:
+
+De qual nó vem (source)
+
+Para qual nó vai (target)
+
+Se tem condição (ex: “Sim/Não” em decisões)
+
+Exemplo:
+
+json:
+
+{
+"id": "e1-2",
+"source": "1",
+"target": "2",
+"label": "Segue o processo"
+}
+
+EXEMPLO COMPLETO DE OUTPUT DA IA:
+🔵 Tema: Ciclo da água
+
+json:
+
+{
+"nodes": [
+{
+"id": "1",
+"label": "Evaporação",
+"description": "A água se transforma em vapor com o calor do sol",
+"type": "start",
+"position": { "x": 200, "y": 50 }
+},
+{
+"id": "2",
+"label": "Condensação",
+"description": "O vapor sobe e se transforma em nuvem",
+"type": "default",
+"position": { "x": 200, "y": 150 }
+},
+{
+"id": "3",
+"label": "Precipitação",
+"description": "A água retorna à terra em forma de chuva",
+"type": "default",
+"position": { "x": 200, "y": 250 }
+},
+{
+"id": "4",
+"label": "Infiltração/Escoamento",
+"description": "A água penetra no solo ou escoa para rios",
+"type": "end",
+"position": { "x": 200, "y": 350 }
+}
+],
+"edges": [
+{ "id": "e1-2", "source": "1", "target": "2" },
+{ "id": "e2-3", "source": "2", "target": "3" },
+{ "id": "e3-4", "source": "3", "target": "4" }
+]
+}
+
+COMO ENVIAR ESSA ESTRUTURA PARA O React Flow
+O React Flow espera exatamente:
+
+Um array de nodes
+
+Um array de edges
+
+➕ Integração com IA
+A IA deve retornar somente a estrutura JSON com nodes e edges, dentro de um código Markdown:
+
+markdown:
+
+{ ...json aqui... }
+yaml:
+Seu sistema do Vibe Code deve:
+1. Identificar esse bloco `fluxograma`
+2. Interpretar o JSON
+3. Renderizar no `React Flow` o conteúdo automaticamente
+---
+## 💡 EXTRA: Funcionalidades Inteligentes
+| Função | O que a IA deve fazer |
+|--------|------------------------|
+| 🔍 Mini resumos ao passar o mouse | Incluir `description` nos nodes |
+| 🧩 Cores diferentes por tipo de etapa | Incluir `type` ou `categoria` nos nodes |
+| ➕ Botão "Adicionar ao Caderno" | Incluir botão em cada nó que copia o texto para o caderno |
+| 📈 Evolução por Fluxo | Marcar fluxogramas vistos pelo aluno no backend |
+| 🧠 IA adaptativa | IA pode ajustar a complexidade dos fluxogramas com base no nível do aluno |
+---
