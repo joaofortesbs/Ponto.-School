@@ -1016,7 +1016,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
   };
   
   const exportAsImage = async () => {
-    return new Promise<boolean>((resolve, reject) => {
+    try {
       // Mostrar indicador visual de carregamento
       const loadingIndicator = document.createElement('div');
       loadingIndicator.className = 'fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-[9999]';
@@ -1031,129 +1031,120 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
       `;
       document.body.appendChild(loadingIndicator);
       
-      setTimeout(async () => {
+      // Esperar um momento para garantir que o DOM está estável
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Verificar se o elemento existe
+      const element = document.querySelector('.react-flow') as HTMLElement;
+      if (!element) {
+        loadingIndicator.remove();
+        alert('Não foi possível encontrar o fluxograma para exportar.');
+        return false;
+      }
+      
+      // Forçar atualização da visualização
+      window.dispatchEvent(new Event('resize'));
+      
+      // Aguardar mais um momento para a renderização
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      try {
+        // Método 1: html2canvas (geralmente mais confiável)
+        const html2canvas = (await import('html2canvas')).default;
+        
+        const canvas = await html2canvas(element, {
+          backgroundColor: document.documentElement.classList.contains('dark') ? '#111827' : '#ffffff',
+          scale: 2,
+          logging: false,
+          useCORS: true,
+          allowTaint: true,
+          ignoreElements: (el) => el.classList.contains('react-flow__minimap') || 
+                                  el.classList.contains('react-flow__attribution') ||
+                                  el.classList.contains('react-flow__panel')
+        });
+        
+        // Converter para PNG e baixar
+        const dataUrl = canvas.toDataURL('image/png');
+        
+        // Criar link para download e disparar o clique
+        const link = document.createElement('a');
+        link.download = `fluxograma_${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
+        link.href = dataUrl;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        
+        // Limpar o DOM após um pequeno atraso
+        setTimeout(() => {
+          document.body.removeChild(link);
+          loadingIndicator.remove();
+          
+          // Mostrar mensagem de sucesso
+          const successMessage = document.createElement('div');
+          successMessage.className = 'fixed bottom-4 right-4 bg-green-50 dark:bg-green-900 text-green-800 dark:text-green-100 px-4 py-2 rounded-md shadow-md border border-green-200 dark:border-green-800 z-50';
+          successMessage.innerHTML = 'Fluxograma exportado com sucesso!';
+          document.body.appendChild(successMessage);
+          
+          // Remover mensagem após 3 segundos
+          setTimeout(() => {
+            successMessage.remove();
+          }, 3000);
+        }, 100);
+        
+        return true;
+      } catch (primaryError) {
+        console.error('Erro no método html2canvas:', primaryError);
+        
+        // Método 2: html-to-image
         try {
-          // Verificar se o elemento existe
-          const element = document.querySelector('.react-flow') as HTMLElement;
-          if (!element) {
-            loadingIndicator.remove();
-            alert('Não foi possível encontrar o fluxograma para exportar.');
-            reject(new Error('Elemento do fluxograma não encontrado'));
-            return;
-          }
+          const options = {
+            quality: 1,
+            backgroundColor: document.documentElement.classList.contains('dark') ? '#111827' : '#ffffff',
+            pixelRatio: 2,
+            cacheBust: true,
+            skipAutoScale: true,
+            filter: (node: HTMLElement) => 
+              !node.classList?.contains('react-flow__minimap') &&
+              !node.classList?.contains('react-flow__attribution') &&
+              !node.classList?.contains('react-flow__panel')
+          };
           
-          // Forçar um repintagem para garantir que o elemento está 100% renderizado
-          window.dispatchEvent(new Event('resize'));
+          const dataUrl = await htmlToImage.toPng(element, options);
           
-          try {
-            // Primeiro método: html2canvas
-            const html2canvas = (await import('html2canvas')).default;
-            
-            const canvas = await html2canvas(element, {
-              backgroundColor: document.documentElement.classList.contains('dark') ? '#111827' : '#ffffff',
-              scale: 2, // Melhora a qualidade da imagem
-              logging: false,
-              useCORS: true, // Tenta resolver problemas de CORS
-              allowTaint: true, // Permite incluir imagens "tainted"
-              ignoreElements: (el) => el.classList.contains('react-flow__minimap') // Ignora minimapa
-            });
-            
-            // Converter para PNG
-            const dataUrl = canvas.toDataURL('image/png');
-            
-            // Criar link para download
-            const link = document.createElement('a');
-            link.download = `fluxograma_${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
-            link.href = dataUrl;
-            document.body.appendChild(link);
-            link.click();
+          const link = document.createElement('a');
+          link.download = `fluxograma_${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
+          link.href = dataUrl;
+          link.style.display = 'none';
+          document.body.appendChild(link);
+          link.click();
+          
+          setTimeout(() => {
             document.body.removeChild(link);
-            
-            // Remover indicador de carregamento
             loadingIndicator.remove();
             
-            // Mostrar mensagem de sucesso
             const successMessage = document.createElement('div');
             successMessage.className = 'fixed bottom-4 right-4 bg-green-50 dark:bg-green-900 text-green-800 dark:text-green-100 px-4 py-2 rounded-md shadow-md border border-green-200 dark:border-green-800 z-50';
             successMessage.innerHTML = 'Fluxograma exportado com sucesso!';
             document.body.appendChild(successMessage);
             
-            // Remover mensagem após 3 segundos
             setTimeout(() => {
               successMessage.remove();
             }, 3000);
-            
-            resolve(true);
-            
-          } catch (primaryError) {
-            console.error('Erro no método principal html2canvas:', primaryError);
-            
-            // Fallback para htmlToImage
-            try {
-              const options = {
-                quality: 1,
-                backgroundColor: document.documentElement.classList.contains('dark') ? '#111827' : '#ffffff',
-                pixelRatio: 2,
-                cacheBust: true,
-                filter: (node: HTMLElement) => 
-                  !node.classList?.contains('react-flow__minimap') &&
-                  !node.classList?.contains('react-flow__attribution')
-              };
-              
-              const dataUrl = await htmlToImage.toPng(element, options);
-              
-              const link = document.createElement('a');
-              link.download = `fluxograma_${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
-              link.href = dataUrl;
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-              
-              loadingIndicator.remove();
-              
-              const successMessage = document.createElement('div');
-              successMessage.className = 'fixed bottom-4 right-4 bg-green-50 dark:bg-green-900 text-green-800 dark:text-green-100 px-4 py-2 rounded-md shadow-md border border-green-200 dark:border-green-800 z-50';
-              successMessage.innerHTML = 'Fluxograma exportado com sucesso!';
-              document.body.appendChild(successMessage);
-              
-              setTimeout(() => {
-                successMessage.remove();
-              }, 3000);
-              
-              resolve(true);
-            } catch (fallbackError) {
-              console.error('Erro no método fallback htmlToImage:', fallbackError);
-              
-              // Segundo fallback: toCanvas e conversão manual
-              try {
-                const canvas = await htmlToImage.toCanvas(element);
-                const dataUrl = canvas.toDataURL('image/png');
-                
-                const link = document.createElement('a');
-                link.download = `fluxograma_${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
-                link.href = dataUrl;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-                loadingIndicator.remove();
-                resolve(true);
-              } catch (finalError) {
-                loadingIndicator.remove();
-                console.error('Todos os métodos de exportação falharam:', finalError);
-                alert('Não foi possível exportar o fluxograma. Por favor, tente novamente ou use uma captura de tela.');
-                reject(finalError);
-              }
-            }
-          }
+          }, 100);
+          
+          return true;
         } catch (error) {
+          console.error('Erro no método html-to-image:', error);
           loadingIndicator.remove();
-          console.error('Erro geral na exportação:', error);
-          alert('Ocorreu um erro ao exportar o fluxograma. Por favor, tente novamente.');
-          reject(error);
+          alert('Erro ao exportar o fluxograma. Por favor, tente novamente.');
+          return false;
         }
-      }, 500); // Aguarda 500ms para garantir que o fluxograma esteja renderizado
-    });
+      }
+    } catch (error) {
+      console.error('Erro geral na exportação:', error);
+      alert('Ocorreu um erro ao exportar o fluxograma. Por favor, tente novamente.');
+      return false;
+    }
   };
 
 
@@ -1418,7 +1409,7 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                   onClick={(e) => {
                     e.stopPropagation();
                     
-                    // Criar menu de exportação diretamente ao invés de verificar se existe
+                    // Criar menu de exportação com estilos melhorados
                     const exportMenu = document.createElement('div');
                     exportMenu.id = 'export-options-menu';
                     exportMenu.className = 'fixed z-[9999] bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 border border-gray-200 dark:border-gray-700 w-48';
@@ -1433,9 +1424,11 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                     const buttonRect = e.currentTarget.getBoundingClientRect();
                     exportMenu.style.top = `${buttonRect.top - 120}px`;
                     exportMenu.style.left = `${buttonRect.left - 20}px`;
-                    exportMenu.style.pointerEvents = 'auto'; // Importante: garantir que receba eventos de mouse
                     
-                    // Criar o menu usando elementos DOM em vez de innerHTML para melhor controle
+                    // Importante: garantir que receba eventos de mouse
+                    exportMenu.style.pointerEvents = 'auto';
+                    
+                    // Usar createElement para criar todos os elementos do menu
                     const menuContent = document.createElement('div');
                     menuContent.className = 'flex flex-col space-y-1';
                     
@@ -1443,34 +1436,79 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                     const exportImgButton = document.createElement('button');
                     exportImgButton.id = 'export-img-button';
                     exportImgButton.className = 'text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 cursor-pointer';
-                    exportImgButton.innerHTML = `
-                      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      Exportar em .IMG
-                    `;
+                    
+                    // Ícone para o botão
+                    const imgIcon = document.createElement('svg');
+                    imgIcon.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                    imgIcon.setAttribute('class', 'w-4 h-4 mr-2');
+                    imgIcon.setAttribute('fill', 'none');
+                    imgIcon.setAttribute('viewBox', '0 0 24 24');
+                    imgIcon.setAttribute('stroke', 'currentColor');
+                    
+                    const imgIconPath = document.createElement('path');
+                    imgIconPath.setAttribute('stroke-linecap', 'round');
+                    imgIconPath.setAttribute('stroke-linejoin', 'round');
+                    imgIconPath.setAttribute('stroke-width', '2');
+                    imgIconPath.setAttribute('d', 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z');
+                    
+                    imgIcon.appendChild(imgIconPath);
+                    exportImgButton.appendChild(imgIcon);
+                    
+                    // Texto do botão
+                    const imgText = document.createTextNode('Exportar em .IMG');
+                    exportImgButton.appendChild(imgText);
                     
                     // Botão PDF (desativado)
                     const exportPdfButton = document.createElement('button');
                     exportPdfButton.className = 'text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 opacity-60 cursor-not-allowed';
                     exportPdfButton.disabled = true;
-                    exportPdfButton.innerHTML = `
-                      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      Exportar em PDF
-                    `;
+                    
+                    // Ícone para o botão PDF
+                    const pdfIcon = document.createElement('svg');
+                    pdfIcon.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                    pdfIcon.setAttribute('class', 'w-4 h-4 mr-2 opacity-60');
+                    pdfIcon.setAttribute('fill', 'none');
+                    pdfIcon.setAttribute('viewBox', '0 0 24 24');
+                    pdfIcon.setAttribute('stroke', 'currentColor');
+                    
+                    const pdfIconPath = document.createElement('path');
+                    pdfIconPath.setAttribute('stroke-linecap', 'round');
+                    pdfIconPath.setAttribute('stroke-linejoin', 'round');
+                    pdfIconPath.setAttribute('stroke-width', '2');
+                    pdfIconPath.setAttribute('d', 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z');
+                    
+                    pdfIcon.appendChild(pdfIconPath);
+                    exportPdfButton.appendChild(pdfIcon);
+                    
+                    // Texto do botão PDF
+                    const pdfText = document.createTextNode('Exportar em PDF');
+                    exportPdfButton.appendChild(pdfText);
                     
                     // Botão Texto (desativado)
                     const exportTextButton = document.createElement('button');
                     exportTextButton.className = 'text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 opacity-60 cursor-not-allowed';
                     exportTextButton.disabled = true;
-                    exportTextButton.innerHTML = `
-                      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      Exportar em Texto
-                    `;
+                    
+                    // Ícone para o botão de texto
+                    const textIcon = document.createElement('svg');
+                    textIcon.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                    textIcon.setAttribute('class', 'w-4 h-4 mr-2 opacity-60');
+                    textIcon.setAttribute('fill', 'none');
+                    textIcon.setAttribute('viewBox', '0 0 24 24');
+                    textIcon.setAttribute('stroke', 'currentColor');
+                    
+                    const textIconPath = document.createElement('path');
+                    textIconPath.setAttribute('stroke-linecap', 'round');
+                    textIconPath.setAttribute('stroke-linejoin', 'round');
+                    textIconPath.setAttribute('stroke-width', '2');
+                    textIconPath.setAttribute('d', 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z');
+                    
+                    textIcon.appendChild(textIconPath);
+                    exportTextButton.appendChild(textIcon);
+                    
+                    // Texto do botão de texto
+                    const textButtonText = document.createTextNode('Exportar em Texto');
+                    exportTextButton.appendChild(textButtonText);
                     
                     // Montar o menu
                     menuContent.appendChild(exportImgButton);
@@ -1484,17 +1522,46 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                     // Configurar evento de clique para exportar em .IMG
                     exportImgButton.onclick = (event) => {
                       event.stopPropagation();
-                      // Mudar estilo do botão para indicar que está exportando
-                      exportImgButton.innerHTML = `
-                        <svg class="animate-spin w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"></circle>
-                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Exportando...
-                      `;
+                      event.preventDefault();
+                      
+                      // Indicador de carregamento no botão
+                      exportImgButton.innerHTML = '';
+                      
+                      // Ícone de loading
+                      const loadingIcon = document.createElement('svg');
+                      loadingIcon.setAttribute('class', 'animate-spin w-4 h-4 mr-2');
+                      loadingIcon.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                      loadingIcon.setAttribute('fill', 'none');
+                      loadingIcon.setAttribute('viewBox', '0 0 24 24');
+                      
+                      const loadingCircle = document.createElement('circle');
+                      loadingCircle.setAttribute('class', 'opacity-25');
+                      loadingCircle.setAttribute('cx', '12');
+                      loadingCircle.setAttribute('cy', '12');
+                      loadingCircle.setAttribute('r', '10');
+                      loadingCircle.setAttribute('stroke', 'currentColor');
+                      loadingCircle.setAttribute('stroke-width', '2');
+                      
+                      const loadingPath = document.createElement('path');
+                      loadingPath.setAttribute('class', 'opacity-75');
+                      loadingPath.setAttribute('fill', 'currentColor');
+                      loadingPath.setAttribute('d', 'M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z');
+                      
+                      loadingIcon.appendChild(loadingCircle);
+                      loadingIcon.appendChild(loadingPath);
+                      exportImgButton.appendChild(loadingIcon);
+                      
+                      // Texto de carregamento
+                      const loadingText = document.createTextNode('Exportando...');
+                      exportImgButton.appendChild(loadingText);
+                      
                       exportImgButton.disabled = true;
                       exportImgButton.className = 'text-left px-3 py-2 text-sm rounded-md transition-colors flex items-center text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700';
                       
+                      // Remover o menu imediatamente
+                      document.removeEventListener('click', closeMenu);
+                      
+                      // Exportar imagem
                       exportAsImage().then(() => {
                         exportMenu.remove();
                       }).catch(error => {
