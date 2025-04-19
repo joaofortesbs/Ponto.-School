@@ -52,8 +52,8 @@ const ExplicacaoAvancada: React.FC<ExplicacaoAvancadaProps> = ({
               ) : (
                 aprofundadoContent.contexto ? (
                   <div className="relative bg-white/60 dark:bg-gray-800/60 rounded-lg border border-gray-200/70 dark:border-gray-700/50 p-4 shadow-sm">
-                    <div className="prose prose-sm dark:prose-invert max-w-none">
-                      <TypewriterEffect text={aprofundadoContent.contexto} typingSpeed={5} />
+                    <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap break-words overflow-auto">
+                      {aprofundadoContent.contexto}
                     </div>
                     <button 
                       onClick={generateAprofundadoContent} 
@@ -94,7 +94,7 @@ const ExplicacaoAvancada: React.FC<ExplicacaoAvancadaProps> = ({
                     {aprofundadoContent.termos.map((termo, index) => (
                       <div key={index} className="bg-white/80 dark:bg-gray-800/60 p-3 rounded-lg border border-gray-200/70 dark:border-gray-700/50 shadow-sm">
                         <h5 className="font-medium text-blue-700 dark:text-blue-400 mb-1">{termo.termo}</h5>
-                        <p className="text-xs text-gray-600 dark:text-gray-300">{termo.definicao}</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{termo.definicao}</p>
                       </div>
                     ))}
                   </div>
@@ -115,7 +115,9 @@ const ExplicacaoAvancada: React.FC<ExplicacaoAvancadaProps> = ({
               ) : (
                 aprofundadoContent.aplicacoes ? (
                   <div className="prose prose-sm dark:prose-invert max-w-none bg-white/80 dark:bg-gray-800/60 p-4 rounded-lg border border-gray-200/70 dark:border-gray-700/50 shadow-sm">
-                    <TypewriterEffect text={aprofundadoContent.aplicacoes} typingSpeed={1} />
+                    <div className="whitespace-pre-wrap break-words overflow-auto">
+                      {aprofundadoContent.aplicacoes}
+                    </div>
                   </div>
                 ) : (
                   <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-100 dark:border-blue-800">

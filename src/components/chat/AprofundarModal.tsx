@@ -231,7 +231,10 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
       Importante: Se o conteúdo original não tiver informações suficientes, realize uma análise profunda baseada nas indicações de tópico presentes nele.
       Caso o conteúdo seja muito genérico, escolha um tema educacional importante relacionado e o desenvolva profundamente.
 
-      INSTRUÇÃO FINAL CRUCIAL: Sua resposta DEVE ser completa e detalhada, com pelo menos 1000 palavras e vários subtópicos.
+      INSTRUÇÃO FINAL CRUCIAL: 
+      1. Sua resposta DEVE ser completa e detalhada, com pelo menos 1000 palavras e vários subtópicos.
+      2. Retorne APENAS o texto formatado em markdown, sem nenhum texto introdutório ou indicação de que você é uma IA.
+      3. Comece imediatamente com o título principal usando ## e em seguida o conteúdo organizado.
       `;
 
       // Adiciona conteúdo inicial para feedback imediato ao usuário
@@ -266,14 +269,27 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
                             !contextoResponse.includes("Não foi possível") &&
                             !contextoResponse.includes("Não tenho informações suficientes") &&
                             !contextoResponse.includes("Desculpe") &&
-                            !contextoResponse.includes("Erro ao processar");
+                            !contextoResponse.includes("Erro ao processar") &&
+                            !contextoResponse.includes("Como uma IA,") &&
+                            !contextoResponse.includes("como uma IA,") &&
+                            !contextoResponse.includes("Sou uma IA") &&
+                            !contextoResponse.includes("sou uma IA");
+
+      // Remove qualquer texto introdutório que possa ter escapado das instruções
+      let cleanedResponse = contextoResponse;
+      if (cleanedResponse.includes("Aqui está")) {
+        const contentStart = cleanedResponse.indexOf("##");
+        if (contentStart > 0) {
+          cleanedResponse = cleanedResponse.substring(contentStart);
+        }
+      }
 
       // Adiciona validação extra para garantir conteúdo de qualidade
-      const hasDetailedContent = contextoResponse && 
-                               (contextoResponse.includes("##") || // Tem título markdown
-                                contextoResponse.includes("\n-") || // Tem lista
-                                contextoResponse.includes("**") || // Tem negrito
-                                contextoResponse.length > 500); // É suficientemente longo
+      const hasDetailedContent = cleanedResponse && 
+                               (cleanedResponse.includes("##") || // Tem título markdown
+                                cleanedResponse.includes("\n-") || // Tem lista
+                                cleanedResponse.includes("**") || // Tem negrito
+                                cleanedResponse.length > 500); // É suficientemente longo
 
       // Se o conteúdo for válido, atualiza o estado
       if (isValidContent && hasDetailedContent) {
@@ -294,7 +310,14 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
         }
 
         // Atualiza imediatamente o contexto para mostrar ao usuário
-        setAprofundadoContent(prev => ({...prev, contexto: formattedContent, loading: false}));
+        // Garantir que o conteúdo seja renderizado corretamente, tratando possíveis caracteres de formatação
+        setAprofundadoContent(prev => ({
+          ...prev, 
+          contexto: formattedContent,
+          loading: false
+        }));
+        
+        console.log("Conteúdo aprofundado gerado com sucesso:", formattedContent.substring(0, 100) + "...");
 
         // Agora gera os termos e aplicações em segundo plano
         try {

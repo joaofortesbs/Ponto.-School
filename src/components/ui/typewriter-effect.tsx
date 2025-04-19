@@ -14,7 +14,7 @@ class ErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
-      return this.props.fallback || <div>Something went wrong.</div>;
+      return this.props.fallback || <div>Something went wrong rendering Markdown.</div>;
     }
 
     return this.props.children;
@@ -29,24 +29,26 @@ interface TypewriterEffectProps {
 
 const TypewriterEffect: React.FC<TypewriterEffectProps> = ({ 
   text, 
-  typingSpeed = 10, // Aumentar a velocidade para maior rapidez
+  typingSpeed = 10, 
   className = ''
 }) => {
   const [displayText, setDisplayText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [renderError, setRenderError] = useState(false); // Added error state
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Reset quando o texto muda
+  // Reset when the text changes
   useEffect(() => {
     setDisplayText('');
     setCurrentIndex(0);
     setIsComplete(false);
+    setRenderError(false); // Reset error state
   }, [text]);
 
   useEffect(() => {
-    // Verifica se é o texto inicial/carregando
+    //Checks if it's the initial/loading text
     if (text.includes("Preparando conteúdo") || text === '') {
       setDisplayText(text);
       return;
@@ -54,7 +56,7 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
 
     if (currentIndex < text.length && !isPaused) {
       const timeout = setTimeout(() => {
-        // Adiciona caracteres por chunks em vez de um por um para melhor performance
+        // Adds characters by chunks instead of one by one for better performance
         const chunkSize = Math.max(1, Math.floor(text.length / 100));
         const nextIndex = Math.min(currentIndex + chunkSize, text.length);
         const chunk = text.substring(currentIndex, nextIndex);
@@ -62,12 +64,12 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
         setDisplayText(prevText => prevText + chunk);
         setCurrentIndex(nextIndex);
 
-        // Verifica se chegou ao final do texto
+        // Checks if it reached the end of the text
         if (nextIndex >= text.length) {
           setIsComplete(true);
         }
 
-        // Scroll para o final do conteúdo para acompanhar a digitação
+        // Scrolls to the end of the content to follow the typing
         if (contentRef.current) {
           contentRef.current.scrollTop = contentRef.current.scrollHeight;
         }
@@ -78,16 +80,16 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
   }, [currentIndex, text, typingSpeed, isPaused]);
 
   const handleClick = () => {
-    // Se já completou, não faz nada ao clicar
+    // If it's already complete, it does nothing when clicked
     if (isComplete) return;
 
-    // Se estiver pausado, continua a digitação
+    // If it's paused, it continues typing
     if (isPaused) {
       setIsPaused(false);
       return;
     }
 
-    // Se o texto estiver sendo digitado e o usuário clicar, completa imediatamente
+    // If the text is being typed and the user clicks, it completes immediately
     if (currentIndex < text.length) {
       setDisplayText(text);
       setCurrentIndex(text.length);
@@ -95,7 +97,7 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
     }
   };
 
-  // Detecta se o texto parece ser markdown
+  // Detects if the text seems to be markdown
   const containsMarkdown = text.includes('#') || 
                            text.includes('**') || 
                            text.includes('*') || 
@@ -112,13 +114,9 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
       className={`prose prose-sm dark:prose-invert max-w-none cursor-pointer ${className}`}
     >
       {containsMarkdown ? (
-        <React.Suspense fallback={<div style={{ whiteSpace: 'pre-wrap' }}>{displayText}</div>}>
-          <ErrorBoundary fallback={<div style={{ whiteSpace: 'pre-wrap' }}>{displayText}</div>}>
-            <ReactMarkdown>
-              {displayText}
-            </ReactMarkdown>
-          </ErrorBoundary>
-        </React.Suspense>
+        <ErrorBoundary fallback={<div style={{ whiteSpace: 'pre-wrap' }}>{renderError ? "Error rendering Markdown" : displayText}</div>}> {/*Improved fallback*/}
+          <ReactMarkdown children={displayText} onError={e => setRenderError(true)}/> {/*Improved error handling*/}
+        </ErrorBoundary>
       ) : (
         <div style={{ whiteSpace: 'pre-wrap' }}>{displayText}</div>
       )}
