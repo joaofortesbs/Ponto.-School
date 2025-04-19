@@ -143,6 +143,9 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
 
   // Função para gerar conteúdo aprofundado
   const generateAprofundadoContent = async () => {
+    // Indica que o processo de geração começou
+    setAprofundadoContent(prev => ({...prev, loading: true}));
+    
     // Busca mensagem da IA
     const lastAIMessage = getLastAIMessage();
     
@@ -163,14 +166,14 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
     let messageContent = extractContent(lastAIMessage);
     
     // Se não encontrou mensagem ou conteúdo vazio, tenta extrair tema a partir de todas as mensagens
-    if (!messageContent.trim()) {
+    if (!messageContent || !messageContent.trim()) {
       console.log("Não foi encontrada mensagem específica da IA, buscando temas no histórico de conversas");
       
       // Extrai temas de todas as mensagens recentes (últimas 5)
       const recentMessages = messages.slice(-5);
       const allContent = recentMessages
         .map(msg => extractContent(msg))
-        .filter(content => content.trim().length > 30)
+        .filter(content => content && content.trim().length > 30)
         .join(". ");
       
       if (allContent) {
@@ -180,7 +183,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
     }
     
     // Último recurso - se ainda não tem conteúdo, usa um tema genérico educacional
-    const safeMessageContent = messageContent.trim() || 
+    const safeMessageContent = messageContent && messageContent.trim() ? messageContent.trim() : 
       "O usuário está buscando informações mais aprofundadas sobre os assuntos educacionais recentemente discutidos. " +
       "Com base no contexto da plataforma educacional, forneça um conteúdo detalhado sobre tópicos de estudo relevantes, " +
       "incluindo conceitos fundamentais, aplicações práticas e contexto histórico.";
@@ -189,9 +192,6 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
     setTemaAtual(safeMessageContent.substring(0, 100) + '...');
     
     console.log("Conteúdo para aprofundamento:", safeMessageContent.substring(0, 50) + "...");
-    
-    // Configura o estado de carregamento
-    setAprofundadoContent(prev => ({...prev, loading: true}));
 
     try {
       // Gera contexto aprofundado com instruções mais detalhadas e robustas
@@ -215,6 +215,8 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
       MUITO IMPORTANTE: Considere que este conteúdo será usado em um recurso educacional chamado "Explicação Avançada" dentro da plataforma Ponto.School. 
       O usuário espera um conteúdo realmente aprofundado, com alto nível de detalhe e qualidade acadêmica.
       
+      FORMATAÇÃO: Use formatação markdown para estruturar sua resposta. Use títulos (##), subtítulos (###), listas, **negrito** para conceitos importantes, e _itálico_ para termos técnicos.
+      
       Conteúdo a ser expandido:
       "${safeMessageContent}"
       
@@ -224,129 +226,271 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
 
       // Chame a API para gerar o contexto aprofundado
       console.log("Gerando contexto aprofundado...");
-      const contextoResponse = await generateAIResponse(contextPrompt, sessionId || 'default_session');
+      
+      // Usa um timeout para garantir que não ficaremos esperando por muito tempo
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Tempo esgotado ao buscar conteúdo")), 15000)
+      );
+      
+      const contextoResponse = await Promise.race([
+        generateAIResponse(contextPrompt, sessionId || 'default_session'),
+        timeoutPromise
+      ]);
       
       // Verifica se o conteúdo é válido e útil
       const isValidContent = contextoResponse && 
-                            contextoResponse.length > 100 && 
+                            typeof contextoResponse === 'string' &&
+                            contextoResponse.length > 150 && 
                             !contextoResponse.includes("Não foi possível") &&
                             !contextoResponse.includes("Não tenho informações suficientes");
       
-      // Se o conteúdo for válido, atualiza o estado. Caso contrário, gera um conteúdo de fallback
+      // Se o conteúdo for válido, atualiza o estado
       if (isValidContent) {
         console.log("Contexto aprofundado gerado com sucesso!");
+        // Atualiza imediatamente o contexto para mostrar ao usuário
         setAprofundadoContent(prev => ({...prev, contexto: contextoResponse, loading: false}));
+        
+        // Agora gera os termos e aplicações em segundo plano
+        try {
+          // Usa o conteúdo da resposta como base para os termos, garantindo consistência
+          const termosPrompt = `
+          Liste e explique os 5 principais termos técnicos relacionados ao seguinte tema que você acabou de explicar: 
+          
+          "${safeMessageContent}"
+          
+          Para cada termo, forneça:
+          1. Definição clara e precisa
+          2. Exemplo prático ou contexto de uso
+          3. Se possível, uma analogia para facilitar o entendimento
+
+          IMPORTANTE: Responda APENAS em formato JSON válido com a estrutura:
+          [{"termo": "Nome do Termo", "definicao": "Definição completa com exemplo e analogia"}, ...] 
+          
+          Não inclua nenhum texto introdutório ou comentário antes ou depois do JSON.
+          `;
+
+          const aplicacoesPrompt = `
+          Mostre como o conhecimento sobre o tema "${safeMessageContent}" pode ser aplicado em diferentes contextos:
+          
+          1. Em debates atuais e discussões contemporâneas
+          2. Em estudos interdisciplinares
+          3. Para resolução de problemas práticos
+          4. Em redações, artigos acadêmicos ou trabalhos escolares
+          5. Relações com outros temas históricos ou científicos semelhantes
+          
+          Estruture sua resposta com subtítulos claros (usando formato markdown ##) e exemplos concretos para cada aplicação.
+          `;
+
+          // Execute estas chamadas em paralelo
+          Promise.all([
+            generateAIResponse(termosPrompt, sessionId || 'default_session'),
+            generateAIResponse(aplicacoesPrompt, sessionId || 'default_session')
+          ]).then(([termosResponse, aplicacoesResponse]) => {
+            console.log("Respostas complementares recebidas!");
+            
+            // Tenta extrair os termos no formato JSON
+            let termosArray = [];
+            try {
+              // Limpa a resposta para tentar extrair apenas o JSON
+              const cleanedResponse = termosResponse.trim()
+                .replace(/```json/g, '')
+                .replace(/```/g, '')
+                .trim();
+                
+              // Tenta fazer parse do JSON
+              termosArray = JSON.parse(cleanedResponse);
+              
+              // Garante que temos pelo menos 3 termos
+              if (!Array.isArray(termosArray) || termosArray.length < 3) {
+                throw new Error("JSON inválido ou com poucos termos");
+              }
+            } catch (e) {
+              console.warn("Erro ao processar JSON de termos:", e);
+              
+              // Tenta extrair usando regex como fallback
+              try {
+                const jsonMatch = termosResponse.match(/\[\s*{.+}\s*\]/s);
+                if (jsonMatch) {
+                  termosArray = JSON.parse(jsonMatch[0]);
+                }
+              } catch (regexError) {
+                console.error("Também falhou com regex:", regexError);
+              }
+              
+              // Se ainda falhou, cria um termo único com a resposta completa
+              if (!Array.isArray(termosArray) || termosArray.length === 0) {
+                console.log("Criando termos manualmente a partir do texto");
+                
+                // Extrai possíveis termos do texto
+                const lines = termosResponse.split('\n');
+                const extractedTerms = [];
+                
+                let currentTerm = null;
+                let currentDefinition = "";
+                
+                for (const line of lines) {
+                  // Busca por padrões que pareçam termos
+                  if (line.match(/^[0-9]+\.\s*["']?([^"':]+)["']?[:]/)) {
+                    // Se já temos um termo sendo processado, salvamos
+                    if (currentTerm) {
+                      extractedTerms.push({
+                        termo: currentTerm,
+                        definicao: currentDefinition.trim()
+                      });
+                    }
+                    
+                    // Extrai o novo termo
+                    const matches = line.match(/^[0-9]+\.\s*["']?([^"':]+)["']?[:](.*)$/);
+                    currentTerm = matches[1].trim();
+                    currentDefinition = matches[2] ? matches[2].trim() : "";
+                  } else if (currentTerm) {
+                    // Continua acumulando a definição
+                    currentDefinition += " " + line.trim();
+                  }
+                }
+                
+                // Adiciona o último termo
+                if (currentTerm) {
+                  extractedTerms.push({
+                    termo: currentTerm,
+                    definicao: currentDefinition.trim()
+                  });
+                }
+                
+                // Se conseguimos extrair termos, usamos eles
+                if (extractedTerms.length > 0) {
+                  termosArray = extractedTerms;
+                } else {
+                  // Último recurso: divide o texto em parágrafos
+                  termosArray = [{
+                    termo: "Glossário Completo",
+                    definicao: termosResponse
+                  }];
+                }
+              }
+            }
+
+            // Atualiza o estado com todos os dados complementares
+            setAprofundadoContent(prev => ({
+              ...prev,
+              termos: termosArray,
+              aplicacoes: aplicacoesResponse,
+              loading: false
+            }));
+          }).catch(complementError => {
+            console.error("Erro ao gerar conteúdo complementar:", complementError);
+            // Mesmo se falhar, já temos o contexto principal
+          });
+          
+        } catch (complementError) {
+          console.error("Erro ao iniciar geração de conteúdo complementar:", complementError);
+          // Não afeta o contexto principal que já foi carregado
+        }
+        
       } else {
         console.log("Gerando conteúdo de fallback devido a resposta insuficiente...");
-        // Gera um conteúdo de fallback sobre um tema educacional geral
-        const fallbackPrompt = `
-        Crie uma explicação detalhada e aprofundada sobre um importante tópico educacional.
-        Escolha um tópico que seja universalmente relevante e que tenha aspectos históricos, teóricos e práticos interessantes.
-        A explicação deve incluir contexto histórico, fundamentos teóricos, aplicações práticas e relevância moderna.
-        Formate o conteúdo de forma bem estruturada, com introdução clara e desenvolvimento lógico das ideias.
-        `;
         
-        const fallbackResponse = await generateAIResponse(fallbackPrompt, sessionId || 'default_session');
-        setAprofundadoContent(prev => ({...prev, contexto: fallbackResponse, loading: false}));
-      }
-
-      // Agora faça solicitações para os termos e aplicações em segundo plano
-      // Usa o conteúdo da resposta como base para os termos, garantindo consistência
-      const termosPrompt = `
-      Liste e explique os principais termos técnicos relacionados ao tema que você acabou de explicar. Para cada termo, forneça:
-      1. Definição clara e precisa
-      2. Exemplo prático ou contexto de uso
-      3. Se possível, uma analogia para facilitar o entendimento
-
-      Responda em formato que possa ser facilmente convertido para JSON com estrutura
-      [{"termo": "Nome do Termo", "definicao": "Definição completa com exemplo e analogia"}, ...]
-      
-      Garanta que os termos sejam realmente relacionados ao conteúdo que você acabou de criar na explicação detalhada.
-      `;
-
-      const aplicacoesPrompt = `
-      Mostre como o conhecimento sobre o tema que você acabou de explicar pode ser aplicado em diferentes contextos:
-      1. Em debates atuais e discussões contemporâneas
-      2. Em estudos interdisciplinares
-      3. Para resolução de problemas práticos
-      4. Em redações, artigos acadêmicos ou trabalhos escolares
-      5. Relações com outros temas históricos ou científicos semelhantes
-      
-      Estruture sua resposta com subtítulos claros e exemplos concretos para cada aplicação.
-      Garanta que as aplicações sejam realmente relacionadas ao conteúdo que você explicou anteriormente na explicação detalhada.
-      `;
-
-      // Execute estas chamadas em paralelo
-      Promise.all([
-        generateAIResponse(termosPrompt, sessionId || 'default_session'),
-        generateAIResponse(aplicacoesPrompt, sessionId || 'default_session')
-      ]).then(([termosResponse, aplicacoesResponse]) => {
-        // Tenta extrair os termos no formato JSON
-        let termosArray = [];
         try {
-          // Procura por conteúdo que parece ser JSON
-          const jsonMatch = termosResponse.match(/\[\s*{.+}\s*\]/s);
-          if (jsonMatch) {
-            termosArray = JSON.parse(jsonMatch[0]);
+          // Gera um conteúdo de fallback sobre um tema educacional mais específico
+          const fallbackPrompt = `
+          Crie uma explicação detalhada e aprofundada sobre um importante tópico educacional relacionado a:
+          "${safeMessageContent.substring(0, 100)}".
+          
+          A explicação deve incluir:
+          - Contexto histórico e evolução do tema
+          - Fundamentos teóricos e conceitos-chave
+          - Aplicações práticas no mundo contemporâneo
+          - Relevância para o desenvolvimento acadêmico e profissional
+          
+          Use formatação markdown para estruturar sua resposta de forma clara.
+          `;
+          
+          const fallbackResponse = await generateAIResponse(fallbackPrompt, sessionId || 'default_session');
+          
+          if (fallbackResponse && fallbackResponse.length > 200) {
+            setAprofundadoContent(prev => ({
+              ...prev, 
+              contexto: fallbackResponse, 
+              loading: false,
+              termos: [
+                {
+                  termo: "Conceito Fundamental", 
+                  definicao: "Ideia básica essencial para a compreensão deste campo de estudo. Serve como alicerce para o desenvolvimento de teorias e aplicações mais complexas."
+                },
+                {
+                  termo: "Aplicação Prática", 
+                  definicao: "Uso de conhecimentos teóricos para resolver problemas reais ou criar soluções úteis. Demonstra a relevância do conhecimento no contexto cotidiano."
+                },
+                {
+                  termo: "Perspectiva Histórica", 
+                  definicao: "Análise da evolução de ideias e conceitos ao longo do tempo, permitindo compreender a origem e o desenvolvimento do conhecimento atual."
+                }
+              ],
+              aplicacoes: "## Aplicações deste Conhecimento\n\n" +
+                          "### Em Debates Contemporâneos\n" +
+                          "Este tema fornece fundamentação para discussões atuais sobre educação, tecnologia e sociedade.\n\n" +
+                          "### Na Resolução de Problemas\n" +
+                          "Os conceitos apresentados podem ser aplicados para abordar desafios práticos em diversos contextos.\n\n" +
+                          "### No Desenvolvimento Acadêmico\n" +
+                          "Compreender este tema aprofundadamente contribui para uma formação acadêmica mais sólida e versátil."
+            }));
           } else {
-            // Fallback: cria um termo único com a resposta completa
-            termosArray = [{
-              termo: "Glossário Completo",
-              definicao: termosResponse
-            }];
+            throw new Error("Fallback response insufficient");
           }
-        } catch (e) {
-          console.error("Erro ao processar termos:", e);
-          termosArray = [{
-            termo: "Glossário Técnico",
-            definicao: termosResponse
-          }];
-        }
-
-        // Atualiza o estado com todos os dados
-        setAprofundadoContent(prev => ({
-          ...prev,
-          termos: termosArray,
-          aplicacoes: aplicacoesResponse,
-          loading: false
-        }));
-      });
-    } catch (error) {
-      console.error("Erro ao gerar conteúdo aprofundado:", error);
-      
-      try {
-        console.log("Tentando gerar conteúdo alternativo após erro...");
-        // Tenta gerar um conteúdo alternativo sobre um tópico educacional geral
-        const emergencyPrompt = `
-        Crie uma explicação educacional detalhada sobre um tema importante para estudantes.
-        Escolha um tópico fundamental que seja útil para o desenvolvimento acadêmico.
-        Inclua contexto histórico, conceitos-chave, aplicações práticas e relevância atual.
-        `;
-        
-        const emergencyResponse = await generateAIResponse(emergencyPrompt, sessionId || 'default_session');
-        
-        if (emergencyResponse && emergencyResponse.length > 200) {
-          // Se conseguiu gerar conteúdo de emergência, usa ele
-          setAprofundadoContent({
-            contexto: emergencyResponse,
+        } catch (fallbackError) {
+          console.error("Erro também no conteúdo de fallback:", fallbackError);
+          
+          // Conteúdo de emergência garantido
+          const emergencyContent = {
+            contexto: "# Explorando o Conhecimento Aprofundado\n\n" +
+                     "A busca pelo conhecimento aprofundado é uma jornada fundamental no processo educacional. " +
+                     "Quando exploramos um tema além de sua superfície, descobrimos conexões, nuances e aplicações que transformam nossa compreensão.\n\n" +
+                     "## Componentes do Aprendizado Profundo\n\n" +
+                     "O estudo aprofundado envolve diversos elementos essenciais:\n\n" +
+                     "1. **Contexto histórico** - Entender como as ideias evoluíram ao longo do tempo\n" +
+                     "2. **Fundamentos teóricos** - Dominar os princípios que sustentam o conhecimento\n" +
+                     "3. **Aplicações práticas** - Visualizar como o conhecimento se traduz em soluções reais\n" +
+                     "4. **Conexões interdisciplinares** - Perceber como diferentes áreas se relacionam\n\n" +
+                     "Ao desenvolver uma compreensão mais profunda, você adquire não apenas informações, mas sabedoria aplicável em múltiplos contextos.",
             loading: false,
             termos: [
               {
-                termo: "Conceito Fundamental", 
-                definicao: "Ideia básica essencial para a compreensão de um campo de estudo específico."
+                termo: "Análise Aprofundada", 
+                definicao: "Uma investigação detalhada que vai além da superfície para examinar os componentes e relações subjacentes de um tópico. Por exemplo, ao estudar literatura, não apenas entender o enredo, mas também analisar contexto histórico, simbolismo e influências. É como observar um iceberg em sua totalidade, não apenas a parte visível acima da água."
               },
               {
-                termo: "Aplicação Prática", 
-                definicao: "Uso de conhecimentos teóricos para resolver problemas reais ou criar soluções úteis."
+                termo: "Contexto Histórico", 
+                definicao: "O conjunto de circunstâncias e eventos do passado que influenciaram o desenvolvimento de um conceito, teoria ou fenômeno. Funciona como as raízes de uma árvore, invisíveis mas fundamentais para sustentar e nutrir o conhecimento que vemos hoje."
+              },
+              {
+                termo: "Interdisciplinaridade", 
+                definicao: "Abordagem que integra conhecimentos, métodos e perspectivas de diferentes disciplinas para criar uma compreensão mais completa de um tema. Semelhante a observar um diamante sob diferentes ângulos de luz para apreciar completamente seu brilho e complexidade."
               }
             ],
-            aplicacoes: "Este conhecimento pode ser aplicado em diversos contextos acadêmicos, no desenvolvimento de projetos, em debates e discussões, na solução de problemas reais e na compreensão de fenômenos complexos do mundo ao nosso redor."
-          });
-          return;
+            aplicacoes: "## Aplicações do Conhecimento Aprofundado\n\n" +
+                        "### Em Debates e Discussões\n" +
+                        "O domínio profundo de um tema permite argumentações mais sólidas e nuançadas, elevando o nível do discurso público e acadêmico.\n\n" +
+                        "### Em Estudos Interdisciplinares\n" +
+                        "Conexões significativas entre diferentes áreas do conhecimento surgem quando temos compreensão aprofundada, gerando inovações importantes.\n\n" +
+                        "### Na Resolução de Problemas\n" +
+                        "Problemas complexos exigem entendimento profundo para serem solucionados efetivamente, possibilitando abordagens mais criativas e eficazes.\n\n" +
+                        "### Em Trabalhos Acadêmicos\n" +
+                        "Pesquisas, artigos e teses ganham substância e originalidade quando baseados em conhecimento detalhado e bem fundamentado."
+          };
+          
+          setAprofundadoContent(emergencyContent);
         }
-      } catch (secondError) {
-        console.error("Erro também na tentativa de conteúdo alternativo:", secondError);
       }
+    } catch (error) {
+      console.error("Erro ao gerar conteúdo aprofundado:", error);
+      
+      // Notifica o usuário
+      toast({
+        title: "Dificuldade ao gerar conteúdo",
+        description: "Estamos encontrando um problema técnico. Por favor, tente novamente.",
+        variant: "destructive",
+        duration: 3000
+      });
       
       // Conteúdo de fallback final em caso de todos os erros - garante que sempre haja algo útil
       const fallbackContent = {
@@ -533,7 +677,19 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
               {aprofundadoContent.loading ? (
                 <div className="typewriter-loader">Preparando conteúdo...</div>
               ) : (
-                <TypewriterEffect text={aprofundadoContent.contexto} typingSpeed={1} />
+                aprofundadoContent.contexto ? (
+                  <TypewriterEffect text={aprofundadoContent.contexto} typingSpeed={1} />
+                ) : (
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-100 dark:border-blue-800">
+                    <p>O conteúdo está sendo preparado para você. Se esta mensagem persistir, clique no botão abaixo para tentar novamente.</p>
+                    <button 
+                      onClick={generateAprofundadoContent} 
+                      className="mt-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-md transition-colors"
+                    >
+                      Gerar conteúdo aprofundado
+                    </button>
+                  </div>
+                )
               )}
             </div>
           </div>
@@ -547,17 +703,29 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
                   <span className="text-sm text-gray-700 dark:text-gray-300">Os termos técnicos estão sendo preparados.</span>
                 </div>
               ) : (
-                aprofundadoContent.termos.length > 0 ? (
+                Array.isArray(aprofundadoContent.termos) && aprofundadoContent.termos.length > 0 ? (
                   aprofundadoContent.termos.map((item, index) => (
-                    <div key={index} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                      <span className="block font-medium text-blue-600 dark:text-blue-400 mb-1">{item.termo}</span>
-                      <span className="text-sm text-gray-700 dark:text-gray-300">{item.definicao}</span>
+                    <div key={index} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-200 dark:hover:border-blue-800 transition-colors">
+                      <span className="block font-medium text-blue-600 dark:text-blue-400 mb-1">
+                        {item.termo || "Termo Técnico"}
+                      </span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                        {item.definicao || "Definição não disponível"}
+                      </span>
                     </div>
                   ))
                 ) : (
                   <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <span className="block font-medium text-blue-600 dark:text-blue-400 mb-1">Termos técnicos</span>
-                    <span className="text-sm text-gray-700 dark:text-gray-300">Não foram encontrados termos técnicos específicos para este tema.</span>
+                    <span className="block font-medium text-blue-600 dark:text-blue-400 mb-1">Processando termos técnicos</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                      Estamos extraindo os principais termos técnicos relacionados a este tema.
+                      <button 
+                        onClick={generateAprofundadoContent}
+                        className="ml-2 text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        Tentar novamente
+                      </button>
+                    </span>
                   </div>
                 )
               )}
@@ -570,7 +738,21 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
               {aprofundadoContent.loading ? (
                 <div className="typewriter-loader">Identificando aplicações...</div>
               ) : (
-                aprofundadoContent.aplicacoes || "Aguardando geração de aplicações para este tema."
+                aprofundadoContent.aplicacoes ? (
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                    <TypewriterEffect text={aprofundadoContent.aplicacoes} typingSpeed={1} />
+                  </div>
+                ) : (
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-100 dark:border-blue-800">
+                    <p>As aplicações estão sendo identificadas. Se esta mensagem persistir, clique no botão abaixo.</p>
+                    <button 
+                      onClick={generateAprofundadoContent} 
+                      className="mt-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-md transition-colors"
+                    >
+                      Gerar aplicações
+                    </button>
+                  </div>
+                )
               )}
             </div>
           </div>
