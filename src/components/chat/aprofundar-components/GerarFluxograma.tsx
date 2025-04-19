@@ -1829,7 +1829,7 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                 </div>
                 
                 {/* Área de animação do fluxograma */}
-                <div className="h-[220px] w-full relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/40 dark:from-gray-900/90 dark:via-blue-950/40 dark:to-indigo-950/30 flex items-center justify-center shadow-inner border border-blue-100/50 dark:border-blue-900/30 group-hover:border-blue-200 dark:group-hover:border-blue-800/50 transition-all duration-500">
+                <div className="h-[260px] w-full relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/40 dark:from-gray-900/90 dark:via-blue-950/40 dark:to-indigo-950/30 flex items-center justify-center shadow-inner border border-blue-100/50 dark:border-blue-900/30 group-hover:border-blue-200 dark:group-hover:border-blue-800/50 transition-all duration-500">
                   {/* Fundo com padrão de grade */}
                   <div className="absolute inset-0 bg-[url('/images/pattern-grid.svg')] bg-center opacity-5 dark:opacity-10"></div>
                   
@@ -1888,18 +1888,8 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                   </div>
                 </div>
                 
-                {/* Rodapé com informações e dica de ação */}
-                <div className="mt-4 flex justify-between items-center">
-                  <p className="text-xs text-gray-500 dark:text-gray-400 italic max-w-[70%]">
-                    Organize conceitos complexos em visualizações claras e estruturadas
-                  </p>
-                  <div className="flex items-center text-xs font-medium text-blue-600 dark:text-blue-400">
-                    <span className="mr-1 opacity-70">Selecione uma fonte</span>
-                    <svg className="h-3 w-3 animate-bounce-x" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
-                  </div>
-                </div>
+                {/* Rodapé simplificado */}
+                <div className="mt-4 h-4"></div>
               </div>
               
               <Button
