@@ -83,69 +83,7 @@ const DecisionNode = ({ data }: { data: any }) => {
   );
 };
 
-// Registro de tipos de nós personalizados
-const nodeTypes: NodeTypes = {
-  start: StartNode,
-  default: DefaultNode,
-  end: EndNode,
-  decision: DecisionNode
-};
-
-// Dados de exemplo para inicialização (caso não tenha dados carregados)
-const initialNodes: Node[] = [
-  {
-    id: '1',
-    data: { 
-      label: 'Início do processo', 
-      description: 'Ponto inicial do fluxograma que representa o começo do processo'
-    },
-    position: { x: 250, y: 5 },
-    type: 'start'
-  },
-  {
-    id: '2',
-    data: { 
-      label: 'Etapa intermediária', 
-      description: 'Etapa que detalha uma parte importante do processo ou conceito'
-    },
-    position: { x: 250, y: 100 },
-    type: 'default'
-  },
-  {
-    id: '3',
-    data: { 
-      label: 'Decisão importante', 
-      description: 'Ponto de decisão que causa ramificação do fluxo'
-    },
-    position: { x: 250, y: 200 },
-    type: 'decision'
-  },
-  {
-    id: '4',
-    data: { 
-      label: 'Resultado final', 
-      description: 'Conclusão do processo ou conceito explicado'
-    },
-    position: { x: 250, y: 300 },
-    type: 'end'
-  }
-];
-
-// Conexões de exemplo
-const initialEdges: Edge[] = [
-  { id: 'e1-2', source: '1', target: '2', animated: true, style: { stroke: '#3b82f6' } },
-  { id: 'e2-3', source: '2', target: '3', animated: true, style: { stroke: '#3b82f6' } },
-  { id: 'e3-4', source: '3', target: '4', animated: true, style: { stroke: '#3b82f6' } }
-];
-
-interface FluxogramaVisualizerProps {
-  flowData?: {
-    nodes: Node[];
-    edges: Edge[];
-  };
-  onNodeClick?: (node: Node) => void;
-}
-
+// Configuração avançada de nós para o fluxograma
 const nodeTypes: NodeTypes = {
   start: ({ data, ...props }: any) => (
     <div
@@ -260,7 +198,7 @@ const nodeTypes: NodeTypes = {
   ),
 };
 
-// Exemplos de dados para desenvolvimento
+// Dados de exemplo para inicialização (caso não tenha dados carregados)
 const initialNodes: Node[] = [
   {
     id: '1',
@@ -288,6 +226,7 @@ const initialNodes: Node[] = [
   }
 ];
 
+// Conexões de exemplo
 const initialEdges: Edge[] = [
   { id: 'e1-2', source: '1', target: '2', animated: true, style: { stroke: '#3b82f6' } },
   { id: 'e2-3', source: '2', target: '3', animated: true, style: { stroke: '#3b82f6' } },
@@ -399,4 +338,4 @@ export const createFluxogramaNode = (
   };
 };
 
-export default FluxogramaVisualizer;aVisualizer;
+export default FluxogramaVisualizer;
