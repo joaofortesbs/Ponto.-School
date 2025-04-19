@@ -589,3 +589,92 @@
   cursor: pointer;
 }
 //Further modifications needed here to fulfill the complete user request.
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes expand-line {
+  0% {
+    width: 0;
+    opacity: 0;
+  }
+  100% {
+    width: 108px;
+    opacity: 1;
+  }
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes bounce-x {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-float-delayed-100 {
+  animation: float 3.5s ease-in-out infinite;
+  animation-delay: 0.1s;
+}
+
+.animate-float-delayed-200 {
+  animation: float 4s ease-in-out infinite;
+  animation-delay: 0.2s;
+}
+
+.animate-float-delayed-300 {
+  animation: float 4.5s ease-in-out infinite;
+  animation-delay: 0.3s;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+.animate-expand-line {
+  animation: expand-line 1.5s ease-out forwards;
+}
+
+.animate-blink {
+  animation: blink 1.5s ease-in-out infinite;
+}
+
+.animate-bounce-x {
+  animation: bounce-x 1s ease-in-out infinite;
+}
+
+.animate-delay-150 {
+  animation-delay: 150ms;
+}
+
+.animate-delay-250 {
+  animation-delay: 250ms;
+}
