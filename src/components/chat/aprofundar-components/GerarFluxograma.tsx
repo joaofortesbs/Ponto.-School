@@ -1804,108 +1804,100 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                 </span>
               </Button>
               
-              {/* Preview Card - Design Avançado */}
-              <div className="w-full mt-6 relative group">
-                {/* Card backdrop with glass effect */}
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-100/30 via-indigo-50/20 to-purple-100/30 dark:from-blue-900/20 dark:via-indigo-900/10 dark:to-purple-900/20 rounded-2xl blur-xl opacity-70 group-hover:opacity-100 transition-all duration-500 scale-95 group-hover:scale-105"></div>
+              {/* Card único de Pré-visualização do Fluxograma */}
+              <div className="w-full mt-6 p-6 bg-white/80 dark:bg-gray-800/80 border border-blue-200/80 dark:border-blue-800/30 rounded-2xl shadow-lg backdrop-blur-xl relative overflow-hidden group hover:shadow-xl transition-all duration-500 hover:border-blue-300 dark:hover:border-blue-700">
+                {/* Efeitos decorativos */}
+                <div className="absolute -right-12 -top-12 w-24 h-24 bg-gradient-to-br from-blue-400/10 to-indigo-400/20 dark:from-blue-400/5 dark:to-indigo-400/10 rounded-full blur-md"></div>
+                <div className="absolute -left-12 -bottom-12 w-24 h-24 bg-gradient-to-tr from-purple-400/10 to-pink-400/20 dark:from-purple-500/5 dark:to-pink-500/10 rounded-full blur-md"></div>
                 
-                {/* Main card */}
-                <div className="relative p-6 bg-white/80 dark:bg-gray-800/80 border border-blue-100/80 dark:border-blue-800/30 rounded-2xl shadow-lg backdrop-blur-xl overflow-hidden z-10">
+                {/* Cabeçalho */}
+                <div className="flex items-center justify-between mb-4 relative z-10">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
+                      <Eye className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white text-lg tracking-tight">Pré-visualização</h4>
+                      <p className="text-xs text-blue-600/80 dark:text-blue-400/80 font-medium">Fluxograma interativo</p>
+                    </div>
+                  </div>
+                  <div className="flex space-x-1">
+                    <span className="w-2 h-2 rounded-full bg-pink-400 animate-pulse"></span>
+                    <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse animate-delay-150"></span>
+                    <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse animate-delay-300"></span>
+                  </div>
+                </div>
+                
+                {/* Área de animação do fluxograma */}
+                <div className="h-[220px] w-full relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/40 dark:from-gray-900/90 dark:via-blue-950/40 dark:to-indigo-950/30 flex items-center justify-center shadow-inner border border-blue-100/50 dark:border-blue-900/30 group-hover:border-blue-200 dark:group-hover:border-blue-800/50 transition-all duration-500">
+                  {/* Fundo com padrão de grade */}
+                  <div className="absolute inset-0 bg-[url('/images/pattern-grid.svg')] bg-center opacity-5 dark:opacity-10"></div>
                   
-                  {/* Decorative elements */}
-                  <div className="absolute -right-12 -top-12 w-24 h-24 bg-gradient-to-br from-blue-400/10 to-indigo-400/20 dark:from-blue-400/5 dark:to-indigo-400/10 rounded-full blur-md"></div>
-                  <div className="absolute -left-12 -bottom-12 w-24 h-24 bg-gradient-to-tr from-purple-400/10 to-pink-400/20 dark:from-purple-500/5 dark:to-pink-500/10 rounded-full blur-md"></div>
-                  
-                  {/* Header */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
-                        <Eye className="h-5 w-5 text-white" />
+                  {/* Nós e conexões animadas */}
+                  <div className="relative flex flex-col items-center z-10 transform group-hover:scale-105 transition-transform duration-700">
+                    {/* Nó principal/conceito */}
+                    <div className="w-28 h-12 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-lg flex items-center justify-center text-white text-xs font-medium mb-3 shadow-lg group-hover:shadow-blue-400/20 dark:group-hover:shadow-blue-500/10 transition-all duration-500 animate-float">
+                      <span className="flex flex-col items-center">
+                        <span className="text-[10px] uppercase tracking-wider opacity-70">Conceito</span>
+                        <span className="font-semibold">Principal</span>
+                      </span>
+                    </div>
+                    
+                    {/* Linha de conexão animada */}
+                    <div className="w-[2px] h-8 bg-gradient-to-b from-blue-400 to-indigo-500 dark:from-blue-500 dark:to-indigo-600 animate-pulse-slow"></div>
+                    
+                    {/* Nós do meio com conexões */}
+                    <div className="flex items-center space-x-14 mb-3 relative">
+                      {/* Nó de contexto (esquerda) */}
+                      <div className="flex flex-col items-center">
+                        <div className="w-20 h-10 bg-gradient-to-r from-indigo-400 to-indigo-500 dark:from-indigo-500 dark:to-indigo-600 rounded-lg flex items-center justify-center text-white text-xs font-medium shadow-md group-hover:shadow-indigo-400/20 dark:group-hover:shadow-indigo-500/10 transition-all duration-500 animate-float-delayed-100">
+                          <span className="font-medium">Contexto</span>
+                        </div>
+                        <div className="w-[2px] h-6 bg-gradient-to-b from-indigo-400 to-purple-500 dark:from-indigo-500 dark:to-purple-600 mt-2 animate-pulse-slow animate-delay-150"></div>
                       </div>
-                      <div>
-                        <h4 className="font-semibold text-gray-900 dark:text-white text-lg tracking-tight">Pré-visualização</h4>
-                        <p className="text-xs text-blue-600/80 dark:text-blue-400/80 font-medium">Fluxograma interativo</p>
+                      
+                      {/* Linha conectora entre nós */}
+                      <div className="absolute top-5 left-[18px] w-[108px] h-[2px] bg-gradient-to-r from-indigo-400 to-purple-400 dark:from-indigo-500 dark:to-purple-500 animate-expand-line"></div>
+                      
+                      {/* Nó de detalhes (direita) */}
+                      <div className="flex flex-col items-center">
+                        <div className="w-20 h-10 bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-500 dark:to-purple-600 rounded-lg flex items-center justify-center text-white text-xs font-medium shadow-md group-hover:shadow-purple-400/20 dark:group-hover:shadow-purple-500/10 transition-all duration-500 animate-float-delayed-200">
+                          <span className="font-medium">Detalhes</span>
+                        </div>
+                        <div className="w-[2px] h-6 bg-gradient-to-b from-purple-400 to-green-500 dark:from-purple-500 dark:to-green-600 mt-2 animate-pulse-slow animate-delay-250"></div>
                       </div>
                     </div>
-                    <div className="flex space-x-1">
-                      <span className="w-2 h-2 rounded-full bg-pink-400 animate-pulse"></span>
-                      <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse animate-delay-150"></span>
-                      <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse animate-delay-300"></span>
+                    
+                    {/* Nó de conclusão */}
+                    <div className="w-28 h-12 bg-gradient-to-r from-green-500 to-emerald-500 dark:from-green-600 dark:to-emerald-600 rounded-lg flex items-center justify-center text-white text-xs font-medium shadow-lg group-hover:shadow-green-400/20 dark:group-hover:shadow-green-500/10 transition-all duration-500 animate-float-delayed-300">
+                      <span className="flex flex-col items-center">
+                        <span className="text-[10px] uppercase tracking-wider opacity-70">Síntese</span>
+                        <span className="font-semibold">Conclusão</span>
+                      </span>
                     </div>
                   </div>
                   
-                  {/* Preview area with advanced animation */}
-                  <div className="h-[220px] w-full relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/40 dark:from-gray-900/90 dark:via-blue-950/40 dark:to-indigo-950/30 flex items-center justify-center shadow-inner border border-blue-100/50 dark:border-blue-900/30 group-hover:border-blue-200 dark:group-hover:border-blue-800/50 transition-all duration-500">
-                    
-                    {/* Grid background */}
-                    <div className="absolute inset-0 bg-[url('/images/pattern-grid.svg')] bg-center opacity-5 dark:opacity-10"></div>
-                    
-                    {/* Enhanced animated nodes with connection lines */}
-                    <div className="relative flex flex-col items-center z-10 transform group-hover:scale-105 transition-transform duration-700">
-                      {/* Main concept node */}
-                      <div className="w-28 h-12 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-lg flex items-center justify-center text-white text-xs font-medium mb-3 shadow-lg group-hover:shadow-blue-400/20 dark:group-hover:shadow-blue-500/10 transition-all duration-500 animate-float">
-                        <span className="flex flex-col items-center">
-                          <span className="text-[10px] uppercase tracking-wider opacity-70">Conceito</span>
-                          <span className="font-semibold">Principal</span>
-                        </span>
-                      </div>
-                      
-                      {/* Connection line with animation */}
-                      <div className="w-[2px] h-8 bg-gradient-to-b from-blue-400 to-indigo-500 dark:from-blue-500 dark:to-indigo-600 animate-pulse-slow"></div>
-                      
-                      {/* Middle nodes with connections */}
-                      <div className="flex items-center space-x-14 mb-3 relative">
-                        {/* Left context node */}
-                        <div className="flex flex-col items-center">
-                          <div className="w-20 h-10 bg-gradient-to-r from-indigo-400 to-indigo-500 dark:from-indigo-500 dark:to-indigo-600 rounded-lg flex items-center justify-center text-white text-xs font-medium shadow-md group-hover:shadow-indigo-400/20 dark:group-hover:shadow-indigo-500/10 transition-all duration-500 animate-float-delayed-100">
-                            <span className="font-medium">Contexto</span>
-                          </div>
-                          <div className="w-[2px] h-6 bg-gradient-to-b from-indigo-400 to-purple-500 dark:from-indigo-500 dark:to-purple-600 mt-2 animate-pulse-slow animate-delay-150"></div>
-                        </div>
-                        
-                        {/* Connector line between nodes */}
-                        <div className="absolute top-5 left-[18px] w-[108px] h-[2px] bg-gradient-to-r from-indigo-400 to-purple-400 dark:from-indigo-500 dark:to-purple-500 animate-expand-line"></div>
-                        
-                        {/* Right details node */}
-                        <div className="flex flex-col items-center">
-                          <div className="w-20 h-10 bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-500 dark:to-purple-600 rounded-lg flex items-center justify-center text-white text-xs font-medium shadow-md group-hover:shadow-purple-400/20 dark:group-hover:shadow-purple-500/10 transition-all duration-500 animate-float-delayed-200">
-                            <span className="font-medium">Detalhes</span>
-                          </div>
-                          <div className="w-[2px] h-6 bg-gradient-to-b from-purple-400 to-green-500 dark:from-purple-500 dark:to-green-600 mt-2 animate-pulse-slow animate-delay-250"></div>
-                        </div>
-                      </div>
-                      
-                      {/* Conclusion node */}
-                      <div className="w-28 h-12 bg-gradient-to-r from-green-500 to-emerald-500 dark:from-green-600 dark:to-emerald-600 rounded-lg flex items-center justify-center text-white text-xs font-medium shadow-lg group-hover:shadow-green-400/20 dark:group-hover:shadow-green-500/10 transition-all duration-500 animate-float-delayed-300">
-                        <span className="flex flex-col items-center">
-                          <span className="text-[10px] uppercase tracking-wider opacity-70">Síntese</span>
-                          <span className="font-semibold">Conclusão</span>
-                        </span>
-                      </div>
-                    </div>
-                    
-                    {/* Overlay gradient with message */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-white/60 via-transparent to-transparent dark:from-gray-900/60 dark:via-transparent dark:to-transparent flex items-end justify-center pb-5 z-20">
-                      <div className="bg-white/90 dark:bg-gray-800/90 px-4 py-2 rounded-full shadow-md backdrop-blur-sm border border-blue-100/50 dark:border-blue-900/30">
-                        <p className="text-sm text-blue-600 dark:text-blue-400 font-medium flex items-center">
-                          <span className="animate-blink mr-2 h-2 w-2 rounded-full bg-blue-500"></span>
-                          O fluxograma gerado aparecerá aqui!
-                        </p>
-                      </div>
+                  {/* Mensagem de sobreposição */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-white/60 via-transparent to-transparent dark:from-gray-900/60 dark:via-transparent dark:to-transparent flex items-end justify-center pb-5 z-20">
+                    <div className="bg-white/90 dark:bg-gray-800/90 px-4 py-2 rounded-full shadow-md backdrop-blur-sm border border-blue-100/50 dark:border-blue-900/30">
+                      <p className="text-sm text-blue-600 dark:text-blue-400 font-medium flex items-center">
+                        <span className="animate-blink mr-2 h-2 w-2 rounded-full bg-blue-500"></span>
+                        O fluxograma gerado aparecerá aqui!
+                      </p>
                     </div>
                   </div>
-                  
-                  {/* Footer with info and action hint */}
-                  <div className="mt-4 flex justify-between items-center">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 italic max-w-[70%]">
-                      Organize conceitos complexos em visualizações claras e estruturadas
-                    </p>
-                    <div className="flex items-center text-xs font-medium text-blue-600 dark:text-blue-400">
-                      <span className="mr-1 opacity-70">Selecione uma fonte</span>
-                      <svg className="h-3 w-3 animate-bounce-x" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                      </svg>
-                    </div>
+                </div>
+                
+                {/* Rodapé com informações e dica de ação */}
+                <div className="mt-4 flex justify-between items-center">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 italic max-w-[70%]">
+                    Organize conceitos complexos em visualizações claras e estruturadas
+                  </p>
+                  <div className="flex items-center text-xs font-medium text-blue-600 dark:text-blue-400">
+                    <span className="mr-1 opacity-70">Selecione uma fonte</span>
+                    <svg className="h-3 w-3 animate-bounce-x" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
                   </div>
                 </div>
               </div>
