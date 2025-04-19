@@ -246,65 +246,173 @@ Crie um fluxograma que:
             labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
           })) || [];
           
-          // Se não houver conexões definidas pela IA, criar conexões sequenciais padrão
+          // Se não houver conexões definidas pela IA, criar conexões entre os nós de forma mais inteligente
           if (edges.length === 0 && nodes.length > 1) {
-            for (let i = 0; i < nodes.length - 1; i++) {
-              // Verificar se o nó de origem é um nó de decisão
-              const sourceNode = nodes[i];
-              const isDecisionNode = sourceNode.type === 'decision';
+            // Primeiro, identificar todos os nós de decisão
+            const decisionNodes = nodes.filter(node => node.type === 'decision');
+            const nonDecisionNodes = nodes.filter(node => node.type !== 'decision');
+            const startNodes = nodes.filter(node => node.type === 'start');
+            const endNodes = nodes.filter(node => node.type === 'end');
+            
+            // Inicialmente criar conexão do nó de início para o primeiro nó não-início
+            if (startNodes.length > 0 && nodes.length > 1) {
+              const startNode = startNodes[0];
+              const secondNodeIndex = nodes.findIndex(node => node.id !== startNode.id);
               
-              // Se for um nó de decisão, criar dois caminhos (Sim/Não)
-              if (isDecisionNode && i < nodes.length - 2) {
-                // Conexão "Sim" para o próximo nó
+              if (secondNodeIndex !== -1) {
                 edges.push({
-                  id: `e${i+1}-${i+2}`,
-                  source: sourceNode.id,
-                  target: nodes[i+1].id,
-                  label: 'Sim',
-                  animated: true,
-                  style: { stroke: '#3b82f6' },
-                  labelStyle: { fill: '#10b981', fontWeight: 500 },
-                  labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
-                });
-                
-                // Se existir um nó adicional, criar conexão "Não"
-                if (i+2 < nodes.length) {
-                  edges.push({
-                    id: `e${i+1}-${i+3}`,
-                    source: sourceNode.id,
-                    target: nodes[i+2].id,
-                    label: 'Não',
-                    animated: true, 
-                    style: { stroke: '#f43f5e' },
-                    labelStyle: { fill: '#f43f5e', fontWeight: 500 },
-                    labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
-                  });
-                }
-              } else {
-                // Para nós normais, criar conexão sequencial com rótulo descritivo
-                const sourceType = sourceNode.type;
-                let connectionLabel = '';
-                
-                // Gerar rótulos baseados no tipo do nó
-                if (sourceType === 'start') {
-                  connectionLabel = 'Inicia';
-                } else if (sourceType === 'end') {
-                  connectionLabel = 'Finaliza';
-                } else {
-                  connectionLabel = 'Segue para';
-                }
-                
-                edges.push({
-                  id: `e${i+1}-${i+2}`,
-                  source: sourceNode.id,
-                  target: nodes[i+1].id,
-                  label: connectionLabel,
+                  id: `e${startNode.id}-${nodes[secondNodeIndex].id}`,
+                  source: startNode.id,
+                  target: nodes[secondNodeIndex].id,
+                  label: 'Inicia',
                   animated: true,
                   style: { stroke: '#3b82f6' },
                   labelStyle: { fill: '#3b82f6', fontWeight: 500 },
                   labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
                 });
               }
+            }
+            
+            // Para cada nó de decisão, criar dois caminhos alternativos (Sim/Não)
+            decisionNodes.forEach((decisionNode, index) => {
+              // Tentar encontrar dois nós para conectar após o nó de decisão
+              const nodeIndex = nodes.findIndex(node => node.id === decisionNode.id);
+              
+              // Encontrar nós candidatos para "Sim" e "Não" - preferencialmente próximos na sequência
+              let yesNodeIndex = -1;
+              let noNodeIndex = -1;
+              
+              // Primeiro tenta encontrar nós adjacentes
+              if (nodeIndex + 1 < nodes.length) {
+                yesNodeIndex = nodeIndex + 1;
+              }
+              
+              if (nodeIndex + 2 < nodes.length) {
+                noNodeIndex = nodeIndex + 2;
+              } else if (nodeIndex - 1 >= 0 && nodeIndex - 1 !== yesNodeIndex) {
+                // Se não há nós à frente, tenta um nó anterior (exceto start)
+                if (nodes[nodeIndex - 1].type !== 'start') {
+                  noNodeIndex = nodeIndex - 1;
+                }
+              }
+              
+              // Se ainda não encontrou, procura por nós não conectados
+              if (yesNodeIndex === -1) {
+                const availableNode = nonDecisionNodes.find(node => 
+                  node.id !== decisionNode.id && !edges.some(edge => edge.target === node.id)
+                );
+                if (availableNode) {
+                  yesNodeIndex = nodes.findIndex(node => node.id === availableNode.id);
+                }
+              }
+              
+              if (noNodeIndex === -1) {
+                const availableNode = nonDecisionNodes.find(node => 
+                  node.id !== decisionNode.id && 
+                  node.id !== (yesNodeIndex !== -1 ? nodes[yesNodeIndex].id : '') &&
+                  !edges.some(edge => edge.target === node.id)
+                );
+                if (availableNode) {
+                  noNodeIndex = nodes.findIndex(node => node.id === availableNode.id);
+                }
+              }
+              
+              // Conectar "Sim" se encontrou um nó alvo
+              if (yesNodeIndex !== -1) {
+                edges.push({
+                  id: `e${decisionNode.id}-${nodes[yesNodeIndex].id}-yes`,
+                  source: decisionNode.id,
+                  target: nodes[yesNodeIndex].id,
+                  label: 'Sim',
+                  animated: true,
+                  style: { stroke: '#10b981' }, // Verde
+                  labelStyle: { fill: '#10b981', fontWeight: 500 },
+                  labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
+                });
+              }
+              
+              // Conectar "Não" se encontrou um nó alvo
+              if (noNodeIndex !== -1) {
+                edges.push({
+                  id: `e${decisionNode.id}-${nodes[noNodeIndex].id}-no`,
+                  source: decisionNode.id,
+                  target: nodes[noNodeIndex].id,
+                  label: 'Não',
+                  animated: true,
+                  style: { stroke: '#f43f5e' }, // Vermelho
+                  labelStyle: { fill: '#f43f5e', fontWeight: 500 },
+                  labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
+                });
+              }
+            });
+            
+            // Agora conectar os nós restantes em sequência, se ainda não estiverem conectados
+            for (let i = 0; i < nodes.length - 1; i++) {
+              const sourceNode = nodes[i];
+              
+              // Pular nós de decisão, pois eles já foram conectados acima
+              if (sourceNode.type === 'decision') continue;
+              
+              // Pular se este nó já é fonte de alguma conexão
+              if (edges.some(edge => edge.source === sourceNode.id)) continue;
+              
+              // Encontrar o próximo nó que não está conectado como alvo
+              let targetNodeIndex = -1;
+              for (let j = 0; j < nodes.length; j++) {
+                if (i !== j && !edges.some(edge => edge.target === nodes[j].id)) {
+                  targetNodeIndex = j;
+                  break;
+                }
+              }
+              
+              // Se encontrou um nó alvo, conectá-lo
+              if (targetNodeIndex !== -1) {
+                // Determinar o rótulo com base no tipo do nó
+                let connectionLabel = '';
+                if (sourceNode.type === 'start') {
+                  connectionLabel = 'Inicia';
+                } else if (nodes[targetNodeIndex].type === 'end') {
+                  connectionLabel = 'Finaliza';
+                } else {
+                  connectionLabel = 'Segue para';
+                }
+                
+                edges.push({
+                  id: `e${sourceNode.id}-${nodes[targetNodeIndex].id}`,
+                  source: sourceNode.id,
+                  target: nodes[targetNodeIndex].id,
+                  label: connectionLabel,
+                  animated: true,
+                  style: { stroke: '#3b82f6' }, // Azul
+                  labelStyle: { fill: '#3b82f6', fontWeight: 500 },
+                  labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
+                });
+              }
+            }
+            
+            // Se ainda tiver nós sem conexões, conectar ao nó de fim
+            if (endNodes.length > 0) {
+              const endNode = endNodes[0];
+              
+              // Encontrar nós que não são fontes de nenhuma conexão (exceto o próprio fim)
+              const nodesWithoutOutgoing = nodes.filter(node => 
+                node.id !== endNode.id && 
+                !edges.some(edge => edge.source === node.id)
+              );
+              
+              // Conectar cada nó sem saída ao nó de fim
+              nodesWithoutOutgoing.forEach(node => {
+                edges.push({
+                  id: `e${node.id}-${endNode.id}`,
+                  source: node.id,
+                  target: endNode.id,
+                  label: 'Finaliza',
+                  animated: true,
+                  style: { stroke: '#3b82f6' },
+                  labelStyle: { fill: '#3b82f6', fontWeight: 500 },
+                  labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
+                });
+              });
             }
           }
           
