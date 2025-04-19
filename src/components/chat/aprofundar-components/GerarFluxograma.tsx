@@ -72,27 +72,27 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
       try {
         // ETAPA 1: Analisar o conteúdo usando a API de IA
         let fluxogramaData;
-        
+
         // Determinar a fonte do conteúdo (IA ou manual)
         const contentToAnalyze = selectedOption === 'manual' 
           ? manualContent 
           : aprofundadoContent?.contexto || '';
-          
+
         if (!contentToAnalyze.trim()) {
           throw new Error('Conteúdo vazio. Por favor, forneça um texto para gerar o fluxograma.');
         }
-        
+
         // Usar a API de IA para gerar o fluxograma
         try {
           // Mostrar indicador de carregamento enquanto processa
           setIsLoading(true);
-          
+
           // Importar o serviço de IA
           const { generateAIResponse } = await import('@/services/aiChatService');
-          
+
           // Criar um ID de sessão único para esta solicitação
           const sessionId = `fluxograma_${Date.now()}`;
-          
+
           // Prompt estruturado para a IA
           const prompt = `
 Analise o seguinte conteúdo e gere um fluxograma estruturado:
@@ -167,7 +167,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
             intelligenceLevel: 'advanced',
             detailedResponse: true
           });
-          
+
           // Extrair o JSON da resposta
           let extractedData;
           try {
@@ -175,19 +175,19 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
             const jsonMatch = response.match(/```json\n([\s\S]*?)\n```/) || 
                              response.match(/```\n([\s\S]*?)\n```/) ||
                              response.match(/{[\s\S]*?}/);
-                             
+
             const jsonString = jsonMatch ? jsonMatch[0].replace(/```json\n|```\n|```/g, '') : response;
             extractedData = JSON.parse(jsonString);
           } catch (error) {
             console.error('Erro ao extrair JSON da resposta da IA:', error);
-            
+
             // Se falhar em extrair o JSON, criar uma estrutura padrão baseada no texto
             // Implementação de fallback similar à original
             const paragraphs = contentToAnalyze.split(/\n\n+/);
             const sentences = contentToAnalyze.split(/[.!?]\s+/);
-            
+
             const mainBlocks = paragraphs.length > 3 ? paragraphs.slice(0, paragraphs.length) : sentences.slice(0, Math.min(8, sentences.length));
-            
+
             const keywords = mainBlocks.map(block => {
               const words = block.split(/\s+/).filter(word => word.length > 3);
               const mainWord = words.find(word => word.length > 5) || words[0] || 'Conceito';
@@ -196,7 +196,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                 keyword: mainWord.length > 20 ? mainWord.substring(0, 20) + '...' : mainWord
               };
             }).slice(0, 8);
-            
+
             // Preparar os dados no formato esperado
             extractedData = {
               nodes: keywords.map((item, index) => ({
@@ -212,12 +212,12 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
               }))
             };
           }
-          
+
           // ETAPA 2: Converter os dados da IA para o formato do fluxograma
           const nodes = extractedData.nodes.map((node, index) => {
             // Determinar o tipo do nó (usando o tipo da IA ou inferindo por conteúdo e posição)
             let nodeType = node.type || 'default';
-            
+
             // Se o tipo não estiver definido, tente inferir do conteúdo ou posição
             if (!node.type) {
               // Mapeamento para as 5 camadas do fluxograma
@@ -239,11 +239,11 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                 // Nós finais antes da conclusão são aplicações práticas
                 nodeType = 'practice';
               }
-              
+
               // Inferência baseada no conteúdo sobrepõe a inferência por posição
               const titleLower = node.title?.toLowerCase() || '';
               const descLower = node.description?.toLowerCase() || '';
-              
+
               if (titleLower.includes('pré-requisito') || 
                   titleLower.includes('termo') || 
                   titleLower.includes('context') ||
@@ -280,7 +280,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                 nodeType = 'decision';
               }
             }
-            
+
             // Calcular posicionamento usando uma estratégia de layout para fluxograma educacional
             // com as 5 camadas de aprendizado definidas
             let position;
@@ -288,7 +288,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
             const canvasHeight = extractedData.nodes.length * 150;
             const verticalSections = 5; // Uma seção para cada camada do modelo de aprendizado
             const sectionHeight = canvasHeight / verticalSections;
-            
+
             // Calcular a seção vertical com base no tipo de nó
             let section = 0;
             switch (nodeType) {
@@ -316,7 +316,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                 // Posicionar nós padrão com base no índice relativo
                 section = Math.floor((index / extractedData.nodes.length) * 4);
             }
-            
+
             // Contar quantos nós estão na mesma seção para calcular o posicionamento horizontal
             const nodesInSameSection = extractedData.nodes.filter(n => {
               // Simplificado para a demonstração, na prática precisaria de uma análise de tipo real
@@ -328,21 +328,21 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
               if (nodeType === 'end' && n.type === 'end') return true;
               return false;
             }).length;
-            
+
             // Distribuir os nós horizontalmente dentro da seção
             const horizontalPosition = nodesInSameSection > 1 
               ? canvasWidth * (0.5 + ((index % nodesInSameSection) - (nodesInSameSection / 2)) * 0.15)
               : canvasWidth * 0.5;
-            
+
             // Adicionar pequena variação aleatória para naturalidade e para evitar sobreposição
             const jitterX = Math.random() * 40 - 20;
             const jitterY = Math.random() * 40 - 20;
-            
+
             position = { 
               x: horizontalPosition + jitterX,
               y: sectionHeight * (section + 0.5) + jitterY
             };
-            
+
             // Dados extras para processos (etapa/passo)
             let extraData = {};
             if (nodeType === 'process') {
@@ -353,7 +353,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                 extraData = { stepNumber };
               }
             }
-            
+
             // Retorna o nó formatado com todos os dados necessários
             return {
               id: node.id,
@@ -366,16 +366,16 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
               position
             };
           });
-          
+
           // ETAPA 3: Gerar as Conexões (Edges) para o fluxograma educacional
           const edges = extractedData.connections?.map(conn => {
             // Determinar o estilo e cor da conexão baseado nos tipos de nós conectados
             const sourceNode = nodes.find(n => n.id === conn.source);
             const targetNode = nodes.find(n => n.id === conn.target);
-            
+
             let edgeStyle = { stroke: '#3b82f6' }; // Azul padrão
             let labelStyle = { fill: '#3b82f6', fontWeight: 500 };
-            
+
             // Estilizar com base no tipo de nós conectados
             if (sourceNode?.type === 'decision') {
               if (conn.label?.toLowerCase().includes('sim') || 
@@ -400,7 +400,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
               edgeStyle = { stroke: '#0ea5e9', strokeDasharray: '5,5' }; // Azul tracejado para dicas
               labelStyle = { fill: '#0ea5e9', fontWeight: 500 };
             }
-            
+
             return {
               id: `e${conn.source}-${conn.target}`,
               source: conn.source,
@@ -412,7 +412,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
               labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
             }
           }) || [];
-          
+
           // Se não houver conexões definidas pela IA, criar conexões para as 5 camadas de aprendizado
           if (edges.length === 0 && nodes.length > 1) {
             // Agrupar nós por tipo para facilitar o gerenciamento das camadas
@@ -426,11 +426,11 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
               end: nodes.filter(n => n.type === 'end'),
               default: nodes.filter(n => n.type === 'default')
             };
-            
+
             // 1. Conectar o nó inicial (conceito central) com os nós de contexto
             if (nodesByType.start.length > 0) {
               const startNode = nodesByType.start[0];
-              
+
               // Se há nós de contexto, conecte o início a eles
               if (nodesByType.context.length > 0) {
                 nodesByType.context.forEach((contextNode, idx) => {
@@ -460,7 +460,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                 });
               }
             }
-            
+
             // 2. Conectar nós de contexto entre si (se houver mais de um)
             if (nodesByType.context.length > 1) {
               for (let i = 0; i < nodesByType.context.length - 1; i++) {
@@ -475,7 +475,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                   labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
                 });
               }
-              
+
               // Conectar o último nó de contexto à primeira etapa do processo
               if (nodesByType.process.length > 0) {
                 edges.push({
@@ -490,24 +490,24 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                 });
               }
             }
-            
+
             // 3. Conectar nós de processo em sequência
             if (nodesByType.process.length > 1) {
               for (let i = 0; i < nodesByType.process.length - 1; i++) {
                 const sourceNode = nodesByType.process[i];
                 const targetNode = nodesByType.process[i+1];
-                
+
                 // Extrair números de etapa se disponíveis
                 const sourceStep = sourceNode.data.stepNumber;
                 const targetStep = targetNode.data.stepNumber;
-                
+
                 let label = '';
                 if (sourceStep && targetStep) {
                   label = `Etapa ${sourceStep} → ${targetStep}`;
                 } else {
                   label = 'Próxima etapa';
                 }
-                
+
                 edges.push({
                   id: `e${sourceNode.id}-${targetNode.id}`,
                   source: sourceNode.id,
@@ -519,7 +519,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                   labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
                 });
               }
-              
+
               // Conectar o último processo aos nós de aplicação prática
               const lastProcess = nodesByType.process[nodesByType.process.length - 1];
               if (nodesByType.practice.length > 0) {
@@ -537,21 +537,21 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                 });
               }
             }
-            
+
             // 4. Conectar os nós de decisão com ramos "Correto" e "Incorreto"
             if (nodesByType.decision.length > 0) {
               nodesByType.decision.forEach((decisionNode, idx) => {
                 // Determinar para onde o ramo "Correto" deve ir
                 // Tipicamente para o próximo nó de prática ou conclusão
                 let correctTargetFound = false;
-                
+
                 // Tentar encontrar um nó de prática não conectado como destino
                 const availablePracticeNodes = nodesByType.practice.filter(n => 
                   n.id !== decisionNode.id && 
                   !edges.some(e => e.target === n.id) &&
                   !edges.some(e => e.source === decisionNode.id && e.target === n.id)
                 );
-                
+
                 if (availablePracticeNodes.length > 0) {
                   edges.push({
                     id: `e${decisionNode.id}-${availablePracticeNodes[0].id}-correct`,
@@ -565,7 +565,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                   });
                   correctTargetFound = true;
                 }
-                
+
                 // Se não encontrou alvo para o caminho correto, tente o nó de fim
                 if (!correctTargetFound && nodesByType.end.length > 0) {
                   edges.push({
@@ -580,17 +580,17 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                   });
                   correctTargetFound = true;
                 }
-                
+
                 // Determinar para onde o ramo "Incorreto" deve ir
                 // Tipicamente para um nó de dica ou volta para um processo anterior
                 let incorrectTargetFound = false;
-                
+
                 // Primeiro tente uma dica
                 if (nodesByType.tip.length > 0) {
                   const availableTips = nodesByType.tip.filter(t => 
                     !edges.some(e => e.source === decisionNode.id && e.target === t.id)
                   );
-                  
+
                   if (availableTips.length > 0) {
                     edges.push({
                       id: `e${decisionNode.id}-${availableTips[0].id}-incorrect`,
@@ -605,7 +605,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                     incorrectTargetFound = true;
                   }
                 }
-                
+
                 // Se não encontrou dica, volte para um processo anterior
                 if (!incorrectTargetFound && nodesByType.process.length > 0) {
                   const processToReview = nodesByType.process[Math.floor(nodesByType.process.length / 2)];
@@ -623,7 +623,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                 }
               });
             }
-            
+
             // 5. Conectar nós de dica aos nós relevantes
             if (nodesByType.tip.length > 0) {
               nodesByType.tip.forEach(tipNode => {
@@ -644,19 +644,19 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                     });
                   }
                 }
-                
+
                 // Se o nó de dica não é origem de nenhuma conexão ainda,
                 // conecte-o de volta a um nó relevante
                 if (!edges.some(e => e.source === tipNode.id)) {
                   // Tentar encontrar o próximo nó lógico
                   let targetFound = false;
-                  
+
                   // Primeiro tente qualquer nó de prática disponível
                   if (!targetFound && nodesByType.practice.length > 0) {
                     const availablePractice = nodesByType.practice.find(p => 
                       !edges.some(e => e.source === tipNode.id && e.target === p.id)
                     );
-                    
+
                     if (availablePractice) {
                       edges.push({
                         id: `e${tipNode.id}-${availablePractice.id}`,
@@ -671,7 +671,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                       targetFound = true;
                     }
                   }
-                  
+
                   // Ou então, vá para o nó final
                   if (!targetFound && nodesByType.end.length > 0) {
                     edges.push({
@@ -688,7 +688,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                 }
               });
             }
-            
+
             // 6. Conectar nós de aplicação prática à conclusão
             if (nodesByType.practice.length > 0 && nodesByType.end.length > 0) {
               // Para cada nó de prática que não tem saída, conectar ao nó de conclusão
@@ -707,7 +707,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                 }
               });
             }
-            
+
             // 7. Verificar nós não conectados e criar conexões adicionais
             // Conectar qualquer nó sem saída ao próximo nó lógico no fluxo
             nodes.forEach(node => {
@@ -718,19 +718,19 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                 switch (node.type) {
                   case 'start': targetNodeType = 'context'; break;
                   case 'context': targetNodeType = 'process'; break;
-                  case 'process': targetNodeType = 'practice'; break;
+                  case ''process': targetNodeType = 'practice'; break;
                   case 'practice': 
                   case 'decision': 
                   case 'tip': targetNodeType = 'end'; break;
                   default: targetNodeType = 'end';
                 }
-                
+
                 // Encontrar o primeiro nó do tipo alvo que não é destino deste nó
                 const targetNodes = nodesByType[targetNodeType] || [];
                 const targetNode = targetNodes.find(t => 
                   t.id !== node.id && !edges.some(e => e.source === node.id && e.target === t.id)
                 );
-                
+
                 // Se encontrou um nó alvo, crie a conexão
                 if (targetNode) {
                   // Personalizar o rótulo com base nos tipos
@@ -744,7 +744,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                   } else if (targetNode.type === 'end') {
                     label = 'Concluindo';
                   }
-                  
+
                   edges.push({
                     id: `e${node.id}-${targetNode.id}`,
                     source: node.id,
@@ -772,21 +772,21 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
               }
             });
           }
-          
+
           fluxogramaData = { nodes, edges };
-          
+
         } catch (error) {
           console.error('Erro ao processar com IA:', error);
-          
+
           // Fallback para o método original se a IA falhar
           fluxogramaData = await new Promise((resolve) => {
             // ETAPA 1: Analisar e Estruturar o Conteúdo
             const paragraphs = contentToAnalyze.split(/\n\n+/);
             const sentences = contentToAnalyze.split(/[.!?]\s+/);
-            
+
             // Identificar blocos conceituais principais
             const mainBlocks = paragraphs.length > 3 ? paragraphs.slice(0, paragraphs.length) : sentences.slice(0, Math.min(8, sentences.length));
-            
+
             // Extrair palavras-chave significativas
             const keywords = mainBlocks.map(block => {
               const words = block.split(/\s+/).filter(word => word.length > 3);
@@ -796,29 +796,29 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                 keyword: mainWord.length > 20 ? mainWord.substring(0, 20) + '...' : mainWord
               };
             }).slice(0, 8); // Limitar a 8 nós para melhor visualização
-            
+
             // ETAPA 2: Gerar os Nós (Nodes) do Fluxograma
             const nodes = keywords.map((item, index) => {
               // Determinar o tipo do nó
               let type = 'default';
               if (index === 0) type = 'start';
               else if (index === keywords.length - 1) type = 'end';
-              
+
               // Criar descrição significativa
               const description = item.text.length > 100 
                 ? item.text.substring(0, 100) + '...' 
                 : item.text;
-              
+
               // Ajustar posicionamento para layout de fluxo
               let position;
               const flowDirection = 'vertical'; // ou 'horizontal'
-              
+
               if (flowDirection === 'vertical') {
                 position = { x: 250, y: 100 + (index * 120) };
               } else {
                 position = { x: 100 + (index * 220), y: 200 };
               }
-              
+
               return {
                 id: (index + 1).toString(),
                 data: { 
@@ -829,7 +829,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                 position
               };
             });
-            
+
             // ETAPA 3: Gerar as Conexões (Edges)
             const edges = [];
             for (let i = 0; i < nodes.length - 1; i++) {
@@ -841,17 +841,17 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                 style: { stroke: '#3b82f6' }
               });
             }
-            
+
             // Simular um pequeno atraso antes de resolver (opcional)
             setTimeout(() => {
               resolve({ nodes, edges });
             }, 1000);
           });
         }
-        
+
         // Armazena os dados do fluxograma para uso posterior no visualizador
         localStorage.setItem('fluxogramaData', JSON.stringify(fluxogramaData));
-        
+
         setIsLoading(false);
         setFluxogramaGerado(true);
       } catch (error) {
@@ -859,7 +859,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
         setIsLoading(false);
       }
     };
-    
+
     processFluxogramaContent();
   };
 
@@ -881,6 +881,67 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
     setSelectedNode(node);
     setShowDetailModal(true);
   };
+
+  const handleCopyFlowchartPrompt = (promptNumber: 1 | 2) => {
+    const prompt = getFlowchartPrompt(promptNumber);
+    navigator.clipboard.writeText(prompt)
+      .then(() => alert('Prompt copiado para a área de transferência!'))
+      .catch(err => console.error('Erro ao copiar prompt:', err));
+  };
+
+
+  const getFlowchartPrompt = (promptNumber: 1 | 2): string => {
+    switch (promptNumber) {
+      case 1:
+        return `
+Prompts que você pode mandar para a IA programadora:
+
+🎯 Prompt 1 – Criação Avançada de Fluxograma
+Com base na explicação dada anteriormente sobre o tema, gere um fluxograma didático e aprofundado, dividido da seguinte forma:
+
+Conceito Central (1 nó)
+
+Contexto e Pré-requisitos (2 a 3 nós)
+
+Processo ou Lógica do Tema (3 a 6 nós)
+
+Aplicações, Exemplos e Erros comuns (2 a 4 nós)
+
+Conclusão/Resumo (1 ou 2 nós)
+
+Para cada nó, gere:
+
+id único
+
+label (curto e claro)
+
+description (resumo curto)
+
+details (explicação que pode ser expandida no clique)
+
+category (ex: definição, exemplo, erro, etapa, conclusão, etc.)
+
+position sugerida (apenas x e y simples para diferenciar os blocos visualmente)
+
+Em seguida, conecte os nós com edges organizando a sequência de aprendizado. Se houver bifurcações ou condições, especifique.
+        `;
+      case 2:
+        return `
+🛠 Prompt 2 – Formatação para React Flow
+O conteúdo gerado acima deve estar no seguinte formato JSON:
+
+fluxograma:
+
+{
+  "nodes": [ ... ],
+  "edges": [ ... ]
+}
+        `;
+      default:
+        return '';
+    }
+  };
+
 
   return (
     <div className="space-y-4">
@@ -921,7 +982,9 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
             </h4>
 
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
-              <Button variant="outline" className="flex flex-col items-center justify-center h-auto py-3 px-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all">
+              <Button variant="outline" className="flex flex-col items-center justify-center h-auto py-3 px-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all"
+                onClick={() => handleCopyFlowchartPrompt(1)}
+              >
                 <RotateCw className="h-5 w-5 mb-1 text-blue-600 dark:text-blue-400" />
                 <span className="text-xs text-gray-700 dark:text-gray-300 text-center">Regenerar</span>
               </Button>

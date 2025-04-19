@@ -441,4 +441,86 @@ export const createFluxogramaNode = (
   };
 };
 
+/**
+ * Função para processar respostas de prompts de fluxograma e converter para o formato esperado
+ * @param promptResponse Resposta da IA contendo os dados do fluxograma
+ * @returns Objeto com nodes e edges formatados para ReactFlow
+ */
+export const processPromptResponse = (promptResponse: string): { nodes: Node[], edges: Edge[] } => {
+  try {
+    // Tenta extrair o JSON da resposta
+    const jsonMatch = promptResponse.match(/```json\n([\s\S]*?)\n```/) || 
+                      promptResponse.match(/```\n([\s\S]*?)\n```/) ||
+                      promptResponse.match(/{[\s\S]*?}/);
+                      
+    const jsonString = jsonMatch ? jsonMatch[0].replace(/```json\n|```\n|```/g, '') : promptResponse;
+    const data = JSON.parse(jsonString);
+    
+    // Mapeia os nós para o formato esperado pelo React Flow
+    const nodes = data.nodes.map((node: any) => ({
+      id: node.id,
+      data: { 
+        label: node.data.label, 
+        description: node.data.description || '',
+        details: node.data.details || '',
+        category: node.data.category || ''
+      },
+      position: node.position || { x: 0, y: 0 },
+      type: mapCategoryToNodeType(node.data.category) || node.type || 'default'
+    }));
+    
+    // Mapeia as arestas (edges) para o formato esperado pelo React Flow
+    const edges = data.edges.map((edge: any) => ({
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+      label: edge.label || '',
+      animated: edge.animated || false,
+      style: edge.style || { stroke: '#3b82f6' }
+    }));
+    
+    return { nodes, edges };
+  } catch (error) {
+    console.error('Erro ao processar resposta do prompt:', error);
+    // Retorna um fluxograma padrão em caso de erro
+    return {
+      nodes: initialNodes,
+      edges: initialEdges
+    };
+  }
+};
+
+/**
+ * Mapeia a categoria do nó para um tipo de nó do React Flow
+ */
+const mapCategoryToNodeType = (category?: string): string => {
+  if (!category) return 'default';
+  
+  const categoryLower = category.toLowerCase();
+  
+  if (categoryLower.includes('defin') || categoryLower.includes('conceito')) {
+    return 'start';
+  }
+  if (categoryLower.includes('contexto') || categoryLower.includes('requisito')) {
+    return 'context';
+  }
+  if (categoryLower.includes('processo') || categoryLower.includes('etapa')) {
+    return 'process';
+  }
+  if (categoryLower.includes('exemplo') || categoryLower.includes('aplica')) {
+    return 'practice';
+  }
+  if (categoryLower.includes('decisão') || categoryLower.includes('erro')) {
+    return 'decision';
+  }
+  if (categoryLower.includes('dica')) {
+    return 'tip';
+  }
+  if (categoryLower.includes('conc') || categoryLower.includes('resumo')) {
+    return 'end';
+  }
+  
+  return 'default';
+};
+
 export default FluxogramaVisualizer;
