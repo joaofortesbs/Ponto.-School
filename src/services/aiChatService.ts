@@ -1174,7 +1174,7 @@ export const resetResponseState = (sessionId: string): void => {
     Estado atual: pausado=${isPaused[sessionId]}, cancelado=${isCancelled[sessionId]}`);
 };
 
-export const generateAIResponse = async (prompt: string, sessionId?: string) => {
+export const generateSimpleAIResponse = async (prompt: string, sessionId?: string) => {
   try {
     // Adicionar timeout para a requisição
     const controller = new AbortController();

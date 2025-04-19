@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { generateAIResponse } from '@/services/aiChatService';
+import { generateSimpleAIResponse } from '@/services/aiChatService';
 import TypewriterEffect from '@/components/ui/typewriter-effect';
 
 interface AprofundarModalProps {
@@ -95,7 +95,7 @@ Formato esperado de resposta: apenas o tema principal, sem frases introdutórias
       setIsTyping(true);
 
       // Obter o tema principal - vamos fazer isso rapidamente
-      const extractedTheme = await generateAIResponse(extractThemePrompt, sessionId || 'aprofundar_session_theme');
+      const extractedTheme = await generateSimpleAIResponse(extractThemePrompt, sessionId || 'aprofundar_session_theme');
       
       // Limpar qualquer texto adicional para obter apenas o tema
       const cleanTheme = extractedTheme.replace(/^[^a-zA-Z0-9áàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ]*|[^a-zA-Z0-9áàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ]*$/g, '');
@@ -136,7 +136,7 @@ Formato da resposta: Liste os termos no formato JSON como este exemplo:
       const aplicacoesPrompt = `Você é um especialista em aplicações práticas do conhecimento. Sobre o tema "${cleanTheme || lastAIMessage}", elabore sobre as 3 principais aplicações práticas deste conhecimento.`;
 
       // Iniciar a geração do contexto imediatamente
-      const contextoResponsePromise = generateAIResponse(contextoPrompt, sessionId || 'aprofundar_session');
+      const contextoResponsePromise = generateSimpleAIResponse(contextoPrompt, sessionId || 'aprofundar_session');
       
       // Aguardar o resultado do contexto para exibição imediata
       let contextoResponse;
@@ -165,34 +165,24 @@ Formato da resposta: Liste os termos no formato JSON como este exemplo:
         return; // Encerrar a função se a resposta estiver vazia
       }
       
-      // Verificar se a resposta é válida
-      if (contextoResponse && contextoResponse.trim() !== "") {
-        // Armazenar o contexto gerado para uso posterior
-        setLastGeneratedContext(contextoResponse);
-        
-        // Ativar o efeito de digitação
-        setIsTyping(true);
-        
-        // Atualizar o estado com o contexto para exibição
-        setAprofundadoContent(prev => ({
-          ...prev,
-          contexto: contextoResponse
-        }));
-        
-        console.log("Contexto definido com sucesso:", contextoResponse.substring(0, 50) + "...");
-      } else {
-        console.error("Resposta de contexto vazia ou inválida");
-        // Definir uma mensagem de erro para o usuário
-        setAprofundadoContent(prev => ({
-          ...prev,
-          contexto: "Não foi possível gerar o conteúdo aprofundado. Por favor, tente novamente."
-        }));
-      }
+      // Resposta é válida, armazenar o contexto gerado para uso posterior
+      setLastGeneratedContext(contextoResponse);
+      
+      // Ativar o efeito de digitação
+      setIsTyping(true);
+      
+      // Atualizar o estado com o contexto para exibição
+      setAprofundadoContent(prev => ({
+        ...prev,
+        contexto: contextoResponse
+      }));
+      
+      console.log("Contexto definido com sucesso:", contextoResponse.substring(0, 50) + "...");
       
       // Iniciar a obtenção dos outros dados em paralelo
       const [termosResponse, aplicacoesResponse] = await Promise.all([
-        generateAIResponse(termosPrompt, sessionId || 'aprofundar_session'),
-        generateAIResponse(aplicacoesPrompt, sessionId || 'aprofundar_session')
+        generateSimpleAIResponse(termosPrompt, sessionId || 'aprofundar_session'),
+        generateSimpleAIResponse(aplicacoesPrompt, sessionId || 'aprofundar_session')
       ]);
 
       // Processa a resposta dos termos técnicos (que deve estar em formato JSON)
@@ -390,7 +380,7 @@ Formato da resposta: Liste os termos no formato JSON como este exemplo:
                     Gerando contexto aprofundado...
                   </span>
                 ) : aprofundadoContent.contexto ? (
-                  isTyping ? (
+                  isTyping && aprofundadoContent.contexto !== "Gerando contexto aprofundado..." ? (
                     <TypewriterEffect 
                       text={aprofundadoContent.contexto} 
                       speed={5} 
