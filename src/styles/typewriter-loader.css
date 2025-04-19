@@ -117,6 +117,33 @@
   animation: paper05 var(--duration) linear infinite;
 }
 
+
+/* Typewriter effect styles */
+.typewriter-effect {
+  display: inline-block;
+  font-family: 'Architects Daughter', monospace;
+}
+
+.typewriter-effect .cursor {
+  display: inline-block;
+  margin-left: 1px;
+  width: 2px;
+  animation: blink 1s step-end infinite;
+}
+
+.typewriter-effect .cursor.visible {
+  opacity: 1;
+}
+
+.typewriter-effect .cursor.hidden {
+  opacity: 0;
+}
+
+@keyframes blink {
+  from, to { opacity: 1; }
+  50% { opacity: 0; }
+}
+
 .typewriter .paper:before {
   content: "";
   position: absolute;

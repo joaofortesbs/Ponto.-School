@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { generateAIResponse } from '@/services/aiChatService';
-import { TypewriterEffect } from '@/components/ui/typewriter-effect';
+import TypewriterEffect from '@/components/ui/typewriter-effect';
 
 interface AprofundarModalProps {
   isOpen: boolean;
