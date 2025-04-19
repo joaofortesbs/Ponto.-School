@@ -1016,71 +1016,84 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
   };
   
   const exportAsImage = () => {
-    // Encontrar o elemento do fluxograma
-    const flowWrapper = document.querySelector('.react-flow');
-    if (!flowWrapper) {
-      alert('Não foi possível encontrar o fluxograma para exportar.');
-      return Promise.reject('Elemento do fluxograma não encontrado');
-    }
-    
-    // Mostrar indicador visual de que está processando
-    const loadingIndicator = document.createElement('div');
-    loadingIndicator.className = 'fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-[9999]';
-    loadingIndicator.innerHTML = `
-      <div class="bg-white dark:bg-gray-800 rounded-lg p-4 flex flex-col items-center">
-        <svg class="animate-spin h-8 w-8 text-blue-600 dark:text-blue-400 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <span class="text-sm text-gray-700 dark:text-gray-300">Exportando fluxograma...</span>
-      </div>
-    `;
-    document.body.appendChild(loadingIndicator);
-    
-    // Configurar opções para melhor qualidade
-    const options = {
-      quality: 1,
-      backgroundColor: document.documentElement.classList.contains('dark') ? '#111827' : '#ffffff',
-      style: {
-        margin: '20px'
-      },
-      pixelRatio: 2, // Aumentar resolução da imagem exportada
-      cacheBust: true // Evitar cache para garantir que a imagem atual seja exportada
-    };
-    
-    // Exportar como PNG
-    return htmlToImage.toPng(flowWrapper as HTMLElement, options)
-      .then(dataUrl => {
-        // Remover o indicador de carregamento
-        loadingIndicator.remove();
+    return new Promise<boolean>((resolve, reject) => {
+      // Encontrar o elemento do fluxograma
+      const flowWrapper = document.querySelector('.react-flow');
+      if (!flowWrapper) {
+        alert('Não foi possível encontrar o fluxograma para exportar.');
+        reject('Elemento do fluxograma não encontrado');
+        return;
+      }
+      
+      // Mostrar indicador visual de que está processando
+      const loadingIndicator = document.createElement('div');
+      loadingIndicator.className = 'fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-[9999]';
+      loadingIndicator.innerHTML = `
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 flex flex-col items-center">
+          <svg class="animate-spin h-8 w-8 text-blue-600 dark:text-blue-400 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span class="text-sm text-gray-700 dark:text-gray-300">Exportando fluxograma...</span>
+        </div>
+      `;
+      document.body.appendChild(loadingIndicator);
+      
+      try {
+        // Configurar opções para melhor qualidade
+        const options = {
+          quality: 1,
+          backgroundColor: document.documentElement.classList.contains('dark') ? '#111827' : '#ffffff',
+          style: {
+            margin: '20px'
+          },
+          pixelRatio: 2, // Aumentar resolução da imagem exportada
+          cacheBust: true, // Evitar cache para garantir que a imagem atual seja exportada
+          filter: (node: HTMLElement) => !node.classList?.contains('react-flow__minimap') // Excluir o minimapa se existir
+        };
         
-        // Criar link para download
-        const link = document.createElement('a');
-        link.download = `fluxograma_${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
-        link.href = dataUrl;
-        link.click();
-        
-        // Mostrar mensagem de sucesso
-        const successMessage = document.createElement('div');
-        successMessage.className = 'fixed bottom-4 right-4 bg-green-50 dark:bg-green-900 text-green-800 dark:text-green-100 px-4 py-2 rounded-md shadow-md border border-green-200 dark:border-green-800 z-50';
-        successMessage.innerHTML = 'Fluxograma exportado com sucesso!';
-        document.body.appendChild(successMessage);
-        
-        // Remover mensagem após 3 segundos
+        // Exportar como PNG
         setTimeout(() => {
-          successMessage.remove();
-        }, 3000);
-        
-        return true;
-      })
-      .catch(error => {
-        // Remover o indicador de carregamento
+          htmlToImage.toPng(flowWrapper as HTMLElement, options)
+            .then(dataUrl => {
+              // Remover o indicador de carregamento
+              loadingIndicator.remove();
+              
+              // Criar link para download
+              const link = document.createElement('a');
+              link.download = `fluxograma_${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
+              link.href = dataUrl;
+              link.click();
+              
+              // Mostrar mensagem de sucesso
+              const successMessage = document.createElement('div');
+              successMessage.className = 'fixed bottom-4 right-4 bg-green-50 dark:bg-green-900 text-green-800 dark:text-green-100 px-4 py-2 rounded-md shadow-md border border-green-200 dark:border-green-800 z-50';
+              successMessage.innerHTML = 'Fluxograma exportado com sucesso!';
+              document.body.appendChild(successMessage);
+              
+              // Remover mensagem após 3 segundos
+              setTimeout(() => {
+                successMessage.remove();
+              }, 3000);
+              
+              resolve(true);
+            })
+            .catch(error => {
+              // Remover o indicador de carregamento
+              loadingIndicator.remove();
+              
+              console.error('Erro ao exportar fluxograma:', error);
+              alert('Ocorreu um erro ao exportar o fluxograma. Por favor, tente novamente.');
+              reject(error);
+            });
+        }, 500); // Adicionado um timeout para garantir que o fluxograma esteja totalmente renderizado
+      } catch (error) {
         loadingIndicator.remove();
-        
-        console.error('Erro ao exportar fluxograma:', error);
-        alert('Ocorreu um erro ao exportar o fluxograma. Por favor, tente novamente.');
-        return false;
-      });
+        console.error('Erro no processo de exportação:', error);
+        alert('Ocorreu um erro ao preparar a exportação. Por favor, tente novamente.');
+        reject(error);
+      }
+    });
   };
 
 
@@ -1393,9 +1406,9 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                     exportMenu.style.left = `${buttonRect.left - 20}px`;
                     
                     // Configurar o evento de clique para o botão 'Exportar em .IMG'
-                    const exportImgButton = exportMenu.querySelector('#export-img-button');
+                    const exportImgButton = document.getElementById('export-img-button');
                     if (exportImgButton) {
-                      exportImgButton.addEventListener('click', () => {
+                      exportImgButton.onclick = () => {
                         exportAsImage().then(() => {
                           exportMenu.remove();
                         }).catch(error => {
@@ -1403,7 +1416,7 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                           alert('Ocorreu um erro ao exportar o fluxograma. Por favor, tente novamente.');
                           exportMenu.remove();
                         });
-                      });
+                      };
                     }
                     
                     // Fechar o menu ao clicar fora dele
@@ -1419,7 +1432,7 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                     // Atraso pequeno para evitar que o menu feche imediatamente
                     setTimeout(() => {
                       document.addEventListener('click', closeMenu);
-                    }, 10);
+                    }, 100); // Aumentado o tempo de espera para garantir que o menu já esteja visível
                   }}
                   className="h-10 w-10 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
                 >
