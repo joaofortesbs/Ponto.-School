@@ -209,7 +209,6 @@ const QuestionDetailModal: React.FC<QuestionDetailModalProps> = ({
       <AprofundarModal
         isOpen={showAprofundarModal}
         onClose={() => setShowAprofundarModal(false)}
-        messageContent={messageContent}
       />
       <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 p-5 shadow-xl w-[90%] max-w-xl animate-fadeIn">
         <div className="flex justify-between items-center mb-4">
