@@ -29,7 +29,7 @@ const QuestionDetailModal: React.FC<QuestionDetailModalProps> = ({
 }) => {
   const [showExplanation, setShowExplanation] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
-  const [showAprofundarModal, setShowAprofundarModal] = useState(false);
+  //Removed showAprofundarModal state
 
   // Determinar o título e conteúdo com base no tipo de questão e no contexto da mensagem
   let questionTitle = `Questão ${questionNumber}`;
@@ -206,10 +206,7 @@ const QuestionDetailModal: React.FC<QuestionDetailModalProps> = ({
 
   return (
     <div id="question-detail-modal" className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
-      <AprofundarModal
-        isOpen={showAprofundarModal}
-        onClose={() => setShowAprofundarModal(false)}
-      />
+      {/*Removed AprofundarModal component*/}
       <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 p-5 shadow-xl w-[90%] max-w-xl animate-fadeIn">
         <div className="flex justify-between items-center mb-4">
           <div className="flex flex-col">
@@ -269,17 +266,7 @@ const QuestionDetailModal: React.FC<QuestionDetailModalProps> = ({
               </svg>
               Voltar para lista
             </button>
-            <button
-              onClick={() => setShowAprofundarModal(true)}
-              className="px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-800/40 text-blue-800 dark:text-blue-300 rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="16"></line>
-                <line x1="8" y1="12" x2="16" y2="12"></line>
-              </svg>
-              Aprofundar no tema
-            </button>
+            {/*Removed Aprofundar button*/}
           </div>
 
           <div className="flex gap-2">
