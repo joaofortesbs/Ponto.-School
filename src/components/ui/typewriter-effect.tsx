@@ -1,73 +1,119 @@
-
-import React, { useState, useEffect } from 'react';
-import '../../styles/typewriter-loader.css';
+import React, { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 interface TypewriterEffectProps {
   text: string;
-  speed?: number;
-  delay?: number;
+  typingSpeed?: number;
   className?: string;
-  onComplete?: () => void;
 }
 
-export const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
-  text,
-  speed = 30,
-  delay = 0,
-  className = "",
-  onComplete
+const TypewriterEffect: React.FC<TypewriterEffectProps> = ({ 
+  text, 
+  typingSpeed = 10, // Aumentar a velocidade para maior rapidez
+  className = ''
 }) => {
   const [displayText, setDisplayText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [showCursor, setShowCursor] = useState(true);
-  
+  const [isPaused, setIsPaused] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // Reset quando o texto muda
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-    
-    // Reset when text changes
     setDisplayText('');
     setCurrentIndex(0);
-    
-    if (delay > 0) {
-      timeoutId = setTimeout(startTyping, delay);
-    } else {
-      startTyping();
-    }
-    
-    return () => {
-      clearTimeout(timeoutId);
-    };
+    setIsComplete(false);
   }, [text]);
-  
-  const startTyping = () => {
-    const intervalId = setInterval(() => {
-      setCurrentIndex(prevIndex => {
-        if (prevIndex >= text.length) {
-          clearInterval(intervalId);
-          if (onComplete) onComplete();
-          return prevIndex;
+
+  useEffect(() => {
+    // Verifica se é o texto inicial/carregando
+    if (text.includes("Preparando conteúdo") || text === '') {
+      setDisplayText(text);
+      return;
+    }
+
+    if (currentIndex < text.length && !isPaused) {
+      const timeout = setTimeout(() => {
+        // Adiciona caracteres por chunks em vez de um por um para melhor performance
+        const chunkSize = Math.max(1, Math.floor(text.length / 100));
+        const nextIndex = Math.min(currentIndex + chunkSize, text.length);
+        const chunk = text.substring(currentIndex, nextIndex);
+
+        setDisplayText(prevText => prevText + chunk);
+        setCurrentIndex(nextIndex);
+
+        // Verifica se chegou ao final do texto
+        if (nextIndex >= text.length) {
+          setIsComplete(true);
         }
-        
-        setDisplayText(prevText => prevText + text.charAt(prevIndex));
-        return prevIndex + 1;
-      });
-    }, speed);
-    
-    // Blinking cursor effect
-    const cursorIntervalId = setInterval(() => {
-      setShowCursor(prev => !prev);
-    }, 500);
-    
-    return () => {
-      clearInterval(intervalId);
-      clearInterval(cursorIntervalId);
-    };
+
+        // Scroll para o final do conteúdo para acompanhar a digitação
+        if (contentRef.current) {
+          contentRef.current.scrollTop = contentRef.current.scrollHeight;
+        }
+      }, typingSpeed);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [currentIndex, text, typingSpeed, isPaused]);
+
+  const handleClick = () => {
+    // Se já completou, não faz nada ao clicar
+    if (isComplete) return;
+
+    // Se estiver pausado, continua a digitação
+    if (isPaused) {
+      setIsPaused(false);
+      return;
+    }
+
+    // Se o texto estiver sendo digitado e o usuário clicar, completa imediatamente
+    if (currentIndex < text.length) {
+      setDisplayText(text);
+      setCurrentIndex(text.length);
+      setIsComplete(true);
+    }
   };
-  
+
+  // Detecta se o texto parece ser markdown
+  const containsMarkdown = text.includes('#') || 
+                           text.includes('**') || 
+                           text.includes('*') || 
+                           text.includes('- ') || 
+                           text.includes('1. ') ||
+                           text.includes('`') ||
+                           text.includes('[') ||
+                           text.includes('###');
+
   return (
-    <div className={`typewriter-effect ${className}`}>
-      <span>{displayText}</span>
-      <span className={`cursor ${showCursor ? 'visible' : 'hidden'}`}>|</span>
+    <div 
+      ref={contentRef}
+      onClick={handleClick} 
+      className={`prose prose-sm dark:prose-invert max-w-none cursor-pointer ${className}`}
+    >
+      {containsMarkdown ? (
+        <ReactMarkdown>
+          {displayText}
+        </ReactMarkdown>
+      ) : (
+        <div style={{ whiteSpace: 'pre-wrap' }}>{displayText}</div>
+      )}
+
+      {currentIndex < text.length && !isPaused && (
+        <span className="animate-pulse inline-block h-4 w-1 ml-0.5 bg-blue-500 dark:bg-blue-400"></span>
+      )}
+
+      {isPaused && (
+        <div className="text-xs text-blue-600 dark:text-blue-400 mt-2 px-2 py-1 bg-blue-100 dark:bg-blue-900/20 rounded inline-block">
+          Clique para continuar a digitação
+        </div>
+      )}
+
+      {!isComplete && !isPaused && currentIndex > 10 && (
+        <div className="text-xs text-blue-600 dark:text-blue-400 mt-2 px-2 py-1 bg-blue-100 dark:bg-blue-900/20 rounded inline-block">
+          Clique para mostrar todo o conteúdo imediatamente
+        </div>
+      )}
     </div>
   );
 };

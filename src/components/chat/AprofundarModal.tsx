@@ -222,33 +222,71 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
       
       Importante: Se o conteúdo original não tiver informações suficientes, realize uma análise profunda baseada nas indicações de tópico presentes nele.
       Caso o conteúdo seja muito genérico, escolha um tema educacional importante relacionado e o desenvolva profundamente.
+
+      INSTRUÇÃO FINAL CRUCIAL: Sua resposta DEVE ser completa e detalhada, com pelo menos 1000 palavras e vários subtópicos.
       `;
+
+      // Adiciona conteúdo inicial para feedback imediato ao usuário
+      setAprofundadoContent(prev => ({
+        ...prev, 
+        contexto: "## Preparando análise aprofundada\n\nEstamos gerando um conteúdo detalhado sobre este tema. Este processo pode levar alguns segundos para garantir uma explicação completa e rica em detalhes...",
+        loading: true
+      }));
 
       // Chame a API para gerar o contexto aprofundado
       console.log("Gerando contexto aprofundado...");
       
-      // Usa um timeout para garantir que não ficaremos esperando por muito tempo
+      // Usa um timeout maior para dar tempo à API de gerar respostas completas
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Tempo esgotado ao buscar conteúdo")), 15000)
+        setTimeout(() => reject(new Error("Tempo esgotado ao buscar conteúdo")), 25000)
       );
       
+      // Adicionando parâmetros específicos para garantir uma resposta detalhada
       const contextoResponse = await Promise.race([
-        generateAIResponse(contextPrompt, sessionId || 'default_session'),
+        generateAIResponse(contextPrompt, sessionId || 'default_session', {
+          intelligenceLevel: "advanced", // Força o uso do nível mais alto de inteligência
+          detailedResponse: true, // Indicação explícita para resposta detalhada
+          maximumLength: true // Indica que desejamos respostas mais longas
+        }),
         timeoutPromise
       ]);
       
-      // Verifica se o conteúdo é válido e útil
+      // Verifica se o conteúdo é válido e útil - verificação mais robusta
       const isValidContent = contextoResponse && 
                             typeof contextoResponse === 'string' &&
                             contextoResponse.length > 150 && 
                             !contextoResponse.includes("Não foi possível") &&
-                            !contextoResponse.includes("Não tenho informações suficientes");
+                            !contextoResponse.includes("Não tenho informações suficientes") &&
+                            !contextoResponse.includes("Desculpe") &&
+                            !contextoResponse.includes("Erro ao processar");
+      
+      // Adiciona validação extra para garantir conteúdo de qualidade
+      const hasDetailedContent = contextoResponse && 
+                               (contextoResponse.includes("##") || // Tem título markdown
+                                contextoResponse.includes("\n-") || // Tem lista
+                                contextoResponse.includes("**") || // Tem negrito
+                                contextoResponse.length > 500); // É suficientemente longo
       
       // Se o conteúdo for válido, atualiza o estado
-      if (isValidContent) {
+      if (isValidContent && hasDetailedContent) {
         console.log("Contexto aprofundado gerado com sucesso!");
+        
+        // Pré-processamento do conteúdo para garantir formatação adequada
+        let formattedContent = contextoResponse;
+        
+        // Garante que comece com um título se não tiver
+        if (!formattedContent.trim().startsWith('#')) {
+          const titleText = safeMessageContent.substring(0, 40).trim() + '...';
+          formattedContent = `## Análise Aprofundada: ${titleText}\n\n${formattedContent}`;
+        }
+        
+        // Adiciona seções se o conteúdo for muito simples
+        if (!formattedContent.includes('###') && formattedContent.length > 300) {
+          formattedContent += `\n\n### Aplicações Práticas\n\nEste conceito tem diversas aplicações no contexto educacional e profissional...`;
+        }
+        
         // Atualiza imediatamente o contexto para mostrar ao usuário
-        setAprofundadoContent(prev => ({...prev, contexto: contextoResponse, loading: false}));
+        setAprofundadoContent(prev => ({...prev, contexto: formattedContent, loading: false}));
         
         // Agora gera os termos e aplicações em segundo plano
         try {
@@ -390,27 +428,81 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
       } else {
         console.log("Gerando conteúdo de fallback devido a resposta insuficiente...");
         
+        // Atualiza o estado para indicar que estamos tentando um plano alternativo
+        setAprofundadoContent(prev => ({
+          ...prev, 
+          contexto: "## Aprofundando o tema\n\nEstamos preparando uma análise detalhada. Aguarde um momento enquanto elaboramos um conteúdo abrangente sobre este assunto...",
+          loading: true
+        }));
+        
         try {
-          // Gera um conteúdo de fallback sobre um tema educacional mais específico
+          // Gera um conteúdo de fallback sobre um tema educacional mais específico com instruções mais específicas
           const fallbackPrompt = `
-          Crie uma explicação detalhada e aprofundada sobre um importante tópico educacional relacionado a:
-          "${safeMessageContent.substring(0, 100)}".
+          Você é um professor especialista encarregado de criar uma explicação EXTREMAMENTE DETALHADA e APROFUNDADA sobre o seguinte tema:
+          "${safeMessageContent}".
           
-          A explicação deve incluir:
-          - Contexto histórico e evolução do tema
-          - Fundamentos teóricos e conceitos-chave
-          - Aplicações práticas no mundo contemporâneo
+          Sua explicação DEVE incluir:
+          - Contexto histórico e evolução detalhada do tema ao longo do tempo
+          - Fundamentos teóricos e conceitos-chave explicados com profundidade
+          - Diversas aplicações práticas no mundo contemporâneo com exemplos concretos
           - Relevância para o desenvolvimento acadêmico e profissional
+          - Debates e controvérsias atuais relacionados ao tema
+          - Conexões com outros campos do conhecimento
           
-          Use formatação markdown para estruturar sua resposta de forma clara.
+          FORMATAÇÃO: Use OBRIGATORIAMENTE formatação markdown rica com:
+          - Títulos (##) e subtítulos (###)
+          - Listas com marcadores
+          - **Negrito** para conceitos importantes
+          - _Itálico_ para termos técnicos
+          
+          IMPORTANTE: Este conteúdo será usado para uma "Explicação Avançada" dentro da plataforma educacional Ponto.School.
+          Seu texto DEVE ser extenso, detalhado e academicamente rigoroso, com no mínimo 1000 palavras.
+          
+          Comece com um título principal atrativo e estruture seu texto em pelo menos 5 seções distintas.
+          Se o tema for genérico, identifique aspectos específicos relevantes e desenvolva-os profundamente.
           `;
           
-          const fallbackResponse = await generateAIResponse(fallbackPrompt, sessionId || 'default_session');
+          // Usa uma abordagem mais agressiva de obtenção de resposta
+          const fallbackPromises = [
+            generateAIResponse(fallbackPrompt, sessionId || 'default_session', {
+              intelligenceLevel: "advanced",
+              detailedResponse: true,
+              maximumLength: true
+            }),
+            // Tenta um segundo prompt ligeiramente diferente em paralelo
+            generateAIResponse(`Crie uma análise acadêmica detalhada sobre: "${safeMessageContent}"`, 
+              sessionId || 'second_attempt_session', {
+              intelligenceLevel: "advanced"
+            })
+          ];
           
-          if (fallbackResponse && fallbackResponse.length > 200) {
+          // Race para pegar a primeira resposta válida
+          const responses = await Promise.allSettled(fallbackPromises);
+          
+          // Procura a melhor resposta entre as tentativas
+          let bestResponse = null;
+          for (const result of responses) {
+            if (result.status === 'fulfilled' && 
+                result.value && 
+                typeof result.value === 'string' && 
+                result.value.length > 500) {
+              bestResponse = result.value;
+              break;
+            }
+          }
+          
+          if (bestResponse) {
+            console.log("Obteve conteúdo alternativo válido!");
+            
+            // Garante que o conteúdo começa com um título
+            if (!bestResponse.trim().startsWith('#')) {
+              bestResponse = `## Análise Aprofundada: ${safeMessageContent.substring(0, 40).trim()}...\n\n${bestResponse}`;
+            }
+            
+            // Atualiza com o conteúdo alternativo de alta qualidade
             setAprofundadoContent(prev => ({
               ...prev, 
-              contexto: fallbackResponse, 
+              contexto: bestResponse, 
               loading: false,
               termos: [
                 {
@@ -424,26 +516,49 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
                 {
                   termo: "Perspectiva Histórica", 
                   definicao: "Análise da evolução de ideias e conceitos ao longo do tempo, permitindo compreender a origem e o desenvolvimento do conhecimento atual."
+                },
+                {
+                  termo: "Interdisciplinaridade", 
+                  definicao: "Conexão entre diferentes áreas do conhecimento que se complementam na compreensão aprofundada deste tema. Esta abordagem permite uma visão mais holística e completa."
+                },
+                {
+                  termo: "Metodologia de Análise", 
+                  definicao: "Conjunto de técnicas e procedimentos utilizados para investigar e compreender este tema de forma sistemática e rigorosa."
                 }
               ],
               aplicacoes: "## Aplicações deste Conhecimento\n\n" +
+                          "### Em Contextos Educacionais\n" +
+                          "Este tema é fundamental para o desenvolvimento de estratégias pedagógicas eficazes e para a compreensão dos processos de aprendizagem em diferentes contextos.\n\n" +
                           "### Em Debates Contemporâneos\n" +
-                          "Este tema fornece fundamentação para discussões atuais sobre educação, tecnologia e sociedade.\n\n" +
-                          "### Na Resolução de Problemas\n" +
-                          "Os conceitos apresentados podem ser aplicados para abordar desafios práticos em diversos contextos.\n\n" +
-                          "### No Desenvolvimento Acadêmico\n" +
-                          "Compreender este tema aprofundadamente contribui para uma formação acadêmica mais sólida e versátil."
+                          "Os conceitos aqui explorados fornecem bases sólidas para discussões atuais sobre educação, ciência, tecnologia e sociedade.\n\n" +
+                          "### Na Resolução de Problemas Complexos\n" +
+                          "A compreensão aprofundada deste tema permite abordar desafios multifacetados com estratégias mais eficientes e fundamentadas.\n\n" +
+                          "### Em Trabalhos Acadêmicos\n" +
+                          "Ao incorporar este conhecimento em pesquisas e artigos, é possível desenvolver argumentações mais robustas e análises mais precisas.\n\n" +
+                          "### No Desenvolvimento Profissional\n" +
+                          "Profissionais que dominam estes conceitos estão melhor preparados para inovar e liderar em seus campos de atuação."
             }));
           } else {
-            throw new Error("Fallback response insufficient");
+            throw new Error("Nenhuma resposta de fallback foi satisfatória");
           }
         } catch (fallbackError) {
           console.error("Erro também no conteúdo de fallback:", fallbackError);
           
-          // Conteúdo de emergência garantido
+          // Conteúdo de emergência melhorado e contextualizado com o tema
+          // Extrai palavras-chave do tema para personalizar o conteúdo de emergência
+          const keywords = safeMessageContent.split(' ')
+            .filter(word => word.length > 4 && !['sobre', 'como', 'para', 'quando', 'onde', 'quem', 'qual'].includes(word.toLowerCase()))
+            .slice(0, 3);
+          
+          // Tenta criar um título temático baseado no conteúdo original
+          let topicTitle = "Explorando o Conhecimento Aprofundado";
+          if (keywords.length > 0) {
+            topicTitle = `Análise Aprofundada: ${keywords.join(' ')}`;
+          }
+          
           const emergencyContent = {
-            contexto: "# Explorando o Conhecimento Aprofundado\n\n" +
-                     "A busca pelo conhecimento aprofundado é uma jornada fundamental no processo educacional. " +
+            contexto: `# ${topicTitle}\n\n` +
+                     `A análise aprofundada de temas relacionados a ${keywords.join(', ') || 'este assunto'} representa uma jornada fundamental no processo educacional. ` +
                      "Quando exploramos um tema além de sua superfície, descobrimos conexões, nuances e aplicações que transformam nossa compreensão.\n\n" +
                      "## Componentes do Aprendizado Profundo\n\n" +
                      "O estudo aprofundado envolve diversos elementos essenciais:\n\n" +
@@ -451,7 +566,34 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
                      "2. **Fundamentos teóricos** - Dominar os princípios que sustentam o conhecimento\n" +
                      "3. **Aplicações práticas** - Visualizar como o conhecimento se traduz em soluções reais\n" +
                      "4. **Conexões interdisciplinares** - Perceber como diferentes áreas se relacionam\n\n" +
-                     "Ao desenvolver uma compreensão mais profunda, você adquire não apenas informações, mas sabedoria aplicável em múltiplos contextos.",
+                     "Ao desenvolver uma compreensão mais profunda, você adquire não apenas informações, mas sabedoria aplicável em múltiplos contextos.\n\n" +
+                     
+                     "## Perspectivas Históricas\n\n" +
+                     `A evolução histórica de conceitos relacionados a ${keywords[0] || 'este campo'} nos mostra como o conhecimento se transforma e se adapta através dos tempos. ` +
+                     "Compreender esta trajetória nos permite apreciar não apenas o estado atual do conhecimento, mas também vislumbrar suas tendências futuras.\n\n" +
+                     
+                     "## Abordagens Teóricas\n\n" +
+                     "Diversas escolas de pensamento têm contribuído com suas perspectivas únicas sobre este tema. Entre as abordagens mais significativas, podemos destacar:\n\n" +
+                     "- **Perspectiva estruturalista** - Analisa o tema a partir de suas estruturas fundamentais e relações internas\n" +
+                     "- **Abordagem funcionalista** - Foca nas funções e propósitos dentro de um sistema maior\n" +
+                     "- **Visão construtivista** - Considera como o conhecimento é construído através da experiência e interação\n\n" +
+                     
+                     "## Aplicações no Mundo Real\n\n" +
+                     "O conhecimento teórico ganha vida quando aplicado em contextos práticos. Algumas das aplicações mais inovadoras incluem:\n\n" +
+                     "1. Desenvolvimento de metodologias educacionais adaptativas\n" +
+                     "2. Criação de sistemas de análise e resolução de problemas complexos\n" +
+                     "3. Elaboração de estruturas conceituais para compreensão de fenômenos multifacetados\n\n" +
+                     
+                     "## Desafios e Fronteiras do Conhecimento\n\n" +
+                     "Como em qualquer área do saber, existem desafios significativos e fronteiras ainda inexploradas. Alguns dos principais desafios incluem:\n\n" +
+                     "- Integração de perspectivas divergentes\n" +
+                     "- Adaptação a contextos culturais diversos\n" +
+                     "- Desenvolvimento de ferramentas de análise mais precisas\n" +
+                     "- Comunicação eficaz de conceitos complexos\n\n" +
+                     
+                     "## Conclusão\n\n" +
+                     `O estudo aprofundado de ${keywords.join(' ') || 'temas educacionais'} não é apenas um exercício acadêmico, mas uma poderosa ferramenta para transformação pessoal e social. ` +
+                     "Ao dominar estes conhecimentos, abrimos portas para novos horizontes de compreensão e atuação no mundo.",
             loading: false,
             termos: [
               {
@@ -465,17 +607,34 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
               {
                 termo: "Interdisciplinaridade", 
                 definicao: "Abordagem que integra conhecimentos, métodos e perspectivas de diferentes disciplinas para criar uma compreensão mais completa de um tema. Semelhante a observar um diamante sob diferentes ângulos de luz para apreciar completamente seu brilho e complexidade."
+              },
+              {
+                termo: "Metacognição", 
+                definicao: "Consciência e compreensão dos próprios processos de pensamento e aprendizagem. É como ter uma 'visão aérea' do próprio pensamento, permitindo monitorar, avaliar e ajustar estratégias de aprendizagem para maior eficácia."
+              },
+              {
+                termo: "Pensamento Crítico", 
+                definicao: "Habilidade de analisar e avaliar objetivamente informações e argumentos, identificando vieses, pressupostos e implicações. Funciona como um filtro mental que processa ideias, separando fatos de opiniões e verificando a solidez de conclusões."
               }
             ],
             aplicacoes: "## Aplicações do Conhecimento Aprofundado\n\n" +
-                        "### Em Debates e Discussões\n" +
-                        "O domínio profundo de um tema permite argumentações mais sólidas e nuançadas, elevando o nível do discurso público e acadêmico.\n\n" +
+                        "### Em Debates e Discussões Acadêmicas\n" +
+                        "O domínio profundo de um tema permite argumentações mais sólidas e nuançadas, elevando o nível do discurso público e acadêmico. Permite identificar falácias, reconhecer premissas implícitas e construir argumentos mais robustos.\n\n" +
+                        
                         "### Em Estudos Interdisciplinares\n" +
-                        "Conexões significativas entre diferentes áreas do conhecimento surgem quando temos compreensão aprofundada, gerando inovações importantes.\n\n" +
-                        "### Na Resolução de Problemas\n" +
-                        "Problemas complexos exigem entendimento profundo para serem solucionados efetivamente, possibilitando abordagens mais criativas e eficazes.\n\n" +
-                        "### Em Trabalhos Acadêmicos\n" +
-                        "Pesquisas, artigos e teses ganham substância e originalidade quando baseados em conhecimento detalhado e bem fundamentado."
+                        "Conexões significativas entre diferentes áreas do conhecimento surgem quando temos compreensão aprofundada, gerando inovações importantes. A interdisciplinaridade permite uma visão mais holística e criativa dos fenômenos estudados.\n\n" +
+                        
+                        "### Na Resolução de Problemas Complexos\n" +
+                        "Problemas complexos exigem entendimento profundo para serem solucionados efetivamente, possibilitando abordagens mais criativas e eficazes. A capacidade de analisar um problema sob múltiplas perspectivas permite identificar soluções inovadoras.\n\n" +
+                        
+                        "### Em Trabalhos Acadêmicos e Pesquisas\n" +
+                        "Pesquisas, artigos e teses ganham substância e originalidade quando baseados em conhecimento detalhado e bem fundamentado. A profundidade de análise permite identificar lacunas na literatura existente e contribuir com avanços significativos.\n\n" +
+                        
+                        "### No Desenvolvimento Profissional\n" +
+                        "Profissionais que dominam conhecimentos aprofundados em suas áreas são capazes de tomar decisões mais informadas e implementar soluções mais eficazes. Este tipo de conhecimento é altamente valorizado em ambientes profissionais competitivos.\n\n" +
+                        
+                        "### Na Formação Educacional\n" +
+                        "Estudantes que desenvolvem o hábito de aprofundar seus conhecimentos constroem bases mais sólidas para aprendizados futuros e desenvolvem autonomia intelectual. Esta abordagem promove um aprendizado mais significativo e duradouro."
           };
           
           setAprofundadoContent(emergencyContent);
@@ -675,18 +834,38 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
             <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Contexto Aprofundado</h4>
             <div className="text-sm text-gray-700 dark:text-gray-300 mb-3">
               {aprofundadoContent.loading ? (
-                <div className="typewriter-loader">Preparando conteúdo...</div>
+                <div className="typewriter-loader p-4 bg-blue-50/40 dark:bg-blue-900/10 rounded-md border border-blue-100/50 dark:border-blue-800/30 animate-pulse">
+                  Preparando análise detalhada do conteúdo... <span className="inline-block w-2 h-4 bg-blue-500 dark:bg-blue-400 animate-blink ml-1"></span>
+                </div>
               ) : (
                 aprofundadoContent.contexto ? (
-                  <TypewriterEffect text={aprofundadoContent.contexto} typingSpeed={1} />
-                ) : (
-                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-100 dark:border-blue-800">
-                    <p>O conteúdo está sendo preparado para você. Se esta mensagem persistir, clique no botão abaixo para tentar novamente.</p>
+                  <div className="relative bg-white/60 dark:bg-gray-800/60 rounded-lg border border-gray-200/70 dark:border-gray-700/50 p-4 shadow-sm">
+                    <TypewriterEffect text={aprofundadoContent.contexto} typingSpeed={5} />
                     <button 
                       onClick={generateAprofundadoContent} 
-                      className="mt-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-md transition-colors"
+                      className="absolute top-3 right-3 p-1.5 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-800/50 text-blue-600 dark:text-blue-400 rounded-md transition-colors text-xs flex items-center"
+                      title="Gerar novo conteúdo"
                     >
-                      Gerar conteúdo aprofundado
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Tentar novamente
+                    </button>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800 flex flex-col items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-500 dark:text-blue-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-center mb-3">Estamos com dificuldade para gerar o conteúdo detalhado. Por favor, tente novamente.</p>
+                    <button 
+                      onClick={generateAprofundadoContent} 
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md transition-colors flex items-center shadow-sm"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                      </svg>
+                      Gerar análise aprofundada
                     </button>
                   </div>
                 )

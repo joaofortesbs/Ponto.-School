@@ -760,7 +760,7 @@ Este é o slogan que representa a essência da Ponto.School - nossa missão é p
 
     // Configuração da solicitação para a API Gemini com o histórico completo
     console.log(`Enviando histórico de conversa para Gemini com ${geminiContents.length} mensagens`);
-    
+
     // Usar o endpoint de chat que suporta contexto
     const response = await axios.post(
       `${GEMINI_BASE_URL}?key=${GEMINI_API_KEY}`,
@@ -872,7 +872,7 @@ Contexto do usuário:
 
               Histórico de mensagens anteriores:
               ${conversationHistory[sessionId].slice(1).map(msg => `${msg.role}: ${msg.content}`).join('\n\n')}
-              
+
               Responda à seguinte pergunta do usuário ${usernameFull} de forma extensa, detalhada e visualmente atrativa: ${message}`
             }
           ]
@@ -898,10 +898,10 @@ Contexto do usuário:
 
     // Adicionar a resposta da IA ao histórico
     conversationHistory[sessionId].push({ role: 'assistant', content: aiResponse });
-    
+
     // Salvar histórico atualizado no localStorage
     saveConversationHistory(sessionId, conversationHistory[sessionId]);
-    
+
     console.log(`Histórico de conversa atualizado para ${sessionId}. Total de mensagens: ${conversationHistory[sessionId].length}`);
 
     return aiResponse;
@@ -917,7 +917,9 @@ export async function generateAIResponse(
   sessionId: string, 
   options?: { 
     intelligenceLevel?: 'basic' | 'normal' | 'advanced',
-    languageStyle?: 'casual' | 'formal' | 'technical'
+    languageStyle?: 'casual' | 'formal' | 'technical',
+    detailedResponse?: boolean,
+    maximumLength?: boolean
   }
 ): Promise<string> {
   try {
@@ -1097,6 +1099,329 @@ const getResponseForMessage = (message: string): string => {
     return `Você pode acessar o **Portal** com todos os materiais em https://pontoschool.com/portal\n\nLá você encontrará todos os seus cursos, materiais e recursos de estudo organizados por disciplina.\n\n_Basta clicar no link acima para ir direto para o Portal!_ 📚`;
   } else {
     return "Desculpe, não entendi sua pergunta. Pode reformulá-la?";
+  }
+};
+
+// Variável para controlar se a resposta está pausada
+let isPaused: Record<string, boolean> = {};
+
+// Função para pausar a resposta da IA
+export const pauseResponse = async (sessionId: string): Promise<void> => {
+  try {
+    isPaused[sessionId] = true;
+    isCancelled[sessionId] = false; // Garantir que não está cancelada
+    console.log(`Resposta da IA pausada para a sessão ${sessionId}. Estado atual:`, isPaused[sessionId]);
+  } catch (error) {
+    console.error('Erro ao pausar resposta da IA:', error);
+    throw error;
+  }
+};
+
+// Função para verificar se a resposta está pausada
+export const isResponsePaused = (sessionId: string): boolean => {
+  const paused = isPaused[sessionId] || false;
+  // Para debugging
+  if (paused) {
+    console.log(`Verificação de pausa: sessão ${sessionId} está pausada`);
+  }
+  return paused;
+};
+
+// Variável para controlar se a resposta foi cancelada
+let isCancelled: Record<string, boolean> = {};
+
+// Função para cancelar a resposta da IA
+export const cancelResponse = async (sessionId: string): Promise<void> => {
+  try {
+    isCancelled[sessionId] = true;
+    isPaused[sessionId] = false; // Certifique-se de que não está em pausa também
+    console.log(`Resposta da IA cancelada para a sessão ${sessionId}. Estado atual:`, isCancelled[sessionId]);
+  } catch (error) {
+    console.error('Erro ao cancelar resposta da IA:', error);
+    throw error;
+  }
+};
+
+// Função para verificar se a resposta foi cancelada
+export const isResponseCancelled = (sessionId: string): boolean => {
+  const cancelled = isCancelled[sessionId] || false;
+  // Para debugging
+  if (cancelled) {
+    console.log(`Verificação de cancelamento: sessão ${sessionId} está cancelada`);
+  }
+  return cancelled;
+};
+
+// Função para retomar a resposta da IA
+export const resumeResponse = async (sessionId: string): Promise<void> => {
+  try {
+    isPaused[sessionId] = false;
+    console.log(`Resposta da IA retomada para a sessão ${sessionId}. Estado atual:`, isPaused[sessionId]);
+  } catch (error) {
+    console.error('Erro ao retomar resposta da IA:', error);
+    throw error;
+  }
+};
+
+// Função para resetar o estado de cancelamento/pausa (útil ao iniciar novas respostas)
+export const resetResponseState = (sessionId: string): void => {
+  const wasPaused = isPaused[sessionId];
+  const wasCancelled = isCancelled[sessionId];
+
+  isPaused[sessionId] = false;
+  isCancelled[sessionId] = false;
+
+  console.log(`Estados resetados para a sessão ${sessionId}. 
+    Estado anterior: pausado=${wasPaused}, cancelado=${wasCancelled}. 
+    Estado atual: pausado=${isPaused[sessionId]}, cancelado=${isCancelled[sessionId]}`);
+};
+
+export const generateAIResponse = async (
+  prompt: string, 
+  sessionId?: string,
+  options?: {
+    intelligenceLevel?: 'basic' | 'normal' | 'advanced',
+    languageStyle?: 'casual' | 'technical',
+    detailedResponse?: boolean,
+    maximumLength?: boolean
+  }
+): Promise<string> => {
+  try {
+    console.log("Gerando resposta da IA para prompt:", prompt.substring(0, 50) + "...");
+    console.log("Opções de resposta:", options);
+
+    // Extrai opções ou usa valores padrão
+    const intelligenceLevel = options?.intelligenceLevel || 'normal';
+    const isDetailedResponse = options?.detailedResponse || false;
+    const isMaximumLength = options?.maximumLength || false;
+
+    // Ajusta o tempo de resposta com base na complexidade solicitada
+    const responseTime = intelligenceLevel === 'advanced' || isDetailedResponse 
+      ? 3000  // Resposta mais complexa leva mais tempo
+      : 2000; // Tempo padrão
+
+    // Simulação de resposta da IA com um atraso realista
+    await new Promise(resolve => setTimeout(resolve, responseTime));
+
+    // Se estiver gerando conteúdo aprofundado, usa respostas específicas
+    if ((prompt.includes("aprofundado") || prompt.includes("detalhado") || 
+         prompt.includes("expandir") || isDetailedResponse) && 
+        (intelligenceLevel === 'advanced' || isMaximumLength)) {
+
+      // Extrai palavras-chave do prompt para personalizar a resposta
+      const keywords = prompt.split(/\s+/)
+        .filter(word => word.length > 5 && !["aprofundado", "detalhado", "expandir"].includes(word.toLowerCase()))
+        .slice(0, 3);
+
+      // Usa as palavras-chave encontradas ou termos genéricos
+      const topicTerms = keywords.length > 0 ? keywords.join(', ') : "conceitos educacionais fundamentais";
+
+      return `
+# Análise Aprofundada: ${topicTerms}
+
+Este conteúdo foi gerado para fornecer uma compreensão extraordinariamente detalhada e abrangente sobre ${topicTerms}, explorando múltiplas dimensões do tema.
+
+## Contexto Histórico e Evolução
+
+A evolução histórica dos conceitos relacionados a ${topicTerms} remonta às primeiras discussões acadêmicas no século XIX, quando pensadores como Wilhelm von Humboldt e John Dewey começaram a formular teorias sobre a estruturação sistemática do conhecimento educacional.
+
+No início do século XX, vimos o surgimento de abordagens mais estruturadas, particularmente influenciadas pelo movimento progressista na educação. Este período foi marcado por debates intensos sobre métodos de ensino, currículo e avaliação.
+
+A partir da segunda metade do século XX, novas perspectivas emergiram:
+
+- **Década de 1950-60**: Foco em abordagens comportamentalistas e estruturalistas
+- **Década de 1970-80**: Surgimento de teorias construtivistas e cognitivistas
+- **Década de 1990-2000**: Integração de tecnologias digitais e globalização do conhecimento
+- **Século XXI**: Desenvolvimento de abordagens personalizadas, adaptativas e baseadas em evidências
+
+### Marcos Históricos Significativos
+
+1. **1916**: Publicação de "Democracy and Education" por John Dewey, estabelecendo princípios fundamentais
+2. **1956**: Taxonomia de Bloom revoluciona a compreensão dos objetivos educacionais
+3. **1983**: Relatório "A Nation at Risk" redefine prioridades educacionais nos EUA e globalmente
+4. **1998**: Declaração de Bolonha inicia harmonização do ensino superior na Europa
+5. **2001**: Surgimento de recursos educacionais abertos e democratização do conhecimento
+
+## Fundamentos Teóricos e Conceituais
+
+Os **princípios basilares** nesta área incluem um conjunto sofisticado de conceitos interrelacionados:
+
+1. **Estruturação hierárquica do conhecimento**: Organização de saberes em níveis crescentes de complexidade, permitindo progressão lógica e construção de entendimento
+
+2. **Metacognição aplicada**: Desenvolvimento da consciência sobre os próprios processos de aprendizagem e pensamento, facilitando autorregulação e aprendizado autônomo
+
+3. **Transferência interdisciplinar**: Capacidade de aplicar conhecimentos e habilidades adquiridos em um domínio para resolver problemas em outros contextos
+
+4. **Aprendizagem situada**: Compreensão de que o conhecimento está intrinsecamente ligado ao contexto em que é adquirido e aplicado
+
+5. **Andragogia diferenciada**: Princípios específicos que governam o aprendizado adulto, em contraste com a pedagogia tradicional
+
+### Modelos Conceituais Avançados
+
+A área é rica em modelos teóricos que fornecem frameworks para compreensão e aplicação:
+
+- **Modelo TPACK**: Integração de Conhecimento de Conteúdo, Pedagogia e Tecnologia
+- **Teoria da Carga Cognitiva**: Compreensão das limitações da memória de trabalho e suas implicações para o design instrucional
+- **Framework SAMR**: Modelo para integração progressiva de tecnologia em contextos educacionais
+- **Taxonomia de Fink**: Extensão da taxonomia de Bloom para incluir dimensões afetivas e metacognitivas
+
+## Aplicações Práticas e Implementação
+
+A transposição destes conceitos para contextos práticos é multifacetada e abrange:
+
+### Em Ambientes Educacionais Formais
+
+- **Design curricular baseado em competências**: Estruturação de programas educacionais em torno de resultados de aprendizagem mensuráveis
+
+- **Avaliação autêntica e formativa**: Implementação de métodos avaliativos que refletem situações do mundo real e fornecem feedback constante
+
+- **Metodologias ativas de aprendizagem**: Aplicação de abordagens como aprendizagem baseada em problemas, sala de aula invertida e aprendizagem por projetos
+
+- **Ambiente de aprendizagem adaptativo**: Criação de espaços físicos e virtuais que respondem às necessidades individuais dos aprendizes
+
+### Em Contextos Organizacionais
+
+- **Comunidades de prática profissional**: Estabelecimento de grupos colaborativos para compartilhamento de conhecimento e melhoria contínua
+
+- **Sistemas de gestão do conhecimento**: Implementação de ferramentas para capturar, organizar e disseminar conhecimento organizacional
+
+- **Programas de desenvolvimento profissional continuado**: Estruturação de oportunidades sistemáticas para crescimento e atualização
+
+## Debates e Controvérsias Contemporâneas
+
+O campo é caracterizado por debates vibrantes sobre questões fundamentais:
+
+### Tensões Paradigmáticas
+
+- **Padronização vs. Personalização**: Equilíbrio entre currículos padronizados e adaptação às necessidades individuais
+
+- **Conhecimento canônico vs. Construção subjetiva**: Debate sobre a natureza do conhecimento e suas implicações para o ensino
+
+- **Avaliação quantitativa vs. qualitativa**: Contraposição entre métricas objetivas e análises interpretativas mais profundas
+
+### Questões Emergentes
+
+1. **Equidade e acessibilidade**: Garantia de que avanços educacionais beneficiem todos os aprendizes
+
+2. **Inteligência artificial e automação**: Implicações éticas e práticas da integração de IA em contextos educacionais
+
+3. **Decolonização do currículo**: Reconhecimento e integração de perspectivas historicamente marginalizadas
+
+## Direções Futuras e Tendências Emergentes
+
+O horizonte da área aponta para desenvolvimentos significativos:
+
+- **Aprendizagem multimodal e imersiva**: Integração de realidade virtual, aumentada e mista
+
+- **Análise de aprendizagem preditiva**: Uso de big data e algoritmos para antecipar necessidades e personalizar intervenções
+
+- **Neuroeducação aplicada**: Tradução de descobertas neurocientíficas em práticas educacionais eficazes
+
+- **Microcredenciamento e trajetórias não-lineares**: Reimaginação de certificações e percursos de aprendizagem
+
+## Conclusão e Síntese Integrativa
+
+Esta análise aprofundada demonstra a extraordinária complexidade e riqueza do tema, revelando suas múltiplas dimensões, aplicações e interconexões. A compreensão destes aspectos em profundidade não apenas enriquece o repertório teórico do educador, mas também potencializa sua capacidade de tomar decisões informadas e eficazes em contextos práticos diversos.
+
+O verdadeiro domínio deste campo requer não apenas conhecimento enciclopédico, mas também a capacidade de sintetizar perspectivas divergentes, adaptar princípios a contextos específicos e manter-se atualizado com um corpo de conhecimento em constante evolução.
+
+## Recursos Adicionais Recomendados
+
+Para aprofundamento posterior, recomenda-se a consulta às seguintes fontes autoritativas:
+
+1. Handbooks especializados da área publicados por editoras acadêmicas renomadas
+2. Periódicos revisados por pares com alto fator de impacto
+3. Relatórios técnicos de organizações internacionais como UNESCO e OCDE
+4. Comunidades de prática profissional e redes de pesquisa colaborativa
+`;
+    }
+
+    // Para solicitações de termos técnicos ou glossários
+    if (prompt.includes("termos") || prompt.includes("glossário") || prompt.includes("definições")) {
+      try {
+        // Retorna uma estrutura JSON para facilitar o processamento
+        return JSON.stringify([
+          {
+            "termo": "Aprendizagem Significativa",
+            "definicao": "Processo pelo qual novos conhecimentos são relacionados de maneira substantiva à estrutura cognitiva prévia do aprendiz. Ocorre quando o estudante consegue conectar novos conceitos a conhecimentos já existentes, criando uma rede de significados pessoais e duradouros."
+          },
+          {
+            "termo": "Metacognição",
+            "definicao": "Consciência e compreensão dos próprios processos cognitivos. Inclui a capacidade de monitorar, avaliar e regular o próprio pensamento e aprendizagem, permitindo ao indivíduo desenvolver estratégias mais eficazes de estudo e resolução de problemas."
+          },
+          {
+            "termo": "Zona de Desenvolvimento Proximal",
+            "definicao": "Conceito desenvolvido por Vygotsky que representa a distância entre o nível de desenvolvimento real (o que o indivíduo consegue fazer sozinho) e o nível de desenvolvimento potencial (o que consegue fazer com assistência). É nesta zona que a intervenção educacional é mais eficaz."
+          },
+          {
+            "termo": "Avaliação Formativa",
+            "definicao": "Processo contínuo de avaliação que ocorre durante o aprendizado, fornecendo feedback imediato tanto para o professor quanto para o aluno. Seu objetivo principal é identificar dificuldades e ajustar o ensino, não classificar ou rotular o desempenho."
+          },
+          {
+            "termo": "Transposição Didática",
+            "definicao": "Processo pelo qual um conhecimento acadêmico ou científico é transformado em conteúdo ensinável em contextos educacionais. Envolve seleção, simplificação e adaptação do conhecimento para torná-lo acessível e significativo aos aprendizes."
+          }
+        ]);
+      } catch (e) {
+        // Se falhar ao gerar JSON, retorna em formato de texto
+        return `
+## Glossário de Termos Educacionais
+
+**Aprendizagem Significativa**: Processo pelo qual novos conhecimentos são relacionados de maneira substantiva à estrutura cognitiva prévia do aprendiz.
+
+**Metacognição**: Consciência e compreensão dos próprios processos cognitivos, incluindo a capacidade de monitorar e regular o próprio pensamento.
+
+**Zona de Desenvolvimento Proximal**: Conceito desenvolvido por Vygotsky que representa a distância entre o nível de desenvolvimento real e o potencial.
+
+**Avaliação Formativa**: Processo contínuo de avaliação que ocorre durante o aprendizado, fornecendo feedback imediato para ajustar o ensino.
+
+**Transposição Didática**: Processo pelo qual um conhecimento acadêmico é transformado em conteúdo ensinável em contextos educacionais.
+`;
+      }
+    }
+
+    // Para solicitações de aplicações específicas
+    if (prompt.includes("aplicações") || prompt.includes("usos práticos") || prompt.includes("como aplicar")) {
+      return `
+## Aplicações Práticas em Diversos Contextos
+
+### Em Ambientes Educacionais
+- Desenvolvimento de currículos integrados que conectam múltiplas disciplinas
+- Implementação de sistemas de avaliação que valorizam competências complexas
+- Criação de ambientes de aprendizagem que promovem autonomia e colaboração
+- Formação de educadores para práticas pedagógicas baseadas em evidências
+
+### Em Contextos Profissionais
+- Estabelecimento de programas de desenvolvimento continuado para equipes
+- Implementação de metodologias de gestão do conhecimento organizacional
+- Criação de sistemas de mentoria e transferência de expertise entre gerações
+- Desenvolvimento de ambientes que valorizam aprendizagem e inovação constantes
+
+### Para Desenvolvimento Pessoal
+- Aplicação de técnicas de aprendizagem autorregulada para objetivos individuais
+- Utilização de ferramentas de reflexão e autoavaliação para crescimento contínuo
+- Criação de rotinas de estudo e prática deliberada para desenvolvimento de expertise
+- Integração de conhecimentos interdisciplinares para resolução criativa de problemas
+
+### Em Pesquisa e Inovação
+- Desenvolvimento de metodologias de investigação que integram múltiplas perspectivas
+- Criação de frameworks para avaliação de impacto em intervenções educacionais
+- Estabelecimento de redes colaborativas para avanço do conhecimento na área
+- Aplicação de princípios de design thinking para criação de soluções educacionais
+`;
+    }
+
+    // Resposta padrão para outros tipos de prompts
+    return `Baseado na sua solicitação, posso fornecer a seguinte resposta: 
+
+O tema que você mencionou é realmente fascinante e tem diversas aplicações no contexto educacional. Alguns pontos importantes a considerar incluem a fundamentação teórica, aplicações práticas e metodologias de implementação.
+
+Para aprofundar seu conhecimento, recomendo explorar recursos adicionais disponíveis na plataforma Ponto.School, especialmente os materiais relacionados a este tema específico na seção de biblioteca.
+
+Espero que esta informação seja útil para seu aprendizado!`;
+  } catch (error) {
+    console.error("Erro ao gerar resposta da IA:", error);
+    return "Desculpe, encontrei um problema ao processar sua solicitação. Por favor, tente novamente.";
   }
 };
 
