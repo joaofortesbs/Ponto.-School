@@ -1020,8 +1020,22 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
     const flowWrapper = document.querySelector('.react-flow');
     if (!flowWrapper) {
       alert('Não foi possível encontrar o fluxograma para exportar.');
-      return;
+      return Promise.reject('Elemento do fluxograma não encontrado');
     }
+    
+    // Mostrar indicador visual de que está processando
+    const loadingIndicator = document.createElement('div');
+    loadingIndicator.className = 'fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-[9999]';
+    loadingIndicator.innerHTML = `
+      <div class="bg-white dark:bg-gray-800 rounded-lg p-4 flex flex-col items-center">
+        <svg class="animate-spin h-8 w-8 text-blue-600 dark:text-blue-400 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span class="text-sm text-gray-700 dark:text-gray-300">Exportando fluxograma...</span>
+      </div>
+    `;
+    document.body.appendChild(loadingIndicator);
     
     // Configurar opções para melhor qualidade
     const options = {
@@ -1029,19 +1043,40 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
       backgroundColor: document.documentElement.classList.contains('dark') ? '#111827' : '#ffffff',
       style: {
         margin: '20px'
-      }
+      },
+      pixelRatio: 2, // Aumentar resolução da imagem exportada
+      cacheBust: true // Evitar cache para garantir que a imagem atual seja exportada
     };
     
     // Exportar como PNG
     return htmlToImage.toPng(flowWrapper as HTMLElement, options)
       .then(dataUrl => {
+        // Remover o indicador de carregamento
+        loadingIndicator.remove();
+        
+        // Criar link para download
         const link = document.createElement('a');
-        link.download = 'fluxograma.png';
+        link.download = `fluxograma_${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
         link.href = dataUrl;
         link.click();
+        
+        // Mostrar mensagem de sucesso
+        const successMessage = document.createElement('div');
+        successMessage.className = 'fixed bottom-4 right-4 bg-green-50 dark:bg-green-900 text-green-800 dark:text-green-100 px-4 py-2 rounded-md shadow-md border border-green-200 dark:border-green-800 z-50';
+        successMessage.innerHTML = 'Fluxograma exportado com sucesso!';
+        document.body.appendChild(successMessage);
+        
+        // Remover mensagem após 3 segundos
+        setTimeout(() => {
+          successMessage.remove();
+        }, 3000);
+        
         return true;
       })
       .catch(error => {
+        // Remover o indicador de carregamento
+        loadingIndicator.remove();
+        
         console.error('Erro ao exportar fluxograma:', error);
         alert('Ocorreu um erro ao exportar o fluxograma. Por favor, tente novamente.');
         return false;
@@ -1310,85 +1345,81 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                   onClick={(e) => {
                     e.stopPropagation();
                     
-                    // Verificar se o menu já existe, se não, criar
-                    let exportMenu = document.getElementById('export-options-menu');
-                    if (!exportMenu) {
-                      exportMenu = document.createElement('div');
-                      exportMenu.id = 'export-options-menu';
-                      exportMenu.className = 'absolute z-50 bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 border border-gray-200 dark:border-gray-700 w-48';
-                      exportMenu.innerHTML = `
-                        <div class="flex flex-col space-y-1">
-                          <button 
-                            class="text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300"
-                            id="export-img-button"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            Exportar em .IMG
-                          </button>
-                          <button class="text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 opacity-60 cursor-not-allowed" disabled>
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Exportar em PDF
-                          </button>
-                          <button class="text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 opacity-60 cursor-not-allowed" disabled>
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Exportar em Texto
-                          </button>
-                        </div>
-                      `;
-                      document.body.appendChild(exportMenu);
+                    // Criar menu de exportação diretamente ao invés de verificar se existe
+                    const exportMenu = document.createElement('div');
+                    exportMenu.id = 'export-options-menu';
+                    exportMenu.className = 'absolute z-50 bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 border border-gray-200 dark:border-gray-700 w-48';
+                    
+                    // Remover qualquer menu anterior que possa existir
+                    const oldMenu = document.getElementById('export-options-menu');
+                    if (oldMenu) {
+                      oldMenu.remove();
                     }
                     
-                    // Alternar visibilidade
-                    if (exportMenu.style.display === 'block') {
-                      exportMenu.style.display = 'none';
-                    } else {
-                      // Posicionar o menu em relação ao botão
-                      const buttonRect = e.currentTarget.getBoundingClientRect();
-                      exportMenu.style.display = 'block';
-                      exportMenu.style.position = 'fixed';
-                      exportMenu.style.zIndex = '9999';
-                      exportMenu.style.top = `${buttonRect.top - 120}px`;
-                      exportMenu.style.left = `${buttonRect.left - 20}px`;
-                      
-                      // Configurar o evento de clique para o botão 'Exportar em .IMG'
-                      setTimeout(() => {
-                        const exportImgButton = exportMenu.querySelector('button:first-child');
-                        if (exportImgButton) {
-                          // Remover listeners anteriores
-                          exportImgButton.replaceWith(exportImgButton.cloneNode(true));
-                          const newExportImgButton = exportMenu.querySelector('button:first-child');
-                          
-                          // Adicionar novo listener
-                          newExportImgButton.addEventListener('click', () => {
-                            exportAsImage();
-                            exportMenu.style.display = 'none';
-                          });
-                        }
-                      }, 0);
-                      
-                      // Fechar o menu ao clicar fora dele
-                      const closeMenu = (event: MouseEvent) => {
-                        if (!exportMenu.contains(event.target as Node) && 
-                            event.target !== e.currentTarget) {
-                          exportMenu.style.display = 'none';
-                          document.removeEventListener('click', closeMenu);
-                        }
-                      };
-                      
-                      // Remover listener anterior se existir
-                      document.removeEventListener('click', closeMenu);
-                      
-                      // Atrasar a adição do listener para evitar que ele feche imediatamente
-                      setTimeout(() => {
-                        document.addEventListener('click', closeMenu);
-                      }, 100);
+                    exportMenu.innerHTML = `
+                      <div class="flex flex-col space-y-1">
+                        <button 
+                          class="text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300"
+                          id="export-img-button"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          Exportar em .IMG
+                        </button>
+                        <button class="text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 opacity-60 cursor-not-allowed" disabled>
+                          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          Exportar em PDF
+                        </button>
+                        <button class="text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 opacity-60 cursor-not-allowed" disabled>
+                          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          Exportar em Texto
+                        </button>
+                      </div>
+                    `;
+                    
+                    document.body.appendChild(exportMenu);
+                    
+                    // Posicionar o menu em relação ao botão
+                    const buttonRect = e.currentTarget.getBoundingClientRect();
+                    exportMenu.style.display = 'block';
+                    exportMenu.style.position = 'fixed';
+                    exportMenu.style.zIndex = '9999';
+                    exportMenu.style.top = `${buttonRect.top - 120}px`;
+                    exportMenu.style.left = `${buttonRect.left - 20}px`;
+                    
+                    // Configurar o evento de clique para o botão 'Exportar em .IMG'
+                    const exportImgButton = exportMenu.querySelector('#export-img-button');
+                    if (exportImgButton) {
+                      exportImgButton.addEventListener('click', () => {
+                        exportAsImage().then(() => {
+                          exportMenu.remove();
+                        }).catch(error => {
+                          console.error('Erro ao exportar imagem:', error);
+                          alert('Ocorreu um erro ao exportar o fluxograma. Por favor, tente novamente.');
+                          exportMenu.remove();
+                        });
+                      });
                     }
+                    
+                    // Fechar o menu ao clicar fora dele
+                    const closeMenu = (event: MouseEvent) => {
+                      if (!exportMenu.contains(event.target as Node) && 
+                          event.target !== e.currentTarget) {
+                        exportMenu.remove();
+                        document.removeEventListener('click', closeMenu);
+                      }
+                    };
+                    
+                    // Adicionar listener para fechar o menu
+                    // Atraso pequeno para evitar que o menu feche imediatamente
+                    setTimeout(() => {
+                      document.addEventListener('click', closeMenu);
+                    }, 10);
                   }}
                   className="h-10 w-10 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
                 >
