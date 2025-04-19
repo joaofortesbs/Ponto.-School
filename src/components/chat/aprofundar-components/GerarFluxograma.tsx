@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import { 
   ArrowLeft, 
   FileDown, 
@@ -134,16 +133,10 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
       return;
     }
 
-    setSelectedOption('manual');
     setIsLoading(true);
 
     // Processar o conteúdo e gerar o fluxograma
-    processFluxogramaContent();
-  };
-
-  // Função para processar o conteúdo e gerar o fluxograma
-  const processFluxogramaContent = async () => {
-      console.log("Processando conteúdo para fluxograma:", manualContent);
+    const processFluxogramaContent = async () => {
       try {
         // ETAPA 1: Analisar o conteúdo usando a API de IA
         let fluxogramaData;
@@ -1370,7 +1363,7 @@ fluxograma:
       </div>
 
       {showFluxograma ? (
-        <div className="space-y-4 w-full max-w-5xl mx-auto fluxograma-modal-container">
+        <div className="space-y-4">
           <div className="flex justify-between items-center mb-2">
             <h4 className="text-md font-medium text-gray-900 dark:text-white">Fluxograma Interativo</h4>
             <Button
@@ -1382,11 +1375,9 @@ fluxograma:
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <div className="h-[70vh] w-full">
-            <FluxogramaVisualizer onNodeClick={handleNodeClick} />
-          </div>
+          <FluxogramaVisualizer onNodeClick={handleNodeClick} />
           {/* Painel de ações fixo compacto */}
-          <div className="bg-white/90 dark:bg-gray-800/90 rounded-xl border border-gray-200/70 dark:border-gray-700/50 p-3 shadow-sm backdrop-blur-sm fixed bottom-8 right-8 z-50">
+          <div className="bg-white/90 dark:bg-gray-800/90 rounded-xl border border-gray-200/70 dark:border-gray-700/50 p-3 shadow-sm backdrop-blur-sm fixed bottom-4 right-4">
             <div className="flex items-center space-x-2">
               <div className="tooltip-container relative group">
                 <Button 
@@ -1937,34 +1928,39 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
               </Button>
 
               {!showManualInput ? (
-                <div className="w-full bg-white dark:bg-gray-900 shadow-sm border border-gray-200 dark:border-gray-700 rounded-full backdrop-blur-sm relative overflow-hidden flex items-center">
-                  <div className="h-10 w-10 flex items-center justify-center">
-                    <PenLine className="h-5 w-5 text-indigo-600 dark:text-indigo-500 ml-3" />
-                  </div>
-                  <div className="flex-1 pr-2">
-                    <Input 
+                <div className="w-full rounded-xl relative overflow-hidden flex items-center">
+                  <div className="flex-1 relative">
+                    <Textarea 
                       value={manualContent}
                       onChange={(e) => setManualContent(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey && manualContent.trim()) {
-                          e.preventDefault();
-                          handleSubmitManualContent();
-                        }
-                      }}
-                      placeholder="Insira seu conteúdo para gerar o fluxograma"
-                      className="border-0 shadow-none bg-transparent focus-visible:ring-0 h-10"
+                      placeholder="Inserir meu próprio conteúdo..."
+                      className="h-8 py-1 px-3 pr-10 resize-none bg-gradient-to-b from-gray-800 to-gray-900 border-0 shadow-md rounded-xl text-white text-sm focus-visible:ring-0 min-h-0 max-h-[40px]"
                       disabled={isLoading}
                     />
+                    <Button
+                      onClick={() => handleSubmitManualContent()}
+                      variant="ghost"
+                      className="absolute right-1 top-1 h-6 w-6 p-0 rounded-full transition-all"
+                      disabled={isLoading || !manualContent.trim()}
+                    >
+                      <span className="sr-only">Enviar conteúdo</span>
+                      <svg
+                        className="h-5 w-5 text-white"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+                          fill="currentColor"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </Button>
                   </div>
-                  <Button
-                    onClick={() => handleSubmitManualContent()}
-                    variant="ghost"
-                    className="h-10 w-10 p-0 mr-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
-                    disabled={isLoading || !manualContent.trim()}
-                  >
-                    <span className="sr-only">Enviar conteúdo</span>
-                    <SendHorizonal className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  </Button>
                 </div>
               ) : null}
               
