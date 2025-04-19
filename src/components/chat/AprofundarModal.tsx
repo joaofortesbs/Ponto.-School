@@ -10,6 +10,7 @@ import TopicosRelacionados from './aprofundar-components/TopicosRelacionados';
 import ExemplosPraticos from './aprofundar-components/ExemplosPraticos';
 import ErrosComuns from './aprofundar-components/ErrosComuns';
 import ExploreMais from './aprofundar-components/ExploreMais';
+import GerarFluxograma from './aprofundar-components/GerarFluxograma';
 
 interface AprofundarModalProps {
   isOpen: boolean;
@@ -20,7 +21,7 @@ interface AprofundarModalProps {
   toast: any; // Added toast prop type
 }
 
-type ContentType = 'main' | 'explicacao' | 'topicos' | 'exemplos' | 'erros' | 'fontes';
+type ContentType = 'main' | 'explicacao' | 'topicos' | 'exemplos' | 'erros' | 'fontes' | 'fluxograma';
 
 interface AprofundadoContent {
   contexto: string;
@@ -774,6 +775,10 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
         return <ErrosComuns handleBack={handleBack} />;
       case 'fontes':
         return <ExploreMais handleBack={handleBack} />;
+      case 'fluxograma':
+        return <GerarFluxograma 
+                 handleBack={handleBack}
+                 aprofundadoContent={aprofundadoContent} />;
       default:
         return <MainContent handleOptionClick={handleOptionClick} />;
     }

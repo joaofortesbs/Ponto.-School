@@ -1,15 +1,15 @@
-
 import React from 'react';
 import { 
   Search,
   Bookmark,
   Lightbulb,
   FileText,
-  AlertTriangle
+  AlertTriangle,
+  GitBranch
 } from "lucide-react";
 
 interface MainContentProps {
-  handleOptionClick: (option: 'main' | 'explicacao' | 'topicos' | 'exemplos' | 'erros' | 'fontes') => void;
+  handleOptionClick: (option: 'main' | 'explicacao' | 'topicos' | 'exemplos' | 'erros' | 'fontes' | 'fluxograma') => void;
 }
 
 const MainContent: React.FC<MainContentProps> = ({ handleOptionClick }) => {
@@ -64,6 +64,19 @@ const MainContent: React.FC<MainContentProps> = ({ handleOptionClick }) => {
         <div className="flex-1">
           <span className="font-semibold text-gray-800 dark:text-gray-100 block mb-0.5">Erros Comuns e Dicas</span>
           <span className="text-xs text-gray-500 dark:text-gray-400">Evite armadilhas e acelere seu aprendizado</span>
+        </div>
+      </div>
+
+      <div 
+        className="flex items-center p-4 rounded-xl border border-gray-200/50 dark:border-gray-700/50 bg-gradient-to-r from-white to-cyan-50 dark:from-gray-800 dark:to-gray-800/80 hover:shadow-md dark:hover:bg-gray-700/40 transition-all duration-300 cursor-pointer group"
+        onClick={() => handleOptionClick('fluxograma')}
+      >
+        <div className="bg-cyan-100 dark:bg-cyan-900/40 p-2.5 rounded-full mr-4 group-hover:scale-110 transition-transform">
+          <GitBranch className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+        </div>
+        <div className="flex-1">
+          <span className="font-semibold text-gray-800 dark:text-gray-100 block mb-0.5">Gerar Fluxograma</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">Visualize o tema em formato de fluxograma interativo</span>
         </div>
       </div>
 
