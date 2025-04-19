@@ -1929,45 +1929,18 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                 </span>
               </Button>
 
-              {!showManualInput ? (
-                <Button
-                  onClick={() => setShowManualInput(true)}
-                  variant="outline"
-                  className="w-full py-6 bg-white/80 dark:bg-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-700/70 shadow-sm border border-gray-200 dark:border-gray-700 rounded-xl backdrop-blur-sm group relative overflow-hidden flex items-center justify-center"
-                  disabled={isLoading}
-                >
-                  <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-700/30 dark:to-gray-800/30 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
-                  <span className="relative flex items-center justify-center">
-                    <PenLine className="h-5 w-5 mr-2 transform group-hover:translate-y-px transition-transform" />
-                    <span className="font-medium">Inserir meu próprio conteúdo</span>
-                  </span>
-                </Button>
-              ) : (
-                <div className="w-full py-4 px-4 bg-white/90 dark:bg-gray-800/90 shadow-sm border border-blue-200 dark:border-blue-800/50 rounded-xl backdrop-blur-sm flex items-center">
-                  <PenLine className="h-5 w-5 mr-3 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                  <Textarea 
-                    value={manualContent}
-                    onChange={(e) => setManualContent(e.target.value)}
-                    placeholder="Insira seu conteúdo para gerar o fluxograma"
-                    className="min-h-[100px] flex-grow border-none shadow-none resize-none focus-visible:ring-0 p-0 bg-transparent"
-                    autoFocus
-                  />
-                  <Button
-                    onClick={() => handleSubmitManualContent()}
-                    className="ml-2 bg-blue-600 hover:bg-blue-700 text-white h-9 px-3 py-2"
-                    disabled={!manualContent.trim()}
-                  >
-                    <SendHorizonal className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    onClick={() => setShowManualInput(false)}
-                    variant="ghost"
-                    className="ml-1 h-9 w-9 p-0"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
+              <Button
+                onClick={() => handleGenerateFlowchart('manual')}
+                variant="outline"
+                className="w-full py-6 bg-white/80 dark:bg-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-700/70 shadow-sm border border-gray-200 dark:border-gray-700 rounded-xl backdrop-blur-sm group relative overflow-hidden flex items-center justify-center"
+                disabled={isLoading || showManualInput}
+              >
+                <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-700/30 dark:to-gray-800/30 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
+                <span className="relative flex items-center justify-center">
+                  <PenLine className="h-5 w-5 mr-2 transform group-hover:translate-y-px transition-transform" />
+                  <span className="font-medium">Inserir meu próprio conteúdo</span>
+                </span>
+              </Button>
               
               {/* Card único de Pré-visualização do Fluxograma */}
               <div className="w-full mt-6 p-6 bg-white/80 dark:bg-gray-800/80 border border-blue-200/80 dark:border-blue-800/30 rounded-2xl shadow-lg backdrop-blur-xl relative overflow-hidden group hover:shadow-xl transition-all duration-500 hover:border-blue-300 dark:hover:border-blue-700">
@@ -2153,8 +2126,31 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
               )}
             </div>
           ) : (
-            <div className="hidden">
-              {/* Mantemos este div vazio para preservar a estrutura condicional */}
+            <div className="space-y-4 bg-white/80 dark:bg-gray-800/80 rounded-xl border border-gray-200/70 dark:border-gray-700/50 p-5 shadow-sm backdrop-blur-sm">
+              <h4 className="text-md font-medium text-gray-900 dark:text-white mb-2">Insira seu conteúdo para gerar o fluxograma</h4>
+              <Textarea 
+                value={manualContent}
+                onChange={(e) => setManualContent(e.target.value)}
+                placeholder="Insira aqui o conteúdo sobre o qual você deseja gerar um fluxograma..."
+                className="min-h-[200px] resize-none"
+              />
+              <div className="flex justify-end space-x-2 mt-2">
+                <Button
+                  onClick={handleCancelManualInput}
+                  variant="outline"
+                  className="flex items-center"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  <span>Cancelar</span>
+                </Button>
+                <Button
+                  onClick={handleSubmitManualContent}
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white flex items-center"
+                >
+                  <SendHorizonal className="h-4 w-4 mr-2" />
+                  <span>Gerar Fluxograma</span>
+                </Button>
+              </div>
             </div>
           )}
 
