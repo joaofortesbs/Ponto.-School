@@ -1928,39 +1928,39 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
               </Button>
 
               {!showManualInput ? (
-                <div className="w-full rounded-xl relative overflow-hidden flex items-center">
-                  <div className="flex-1 relative">
+                <div className="w-full py-2 bg-white/80 dark:bg-gray-800/50 shadow-sm border border-gray-200 dark:border-gray-700 rounded-xl backdrop-blur-sm relative overflow-hidden flex items-center">
+                  <div className="flex-1 px-4">
                     <Textarea 
                       value={manualContent}
                       onChange={(e) => setManualContent(e.target.value)}
                       placeholder="Inserir meu próprio conteúdo..."
-                      className="h-8 py-1 px-3 pr-10 resize-none bg-gradient-to-b from-gray-800 to-gray-900 border-0 shadow-md rounded-xl text-white text-sm focus-visible:ring-0 min-h-0 max-h-[40px]"
+                      className="border-0 shadow-none resize-none bg-transparent focus-visible:ring-0 p-0 min-h-[52px] max-h-[200px]"
                       disabled={isLoading}
                     />
-                    <Button
-                      onClick={() => handleSubmitManualContent()}
-                      variant="ghost"
-                      className="absolute right-1 top-1 h-6 w-6 p-0 rounded-full transition-all"
-                      disabled={isLoading || !manualContent.trim()}
-                    >
-                      <span className="sr-only">Enviar conteúdo</span>
-                      <svg
-                        className="h-5 w-5 text-white"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
-                          fill="currentColor"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </Button>
                   </div>
+                  <Button
+                    onClick={() => handleSubmitManualContent()}
+                    variant="ghost"
+                    className="h-12 w-12 p-0 mr-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
+                    disabled={isLoading || !manualContent.trim()}
+                  >
+                    <span className="sr-only">Enviar conteúdo</span>
+                    <svg
+                      className="h-6 w-6 text-blue-600 dark:text-blue-400"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+                        fill="currentColor"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </Button>
                 </div>
               ) : null}
               
