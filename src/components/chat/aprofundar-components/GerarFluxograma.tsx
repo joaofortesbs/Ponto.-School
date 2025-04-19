@@ -14,7 +14,8 @@ import {
   Maximize2,
   Save,
   X,
-  SendHorizonal
+  SendHorizonal,
+  Share2
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import FluxogramaVisualizer from './FluxogramaVisualizer';
@@ -1097,44 +1098,88 @@ fluxograma:
             </Button>
           </div>
           <FluxogramaVisualizer onNodeClick={handleNodeClick} />
-          {/* Painel de ações fixo */}
-          <div className="bg-white/80 dark:bg-gray-800/80 rounded-xl border border-gray-200/70 dark:border-gray-700/50 p-5 shadow-sm backdrop-blur-sm fixed bottom-4 right-4">
-            <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-3 flex items-center">
-              <FileLineChart className="h-5 w-5 mr-2 text-blue-500" />
-              Painel de Ações
-            </h4>
-
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
-              <Button variant="outline" className="flex flex-col items-center justify-center h-auto py-3 px-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all"
-                onClick={() => handleCopyFlowchartPrompt(1)}
-              >
-                <RotateCw className="h-5 w-5 mb-1 text-blue-600 dark:text-blue-400" />
-                <span className="text-xs text-gray-700 dark:text-gray-300 text-center">Regenerar</span>
-              </Button>
-
-              <Button variant="outline" className="flex flex-col items-center justify-center h-auto py-3 px-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all">
-                <Download className="h-5 w-5 mb-1 text-blue-600 dark:text-blue-400" />
-                <span className="text-xs text-gray-700 dark:text-gray-300 text-center">Exportar</span>
-              </Button>
-
-              <Button variant="outline" className="flex flex-col items-center justify-center h-auto py-3 px-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all">
-                <Clipboard className="h-5 w-5 mb-1 text-blue-600 dark:text-blue-400" />
-                <span className="text-xs text-gray-700 dark:text-gray-300 text-center">Caderno</span>
-              </Button>
-
-              <Button variant="outline" className="flex flex-col items-center justify-center h-auto py-3 px-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all">
-                <Maximize2 className="h-5 w-5 mb-1 text-blue-600 dark:text-blue-400" />
-                <span className="text-xs text-gray-700 dark:text-gray-300 text-center">Ampliar</span>
-              </Button>
-
-              <Button 
-                variant="outline" 
-                className="flex flex-col items-center justify-center h-auto py-3 px-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all"
-                onClick={handleSaveFluxograma}
-              >
-                <Save className="h-5 w-5 mb-1 text-blue-600 dark:text-blue-400" />
-                <span className="text-xs text-gray-700 dark:text-gray-300 text-center">Salvar</span>
-              </Button>
+          {/* Painel de ações fixo compacto */}
+          <div className="bg-white/90 dark:bg-gray-800/90 rounded-xl border border-gray-200/70 dark:border-gray-700/50 p-3 shadow-sm backdrop-blur-sm fixed bottom-4 right-4">
+            <div className="flex items-center space-x-2">
+              <div className="tooltip-container relative group">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => handleCopyFlowchartPrompt(1)}
+                  className="h-10 w-10 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
+                >
+                  <RotateCw className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </Button>
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+                  Regenerar
+                </div>
+              </div>
+              
+              <div className="tooltip-container relative group">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="h-10 w-10 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
+                >
+                  <Download className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </Button>
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+                  Exportar
+                </div>
+              </div>
+              
+              <div className="tooltip-container relative group">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="h-10 w-10 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
+                >
+                  <Clipboard className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </Button>
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+                  Caderno
+                </div>
+              </div>
+              
+              <div className="tooltip-container relative group">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="h-10 w-10 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
+                >
+                  <Maximize2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </Button>
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+                  Ampliar
+                </div>
+              </div>
+              
+              <div className="tooltip-container relative group">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={handleSaveFluxograma}
+                  className="h-10 w-10 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
+                >
+                  <Save className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </Button>
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+                  Salvar
+                </div>
+              </div>
+              
+              <div className="tooltip-container relative group">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="h-10 w-10 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
+                >
+                  <Share2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </Button>
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+                  Compartilhar
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1194,26 +1239,89 @@ fluxograma:
                   
                   {savedFluxogramas.length > 0 ? (
                     <div className="space-y-3">
-                      {savedFluxogramas.map((fluxograma, index) => (
-                        <div 
-                          key={index}
-                          className="bg-white dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600 hover:border-green-300 dark:hover:border-green-500 transition-colors cursor-pointer"
-                          onClick={() => handleLoadSavedFluxograma(fluxograma)}
-                        >
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center">
-                              <FileLineChart className="h-4 w-4 mr-2 text-green-600 dark:text-green-400" />
-                              <span className="font-medium text-sm">{fluxograma.title || `Fluxograma ${index + 1}`}</span>
+                      {savedFluxogramas.map((fluxograma, index) => {
+                        const [isEditing, setIsEditing] = useState(false);
+                        const [editedTitle, setEditedTitle] = useState(fluxograma.title || `Fluxograma ${index + 1}`);
+                        
+                        const handleEditTitle = (e: React.MouseEvent) => {
+                          e.stopPropagation();
+                          setIsEditing(true);
+                        };
+                        
+                        const handleSaveTitle = (e: React.MouseEvent) => {
+                          e.stopPropagation();
+                          if (editedTitle.trim()) {
+                            const updatedFluxogramas = [...savedFluxogramas];
+                            updatedFluxogramas[index].title = editedTitle;
+                            setSavedFluxogramas(updatedFluxogramas);
+                            localStorage.setItem('savedFluxogramas', JSON.stringify(updatedFluxogramas));
+                          }
+                          setIsEditing(false);
+                        };
+                        
+                        return (
+                          <div 
+                            key={index}
+                            className="bg-white dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600 hover:border-green-300 dark:hover:border-green-500 transition-colors cursor-pointer"
+                            onClick={() => handleLoadSavedFluxograma(fluxograma)}
+                          >
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center flex-grow">
+                                <FileLineChart className="h-4 w-4 mr-2 text-green-600 dark:text-green-400 flex-shrink-0" />
+                                {isEditing ? (
+                                  <div className="flex items-center space-x-2 flex-grow" onClick={(e) => e.stopPropagation()}>
+                                    <input
+                                      type="text"
+                                      value={editedTitle}
+                                      onChange={(e) => setEditedTitle(e.target.value)}
+                                      className="flex-grow text-sm rounded border border-blue-300 dark:border-blue-600 px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                      autoFocus
+                                    />
+                                    <Button 
+                                      size="sm" 
+                                      variant="ghost" 
+                                      onClick={handleSaveTitle}
+                                      className="h-7 w-7 p-0"
+                                    >
+                                      <CheckCircle className="h-4 w-4 text-green-500" />
+                                    </Button>
+                                    <Button 
+                                      size="sm" 
+                                      variant="ghost" 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsEditing(false);
+                                        setEditedTitle(fluxograma.title || `Fluxograma ${index + 1}`);
+                                      }}
+                                      className="h-7 w-7 p-0"
+                                    >
+                                      <X className="h-4 w-4 text-red-500" />
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center justify-between flex-grow">
+                                    <span className="font-medium text-sm">{fluxograma.title || `Fluxograma ${index + 1}`}</span>
+                                    <Button 
+                                      size="sm" 
+                                      variant="ghost" 
+                                      onClick={handleEditTitle}
+                                      className="h-6 w-6 p-0 ml-2"
+                                    >
+                                      <PenLine className="h-3 w-3 text-blue-500" />
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                              <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">{fluxograma.date}</span>
                             </div>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">{fluxograma.date}</span>
+                            {fluxograma.description && (
+                              <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 line-clamp-2 ml-6">
+                                {fluxograma.description}
+                              </p>
+                            )}
                           </div>
-                          {fluxograma.description && (
-                            <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 line-clamp-2 ml-6">
-                              {fluxograma.description}
-                            </p>
-                          )}
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="text-center py-8 px-4">
