@@ -701,7 +701,12 @@
 }
 
 .animate-dashed-move {
-  animation: dashed-line-move 3s linear infinite;
+  stroke-dasharray: 3, 3; /* Pontos menores */
+}
+
+/* Classe estática para pontilhados sem movimento */
+.static-dashed {
+  stroke-dasharray: 3, 3;
 }
 
 .animate-floating-node {

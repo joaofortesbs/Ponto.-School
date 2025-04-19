@@ -1970,12 +1970,12 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                 <div className="h-[220px] w-full relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/40 dark:from-gray-900/90 dark:via-blue-950/40 dark:to-indigo-950/30 flex items-center justify-center shadow-inner border border-blue-100/50 dark:border-blue-900/30 group-hover:border-blue-200 dark:group-hover:border-blue-800/50 transition-all duration-500" id="flow-preview-container">
                   {/* Fundo com padrão de pontos (estilo ReactFlow) */}
                   <div className="absolute inset-0">
-                    {/* Grade de pontos animados */}
+                    {/* Grade de pontos animados - Pontos menores */}
                     <div className="absolute inset-0 grid grid-cols-12 grid-rows-8">
                       {Array.from({ length: 96 }).map((_, index) => (
                         <div key={index} className="relative flex items-center justify-center">
                           <div 
-                            className={`w-1 h-1 rounded-full bg-blue-400/20 dark:bg-blue-500/20 absolute animate-pulse-slow ${
+                            className={`w-0.5 h-0.5 rounded-full bg-blue-400/15 dark:bg-blue-500/15 absolute animate-pulse-slow ${
                               index % 3 === 0 ? 'animate-delay-100' : index % 3 === 1 ? 'animate-delay-200' : 'animate-delay-300'
                             }`}
                           ></div>
@@ -1991,54 +1991,54 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                     <div className="relative w-full max-w-xs h-full flex flex-col items-center justify-center" id="flow-interactive-preview">
                       {/* Layout em camadas para organização correta das linhas */}
                       <div className="relative w-full flex flex-col items-center justify-between h-[170px]">
-                        {/* Camada 1: Nó principal/conceito */}
-                        <div className="draggable-node cursor-move w-24 h-9 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-md hover:shadow-lg hover:shadow-blue-400/20 dark:hover:shadow-blue-500/10 transition-all duration-300 animate-float scale-90 hover:scale-100 transform-gpu z-20"
+                        {/* Camada 1: Nó principal/conceito - Menor */}
+                        <div className="draggable-node cursor-move w-20 h-8 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-md hover:shadow-lg hover:shadow-blue-400/20 dark:hover:shadow-blue-500/10 transition-all duration-300 animate-float scale-90 hover:scale-100 transform-gpu z-20"
                              style={{touchAction: 'none'}}>
                           <span className="flex flex-col items-center">
-                            <span className="text-[8px] uppercase tracking-wider opacity-70">Conceito</span>
-                            <span className="font-semibold text-[10px]">Principal</span>
+                            <span className="text-[7px] uppercase tracking-wider opacity-70">Conceito</span>
+                            <span className="font-semibold text-[9px]">Principal</span>
                           </span>
                         </div>
                         
-                        {/* Conexões verticais animadas (do principal para os do meio) */}
+                        {/* Conexões verticais estáticas (do principal para os do meio) */}
                         <div className="absolute top-[27px] left-1/2 transform -translate-x-1/2 w-0 h-[37px]">
-                          <div className="absolute left-0 w-0 h-full border-l-2 border-dashed border-blue-400 dark:border-blue-500 animate-dashed-move"></div>
+                          <div className="absolute left-0 w-0 h-full border-l-2 border-dashed border-blue-400 dark:border-blue-500 static-dashed"></div>
                         </div>
                         
-                        {/* Camada 2: Nós do meio com conexões laterais */}
-                        <div className="flex items-center justify-center space-x-24 z-20 relative mb-2">
-                          {/* Nó de contexto (esquerda) */}
-                          <div className="draggable-node cursor-move w-20 h-8 bg-gradient-to-r from-indigo-400 to-indigo-500 dark:from-indigo-500 dark:to-indigo-600 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-sm hover:shadow-md hover:shadow-indigo-400/20 dark:hover:shadow-indigo-500/10 transition-all duration-300 animate-float-delayed-100 scale-90 hover:scale-100 transform-gpu"
+                        {/* Camada 2: Nós do meio com conexões laterais - Blocos menores */}
+                        <div className="flex items-center justify-center space-x-20 z-20 relative mb-2">
+                          {/* Nó de contexto (esquerda) - Menor */}
+                          <div className="draggable-node cursor-move w-16 h-7 bg-gradient-to-r from-indigo-400 to-indigo-500 dark:from-indigo-500 dark:to-indigo-600 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-sm hover:shadow-md hover:shadow-indigo-400/20 dark:hover:shadow-indigo-500/10 transition-all duration-300 animate-float-delayed-100 scale-90 hover:scale-100 transform-gpu"
                               style={{touchAction: 'none'}}>
-                            <span className="font-medium text-[10px]">Contexto</span>
+                            <span className="font-medium text-[9px]">Contexto</span>
                           </div>
                           
-                          {/* Nó de detalhes (direita) */}
-                          <div className="draggable-node cursor-move w-20 h-8 bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-500 dark:to-purple-600 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-sm hover:shadow-md hover:shadow-purple-400/20 dark:hover:shadow-purple-500/10 transition-all duration-300 animate-float-delayed-200 scale-90 hover:scale-100 transform-gpu"
+                          {/* Nó de detalhes (direita) - Menor */}
+                          <div className="draggable-node cursor-move w-16 h-7 bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-500 dark:to-purple-600 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-sm hover:shadow-md hover:shadow-purple-400/20 dark:hover:shadow-purple-500/10 transition-all duration-300 animate-float-delayed-200 scale-90 hover:scale-100 transform-gpu"
                               style={{touchAction: 'none'}}>
-                            <span className="font-medium text-[10px]">Detalhes</span>
+                            <span className="font-medium text-[9px]">Detalhes</span>
                           </div>
                         </div>
                         
-                        {/* Conexão horizontal entre os nós do meio */}
-                        <div className="absolute top-[73px] w-[82px] left-1/2 transform -translate-x-1/2 -translate-y-[1px]">
-                          <div className="absolute h-[2px] w-full border-t-2 border-dashed border-indigo-400 dark:border-indigo-500 animate-expand-line"></div>
+                        {/* Conexão horizontal entre os nós do meio - Estática */}
+                        <div className="absolute top-[73px] w-[72px] left-1/2 transform -translate-x-1/2 -translate-y-[1px]">
+                          <div className="absolute h-[2px] w-full border-t-2 border-dashed border-indigo-400 dark:border-indigo-500 static-dashed"></div>
                         </div>
                         
-                        {/* Conexões verticais dos nós do meio para o nó de conclusão */}
-                        <div className="absolute top-[85px] left-[calc(50%-60px)] w-0 h-[40px]">
-                          <div className="absolute left-0 w-0 h-full border-l-2 border-dashed border-indigo-400 dark:border-indigo-500 animate-dashed-move animate-delay-100"></div>
+                        {/* Conexões verticais dos nós do meio para o nó de conclusão - Estáticas */}
+                        <div className="absolute top-[85px] left-[calc(50%-50px)] w-0 h-[40px]">
+                          <div className="absolute left-0 w-0 h-full border-l-2 border-dashed border-indigo-400 dark:border-indigo-500 static-dashed"></div>
                         </div>
-                        <div className="absolute top-[85px] left-[calc(50%+60px)] w-0 h-[40px]">
-                          <div className="absolute left-0 w-0 h-full border-l-2 border-dashed border-purple-400 dark:border-purple-500 animate-dashed-move animate-delay-200"></div>
+                        <div className="absolute top-[85px] left-[calc(50%+50px)] w-0 h-[40px]">
+                          <div className="absolute left-0 w-0 h-full border-l-2 border-dashed border-purple-400 dark:border-purple-500 static-dashed"></div>
                         </div>
                         
-                        {/* Camada 3: Nó de conclusão */}
-                        <div className="draggable-node cursor-move w-24 h-9 bg-gradient-to-r from-green-500 to-emerald-500 dark:from-green-600 dark:to-emerald-600 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-md hover:shadow-lg hover:shadow-green-400/20 dark:hover:shadow-green-500/10 transition-all duration-300 animate-float-delayed-300 scale-90 hover:scale-100 transform-gpu z-20"
+                        {/* Camada 3: Nó de conclusão - Menor */}
+                        <div className="draggable-node cursor-move w-20 h-8 bg-gradient-to-r from-green-500 to-emerald-500 dark:from-green-600 dark:to-emerald-600 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-md hover:shadow-lg hover:shadow-green-400/20 dark:hover:shadow-green-500/10 transition-all duration-300 animate-float-delayed-300 scale-90 hover:scale-100 transform-gpu z-20"
                              style={{touchAction: 'none'}}>
                           <span className="flex flex-col items-center">
-                            <span className="text-[8px] uppercase tracking-wider opacity-70">Síntese</span>
-                            <span className="font-semibold text-[10px]">Conclusão</span>
+                            <span className="text-[7px] uppercase tracking-wider opacity-70">Síntese</span>
+                            <span className="font-semibold text-[9px]">Conclusão</span>
                           </span>
                         </div>
                       </div>

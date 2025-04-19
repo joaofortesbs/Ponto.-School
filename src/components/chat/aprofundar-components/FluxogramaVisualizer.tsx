@@ -352,7 +352,18 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => 
   dagreGraph.setDefaultEdgeLabel(() => ({}));
 
   // Define as direções: TB (top to bottom) ou LR (left to right)
-  dagreGraph.setGraph({ rankdir: direction, nodesep: 80, ranksep: 120, marginx: 20, marginy: 20 });
+  // Aumentando a separação entre nós para melhor alinhamento das linhas
+  dagreGraph.setGraph({ 
+    rankdir: direction, 
+    nodesep: 100,  // Aumentado para dar mais espaço horizontal
+    ranksep: 150,  // Aumentado para dar mais espaço vertical
+    marginx: 30, 
+    marginy: 30,
+    align: 'DL',  // Alinhamento para melhor posicionamento
+    rankSep: 150,  // Espaçamento entre fileiras
+    edgeSep: 50,   // Separação entre arestas paralelas
+    acyclicer: 'greedy' // Algoritmo para reduzir sobreposições
+  });
 
   // Adiciona os nós ao grafo dagre com as dimensões adequadas
   nodes.forEach((node) => {
@@ -365,29 +376,41 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => 
       height = 100;
     } else if (node.type === 'decision') {
       height = 140; // Nós de decisão podem precisar de mais espaço vertical
+      width = 230;  // Ligeiramente mais largo para decisões
+    } else if (node.type === 'tip') {
+      width = 210;
+      height = 110;
     }
 
     dagreGraph.setNode(node.id, { width, height });
   });
 
-  // Adiciona as arestas ao grafo
+  // Adiciona as arestas ao grafo com pesos para melhor roteamento
   edges.forEach((edge) => {
-    dagreGraph.setEdge(edge.source, edge.target);
+    // Configurar peso da aresta para controlar o roteamento
+    dagreGraph.setEdge(edge.source, edge.target, {
+      weight: 1,
+      minlen: 1 // Distância mínima entre nós conectados
+    });
   });
 
   // Calcula o layout
   dagre.layout(dagreGraph);
 
-  // Obtem os nós com as posições atualizadas
+  // Obtem os nós com as posições atualizadas e centraliza corretamente
   const layoutedNodes = nodes.map((node) => {
     const nodeWithPosition = dagreGraph.node(node.id);
-
+    
+    // Ajuste fino para centralização mais precisa
     return {
       ...node,
       position: {
-        x: nodeWithPosition.x - nodeWidth / 2,
-        y: nodeWithPosition.y - nodeHeight / 2,
+        x: Math.round(nodeWithPosition.x - nodeWidth / 2),
+        y: Math.round(nodeWithPosition.y - nodeHeight / 2),
       },
+      // Garantir que as âncoras de conexão estejam centralizadas
+      sourcePosition: direction === 'TB' ? 'bottom' : 'right',
+      targetPosition: direction === 'TB' ? 'top' : 'left',
     };
   });
 
@@ -507,8 +530,16 @@ const FluxogramaVisualizer: React.FC<FluxogramaVisualizerProps> = ({
           style: { strokeWidth: 2 },
           labelShowBg: true,
           labelBgPadding: [4, 2],
-          labelBgBorderRadius: 4
+          labelBgBorderRadius: 4,
+          curvature: 0.3, // Ajuste da curvatura para conexões mais suaves
+          pathOptions: {
+            offset: 15, // Ajuste o offset para melhor posicionamento
+            borderRadius: 8 // Cantos arredondados nas curvas
+          }
         }}
+        snapToGrid={true}
+        snapGrid={[10, 10]}
+        connectionRadius={30} // Aumentar área de detecção para conectar nós
       >
         <Controls />
         <MiniMap
