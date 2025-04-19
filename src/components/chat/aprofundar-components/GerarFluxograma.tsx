@@ -80,7 +80,7 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
       // Aqui seria implementada a lógica real de geração do fluxograma
     }, 3000);
   };
-  
+
   const handleSaveFluxograma = () => {
     try {
       // Obter os dados do fluxograma atual
@@ -89,7 +89,7 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
         console.error('Nenhum fluxograma disponível para salvar');
         return;
       }
-      
+
       // Criar um novo objeto para o fluxograma salvo
       const newSavedFluxograma = {
         id: `flux_${Date.now()}`,
@@ -98,14 +98,14 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
         date: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }),
         data: JSON.parse(fluxogramaData)
       };
-      
+
       // Adicionar à lista de fluxogramas salvos
       const updatedFluxogramas = [...savedFluxogramas, newSavedFluxograma];
       setSavedFluxogramas(updatedFluxogramas);
-      
+
       // Salvar no localStorage
       localStorage.setItem('savedFluxogramas', JSON.stringify(updatedFluxogramas));
-      
+
       // Mostrar mensagem de sucesso
       alert('Fluxograma salvo com sucesso!');
     } catch (error) {
@@ -113,12 +113,12 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
       alert('Erro ao salvar o fluxograma. Por favor, tente novamente.');
     }
   };
-  
+
   const handleLoadSavedFluxograma = (fluxograma: any) => {
     try {
       // Salvar os dados do fluxograma selecionado para o visualizador
       localStorage.setItem('fluxogramaData', JSON.stringify(fluxograma.data));
-      
+
       // Mostrar o visualizador
       setFluxogramaGerado(true);
       setShowFluxograma(true);
@@ -264,7 +264,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
 
             const jsonString = jsonMatch ? jsonMatch[0].replace(/```json\n|```\n|```/g, '') : response;
             extractedData = JSON.parse(jsonString);
-            
+
             // Normalize data structure - ensure we have both nodes and edges
             if (!extractedData.edges && extractedData.connections) {
               // Convert connections to edges if needed
@@ -320,7 +320,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
               type: index === 0 ? 'start' : index === keywords.length - 1 ? 'end' : 'default',
               position: { x: 100 + (index % 3) * 50, y: 100 * Math.floor(index / 3) }
             }));
-            
+
             // Create edges to connect nodes
             const edges = [];
             for (let i = 0; i < nodes.length - 1; i++) {
@@ -333,7 +333,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                 animated: true
               });
             }
-            
+
             extractedData = { nodes, edges };
           }
 
@@ -740,453 +740,17 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                     target: processToReview.id,
                     label: 'Incorreto - Revise',
                     animated: false,
-                    style: { stroke: '#f43f5e' }, // Vermelho
-                    labelStyle: { fill: '#f43f5e', fontWeight: 500 },
-                    labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
-                  });
-                  incorrectTargetFound = true;
-                }
-              });
-            }
+                    style: { stroke: '#fjson\n([\s\S]*?)\n```/) || 
+                                         response.match(/```\n([\s\S]*?)\n```/) ||
+                                         response.match(/{[\s\S]*?}/);
 
-            // 5. Conectar nós de dica aos nós relevantes
-            if (nodesByType.tip.length > 0) {
-              nodesByType.tip.forEach(tipNode => {
-                // Se o nó de dica não é destino de nenhuma conexão ainda, conecte-o
-                if (!edges.some(e => e.target === tipNode.id)) {
-                  // Encontrar um nó de processo aleatório para receber a dica
-                  if (nodesByType.process.length > 0) {
-                    const randomProcessIndex = Math.floor(Math.random() * nodesByType.process.length);
-                    edges.push({
-                      id: `e${nodesByType.process[randomProcessIndex].id}-${tipNode.id}`,
-                      source: nodesByType.process[randomProcessIndex].id,
-                      target: tipNode.id,
-                      label: 'Dica importante',
-                      animated: true,
-                      style: { stroke: '#0ea5e9', strokeDasharray: '5,5' }, // Azul tracejado
-                      labelStyle: { fill: '#0ea5e9', fontWeight: 500 },
-                      labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
-                    });
-                  }
-                }
-
-                // Se o nó de dica não é origem de nenhuma conexão ainda,
-                // conecte-o de volta a um nó relevante
-                if (!edges.some(e => e.source === tipNode.id)) {
-                  // Tentar encontrar o próximo nó lógico
-                  let targetFound = false;
-
-                  // Primeiro tente qualquer nó de prática disponível
-                  if (!targetFound && nodesByType.practice.length > 0) {
-                    const availablePractice = nodesByType.practice.find(p => 
-                      !edges.some(e => e.source === tipNode.id && e.target === p.id)
-                    );
-
-                    if (availablePractice) {
-                      edges.push({
-                        id: `e${tipNode.id}-${availablePractice.id}`,
-                        source: tipNode.id,
-                        target: availablePractice.id,
-                        label: 'Continue',
-                        animated: false,
-                        style: { stroke: '#0ea5e9', strokeDasharray: '5,5' }, // Azul tracejado
-                        labelStyle: { fill: '#0ea5e9', fontWeight: 500 },
-                        labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
-                      });
-                      targetFound = true;
-                    }
-                  }
-
-                  // Ou então, vá para o nó final
-                  if (!targetFound && nodesByType.end.length > 0) {
-                    edges.push({
-                      id: `e${tipNode.id}-${nodesByType.end[0].id}`,
-                      source: tipNode.id,
-                      target: nodesByType.end[0].id,
-                      label: 'Prosseguir',
-                      animated: false,
-                      style: { stroke: '#0ea5e9', strokeDasharray: '5,5' }, // Azul tracejado
-                      labelStyle: { fill: '#0ea5e9', fontWeight: 500 },
-                      labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
-                    });
-                  }
-                }
-              });
-            }
-
-            // 6. Conectar nós de aplicação prática à conclusão
-            if (nodesByType.practice.length > 0 && nodesByType.end.length > 0) {
-              // Para cada nó de prática que não tem saída, conectar ao nó de conclusão
-              nodesByType.practice.forEach(practiceNode => {
-                if (!edges.some(e => e.source === practiceNode.id)) {
-                  edges.push({
-                    id: `e${practiceNode.id}-${nodesByType.end[0].id}`,
-                    source: practiceNode.id,
-                    target: nodesByType.end[0].id,
-                    label: 'Consolidar aprendizado',
-                    animated: false,
-                    style: { stroke: '#6366f1' }, // Indigo
-                    labelStyle: { fill: '#6366f1', fontWeight: 500 },
-                    labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
-                  });
-                }
-              });
-            }
-
-            // 7. Verificar nós não conectados e criar conexões adicionais
-            // Conectar qualquer nó sem saída ao próximo nó lógico no fluxo
-            nodes.forEach(node => {
-              // Se o nó não tem saída (exceto o nó final)
-              if (node.type !== 'end' && !edges.some(e => e.source === node.id)) {
-                // Determinar para qual tipo de nó deveria conectar com base na camada atual
-                let targetNodeType = 'default';
-                switch (node.type) {
-                  case 'start': targetNodeType = 'context'; break;
-                  case 'context': targetNodeType = 'process'; break;
-                  case 'process': targetNodeType = 'practice'; break;
-                  case 'practice': 
-                  case 'decision': 
-                  case 'tip': targetNodeType = 'end'; break;
-                  default: targetNodeType = 'end';
-                }
-
-                // Encontrar o primeiro nó do tipo alvo que não é destino deste nó
-                const targetNodes = nodesByType[targetNodeType] || [];
-                const targetNode = targetNodes.find(t => 
-                  t.id !== node.id && !edges.some(e => e.source === node.id && e.target === t.id)
-                );
-
-                // Se encontrou um nó alvo, crie a conexão
-                if (targetNode) {
-                  // Personalizar o rótulo com base nos tipos
-                  let label = 'Continua';
-                  if (node.type === 'start' && targetNode.type === 'context') {
-                    label = 'Para compreender';
-                  } else if (node.type === 'context' && targetNode.type === 'process') {
-                    label = 'Vamos ao processo';
-                  } else if (node.type === 'process' && targetNode.type === 'practice') {
-                    label = 'Aplicação';
-                  } else if (targetNode.type === 'end') {
-                    label = 'Concluindo';
-                  }
-
-                  edges.push({
-                    id: `e${node.id}-${targetNode.id}`,
-                    source: node.id,
-                    target: targetNode.id,
-                    label: label,
-                    animated: false,
-                    style: { stroke: '#3b82f6' }, // Azul padrão
-                    labelStyle: { fill: '#3b82f6', fontWeight: 500 },
-                    labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
-                  });
-                }
-                // Se não encontrou do tipo ideal, tente conectar ao nó final
-                else if (nodesByType.end.length > 0 && node.type !== 'end') {
-                  edges.push({
-                    id: `e${node.id}-${nodesByType.end[0].id}`,
-                    source: node.id,
-                    target: nodesByType.end[0].id,
-                    label: 'Finalizando',
-                    animated: false,
-                    style: { stroke: '#3b82f6' }, // Azul padrão
-                    labelStyle: { fill: '#3b82f6', fontWeight: 500 },
-                    labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
-                  });
-                }
-              }
-            });
-          }
-
-          fluxogramaData = { nodes, edges };
-
-        } catch (error) {
-          console.error('Erro ao processar com IA:', error);
-
-          // Fallback para o método original se a IA falhar
-          fluxogramaData = await new Promise((resolve) => {
-            // ETAPA 1: Analisar e Estruturar o Conteúdo
-            const paragraphs = contentToAnalyze.split(/\n\n+/);
-            const sentences = contentToAnalyze.split(/[.!?]\s+/);
-
-            // Identificar blocos conceituais principais
-            const mainBlocks = paragraphs.length > 3 ? paragraphs.slice(0, paragraphs.length) : sentences.slice(0, Math.min(8, sentences.length));
-
-            // Extrair palavras-chave significativas
-            const keywords = mainBlocks.map(block => {
-              const words = block.split(/\s+/).filter(word => word.length > 3);
-              const mainWord = words.find(word => word.length > 5) || words[0] || 'Conceito';
-              return {
-                text: block,
-                keyword: mainWord.length > 20 ? mainWord.substring(0, 20) + '...' : mainWord
-              };
-            }).slice(0, 8); // Limitar a 8 nós para melhor visualização
-
-            // ETAPA 2: Gerar os Nós (Nodes) do Fluxograma
-            const nodes = keywords.map((item, index) => {
-              // Determinar o tipo do nó
-              let type = 'default';
-              if (index === 0) type = 'start';
-              else if (index === keywords.length - 1) type = 'end';
-
-              // Criar descrição significativa
-              const description = item.text.length > 100 
-                ? item.text.substring(0, 100) + '...' 
-                : item.text;
-
-              // Ajustar posicionamento para layout de fluxo
-              let position;
-              const flowDirection = 'vertical'; // ou 'horizontal'
-
-              if (flowDirection === 'vertical') {
-                position = { x: 250, y: 100 + (index * 120) };
-              } else {
-                position = { x: 100 + (index * 220), y: 200 };
-              }
-
-              return {
-                id: (index + 1).toString(),
-                data: { 
-                  label: item.keyword.charAt(0).toUpperCase() + item.keyword.slice(1), 
-                  description: description
-                },
-                type,
-                position
-              };
-            });
-
-            // ETAPA 3: Gerar as Conexões (Edges)
-            const edges = [];
-            for (let i = 0; i < nodes.length - 1; i++) {
-              edges.push({
-                id: `e${i+1}-${i+2}`,
-                source: (i + 1).toString(),
-                target: (i + 2).toString(),
-                animated: true,
-                style: { stroke: '#3b82f6' }
-              });
-            }
-
-            // Simular um pequeno atraso antes de resolver (opcional)
-            setTimeout(() => {
-              resolve({ nodes, edges });
-            }, 1000);
-          });
-        }
-
-        // Armazena os dados do fluxograma para uso posterior no visualizador
-        localStorage.setItem('fluxogramaData', JSON.stringify(fluxogramaData));
-
-        setIsLoading(false);
-        setFluxogramaGerado(true);
-      } catch (error) {
-        console.error('Erro ao processar o fluxograma:', error);
-        setIsLoading(false);
-      }
-    };
-
-    processFluxogramaContent();
-  };
-
-  const handleCancelManualInput = () => {
-    setShowManualInput(false);
-    setSelectedOption(null);
-    setManualContent('');
-  };
-
-  const handleVisualizarFluxograma = () => {
-    setShowFluxograma(true);
-  };
-
-  const handleCloseFluxograma = () => {
-    setShowFluxograma(false);
-  };
-
-  const handleNodeClick = (node: Node) => {
-    setSelectedNode(node);
-    setShowDetailModal(true);
-  };
-
-  const handleCopyFlowchartPrompt = (promptNumber: 1 | 2) => {
-    const prompt = getFlowchartPrompt(promptNumber);
-    navigator.clipboard.writeText(prompt)
-      .then(() => alert('Prompt copiado para a área de transferência!'))
-      .catch(err => console.error('Erro ao copiar prompt:', err));
-  };
-
-
-  const getFlowchartPrompt = (promptNumber: 1 | 2): string => {
-    switch (promptNumber) {
-      case 1:
-        return `
-Prompts que você pode mandar para a IA programadora:
-
-🎯 Prompt 1 – Criação Avançada de Fluxograma
-Com base na explicação dada anteriormente sobre o tema, gere um fluxograma didático e aprofundado, dividido da seguinte forma:
-
-Conceito Central (1 nó)
-
-Contexto e Pré-requisitos (2 a 3 nós)
-
-Processo ou Lógica do Tema (3 a 6 nós)
-
-Aplicações, Exemplos e Erros comuns (2 a 4 nós)
-
-Conclusão/Resumo (1 ou 2 nós)
-
-Para cada nó, gere:
-
-id único
-
-label (curto e claro)
-
-description (resumo curto)
-
-details (explicação que pode ser expandida no clique)
-
-category (ex: definição, exemplo, erro, etapa, conclusão, etc.)
-
-position sugerida (apenas x e y simples para diferenciar os blocos visualmente)
-
-Em seguida, conecte os nós com edges organizando a sequência de aprendizado. Se houver bifurcações ou condições, especifique.
-        `;
-      case 2:
-        return `
-🛠 Prompt 2 – Formatação para React Flow
-O conteúdo gerado acima deve estar no seguinte formato JSON:
-
-fluxograma:
-
-{
-  "nodes": [ ... ],
-  "edges": [ ... ]
-}
-        `;
-      default:
-        return '';
-    }
-  };
-
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center mb-2">
-        <Button 
-          onClick={handleBack} 
-          variant="ghost" 
-          size="sm" 
-          className="mr-2 h-8 w-8 p-0 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
-          <FileLineChart className="h-5 w-5 mr-2 text-blue-500" />
-          Criar Fluxograma do Tema
-        </h3>
-      </div>
-
-      {showFluxograma ? (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center mb-2">
-            <h4 className="text-md font-medium text-gray-900 dark:text-white">Fluxograma Interativo</h4>
-            <Button
-              onClick={handleCloseFluxograma}
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-          <FluxogramaVisualizer onNodeClick={handleNodeClick} />
-          {/* Painel de ações fixo compacto */}
-          <div className="bg-white/90 dark:bg-gray-800/90 rounded-xl border border-gray-200/70 dark:border-gray-700/50 p-3 shadow-sm backdrop-blur-sm fixed bottom-4 right-4">
-            <div className="flex items-center space-x-2">
-              <div className="tooltip-container relative group">
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => {
-                    setIsLoading(true);
-                    setShowFluxograma(false);
-                    
-                    // Reutilizar a lógica de geração do fluxograma
-                    const regenerateFluxograma = async () => {
-                      // Remover dados anteriores
-                      localStorage.removeItem('fluxogramaData');
-                      
-                      // Gerar novo fluxograma usando o conteúdo já processado
-                      const sourceOption = selectedOption || 'ia';
-                      const contentToProcess = sourceOption === 'manual' 
-                        ? manualContent 
-                        : aprofundadoContent?.contexto || '';
-                      
-                      if (!contentToProcess.trim()) {
-                        setIsLoading(false);
-                        alert('Não há conteúdo disponível para regenerar o fluxograma.');
-                        return;
-                      }
-                      
-                      // Processar novamente seguindo a lógica existente
-                      try {
-                        // Importar o serviço de IA
-                        const { generateAIResponse } = await import('@/services/aiChatService');
-                        
-                        // Criar um ID de sessão único
-                        const sessionId = `fluxograma_regen_${Date.now()}`;
-                        
-                        // Usar o mesmo prompt para obter consistência
-                        const prompt = `
-Com base na seguinte explicação sobre o tema, gere um fluxograma interativo no formato do React Flow:
-
-${contentToProcess}
-
-Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
-
-1. Comece com um CONCEITO CENTRAL (nó inicial):
-   - Defina o tema de forma objetiva e clara
-   - Ex: "O que é fotossíntese?"
-
-2. Adicione CONTEXTUALIZAÇÃO E PRÉ-REQUISITOS:
-   - Conhecimentos prévios necessários
-   - Termos importantes para entender o tema
-   - Base científica/histórica relevante
-
-3. Detalhe o PROCESSO, MECANISMO OU LÓGICA DO TEMA:
-   - Passo a passo da explicação em etapas numeradas
-   - Fluxo de causa e efeito
-   - Ex: "Etapa 1: Captação de luz → Etapa 2: Transformação química → Etapa 3: Liberação de oxigênio"
-
-4. Inclua uma CAMADA DE APLICAÇÃO/PRÁTICA:
-   - Exemplos práticos ou situações-problema
-   - Destaque erros comuns e dicas
-   - Inclua nós de decisão do tipo: "Se o aluno pensar A → Mostrar que está errado" / "Se pensar B → Está correto"
-
-5. Finalize com CONCLUSÃO OU RESULTADO FINAL:
-   - Síntese do aprendizado
-   - Resumo visual
-   - Dica de ouro ou aplicação em provas
-
-// Outras instruções detalhadas mantidas...
-`;
-                        
-                        // Chamar a API de IA
-                        const response = await generateAIResponse(prompt, sessionId, {
-                          intelligenceLevel: 'advanced',
-                          detailedResponse: true
-                        });
-                        
-                        // Processar a resposta e salvar os dados
-                        // Usar a lógica existente, mas simplificada
-                        let extractedData;
-                        try {
-                          const jsonMatch = response.match(/```json\n([\s\S]*?)\n```/) || 
+                          const jsonString = jsonMatch ? jsonMatch[0].replace(/```json\n|```\n|json\n([\s\S]*?)\n```/) || 
                                          response.match(/```\n([\s\S]*?)\n```/) ||
                                          response.match(/{[\s\S]*?}/);
 
                           const jsonString = jsonMatch ? jsonMatch[0].replace(/```json\n|```\n|```/g, '') : response;
                           extractedData = JSON.parse(jsonString);
-                          
+
                           // Normalize data structure
                           if (!extractedData.edges && extractedData.connections) {
                             extractedData.edges = extractedData.connections.map(conn => ({
@@ -1227,7 +791,7 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                             type: index === 0 ? 'start' : index === mainBlocks.length - 1 ? 'end' : 'default',
                             position: { x: 250, y: 100 * (index + 1) }
                           }));
-                          
+
                           const edges = [];
                           for (let i = 0; i < nodes.length - 1; i++) {
                             edges.push({
@@ -1238,29 +802,29 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                               style: { stroke: '#3b82f6' }
                             });
                           }
-                          
+
                           extractedData = { nodes, edges };
                         }
-                        
+
                         // Salvar os novos dados
                         localStorage.setItem('fluxogramaData', JSON.stringify(extractedData));
-                        
+
                         // Mostrar o fluxograma
                         setIsLoading(false);
                         setFluxogramaGerado(true);
                         setShowFluxograma(true);
-                        
+
                       } catch (error) {
                         console.error('Erro ao regenerar o fluxograma:', error);
                         setIsLoading(false);
                         alert('Ocorreu um erro ao regenerar o fluxograma. Por favor, tente novamente.');
                       }
                     };
-                    
+
                     // Iniciar o processo de regeneração
                     regenerateFluxograma();
                   }}
-                  className="h-10 w-10 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
+                  className="h-8 w-8 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
                 >
                   <RotateCw className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </Button>
@@ -1268,12 +832,12 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                   Regenerar
                 </div>
               </div>
-              
+
               <div className="tooltip-container relative group">
                 <Button 
                   variant="ghost" 
                   size="icon"
-                  className="h-10 w-10 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
+                  className="h-8 w-8 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
                 >
                   <Download className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </Button>
@@ -1281,12 +845,12 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                   Exportar
                 </div>
               </div>
-              
+
               <div className="tooltip-container relative group">
                 <Button 
                   variant="ghost" 
                   size="icon"
-                  className="h-10 w-10 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
+                  className="h-8 w-8 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
                 >
                   <Clipboard className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </Button>
@@ -1294,7 +858,7 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                   Caderno
                 </div>
               </div>
-              
+
               <div className="tooltip-container relative group">
                 <Button 
                   variant="ghost" 
@@ -1311,7 +875,7 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                         fluxogramaContainer.classList.remove('h-[90vh]', 'fixed', 'top-[5vh]', 'left-[5vw]', 'right-[5vw]', 'w-[90vw]', 'z-50');
                         fluxogramaContainer.classList.add('h-[60vh]');
                       }
-                      
+
                       // Ajustar o fluxograma para caber na nova visualização
                       setTimeout(() => {
                         const reactFlowInstance = document.querySelector('.react-flow');
@@ -1322,7 +886,7 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                       }, 100);
                     }
                   }}
-                  className="h-10 w-10 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
+                  className="h-8 w-8 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
                 >
                   <Maximize2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </Button>
@@ -1330,13 +894,13 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                   Ampliar
                 </div>
               </div>
-              
+
               <div className="tooltip-container relative group">
                 <Button 
                   variant="ghost" 
                   size="icon"
                   onClick={handleSaveFluxograma}
-                  className="h-10 w-10 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
+                  className="h-8 w-8 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
                 >
                   <Save className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </Button>
@@ -1344,7 +908,7 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                   Salvar
                 </div>
               </div>
-              
+
               <div className="tooltip-container relative group">
                 <Button 
                   variant="ghost" 
@@ -1356,7 +920,7 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                       alert('É necessário salvar o fluxograma antes de compartilhar.');
                       return;
                     }
-                    
+
                     try {
                       // Obter dados do usuário
                       const userMetadata = JSON.parse(localStorage.getItem('supabase.auth.token') || '{}');
@@ -1364,18 +928,18 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                                      localStorage.getItem('username') || 
                                      sessionStorage.getItem('username') || 
                                      'usuario';
-                      
+
                       const userId = userMetadata?.currentSession?.user?.id || 'id_temporario';
-                      
+
                       // Obter título do fluxograma (usar título fixo se não estiver salvo)
                       const savedFluxogramas = JSON.parse(localStorage.getItem('savedFluxogramas') || '[]');
                       const latestFluxograma = savedFluxogramas.length > 0 ? savedFluxogramas[savedFluxogramas.length - 1] : null;
-                      
+
                       // Se não houver fluxograma salvo, perguntar ao usuário
                       let fluxogramaTitle = latestFluxograma?.title || '';
                       if (!fluxogramaTitle) {
                         fluxogramaTitle = prompt('Digite um título para o fluxograma:') || 'fluxograma';
-                        
+
                         // Salvar fluxograma automaticamente com o título fornecido
                         if (fluxogramaTitle) {
                           const newSavedFluxograma = {
@@ -1385,22 +949,22 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                             date: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }),
                             data: JSON.parse(fluxogramaData)
                           };
-                          
+
                           const updatedFluxogramas = [...savedFluxogramas, newSavedFluxograma];
                           setSavedFluxogramas(updatedFluxogramas);
                           localStorage.setItem('savedFluxogramas', JSON.stringify(updatedFluxogramas));
                         }
                       }
-                      
+
                       // Formatar títulos para URL (remover espaços e caracteres especiais)
                       const formattedTitle = fluxogramaTitle.toLowerCase()
                         .replace(/[^\w\s-]/g, '')
                         .replace(/\s+/g, '-');
-                      
+
                       // Criar URL compartilhável
                       const baseUrl = window.location.origin;
                       const shareUrl = `${baseUrl}/fluxograma/${formattedTitle}/${username}/${userId}`;
-                      
+
                       // Salvar dados no localStorage para acesso pela página compartilhada
                       const shareData = {
                         fluxogramaData: JSON.parse(fluxogramaData),
@@ -1409,13 +973,13 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                         userId,
                         timestamp: Date.now()
                       };
-                      
+
                       localStorage.setItem(`shared_fluxograma_${formattedTitle}_${userId}`, JSON.stringify(shareData));
-                      
+
                       // Copiar URL para área de transferência
                       await navigator.clipboard.writeText(shareUrl);
                       alert(`URL do fluxograma copiada para a área de transferência:\n${shareUrl}`);
-                      
+
                       // Abrir nova página
                       const openInNewTab = confirm('URL copiada! Deseja abrir a página compartilhada em uma nova aba?');
                       if (openInNewTab) {
@@ -1426,7 +990,7 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                       alert('Ocorreu um erro ao compartilhar o fluxograma.');
                     }
                   }}
-                  className="h-10 w-10 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
+                  className="h-8 w-8 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
                 >
                   <Share2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </Button>
@@ -1471,7 +1035,7 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                   <span className="font-medium">Inserir meu próprio conteúdo</span>
                 </span>
               </Button>
-              
+
               <Button
                 onClick={() => setShowSavedFluxogramas(!showSavedFluxogramas)}
                 variant="outline"
@@ -1483,14 +1047,14 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                   <span className="font-medium text-green-700 dark:text-green-300">{showSavedFluxogramas ? "Ocultar fluxogramas salvos" : "Ver fluxogramas salvos"}</span>
                 </span>
               </Button>
-              
+
               {showSavedFluxogramas && (
                 <div className="mt-4 bg-white/80 dark:bg-gray-800/80 rounded-xl border border-gray-200/70 dark:border-gray-700/50 p-5 shadow-sm backdrop-blur-sm">
                   <h4 className="text-md font-medium text-gray-900 dark:text-white mb-4 flex items-center">
                     <Save className="h-5 w-5 mr-2 text-green-600 dark:text-green-400" />
                     Fluxogramas Salvos
                   </h4>
-                  
+
                   {savedFluxogramas.length > 0 ? (
                     <div className="space-y-3">
                       {savedFluxogramas.map((fluxograma, index) => {
