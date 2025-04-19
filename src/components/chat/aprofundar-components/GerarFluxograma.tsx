@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -48,10 +47,10 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
       setShowManualInput(true);
       return;
     }
-    
+
     setSelectedOption(option);
     setIsLoading(true);
-    
+
     // Simula o processamento do fluxograma
     setTimeout(() => {
       setIsLoading(false);
@@ -64,10 +63,10 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
     if (!manualContent.trim()) {
       return;
     }
-    
+
     setIsLoading(true);
     setShowManualInput(false);
-    
+
     // Simula o processamento do fluxograma com conteúdo manual
     setTimeout(() => {
       setIsLoading(false);
@@ -125,6 +124,40 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
             </Button>
           </div>
           <FluxogramaVisualizer onNodeClick={handleNodeClick} />
+          {/* Painel de ações fixo */}
+          <div className="bg-white/80 dark:bg-gray-800/80 rounded-xl border border-gray-200/70 dark:border-gray-700/50 p-5 shadow-sm backdrop-blur-sm fixed bottom-4 right-4">
+            <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-3 flex items-center">
+              <FileLineChart className="h-5 w-5 mr-2 text-blue-500" />
+              Painel de Ações
+            </h4>
+
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+              <Button variant="outline" className="flex flex-col items-center justify-center h-auto py-3 px-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all">
+                <RotateCw className="h-5 w-5 mb-1 text-blue-600 dark:text-blue-400" />
+                <span className="text-xs text-gray-700 dark:text-gray-300 text-center">Regenerar</span>
+              </Button>
+
+              <Button variant="outline" className="flex flex-col items-center justify-center h-auto py-3 px-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all">
+                <Download className="h-5 w-5 mb-1 text-blue-600 dark:text-blue-400" />
+                <span className="text-xs text-gray-700 dark:text-gray-300 text-center">Exportar</span>
+              </Button>
+
+              <Button variant="outline" className="flex flex-col items-center justify-center h-auto py-3 px-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all">
+                <Clipboard className="h-5 w-5 mb-1 text-blue-600 dark:text-blue-400" />
+                <span className="text-xs text-gray-700 dark:text-gray-300 text-center">Caderno</span>
+              </Button>
+
+              <Button variant="outline" className="flex flex-col items-center justify-center h-auto py-3 px-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all">
+                <Maximize2 className="h-5 w-5 mb-1 text-blue-600 dark:text-blue-400" />
+                <span className="text-xs text-gray-700 dark:text-gray-300 text-center">Ampliar</span>
+              </Button>
+
+              <Button variant="outline" className="flex flex-col items-center justify-center h-auto py-3 px-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all">
+                <Save className="h-5 w-5 mb-1 text-blue-600 dark:text-blue-400" />
+                <span className="text-xs text-gray-700 dark:text-gray-300 text-center">Salvar</span>
+              </Button>
+            </div>
+          </div>
         </div>
       ) : (
         <ScrollArea className="h-[50vh] pr-4">
@@ -147,7 +180,7 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
                   <span className="font-medium">Usar conteúdo da IA acima</span>
                 </span>
               </Button>
-              
+
               <Button
                 onClick={() => handleGenerateFlowchart('manual')}
                 variant="outline"
@@ -234,39 +267,7 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
                 </div>
               </div>
 
-              <div className="bg-white/80 dark:bg-gray-800/80 rounded-xl border border-gray-200/70 dark:border-gray-700/50 p-5 shadow-sm backdrop-blur-sm">
-                <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-3 flex items-center">
-                  <FileLineChart className="h-5 w-5 mr-2 text-blue-500" />
-                  Painel de Ações
-                </h4>
-                
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
-                  <Button variant="outline" className="flex flex-col items-center justify-center h-auto py-3 px-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all">
-                    <RotateCw className="h-5 w-5 mb-1 text-blue-600 dark:text-blue-400" />
-                    <span className="text-xs text-gray-700 dark:text-gray-300 text-center">Regenerar</span>
-                  </Button>
-                  
-                  <Button variant="outline" className="flex flex-col items-center justify-center h-auto py-3 px-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all">
-                    <Download className="h-5 w-5 mb-1 text-blue-600 dark:text-blue-400" />
-                    <span className="text-xs text-gray-700 dark:text-gray-300 text-center">Exportar</span>
-                  </Button>
-                  
-                  <Button variant="outline" className="flex flex-col items-center justify-center h-auto py-3 px-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all">
-                    <Clipboard className="h-5 w-5 mb-1 text-blue-600 dark:text-blue-400" />
-                    <span className="text-xs text-gray-700 dark:text-gray-300 text-center">Caderno</span>
-                  </Button>
-                  
-                  <Button variant="outline" className="flex flex-col items-center justify-center h-auto py-3 px-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all">
-                    <Maximize2 className="h-5 w-5 mb-1 text-blue-600 dark:text-blue-400" />
-                    <span className="text-xs text-gray-700 dark:text-gray-300 text-center">Ampliar</span>
-                  </Button>
-                  
-                  <Button variant="outline" className="flex flex-col items-center justify-center h-auto py-3 px-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all">
-                    <Save className="h-5 w-5 mb-1 text-blue-600 dark:text-blue-400" />
-                    <span className="text-xs text-gray-700 dark:text-gray-300 text-center">Salvar</span>
-                  </Button>
-                </div>
-              </div>
+              {/* Painel de ações removido daqui, pois agora está fixo no topo */}
             </div>
           )}
 
@@ -293,39 +294,7 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
                 </div>
               </div>
 
-              <div className="bg-white/80 dark:bg-gray-800/80 rounded-xl border border-gray-200/70 dark:border-gray-700/50 p-5 shadow-sm backdrop-blur-sm">
-                <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-3 flex items-center">
-                  <FileLineChart className="h-5 w-5 mr-2 text-blue-500" />
-                  Painel de Ações
-                </h4>
-                
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
-                  <Button variant="outline" className="flex flex-col items-center justify-center h-auto py-3 px-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all">
-                    <RotateCw className="h-5 w-5 mb-1 text-blue-600 dark:text-blue-400" />
-                    <span className="text-xs text-gray-700 dark:text-gray-300 text-center">Regenerar</span>
-                  </Button>
-                  
-                  <Button variant="outline" className="flex flex-col items-center justify-center h-auto py-3 px-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all">
-                    <Download className="h-5 w-5 mb-1 text-blue-600 dark:text-blue-400" />
-                    <span className="text-xs text-gray-700 dark:text-gray-300 text-center">Exportar</span>
-                  </Button>
-                  
-                  <Button variant="outline" className="flex flex-col items-center justify-center h-auto py-3 px-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all">
-                    <Clipboard className="h-5 w-5 mb-1 text-blue-600 dark:text-blue-400" />
-                    <span className="text-xs text-gray-700 dark:text-gray-300 text-center">Caderno</span>
-                  </Button>
-                  
-                  <Button variant="outline" className="flex flex-col items-center justify-center h-auto py-3 px-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all">
-                    <Maximize2 className="h-5 w-5 mb-1 text-blue-600 dark:text-blue-400" />
-                    <span className="text-xs text-gray-700 dark:text-gray-300 text-center">Ampliar</span>
-                  </Button>
-                  
-                  <Button variant="outline" className="flex flex-col items-center justify-center h-auto py-3 px-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all">
-                    <Save className="h-5 w-5 mb-1 text-blue-600 dark:text-blue-400" />
-                    <span className="text-xs text-gray-700 dark:text-gray-300 text-center">Salvar</span>
-                  </Button>
-                </div>
-              </div>
+              {/* Painel de ações removido daqui, pois agora está fixo no topo */}
             </div>
           )}
         </ScrollArea>
