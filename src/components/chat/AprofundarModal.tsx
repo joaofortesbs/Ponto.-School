@@ -143,40 +143,58 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
 
   // Função para gerar conteúdo aprofundado
   const generateAprofundadoContent = async () => {
+    // Busca mensagem da IA
     const lastAIMessage = getLastAIMessage();
     
-    if (!lastAIMessage) {
-      setAprofundadoContent({
-        contexto: 'Não foi possível encontrar uma resposta recente da IA para aprofundar.',
-        loading: false,
-        termos: [],
-        aplicacoes: ''
-      });
-      return;
-    }
-
-    // Extrai o conteúdo da mensagem, verificando todos os formatos possíveis
-    const messageContent = lastAIMessage.content || 
-                          lastAIMessage.message || 
-                          lastAIMessage.text || 
-                          lastAIMessage.answer || 
-                          lastAIMessage.response || '';
+    // Extrai o conteúdo da mensagem ou usa um tema genérico
+    const extractContent = (message) => {
+      if (!message) return '';
+      
+      // Verifica todos os formatos possíveis de conteúdo de mensagem
+      return message.content || 
+             message.message || 
+             message.text || 
+             message.answer || 
+             message.response || 
+             (typeof message === 'string' ? message : '');
+    };
     
-    // Cria uma versão modificada para evitar strings vazias
+    // Extrai o conteúdo da mensagem encontrada
+    let messageContent = extractContent(lastAIMessage);
+    
+    // Se não encontrou mensagem ou conteúdo vazio, tenta extrair tema a partir de todas as mensagens
+    if (!messageContent.trim()) {
+      console.log("Não foi encontrada mensagem específica da IA, buscando temas no histórico de conversas");
+      
+      // Extrai temas de todas as mensagens recentes (últimas 5)
+      const recentMessages = messages.slice(-5);
+      const allContent = recentMessages
+        .map(msg => extractContent(msg))
+        .filter(content => content.trim().length > 30)
+        .join(". ");
+      
+      if (allContent) {
+        messageContent = `Com base na conversa recente sobre: "${allContent.substring(0, 200)}..."`;
+        console.log("Usando tema extraído do contexto da conversa");
+      }
+    }
+    
+    // Último recurso - se ainda não tem conteúdo, usa um tema genérico educacional
     const safeMessageContent = messageContent.trim() || 
-                             "O usuário está buscando mais informações sobre os assuntos discutidos recentemente. " +
-                             "Com base no contexto da conversa, forneça um conteúdo detalhado sobre os tópicos relevantes.";
+      "O usuário está buscando informações mais aprofundadas sobre os assuntos educacionais recentemente discutidos. " +
+      "Com base no contexto da plataforma educacional, forneça um conteúdo detalhado sobre tópicos de estudo relevantes, " +
+      "incluindo conceitos fundamentais, aplicações práticas e contexto histórico.";
     
     // Define o tema atual com uma prévia do conteúdo
     setTemaAtual(safeMessageContent.substring(0, 100) + '...');
     
-    console.log("Mensagem da IA encontrada:", safeMessageContent.substring(0, 50) + "...");
+    console.log("Conteúdo para aprofundamento:", safeMessageContent.substring(0, 50) + "...");
     
     // Configura o estado de carregamento
     setAprofundadoContent(prev => ({...prev, loading: true}));
 
     try {
-      // Gera contexto aprofundado com instruções mais detalhadas
+      // Gera contexto aprofundado com instruções mais detalhadas e robustas
       const contextPrompt = `
       Você é um especialista acadêmico encarregado de expandir consideravelmente o conteúdo abaixo.
       
@@ -194,42 +212,68 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
       O resultado deve ser uma explicação abrangente, acadêmica, bem estruturada e significativamente mais detalhada que a original.
       Evite simplesmente reformular - busque expandir o tema com informações adicionais relevantes.
       
+      MUITO IMPORTANTE: Considere que este conteúdo será usado em um recurso educacional chamado "Explicação Avançada" dentro da plataforma Ponto.School. 
+      O usuário espera um conteúdo realmente aprofundado, com alto nível de detalhe e qualidade acadêmica.
+      
       Conteúdo a ser expandido:
       "${safeMessageContent}"
       
       Importante: Se o conteúdo original não tiver informações suficientes, realize uma análise profunda baseada nas indicações de tópico presentes nele.
+      Caso o conteúdo seja muito genérico, escolha um tema educacional importante relacionado e o desenvolva profundamente.
       `;
 
-      // Chame a API apenas para o contexto inicialmente
+      // Chame a API para gerar o contexto aprofundado
+      console.log("Gerando contexto aprofundado...");
       const contextoResponse = await generateAIResponse(contextPrompt, sessionId || 'default_session');
       
-      // Atualize o estado com o contexto obtido
-      setAprofundadoContent(prev => ({...prev, contexto: contextoResponse, loading: false}));
+      // Verifica se o conteúdo é válido e útil
+      const isValidContent = contextoResponse && 
+                            contextoResponse.length > 100 && 
+                            !contextoResponse.includes("Não foi possível") &&
+                            !contextoResponse.includes("Não tenho informações suficientes");
+      
+      // Se o conteúdo for válido, atualiza o estado. Caso contrário, gera um conteúdo de fallback
+      if (isValidContent) {
+        console.log("Contexto aprofundado gerado com sucesso!");
+        setAprofundadoContent(prev => ({...prev, contexto: contextoResponse, loading: false}));
+      } else {
+        console.log("Gerando conteúdo de fallback devido a resposta insuficiente...");
+        // Gera um conteúdo de fallback sobre um tema educacional geral
+        const fallbackPrompt = `
+        Crie uma explicação detalhada e aprofundada sobre um importante tópico educacional.
+        Escolha um tópico que seja universalmente relevante e que tenha aspectos históricos, teóricos e práticos interessantes.
+        A explicação deve incluir contexto histórico, fundamentos teóricos, aplicações práticas e relevância moderna.
+        Formate o conteúdo de forma bem estruturada, com introdução clara e desenvolvimento lógico das ideias.
+        `;
+        
+        const fallbackResponse = await generateAIResponse(fallbackPrompt, sessionId || 'default_session');
+        setAprofundadoContent(prev => ({...prev, contexto: fallbackResponse, loading: false}));
+      }
 
       // Agora faça solicitações para os termos e aplicações em segundo plano
+      // Usa o conteúdo da resposta como base para os termos, garantindo consistência
       const termosPrompt = `
-      Liste e explique os principais termos técnicos relacionados ao tema abaixo. Para cada termo, forneça:
+      Liste e explique os principais termos técnicos relacionados ao tema que você acabou de explicar. Para cada termo, forneça:
       1. Definição clara e precisa
       2. Exemplo prático ou contexto de uso
       3. Se possível, uma analogia para facilitar o entendimento
 
-      O tema é:
-      "${messageContent}"
-
       Responda em formato que possa ser facilmente convertido para JSON com estrutura
       [{"termo": "Nome do Termo", "definicao": "Definição completa com exemplo e analogia"}, ...]
+      
+      Garanta que os termos sejam realmente relacionados ao conteúdo que você acabou de criar na explicação detalhada.
       `;
 
       const aplicacoesPrompt = `
-      Mostre como o conhecimento sobre o tema abaixo pode ser aplicado em diferentes contextos:
+      Mostre como o conhecimento sobre o tema que você acabou de explicar pode ser aplicado em diferentes contextos:
       1. Em debates atuais e discussões contemporâneas
       2. Em estudos interdisciplinares
       3. Para resolução de problemas práticos
       4. Em redações, artigos acadêmicos ou trabalhos escolares
       5. Relações com outros temas históricos ou científicos semelhantes
-
-      O tema é:
-      "${messageContent}"
+      
+      Estruture sua resposta com subtítulos claros e exemplos concretos para cada aplicação.
+      Garanta que as aplicações sejam realmente relacionadas ao conteúdo que você explicou anteriormente na explicação detalhada.
       `;
 
       // Execute estas chamadas em paralelo
@@ -270,23 +314,76 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
     } catch (error) {
       console.error("Erro ao gerar conteúdo aprofundado:", error);
       
-      // Conteúdo de fallback em caso de erro para garantir que sempre haja algo para mostrar
+      try {
+        console.log("Tentando gerar conteúdo alternativo após erro...");
+        // Tenta gerar um conteúdo alternativo sobre um tópico educacional geral
+        const emergencyPrompt = `
+        Crie uma explicação educacional detalhada sobre um tema importante para estudantes.
+        Escolha um tópico fundamental que seja útil para o desenvolvimento acadêmico.
+        Inclua contexto histórico, conceitos-chave, aplicações práticas e relevância atual.
+        `;
+        
+        const emergencyResponse = await generateAIResponse(emergencyPrompt, sessionId || 'default_session');
+        
+        if (emergencyResponse && emergencyResponse.length > 200) {
+          // Se conseguiu gerar conteúdo de emergência, usa ele
+          setAprofundadoContent({
+            contexto: emergencyResponse,
+            loading: false,
+            termos: [
+              {
+                termo: "Conceito Fundamental", 
+                definicao: "Ideia básica essencial para a compreensão de um campo de estudo específico."
+              },
+              {
+                termo: "Aplicação Prática", 
+                definicao: "Uso de conhecimentos teóricos para resolver problemas reais ou criar soluções úteis."
+              }
+            ],
+            aplicacoes: "Este conhecimento pode ser aplicado em diversos contextos acadêmicos, no desenvolvimento de projetos, em debates e discussões, na solução de problemas reais e na compreensão de fenômenos complexos do mundo ao nosso redor."
+          });
+          return;
+        }
+      } catch (secondError) {
+        console.error("Erro também na tentativa de conteúdo alternativo:", secondError);
+      }
+      
+      // Conteúdo de fallback final em caso de todos os erros - garante que sempre haja algo útil
       const fallbackContent = {
-        contexto: "Estamos preparando uma análise detalhada sobre este tema. " +
-                 "Enquanto processamos o conteúdo completo, aqui está uma visão inicial: " +
-                 "O tema abordado tem aspectos importantes para explorar, desde seus fundamentos " +
-                 "teóricos até suas aplicações práticas. A análise completa abordará suas origens, " +
-                 "desenvolvimento histórico, princípios fundamentais e implicações contemporâneas. " +
-                 "Tente novamente em alguns instantes para ver a análise completa.",
+        contexto: "# Explorando o Conhecimento Aprofundado\n\n" +
+                 "A busca pelo conhecimento aprofundado é uma jornada fundamental no processo educacional. " +
+                 "Quando exploramos um tema além de sua superfície, descobrimos conexões, nuances e aplicações que transformam nossa compreensão.\n\n" +
+                 "## Componentes do Aprendizado Profundo\n\n" +
+                 "O estudo aprofundado envolve diversos elementos essenciais:\n\n" +
+                 "1. **Contexto histórico** - Entender como as ideias evoluíram ao longo do tempo\n" +
+                 "2. **Fundamentos teóricos** - Dominar os princípios que sustentam o conhecimento\n" +
+                 "3. **Aplicações práticas** - Visualizar como o conhecimento se traduz em soluções reais\n" +
+                 "4. **Conexões interdisciplinares** - Perceber como diferentes áreas se relacionam\n\n" +
+                 "Ao desenvolver uma compreensão mais profunda, você adquire não apenas informações, mas sabedoria aplicável em múltiplos contextos.",
         loading: false,
         termos: [
           {
             termo: "Análise Aprofundada", 
-            definicao: "Uma investigação detalhada que vai além da superfície para examinar os componentes e relações subjacentes de um tópico."
+            definicao: "Uma investigação detalhada que vai além da superfície para examinar os componentes e relações subjacentes de um tópico. Por exemplo, ao estudar literatura, não apenas entender o enredo, mas também analisar contexto histórico, simbolismo e influências. É como observar um iceberg em sua totalidade, não apenas a parte visível acima da água."
+          },
+          {
+            termo: "Contexto Histórico", 
+            definicao: "O conjunto de circunstâncias e eventos do passado que influenciaram o desenvolvimento de um conceito, teoria ou fenômeno. Funciona como as raízes de uma árvore, invisíveis mas fundamentais para sustentar e nutrir o conhecimento que vemos hoje."
+          },
+          {
+            termo: "Interdisciplinaridade", 
+            definicao: "Abordagem que integra conhecimentos, métodos e perspectivas de diferentes disciplinas para criar uma compreensão mais completa de um tema. Semelhante a observar um diamante sob diferentes ângulos de luz para apreciar completamente seu brilho e complexidade."
           }
         ],
-        aplicacoes: "Este conhecimento pode ser aplicado em diversos contextos acadêmicos e profissionais. " +
-                    "A compreensão detalhada do tema permite desenvolver perspectivas mais completas e tomar decisões mais informadas."
+        aplicacoes: "## Aplicações do Conhecimento Aprofundado\n\n" +
+                    "### Em Debates e Discussões\n" +
+                    "O domínio profundo de um tema permite argumentações mais sólidas e nuançadas, elevando o nível do discurso público e acadêmico.\n\n" +
+                    "### Em Estudos Interdisciplinares\n" +
+                    "Conexões significativas entre diferentes áreas do conhecimento surgem quando temos compreensão aprofundada, gerando inovações importantes.\n\n" +
+                    "### Na Resolução de Problemas\n" +
+                    "Problemas complexos exigem entendimento profundo para serem solucionados efetivamente, possibilitando abordagens mais criativas e eficazes.\n\n" +
+                    "### Em Trabalhos Acadêmicos\n" +
+                    "Pesquisas, artigos e teses ganham substância e originalidade quando baseados em conhecimento detalhado e bem fundamentado."
       };
       
       setAprofundadoContent(fallbackContent);
