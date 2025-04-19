@@ -1,4 +1,3 @@
-
 import React from "react";
 
 interface TrueFalseQuestionProps {
@@ -30,7 +29,7 @@ export const TrueFalseQuestion: React.FC<TrueFalseQuestionProps> = ({
   const questionContent = selectedQuestion 
     ? selectedQuestion.text 
     : trueFalseQuestions[(questionNumber - 1) % trueFalseQuestions.length];
-    
+
   // Verificar se o usuário já selecionou uma opção e se temos informação sobre a resposta correta
   const showCorrectAnswer = showExplanation && selectedOption !== null && selectedQuestion?.answer !== undefined;
   const trueIsCorrect = selectedQuestion?.answer === true;
@@ -105,19 +104,6 @@ export const TrueFalseQuestion: React.FC<TrueFalseQuestionProps> = ({
               </svg>
             )}
           </div>
-        </div>
-      </div>
-    </div>
-  );
-} falseIsCorrect
-                ? "bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700 text-green-700 dark:text-green-300"
-                : ""
-            }`}
-            onClick={() => onOptionSelect("false")}
-            disabled={selectedOption !== null}
-          >
-            Falso
-          </button>
         </div>
       </div>
     </div>
