@@ -718,7 +718,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                 switch (node.type) {
                   case 'start': targetNodeType = 'context'; break;
                   case 'context': targetNodeType = 'process'; break;
-                  case ''process': targetNodeType = 'practice'; break;
+                  case 'process': targetNodeType = 'practice'; break;
                   case 'practice': 
                   case 'decision': 
                   case 'tip': targetNodeType = 'end'; break;
