@@ -717,6 +717,15 @@
   }
 }
 
+/* Classes específicas para animação das linhas pontilhadas */
+.animate-dash-slow {
+  animation: dashVertical 10s linear infinite;
+}
+
+.animate-dash-horizontal {
+  animation: dashHorizontal 10s linear infinite;
+}
+
 /* Efeito de escala ao passar o mouse */
 .mini-flow-node {
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;

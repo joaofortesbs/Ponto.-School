@@ -21,22 +21,22 @@ export function LogoManager() {
     const ensureLogoAvailability = async () => {
       // Usar a versão base64 como fallback garantido
       const fallbackLogo = PONTO_SCHOOL_LOGO_BASE64;
-      
+
       try {
         // Forçar o uso da logo padrão mais recente
         const currentVersion = getLogoVersion() + 1; // Incrementar versão para forçar atualização
         const defaultLogo = DEFAULT_LOGO;
         const versionedUrl = getVersionedLogoUrl(defaultLogo, currentVersion);
-        
+
         // Salvar a nova versão no localStorage
         saveLogoToLocalStorage(defaultLogo, currentVersion);
-        
+
         window.PONTO_SCHOOL_CONFIG = {
           defaultLogo: versionedUrl,
           logoLoaded: true,
           logoVersion: currentVersion,
         };
-        
+
         setLogoLoaded(true);
         document.dispatchEvent(
           new CustomEvent("logoLoaded", { detail: versionedUrl }),
