@@ -1361,7 +1361,7 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                     // Criar menu de exportação diretamente ao invés de verificar se existe
                     const exportMenu = document.createElement('div');
                     exportMenu.id = 'export-options-menu';
-                    exportMenu.className = 'absolute z-50 bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 border border-gray-200 dark:border-gray-700 w-48';
+                    exportMenu.className = 'fixed z-[9999] bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 border border-gray-200 dark:border-gray-700 w-48';
                     
                     // Remover qualquer menu anterior que possa existir
                     const oldMenu = document.getElementById('export-options-menu');
@@ -1372,7 +1372,7 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                     exportMenu.innerHTML = `
                       <div class="flex flex-col space-y-1">
                         <button 
-                          class="text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300"
+                          class="text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 cursor-pointer"
                           id="export-img-button"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1395,35 +1395,40 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                       </div>
                     `;
                     
-                    document.body.appendChild(exportMenu);
+                    // Adicionar para body com um wrapper para prevenir eventos de mouse passando
+                    const menuWrapper = document.createElement('div');
+                    menuWrapper.className = 'fixed inset-0 z-[9998]';
+                    menuWrapper.style.pointerEvents = 'none'; // Permite cliques passarem através do wrapper
+                    document.body.appendChild(menuWrapper);
+                    
+                    // O menu em si deve capturar eventos
+                    exportMenu.style.pointerEvents = 'auto';
+                    menuWrapper.appendChild(exportMenu);
                     
                     // Posicionar o menu em relação ao botão
                     const buttonRect = e.currentTarget.getBoundingClientRect();
-                    exportMenu.style.display = 'block';
-                    exportMenu.style.position = 'fixed';
-                    exportMenu.style.zIndex = '9999';
                     exportMenu.style.top = `${buttonRect.top - 120}px`;
                     exportMenu.style.left = `${buttonRect.left - 20}px`;
                     
                     // Configurar o evento de clique para o botão 'Exportar em .IMG'
                     const exportImgButton = document.getElementById('export-img-button');
                     if (exportImgButton) {
-                      exportImgButton.onclick = () => {
+                      exportImgButton.addEventListener('click', () => {
                         exportAsImage().then(() => {
-                          exportMenu.remove();
+                          menuWrapper.remove();
                         }).catch(error => {
                           console.error('Erro ao exportar imagem:', error);
                           alert('Ocorreu um erro ao exportar o fluxograma. Por favor, tente novamente.');
-                          exportMenu.remove();
+                          menuWrapper.remove();
                         });
-                      };
+                      });
                     }
                     
                     // Fechar o menu ao clicar fora dele
                     const closeMenu = (event: MouseEvent) => {
                       if (!exportMenu.contains(event.target as Node) && 
                           event.target !== e.currentTarget) {
-                        exportMenu.remove();
+                        menuWrapper.remove();
                         document.removeEventListener('click', closeMenu);
                       }
                     };
@@ -1432,7 +1437,7 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                     // Atraso pequeno para evitar que o menu feche imediatamente
                     setTimeout(() => {
                       document.addEventListener('click', closeMenu);
-                    }, 100); // Aumentado o tempo de espera para garantir que o menu já esteja visível
+                    }, 100);
                   }}
                   className="h-10 w-10 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
                 >
