@@ -11,6 +11,8 @@ import ExemplosPraticos from './aprofundar-components/ExemplosPraticos';
 import ErrosComuns from './aprofundar-components/ErrosComuns';
 import ExploreMais from './aprofundar-components/ExploreMais';
 import GerarFluxograma from './aprofundar-components/GerarFluxograma';
+import FluxogramaVisualizer from './aprofundar-components/FluxogramaVisualizer';
+import FluxogramaDetailModal from './aprofundar-components/FluxogramaDetailModal';
 
 interface AprofundarModalProps {
   isOpen: boolean;
