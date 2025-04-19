@@ -15,8 +15,7 @@ import {
   Save,
   X,
   SendHorizonal,
-  Share2,
-  Sparkles
+  Share2
 } from 'lucide-react';
 import * as htmlToImage from 'html-to-image';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -66,19 +65,21 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
   }, []);
 
   const handleGenerateFlowchart = (option: 'ia' | 'manual') => {
-    setSelectedOption(option);
-    
-    if (option === 'ia') {
-      setIsLoading(true);
-
-      // Simula o processamento do fluxograma
-      setTimeout(() => {
-        setIsLoading(false);
-        setFluxogramaGerado(true);
-        // Aqui seria implementada a lógica real de geração do fluxograma
-      }, 3000);
+    if (option === 'manual') {
+      setSelectedOption(option);
+      setShowManualInput(true);
+      return;
     }
-    // Para opção manual, o comportamento agora é controlado pelo estado showManualInput
+
+    setSelectedOption(option);
+    setIsLoading(true);
+
+    // Simula o processamento do fluxograma
+    setTimeout(() => {
+      setIsLoading(false);
+      setFluxogramaGerado(true);
+      // Aqui seria implementada a lógica real de geração do fluxograma
+    }, 3000);
   };
   
   const handleSaveFluxograma = () => {
@@ -307,6 +308,36 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
       }
     };
   }, [selectedOption, showManualInput, fluxogramaGerado]);
+
+1. Comece com um CONCEITO CENTRAL (nó inicial):
+   - Defina o tema de forma objetiva e clara
+   - Ex: "O que é fotossíntese?"
+
+2. Adicione CONTEXTUALIZAÇÃO E PRÉ-REQUISITOS:
+   - Conhecimentos prévios necessários
+   - Termos importantes para entender o tema
+   - Base científica/histórica relevante
+
+3. Detalhe o PROCESSO, MECANISMO OU LÓGICA DO TEMA:
+   - Passo a passo da explicação em etapas numeradas
+   - Fluxo de causa e efeito
+   - Ex: "Etapa 1: Captação de luz → Etapa 2: Transformação química → Etapa 3: Liberação de oxigênio"
+
+4. Inclua uma CAMADA DE APLICAÇÃO/PRÁTICA:
+   - Exemplos práticos ou situações-problema
+   - Destaque erros comuns e dicas
+   - Inclua nós de decisão do tipo: "Se o aluno pensar A → Mostrar que está errado" / "Se pensar B → Está correto"
+
+5. Finalize com CONCLUSÃO OU RESULTADO FINAL:
+   - Síntese do aprendizado
+   - Resumo visual
+   - Dica de ouro ou aplicação em provas
+
+Adicione ELEMENTOS EXTRAS distribuídos no fluxograma:
+- Tópicos Relacionados (possíveis conexões para novos fluxos)
+- Comparações entre conceitos (quando aplicável)
+- Aplicações na vida real
+- Alertas sobre equívocos comuns
 
 Para cada nó (node), inclua:
 - id: único (numérico ou string)
@@ -1898,38 +1929,18 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                 </span>
               </Button>
 
-              {!showManualInput ? (
-                <Button
-                  onClick={() => setShowManualInput(true)}
-                  variant="outline"
-                  className="w-full py-6 bg-white/80 dark:bg-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-700/70 shadow-sm border border-gray-200 dark:border-gray-700 rounded-xl backdrop-blur-sm group relative overflow-hidden flex items-center justify-center"
-                  disabled={isLoading}
-                >
-                  <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-700/30 dark:to-gray-800/30 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
-                  <span className="relative flex items-center justify-center">
-                    <PenLine className="h-5 w-5 mr-2 transform group-hover:translate-y-px transition-transform" />
-                    <span className="font-medium">Inserir meu próprio conteúdo</span>
-                  </span>
-                </Button>
-              ) : (
-                <div className="relative w-full py-3 px-4 bg-white/95 dark:bg-gray-800/95 border border-blue-200 dark:border-blue-800/50 rounded-xl shadow-sm transition-all">
-                  <Textarea 
-                    value={manualContent}
-                    onChange={(e) => setManualContent(e.target.value)}
-                    placeholder="Escreva aqui o conteúdo para gerar seu fluxograma..."
-                    className="min-h-[120px] resize-none w-full py-1 px-1 bg-transparent border-none focus:ring-0 focus:outline-none"
-                  />
-                  <Button
-                    onClick={handleSubmitManualContent}
-                    className="absolute right-3 top-3 h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all p-0 flex items-center justify-center group overflow-hidden"
-                    disabled={!manualContent.trim() || isLoading}
-                  >
-                    <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-400/20 to-indigo-400/20 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
-                    <Sparkles className="h-5 w-5 text-white relative z-10" />
-                    <span className="absolute -bottom-10 opacity-0 group-hover:opacity-100 group-hover:-bottom-6 transition-all text-[10px] font-medium">Enviar</span>
-                  </Button>
-                </div>
-              )}
+              <Button
+                onClick={() => handleGenerateFlowchart('manual')}
+                variant="outline"
+                className="w-full py-6 bg-white/80 dark:bg-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-700/70 shadow-sm border border-gray-200 dark:border-gray-700 rounded-xl backdrop-blur-sm group relative overflow-hidden flex items-center justify-center"
+                disabled={isLoading || showManualInput}
+              >
+                <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-700/30 dark:to-gray-800/30 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
+                <span className="relative flex items-center justify-center">
+                  <PenLine className="h-5 w-5 mr-2 transform group-hover:translate-y-px transition-transform" />
+                  <span className="font-medium">Inserir meu próprio conteúdo</span>
+                </span>
+              </Button>
               
               {/* Card único de Pré-visualização do Fluxograma */}
               <div className="w-full mt-6 p-6 bg-white/80 dark:bg-gray-800/80 border border-blue-200/80 dark:border-blue-800/30 rounded-2xl shadow-lg backdrop-blur-xl relative overflow-hidden group hover:shadow-xl transition-all duration-500 hover:border-blue-300 dark:hover:border-blue-700">
@@ -2114,7 +2125,33 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                 </div>
               )}
             </div>
-          ) : null
+          ) : (
+            <div className="space-y-4 bg-white/80 dark:bg-gray-800/80 rounded-xl border border-gray-200/70 dark:border-gray-700/50 p-5 shadow-sm backdrop-blur-sm">
+              <h4 className="text-md font-medium text-gray-900 dark:text-white mb-2">Insira seu conteúdo para gerar o fluxograma</h4>
+              <Textarea 
+                value={manualContent}
+                onChange={(e) => setManualContent(e.target.value)}
+                placeholder="Insira aqui o conteúdo sobre o qual você deseja gerar um fluxograma..."
+                className="min-h-[200px] resize-none"
+              />
+              <div className="flex justify-end space-x-2 mt-2">
+                <Button
+                  onClick={handleCancelManualInput}
+                  variant="outline"
+                  className="flex items-center"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  <span>Cancelar</span>
+                </Button>
+                <Button
+                  onClick={handleSubmitManualContent}
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white flex items-center"
+                >
+                  <SendHorizonal className="h-4 w-4 mr-2" />
+                  <span>Gerar Fluxograma</span>
+                </Button>
+              </div>
+            </div>
           )}
 
           {isLoading && (
