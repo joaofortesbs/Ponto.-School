@@ -1364,7 +1364,7 @@ fluxograma:
       </div>
 
       {showFluxograma ? (
-        <div className="space-y-4 w-full max-w-5xl mx-auto">
+        <div className="space-y-4 w-full max-w-5xl mx-auto fluxograma-modal-container">
           <div className="flex justify-between items-center mb-2">
             <h4 className="text-md font-medium text-gray-900 dark:text-white">Fluxograma Interativo</h4>
             <Button

@@ -28,7 +28,14 @@
 @tailwind base;
 
 /* Estilo personalizado para o modal de fluxograma */
-.fluxograma-modal-container:has(.h-[70vh]) {
+.fluxograma-modal-container {
+  max-width: 90vw !important;
+  width: 90vw !important;
+}
+
+/* Estilo específico para garantir que o modal ocupe mais espaço */
+.dialog-content .fluxograma-modal-container,
+[role="dialog"] .fluxograma-modal-container {
   max-width: 90vw !important;
   width: 90vw !important;
 }
