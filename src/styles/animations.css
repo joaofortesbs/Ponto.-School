@@ -639,9 +639,29 @@
 @keyframes dashed-line-move {
   0% {
     background-position: 0 0;
+    stroke-dashoffset: 10;
   }
   100% {
     background-position: 20px 0;
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes floating-node {
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(5px, -5px);
+  }
+  50% {
+    transform: translate(-3px, -7px);
+  }
+  75% {
+    transform: translate(-6px, 3px);
+  }
+  100% {
+    transform: translate(0, 0);
   }
 }
 
@@ -681,7 +701,11 @@
 }
 
 .animate-dashed-move {
-  animation: dashed-line-move 1.5s linear infinite;
+  animation: dashed-line-move 3s linear infinite;
+}
+
+.animate-floating-node {
+  animation: floating-node 8s ease-in-out infinite;
 }
 
 .animate-delay-150 {
