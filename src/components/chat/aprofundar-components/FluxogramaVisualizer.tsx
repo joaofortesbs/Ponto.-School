@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import ReactFlow, {
   MiniMap,
   Controls,
@@ -9,8 +9,12 @@ import ReactFlow, {
   Edge,
   NodeTypes,
   ConnectionLineType,
+  ReactFlowInstance,
+  useReactFlow,
+  Panel,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
+import dagre from 'dagre';
 
 // Importando os estilos necessários
 import { cn } from '@/lib/utils';
@@ -337,6 +341,58 @@ interface FluxogramaVisualizerProps {
   onNodeClick?: (node: Node) => void;
 }
 
+// Layout automático dos nós utilizando dagre para organizar o fluxograma
+const nodeWidth = 220;
+const nodeHeight = 120;
+
+const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => {
+  // Cria um novo grafo
+  const dagreGraph = new dagre.graphlib.Graph();
+  dagreGraph.setDefaultEdgeLabel(() => ({}));
+  
+  // Define as direções: TB (top to bottom) ou LR (left to right)
+  dagreGraph.setGraph({ rankdir: direction, nodesep: 80, ranksep: 120, marginx: 20, marginy: 20 });
+
+  // Adiciona os nós ao grafo dagre com as dimensões adequadas
+  nodes.forEach((node) => {
+    // Ajusta os tamanhos baseados no tipo do nó
+    let width = nodeWidth;
+    let height = nodeHeight;
+    
+    // Nós de tipo start e end podem ter dimensões diferentes
+    if (node.type === 'start' || node.type === 'end') {
+      height = 100;
+    } else if (node.type === 'decision') {
+      height = 140; // Nós de decisão podem precisar de mais espaço vertical
+    }
+    
+    dagreGraph.setNode(node.id, { width, height });
+  });
+
+  // Adiciona as arestas ao grafo
+  edges.forEach((edge) => {
+    dagreGraph.setEdge(edge.source, edge.target);
+  });
+
+  // Calcula o layout
+  dagre.layout(dagreGraph);
+
+  // Obtem os nós com as posições atualizadas
+  const layoutedNodes = nodes.map((node) => {
+    const nodeWithPosition = dagreGraph.node(node.id);
+    
+    return {
+      ...node,
+      position: {
+        x: nodeWithPosition.x - nodeWidth / 2,
+        y: nodeWithPosition.y - nodeHeight / 2,
+      },
+    };
+  });
+
+  return { nodes: layoutedNodes, edges };
+};
+
 /**
  * Componente principal do visualizador de fluxograma
  */
@@ -344,6 +400,9 @@ const FluxogramaVisualizer: React.FC<FluxogramaVisualizerProps> = ({
   flowData,
   onNodeClick 
 }) => {
+  const reactFlowInstance = useRef<ReactFlowInstance | null>(null);
+  const [isLayouted, setIsLayouted] = useState(false);
+  
   // Carrega os dados do localStorage, se houver, ou usa os exemplos
   const loadFlowData = () => {
     try {
@@ -358,16 +417,66 @@ const FluxogramaVisualizer: React.FC<FluxogramaVisualizerProps> = ({
   };
 
   const data = flowData || loadFlowData();
-  const [nodes, setNodes, onNodesChange] = useNodesState(data.nodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(data.edges);
+  
+  // Aplicar o layout automático aos nós e arestas usando dagre
+  const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+    data.nodes, 
+    data.edges,
+    'TB' // direção de cima para baixo
+  );
+  
+  const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges);
+
+  // Função para reorganizar o layout
+  const onLayout = useCallback((direction: 'TB' | 'LR') => {
+    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+      nodes,
+      edges,
+      direction
+    );
+
+    setNodes([...layoutedNodes]);
+    setEdges([...layoutedEdges]);
+    
+    // Centralizar o fluxograma após o layout
+    if (reactFlowInstance.current) {
+      window.requestAnimationFrame(() => {
+        reactFlowInstance.current?.fitView({
+          padding: 0.2,
+          includeHiddenNodes: false,
+        });
+      });
+    }
+    
+    setIsLayouted(true);
+  }, [nodes, edges, setNodes, setEdges]);
 
   // Atualiza os nós e arestas quando os dados externos mudam
   useEffect(() => {
     if (flowData) {
-      setNodes(flowData.nodes);
-      setEdges(flowData.edges);
+      const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+        flowData.nodes, 
+        flowData.edges,
+        'TB'
+      );
+      
+      setNodes(layoutedNodes);
+      setEdges(layoutedEdges);
+      setIsLayouted(false);
     }
   }, [flowData, setNodes, setEdges]);
+  
+  // Aplica o layout automático na montagem inicial
+  useEffect(() => {
+    if (!isLayouted) {
+      // Pequeno delay para garantir que o componente está totalmente montado
+      const timer = setTimeout(() => {
+        onLayout('TB');
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isLayouted, onLayout]);
 
   // Função para lidar com cliques nos nós
   const handleNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
@@ -385,6 +494,10 @@ const FluxogramaVisualizer: React.FC<FluxogramaVisualizerProps> = ({
         onEdgesChange={onEdgesChange}
         onNodeClick={handleNodeClick}
         nodeTypes={nodeTypes}
+        onInit={(instance) => {
+          reactFlowInstance.current = instance;
+          instance.fitView({ padding: 0.2 });
+        }}
         fitView
         attributionPosition="bottom-right"
         connectionLineType={ConnectionLineType.SmoothStep}
@@ -411,6 +524,22 @@ const FluxogramaVisualizer: React.FC<FluxogramaVisualizerProps> = ({
             return '#ffffff';
           }}
         />
+        <Panel position="top-right" className="bg-white dark:bg-gray-800 p-2 rounded-md shadow-md border border-gray-200 dark:border-gray-700">
+          <div className="flex gap-2">
+            <button
+              onClick={() => onLayout('TB')}
+              className="px-3 py-1 text-xs font-medium rounded-md bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-800/50 transition-colors"
+            >
+              Organizar Vertical
+            </button>
+            <button
+              onClick={() => onLayout('LR')}
+              className="px-3 py-1 text-xs font-medium rounded-md bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-800/50 transition-colors"
+            >
+              Organizar Horizontal
+            </button>
+          </div>
+        </Panel>
         <Background color="#aaa" gap={16} />
       </ReactFlow>
     </div>
