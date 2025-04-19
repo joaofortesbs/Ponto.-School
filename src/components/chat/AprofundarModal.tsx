@@ -788,10 +788,13 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[1200px] w-[95vw] p-0 overflow-hidden bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 rounded-xl">
-        <div className="flex flex-col h-[80vh]">
-          {renderContent()}
-        </div>
+      <DialogContent className="sm:max-w-md md:max-w-xl bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-gray-800/95 dark:to-gray-900/95 backdrop-blur-xl border border-gray-100/80 dark:border-gray-700/80 shadow-xl rounded-2xl">
+        <DialogHeader className={activeContent === 'main' ? 'mb-2' : 'mb-0'}>
+          <DialogTitle className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+            {activeContent === 'main' ? 'Aprofundar no tema' : ''}
+          </DialogTitle>
+        </DialogHeader>
+        {renderContent()}
       </DialogContent>
     </Dialog>
   );
