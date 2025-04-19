@@ -95,7 +95,7 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
 
           // Prompt estruturado para a IA
           const prompt = `
-Com base na seguinte explicação sobre o tema, gere um fluxograma interativo no formato do React Flow:
+Analise o seguinte conteúdo e gere um fluxograma estruturado:
 
 ${contentToAnalyze}
 
@@ -131,50 +131,33 @@ Adicione ELEMENTOS EXTRAS distribuídos no fluxograma:
 - Aplicações na vida real
 - Alertas sobre equívocos comuns
 
-Para cada nó (node), inclua:
-- id: único (numérico ou string)
-- title: título curto e claro
-- description: explicação resumida
-- type: um dos seguintes ("start", "context", "process", "practice", "decision", "tip", "end")
-- position: coordenadas x e y (posicione os nós em camadas, ex: y: 0, y: 100, y: 200...)
+Classifique cada bloco com um dos seguintes tipos:
+- "start" (conceito central)
+- "context" (contextualização)
+- "process" (etapas do processo)
+- "practice" (aplicação prática)
+- "decision" (pontos de decisão/verificação)
+- "tip" (dicas extras)
+- "end" (conclusão)
 
-Para cada conexão (edge), inclua:
-- id: formado por "eID1-ID2" (concatenando os IDs de origem e destino)
-- source: ID do nó de origem
-- target: ID do nó de destino
-- label: descrição da relação (ex: "Segue para", "Sim", "Não")
-- type: "smoothstep" para fluidez visual
-- animated: true para conexões importantes
-
-IMPORTANTE: Conecte todos os nós em sequência lógica de aprendizado, e se houver ramificações (ex: exemplos, erros), conecte como saídas alternativas do nó anterior.
-
-Dicas para posicionamento visual:
-- Posicione os y dos nós em camadas (0px, 100px, 200px, 300px...)
-- Varie o x para ramificações (ex: x: 100, x: 250, x: 400)
-- Use animated: true nos edges para as setas se moverem nas conexões importantes
+Organize os blocos em uma sequência lógica e crie conexões significativas entre eles, com rótulos descritivos para cada conexão.
 
 Retorne o resultado como um objeto JSON com a seguinte estrutura:
 {
   "nodes": [
     {
       "id": "1",
-      "title": "O que é Fotossíntese?",
-      "description": "Processo biológico pelo qual plantas transformam luz em energia",
-      "type": "start",
-      "position": { "x": 100, "y": 0 }
-    },
-    ...
+      "title": "Título do nó",
+      "description": "Descrição detalhada do nó",
+      "type": "start/default/decision/end"
+    }
   ],
-  "edges": [
+  "connections": [
     {
-      "id": "e1-2",
       "source": "1",
       "target": "2",
-      "label": "Segue para",
-      "type": "smoothstep",
-      "animated": true
-    },
-    ...
+      "label": "Descrição da relação ou condição (ex: 'Segue para', 'Sim', 'Não')"
+    }
   ]
 }
 `;
@@ -195,35 +178,6 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
 
             const jsonString = jsonMatch ? jsonMatch[0].replace(/```json\n|```\n|```/g, '') : response;
             extractedData = JSON.parse(jsonString);
-            
-            // Normalize data structure - ensure we have both nodes and edges
-            if (!extractedData.edges && extractedData.connections) {
-              // Convert connections to edges if needed
-              extractedData.edges = extractedData.connections.map(conn => ({
-                id: `e${conn.source}-${conn.target}`,
-                source: conn.source,
-                target: conn.target,
-                label: conn.label || '',
-                type: 'smoothstep',
-                animated: conn.animated || false
-              }));
-            } else if (!extractedData.edges) {
-              // Create default edges if none provided
-              extractedData.edges = [];
-              // If we have nodes, create sequential edges between them
-              if (extractedData.nodes && extractedData.nodes.length > 1) {
-                for (let i = 0; i < extractedData.nodes.length - 1; i++) {
-                  extractedData.edges.push({
-                    id: `e${extractedData.nodes[i].id}-${extractedData.nodes[i+1].id}`,
-                    source: extractedData.nodes[i].id,
-                    target: extractedData.nodes[i+1].id,
-                    label: 'Segue para',
-                    type: 'smoothstep',
-                    animated: true
-                  });
-                }
-              }
-            }
           } catch (error) {
             console.error('Erro ao extrair JSON da resposta da IA:', error);
 
@@ -244,28 +198,19 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
             }).slice(0, 8);
 
             // Preparar os dados no formato esperado
-            const nodes = keywords.map((item, index) => ({
-              id: (index + 1).toString(),
-              title: item.keyword.charAt(0).toUpperCase() + item.keyword.slice(1),
-              description: item.text,
-              type: index === 0 ? 'start' : index === keywords.length - 1 ? 'end' : 'default',
-              position: { x: 100 + (index % 3) * 50, y: 100 * Math.floor(index / 3) }
-            }));
-            
-            // Create edges to connect nodes
-            const edges = [];
-            for (let i = 0; i < nodes.length - 1; i++) {
-              edges.push({
-                id: `e${nodes[i].id}-${nodes[i+1].id}`,
-                source: nodes[i].id,
-                target: nodes[i+1].id,
-                label: 'Segue para',
-                type: 'smoothstep',
-                animated: true
-              });
-            }
-            
-            extractedData = { nodes, edges };
+            extractedData = {
+              nodes: keywords.map((item, index) => ({
+                id: (index + 1).toString(),
+                title: item.keyword.charAt(0).toUpperCase() + item.keyword.slice(1),
+                description: item.text,
+                type: index === 0 ? 'start' : index === keywords.length - 1 ? 'end' : 'default'
+              })),
+              connections: keywords.slice(0, -1).map((_, index) => ({
+                source: (index + 1).toString(),
+                target: (index + 2).toString(),
+                label: ''
+              }))
+            };
           }
 
           // ETAPA 2: Converter os dados da IA para o formato do fluxograma
@@ -423,24 +368,24 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
           });
 
           // ETAPA 3: Gerar as Conexões (Edges) para o fluxograma educacional
-          const edges = extractedData.edges?.map(edge => {
+          const edges = extractedData.connections?.map(conn => {
             // Determinar o estilo e cor da conexão baseado nos tipos de nós conectados
-            const sourceNode = nodes.find(n => n.id === edge.source);
-            const targetNode = nodes.find(n => n.id === edge.target);
+            const sourceNode = nodes.find(n => n.id === conn.source);
+            const targetNode = nodes.find(n => n.id === conn.target);
 
             let edgeStyle = { stroke: '#3b82f6' }; // Azul padrão
             let labelStyle = { fill: '#3b82f6', fontWeight: 500 };
 
             // Estilizar com base no tipo de nós conectados
             if (sourceNode?.type === 'decision') {
-              if (edge.label?.toLowerCase().includes('sim') || 
-                  edge.label?.toLowerCase().includes('correto') ||
-                  edge.label?.toLowerCase().includes('verdadeiro')) {
+              if (conn.label?.toLowerCase().includes('sim') || 
+                  conn.label?.toLowerCase().includes('correto') ||
+                  conn.label?.toLowerCase().includes('verdadeiro')) {
                 edgeStyle = { stroke: '#10b981' }; // Verde para caminhos positivos
                 labelStyle = { fill: '#10b981', fontWeight: 500 };
-              } else if (edge.label?.toLowerCase().includes('não') || 
-                         edge.label?.toLowerCase().includes('incorreto') ||
-                         edge.label?.toLowerCase().includes('falso')) {
+              } else if (conn.label?.toLowerCase().includes('não') || 
+                         conn.label?.toLowerCase().includes('incorreto') ||
+                         conn.label?.toLowerCase().includes('falso')) {
                 edgeStyle = { stroke: '#f43f5e' }; // Vermelho para caminhos negativos
                 labelStyle = { fill: '#f43f5e', fontWeight: 500 };
               }
@@ -457,12 +402,11 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
             }
 
             return {
-              id: edge.id || `e${edge.source}-${edge.target}`,
-              source: edge.source,
-              target: edge.target,
-              label: edge.label || '',
-              type: edge.type || 'smoothstep',
-              animated: edge.animated || edge.label?.toLowerCase().includes('importante') || false,
+              id: `e${conn.source}-${conn.target}`,
+              source: conn.source,
+              target: conn.target,
+              label: conn.label || '',
+              animated: conn.label?.toLowerCase().includes('importante') || false,
               style: edgeStyle,
               labelStyle: labelStyle,
               labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
