@@ -171,6 +171,144 @@ ${contentToAnalyze}
 
 Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
 
+
+  // Função para tornar os nós arrastáveis
+  useEffect(() => {
+    // Verificar se estamos no navegador antes de usar o DOM
+    if (typeof window !== 'undefined') {
+      const container = document.getElementById('flow-preview-container');
+      const nodes = document.querySelectorAll('.draggable-node');
+      
+      if (container && nodes.length > 0) {
+        nodes.forEach(node => {
+          let isDragging = false;
+          let startX = 0;
+          let startY = 0;
+          let initialX = 0;
+          let initialY = 0;
+          let currentX = 0;
+          let currentY = 0;
+          
+          // Função para iniciar o arrasto
+          const startDrag = (e: MouseEvent | TouchEvent) => {
+            isDragging = true;
+            
+            if (e instanceof MouseEvent) {
+              startX = e.clientX;
+              startY = e.clientY;
+            } else {
+              startX = e.touches[0].clientX;
+              startY = e.touches[0].clientY;
+            }
+            
+            // Obter a posição atual do elemento
+            const style = window.getComputedStyle(node);
+            const transform = style.transform;
+            
+            // Extrair a matriz de transformação atual
+            if (transform !== 'none') {
+              const matrix = new DOMMatrix(transform);
+              initialX = matrix.e;
+              initialY = matrix.f;
+            } else {
+              initialX = 0;
+              initialY = 0;
+            }
+            
+            currentX = initialX;
+            currentY = initialY;
+            
+            node.classList.add('scale-105');
+            node.classList.add('shadow-lg');
+            
+            // Adicionar eventos de movimento e fim do arrasto
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('touchmove', drag, { passive: false });
+            document.addEventListener('mouseup', endDrag);
+            document.addEventListener('touchend', endDrag);
+          };
+          
+          // Função para realizar o arrasto
+          const drag = (e: MouseEvent | TouchEvent) => {
+            if (!isDragging) return;
+            
+            e.preventDefault();
+            
+            let clientX: number, clientY: number;
+            
+            if (e instanceof MouseEvent) {
+              clientX = e.clientX;
+              clientY = e.clientY;
+            } else {
+              clientX = e.touches[0].clientX;
+              clientY = e.touches[0].clientY;
+            }
+            
+            // Calcular a nova posição
+            const deltaX = clientX - startX;
+            const deltaY = clientY - startY;
+            
+            currentX = initialX + deltaX;
+            currentY = initialY + deltaY;
+            
+            // Limitar o movimento aos limites do container
+            const rect = node.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            
+            if (rect.left + deltaX < containerRect.left) {
+              currentX = initialX + (containerRect.left - rect.left);
+            }
+            if (rect.right + deltaX > containerRect.right) {
+              currentX = initialX + (containerRect.right - rect.right);
+            }
+            if (rect.top + deltaY < containerRect.top) {
+              currentY = initialY + (containerRect.top - rect.top);
+            }
+            if (rect.bottom + deltaY > containerRect.bottom) {
+              currentY = initialY + (containerRect.bottom - rect.bottom);
+            }
+            
+            // Aplicar a transformação
+            node.style.transform = `translate(${currentX}px, ${currentY}px) scale(1.05)`;
+          };
+          
+          // Função para finalizar o arrasto
+          const endDrag = () => {
+            isDragging = false;
+            node.classList.remove('scale-105');
+            node.classList.remove('shadow-lg');
+            node.style.transform = `translate(${currentX}px, ${currentY}px)`;
+            
+            // Remover eventos de arrasto
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('touchmove', drag);
+            document.removeEventListener('mouseup', endDrag);
+            document.removeEventListener('touchend', endDrag);
+          };
+          
+          // Adicionar eventos de início de arrasto
+          node.addEventListener('mousedown', startDrag);
+          node.addEventListener('touchstart', startDrag, { passive: true });
+          
+          // Prevenir o comportamento padrão de drag and drop do navegador
+          node.addEventListener('dragstart', (e) => e.preventDefault());
+        });
+      }
+    }
+    
+    // Cleanup quando o componente for desmontado
+    return () => {
+      if (typeof window !== 'undefined') {
+        const nodes = document.querySelectorAll('.draggable-node');
+        nodes.forEach(node => {
+          node.removeEventListener('mousedown', () => {});
+          node.removeEventListener('touchstart', () => {});
+          node.removeEventListener('dragstart', () => {});
+        });
+      }
+    };
+  }, [selectedOption, showManualInput, fluxogramaGerado]);
+
 1. Comece com um CONCEITO CENTRAL (nó inicial):
    - Defina o tema de forma objetiva e clara
    - Ex: "O que é fotossíntese?"
@@ -1828,56 +1966,69 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                   </div>
                 </div>
                 
-                {/* Área de animação do fluxograma */}
-                <div className="h-[220px] w-full relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/40 dark:from-gray-900/90 dark:via-blue-950/40 dark:to-indigo-950/30 flex items-center justify-center shadow-inner border border-blue-100/50 dark:border-blue-900/30 group-hover:border-blue-200 dark:group-hover:border-blue-800/50 transition-all duration-500">
+                {/* Área de animação do fluxograma - Modernizada */}
+                <div className="h-[220px] w-full relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/40 dark:from-gray-900/90 dark:via-blue-950/40 dark:to-indigo-950/30 flex items-center justify-center shadow-inner border border-blue-100/50 dark:border-blue-900/30 group-hover:border-blue-200 dark:group-hover:border-blue-800/50 transition-all duration-500" id="flow-preview-container">
                   {/* Fundo com padrão de grade */}
                   <div className="absolute inset-0 bg-[url('/images/pattern-grid.svg')] bg-center opacity-5 dark:opacity-10"></div>
                   
-                  {/* Nós e conexões animadas */}
-                  <div className="relative flex flex-col items-center z-10 transform group-hover:scale-105 transition-transform duration-700">
-                    {/* Nó principal/conceito */}
-                    <div className="w-28 h-12 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-lg flex items-center justify-center text-white text-xs font-medium mb-3 shadow-lg group-hover:shadow-blue-400/20 dark:group-hover:shadow-blue-500/10 transition-all duration-500 animate-float">
-                      <span className="flex flex-col items-center">
-                        <span className="text-[10px] uppercase tracking-wider opacity-70">Conceito</span>
-                        <span className="font-semibold">Principal</span>
-                      </span>
-                    </div>
-                    
-                    {/* Linha de conexão animada */}
-                    <div className="w-[2px] h-8 bg-gradient-to-b from-blue-400 to-indigo-500 dark:from-blue-500 dark:to-indigo-600 animate-pulse-slow"></div>
-                    
-                    {/* Nós do meio com conexões */}
-                    <div className="flex items-center space-x-14 mb-3 relative">
-                      {/* Nó de contexto (esquerda) */}
-                      <div className="flex flex-col items-center">
-                        <div className="w-20 h-10 bg-gradient-to-r from-indigo-400 to-indigo-500 dark:from-indigo-500 dark:to-indigo-600 rounded-lg flex items-center justify-center text-white text-xs font-medium shadow-md group-hover:shadow-indigo-400/20 dark:group-hover:shadow-indigo-500/10 transition-all duration-500 animate-float-delayed-100">
-                          <span className="font-medium">Contexto</span>
-                        </div>
-                        <div className="w-[2px] h-6 bg-gradient-to-b from-indigo-400 to-purple-500 dark:from-indigo-500 dark:to-purple-600 mt-2 animate-pulse-slow animate-delay-150"></div>
+                  {/* Nós e conexões animadas - Versão interativa e moderna */}
+                  <div className="relative w-full h-full flex justify-center items-center z-10">
+                    {/* Canvas interativo para os nós */}
+                    <div className="relative w-full max-w-xs h-full flex flex-col items-center justify-center" id="flow-interactive-preview">
+                      {/* Nó principal/conceito - Menor e mais moderno */}
+                      <div className="draggable-node cursor-move w-24 h-9 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-md flex items-center justify-center text-white text-xs font-medium mb-3 shadow-md hover:shadow-lg hover:shadow-blue-400/20 dark:hover:shadow-blue-500/10 transition-all duration-300 animate-float scale-90 hover:scale-100 transform-gpu"
+                           style={{touchAction: 'none'}}>
+                        <span className="flex flex-col items-center">
+                          <span className="text-[8px] uppercase tracking-wider opacity-70">Conceito</span>
+                          <span className="font-semibold text-[10px]">Principal</span>
+                        </span>
                       </div>
                       
-                      {/* Linha conectora entre nós */}
-                      <div className="absolute top-5 left-[18px] w-[108px] h-[2px] bg-gradient-to-r from-indigo-400 to-purple-400 dark:from-indigo-500 dark:to-purple-500 animate-expand-line"></div>
-                      
-                      {/* Nó de detalhes (direita) */}
-                      <div className="flex flex-col items-center">
-                        <div className="w-20 h-10 bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-500 dark:to-purple-600 rounded-lg flex items-center justify-center text-white text-xs font-medium shadow-md group-hover:shadow-purple-400/20 dark:group-hover:shadow-purple-500/10 transition-all duration-500 animate-float-delayed-200">
-                          <span className="font-medium">Detalhes</span>
-                        </div>
-                        <div className="w-[2px] h-6 bg-gradient-to-b from-purple-400 to-green-500 dark:from-purple-500 dark:to-green-600 mt-2 animate-pulse-slow animate-delay-250"></div>
+                      {/* Linha de conexão animada com pontilhado e movimento */}
+                      <div className="w-[1px] h-6 relative">
+                        <div className="absolute inset-0 border-r-2 border-dashed border-blue-400 dark:border-blue-500 animate-bounce-x"></div>
                       </div>
-                    </div>
-                    
-                    {/* Nó de conclusão */}
-                    <div className="w-28 h-12 bg-gradient-to-r from-green-500 to-emerald-500 dark:from-green-600 dark:to-emerald-600 rounded-lg flex items-center justify-center text-white text-xs font-medium shadow-lg group-hover:shadow-green-400/20 dark:group-hover:shadow-green-500/10 transition-all duration-500 animate-float-delayed-300">
-                      <span className="flex flex-col items-center">
-                        <span className="text-[10px] uppercase tracking-wider opacity-70">Síntese</span>
-                        <span className="font-semibold">Conclusão</span>
-                      </span>
+                      
+                      {/* Nós do meio com conexões */}
+                      <div className="flex items-center space-x-14 mb-3 relative">
+                        {/* Nó de contexto (esquerda) */}
+                        <div className="flex flex-col items-center">
+                          <div className="draggable-node cursor-move w-18 h-8 bg-gradient-to-r from-indigo-400 to-indigo-500 dark:from-indigo-500 dark:to-indigo-600 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-sm hover:shadow-md hover:shadow-indigo-400/20 dark:hover:shadow-indigo-500/10 transition-all duration-300 animate-float-delayed-100 scale-90 hover:scale-100 transform-gpu"
+                            style={{touchAction: 'none'}}>
+                            <span className="font-medium text-[10px]">Contexto</span>
+                          </div>
+                          <div className="w-[1px] h-5 relative mt-2">
+                            <div className="absolute inset-0 border-r-2 border-dashed border-indigo-400 dark:border-indigo-500 animate-bounce-x animate-delay-150"></div>
+                          </div>
+                        </div>
+                        
+                        {/* Linha conectora entre nós com pontilhado e animação */}
+                        <div className="absolute top-4 left-[18px] w-[86px] h-[1px]">
+                          <div className="absolute inset-0 border-t-2 border-dashed border-indigo-400 dark:border-indigo-500 animate-expand-line"></div>
+                        </div>
+                        
+                        {/* Nó de detalhes (direita) */}
+                        <div className="flex flex-col items-center">
+                          <div className="draggable-node cursor-move w-18 h-8 bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-500 dark:to-purple-600 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-sm hover:shadow-md hover:shadow-purple-400/20 dark:hover:shadow-purple-500/10 transition-all duration-300 animate-float-delayed-200 scale-90 hover:scale-100 transform-gpu"
+                            style={{touchAction: 'none'}}>
+                            <span className="font-medium text-[10px]">Detalhes</span>
+                          </div>
+                          <div className="w-[1px] h-5 relative mt-2">
+                            <div className="absolute inset-0 border-r-2 border-dashed border-purple-400 dark:border-purple-500 animate-bounce-x animate-delay-250"></div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Nó de conclusão */}
+                      <div className="draggable-node cursor-move w-24 h-9 bg-gradient-to-r from-green-500 to-emerald-500 dark:from-green-600 dark:to-emerald-600 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-md hover:shadow-lg hover:shadow-green-400/20 dark:hover:shadow-green-500/10 transition-all duration-300 animate-float-delayed-300 scale-90 hover:scale-100 transform-gpu"
+                           style={{touchAction: 'none'}}>
+                        <span className="flex flex-col items-center">
+                          <span className="text-[8px] uppercase tracking-wider opacity-70">Síntese</span>
+                          <span className="font-semibold text-[10px]">Conclusão</span>
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  
-                  {/* Área limpa para visualização do fluxograma */}
                 </div>
                 
                 {/* Rodapé com a mensagem do fluxograma */}

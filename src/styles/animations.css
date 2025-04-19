@@ -636,6 +636,15 @@
   }
 }
 
+@keyframes dashed-line-move {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 20px 0;
+  }
+}
+
 .animate-float {
   animation: float 3s ease-in-out infinite;
 }
@@ -671,10 +680,34 @@
   animation: bounce-x 1s ease-in-out infinite;
 }
 
+.animate-dashed-move {
+  animation: dashed-line-move 1.5s linear infinite;
+}
+
 .animate-delay-150 {
   animation-delay: 150ms;
 }
 
 .animate-delay-250 {
   animation-delay: 250ms;
+}
+
+/* Estilos adicionais para os nós arrastáveis */
+.draggable-node {
+  position: relative;
+  z-index: 10;
+  will-change: transform;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.draggable-node:hover {
+  box-shadow: 0 8px 16px -2px rgba(59, 130, 246, 0.3);
+  z-index: 20;
+}
+
+.draggable-node:active {
+  cursor: grabbing;
+  cursor: -webkit-grabbing;
+  z-index: 30;
 }
