@@ -1,4 +1,3 @@
-
 import React, { useCallback, useState } from 'react';
 import ReactFlow, {
   Controls,
@@ -229,7 +228,7 @@ const FluxogramaVisualizer: React.FC<FluxogramaVisualizerProps> = ({
         />
         <Background color="#aaa" gap={16} />
       </ReactFlow>
-      
+
       {selectedNode && (
         <Card className="p-4 mt-4 border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/30">
           <div className="flex items-center mb-2">

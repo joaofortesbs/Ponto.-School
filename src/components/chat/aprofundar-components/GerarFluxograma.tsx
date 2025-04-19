@@ -123,9 +123,8 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <FluxogramaVisualizer onNodeClick={handleNodeClick} />
-          {/* Painel de ações fixo */}
-          <div className="bg-white/80 dark:bg-gray-800/80 rounded-xl border border-gray-200/70 dark:border-gray-700/50 p-5 shadow-sm backdrop-blur-sm fixed bottom-4 right-4">
+          {/* O FluxogramaVisualizer agora está após este bloco */}
+          <div className="bg-white/80 dark:bg-gray-800/80 rounded-xl border border-gray-200/70 dark:border-gray-700/50 p-5 shadow-sm backdrop-blur-sm fixed bottom-4 right-4 w-[80%]"> {/* Increased width and moved to the bottom */}
             <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-3 flex items-center">
               <FileLineChart className="h-5 w-5 mr-2 text-blue-500" />
               Painel de Ações
@@ -158,6 +157,7 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
               </Button>
             </div>
           </div>
+          <FluxogramaVisualizer onNodeClick={handleNodeClick} />
         </div>
       ) : (
         <ScrollArea className="h-[50vh] pr-4">
