@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   Search,
@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { generateAIResponse } from '@/services/aiChatService';
 
 interface AprofundarModalProps {
   isOpen: boolean;
@@ -20,124 +19,22 @@ interface AprofundarModalProps {
   sessionId?: string; // Added sessionId prop type
   setShowAprofundarModal: any; // Added setShowAprofundarModal prop type
   toast: any; // Added toast prop type
+
 }
 
 type ContentType = 'main' | 'explicacao' | 'topicos' | 'exemplos' | 'erros' | 'fontes';
 
-interface ExplicacaoAvancadaContent {
-  contextoAprofundado: string;
-  termosTecnicos: Array<{termo: string, definicao: string}>;
-  aplicacoesExpandidas: string;
-}
-
 const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, messages, sessionId, setShowAprofundarModal, toast }) => {
   const [activeContent, setActiveContent] = useState<ContentType>('main');
   const [loading, setLoading] = useState(false);
-  const [explicacaoContent, setExplicacaoContent] = useState<ExplicacaoAvancadaContent>({
-    contextoAprofundado: '',
-    termosTecnicos: [],
-    aplicacoesExpandidas: ''
-  });
 
-  const handleOptionClick = async (option: ContentType) => {
+  const handleOptionClick = (option: ContentType) => {
     setLoading(true);
-    
-    if (option === 'explicacao') {
-      try {
-        // Obtém o último conteúdo da IA (última mensagem)
-        const lastMessage = messages && messages.length > 0 
-          ? messages[messages.length - 1].content 
-          : 'Não foi possível identificar o tema atual.';
-
-        // Envia o prompt para a IA
-        const promptExplicacaoAvancada = `Você está ajudando um estudante a aprofundar um tema específico. Com base no conteúdo original da aula ou pergunta respondida anteriormente, forneça uma versão expandida com:
-
-Contexto Aprofundado: traga contexto histórico, científico ou social sobre o tema.
-
-Termos Técnicos: liste e explique os principais termos técnicos presentes no conteúdo.
-
-Aplicações Expandidas: explique como esse conhecimento pode ser aplicado na prática ou em outras disciplinas.
-
-Seja didático, direto e evite jargões excessivos. Se possível, use exemplos e analogias.
-
-Conteúdo original: "${lastMessage}"
-
-Formato da resposta (use exatamente este formato JSON):
-{
-  "contextoAprofundado": "texto com contexto histórico, científico ou social sobre o tema",
-  "termosTecnicos": [
-    {"termo": "nome do termo 1", "definicao": "definição detalhada do termo 1"},
-    {"termo": "nome do termo 2", "definicao": "definição detalhada do termo 2"}
-  ],
-  "aplicacoesExpandidas": "texto explicando aplicações práticas deste conhecimento"
-}`;
-
-        const response = await generateAIResponse(
-          promptExplicacaoAvancada,
-          sessionId || 'explicacao_avancada_session',
-          {
-            intelligenceLevel: 'advanced',
-            languageStyle: 'formal'
-          }
-        );
-
-        try {
-          // Tenta fazer o parse da resposta como JSON
-          const parsedResponse = JSON.parse(response);
-          setExplicacaoContent(parsedResponse);
-        } catch (error) {
-          // Fallback: tenta extrair as seções da resposta em texto
-          const contextoMatch = response.match(/Contexto Aprofundado[:\s]+([\s\S]+?)(?=Termos Técnicos|Aplicações Expandidas|$)/i);
-          const termosMatch = response.match(/Termos Técnicos[:\s]+([\s\S]+?)(?=Aplicações Expandidas|$)/i);
-          const aplicacoesMatch = response.match(/Aplicações Expandidas[:\s]+([\s\S]+?)(?=$)/i);
-          
-          const contexto = contextoMatch ? contextoMatch[1].trim() : 'Não foi possível gerar o contexto.';
-          const aplicacoes = aplicacoesMatch ? aplicacoesMatch[1].trim() : 'Não foi possível gerar as aplicações.';
-          
-          let termos: Array<{termo: string, definicao: string}> = [];
-          if (termosMatch) {
-            const termosText = termosMatch[1];
-            const termosLines = termosText.split('\n').filter(line => line.trim());
-            
-            termosLines.forEach(line => {
-              const termoParts = line.split(':');
-              if (termoParts.length >= 2) {
-                termos.push({
-                  termo: termoParts[0].trim(),
-                  definicao: termoParts.slice(1).join(':').trim()
-                });
-              }
-            });
-          }
-          
-          if (termos.length === 0) {
-            termos = [{ termo: 'Nota', definicao: 'Não foi possível extrair os termos técnicos.' }];
-          }
-          
-          setExplicacaoContent({
-            contextoAprofundado: contexto,
-            termosTecnicos: termos,
-            aplicacoesExpandidas: aplicacoes
-          });
-        }
-      } catch (error) {
-        console.error('Erro ao gerar explicação avançada:', error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível gerar a explicação avançada.",
-          variant: "destructive"
-        });
-        
-        setExplicacaoContent({
-          contextoAprofundado: 'Não foi possível gerar o contexto aprofundado.',
-          termosTecnicos: [{ termo: 'Erro', definicao: 'Ocorreu um erro ao processar os termos técnicos.' }],
-          aplicacoesExpandidas: 'Não foi possível gerar as aplicações expandidas.'
-        });
-      }
-    }
-    
-    setActiveContent(option);
-    setLoading(false);
+    // Simula um tempo de carregamento
+    setTimeout(() => {
+      setActiveContent(option);
+      setLoading(false);
+    }, 500);
   };
 
   const handleBack = () => {
@@ -228,45 +125,37 @@ Formato da resposta (use exatamente este formato JSON):
       </div>
 
       <ScrollArea className="h-[60vh] pr-4">
-        {loading ? (
-          <div className="bg-blue-50/50 dark:bg-blue-950/20 rounded-xl p-4 border border-blue-100 dark:border-blue-900/30 mb-4">
-            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-              Gerando conteúdo aprofundado para você. Por favor, aguarde...
+        <div className="bg-blue-50/50 dark:bg-blue-950/20 rounded-xl p-4 border border-blue-100 dark:border-blue-900/30 mb-4">
+          <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+            O conteúdo solicitado está sendo preparado para você. Aqui você encontrará uma versão expandida da resposta original da IA, incluindo explicações mais detalhadas, termos técnicos, aplicações do conteúdo, contexto histórico e comparações com conceitos semelhantes.
+          </p>
+        </div>
+
+        <div className="space-y-6">
+          <div>
+            <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Contexto Aprofundado</h4>
+            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+              Aqui aparecerá o contexto histórico e científico aprofundado sobre o tema discutido.
             </p>
           </div>
-        ) : (
-          <div className="space-y-6">
-            <div>
-              <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Contexto Aprofundado</h4>
-              <div className="bg-blue-50/30 dark:bg-blue-950/10 p-4 rounded-lg border border-blue-100/60 dark:border-blue-900/20">
-                <p className="text-sm text-gray-700 dark:text-gray-300 mb-3 whitespace-pre-line">
-                  {explicacaoContent.contextoAprofundado}
-                </p>
-              </div>
-            </div>
 
-            <div>
-              <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Termos Técnicos</h4>
-              <div className="grid grid-cols-1 gap-3">
-                {explicacaoContent.termosTecnicos.map((item, index) => (
-                  <div key={index} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <span className="block font-medium text-blue-600 dark:text-blue-400 mb-1">{item.termo}</span>
-                    <span className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{item.definicao}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Aplicações Expandidas</h4>
-              <div className="bg-green-50/30 dark:bg-green-950/10 p-4 rounded-lg border border-green-100/60 dark:border-green-900/20">
-                <p className="text-sm text-gray-700 dark:text-gray-300 mb-3 whitespace-pre-line">
-                  {explicacaoContent.aplicacoesExpandidas}
-                </p>
+          <div>
+            <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Termos Técnicos</h4>
+            <div className="grid grid-cols-1 gap-3">
+              <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                <span className="block font-medium text-blue-600 dark:text-blue-400 mb-1">Termo técnico</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">Definição detalhada do termo aparecerá aqui.</span>
               </div>
             </div>
           </div>
-        )}
+
+          <div>
+            <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Aplicações Expandidas</h4>
+            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+              Aqui serão listadas as aplicações práticas e teóricas deste conhecimento.
+            </p>
+          </div>
+        </div>
       </ScrollArea>
     </div>
   );
