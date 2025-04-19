@@ -1,0 +1,47 @@
+[plugin:vite:react-swc] × Expected a semicolon
+     ╭─[/home/runner/workspace/src/components/chat/aprofundar-components/GerarFluxograma.tsx:269:1]
+ 269 │             }
+ 270 │             
+ 271 │             // Aplicar a transformação
+ 272 │             node.style.transform = `translate(${currentX}px, ${currentY}px) scale(1.05)`;
+     ·                                     ─────────
+ 273 │           };
+ 274 │           
+ 275 │           // Função para finalizar o arrasto
+     ╰────
+
+  × Expected a semicolon
+     ╭─[/home/runner/workspace/src/components/chat/aprofundar-components/GerarFluxograma.tsx:269:1]
+ 269 │             }
+ 270 │             
+ 271 │             // Aplicar a transformação
+ 272 │             node.style.transform = `translate(${currentX}px, ${currentY}px) scale(1.05)`;
+     ·                                                          ▲
+ 273 │           };
+ 274 │           
+ 275 │           // Função para finalizar o arrasto
+     ╰────
+
+  × Expected ';', '}' or <eof>
+     ╭─[/home/runner/workspace/src/components/chat/aprofundar-components/GerarFluxograma.tsx:269:1]
+ 269 │             }
+ 270 │             
+ 271 │             // Aplicar a transformação
+ 272 │             node.style.transform = `translate(${currentX}px, ${currentY}px) scale(1.05)`;
+     ·                                                          ──┬───
+     ·                                                            ╰── This is the expression part of an expression statement
+ 273 │           };
+ 274 │           
+ 275 │           // Função para finalizar o arrasto
+     ╰────
+
+
+Caused by:
+    Syntax Error
+/home/runner/workspace/src/components/chat/aprofundar-components/GerarFluxograma.tsx:269:1
+1967|                  </div>
+1968|                  
+1969|                  {/* Área de animação do fluxograma - Modernizada */}
+   |                ^
+1970|                  <div className="h-[220px] w-full relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/40 dark:from-gray-900/90 dark:via-blue-950/40 dark:to-indigo-950/30 flex items-center justify-center shadow-inner border border-blue-100/50 dark:border-blue-900/30 group-hover:border-blue-200 dark:group-hover:border-blue-800/50 transition-all duration-500" id="flow-preview-container">
+1971|                    {/* Fundo com padrão de grade */}
