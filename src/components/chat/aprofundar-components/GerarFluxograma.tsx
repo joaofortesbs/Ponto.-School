@@ -40,6 +40,26 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [manualContent, setManualContent] = useState('');
   const [showManualInput, setShowManualInput] = useState(false);
+  const [showSavedFluxogramas, setShowSavedFluxogramas] = useState(false);
+  const [savedFluxogramas, setSavedFluxogramas] = useState<Array<{
+    id: string;
+    title: string;
+    description?: string;
+    date: string;
+    data: any;
+  }>>([]);
+
+  // Carrega os fluxogramas salvos do localStorage
+  useEffect(() => {
+    try {
+      const savedData = localStorage.getItem('savedFluxogramas');
+      if (savedData) {
+        setSavedFluxogramas(JSON.parse(savedData));
+      }
+    } catch (error) {
+      console.error('Erro ao carregar fluxogramas salvos:', error);
+    }
+  }, []);
 
   const handleGenerateFlowchart = (option: 'ia' | 'manual') => {
     if (option === 'manual') {
@@ -57,6 +77,53 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
       setFluxogramaGerado(true);
       // Aqui seria implementada a lógica real de geração do fluxograma
     }, 3000);
+  };
+  
+  const handleSaveFluxograma = () => {
+    try {
+      // Obter os dados do fluxograma atual
+      const fluxogramaData = localStorage.getItem('fluxogramaData');
+      if (!fluxogramaData) {
+        console.error('Nenhum fluxograma disponível para salvar');
+        return;
+      }
+      
+      // Criar um novo objeto para o fluxograma salvo
+      const newSavedFluxograma = {
+        id: `flux_${Date.now()}`,
+        title: `Fluxograma ${savedFluxogramas.length + 1}`,
+        description: selectedOption === 'manual' ? manualContent.substring(0, 100) + '...' : 'Gerado pela IA',
+        date: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }),
+        data: JSON.parse(fluxogramaData)
+      };
+      
+      // Adicionar à lista de fluxogramas salvos
+      const updatedFluxogramas = [...savedFluxogramas, newSavedFluxograma];
+      setSavedFluxogramas(updatedFluxogramas);
+      
+      // Salvar no localStorage
+      localStorage.setItem('savedFluxogramas', JSON.stringify(updatedFluxogramas));
+      
+      // Mostrar mensagem de sucesso
+      alert('Fluxograma salvo com sucesso!');
+    } catch (error) {
+      console.error('Erro ao salvar fluxograma:', error);
+      alert('Erro ao salvar o fluxograma. Por favor, tente novamente.');
+    }
+  };
+  
+  const handleLoadSavedFluxograma = (fluxograma: any) => {
+    try {
+      // Salvar os dados do fluxograma selecionado para o visualizador
+      localStorage.setItem('fluxogramaData', JSON.stringify(fluxograma.data));
+      
+      // Mostrar o visualizador
+      setFluxogramaGerado(true);
+      setShowFluxograma(true);
+    } catch (error) {
+      console.error('Erro ao carregar fluxograma:', error);
+      alert('Erro ao carregar o fluxograma. Por favor, tente novamente.');
+    }
   };
 
   const handleSubmitManualContent = () => {
@@ -1060,7 +1127,11 @@ fluxograma:
                 <span className="text-xs text-gray-700 dark:text-gray-300 text-center">Ampliar</span>
               </Button>
 
-              <Button variant="outline" className="flex flex-col items-center justify-center h-auto py-3 px-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all">
+              <Button 
+                variant="outline" 
+                className="flex flex-col items-center justify-center h-auto py-3 px-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all"
+                onClick={handleSaveFluxograma}
+              >
                 <Save className="h-5 w-5 mb-1 text-blue-600 dark:text-blue-400" />
                 <span className="text-xs text-gray-700 dark:text-gray-300 text-center">Salvar</span>
               </Button>
@@ -1101,6 +1172,62 @@ fluxograma:
                   <span className="font-medium">Inserir meu próprio conteúdo</span>
                 </span>
               </Button>
+              
+              <Button
+                onClick={() => setShowSavedFluxogramas(!showSavedFluxogramas)}
+                variant="outline"
+                className="w-full py-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/40 dark:to-emerald-900/40 hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-900/60 dark:hover:to-emerald-900/60 shadow-sm border border-green-200 dark:border-green-800 rounded-xl backdrop-blur-sm group relative overflow-hidden flex items-center justify-center"
+              >
+                <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-green-100/50 to-emerald-100/50 dark:from-green-800/30 dark:to-emerald-800/30 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
+                <span className="relative flex items-center justify-center">
+                  <Save className="h-5 w-5 mr-2 transform group-hover:translate-y-px transition-transform text-green-600 dark:text-green-400" />
+                  <span className="font-medium text-green-700 dark:text-green-300">{showSavedFluxogramas ? "Ocultar fluxogramas salvos" : "Ver fluxogramas salvos"}</span>
+                </span>
+              </Button>
+              
+              {showSavedFluxogramas && (
+                <div className="mt-4 bg-white/80 dark:bg-gray-800/80 rounded-xl border border-gray-200/70 dark:border-gray-700/50 p-5 shadow-sm backdrop-blur-sm">
+                  <h4 className="text-md font-medium text-gray-900 dark:text-white mb-4 flex items-center">
+                    <Save className="h-5 w-5 mr-2 text-green-600 dark:text-green-400" />
+                    Fluxogramas Salvos
+                  </h4>
+                  
+                  {savedFluxogramas.length > 0 ? (
+                    <div className="space-y-3">
+                      {savedFluxogramas.map((fluxograma, index) => (
+                        <div 
+                          key={index}
+                          className="bg-white dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600 hover:border-green-300 dark:hover:border-green-500 transition-colors cursor-pointer"
+                          onClick={() => handleLoadSavedFluxograma(fluxograma)}
+                        >
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center">
+                              <FileLineChart className="h-4 w-4 mr-2 text-green-600 dark:text-green-400" />
+                              <span className="font-medium text-sm">{fluxograma.title || `Fluxograma ${index + 1}`}</span>
+                            </div>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">{fluxograma.date}</span>
+                          </div>
+                          {fluxograma.description && (
+                            <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 line-clamp-2 ml-6">
+                              {fluxograma.description}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 px-4">
+                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
+                        <FileLineChart className="h-6 w-6 text-gray-400 dark:text-gray-500" />
+                      </div>
+                      <h5 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Nenhum fluxograma salvo</h5>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
+                        Crie e salve seus fluxogramas para acessá-los posteriormente nesta seção.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-4 bg-white/80 dark:bg-gray-800/80 rounded-xl border border-gray-200/70 dark:border-gray-700/50 p-5 shadow-sm backdrop-blur-sm">
