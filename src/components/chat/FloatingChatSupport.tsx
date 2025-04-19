@@ -2320,6 +2320,19 @@ Exemplo de formato da resposta:
                                 
                                 setShowAprofundarModal(true);
                                 
+                                // Garantir que a mensagem atual seja a primeira na lista
+                                const currentMessageIndex = messages.findIndex(m => m.id === message.id);
+                                if (currentMessageIndex !== -1) {
+                                  const reorderedMessages = [...messages];
+                                  const [currentMessage] = reorderedMessages.splice(currentMessageIndex, 1);
+                                  reorderedMessages.unshift(currentMessage);
+                                  
+                                  // Forçar atualização do AprofundarModal com as mensagens reordenadas
+                                  setTimeout(() => {
+                                    setMessages(reorderedMessages);
+                                  }, 100);
+                                }
+                                
                                 toast({
                                   title: "Aprofundando no tema",
                                   description: "Gerando conteúdo mais detalhado sobre este tópico...",
