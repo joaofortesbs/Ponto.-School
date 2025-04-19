@@ -1942,136 +1942,156 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                 </span>
               </Button>
               
-              {/* Card único de Pré-visualização do Fluxograma */}
-              <div className="w-full mt-6 p-6 bg-white/80 dark:bg-gray-800/80 border border-blue-200/80 dark:border-blue-800/30 rounded-2xl shadow-lg backdrop-blur-xl relative overflow-hidden group hover:shadow-xl transition-all duration-500 hover:border-blue-300 dark:hover:border-blue-700">
-                {/* Efeitos decorativos */}
-                <div className="absolute -right-12 -top-12 w-24 h-24 bg-gradient-to-br from-blue-400/10 to-indigo-400/20 dark:from-blue-400/5 dark:to-indigo-400/10 rounded-full blur-md"></div>
-                <div className="absolute -left-12 -bottom-12 w-24 h-24 bg-gradient-to-tr from-purple-400/10 to-pink-400/20 dark:from-purple-500/5 dark:to-pink-500/10 rounded-full blur-md"></div>
-                
-                {/* Cabeçalho */}
-                <div className="flex items-center justify-between mb-4 relative z-10">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
-                      <Eye className="h-5 w-5 text-white" />
+              {/* Card de Pré-visualização ou Card de Processamento do Fluxograma */}
+              {!isLoading ? (
+                <div className="w-full mt-6 p-6 bg-white/80 dark:bg-gray-800/80 border border-blue-200/80 dark:border-blue-800/30 rounded-2xl shadow-lg backdrop-blur-xl relative overflow-hidden group hover:shadow-xl transition-all duration-500 hover:border-blue-300 dark:hover:border-blue-700">
+                  {/* Efeitos decorativos */}
+                  <div className="absolute -right-12 -top-12 w-24 h-24 bg-gradient-to-br from-blue-400/10 to-indigo-400/20 dark:from-blue-400/5 dark:to-indigo-400/10 rounded-full blur-md"></div>
+                  <div className="absolute -left-12 -bottom-12 w-24 h-24 bg-gradient-to-tr from-purple-400/10 to-pink-400/20 dark:from-purple-500/5 dark:to-pink-500/10 rounded-full blur-md"></div>
+                  
+                  {/* Cabeçalho */}
+                  <div className="flex items-center justify-between mb-4 relative z-10">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
+                        <Eye className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900 dark:text-white text-lg tracking-tight">Pré-visualização</h4>
+                        <p className="text-xs text-blue-600/80 dark:text-blue-400/80 font-medium">Fluxograma interativo</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white text-lg tracking-tight">Pré-visualização</h4>
-                      <p className="text-xs text-blue-600/80 dark:text-blue-400/80 font-medium">Fluxograma interativo</p>
+                    <div className="flex space-x-1">
+                      <span className="w-2 h-2 rounded-full bg-pink-400 animate-pulse"></span>
+                      <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse animate-delay-150"></span>
+                      <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse animate-delay-300"></span>
                     </div>
-                  </div>
-                  <div className="flex space-x-1">
-                    <span className="w-2 h-2 rounded-full bg-pink-400 animate-pulse"></span>
-                    <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse animate-delay-150"></span>
-                    <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse animate-delay-300"></span>
-                  </div>
-                </div>
-                
-                {/* Área de animação do fluxograma - Modernizada e Melhorada */}
-                <div className="h-[220px] w-full relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/40 dark:from-gray-900/90 dark:via-blue-950/40 dark:to-indigo-950/30 flex items-center justify-center shadow-inner border border-blue-100/50 dark:border-blue-900/30 group-hover:border-blue-200 dark:group-hover:border-blue-800/50 transition-all duration-500" id="flow-preview-container">
-                  {/* Fundo com padrão de pontos (estilo ReactFlow) */}
-                  <div className="absolute inset-0">
-                    {/* Grade de pontos animados - Pontos menores */}
-                    <div className="absolute inset-0 grid grid-cols-12 grid-rows-8">
-                      {Array.from({ length: 96 }).map((_, index) => (
-                        <div key={index} className="relative flex items-center justify-center">
-                          <div 
-                            className={`w-0.5 h-0.5 rounded-full bg-blue-400/15 dark:bg-blue-500/15 absolute animate-pulse-slow ${
-                              index % 3 === 0 ? 'animate-delay-100' : index % 3 === 1 ? 'animate-delay-200' : 'animate-delay-300'
-                            }`}
-                          ></div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="absolute inset-0 bg-[url('/images/pattern-grid.svg')] bg-center opacity-5 dark:opacity-10"></div>
                   </div>
                   
-                  {/* Nós e conexões animadas - Versão interativa e moderna com conexões melhoradas */}
-                  <div className="relative w-full h-full flex justify-center items-center z-10">
-                    {/* Canvas interativo para os nós */}
-                    <div className="relative w-full max-w-xs h-full flex flex-col items-center justify-center" id="flow-interactive-preview">
-                      {/* Layout em camadas para organização correta das linhas */}
-                      <div className="relative w-full flex flex-col items-center justify-between h-[170px]">
-                        {/* Camada 1: Nó principal/conceito - Menor */}
-                        <div className="draggable-node cursor-move w-20 h-8 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-md hover:shadow-lg hover:shadow-blue-400/20 dark:hover:shadow-blue-500/10 transition-all duration-300 animate-float scale-90 hover:scale-100 transform-gpu z-20"
-                             style={{touchAction: 'none'}}>
-                          <span className="flex flex-col items-center">
-                            <span className="text-[7px] uppercase tracking-wider opacity-70">Conceito</span>
-                            <span className="font-semibold text-[9px]">Principal</span>
-                          </span>
-                        </div>
-                        
-                        {/* Conexões verticais estáticas (do principal para os do meio) */}
-                        <div className="absolute top-[27px] left-1/2 transform -translate-x-1/2 w-0 h-[37px]">
-                          <div className="absolute left-0 w-0 h-full border-l-2 border-dashed border-blue-400 dark:border-blue-500 static-dashed"></div>
-                        </div>
-                        
-                        {/* Camada 2: Nós do meio com conexões laterais - Blocos menores */}
-                        <div className="flex items-center justify-center space-x-20 z-20 relative mb-2">
-                          {/* Nó de contexto (esquerda) - Menor */}
-                          <div className="draggable-node cursor-move w-16 h-7 bg-gradient-to-r from-indigo-400 to-indigo-500 dark:from-indigo-500 dark:to-indigo-600 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-sm hover:shadow-md hover:shadow-indigo-400/20 dark:hover:shadow-indigo-500/10 transition-all duration-300 animate-float-delayed-100 scale-90 hover:scale-100 transform-gpu"
+                  {/* Área de animação do fluxograma - Modernizada e Melhorada */}
+                  <div className="h-[220px] w-full relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/40 dark:from-gray-900/90 dark:via-blue-950/40 dark:to-indigo-950/30 flex items-center justify-center shadow-inner border border-blue-100/50 dark:border-blue-900/30 group-hover:border-blue-200 dark:group-hover:border-blue-800/50 transition-all duration-500" id="flow-preview-container">
+                    {/* Fundo com padrão de pontos (estilo ReactFlow) */}
+                    <div className="absolute inset-0">
+                      {/* Grade de pontos animados - Pontos menores */}
+                      <div className="absolute inset-0 grid grid-cols-12 grid-rows-8">
+                        {Array.from({ length: 96 }).map((_, index) => (
+                          <div key={index} className="relative flex items-center justify-center">
+                            <div 
+                              className={`w-0.5 h-0.5 rounded-full bg-blue-400/15 dark:bg-blue-500/15 absolute animate-pulse-slow ${
+                                index % 3 === 0 ? 'animate-delay-100' : index % 3 === 1 ? 'animate-delay-200' : 'animate-delay-300'
+                              }`}
+                            ></div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="absolute inset-0 bg-[url('/images/pattern-grid.svg')] bg-center opacity-5 dark:opacity-10"></div>
+                    </div>
+                    
+                    {/* Nós e conexões animadas - Versão interativa e moderna com conexões melhoradas */}
+                    <div className="relative w-full h-full flex justify-center items-center z-10">
+                      {/* Canvas interativo para os nós */}
+                      <div className="relative w-full max-w-xs h-full flex flex-col items-center justify-center" id="flow-interactive-preview">
+                        {/* Layout em camadas para organização correta das linhas */}
+                        <div className="relative w-full flex flex-col items-center justify-between h-[170px]">
+                          {/* Camada 1: Nó principal/conceito - Menor */}
+                          <div className="draggable-node cursor-move w-20 h-8 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-md hover:shadow-lg hover:shadow-blue-400/20 dark:hover:shadow-blue-500/10 transition-all duration-300 animate-float scale-90 hover:scale-100 transform-gpu z-20"
                               style={{touchAction: 'none'}}>
-                            <span className="font-medium text-[9px]">Contexto</span>
+                            <span className="flex flex-col items-center">
+                              <span className="text-[7px] uppercase tracking-wider opacity-70">Conceito</span>
+                              <span className="font-semibold text-[9px]">Principal</span>
+                            </span>
                           </div>
                           
-                          {/* Nó de detalhes (direita) - Menor */}
-                          <div className="draggable-node cursor-move w-16 h-7 bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-500 dark:to-purple-600 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-sm hover:shadow-md hover:shadow-purple-400/20 dark:hover:shadow-purple-500/10 transition-all duration-300 animate-float-delayed-200 scale-90 hover:scale-100 transform-gpu"
+                          {/* Conexões verticais estáticas (do principal para os do meio) */}
+                          <div className="absolute top-[27px] left-1/2 transform -translate-x-1/2 w-0 h-[37px]">
+                            <div className="absolute left-0 w-0 h-full border-l-2 border-dashed border-blue-400 dark:border-blue-500 static-dashed"></div>
+                          </div>
+                          
+                          {/* Camada 2: Nós do meio com conexões laterais - Blocos menores */}
+                          <div className="flex items-center justify-center space-x-20 z-20 relative mb-2">
+                            {/* Nó de contexto (esquerda) - Menor */}
+                            <div className="draggable-node cursor-move w-16 h-7 bg-gradient-to-r from-indigo-400 to-indigo-500 dark:from-indigo-500 dark:to-indigo-600 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-sm hover:shadow-md hover:shadow-indigo-400/20 dark:hover:shadow-indigo-500/10 transition-all duration-300 animate-float-delayed-100 scale-90 hover:scale-100 transform-gpu"
+                                style={{touchAction: 'none'}}>
+                              <span className="font-medium text-[9px]">Contexto</span>
+                            </div>
+                            
+                            {/* Nó de detalhes (direita) - Menor */}
+                            <div className="draggable-node cursor-move w-16 h-7 bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-500 dark:to-purple-600 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-sm hover:shadow-md hover:shadow-purple-400/20 dark:hover:shadow-purple-500/10 transition-all duration-300 animate-float-delayed-200 scale-90 hover:scale-100 transform-gpu"
+                                style={{touchAction: 'none'}}>
+                              <span className="font-medium text-[9px]">Detalhes</span>
+                            </div>
+                          </div>
+                          
+                          {/* Conexão horizontal entre os nós do meio - Estática */}
+                          <div className="absolute top-[73px] w-[72px] left-1/2 transform -translate-x-1/2 -translate-y-[1px]">
+                            <div className="absolute h-[2px] w-full border-t-2 border-dashed border-indigo-400 dark:border-indigo-500 static-dashed"></div>
+                          </div>
+                          
+                          {/* Conexões verticais dos nós do meio para o nó de conclusão - Estáticas */}
+                          <div className="absolute top-[85px] left-[calc(50%-50px)] w-0 h-[40px]">
+                            <div className="absolute left-0 w-0 h-full border-l-2 border-dashed border-indigo-400 dark:border-indigo-500 static-dashed"></div>
+                          </div>
+                          <div className="absolute top-[85px] left-[calc(50%+50px)] w-0 h-[40px]">
+                            <div className="absolute left-0 w-0 h-full border-l-2 border-dashed border-purple-400 dark:border-purple-500 static-dashed"></div>
+                          </div>
+                          
+                          {/* Camada 3: Nó de conclusão - Menor */}
+                          <div className="draggable-node cursor-move w-20 h-8 bg-gradient-to-r from-green-500 to-emerald-500 dark:from-green-600 dark:to-emerald-600 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-md hover:shadow-lg hover:shadow-green-400/20 dark:hover:shadow-green-500/10 transition-all duration-300 animate-float-delayed-300 scale-90 hover:scale-100 transform-gpu z-20"
                               style={{touchAction: 'none'}}>
-                            <span className="font-medium text-[9px]">Detalhes</span>
+                            <span className="flex flex-col items-center">
+                              <span className="text-[7px] uppercase tracking-wider opacity-70">Síntese</span>
+                              <span className="font-semibold text-[9px]">Conclusão</span>
+                            </span>
                           </div>
                         </div>
                         
-                        {/* Conexão horizontal entre os nós do meio - Estática */}
-                        <div className="absolute top-[73px] w-[72px] left-1/2 transform -translate-x-1/2 -translate-y-[1px]">
-                          <div className="absolute h-[2px] w-full border-t-2 border-dashed border-indigo-400 dark:border-indigo-500 static-dashed"></div>
+                        {/* Partículas flutuantes para efeito de movimento adicional */}
+                        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                          {Array.from({ length: 8 }).map((_, index) => (
+                            <div 
+                              key={`particle-${index}`}
+                              className={`absolute w-1 h-1 rounded-full bg-blue-400/30 dark:bg-blue-500/30 animate-floating-node`}
+                              style={{
+                                top: `${20 + Math.random() * 60}%`,
+                                left: `${20 + Math.random() * 60}%`,
+                                animationDelay: `${index * 0.5}s`,
+                                animationDuration: `${5 + Math.random() * 5}s`
+                              }}
+                            ></div>
+                          ))}
                         </div>
-                        
-                        {/* Conexões verticais dos nós do meio para o nó de conclusão - Estáticas */}
-                        <div className="absolute top-[85px] left-[calc(50%-50px)] w-0 h-[40px]">
-                          <div className="absolute left-0 w-0 h-full border-l-2 border-dashed border-indigo-400 dark:border-indigo-500 static-dashed"></div>
-                        </div>
-                        <div className="absolute top-[85px] left-[calc(50%+50px)] w-0 h-[40px]">
-                          <div className="absolute left-0 w-0 h-full border-l-2 border-dashed border-purple-400 dark:border-purple-500 static-dashed"></div>
-                        </div>
-                        
-                        {/* Camada 3: Nó de conclusão - Menor */}
-                        <div className="draggable-node cursor-move w-20 h-8 bg-gradient-to-r from-green-500 to-emerald-500 dark:from-green-600 dark:to-emerald-600 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-md hover:shadow-lg hover:shadow-green-400/20 dark:hover:shadow-green-500/10 transition-all duration-300 animate-float-delayed-300 scale-90 hover:scale-100 transform-gpu z-20"
-                             style={{touchAction: 'none'}}>
-                          <span className="flex flex-col items-center">
-                            <span className="text-[7px] uppercase tracking-wider opacity-70">Síntese</span>
-                            <span className="font-semibold text-[9px]">Conclusão</span>
-                          </span>
-                        </div>
-                      </div>
-                      
-                      {/* Partículas flutuantes para efeito de movimento adicional */}
-                      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                        {Array.from({ length: 8 }).map((_, index) => (
-                          <div 
-                            key={`particle-${index}`}
-                            className={`absolute w-1 h-1 rounded-full bg-blue-400/30 dark:bg-blue-500/30 animate-floating-node`}
-                            style={{
-                              top: `${20 + Math.random() * 60}%`,
-                              left: `${20 + Math.random() * 60}%`,
-                              animationDelay: `${index * 0.5}s`,
-                              animationDuration: `${5 + Math.random() * 5}s`
-                            }}
-                          ></div>
-                        ))}
                       </div>
                     </div>
                   </div>
-                </div>
-                
-                {/* Rodapé com a mensagem do fluxograma */}
-                <div className="mt-4 flex justify-center items-center">
-                  <div className="bg-white/90 dark:bg-gray-800/90 px-4 py-2 rounded-full shadow-md backdrop-blur-sm border border-blue-100/50 dark:border-blue-900/30">
-                    <p className="text-sm text-blue-600 dark:text-blue-400 font-medium flex items-center">
-                      <span className="animate-blink mr-2 h-2 w-2 rounded-full bg-blue-500"></span>
-                      O fluxograma gerado aparecerá aqui!
-                    </p>
+                  
+                  {/* Rodapé com a mensagem do fluxograma */}
+                  <div className="mt-4 flex justify-center items-center">
+                    <div className="bg-white/90 dark:bg-gray-800/90 px-4 py-2 rounded-full shadow-md backdrop-blur-sm border border-blue-100/50 dark:border-blue-900/30">
+                      <p className="text-sm text-blue-600 dark:text-blue-400 font-medium flex items-center">
+                        <span className="animate-blink mr-2 h-2 w-2 rounded-full bg-blue-500"></span>
+                        O fluxograma gerado aparecerá aqui!
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="mt-6 bg-[#131A2B] rounded-xl p-6 shadow-lg flex flex-col items-center justify-center max-w-xl mx-auto">
+                  <div className="mb-4">
+                    <div className="h-16 w-16 rounded-full bg-[#2C3E87] flex items-center justify-center">
+                      <svg className="animate-spin h-8 w-8 text-[#6B8AFF]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </div>
+                  </div>
+                  <h4 className="text-lg font-medium text-white mb-2">Processando o Fluxograma</h4>
+                  <p className="text-sm text-gray-300 text-center mb-6">
+                    Estamos analisando o conteúdo e construindo um fluxograma visual para facilitar sua compreensão.
+                  </p>
+                  <div className="w-full bg-[#1E2A45] rounded-full h-2.5 overflow-hidden">
+                    <div className="bg-[#4C78FF] h-2.5 rounded-full animate-progress"></div>
+                  </div>
+                </div>
+              )}
               
               <Button
                 onClick={() => setShowSavedFluxogramas(!showSavedFluxogramas)}
@@ -2154,25 +2174,7 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
             </div>
           )}
 
-          {isLoading && (
-            <div className="mt-6 bg-[#131A2B] rounded-xl p-6 shadow-lg flex flex-col items-center justify-center max-w-xl mx-auto">
-              <div className="mb-4">
-                <div className="h-16 w-16 rounded-full bg-[#2C3E87] flex items-center justify-center">
-                  <svg className="animate-spin h-8 w-8 text-[#6B8AFF]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                </div>
-              </div>
-              <h4 className="text-lg font-medium text-white mb-2">Processando o Fluxograma</h4>
-              <p className="text-sm text-gray-300 text-center mb-6">
-                Estamos analisando o conteúdo e construindo um fluxograma visual para facilitar sua compreensão.
-              </p>
-              <div className="w-full bg-[#1E2A45] rounded-full h-2.5 overflow-hidden">
-                <div className="bg-[#4C78FF] h-2.5 rounded-full animate-progress"></div>
-              </div>
-            </div>
-          )}
+          {/* Card de processamento agora está integrado diretamente na visualização condicional acima */}
 
           {selectedOption === 'ia' && !isLoading && fluxogramaGerado && (
             <div className="mt-6 space-y-6">
