@@ -1017,43 +1017,47 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
   
   const exportAsImage = () => {
     return new Promise<boolean>((resolve, reject) => {
-      // Encontrar o elemento do fluxograma
-      const flowWrapper = document.querySelector('.react-flow');
-      if (!flowWrapper) {
-        alert('Não foi possível encontrar o fluxograma para exportar.');
-        reject('Elemento do fluxograma não encontrado');
-        return;
-      }
-      
-      // Mostrar indicador visual de que está processando
-      const loadingIndicator = document.createElement('div');
-      loadingIndicator.className = 'fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-[9999]';
-      loadingIndicator.innerHTML = `
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 flex flex-col items-center">
-          <svg class="animate-spin h-8 w-8 text-blue-600 dark:text-blue-400 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <span class="text-sm text-gray-700 dark:text-gray-300">Exportando fluxograma...</span>
-        </div>
-      `;
-      document.body.appendChild(loadingIndicator);
-      
-      try {
-        // Configurar opções para melhor qualidade
-        const options = {
-          quality: 1,
-          backgroundColor: document.documentElement.classList.contains('dark') ? '#111827' : '#ffffff',
-          style: {
-            margin: '20px'
-          },
-          pixelRatio: 2, // Aumentar resolução da imagem exportada
-          cacheBust: true, // Evitar cache para garantir que a imagem atual seja exportada
-          filter: (node: HTMLElement) => !node.classList?.contains('react-flow__minimap') // Excluir o minimapa se existir
-        };
+      // Adicionando timeout para garantir que o fluxograma esteja completamente renderizado
+      setTimeout(() => {
+        // Encontrar o elemento do fluxograma
+        const flowWrapper = document.querySelector('.react-flow');
+        if (!flowWrapper) {
+          alert('Não foi possível encontrar o fluxograma para exportar.');
+          reject('Elemento do fluxograma não encontrado');
+          return;
+        }
         
-        // Exportar como PNG
-        setTimeout(() => {
+        // Mostrar indicador visual de que está processando
+        const loadingIndicator = document.createElement('div');
+        loadingIndicator.className = 'fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-[9999]';
+        loadingIndicator.innerHTML = `
+          <div class="bg-white dark:bg-gray-800 rounded-lg p-4 flex flex-col items-center">
+            <svg class="animate-spin h-8 w-8 text-blue-600 dark:text-blue-400 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="text-sm text-gray-700 dark:text-gray-300">Exportando fluxograma...</span>
+          </div>
+        `;
+        document.body.appendChild(loadingIndicator);
+        
+        try {
+          // Forçar repintagem do elemento para garantir que está completamente renderizado
+          window.dispatchEvent(new Event('resize'));
+          
+          // Configurar opções para melhor qualidade
+          const options = {
+            quality: 1,
+            backgroundColor: document.documentElement.classList.contains('dark') ? '#111827' : '#ffffff',
+            style: {
+              margin: '20px'
+            },
+            pixelRatio: 2, // Aumentar resolução da imagem exportada
+            cacheBust: true, // Evitar cache para garantir que a imagem atual seja exportada
+            filter: (node: HTMLElement) => !node.classList?.contains('react-flow__minimap') // Excluir o minimapa se existir
+          };
+          
+          // Exportar como PNG com tratamento de erro robusto
           htmlToImage.toPng(flowWrapper as HTMLElement, options)
             .then(dataUrl => {
               // Remover o indicador de carregamento
@@ -1083,16 +1087,46 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
               loadingIndicator.remove();
               
               console.error('Erro ao exportar fluxograma:', error);
-              alert('Ocorreu um erro ao exportar o fluxograma. Por favor, tente novamente.');
-              reject(error);
+              
+              // Tente um fallback método
+              try {
+                console.log("Tentando método alternativo de exportação...");
+                htmlToImage.toCanvas(flowWrapper as HTMLElement, options)
+                  .then(canvas => {
+                    const dataUrl = canvas.toDataURL('image/png');
+                    const link = document.createElement('a');
+                    link.download = `fluxograma_${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
+                    link.href = dataUrl;
+                    link.click();
+                    
+                    const successMessage = document.createElement('div');
+                    successMessage.className = 'fixed bottom-4 right-4 bg-green-50 dark:bg-green-900 text-green-800 dark:text-green-100 px-4 py-2 rounded-md shadow-md border border-green-200 dark:border-green-800 z-50';
+                    successMessage.innerHTML = 'Fluxograma exportado com sucesso!';
+                    document.body.appendChild(successMessage);
+                    
+                    setTimeout(() => {
+                      successMessage.remove();
+                    }, 3000);
+                    
+                    resolve(true);
+                  })
+                  .catch(fallbackError => {
+                    console.error('Erro no método alternativo:', fallbackError);
+                    alert('Ocorreu um erro ao exportar o fluxograma. Por favor, tente novamente.');
+                    reject(fallbackError);
+                  });
+              } catch (fallbackError) {
+                alert('Ocorreu um erro ao exportar o fluxograma. Por favor, tente novamente.');
+                reject(error);
+              }
             });
-        }, 500); // Adicionado um timeout para garantir que o fluxograma esteja totalmente renderizado
-      } catch (error) {
-        loadingIndicator.remove();
-        console.error('Erro no processo de exportação:', error);
-        alert('Ocorreu um erro ao preparar a exportação. Por favor, tente novamente.');
-        reject(error);
-      }
+        } catch (error) {
+          loadingIndicator.remove();
+          console.error('Erro no processo de exportação:', error);
+          alert('Ocorreu um erro ao preparar a exportação. Por favor, tente novamente.');
+          reject(error);
+        }
+      }, 300); // Timeout inicial para garantir que o fluxograma esteja totalmente renderizado
     });
   };
 
@@ -1369,72 +1403,80 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                       oldMenu.remove();
                     }
                     
-                    exportMenu.innerHTML = `
-                      <div class="flex flex-col space-y-1">
-                        <button 
-                          class="text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 cursor-pointer"
-                          id="export-img-button"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          Exportar em .IMG
-                        </button>
-                        <button class="text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 opacity-60 cursor-not-allowed" disabled>
-                          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                          Exportar em PDF
-                        </button>
-                        <button class="text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 opacity-60 cursor-not-allowed" disabled>
-                          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                          Exportar em Texto
-                        </button>
-                      </div>
-                    `;
-                    
-                    // Adicionar para body com um wrapper para prevenir eventos de mouse passando
-                    const menuWrapper = document.createElement('div');
-                    menuWrapper.className = 'fixed inset-0 z-[9998]';
-                    menuWrapper.style.pointerEvents = 'none'; // Permite cliques passarem através do wrapper
-                    document.body.appendChild(menuWrapper);
-                    
-                    // O menu em si deve capturar eventos
-                    exportMenu.style.pointerEvents = 'auto';
-                    menuWrapper.appendChild(exportMenu);
-                    
                     // Posicionar o menu em relação ao botão
                     const buttonRect = e.currentTarget.getBoundingClientRect();
                     exportMenu.style.top = `${buttonRect.top - 120}px`;
                     exportMenu.style.left = `${buttonRect.left - 20}px`;
+                    exportMenu.style.pointerEvents = 'auto'; // Importante: garantir que receba eventos de mouse
                     
-                    // Configurar o evento de clique para o botão 'Exportar em .IMG'
-                    const exportImgButton = document.getElementById('export-img-button');
-                    if (exportImgButton) {
-                      exportImgButton.addEventListener('click', () => {
-                        exportAsImage().then(() => {
-                          menuWrapper.remove();
-                        }).catch(error => {
-                          console.error('Erro ao exportar imagem:', error);
-                          alert('Ocorreu um erro ao exportar o fluxograma. Por favor, tente novamente.');
-                          menuWrapper.remove();
-                        });
+                    // Criar o menu usando elementos DOM em vez de innerHTML para melhor controle
+                    const menuContent = document.createElement('div');
+                    menuContent.className = 'flex flex-col space-y-1';
+                    
+                    // Botão Exportar IMG
+                    const exportImgButton = document.createElement('button');
+                    exportImgButton.id = 'export-img-button';
+                    exportImgButton.className = 'text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 cursor-pointer';
+                    exportImgButton.innerHTML = `
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      Exportar em .IMG
+                    `;
+                    
+                    // Botão PDF (desativado)
+                    const exportPdfButton = document.createElement('button');
+                    exportPdfButton.className = 'text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 opacity-60 cursor-not-allowed';
+                    exportPdfButton.disabled = true;
+                    exportPdfButton.innerHTML = `
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Exportar em PDF
+                    `;
+                    
+                    // Botão Texto (desativado)
+                    const exportTextButton = document.createElement('button');
+                    exportTextButton.className = 'text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 opacity-60 cursor-not-allowed';
+                    exportTextButton.disabled = true;
+                    exportTextButton.innerHTML = `
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Exportar em Texto
+                    `;
+                    
+                    // Montar o menu
+                    menuContent.appendChild(exportImgButton);
+                    menuContent.appendChild(exportPdfButton);
+                    menuContent.appendChild(exportTextButton);
+                    exportMenu.appendChild(menuContent);
+                    
+                    // Adicionar o menu ao DOM
+                    document.body.appendChild(exportMenu);
+                    
+                    // Configurar evento de clique para exportar em .IMG
+                    exportImgButton.onclick = (event) => {
+                      event.stopPropagation();
+                      exportAsImage().then(() => {
+                        exportMenu.remove();
+                      }).catch(error => {
+                        console.error('Erro ao exportar imagem:', error);
+                        alert('Ocorreu um erro ao exportar o fluxograma. Por favor, tente novamente.');
+                        exportMenu.remove();
                       });
-                    }
+                    };
                     
                     // Fechar o menu ao clicar fora dele
                     const closeMenu = (event: MouseEvent) => {
                       if (!exportMenu.contains(event.target as Node) && 
                           event.target !== e.currentTarget) {
-                        menuWrapper.remove();
+                        exportMenu.remove();
                         document.removeEventListener('click', closeMenu);
                       }
                     };
                     
                     // Adicionar listener para fechar o menu
-                    // Atraso pequeno para evitar que o menu feche imediatamente
                     setTimeout(() => {
                       document.addEventListener('click', closeMenu);
                     }, 100);
