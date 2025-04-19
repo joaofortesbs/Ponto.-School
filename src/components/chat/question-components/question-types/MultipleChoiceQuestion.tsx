@@ -60,31 +60,53 @@ export const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
       const isCorrect = option.isCorrect === true;
       // Mostrar a resposta correta apenas se o usuário clicou em "Ver resposta"
       const showCorrectAnswer = showExplanation && selectedOption !== null;
+      
+      // Verificar se esta é a opção selecionada pelo usuário e está incorreta
+      const isSelectedAndIncorrect = showCorrectAnswer && selectedOption === letter && !isCorrect;
 
       return (
         <div 
           key={option.id}
           className={`flex items-center space-x-2 p-2 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 ${
-            selectedOption === letter 
+            selectedOption === letter && !showCorrectAnswer
               ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700' 
               : ''
           } ${
             showCorrectAnswer && isCorrect 
               ? 'bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700' 
               : ''
+          } ${
+            isSelectedAndIncorrect
+              ? 'bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700'
+              : ''
           }`}
           onClick={() => onOptionSelect(letter)}
         >
           <div className={`flex items-center justify-center w-6 h-6 rounded-full border ${
-            selectedOption === letter 
+            selectedOption === letter && !showCorrectAnswer
               ? 'border-blue-500 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' 
               : showCorrectAnswer && isCorrect
                 ? 'border-green-500 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300'
-                : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+                : isSelectedAndIncorrect
+                  ? 'border-red-500 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300'
+                  : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
           }`}>
             <span className="text-xs font-medium">{letter}</span>
           </div>
           <span className="text-sm text-gray-700 dark:text-gray-300">{option.text}</span>
+          
+          {/* Ícones de verificação (correto) ou X (incorreto) */}
+          {showCorrectAnswer && isCorrect && (
+            <svg className="w-5 h-5 text-green-500 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+          )}
+          
+          {isSelectedAndIncorrect && (
+            <svg className="w-5 h-5 text-red-500 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          )}
         </div>
       );
     });
