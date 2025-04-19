@@ -1970,12 +1970,14 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                 <div className="h-[220px] w-full relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/40 dark:from-gray-900/90 dark:via-blue-950/40 dark:to-indigo-950/30 flex items-center justify-center shadow-inner border border-blue-100/50 dark:border-blue-900/30 group-hover:border-blue-200 dark:group-hover:border-blue-800/50 transition-all duration-500" id="flow-preview-container">
                   {/* Fundo com padrão de pontos (estilo ReactFlow) */}
                   <div className="absolute inset-0">
-                    {/* Grade de pontos estáticos */}
-                    <div className="absolute inset-0 grid grid-cols-16 grid-rows-10">
-                      {Array.from({ length: 160 }).map((_, index) => (
+                    {/* Grade de pontos animados */}
+                    <div className="absolute inset-0 grid grid-cols-12 grid-rows-8">
+                      {Array.from({ length: 96 }).map((_, index) => (
                         <div key={index} className="relative flex items-center justify-center">
                           <div 
-                            className="w-[0.5px] h-[0.5px] rounded-full bg-blue-400/15 dark:bg-blue-500/15 absolute"
+                            className={`w-1 h-1 rounded-full bg-blue-400/20 dark:bg-blue-500/20 absolute animate-pulse-slow ${
+                              index % 3 === 0 ? 'animate-delay-100' : index % 3 === 1 ? 'animate-delay-200' : 'animate-delay-300'
+                            }`}
                           ></div>
                         </div>
                       ))}
@@ -1983,7 +1985,7 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                     <div className="absolute inset-0 bg-[url('/images/pattern-grid.svg')] bg-center opacity-5 dark:opacity-10"></div>
                   </div>
                   
-                  {/* Nós e conexões - Versão interativa e moderna com conexões melhoradas e alinhadas */}
+                  {/* Nós e conexões animadas - Versão interativa e moderna com conexões melhoradas */}
                   <div className="relative w-full h-full flex justify-center items-center z-10">
                     {/* Canvas interativo para os nós */}
                     <div className="relative w-full max-w-xs h-full flex flex-col items-center justify-center" id="flow-interactive-preview">
@@ -1998,9 +2000,9 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                           </span>
                         </div>
                         
-                        {/* Conexões verticais estáticas (do principal para os do meio) - linha única centralizada */}
+                        {/* Conexões verticais animadas (do principal para os do meio) */}
                         <div className="absolute top-[27px] left-1/2 transform -translate-x-1/2 w-0 h-[37px]">
-                          <div className="absolute left-0 w-0 h-full border-l-[1px] border-dotted border-blue-400 dark:border-blue-500"></div>
+                          <div className="absolute left-0 w-0 h-full border-l-2 border-dashed border-blue-400 dark:border-blue-500 animate-dashed-move"></div>
                         </div>
                         
                         {/* Camada 2: Nós do meio com conexões laterais */}
@@ -2018,17 +2020,17 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                           </div>
                         </div>
                         
-                        {/* Conexão horizontal entre os nós do meio - linha reta e fina */}
-                        <div className="absolute top-[73px] w-[90px] left-1/2 transform -translate-x-1/2 -translate-y-[1px]">
-                          <div className="absolute h-[1px] w-full border-t-[1px] border-dotted border-indigo-400 dark:border-indigo-500"></div>
+                        {/* Conexão horizontal entre os nós do meio */}
+                        <div className="absolute top-[73px] w-[82px] left-1/2 transform -translate-x-1/2 -translate-y-[1px]">
+                          <div className="absolute h-[2px] w-full border-t-2 border-dashed border-indigo-400 dark:border-indigo-500 animate-expand-line"></div>
                         </div>
                         
-                        {/* Conexões verticais dos nós do meio para o nó de conclusão - alinhadas corretamente */}
+                        {/* Conexões verticais dos nós do meio para o nó de conclusão */}
                         <div className="absolute top-[85px] left-[calc(50%-60px)] w-0 h-[40px]">
-                          <div className="absolute left-0 w-0 h-full border-l-[1px] border-dotted border-indigo-400 dark:border-indigo-500"></div>
+                          <div className="absolute left-0 w-0 h-full border-l-2 border-dashed border-indigo-400 dark:border-indigo-500 animate-dashed-move animate-delay-100"></div>
                         </div>
                         <div className="absolute top-[85px] left-[calc(50%+60px)] w-0 h-[40px]">
-                          <div className="absolute left-0 w-0 h-full border-l-[1px] border-dotted border-purple-400 dark:border-purple-500"></div>
+                          <div className="absolute left-0 w-0 h-full border-l-2 border-dashed border-purple-400 dark:border-purple-500 animate-dashed-move animate-delay-200"></div>
                         </div>
                         
                         {/* Camada 3: Nó de conclusão */}
@@ -2041,15 +2043,17 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                         </div>
                       </div>
                       
-                      {/* Partículas estáticas para dar profundidade sem movimento excessivo */}
+                      {/* Partículas flutuantes para efeito de movimento adicional */}
                       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                        {Array.from({ length: 12 }).map((_, index) => (
+                        {Array.from({ length: 8 }).map((_, index) => (
                           <div 
                             key={`particle-${index}`}
-                            className="absolute w-[0.5px] h-[0.5px] rounded-full bg-blue-400/20 dark:bg-blue-500/20"
+                            className={`absolute w-1 h-1 rounded-full bg-blue-400/30 dark:bg-blue-500/30 animate-floating-node`}
                             style={{
-                              top: `${15 + Math.random() * 70}%`,
-                              left: `${15 + Math.random() * 70}%`
+                              top: `${20 + Math.random() * 60}%`,
+                              left: `${20 + Math.random() * 60}%`,
+                              animationDelay: `${index * 0.5}s`,
+                              animationDuration: `${5 + Math.random() * 5}s`
                             }}
                           ></div>
                         ))}
