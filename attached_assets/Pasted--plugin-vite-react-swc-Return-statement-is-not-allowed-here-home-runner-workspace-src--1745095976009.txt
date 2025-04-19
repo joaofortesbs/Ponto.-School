@@ -1,0 +1,939 @@
+[plugin:vite:react-swc] × Return statement is not allowed here
+      ╭─[/home/runner/workspace/src/components/chat/aprofundar-components/GerarFluxograma.tsx:1352:1]
+ 1352 │       };
+ 1353 │     
+ 1354 │     
+ 1355 │ ╭─▶   return (
+ 1356 │ │       <div className="space-y-4">
+ 1357 │ │         <div className="flex items-center mb-2">
+ 1358 │ │           <Button 
+ 1359 │ │             onClick={handleBack} 
+ 1360 │ │             variant="ghost" 
+ 1361 │ │             size="sm" 
+ 1362 │ │             className="mr-2 h-8 w-8 p-0 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+ 1363 │ │           >
+ 1364 │ │             <ArrowLeft className="h-4 w-4" />
+ 1365 │ │           </Button>
+ 1366 │ │           <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+ 1367 │ │             <FileLineChart className="h-5 w-5 mr-2 text-blue-500" />
+ 1368 │ │             Criar Fluxograma do Tema
+ 1369 │ │           </h3>
+ 1370 │ │         </div>
+ 1371 │ │   
+ 1372 │ │         {showFluxograma ? (
+ 1373 │ │           <div className="space-y-4 w-full max-w-5xl mx-auto fluxograma-modal-container">
+ 1374 │ │             <div className="flex justify-between items-center mb-2">
+ 1375 │ │               <h4 className="text-md font-medium text-gray-900 dark:text-white">Fluxograma Interativo</h4>
+ 1376 │ │               <Button
+ 1377 │ │                 onClick={handleCloseFluxograma}
+ 1378 │ │                 variant="ghost"
+ 1379 │ │                 size="sm"
+ 1380 │ │                 className="h-8 w-8 p-0"
+ 1381 │ │               >
+ 1382 │ │                 <X className="h-4 w-4" />
+ 1383 │ │               </Button>
+ 1384 │ │             </div>
+ 1385 │ │             <div className="h-[70vh] w-full">
+ 1386 │ │               <FluxogramaVisualizer onNodeClick={handleNodeClick} />
+ 1387 │ │             </div>
+ 1388 │ │             {/* Painel de ações fixo compacto */}
+ 1389 │ │             <div className="bg-white/90 dark:bg-gray-800/90 rounded-xl border border-gray-200/70 dark:border-gray-700/50 p-3 shadow-sm backdrop-blur-sm fixed bottom-8 right-8 z-50">
+ 1390 │ │               <div className="flex items-center space-x-2">
+ 1391 │ │                 <div className="tooltip-container relative group">
+ 1392 │ │                   <Button 
+ 1393 │ │                     variant="ghost" 
+ 1394 │ │                     size="icon"
+ 1395 │ │                     onClick={() => {
+ 1396 │ │                       setIsLoading(true);
+ 1397 │ │                       setShowFluxograma(false);
+ 1398 │ │                       
+ 1399 │ │                       // Reutilizar a lógica de geração do fluxograma
+ 1400 │ │                       const regenerateFluxograma = async () => {
+ 1401 │ │                         // Remover dados anteriores
+ 1402 │ │                         localStorage.removeItem('fluxogramaData');
+ 1403 │ │                         
+ 1404 │ │                         // Gerar novo fluxograma usando o conteúdo já processado
+ 1405 │ │                         const sourceOption = selectedOption || 'ia';
+ 1406 │ │                         const contentToProcess = sourceOption === 'manual' 
+ 1407 │ │                           ? manualContent 
+ 1408 │ │                           : aprofundadoContent?.contexto || '';
+ 1409 │ │                         
+ 1410 │ │                         if (!contentToProcess.trim()) {
+ 1411 │ │                           setIsLoading(false);
+ 1412 │ │                           alert('Não há conteúdo disponível para regenerar o fluxograma.');
+ 1413 │ │                           return;
+ 1414 │ │                         }
+ 1415 │ │                         
+ 1416 │ │                         // Processar novamente seguindo a lógica existente
+ 1417 │ │                         try {
+ 1418 │ │                           // Importar o serviço de IA
+ 1419 │ │                           const { generateAIResponse } = await import('@/services/aiChatService');
+ 1420 │ │                           
+ 1421 │ │                           // Criar um ID de sessão único
+ 1422 │ │                           const sessionId = `fluxograma_regen_${Date.now()}`;
+ 1423 │ │                           
+ 1424 │ │                           // Usar o mesmo prompt para obter consistência
+ 1425 │ │                           const prompt = `
+ 1426 │ │   Com base na seguinte explicação sobre o tema, gere um fluxograma interativo no formato do React Flow:
+ 1427 │ │   
+ 1428 │ │   ${contentToProcess}
+ 1429 │ │   
+ 1430 │ │   Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
+ 1431 │ │   
+ 1432 │ │   1. Comece com um CONCEITO CENTRAL (nó inicial):
+ 1433 │ │      - Defina o tema de forma objetiva e clara
+ 1434 │ │      - Ex: "O que é fotossíntese?"
+ 1435 │ │   
+ 1436 │ │   2. Adicione CONTEXTUALIZAÇÃO E PRÉ-REQUISITOS:
+ 1437 │ │      - Conhecimentos prévios necessários
+ 1438 │ │      - Termos importantes para entender o tema
+ 1439 │ │      - Base científica/histórica relevante
+ 1440 │ │   
+ 1441 │ │   3. Detalhe o PROCESSO, MECANISMO OU LÓGICA DO TEMA:
+ 1442 │ │      - Passo a passo da explicação em etapas numeradas
+ 1443 │ │      - Fluxo de causa e efeito
+ 1444 │ │      - Ex: "Etapa 1: Captação de luz → Etapa 2: Transformação química → Etapa 3: Liberação de oxigênio"
+ 1445 │ │   
+ 1446 │ │   4. Inclua uma CAMADA DE APLICAÇÃO/PRÁTICA:
+ 1447 │ │      - Exemplos práticos ou situações-problema
+ 1448 │ │      - Destaque erros comuns e dicas
+ 1449 │ │      - Inclua nós de decisão do tipo: "Se o aluno pensar A → Mostrar que está errado" / "Se pensar B → Está correto"
+ 1450 │ │   
+ 1451 │ │   5. Finalize com CONCLUSÃO OU RESULTADO FINAL:
+ 1452 │ │      - Síntese do aprendizado
+ 1453 │ │      - Resumo visual
+ 1454 │ │      - Dica de ouro ou aplicação em provas
+ 1455 │ │   
+ 1456 │ │   // Outras instruções detalhadas mantidas...
+ 1457 │ │   `;
+ 1458 │ │                           
+ 1459 │ │                           // Chamar a API de IA
+ 1460 │ │                           const response = await generateAIResponse(prompt, sessionId, {
+ 1461 │ │                             intelligenceLevel: 'advanced',
+ 1462 │ │                             detailedResponse: true
+ 1463 │ │                           });
+ 1464 │ │                           
+ 1465 │ │                           // Processar a resposta e salvar os dados
+ 1466 │ │                           // Usar a lógica existente, mas simplificada
+ 1467 │ │                           let extractedData;
+ 1468 │ │                           try {
+ 1469 │ │                             const jsonMatch = response.match(/```json\n([\s\S]*?)\n```/) || 
+ 1470 │ │                                            response.match(/```\n([\s\S]*?)\n```/) ||
+ 1471 │ │                                            response.match(/{[\s\S]*?}/);
+ 1472 │ │   
+ 1473 │ │                             const jsonString = jsonMatch ? jsonMatch[0].replace(/```json\n|```\n|```/g, '') : response;
+ 1474 │ │                             extractedData = JSON.parse(jsonString);
+ 1475 │ │                             
+ 1476 │ │                             // Normalize data structure
+ 1477 │ │                             if (!extractedData.edges && extractedData.connections) {
+ 1478 │ │                               extractedData.edges = extractedData.connections.map(conn => ({
+ 1479 │ │                                 id: `e${conn.source}-${conn.target}`,
+ 1480 │ │                                 source: conn.source,
+ 1481 │ │                                 target: conn.target,
+ 1482 │ │                                 label: conn.label || '',
+ 1483 │ │                                 type: 'smoothstep',
+ 1484 │ │                                 animated: conn.animated || false
+ 1485 │ │                               }));
+ 1486 │ │                             } else if (!extractedData.edges) {
+ 1487 │ │                               extractedData.edges = [];
+ 1488 │ │                               if (extractedData.nodes && extractedData.nodes.length > 1) {
+ 1489 │ │                                 for (let i = 0; i < extractedData.nodes.length - 1; i++) {
+ 1490 │ │                                   extractedData.edges.push({
+ 1491 │ │                                     id: `e${extractedData.nodes[i].id}-${extractedData.nodes[i+1].id}`,
+ 1492 │ │                                     source: extractedData.nodes[i].id,
+ 1493 │ │                                     target: extractedData.nodes[i+1].id,
+ 1494 │ │                                     label: 'Segue para',
+ 1495 │ │                                     type: 'smoothstep',
+ 1496 │ │                                     animated: true
+ 1497 │ │                                   });
+ 1498 │ │                                 }
+ 1499 │ │                               }
+ 1500 │ │                             }
+ 1501 │ │                           } catch (error) {
+ 1502 │ │                             console.error('Erro ao extrair JSON da resposta da IA:', error);
+ 1503 │ │                             // Criar uma estrutura simples de fallback
+ 1504 │ │                             const paragraphs = contentToProcess.split(/\n\n+/);
+ 1505 │ │                             const sentences = contentToProcess.split(/[.!?]\s+/);
+ 1506 │ │                             const mainBlocks = paragraphs.length > 3 ? paragraphs.slice(0, paragraphs.length) : sentences.slice(0, Math.min(8, sentences.length));
+ 1507 │ │                             const nodes = mainBlocks.map((block, index) => ({
+ 1508 │ │                               id: (index + 1).toString(),
+ 1509 │ │                               data: { 
+ 1510 │ │                                 label: `Conceito ${index + 1}`, 
+ 1511 │ │                                 description: block
+ 1512 │ │                               },
+ 1513 │ │                               type: index === 0 ? 'start' : index === mainBlocks.length - 1 ? 'end' : 'default',
+ 1514 │ │                               position: { x: 250, y: 100 * (index + 1) }
+ 1515 │ │                             }));
+ 1516 │ │                             
+ 1517 │ │                             const edges = [];
+ 1518 │ │                             for (let i = 0; i < nodes.length - 1; i++) {
+ 1519 │ │                               edges.push({
+ 1520 │ │                                 id: `e${i+1}-${i+2}`,
+ 1521 │ │                                 source: (i + 1).toString(),
+ 1522 │ │                                 target: (i + 2).toString(),
+ 1523 │ │                                 animated: true,
+ 1524 │ │                                 style: { stroke: '#3b82f6' }
+ 1525 │ │                               });
+ 1526 │ │                             }
+ 1527 │ │                             
+ 1528 │ │                             extractedData = { nodes, edges };
+ 1529 │ │                           }
+ 1530 │ │                           
+ 1531 │ │                           // Salvar os novos dados
+ 1532 │ │                           localStorage.setItem('fluxogramaData', JSON.stringify(extractedData));
+ 1533 │ │                           
+ 1534 │ │                           // Mostrar o fluxograma
+ 1535 │ │                           setIsLoading(false);
+ 1536 │ │                           setFluxogramaGerado(true);
+ 1537 │ │                           setShowFluxograma(true);
+ 1538 │ │                           
+ 1539 │ │                         } catch (error) {
+ 1540 │ │                           console.error('Erro ao regenerar o fluxograma:', error);
+ 1541 │ │                           setIsLoading(false);
+ 1542 │ │                           alert('Ocorreu um erro ao regenerar o fluxograma. Por favor, tente novamente.');
+ 1543 │ │                         }
+ 1544 │ │                       };
+ 1545 │ │                       
+ 1546 │ │                       // Iniciar o processo de regeneração
+ 1547 │ │                       regenerateFluxograma();
+ 1548 │ │                     }}
+ 1549 │ │                     className="h-10 w-10 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
+ 1550 │ │                   >
+ 1551 │ │                     <RotateCw className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+ 1552 │ │                   </Button>
+ 1553 │ │                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+ 1554 │ │                     Regenerar
+ 1555 │ │                   </div>
+ 1556 │ │                 </div>
+ 1557 │ │                 
+ 1558 │ │                 <div className="tooltip-container relative group">
+ 1559 │ │                   <Button 
+ 1560 │ │                     variant="ghost" 
+ 1561 │ │                     size="icon"
+ 1562 │ │                     onClick={(e) => {
+ 1563 │ │                       e.stopPropagation();
+ 1564 │ │                       
+ 1565 │ │                       // Criar menu de exportação com estilos melhorados
+ 1566 │ │                       const exportMenu = document.createElement('div');
+ 1567 │ │                       exportMenu.id = 'export-options-menu';
+ 1568 │ │                       exportMenu.className = 'fixed z-[9999] bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 border border-gray-200 dark:border-gray-700 w-48';
+ 1569 │ │                       
+ 1570 │ │                       // Remover qualquer menu anterior que possa existir
+ 1571 │ │                       const oldMenu = document.getElementById('export-options-menu');
+ 1572 │ │                       if (oldMenu) {
+ 1573 │ │                         oldMenu.remove();
+ 1574 │ │                       }
+ 1575 │ │                       
+ 1576 │ │                       // Posicionar o menu em relação ao botão
+ 1577 │ │                       const buttonRect = e.currentTarget.getBoundingClientRect();
+ 1578 │ │                       exportMenu.style.top = `${buttonRect.top - 120}px`;
+ 1579 │ │                       exportMenu.style.left = `${buttonRect.left - 20}px`;
+ 1580 │ │                       
+ 1581 │ │                       // Importante: garantir que receba eventos de mouse
+ 1582 │ │                       exportMenu.style.pointerEvents = 'auto';
+ 1583 │ │                       
+ 1584 │ │                       // Usar createElement para criar todos os elementos do menu
+ 1585 │ │                       const menuContent = document.createElement('div');
+ 1586 │ │                       menuContent.className = 'flex flex-col space-y-1';
+ 1587 │ │                       
+ 1588 │ │                       // Botão Exportar IMG
+ 1589 │ │                       const exportImgButton = document.createElement('button');
+ 1590 │ │                       exportImgButton.id = 'export-img-button';
+ 1591 │ │                       exportImgButton.className = 'text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 cursor-pointer';
+ 1592 │ │                       
+ 1593 │ │                       // Ícone para o botão
+ 1594 │ │                       const imgIcon = document.createElement('svg');
+ 1595 │ │                       imgIcon.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+ 1596 │ │                       imgIcon.setAttribute('class', 'w-4 h-4 mr-2');
+ 1597 │ │                       imgIcon.setAttribute('fill', 'none');
+ 1598 │ │                       imgIcon.setAttribute('viewBox', '0 0 24 24');
+ 1599 │ │                       imgIcon.setAttribute('stroke', 'currentColor');
+ 1600 │ │                       
+ 1601 │ │                       const imgIconPath = document.createElement('path');
+ 1602 │ │                       imgIconPath.setAttribute('stroke-linecap', 'round');
+ 1603 │ │                       imgIconPath.setAttribute('stroke-linejoin', 'round');
+ 1604 │ │                       imgIconPath.setAttribute('stroke-width', '2');
+ 1605 │ │                       imgIconPath.setAttribute('d', 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z');
+ 1606 │ │                       
+ 1607 │ │                       imgIcon.appendChild(imgIconPath);
+ 1608 │ │                       exportImgButton.appendChild(imgIcon);
+ 1609 │ │                       
+ 1610 │ │                       // Texto do botão
+ 1611 │ │                       const imgText = document.createTextNode('Exportar em .IMG');
+ 1612 │ │                       exportImgButton.appendChild(imgText);
+ 1613 │ │                       
+ 1614 │ │                       // Botão PDF (desativado)
+ 1615 │ │                       const exportPdfButton = document.createElement('button');
+ 1616 │ │                       exportPdfButton.className = 'text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 opacity-60 cursor-not-allowed';
+ 1617 │ │                       exportPdfButton.disabled = true;
+ 1618 │ │                       
+ 1619 │ │                       // Ícone para o botão PDF
+ 1620 │ │                       const pdfIcon = document.createElement('svg');
+ 1621 │ │                       pdfIcon.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+ 1622 │ │                       pdfIcon.setAttribute('class', 'w-4 h-4 mr-2 opacity-60');
+ 1623 │ │                       pdfIcon.setAttribute('fill', 'none');
+ 1624 │ │                       pdfIcon.setAttribute('viewBox', '0 0 24 24');
+ 1625 │ │                       pdfIcon.setAttribute('stroke', 'currentColor');
+ 1626 │ │                       
+ 1627 │ │                       const pdfIconPath = document.createElement('path');
+ 1628 │ │                       pdfIconPath.setAttribute('stroke-linecap', 'round');
+ 1629 │ │                       pdfIconPath.setAttribute('stroke-linejoin', 'round');
+ 1630 │ │                       pdfIconPath.setAttribute('stroke-width', '2');
+ 1631 │ │                       pdfIconPath.setAttribute('d', 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z');
+ 1632 │ │                       
+ 1633 │ │                       pdfIcon.appendChild(pdfIconPath);
+ 1634 │ │                       exportPdfButton.appendChild(pdfIcon);
+ 1635 │ │                       
+ 1636 │ │                       // Texto do botão PDF
+ 1637 │ │                       const pdfText = document.createTextNode('Exportar em PDF');
+ 1638 │ │                       exportPdfButton.appendChild(pdfText);
+ 1639 │ │                       
+ 1640 │ │                       // Botão Texto (desativado)
+ 1641 │ │                       const exportTextButton = document.createElement('button');
+ 1642 │ │                       exportTextButton.className = 'text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 opacity-60 cursor-not-allowed';
+ 1643 │ │                       exportTextButton.disabled = true;
+ 1644 │ │                       
+ 1645 │ │                       // Ícone para o botão de texto
+ 1646 │ │                       const textIcon = document.createElement('svg');
+ 1647 │ │                       textIcon.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+ 1648 │ │                       textIcon.setAttribute('class', 'w-4 h-4 mr-2 opacity-60');
+ 1649 │ │                       textIcon.setAttribute('fill', 'none');
+ 1650 │ │                       textIcon.setAttribute('viewBox', '0 0 24 24');
+ 1651 │ │                       textIcon.setAttribute('stroke', 'currentColor');
+ 1652 │ │                       
+ 1653 │ │                       const textIconPath = document.createElement('path');
+ 1654 │ │                       textIconPath.setAttribute('stroke-linecap', 'round');
+ 1655 │ │                       textIconPath.setAttribute('stroke-linejoin', 'round');
+ 1656 │ │                       textIconPath.setAttribute('stroke-width', '2');
+ 1657 │ │                       textIconPath.setAttribute('d', 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z');
+ 1658 │ │                       
+ 1659 │ │                       textIcon.appendChild(textIconPath);
+ 1660 │ │                       exportTextButton.appendChild(textIcon);
+ 1661 │ │                       
+ 1662 │ │                       // Texto do botão de texto
+ 1663 │ │                       const textButtonText = document.createTextNode('Exportar em Texto');
+ 1664 │ │                       exportTextButton.appendChild(textButtonText);
+ 1665 │ │                       
+ 1666 │ │                       // Montar o menu
+ 1667 │ │                       menuContent.appendChild(exportImgButton);
+ 1668 │ │                       menuContent.appendChild(exportPdfButton);
+ 1669 │ │                       menuContent.appendChild(exportTextButton);
+ 1670 │ │                       exportMenu.appendChild(menuContent);
+ 1671 │ │                       
+ 1672 │ │                       // Adicionar o menu ao DOM
+ 1673 │ │                       document.body.appendChild(exportMenu);
+ 1674 │ │                       
+ 1675 │ │                       // Configurar evento de clique para exportar em .IMG
+ 1676 │ │                       exportImgButton.onclick = (event) => {
+ 1677 │ │                         event.stopPropagation();
+ 1678 │ │                         event.preventDefault();
+ 1679 │ │                         
+ 1680 │ │                         // Remover o menu de exportação sem fechar o modal principal
+ 1681 │ │                         const exportMenu = document.getElementById('export-options-menu');
+ 1682 │ │                         if (exportMenu) {
+ 1683 │ │                           exportMenu.remove();
+ 1684 │ │                         }
+ 1685 │ │                         
+ 1686 │ │                         // Indicador de carregamento no botão
+ 1687 │ │                         exportImgButton.innerHTML = '';
+ 1688 │ │                         
+ 1689 │ │                         // Ícone de loading
+ 1690 │ │                         const loadingIcon = document.createElement('svg');
+ 1691 │ │                         loadingIcon.setAttribute('class', 'animate-spin w-4 h-4 mr-2');
+ 1692 │ │                         loadingIcon.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+ 1693 │ │                         loadingIcon.setAttribute('fill', 'none');
+ 1694 │ │                         loadingIcon.setAttribute('viewBox', '0 0 24 24');
+ 1695 │ │                         
+ 1696 │ │                         const loadingCircle = document.createElement('circle');
+ 1697 │ │                         loadingCircle.setAttribute('class', 'opacity-25');
+ 1698 │ │                         loadingCircle.setAttribute('cx', '12');
+ 1699 │ │                         loadingCircle.setAttribute('cy', '12');
+ 1700 │ │                         loadingCircle.setAttribute('r', '10');
+ 1701 │ │                         loadingCircle.setAttribute('stroke', 'currentColor');
+ 1702 │ │                         loadingCircle.setAttribute('stroke-width', '2');
+ 1703 │ │                         
+ 1704 │ │                         const loadingPath = document.createElement('path');
+ 1705 │ │                         loadingPath.setAttribute('class', 'opacity-75');
+ 1706 │ │                         loadingPath.setAttribute('fill', 'currentColor');
+ 1707 │ │                         loadingPath.setAttribute('d', 'M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z');
+ 1708 │ │                         
+ 1709 │ │                         loadingIcon.appendChild(loadingCircle);
+ 1710 │ │                         loadingIcon.appendChild(loadingPath);
+ 1711 │ │                         exportImgButton.appendChild(loadingIcon);
+ 1712 │ │                         
+ 1713 │ │                         // Texto de carregamento
+ 1714 │ │                         const loadingText = document.createTextNode('Exportando...');
+ 1715 │ │                         exportImgButton.appendChild(loadingText);
+ 1716 │ │                         
+ 1717 │ │                         exportImgButton.disabled = true;
+ 1718 │ │                         exportImgButton.className = 'text-left px-3 py-2 text-sm rounded-md transition-colors flex items-center text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700';
+ 1719 │ │                         
+ 1720 │ │                         // Remover a escuta do evento de clique para evitar fechamento indesejado
+ 1721 │ │                         document.removeEventListener('click', closeMenu);
+ 1722 │ │                         
+ 1723 │ │                         // Criar uma função que executa a exportação sem fechar o modal principal
+ 1724 │ │                         setTimeout(() => {
+ 1725 │ │                           // Exportar imagem sem fechar o modal principal
+ 1726 │ │                           exportAsImage().then((success) => {
+ 1727 │ │                             // O menu já foi removido acima, não precisamos fazer novamente
+ 1728 │ │                             // Apenas notificar o usuário se houver falha
+ 1729 │ │                             if (!success) {
+ 1730 │ │                               console.error('Falha ao exportar imagem');
+ 1731 │ │                             }
+ 1732 │ │                           }).catch(error => {
+ 1733 │ │                             console.error('Erro ao exportar imagem:', error);
+ 1734 │ │                             alert('Ocorreu um erro ao exportar o fluxograma. Por favor, tente novamente.');
+ 1735 │ │                           });
+ 1736 │ │                         }, 50);
+ 1737 │ │                       };
+ 1738 │ │                       
+ 1739 │ │                       // Fechar o menu ao clicar fora dele
+ 1740 │ │                       const closeMenu = (event: MouseEvent) => {
+ 1741 │ │                         if (!exportMenu.contains(event.target as Node) && 
+ 1742 │ │                             event.target !== e.currentTarget) {
+ 1743 │ │                           exportMenu.remove();
+ 1744 │ │                           document.removeEventListener('click', closeMenu);
+ 1745 │ │                         }
+ 1746 │ │                       };
+ 1747 │ │                       
+ 1748 │ │                       // Adicionar listener para fechar o menu
+ 1749 │ │                       setTimeout(() => {
+ 1750 │ │                         document.addEventListener('click', closeMenu);
+ 1751 │ │                       }, 100);
+ 1752 │ │                     }}
+ 1753 │ │                     className="h-10 w-10 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
+ 1754 │ │                   >
+ 1755 │ │                     <Download className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+ 1756 │ │                   </Button>
+ 1757 │ │                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+ 1758 │ │                     Exportar
+ 1759 │ │                   </div>
+ 1760 │ │                 </div>
+ 1761 │ │                 
+ 1762 │ │                 <div className="tooltip-container relative group">
+ 1763 │ │                   <Button 
+ 1764 │ │                     variant="ghost" 
+ 1765 │ │                     size="icon"
+ 1766 │ │                     className="h-10 w-10 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
+ 1767 │ │                   >
+ 1768 │ │                     <Clipboard className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+ 1769 │ │                   </Button>
+ 1770 │ │                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+ 1771 │ │                     Caderno
+ 1772 │ │                   </div>
+ 1773 │ │                 </div>
+ 1774 │ │                 
+ 1775 │ │                 <div className="tooltip-container relative group">
+ 1776 │ │                   <Button 
+ 1777 │ │                     variant="ghost" 
+ 1778 │ │                     size="icon"
+ 1779 │ │                     onClick={() => {
+ 1780 │ │                       // Obter o elemento que contém o fluxograma
+ 1781 │ │                       const fluxogramaContainer = document.querySelector('.h-[60vh]');
+ 1782 │ │                       if (fluxogramaContainer) {
+ 1783 │ │                         // Alternar entre tamanho normal e ampliado
+ 1784 │ │                         if (fluxogramaContainer.classList.contains('h-[60vh]')) {
+ 1785 │ │                           fluxogramaContainer.classList.remove('h-[60vh]');
+ 1786 │ │                           fluxogramaContainer.classList.add('h-[90vh]', 'fixed', 'top-[5vh]', 'left-[5vw]', 'right-[5vw]', 'w-[90vw]', 'z-50');
+ 1787 │ │                         } else {
+ 1788 │ │                           fluxogramaContainer.classList.remove('h-[90vh]', 'fixed', 'top-[5vh]', 'left-[5vw]', 'right-[5vw]', 'w-[90vw]', 'z-50');
+ 1789 │ │                           fluxogramaContainer.classList.add('h-[60vh]');
+ 1790 │ │                         }
+ 1791 │ │                         
+ 1792 │ │                         // Ajustar o fluxograma para caber na nova visualização
+ 1793 │ │                         setTimeout(() => {
+ 1794 │ │                           const reactFlowInstance = document.querySelector('.react-flow');
+ 1795 │ │                           if (reactFlowInstance) {
+ 1796 │ │                             // Disparar evento de redimensionamento para atualizar a visualização
+ 1797 │ │                             window.dispatchEvent(new Event('resize'));
+ 1798 │ │                           }
+ 1799 │ │                         }, 100);
+ 1800 │ │                       }
+ 1801 │ │                     }}
+ 1802 │ │                     className="h-10 w-10 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
+ 1803 │ │                   >
+ 1804 │ │                     <Maximize2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+ 1805 │ │                   </Button>
+ 1806 │ │                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+ 1807 │ │                     Ampliar
+ 1808 │ │                   </div>
+ 1809 │ │                 </div>
+ 1810 │ │                 
+ 1811 │ │                 <div className="tooltip-container relative group">
+ 1812 │ │                   <Button 
+ 1813 │ │                     variant="ghost" 
+ 1814 │ │                     size="icon"
+ 1815 │ │                     onClick={handleSaveFluxograma}
+ 1816 │ │                     className="h-10 w-10 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
+ 1817 │ │                   >
+ 1818 │ │                     <Save className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+ 1819 │ │                   </Button>
+ 1820 │ │                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+ 1821 │ │                     Salvar
+ 1822 │ │                   </div>
+ 1823 │ │                 </div>
+ 1824 │ │                 
+ 1825 │ │                 <div className="tooltip-container relative group">
+ 1826 │ │                   <Button 
+ 1827 │ │                     variant="ghost" 
+ 1828 │ │                     size="icon"
+ 1829 │ │                     onClick={async () => {
+ 1830 │ │                       // Verificar se o fluxograma está salvo
+ 1831 │ │                       const fluxogramaData = localStorage.getItem('fluxogramaData');
+ 1832 │ │                       if (!fluxogramaData) {
+ 1833 │ │                         alert('É necessário salvar o fluxograma antes de compartilhar.');
+ 1834 │ │                         return;
+ 1835 │ │                       }
+ 1836 │ │                       
+ 1837 │ │                       try {
+ 1838 │ │                         // Obter dados do usuário
+ 1839 │ │                         const userMetadata = JSON.parse(localStorage.getItem('supabase.auth.token') || '{}');
+ 1840 │ │                         const username = userMetadata?.currentSession?.user?.user_metadata?.username || 
+ 1841 │ │                                        localStorage.getItem('username') || 
+ 1842 │ │                                        sessionStorage.getItem('username') || 
+ 1843 │ │                                        'usuario';
+ 1844 │ │                         
+ 1845 │ │                         const userId = userMetadata?.currentSession?.user?.id || 'id_temporario';
+ 1846 │ │                         
+ 1847 │ │                         // Obter título do fluxograma (usar título fixo se não estiver salvo)
+ 1848 │ │                         const savedFluxogramas = JSON.parse(localStorage.getItem('savedFluxogramas') || '[]');
+ 1849 │ │                         const latestFluxograma = savedFluxogramas.length > 0 ? savedFluxogramas[savedFluxogramas.length - 1] : null;
+ 1850 │ │                         
+ 1851 │ │                         // Se não houver fluxograma salvo, perguntar ao usuário
+ 1852 │ │                         let fluxogramaTitle = latestFluxograma?.title || '';
+ 1853 │ │                         if (!fluxogramaTitle) {
+ 1854 │ │                           fluxogramaTitle = prompt('Digite um título para o fluxograma:') || 'fluxograma';
+ 1855 │ │                           
+ 1856 │ │                           // Salvar fluxograma automaticamente com o título fornecido
+ 1857 │ │                           if (fluxogramaTitle) {
+ 1858 │ │                             const newSavedFluxograma = {
+ 1859 │ │                               id: `flux_${Date.now()}`,
+ 1860 │ │                               title: fluxogramaTitle,
+ 1861 │ │                               description: selectedOption === 'manual' ? manualContent.substring(0, 100) + '...' : 'Gerado pela IA',
+ 1862 │ │                               date: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }),
+ 1863 │ │                               data: JSON.parse(fluxogramaData)
+ 1864 │ │                             };
+ 1865 │ │                             
+ 1866 │ │                             const updatedFluxogramas = [...savedFluxogramas, newSavedFluxograma];
+ 1867 │ │                             setSavedFluxogramas(updatedFluxogramas);
+ 1868 │ │                             localStorage.setItem('savedFluxogramas', JSON.stringify(updatedFluxogramas));
+ 1869 │ │                           }
+ 1870 │ │                         }
+ 1871 │ │                         
+ 1872 │ │                         // Formatar títulos para URL (remover espaços e caracteres especiais)
+ 1873 │ │                         const formattedTitle = fluxogramaTitle.toLowerCase()
+ 1874 │ │                           .replace(/[^\w\s-]/g, '')
+ 1875 │ │                           .replace(/\s+/g, '-');
+ 1876 │ │                         
+ 1877 │ │                         // Criar URL compartilhável
+ 1878 │ │                         const baseUrl = window.location.origin;
+ 1879 │ │                         const shareUrl = `${baseUrl}/fluxograma/${formattedTitle}/${username}/${userId}`;
+ 1880 │ │                         
+ 1881 │ │                         // Salvar dados no localStorage para acesso pela página compartilhada
+ 1882 │ │                         const shareData = {
+ 1883 │ │                           fluxogramaData: JSON.parse(fluxogramaData),
+ 1884 │ │                           title: fluxogramaTitle,
+ 1885 │ │                           username,
+ 1886 │ │                           userId,
+ 1887 │ │                           timestamp: Date.now()
+ 1888 │ │                         };
+ 1889 │ │                         
+ 1890 │ │                         localStorage.setItem(`shared_fluxograma_${formattedTitle}_${userId}`, JSON.stringify(shareData));
+ 1891 │ │                         
+ 1892 │ │                         // Copiar URL para área de transferência
+ 1893 │ │                         await navigator.clipboard.writeText(shareUrl);
+ 1894 │ │                         alert(`URL do fluxograma copiada para a área de transferência:\n${shareUrl}`);
+ 1895 │ │                         
+ 1896 │ │                         // Abrir nova página
+ 1897 │ │                         const openInNewTab = confirm('URL copiada! Deseja abrir a página compartilhada em uma nova aba?');
+ 1898 │ │                         if (openInNewTab) {
+ 1899 │ │                           window.open(shareUrl, '_blank');
+ 1900 │ │                         }
+ 1901 │ │                       } catch (error) {
+ 1902 │ │                         console.error('Erro ao compartilhar fluxograma:', error);
+ 1903 │ │                         alert('Ocorreu um erro ao compartilhar o fluxograma.');
+ 1904 │ │                       }
+ 1905 │ │                     }}
+ 1906 │ │                     className="h-10 w-10 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
+ 1907 │ │                   >
+ 1908 │ │                     <Share2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+ 1909 │ │                   </Button>
+ 1910 │ │                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+ 1911 │ │                     Compartilhar
+ 1912 │ │                   </div>
+ 1913 │ │                 </div>
+ 1914 │ │               </div>
+ 1915 │ │             </div>
+ 1916 │ │           </div>
+ 1917 │ │         ) : (
+ 1918 │ │           <ScrollArea className="h-[50vh] pr-4">
+ 1919 │ │             <div className="bg-gradient-to-r from-blue-50/70 to-indigo-50/70 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl p-4 border border-blue-100/80 dark:border-blue-800/30 mb-4 backdrop-blur-sm">
+ 1920 │ │               <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+ 1921 │ │                 Selecione abaixo como deseja gerar o fluxograma.
+ 1922 │ │               </p>
+ 1923 │ │             </div>
+ 1924 │ │   
+ 1925 │ │             {!showManualInput ? (
+ 1926 │ │               <div className="space-y-4">
+ 1927 │ │                 <Button
+ 1928 │ │                   onClick={() => handleGenerateFlowchart('ia')}
+ 1929 │ │                   className="w-full py-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all border border-blue-500/20 rounded-xl group relative overflow-hidden flex items-center justify-center"
+ 1930 │ │                   disabled={isLoading || showManualInput}
+ 1931 │ │                 >
+ 1932 │ │                   <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-400/10 to-indigo-400/10 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
+ 1933 │ │                   <span className="relative flex items-center justify-center">
+ 1934 │ │                     <FileDown className="h-5 w-5 mr-2 transform group-hover:translate-y-px transition-transform" />
+ 1935 │ │                     <span className="font-medium">Usar conteúdo da IA acima</span>
+ 1936 │ │                   </span>
+ 1937 │ │                 </Button>
+ 1938 │ │   
+ 1939 │ │                 {!showManualInput ? (
+ 1940 │ │                   <div className="w-full bg-white dark:bg-gray-900 shadow-sm border border-gray-200 dark:border-gray-700 rounded-full backdrop-blur-sm relative overflow-hidden flex items-center">
+ 1941 │ │                     <div className="h-10 w-10 flex items-center justify-center">
+ 1942 │ │                       <PenLine className="h-5 w-5 text-indigo-600 dark:text-indigo-500 ml-3" />
+ 1943 │ │                     </div>
+ 1944 │ │                     <div className="flex-1 pr-2">
+ 1945 │ │                       <Input 
+ 1946 │ │                         value={manualContent}
+ 1947 │ │                         onChange={(e) => setManualContent(e.target.value)}
+ 1948 │ │                         onKeyDown={(e) => {
+ 1949 │ │                           if (e.key === 'Enter' && !e.shiftKey && manualContent.trim()) {
+ 1950 │ │                             e.preventDefault();
+ 1951 │ │                             handleSubmitManualContent();
+ 1952 │ │                           }
+ 1953 │ │                         }}
+ 1954 │ │                         placeholder="Insira seu conteúdo para gerar o fluxograma"
+ 1955 │ │                         className="border-0 shadow-none bg-transparent focus-visible:ring-0 h-10"
+ 1956 │ │                         disabled={isLoading}
+ 1957 │ │                       />
+ 1958 │ │                     </div>
+ 1959 │ │                     <Button
+ 1960 │ │                       onClick={() => handleSubmitManualContent()}
+ 1961 │ │                       variant="ghost"
+ 1962 │ │                       className="h-10 w-10 p-0 mr-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
+ 1963 │ │                       disabled={isLoading || !manualContent.trim()}
+ 1964 │ │                     >
+ 1965 │ │                       <span className="sr-only">Enviar conteúdo</span>
+ 1966 │ │                       <SendHorizonal className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+ 1967 │ │                     </Button>
+ 1968 │ │                   </div>
+ 1969 │ │                 ) : null}
+ 1970 │ │                 
+ 1971 │ │                 {/* Card único de Pré-visualização do Fluxograma */}
+ 1972 │ │                 <div className="w-full mt-6 p-6 bg-white/80 dark:bg-gray-800/80 border border-blue-200/80 dark:border-blue-800/30 rounded-2xl shadow-lg backdrop-blur-xl relative overflow-hidden group hover:shadow-xl transition-all duration-500 hover:border-blue-300 dark:hover:border-blue-700">
+ 1973 │ │                   {/* Efeitos decorativos */}
+ 1974 │ │                   <div className="absolute -right-12 -top-12 w-24 h-24 bg-gradient-to-br from-blue-400/10 to-indigo-400/20 dark:from-blue-400/5 dark:to-indigo-400/10 rounded-full blur-md"></div>
+ 1975 │ │                   <div className="absolute -left-12 -bottom-12 w-24 h-24 bg-gradient-to-tr from-purple-400/10 to-pink-400/20 dark:from-purple-500/5 dark:to-pink-500/10 rounded-full blur-md"></div>
+ 1976 │ │                   
+ 1977 │ │                   {/* Cabeçalho */}
+ 1978 │ │                   <div className="flex items-center justify-between mb-4 relative z-10">
+ 1979 │ │                     <div className="flex items-center space-x-2">
+ 1980 │ │                       <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
+ 1981 │ │                         <Eye className="h-5 w-5 text-white" />
+ 1982 │ │                       </div>
+ 1983 │ │                       <div>
+ 1984 │ │                         <h4 className="font-semibold text-gray-900 dark:text-white text-lg tracking-tight">Pré-visualização</h4>
+ 1985 │ │                         <p className="text-xs text-blue-600/80 dark:text-blue-400/80 font-medium">Fluxograma interativo</p>
+ 1986 │ │                       </div>
+ 1987 │ │                     </div>
+ 1988 │ │                     <div className="flex space-x-1">
+ 1989 │ │                       <span className="w-2 h-2 rounded-full bg-pink-400 animate-pulse"></span>
+ 1990 │ │                       <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse animate-delay-150"></span>
+ 1991 │ │                       <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse animate-delay-300"></span>
+ 1992 │ │                     </div>
+ 1993 │ │                   </div>
+ 1994 │ │                   
+ 1995 │ │                   {/* Área de animação do fluxograma - Modernizada e Melhorada */}
+ 1996 │ │                   <div className="h-[220px] w-full relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/40 dark:from-gray-900/90 dark:via-blue-950/40 dark:to-indigo-950/30 flex items-center justify-center shadow-inner border border-blue-100/50 dark:border-blue-900/30 group-hover:border-blue-200 dark:group-hover:border-blue-800/50 transition-all duration-500" id="flow-preview-container">
+ 1997 │ │                     {/* Fundo com padrão de pontos (estilo ReactFlow) */}
+ 1998 │ │                     <div className="absolute inset-0">
+ 1999 │ │                       {/* Grade de pontos animados - Pontos menores */}
+ 2000 │ │                       <div className="absolute inset-0 grid grid-cols-12 grid-rows-8">
+ 2001 │ │                         {Array.from({ length: 96 }).map((_, index) => (
+ 2002 │ │                           <div key={index} className="relative flex items-center justify-center">
+ 2003 │ │                             <div 
+ 2004 │ │                               className={`w-0.5 h-0.5 rounded-full bg-blue-400/15 dark:bg-blue-500/15 absolute animate-pulse-slow ${
+ 2005 │ │                                 index % 3 === 0 ? 'animate-delay-100' : index % 3 === 1 ? 'animate-delay-200' : 'animate-delay-300'
+ 2006 │ │                               }`}
+ 2007 │ │                             ></div>
+ 2008 │ │                           </div>
+ 2009 │ │                         ))}
+ 2010 │ │                       </div>
+ 2011 │ │                       <div className="absolute inset-0 bg-[url('/images/pattern-grid.svg')] bg-center opacity-5 dark:opacity-10"></div>
+ 2012 │ │                     </div>
+ 2013 │ │                     
+ 2014 │ │                     {/* Nós e conexões animadas - Versão interativa e moderna com conexões melhoradas */}
+ 2015 │ │                     <div className="relative w-full h-full flex justify-center items-center z-10">
+ 2016 │ │                       {/* Canvas interativo para os nós */}
+ 2017 │ │                       <div className="relative w-full max-w-xs h-full flex flex-col items-center justify-center" id="flow-interactive-preview">
+ 2018 │ │                         {/* Layout em camadas para organização correta das linhas */}
+ 2019 │ │                         <div className="relative w-full flex flex-col items-center justify-between h-[170px]">
+ 2020 │ │                           {/* Camada 1: Nó principal/conceito - Menor */}
+ 2021 │ │                           <div className="draggable-node cursor-move w-20 h-8 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-md hover:shadow-lg hover:shadow-blue-400/20 dark:hover:shadow-blue-500/10 transition-all duration-300 animate-float scale-90 hover:scale-100 transform-gpu z-20"
+ 2022 │ │                                style={{touchAction: 'none'}}>
+ 2023 │ │                             <span className="flex flex-col items-center">
+ 2024 │ │                               <span className="text-[7px] uppercase tracking-wider opacity-70">Conceito</span>
+ 2025 │ │                               <span className="font-semibold text-[9px]">Principal</span>
+ 2026 │ │                             </span>
+ 2027 │ │                           </div>
+ 2028 │ │                           
+ 2029 │ │                           {/* Conexões verticais estáticas (do principal para os do meio) */}
+ 2030 │ │                           <div className="absolute top-[27px] left-1/2 transform -translate-x-1/2 w-0 h-[37px]">
+ 2031 │ │                             <div className="absolute left-0 w-0 h-full border-l-2 border-dashed border-blue-400 dark:border-blue-500 static-dashed"></div>
+ 2032 │ │                           </div>
+ 2033 │ │                           
+ 2034 │ │                           {/* Camada 2: Nós do meio com conexões laterais - Blocos menores */}
+ 2035 │ │                           <div className="flex items-center justify-center space-x-20 z-20 relative mb-2">
+ 2036 │ │                             {/* Nó de contexto (esquerda) - Menor */}
+ 2037 │ │                             <div className="draggable-node cursor-move w-16 h-7 bg-gradient-to-r from-indigo-400 to-indigo-500 dark:from-indigo-500 dark:to-indigo-600 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-sm hover:shadow-md hover:shadow-indigo-400/20 dark:hover:shadow-indigo-500/10 transition-all duration-300 animate-float-delayed-100 scale-90 hover:scale-100 transform-gpu"
+ 2038 │ │                                 style={{touchAction: 'none'}}>
+ 2039 │ │                               <span className="font-medium text-[9px]">Contexto</span>
+ 2040 │ │                             </div>
+ 2041 │ │                             
+ 2042 │ │                             {/* Nó de detalhes (direita) - Menor */}
+ 2043 │ │                             <div className="draggable-node cursor-move w-16 h-7 bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-500 dark:to-purple-600 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-sm hover:shadow-md hover:shadow-purple-400/20 dark:hover:shadow-purple-500/10 transition-all duration-300 animate-float-delayed-200 scale-90 hover:scale-100 transform-gpu"
+ 2044 │ │                                 style={{touchAction: 'none'}}>
+ 2045 │ │                               <span className="font-medium text-[9px]">Detalhes</span>
+ 2046 │ │                             </div>
+ 2047 │ │                           </div>
+ 2048 │ │                           
+ 2049 │ │                           {/* Conexão horizontal entre os nós do meio - Estática */}
+ 2050 │ │                           <div className="absolute top-[73px] w-[72px] left-1/2 transform -translate-x-1/2 -translate-y-[1px]">
+ 2051 │ │                             <div className="absolute h-[2px] w-full border-t-2 border-dashed border-indigo-400 dark:border-indigo-500 static-dashed"></div>
+ 2052 │ │                           </div>
+ 2053 │ │                           
+ 2054 │ │                           {/* Conexões verticais dos nós do meio para o nó de conclusão - Estáticas */}
+ 2055 │ │                           <div className="absolute top-[85px] left-[calc(50%-50px)] w-0 h-[40px]">
+ 2056 │ │                             <div className="absolute left-0 w-0 h-full border-l-2 border-dashed border-indigo-400 dark:border-indigo-500 static-dashed"></div>
+ 2057 │ │                           </div>
+ 2058 │ │                           <div className="absolute top-[85px] left-[calc(50%+50px)] w-0 h-[40px]">
+ 2059 │ │                             <div className="absolute left-0 w-0 h-full border-l-2 border-dashed border-purple-400 dark:border-purple-500 static-dashed"></div>
+ 2060 │ │                           </div>
+ 2061 │ │                           
+ 2062 │ │                           {/* Camada 3: Nó de conclusão - Menor */}
+ 2063 │ │                           <div className="draggable-node cursor-move w-20 h-8 bg-gradient-to-r from-green-500 to-emerald-500 dark:from-green-600 dark:to-emerald-600 rounded-md flex items-center justify-center text-white text-xs font-medium shadow-md hover:shadow-lg hover:shadow-green-400/20 dark:hover:shadow-green-500/10 transition-all duration-300 animate-float-delayed-300 scale-90 hover:scale-100 transform-gpu z-20"
+ 2064 │ │                                style={{touchAction: 'none'}}>
+ 2065 │ │                             <span className="flex flex-col items-center">
+ 2066 │ │                               <span className="text-[7px] uppercase tracking-wider opacity-70">Síntese</span>
+ 2067 │ │                               <span className="font-semibold text-[9px]">Conclusão</span>
+ 2068 │ │                             </span>
+ 2069 │ │                           </div>
+ 2070 │ │                         </div>
+ 2071 │ │                         
+ 2072 │ │                         {/* Partículas flutuantes para efeito de movimento adicional */}
+ 2073 │ │                         <div className="absolute inset-0 pointer-events-none overflow-hidden">
+ 2074 │ │                           {Array.from({ length: 8 }).map((_, index) => (
+ 2075 │ │                             <div 
+ 2076 │ │                               key={`particle-${index}`}
+ 2077 │ │                               className={`absolute w-1 h-1 rounded-full bg-blue-400/30 dark:bg-blue-500/30 animate-floating-node`}
+ 2078 │ │                               style={{
+ 2079 │ │                                 top: `${20 + Math.random() * 60}%`,
+ 2080 │ │                                 left: `${20 + Math.random() * 60}%`,
+ 2081 │ │                                 animationDelay: `${index * 0.5}s`,
+ 2082 │ │                                 animationDuration: `${5 + Math.random() * 5}s`
+ 2083 │ │                               }}
+ 2084 │ │                             ></div>
+ 2085 │ │                           ))}
+ 2086 │ │                         </div>
+ 2087 │ │                       </div>
+ 2088 │ │                     </div>
+ 2089 │ │                   </div>
+ 2090 │ │                   
+ 2091 │ │                   {/* Rodapé com a mensagem do fluxograma */}
+ 2092 │ │                   <div className="mt-4 flex justify-center items-center">
+ 2093 │ │                     <div className="bg-white/90 dark:bg-gray-800/90 px-4 py-2 rounded-full shadow-md backdrop-blur-sm border border-blue-100/50 dark:border-blue-900/30">
+ 2094 │ │                       <p className="text-sm text-blue-600 dark:text-blue-400 font-medium flex items-center">
+ 2095 │ │                         <span className="animate-blink mr-2 h-2 w-2 rounded-full bg-blue-500"></span>
+ 2096 │ │                         O fluxograma gerado aparecerá aqui!
+ 2097 │ │                       </p>
+ 2098 │ │                     </div>
+ 2099 │ │                   </div>
+ 2100 │ │                 </div>
+ 2101 │ │                 
+ 2102 │ │                 <Button
+ 2103 │ │                   onClick={() => setShowSavedFluxogramas(!showSavedFluxogramas)}
+ 2104 │ │                   variant="outline"
+ 2105 │ │                   className="w-full py-4 mt-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/40 dark:to-emerald-900/40 hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-900/60 dark:hover:to-emerald-900/60 shadow-sm border border-green-200 dark:border-green-800 rounded-xl backdrop-blur-sm group relative overflow-hidden flex items-center justify-center"
+ 2106 │ │                 >
+ 2107 │ │                   <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-green-100/50 to-emerald-100/50 dark:from-green-800/30 dark:to-emerald-800/30 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
+ 2108 │ │                   <span className="relative flex items-center justify-center">
+ 2109 │ │                     <Save className="h-5 w-5 mr-2 transform group-hover:translate-y-px transition-transform text-green-600 dark:text-green-400" />
+ 2110 │ │                     <span className="font-medium text-green-700 dark:text-green-300">{showSavedFluxogramas ? "Ocultar fluxogramas salvos" : "Ver fluxogramas salvos"}</span>
+ 2111 │ │                   </span>
+ 2112 │ │                 </Button>
+ 2113 │ │                 
+ 2114 │ │                 {showSavedFluxogramas && (
+ 2115 │ │                   <div className="mt-4 bg-white/80 dark:bg-gray-800/80 rounded-xl border border-gray-200/70 dark:border-gray-700/50 p-5 shadow-sm backdrop-blur-sm">
+ 2116 │ │                     <h4 className="text-md font-medium text-gray-900 dark:text-white mb-4 flex items-center">
+ 2117 │ │                       <Save className="h-5 w-5 mr-2 text-green-600 dark:text-green-400" />
+ 2118 │ │                       Fluxogramas Salvos
+ 2119 │ │                     </h4>
+ 2120 │ │                     
+ 2121 │ │                     {savedFluxogramas.length > 0 ? (
+ 2122 │ │                       <div className="space-y-3">
+ 2123 │ │                         {savedFluxogramas.map((fluxograma, index) => {
+ 2124 │ │                           return (
+ 2125 │ │                             <FluxogramaItem
+ 2126 │ │                               key={index}
+ 2127 │ │                               fluxograma={fluxograma}
+ 2128 │ │                               index={index}
+ 2129 │ │                               onLoadFluxograma={handleLoadSavedFluxograma}
+ 2130 │ │                               onUpdateTitle={(index, newTitle) => {
+ 2131 │ │                                 const updatedFluxogramas = [...savedFluxogramas];
+ 2132 │ │                                 updatedFluxogramas[index].title = newTitle;
+ 2133 │ │                                 setSavedFluxogramas(updatedFluxogramas);
+ 2134 │ │                                 localStorage.setItem('savedFluxogramas', JSON.stringify(updatedFluxogramas));
+ 2135 │ │                               }}
+ 2136 │ │                             />
+ 2137 │ │                           );
+ 2138 │ │                         })}
+ 2139 │ │                       </div>
+ 2140 │ │                     ) : (
+ 2141 │ │                       <div className="text-center py-8 px-4">
+ 2142 │ │                         <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
+ 2143 │ │                           <FileLineChart className="h-6 w-6 text-gray-400 dark:text-gray-500" />
+ 2144 │ │                         </div>
+ 2145 │ │                         <h5 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Nenhum fluxograma salvo</h5>
+ 2146 │ │                         <p className="text-xs text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
+ 2147 │ │                           Crie e salve seus fluxogramas para acessá-los posteriormente nesta seção.
+ 2148 │ │                         </p>
+ 2149 │ │                       </div>
+ 2150 │ │                     )}
+ 2151 │ │                   </div>
+ 2152 │ │                 )}
+ 2153 │ │               </div>
+ 2154 │ │             ) : (
+ 2155 │ │               <div className="space-y-4 bg-white/80 dark:bg-gray-800/80 rounded-xl border border-gray-200/70 dark:border-gray-700/50 p-5 shadow-sm backdrop-blur-sm">
+ 2156 │ │                 <h4 className="text-md font-medium text-gray-900 dark:text-white mb-2">Insira seu conteúdo para gerar o fluxograma</h4>
+ 2157 │ │                 <Textarea 
+ 2158 │ │                   value={manualContent}
+ 2159 │ │                   onChange={(e) => setManualContent(e.target.value)}
+ 2160 │ │                   placeholder="Insira aqui o conteúdo sobre o qual você deseja gerar um fluxograma..."
+ 2161 │ │                   className="min-h-[200px] resize-none"
+ 2162 │ │                 />
+ 2163 │ │                 <div className="flex justify-end space-x-2 mt-2">
+ 2164 │ │                   <Button
+ 2165 │ │                     onClick={handleCancelManualInput}
+ 2166 │ │                     variant="outline"
+ 2167 │ │                     className="flex items-center"
+ 2168 │ │                   >
+ 2169 │ │                     <X className="h-4 w-4 mr-2" />
+ 2170 │ │                     <span>Cancelar</span>
+ 2171 │ │                   </Button>
+ 2172 │ │                   <Button
+ 2173 │ │                     onClick={handleSubmitManualContent}
+ 2174 │ │                     className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white flex items-center"
+ 2175 │ │                   >
+ 2176 │ │                     <SendHorizonal className="h-4 w-4 mr-2" />
+ 2177 │ │                     <span>Gerar Fluxograma</span>
+ 2178 │ │                   </Button>
+ 2179 │ │                 </div>
+ 2180 │ │               </div>
+ 2181 │ │             )}
+ 2182 │ │   
+ 2183 │ │             {isLoading && (
+ 2184 │ │               <div className="mt-6 bg-white/80 dark:bg-gray-800/80 rounded-xl border border-gray-200/70 dark:border-gray-700/50 p-6 shadow-sm backdrop-blur-sm">
+ 2185 │ │                 <div className="flex flex-col items-center justify-center">
+ 2186 │ │                   <div className="flex items-center justify-center w-16 h-16 rounded-full bg-blue-100/80 dark:bg-blue-900/40 mb-4 relative">
+ 2187 │ │                     <div className="absolute inset-0 rounded-full bg-blue-500/10 animate-pulse"></div>
+ 2188 │ │                     <svg className="animate-spin h-8 w-8 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+ 2189 │ │                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+ 2190 │ │                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+ 2191 │ │                     </svg>
+ 2192 │ │                   </div>
+ 2193 │ │                   <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-1">Processando o Fluxograma</h4>
+ 2194 │ │                   <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+ 2195 │ │                     Estamos analisando o conteúdo e construindo um fluxograma visual para facilitar sua compreensão.
+ 2196 │ │                   </p>
+ 2197 │ │                 </div>
+ 2198 │ │                 <div className="mt-4 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
+ 2199 │ │                   <div className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2.5 rounded-full animate-progress"></div>
+ 2200 │ │                 </div>
+ 2201 │ │               </div>
+ 2202 │ │             )}
+ 2203 │ │   
+ 2204 │ │             {selectedOption === 'ia' && !isLoading && fluxogramaGerado && (
+ 2205 │ │               <div className="mt-6 space-y-6">
+ 2206 │ │                 <div className="bg-white/80 dark:bg-gray-800/80 rounded-xl border border-gray-200/70 dark:border-gray-700/50 p-5 shadow-sm backdrop-blur-sm">
+ 2207 │ │                   <div className="flex items-center justify-center mb-4">
+ 2208 │ │                     <div className="h-12 w-12 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 rounded-full flex items-center justify-center text-green-600 dark:text-green-400 shadow-sm">
+ 2209 │ │                       <CheckCircle className="h-6 w-6" />
+ 2210 │ │                     </div>
+ 2211 │ │                   </div>
+ 2212 │ │                   <h4 className="text-center text-lg font-medium text-gray-900 dark:text-white mb-2">Fluxograma Gerado!</h4>
+ 2213 │ │                   <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-4">
+ 2214 │ │                     Seu fluxograma foi criado com base no conteúdo da IA.
+ 2215 │ │                   </p>
+ 2216 │ │                   <div className="flex justify-center">
+ 2217 │ │                     <Button 
+ 2218 │ │                       onClick={handleVisualizarFluxograma}
+ 2219 │ │                       className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center"
+ 2220 │ │                     >
+ 2221 │ │                       <Eye className="h-4 w-4 mr-2" />
+ 2222 │ │                       <span>Visualizar Fluxograma</span>
+ 2223 │ │                     </Button>
+ 2224 │ │                   </div>
+ 2225 │ │                 </div>
+ 2226 │ │   
+ 2227 │ │                 {/* Painel de ações removido daqui, pois agora está fixo no topo */}
+ 2228 │ │               </div>
+ 2229 │ │             )}
+ 2230 │ │   
+ 2231 │ │             {selectedOption === 'manual' && !isLoading && fluxogramaGerado && (
+ 2232 │ │               <div className="mt-6 space-y-6">
+ 2233 │ │                 <div className="bg-white/80 dark:bg-gray-800/80 rounded-xl border border-gray-200/70 dark:border-gray-700/50 p-5 shadow-sm backdrop-blur-sm">
+ 2234 │ │                   <div className="flex items-center justify-center mb-4">
+ 2235 │ │                     <div className="h-12 w-12 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 rounded-full flex items-center justify-center text-green-600 dark:text-green-400 shadow-sm">
+ 2236 │ │                       <CheckCircle className="h-6 w-6" />
+ 2237 │ │                     </div>
+ 2238 │ │                   </div>
+ 2239 │ │                   <h4 className="text-center text-lg font-medium text-gray-900 dark:text-white mb-2">Fluxograma Personalizado</h4>
+ 2240 │ │                   <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-4">
+ 2241 │ │                     Seu fluxograma foi criado com base no conteúdo personalizado.
+ 2242 │ │                   </p>
+ 2243 │ │                   <div className="flex justify-center">
+ 2244 │ │                     <Button
+ 2245 │ │                       onClick={handleVisualizarFluxograma}
+ 2246 │ │                       className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center"
+ 2247 │ │                     >
+ 2248 │ │                       <Eye className="h-4 w-4 mr-2" />
+ 2249 │ │                       <span>Visualizar Fluxograma</span>
+ 2250 │ │                     </Button>
+ 2251 │ │                   </div>
+ 2252 │ │                 </div>
+ 2253 │ │   
+ 2254 │ │                 {/* Painel de ações removido daqui, pois agora está fixo no topo */}
+ 2255 │ │               </div>
+ 2256 │ │             )}
+ 2257 │ │           </ScrollArea>
+ 2258 │ │         )}
+ 2259 │ │   
+ 2260 │ │         {showDetailModal && selectedNode && (
+ 2261 │ │           <FluxogramaDetailModal
+ 2262 │ │             isOpen={showDetailModal}
+ 2263 │ │             onClose={() => setShowDetailModal(false)}
+ 2264 │ │             node={selectedNode}
+ 2265 │ │           />
+ 2266 │ │         )}
+ 2267 │ │       </div>
+ 2268 │ ╰─▶   );
+ 2269 │     };
+ 2270 │     
+ 2271 │     export default GerarFluxograma;
+      ╰────
+
+  × Expression expected
+      ╭─[/home/runner/workspace/src/components/chat/aprofundar-components/GerarFluxograma.tsx:2266:1]
+ 2266 │       )}
+ 2267 │     </div>
+ 2268 │   );
+ 2269 │ };
+      · ─
+ 2270 │ 
+ 2271 │ export default GerarFluxograma;
+      ╰────
+
+
+Caused by:
+    Syntax Error
+/home/runner/workspace/src/components/chat/aprofundar-components/GerarFluxograma.tsx:1352:1
