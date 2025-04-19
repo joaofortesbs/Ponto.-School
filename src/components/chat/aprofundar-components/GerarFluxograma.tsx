@@ -1876,22 +1876,22 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                       </span>
                     </div>
                   </div>
-                  
-                  {/* Mensagem de sobreposição */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-white/60 via-transparent to-transparent dark:from-gray-900/60 dark:via-transparent dark:to-transparent flex items-end justify-center pb-5 z-20">
-                    <div className="bg-white/90 dark:bg-gray-800/90 px-4 py-2 rounded-full shadow-md backdrop-blur-sm border border-blue-100/50 dark:border-blue-900/30">
-                      <p className="text-sm text-blue-600 dark:text-blue-400 font-medium flex items-center">
-                        <span className="animate-blink mr-2 h-2 w-2 rounded-full bg-blue-500"></span>
-                        O fluxograma gerado aparecerá aqui!
-                      </p>
-                    </div>
-                  </div>
                 </div>
                 
                 {/* Rodapé simplificado */}
                 <div className="mt-4 h-4"></div>
               </div>
               
+              {/* Mensagem de visualização do fluxograma */}
+              <div className="w-full mt-4 flex justify-center">
+                <div className="bg-white/90 dark:bg-gray-800/90 px-5 py-3 rounded-lg shadow-md backdrop-blur-sm border border-blue-100/50 dark:border-blue-900/30 transform hover:scale-105 transition-all duration-300">
+                  <p className="text-sm text-blue-600 dark:text-blue-400 font-medium flex items-center">
+                    <span className="animate-blink mr-2 h-2 w-2 rounded-full bg-blue-500"></span>
+                    O fluxograma gerado aparecerá aqui!
+                  </p>
+                </div>
+              </div>
+
               <Button
                 onClick={() => setShowSavedFluxogramas(!showSavedFluxogramas)}
                 variant="outline"
