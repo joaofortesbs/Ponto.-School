@@ -297,14 +297,10 @@ Crie um fluxograma que:
               });
             }
             
-            resolve({ nodes, edges });
-          });
-        }
-            
-            // Resolver com os dados do fluxograma
+            // Simular um pequeno atraso antes de resolver (opcional)
             setTimeout(() => {
               resolve({ nodes, edges });
-            }, 3000);
+            }, 1000);
           });
         }
         
