@@ -1034,8 +1034,10 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
       // Esperar um momento para garantir que o DOM está estável
       await new Promise(resolve => setTimeout(resolve, 300));
       
-      // Verificar se o elemento existe
-      const element = document.querySelector('.react-flow') as HTMLElement;
+      // Verificar se o elemento existe - melhorando a seleção para garantir que encontre o elemento 
+      const element = document.querySelector('.react-flow') || 
+                      document.querySelector('.react-flow__viewport') ||
+                      document.querySelector('[data-testid="rf__wrapper"]') as HTMLElement;
       if (!element) {
         loadingIndicator.remove();
         alert('Não foi possível encontrar o fluxograma para exportar.');
