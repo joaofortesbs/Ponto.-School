@@ -19,7 +19,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import FluxogramaVisualizer from './FluxogramaVisualizer';
 import FluxogramaDetailModal from './FluxogramaDetailModal';
-import { Node } from 'react-flow-renderer';
+import { Node } from 'reactflow';
 
 interface GerarFluxogramaProps {
   handleBack: () => void;
@@ -70,36 +70,68 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
     // Processar o conteúdo e gerar o fluxograma
     const processFluxogramaContent = async () => {
       try {
-        // Aqui seria a chamada real para a API que processa o conteúdo
-        // Por enquanto, simularemos com uma estrutura de exemplo baseada no conteúdo
-        
-        // Simula o tempo de processamento
+        // Implementação da lógica de geração de fluxograma
         const fluxogramaData = await new Promise((resolve) => {
           setTimeout(() => {
-            // Extrai palavras-chave do conteúdo
-            const keywords = manualContent
-              .split(/[.,!?;\n]/)
-              .map(word => word.trim())
-              .filter(word => word.length > 5)
-              .slice(0, 6);
+            // ETAPA 1: Analisar e Estruturar o Conteúdo
+            const paragraphs = manualContent.split(/\n\n+/);
+            const sentences = manualContent.split(/[.!?]\s+/);
             
-            // Cria nós baseados nas palavras-chave
-            const nodes = keywords.map((keyword, index) => ({
-              id: (index + 1).toString(),
-              label: keyword.length > 15 ? keyword.substring(0, 15) + '...' : keyword,
-              description: `Conceito relacionado a: ${keyword}`,
-              type: index === 0 ? 'start' : index === keywords.length - 1 ? 'end' : 'default',
-              position: { x: 200, y: 50 + (index * 100) }
-            }));
+            // Identificar blocos conceituais principais
+            const mainBlocks = paragraphs.length > 3 ? paragraphs.slice(0, paragraphs.length) : sentences.slice(0, Math.min(8, sentences.length));
             
-            // Cria conexões entre os nós
+            // Extrair palavras-chave significativas
+            const keywords = mainBlocks.map(block => {
+              const words = block.split(/\s+/).filter(word => word.length > 3);
+              const mainWord = words.find(word => word.length > 5) || words[0] || 'Conceito';
+              return {
+                text: block,
+                keyword: mainWord.length > 20 ? mainWord.substring(0, 20) + '...' : mainWord
+              };
+            }).slice(0, 8); // Limitar a 8 nós para melhor visualização
+            
+            // ETAPA 2: Gerar os Nós (Nodes) do Fluxograma
+            const nodes = keywords.map((item, index) => {
+              // Determinar o tipo do nó
+              let type = 'default';
+              if (index === 0) type = 'start';
+              else if (index === keywords.length - 1) type = 'end';
+              
+              // Criar descrição significativa
+              const description = item.text.length > 100 
+                ? item.text.substring(0, 100) + '...' 
+                : item.text;
+              
+              // Ajustar posicionamento para layout de fluxo
+              let position;
+              const flowDirection = 'vertical'; // ou 'horizontal'
+              
+              if (flowDirection === 'vertical') {
+                position = { x: 250, y: 100 + (index * 120) };
+              } else {
+                position = { x: 100 + (index * 220), y: 200 };
+              }
+              
+              return {
+                id: (index + 1).toString(),
+                data: { 
+                  label: item.keyword.charAt(0).toUpperCase() + item.keyword.slice(1), 
+                  description: description
+                },
+                type,
+                position
+              };
+            });
+            
+            // ETAPA 3: Gerar as Conexões (Edges)
             const edges = [];
             for (let i = 0; i < nodes.length - 1; i++) {
               edges.push({
                 id: `e${i+1}-${i+2}`,
                 source: (i + 1).toString(),
                 target: (i + 2).toString(),
-                label: i === 0 ? 'Inicia' : i === nodes.length - 2 ? 'Finaliza' : 'Continua'
+                animated: true,
+                style: { stroke: '#3b82f6' }
               });
             }
             
