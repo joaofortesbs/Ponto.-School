@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { generateAIResponse } from '@/services/aiChatService';
+import TypewriterEffect from '@/components/ui/typewriter-effect';
 
 interface AprofundarModalProps {
   isOpen: boolean;
@@ -42,6 +43,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
     loading: false
   });
   const [lastGeneratedContext, setLastGeneratedContext] = useState<string>('');
+  const [isTyping, setIsTyping] = useState(false);
 
   // Obter a última mensagem do assistente (resposta da IA)
   const getLastAIMessage = () => {
@@ -80,14 +82,23 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
 
 Formato esperado de resposta: apenas o tema principal, sem frases introdutórias ou explicativas.`;
 
-      // Obter o tema principal
+      // Mostrar imediatamente um texto de carregamento rápido
+      setAprofundadoContent(prev => ({
+        ...prev,
+        contexto: "Gerando contexto aprofundado..."
+      }));
+      
+      // Ativar o efeito de digitação enquanto o conteúdo é gerado
+      setIsTyping(true);
+
+      // Obter o tema principal - vamos fazer isso rapidamente
       const extractedTheme = await generateAIResponse(extractThemePrompt, sessionId || 'aprofundar_session_theme');
       
       // Limpar qualquer texto adicional para obter apenas o tema
       const cleanTheme = extractedTheme.replace(/^[^a-zA-Z0-9áàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ]*|[^a-zA-Z0-9áàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ]*$/g, '');
       console.log("Tema extraído:", cleanTheme);
 
-      // Prompt para o contexto aprofundado
+      // Prompt para o contexto aprofundado - versão otimizada para resposta rápida
       const contextoPrompt = `Você é um especialista acadêmico. Gere um texto detalhado e aprofundado sobre o tema "${cleanTheme || lastAIMessage}".
       
 Seu texto deve incluir:
@@ -97,15 +108,14 @@ Seu texto deve incluir:
 4. Perspectivas críticas e debates acadêmicos atuais
 5. Relações com outras áreas do conhecimento
 
-Use uma linguagem acadêmica e didática, estruturando o texto em parágrafos bem organizados. Seu texto deve ser informativo, preciso e aprofundado, mantendo um tom educativo apropriado para estudantes que desejam aprender mais sobre este tema.`;
+Seja conciso e direto, estruturando o texto em parágrafos bem organizados. Seu texto deve ser informativo e preciso.`;
 
-      // Prompt para os termos técnicos
-      const termosPrompt = `Você é um especialista em terminologia técnica. Sobre o tema "${cleanTheme || lastAIMessage}", identifique e explique 3-5 termos técnicos importantes.
+      // Prompt para os termos técnicos - versão simplificada
+      const termosPrompt = `Você é um especialista em terminologia técnica. Sobre o tema "${cleanTheme || lastAIMessage}", identifique e explique 3 termos técnicos importantes.
       
 Para cada termo, forneça:
 1. O nome do termo
 2. Uma definição clara e precisa
-3. A importância deste termo no contexto do tema
 
 Formato da resposta: Liste os termos no formato JSON como este exemplo:
 [
@@ -119,36 +129,36 @@ Formato da resposta: Liste os termos no formato JSON como este exemplo:
   }
 ]`;
 
-      // Prompt para as aplicações expandidas
-      const aplicacoesPrompt = `Você é um especialista em aplicações práticas do conhecimento. Sobre o tema "${cleanTheme || lastAIMessage}", elabore sobre as aplicações práticas e teóricas.
+      // Prompt para as aplicações expandidas - versão simplificada
+      const aplicacoesPrompt = `Você é um especialista em aplicações práticas do conhecimento. Sobre o tema "${cleanTheme || lastAIMessage}", elabore sobre as 3 principais aplicações práticas deste conhecimento.`;
+
+      // Iniciar a geração do contexto imediatamente e mostrar em tempo real
+      const contextoResponsePromise = generateAIResponse(contextoPrompt, sessionId || 'aprofundar_session');
       
-Inclua:
-1. Como este conhecimento é aplicado em diferentes campos
-2. Exemplos práticos e concretos do mundo real
-3. Relevância para estudos futuros e pesquisas atuais
-4. Conexões interdisciplinares e impactos sociais
-5. Inovações recentes e tendências emergentes
-
-Forneça uma explicação detalhada e útil para um estudante que quer entender o valor prático e a relevância contemporânea deste conhecimento.`;
-
-      // Primeiro, vamos obter só o contexto para mostrar rapidamente
-      const contextoResponse = await generateAIResponse(contextoPrompt, sessionId || 'aprofundar_session');
+      // Enquanto aguardamos o contexto completo, vamos mostrar um texto de carregamento
+      // que será substituído gradualmente pelo contexto real usando o efeito de digitação
+      
+      // Iniciar a obtenção dos outros dados em paralelo
+      const outrasPromises = Promise.all([
+        contextoResponsePromise,
+        generateAIResponse(termosPrompt, sessionId || 'aprofundar_session'),
+        generateAIResponse(aplicacoesPrompt, sessionId || 'aprofundar_session')
+      ]);
+      
+      // Aguardar o resultado do contexto para exibição imediata
+      const contextoResponse = await contextoResponsePromise;
       
       // Armazenar o contexto gerado para uso posterior
       setLastGeneratedContext(contextoResponse);
       
-      // Atualizar o estado imediatamente com o contexto, mantendo loading como true
-      // para indicar que ainda estamos buscando os outros dados
+      // Atualizar o estado com o contexto, ativando o efeito de digitação
       setAprofundadoContent(prev => ({
         ...prev,
         contexto: contextoResponse
       }));
-
-      // Agora vamos buscar os outros dados em paralelo
-      const [termosResponse, aplicacoesResponse] = await Promise.all([
-        generateAIResponse(termosPrompt, sessionId || 'aprofundar_session'),
-        generateAIResponse(aplicacoesPrompt, sessionId || 'aprofundar_session')
-      ]);
+      
+      // Aguardar o restante dos dados
+      const [_, termosResponse, aplicacoesResponse] = await outrasPromises;
 
       // Processa a resposta dos termos técnicos (que deve estar em formato JSON)
       let termosParsed = [];
@@ -321,10 +331,21 @@ Forneça uma explicação detalhada e útil para um estudante que quer entender 
               </div>
             ) : (
               <div className="text-sm text-gray-700 dark:text-gray-300 mb-3 whitespace-pre-line">
-                {aprofundadoContent.contexto || lastGeneratedContext || (
+                {aprofundadoContent.loading ? (
                   <span className="flex items-center">
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
                     Gerando contexto aprofundado...
+                  </span>
+                ) : aprofundadoContent.contexto ? (
+                  <TypewriterEffect 
+                    text={aprofundadoContent.contexto} 
+                    speed={5} 
+                    onComplete={() => setIsTyping(false)}
+                  />
+                ) : (
+                  <span className="flex items-center">
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Preparando conteúdo...
                   </span>
                 )}
               </div>

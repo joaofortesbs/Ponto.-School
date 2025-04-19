@@ -1,4 +1,3 @@
-
 /* From Uiverse.io by Nawsome */ 
 .typewriter {
   --blue: #FF8736;
@@ -307,4 +306,13 @@
   position: relative;
   min-height: 24px;
   padding-left: 30px;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-blink {
+  animation: blink 1s infinite;
 }
