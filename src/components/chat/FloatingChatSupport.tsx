@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import NotebookSimulation from "./NotebookSimulation";
 import SlidesPresentationModal from "./SlidesPresentationModal";
 import QuizTask from "../agenda/challenges/QuizTask";
+import AprofundarModal from "./AprofundarModal";
 import {
   MessageSquare,
   Send,
@@ -430,6 +431,9 @@ const FloatingChatSupport: React.FC = () => {
     customClassGroup: string;
     customGrade: string;
   }
+  
+  // Estado para modal Aprofundar no tema
+  const [showAprofundarModal, setShowAprofundarModal] = useState(false);
   
   // Estado para controlar modal de personalização do Epictus IA
   const [showEpictusPersonalizeModal, setShowEpictusPersonalizeModal] = useState(false);
@@ -2309,10 +2313,12 @@ Exemplo de formato da resposta:
                               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // Implementar aprofundamento no tema
+                                // Abrir modal de aprofundamento no tema
                                 setMessages(prevMessages => 
                                   prevMessages.map(msg => ({...msg, showContextTools: false}))
                                 );
+                                
+                                setShowAprofundarModal(true);
                                 
                                 toast({
                                   title: "Aprofundando no tema",
@@ -4062,6 +4068,12 @@ Exemplo de formato da resposta:
         </div>
       )}
 
+      {/* Modal de Aprofundar no Tema */}
+      <AprofundarModal 
+        isOpen={showAprofundarModal}
+        onClose={() => setShowAprofundarModal(false)}
+      />
+      
       {/* Modal de Caderno para anotações */}
       {showNotebookModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
