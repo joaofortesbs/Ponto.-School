@@ -42,6 +42,20 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
   const [isGeneratingFontes, setIsGeneratingFontes] = useState(true);
   const [recursosContent, setRecursosContent] = useState<any[] | null>(null);
   const [exerciciosContent, setExerciciosContent] = useState<any[] | null>(null);
+  
+  // Reset states when modal is closed
+  useEffect(() => {
+    if (!isOpen) {
+      setActiveContent('main');
+      setExplicacaoContent(null);
+      setTopicosContent(null);
+      setExemplosContent(null);
+      setErrosContent(null);
+      setDicasContent(null);
+      setRecursosContent(null);
+      setExerciciosContent(null);
+    }
+  }, [isOpen]);
 
   const handleOptionClick = (option: ContentType) => {
     setLoading(true);
@@ -53,7 +67,15 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
   };
 
   const handleBack = () => {
+    // Resetar os estados dos conteúdos ao voltar para o menu principal
     setActiveContent('main');
+    setExplicacaoContent(null);
+    setTopicosContent(null);
+    setExemplosContent(null);
+    setErrosContent(null);
+    setDicasContent(null);
+    setRecursosContent(null);
+    setExerciciosContent(null);
   };
 
   // Generate content for each tab when it becomes active
@@ -195,63 +217,66 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
       }
     };
 
-    // Gerar conteúdo para a aba selecionada
-    if (activeContent === 'explicacao') {
-      setIsGeneratingExplicacao(true);
-      // Simulação de chamada de API para a IA - usando o conteúdo da mensagem real
-      setTimeout(() => {
-        const generatedContent = generateContentFromMessage('explicacao');
-        setExplicacaoContent(generatedContent);
-        setIsGeneratingExplicacao(false);
-      }, 1500);
-    }
-    
-    if (activeContent === 'topicos') {
-      setIsGeneratingTopicos(true);
-      // Simulação de chamada de API para a IA - usando o conteúdo da mensagem real
-      setTimeout(() => {
-        const generatedContent = generateContentFromMessage('topicos');
-        setTopicosContent(generatedContent);
-        setIsGeneratingTopicos(false);
-      }, 1500);
-    }
-    
-    if (activeContent === 'exemplos') {
-      setIsGeneratingExemplos(true);
-      // Simulação de chamada de API para a IA - usando o conteúdo da mensagem real
-      setTimeout(() => {
-        const generatedContent = generateContentFromMessage('exemplos');
-        setExemplosContent(generatedContent);
-        setIsGeneratingExemplos(false);
-      }, 1500);
-    }
-    
-    if (activeContent === 'erros') {
-      setIsGeneratingErros(true);
-      // Simulação de chamada de API para a IA - usando o conteúdo da mensagem real
-      setTimeout(() => {
-        const generated = generateContentFromMessage('erros');
-        
-        if (generated) {
-          setErrosContent(generated.erros);
-          setDicasContent(generated.dicas);
-        }
-        setIsGeneratingErros(false);
-      }, 1500);
-    }
-    
-    if (activeContent === 'fontes') {
-      setIsGeneratingFontes(true);
-      // Simulação de chamada de API para a IA - usando o conteúdo da mensagem real
-      setTimeout(() => {
-        const generated = generateContentFromMessage('fontes');
-        
-        if (generated) {
-          setRecursosContent(generated.recursos);
-          setExerciciosContent(generated.exercicios);
-        }
-        setIsGeneratingFontes(false);
-      }, 1500);
+    // Geramos o conteúdo sempre que o usuário seleciona uma opção
+    // e não apenas quando o estado inicial é nulo
+    const handleContentGeneration = () => {
+      switch (activeContent) {
+        case 'explicacao':
+          setIsGeneratingExplicacao(true);
+          setTimeout(() => {
+            const generatedContent = generateContentFromMessage('explicacao');
+            setExplicacaoContent(generatedContent);
+            setIsGeneratingExplicacao(false);
+          }, 1000);
+          break;
+          
+        case 'topicos':
+          setIsGeneratingTopicos(true);
+          setTimeout(() => {
+            const generatedContent = generateContentFromMessage('topicos');
+            setTopicosContent(generatedContent);
+            setIsGeneratingTopicos(false);
+          }, 1000);
+          break;
+          
+        case 'exemplos':
+          setIsGeneratingExemplos(true);
+          setTimeout(() => {
+            const generatedContent = generateContentFromMessage('exemplos');
+            setExemplosContent(generatedContent);
+            setIsGeneratingExemplos(false);
+          }, 1000);
+          break;
+          
+        case 'erros':
+          setIsGeneratingErros(true);
+          setTimeout(() => {
+            const generated = generateContentFromMessage('erros');
+            if (generated) {
+              setErrosContent(generated.erros);
+              setDicasContent(generated.dicas);
+            }
+            setIsGeneratingErros(false);
+          }, 1000);
+          break;
+          
+        case 'fontes':
+          setIsGeneratingFontes(true);
+          setTimeout(() => {
+            const generated = generateContentFromMessage('fontes');
+            if (generated) {
+              setRecursosContent(generated.recursos);
+              setExerciciosContent(generated.exercicios);
+            }
+            setIsGeneratingFontes(false);
+          }, 1000);
+          break;
+      }
+    };
+
+    // Gerar conteúdo sempre que a opção ativa mudar
+    if (activeContent !== 'main') {
+      handleContentGeneration();
     }
   }, [activeContent, messageContent]);
 
