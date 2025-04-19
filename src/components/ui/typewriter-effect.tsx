@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import '../../styles/typewriter-loader.css';
 
 interface TypewriterEffectProps {
   text: string;
@@ -10,7 +9,7 @@ interface TypewriterEffectProps {
   onComplete?: () => void;
 }
 
-export const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
+const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
   text,
   speed = 30,
   delay = 0,

@@ -760,7 +760,7 @@ Este é o slogan que representa a essência da Ponto.School - nossa missão é p
 
     // Configuração da solicitação para a API Gemini com o histórico completo
     console.log(`Enviando histórico de conversa para Gemini com ${geminiContents.length} mensagens`);
-    
+
     // Usar o endpoint de chat que suporta contexto
     const response = await axios.post(
       `${GEMINI_BASE_URL}?key=${GEMINI_API_KEY}`,
@@ -872,7 +872,7 @@ Contexto do usuário:
 
               Histórico de mensagens anteriores:
               ${conversationHistory[sessionId].slice(1).map(msg => `${msg.role}: ${msg.content}`).join('\n\n')}
-              
+
               Responda à seguinte pergunta do usuário ${usernameFull} de forma extensa, detalhada e visualmente atrativa: ${message}`
             }
           ]
@@ -898,10 +898,10 @@ Contexto do usuário:
 
     // Adicionar a resposta da IA ao histórico
     conversationHistory[sessionId].push({ role: 'assistant', content: aiResponse });
-    
+
     // Salvar histórico atualizado no localStorage
     saveConversationHistory(sessionId, conversationHistory[sessionId]);
-    
+
     console.log(`Histórico de conversa atualizado para ${sessionId}. Total de mensagens: ${conversationHistory[sessionId].length}`);
 
     return aiResponse;
@@ -1172,4 +1172,610 @@ export const resetResponseState = (sessionId: string): void => {
   console.log(`Estados resetados para a sessão ${sessionId}. 
     Estado anterior: pausado=${wasPaused}, cancelado=${wasCancelled}. 
     Estado atual: pausado=${isPaused[sessionId]}, cancelado=${isCancelled[sessionId]}`);
+};
+
+// Função de simulação de resposta da IA
+const simulateAIResponse = async (prompt: string, options?: { 
+  intelligenceLevel?: 'basic' | 'normal' | 'advanced',
+  languageStyle?: 'casual' | 'formal' | 'technical'
+}): Promise<string> => {
+  // Adicionar delay para simular tempo de processamento
+  await new Promise(resolve => setTimeout(resolve, 800));
+
+  // Palavras-chave para detectar tipo de pergunta
+  const keywords = {
+    plataforma: ["como usar", "funcionalidade", "plataforma", "ferramenta", "recurso", "interface", "ponto.school", "menu", "barra lateral", "dashboard"],
+    educacional: ["matemática", "física", "química", "biologia", "história", "geografia", "português", "inglês", "ciências", "literatura", "aprender", "estudo", "matéria", "disciplina", "conteúdo", "entender"],
+    técnico: ["programação", "código", "python", "javascript", "html", "css", "banco de dados", "api", "algoritmo", "função", "desenvolvimento", "dev", "web", "app", "aplicação", "software"],
+    ajuda: ["ajuda", "suporte", "problema", "erro", "bug", "não consigo", "falha", "dúvida", "como faço", "preciso de ajuda", "help", "socorro", "assistência", "orientação"],
+    aprofundar: ["aprofundar", "detalhes", "explicação avançada", "mais informações", "aprofundamento", "detalhar", "expandir", "elaborar"]
+  };
+
+  // Detectar tipo de pergunta por palavras-chave
+  let questionType = "geral";
+  for (const [type, words] of Object.entries(keywords)) {
+    if (words.some(word => prompt.toLowerCase().includes(word.toLowerCase()))) {
+      questionType = type;
+      break;
+    }
+  }
+
+  // Caso especial para o modal de aprofundamento
+  if (prompt.includes("Analise profundamente o tema") || questionType === "aprofundar") {
+    return generateDeepExplanation(prompt);
+  }
+
+  // Personalizar resposta com base no nível de inteligência escolhido
+  const intelligenceLevel = options?.intelligenceLevel || 'normal';
+  const languageStyle = options?.languageStyle || 'casual';
+
+  let response = "";
+
+  // Respostas base por tipo de pergunta
+  const baseResponses = {
+    plataforma: `A Ponto.School é uma plataforma educacional completa que oferece múltiplos recursos para ajudar em seus estudos. Na nossa plataforma, você tem acesso a EpictusIA, um assistente inteligente que cria planos de estudos personalizados, biblioteca com materiais selecionados, turmas interativas, e grupos de estudo para aprendizado colaborativo. Nosso design intuitivo e ferramentas integradas tornam o aprendizado mais eficiente e conectado.`,
+
+    educacional: `Este é um tópico fascinante para estudar! Posso ajudar com explicações, exemplos práticos, e exercícios para fixação. A Ponto.School oferece materiais didáticos específicos sobre este assunto na nossa Biblioteca Digital. Também temos grupos de estudo relacionados onde você pode discutir e aprofundar seus conhecimentos com outros estudantes interessados. O EpictusIA pode criar um plano de estudos personalizado sobre este tema específico.`,
+
+    técnico: `Programação e desenvolvimento técnico são áreas essenciais hoje em dia. Na Ponto.School, temos recursos específicos para aprendizado de tecnologia, incluindo tutoriais interativos, projetos práticos, e comunidades de programadores. Nossa plataforma facilita o aprendizado com feedback em tempo real e conexão com mentores experientes na área. O EpictusIA pode ajudar a criar roteiros de aprendizado técnico adaptados ao seu nível atual.`,
+
+    ajuda: `Estou aqui para ajudar! Vamos resolver isso juntos. A Ponto.School possui um sistema de suporte abrangente para atender todas as suas necessidades. Além de mim, você pode acessar tutoriais na Biblioteca, buscar ajuda em Grupos de Estudo, ou usar o recurso de Conexão Expert para falar com especialistas em áreas específicas. Se preferir, pode também acessar nosso FAQ completo na seção de Ajuda.`,
+
+    geral: `Obrigado por sua mensagem! A Ponto.School está sempre evoluindo para oferecer a melhor experiência educacional possível. Nossa plataforma integra inteligência artificial, recursos de estudo personalizados, e uma comunidade vibrante para maximizar seu aprendizado. Explore nossos recursos como EpictusIA, Biblioteca, Grupos de Estudo, e muito mais para aproveitar ao máximo sua jornada educacional.`
+  };
+
+  // Ajustar tamanho e complexidade da resposta com base no nível de inteligência
+  switch (intelligenceLevel) {
+    case 'basic':
+      // Resposta curta e direta
+      response = baseResponses[questionType].split('.')[0] + '.';
+      break;
+
+    case 'advanced':
+      // Resposta detalhada com formatação e recursos adicionais
+      const formattedResponse = baseResponses[questionType];
+
+      // Adicionar detalhes, exemplos, e recursos da plataforma
+      response = `# Resposta à sua pergunta\n\n${formattedResponse}\n\n## Recursos relacionados na Ponto.School\n\n- **EpictusIA**: Assistente de IA para aprendizado personalizado\n- **Biblioteca Digital**: Materiais de estudo curados por especialistas\n- **Grupos de Estudo**: Comunidades para aprendizado colaborativo\n- **Conexão Expert**: Mentoria com profissionais experientes\n\n## Próximos passos recomendados\n\n1. Explore o material relacionado na Biblioteca\n2. Participe dos grupos de discussão sobre este tema\n3. Utilize o EpictusIA para criar um plano de estudos personalizado\n4. Acompanhe seu progresso na Dashboard principal\n\nQuer saber mais sobre algum destes recursos específicos?`;
+      break;
+
+    case 'normal':
+    default:
+      // Resposta padrão com pequenos ajustes
+      response = baseResponses[questionType];
+      // Adicionar sugestão de recurso da plataforma
+      response += ` Posso ajudar com mais alguma informação ou direcionar você para recursos específicos sobre este tema?`;
+      break;
+  }
+
+  // Ajustar estilo de linguagem
+  if (languageStyle === 'technical') {
+    // Tornar o tom mais técnico e formal
+    response = response.replace(/Estou aqui para ajudar!/g, "Seguem informações técnicas pertinentes à sua solicitação.");
+    response = response.replace(/fascinante/g, "relevante");
+    response = response.replace(/Obrigado por sua mensagem!/g, "Em resposta à sua solicitação:");
+    response = response.replace(/!/g, ".");
+  } else if (languageStyle === 'casual') {
+    // Tornar o tom mais informal e amigável
+    response = response.replace(/A Ponto.School possui um sistema/g, "A Ponto.School tem um sistema");
+    response = response.replace(/oferece múltiplos recursos/g, "oferece vários recursos legais");
+    // Adicionar emojis para tom mais casual
+    response = response.replace(/\. /g, ". 😊 ");
+    response = response.replace(/\? /g, "? 👍 ");
+  }
+
+  return response;
+};
+
+// Função para gerar explicações aprofundadas para o modal de aprofundamento
+const generateDeepExplanation = (prompt: string): string => {
+  // Analisar o prompt para identificar o conteúdo original a ser aprofundado
+  const originalContentMatch = prompt.match(/Mensagem original: "(.*?)"/s);
+  let originalContent = '';
+
+  if (originalContentMatch && originalContentMatch[1]) {
+    originalContent = originalContentMatch[1];
+  }
+
+  // Extrair palavras-chave para determinar o tema principal
+  const keywords = extractKeywords(originalContent);
+
+  // Determinar tema geral baseado nas palavras-chave
+  const theme = determineTheme(keywords);
+
+  // Gerar uma explicação detalhada baseada no tema
+  let deepExplanation = '';
+
+  switch (theme) {
+    case 'matemática':
+      deepExplanation = `# Matemática: Conceitos Fundamentais e Aplicações
+
+## Introdução ao Tema
+
+A matemática é muito mais do que apenas números e fórmulas; é uma linguagem universal que nos permite descrever padrões, relações e estruturas. Seu desenvolvimento atravessa milênios de história humana, com contribuições de diversas civilizações.
+
+## Contexto Histórico
+
+A jornada matemática começou com necessidades práticas de contagem e medição. Os babilônios desenvolveram um sofisticado sistema numérico de base 60, cuja influência ainda persiste em nossa medição de tempo. Os egípcios criaram métodos para cálculos de áreas e volumes essenciais para agricultura e construção. Na Grécia Antiga, matemáticos como Euclides, Pitágoras e Arquimedes transformaram a matemática em uma ciência dedutiva baseada em axiomas, definições e teoremas.
+
+Durante a Era de Ouro Islâmica (séculos VIII-XIV), estudiosos como Al-Khwarizmi, cujo nome originou a palavra "algoritmo", preservaram e expandiram o conhecimento matemático, introduzindo conceitos fundamentais de álgebra. O Renascimento europeu trouxe avanços significativos com figuras como Fibonacci, Cardano e Descartes, que conectou geometria e álgebra.
+
+Nos séculos XVII e XVIII, Newton e Leibniz simultaneamente desenvolveram o cálculo diferencial e integral, ferramentas essenciais para descrever mudanças e acumulações. O século XX viu a formalização da matemática moderna com contribuições de Hilbert, Gödel, Turing, entre outros.
+
+## Conceitos Fundamentais
+
+A matemática se organiza em diversas áreas interconectadas:
+
+- **Aritmética**: Estuda operações básicas com números (adição, subtração, multiplicação, divisão)
+- **Álgebra**: Generaliza a aritmética usando variáveis e equações para expressar relações
+- **Geometria**: Investiga propriedades de formas, tamanhos, posições relativas de figuras e espaço
+- **Cálculo**: Examina mudanças contínuas através de derivadas e integrais
+- **Teoria dos Números**: Explora propriedades e relações entre números inteiros
+- **Estatística e Probabilidade**: Analisa dados, variabilidade e incerteza
+- **Lógica Matemática**: Estuda métodos formais de raciocínio
+
+## Aplicações Práticas
+
+A matemática permeia praticamente todos os aspectos da vida moderna:
+
+1. **Ciências Naturais**: Física, química e biologia utilizam matemática extensivamente para modelar fenômenos naturais
+2. **Engenharia**: Projetos, análises estruturais e sistemas dependem de cálculos matemáticos precisos
+3. **Tecnologia**: Computação, criptografia, inteligência artificial e processamento de dados são fundamentados em conceitos matemáticos
+4. **Economia e Finanças**: Modelos econômicos, análises de risco e instrumentos financeiros baseiam-se em matemática avançada
+5. **Medicina**: Desde dosagens de medicamentos até imageamento médico e modelagem epidemiológica
+6. **Artes e Design**: Proporções, perspectiva, padrões e algoritmos generativos
+
+## Interdisciplinaridade
+
+A matemática fornece ferramentas conceituais para diversas disciplinas:
+
+- **Física-Matemática**: Equações diferenciais descrevem fenômenos físicos fundamentais
+- **Biologia Matemática**: Modelos matemáticos explicam crescimento populacional, epidemias e sistemas biológicos
+- **Psicologia Cognitiva**: Modelos matemáticos ajudam a entender processos de tomada de decisão e funções cerebrais
+- **Linguística Computacional**: Algoritmos matemáticos analisam estruturas e padrões linguísticos
+
+## Desafios Contemporâneos
+
+A matemática continua evoluindo para enfrentar questões complexas:
+
+- **Problemas do Milênio**: Sete problemas fundamentais com prêmio de $1 milhão cada
+- **Inteligência Artificial**: Novas estruturas matemáticas para aprendizado de máquina
+- **Ciência de Dados**: Métodos estatísticos avançados para análise de grandes volumes de informação
+- **Matemática Quântica**: Fundamentos para computação quântica e mecânica quântica
+
+## Conclusão
+
+A matemática é simultaneamente uma criação humana abstrata e uma ferramenta para descrever a realidade física. Sua beleza reside na elegância de suas teorias e na surpreendente eficácia em explicar o universo. O desenvolvimento do pensamento matemático não apenas reflete nossa capacidade de abstração, mas também amplia nossa compreensão do mundo e potencializa avanços tecnológicos e científicos.`;
+      break;
+
+    case 'ciências':
+      deepExplanation = `# O Método Científico: Fundamentos e Evolução
+
+## Introdução ao Tema
+
+O método científico representa o alicerce da investigação empírica moderna, fornecendo uma estrutura sistemática para explorar fenômenos naturais, testar hipóteses e construir conhecimento verificável. Mais que um procedimento rígido, é uma abordagem dinâmica e auto-corretiva para compreender o mundo.
+
+## Contexto Histórico
+
+O pensamento sistemático sobre a natureza tem raízes antigas. Filósofos gregos como Aristóteles propuseram observações naturais, embora frequentemente misturadas com filosofia especulativa. Durante a Idade Média islâmica, estudiosos como Ibn al-Haytham (Alhazen) enfatizaram experimentação sistemática e verificação empírica, especialmente em óptica.
+
+A Revolução Científica europeia (séculos XVI-XVII) marcou uma transformação fundamental. Figuras como Francis Bacon advogaram pela indução a partir de observações, enquanto Galileu Galilei combinou experimentação controlada com matemática. René Descartes enfatizou o raciocínio dedutivo e o ceticismo metódico. Isaac Newton posteriormente sintetizou abordagens experimentais e matemáticas.
+
+Nos séculos XIX e XX, o método científico foi refinado com ferramentas estatísticas, delineamento experimental e técnicas de replicação, embora filósofos como Karl Popper e Thomas Kuhn tenham destacado suas limitações e a importância de fatores sociais na construção do conhecimento científico.
+
+## Princípios Fundamentais
+
+O método científico moderno incorpora vários elementos essenciais:
+
+1. **Observação**: Coleta sistemática de informações sobre fenômenos
+2. **Questionamento**: Formulação de perguntas testáveis
+3. **Hipótese**: Proposição de explicação provisória
+4. **Predição**: Consequências lógicas da hipótese
+5. **Experimentação**: Testes controlados para verificar predições
+6. **Análise**: Interpretação de resultados, frequentemente usando estatística
+7. **Conclusão**: Avaliação da hipótese com base nos resultados
+8. **Comunicação**: Compartilhamento de métodos e resultados para revisão por pares
+9. **Replicação**: Repetição de experimentos para verificar consistência
+10. **Refinamento**: Modificação de teorias com base em novas evidências
+
+## Aplicações Práticas
+
+O método científico transcende laboratórios, informando:
+
+- **Medicina Baseada em Evidências**: Tratamentos fundamentados em ensaios clínicos rigorosos
+- **Engenharia**: Testes sistemáticos de materiais e designs
+- **Políticas Públicas**: Programas avaliados através de dados empíricos
+- **Agricultura**: Métodos de cultivo otimizados por experimentos controlados
+- **Tecnologia**: Desenvolvimento iterativo baseado em testes e feedback
+- **Ciência Forense**: Análise sistemática de evidências criminais
+- **Gestão Empresarial**: Decisões baseadas em dados e experimentação
+
+## Interdisciplinaridade
+
+O método científico conecta-se a diversos campos:
+
+- **Filosofia da Ciência**: Examina premissas, limitações e implicações da metodologia científica
+- **Sociologia do Conhecimento**: Investiga influências sociais na produção científica
+- **Psicologia Cognitiva**: Estuda vieses que afetam raciocínio científico
+- **Ética**: Considera implicações morais da pesquisa
+- **Comunicação**: Explora transmissão eficaz de descobertas científicas
+
+## Desafios Contemporâneos
+
+A ciência moderna enfrenta questões complexas:
+
+- **Reprodutibilidade**: Muitos resultados publicados não são replicáveis
+- **Complexidade Estatística**: Análises sofisticadas podem produzir resultados espúrios
+- **Viés de Publicação**: Tendência a publicar apenas resultados positivos
+- **Democratização**: Equilíbrio entre expertise especializada e participação pública
+- **Questões Interdisciplinares**: Problemas que transcendem disciplinas individuais
+- **Modelagem Computacional**: Integração de simulações com experimentação tradicional
+- **Ciência Aberta**: Movimento para transparência, dados abertos e acesso livre
+
+## Conclusão
+
+O método científico representa uma das mais poderosas ferramentas intelectuais desenvolvidas pela humanidade. Sua estrutura sistemática e auto-corretiva permite distinguir afirmações justificadas empiricamente de especulações infundadas. Embora tenha limitações e esteja sujeito a influências sociais e culturais, continua sendo nosso melhor instrumento para construir conhecimento confiável sobre o mundo natural. A ciência moderna reconhece sua natureza provisória e iterativa, onde teorias são continuamente refinadas à luz de novas evidências.`;
+      break;
+
+    case 'história':
+      deepExplanation = `# Revoluções Industriais: Transformações Tecnológicas e Sociais
+
+## Introdução ao Tema
+
+As Revoluções Industriais representam períodos de transformação tecnológica acelerada que reconfiguraram fundamentalmente as estruturas econômicas, sociais e políticas globais. Estes momentos de inflexão histórica não foram apenas transições tecnológicas, mas complexas reconfigurações da relação humana com trabalho, tempo, espaço e natureza.
+
+## Contexto Histórico
+
+### Primeira Revolução Industrial (c. 1760-1840)
+
+Originada na Grã-Bretanha, esta transformação inicial caracterizou-se pela transição de métodos manuais para processos mecanizados. Fatores-chave incluíam:
+
+- **Inovações técnicas**: A máquina a vapor de Watt, o tear mecânico e avanços metalúrgicos
+- **Novos sistemas energéticos**: Substituição de energia humana, animal e hídrica pelo carvão
+- **Transformações sociais**: Urbanização acelerada e surgimento do proletariado industrial
+- **Antecedentes necessários**: Excedentes agrícolas, acumulação de capital mercantil e transformações na propriedade rural (cercamentos)
+
+A indústria têxtil liderou esta revolução, com fábricas de algodão aumentando drasticamente a produtividade. Cidades industriais como Manchester cresceram exponencialmente, frequentemente com condições sanitárias precárias e habitações inadequadas para a massa trabalhadora.
+
+### Segunda Revolução Industrial (c. 1870-1914)
+
+Este período testemunhou a difusão da industrialização para Europa continental, América do Norte e Japão, caracterizando-se por:
+
+- **Novas fontes energéticas**: Eletricidade e petróleo complementando o carvão
+- **Inovações químicas**: Fertilizantes sintéticos, corantes e medicamentos
+- **Avanços em comunicação**: Telégrafo e telefone encurtando distâncias
+- **Produção em massa**: Linha de montagem e padronização
+- **Gestão científica**: Taylorismo e racionalização do processo produtivo
+
+Empresas cresceram em escala e complexidade, surgindo corporações multinacionais e oligopólios. A competição por mercados e recursos intensificou o imperialismo europeu, enquanto tensões geopolíticas alimentaram a corrida armamentista que culminaria na Primeira Guerra Mundial.
+
+### Terceira Revolução Industrial (c. 1950-2000)
+
+Também chamada revolução digital ou informacional, caracterizou-se por:
+
+- **Computação e automação**: Dispositivos eletrônicos substituindo componentes mecânicos
+- **Telecomunicações avançadas**: Satélites, fibra óptica e internet
+- **Miniaturização**: Transistores e microchips
+- **Energia nuclear**: Novas possibilidades energéticas
+- **Organização flexível**: Toyotismo substituindo produção fordista rígida
+
+Esta fase viu a emergência de economias de serviços nas nações desenvolvidas, com manufatura frequentemente realocada para países em desenvolvimento. Globalização econômica intensificou-se, com cadeias de valor fragmentadas geograficamente.
+
+### Quarta Revolução Industrial (c. 2010-presente)
+
+Atualmente em curso, caracteriza-se pela fusão de tecnologias que borram fronteiras entre esferas física, digital e biológica:
+
+- **Inteligência artificial e aprendizado de máquina**
+- **Internet das coisas e sensores ubíquos**
+- **Robótica avançada e manufatura aditiva (impressão 3D)**
+- **Biotecnologia e edição genética**
+- **Computação quântica e tecnologias imersivas**
+
+## Impactos Socioeconômicos
+
+As revoluções industriais produziram transformações profundas:
+
+### Econômicos
+- Crescimento econômico sem precedentes, com aumento exponencial de produtividade
+- Novos setores econômicos e profissões emergindo enquanto outros desaparecem
+- Reorganização da divisão internacional do trabalho
+- Urbanização acelerada e transformação da paisagem
+
+### Sociais
+- Ascensão de novas classes sociais e reconfiguração de relações de poder
+- Transformações na estrutura familiar e papéis de gênero
+- Aumento inicial da desigualdade seguido por redistribuição em alguns contextos
+- Melhorias materiais massivas, especialmente em expectativa de vida, saúde e alfabetização
+
+### Ambientais
+- Intensificação da extração de recursos naturais
+- Poluição atmosférica, hídrica e degradação de ecossistemas
+- Alteração climática antropogênica
+- Desenvolvimento gradual de tecnologias mais eficientes e limpas
+
+## Perspectivas Teóricas
+
+Diferentes tradições intelectuais interpretam as revoluções industriais distintamente:
+
+- **Liberal/Whig**: Celebra inovação, empreendedorismo e progresso material
+- **Marxista**: Enfatiza exploração de classe, alienação e contradições do capitalismo
+- **Ecológica**: Destaca insustentabilidade do crescimento industrial e rupturas metabólicas
+- **Feminista**: Examina transformações no trabalho reprodutivo e nas relações de gênero
+- **Pós-colonial**: Analisa assimetrias globais e continuidades com exploração colonial
+
+## Conclusão
+
+As revoluções industriais representam inflexões decisivas na trajetória humana, comparáveis em impacto apenas à revolução neolítica que originou a agricultura. Cada fase trouxe simultaneamente oportunidades extraordinárias e desafios profundos, demonstrando a complexa dialética entre transformação tecnológica e reconfiguração social. A quarta revolução industrial, ainda em desdobramento, promete mudanças talvez mais rápidas e disruptivas que suas antecessoras, levantando questões fundamentais sobre trabalho, privacidade, distribuição de riqueza e sustentabilidade planetária.`;
+      break;
+
+    case 'tecnologia':
+      deepExplanation = `# Inteligência Artificial: Fundamentos, Avanços e Implicações
+
+## Introdução ao Tema
+
+A Inteligência Artificial (IA) representa uma das fronteiras mais dinâmicas da computação moderna, buscando criar sistemas capazes de realizar tarefas que tradicionalmente requerem inteligência humana. Mais que uma tecnologia singular, a IA engloba um ecossistema de abordagens, algoritmos e filosofias para simular aspectos da cognição humana.
+
+## Contexto Histórico
+
+A trajetória da IA atravessa várias fases distintas:
+
+### Origens Conceituais (1940-1950)
+As raízes da IA encontram-se nas formulações matemáticas de Alan Turing, incluindo a proposta do "Teste de Turing" para avaliar inteligência mecânica, e nos primeiros modelos neuronais de McCulloch e Pitts. A cibernética de Norbert Wiener estabeleceu fundamentos para sistemas auto-regulatórios.
+
+### Nascimento Formal (1950-1960)
+O termo "Inteligência Artificial" foi cunhado no famoso workshop de Dartmouth em 1956, organizado por John McCarthy. Programas pioneiros incluíam o Logic Theorist e General Problem Solver de Allen Newell e Herbert Simon. Os primeiros laboratórios de IA foram estabelecidos no MIT, Stanford e Carnegie Mellon.
+
+### Primavera Inicial (1960-1970)
+Avanços iniciais em processamento simbólico e abordagens baseadas em regras geraram otimismo. Joseph Weizenbaum criou ELIZA, simulando conversação, enquanto Terry Winograd desenvolveu SHRDLU para compreensão de linguagem natural em domínios restritos.
+
+### Primeiro Inverno da IA (1970-1980)
+Limitações técnicas e expectativas exageradas levaram a cortes de financiamento. O Relatório Lighthill no Reino Unido criticou severamente o progresso da IA, resultando em redução de apoio governamental. As promessas não cumpridas de tradução automática e compreensão generalizada da linguagem geraram ceticismo.
+
+### Renascimento (1980-1990)
+Sistemas especialistas comerciais revitalizaram o campo. Exemplos notáveis incluem MYCIN para diagnósticos médicos e XCON para configuração de computadores. O Japão lançou a ambiciosa iniciativa "Computadores de Quinta Geração".
+
+### Segundo Inverno da IA (1990-início dos anos 2000)
+Novamente, limitações técnicas e expectativas inflacionadas levaram a retrações. Muitas empresas de sistemas especialistas falharam quando a manutenção provou-se mais complexa que o desenvolvimento inicial.
+
+### Ressurgimento Moderno (meados dos anos 2000-presente)
+Impulsionado por três fatores convergentes:
+- **Big Data**: Disponibilidade sem precedentes de dados de treinamento
+- **Poder Computacional**: GPUs e infraestrutura de nuvem viabilizando computação paralela massiva
+- **Algoritmos Refinados**: Avanços em aprendizado profundo e redes neurais
+
+Marcos recentes incluem a vitória do DeepBlue sobre Garry Kasparov em xadrez (1997), Watson da IBM vencendo no Jeopardy! (2011), AlphaGo derrotando o campeão mundial de Go (2016), e modelos generativos como GPT, DALL-E e Stable Diffusion (2020-presente).
+
+## Fundamentos Técnicos
+
+### Paradigmas Principais
+
+A IA desenvolve-se através de múltiplas abordagens complementares:
+
+#### Sistemas Simbólicos
+- Baseados em representação explícita do conhecimento e lógica formal
+- Utilizam regras, ontologias e inferência simbólica
+- Vantagens: interpretabilidade e raciocínio explícito
+- Exemplos: sistemas especialistas, planejamento automatizado
+
+#### Aprendizado de Máquina
+- Sistemas que melhoram automaticamente com experiência
+- Subtipologias principais:
+  - **Supervisionado**: Aprende mapeamentos de exemplos rotulados
+  - **Não-supervisionado**: Descobre padrões em dados não rotulados
+  - **Por reforço**: Aprende através de tentativa e erro com feedback
+- Algoritmos notáveis: árvores de decisão, máquinas de vetores de suporte, florestas aleatórias
+
+#### Aprendizado Profundo
+- Redes neurais multicamadas inspiradas na estrutura cerebral
+- Arquiteturas especializadas incluem:
+  - **Redes Convolucionais (CNNs)**: Otimizadas para processamento visual
+  - **Redes Recorrentes (RNNs)**: Para dados sequenciais
+  - **Transformers**: Dominantes em processamento de linguagem natural
+  - **Redes Adversariais Generativas (GANs)**: Para geração de conteúdo
+
+### Áreas de Aplicação
+
+A IA transformou numerosos domínios:
+
+- **Processamento de Linguagem Natural**: Tradução, sumarização, geração de texto
+- **Visão Computacional**: Reconhecimento de objetos, análise de imagens médicas
+- **Sistemas de Recomendação**: Filtragem personalizada de conteúdo e produtos
+- **Robótica**: Navegação autônoma, manipulação de objetos
+- **Saúde**: Diagnóstico auxiliado por IA, descoberta de medicamentos
+- **Finanças**: Detecção de fraudes, negociação algorítmica
+- **Transportes**: Veículos autônomos, otimização logística
+- **Criatividade Computacional**: Geração de arte, música e narrativas
+
+## Implicações Sociais e Éticas
+
+O desenvolvimento acelerado da IA levanta questões fundamentais:
+
+### Transformações no Trabalho
+- Automação de tarefas cognitivas e manuais
+- Criação de novas profissões versus obsolescência ocupacional
+- Desigualdades potenciais na distribuição de benefícios
+- Necessidade de educação continuada e requalificação
+
+### Vieses e Justiça Algorítmica
+- IA herda e amplifica preconceitos presentes nos dados de treinamento
+- Discriminação algorítmica em setores críticos como empréstimos, contratações e justiça criminal
+- Desafios de auditabilidade em sistemas "caixa-preta"
+
+### Privacidade e Vigilância
+- Tecnologias de reconhecimento facial e análise comportamental
+- Tensão entre personalização de serviços e coleta pervasiva de dados
+- Manipulação potencial baseada em modelagem psicométrica
+
+### Segurança e Controle
+- Cibersegurança e IA adversarial
+- Armas autônomas e militarização da IA
+- Desafio do alinhamento de valores em sistemas avançados
+
+### Governança e Regulação
+- Abordagens nacionais divergentes (EUA, China, UE)
+- Regulação baseada em risco versus baseada em princípios
+- Padrões emergentes como AI Act europeu e diretrizes da OCDE
+
+## Fronteiras da Pesquisa
+
+Áreas de investigação ativa incluem:
+
+- **IA Explicável (XAI)**: Tornando sistemas complexos interpretáveis
+- **Aprendizado por Transferência**: Aplicando conhecimento entre domínios
+- **Aprendizado com Poucos Exemplos**: Reduzindo necessidade de dados massivos
+- **IA Multimodal**: Integrando texto, imagem, áudio e outros sinais
+- **Modelos de Fundação**: Sistemas pré-treinados adaptáveis a múltiplas tarefas
+- **IA Neurossimbólica**: Combinando raciocínio simbólico com aprendizado neural
+- **IA Inspirada Biologicamente**: Incorporando insights das neurociências
+
+## Conclusão
+
+A Inteligência Artificial representa uma das mais transformadoras tecnologias do século XXI, com potencial para remodelar fundamentalmente como vivemos, trabalhamos e interagimos. Seu desenvolvimento acelerado oferece oportunidades extraordinárias para avanços humanos, desde melhoria na saúde até solução de desafios complexos como mudanças climáticas. Contudo, também apresenta riscos significativos relacionados a automação em massa, vigilância, desigualdade e concentração de poder. O direcionamento desta tecnologia para benefício amplo e equitativo exigirá não apenas avanços técnicos contínuos, mas também deliberação social sofisticada, marcos regulatórios adaptáveis e cooperação internacional. A forma como navegarmos esta revolução tecnológica definirá em grande parte nosso futuro coletivo.`;
+      break;
+
+    default:
+      // Resposta genérica para outros temas
+      deepExplanation = `# Aprofundamento Detalhado do Tema
+
+## Contexto Histórico e Evolução do Conceito
+
+Este tema tem raízes profundas que se estendem através de diversos períodos históricos. Inicialmente desenvolvido como resposta a necessidades específicas de seu tempo, evoluiu significativamente através de contribuições de pensadores, pesquisadores e praticantes de diferentes culturas e épocas.
+
+A compreensão contemporânea incorpora múltiplas dimensões que raramente são exploradas em explicações introdutórias. Ao examinar o desenvolvimento histórico, identificamos tendências, rupturas e continuidades que iluminam não apenas o passado, mas também trajetórias futuras potenciais.
+
+## Fundamentos Teóricos e Conceituais
+
+Os alicerces teóricos deste tema são multifacetados, envolvendo princípios de áreas complementares que se interseccionam para formar um corpo de conhecimento robusto. Estes fundamentos incluem:
+
+- **Princípios estruturais**: Elementos fundamentais que definem o campo e sua organização interna
+- **Modelos explicativos**: Esquemas conceituais que fornecem interpretações coerentes de fenômenos observados
+- **Paradigmas dominantes**: Estruturas de pensamento que orientam pesquisa e aplicação
+- **Abordagens alternativas**: Perspectivas complementares ou contestadoras que enriquecem o campo
+
+A integração destes elementos cria um panorama conceitual rico, possibilitando análises em diferentes níveis de abstração e aplicabilidade.
+
+## Aplicações Práticas e Exemplos Concretos
+
+Na prática, este conhecimento manifesta-se através de aplicações diversificadas, incluindo:
+
+1. **Aplicações cotidianas**: Como estes conceitos influenciam experiências diárias
+2. **Implementações profissionais**: Utilização em contextos especializados e técnicos
+3. **Estudos de caso exemplares**: Situações reais que demonstram princípios em ação
+4. **Tendências emergentes**: Novas direções de aplicação em desenvolvimento
+
+Através destes exemplos, podemos observar como princípios abstratos transformam-se em resultados tangíveis, validando e expandindo o conhecimento teórico.
+
+## Pesquisas Contemporâneas e Avanços Recentes
+
+O campo continua em evolução dinâmica, com pesquisas recentes expandindo fronteiras de compreensão. Avanços notáveis incluem:
+
+- Desenvolvimento de metodologias inovadoras que permitem investigações mais precisas
+- Descobertas que desafiam pressupostos estabelecidos
+- Integração com tecnologias emergentes, abrindo novas possibilidades
+- Colaborações interdisciplinares que enriquecem perspectivas
+
+Estas pesquisas não apenas respondem a questões existentes, mas frequentemente geram novas perguntas, impulsionando o ciclo contínuo de investigação científica.
+
+## Perspectivas Interdisciplinares
+
+A compreensão completa deste tema beneficia-se enormemente de conexões com múltiplas disciplinas, incluindo:
+
+- **Conexões humanísticas**: Relações com filosofia, história e estudos culturais
+- **Interfaces científicas**: Vínculos com ciências naturais e sociais
+- **Dimensões tecnológicas**: Intersecções com avanços técnicos e computacionais
+- **Implicações sociais**: Impactos em estruturas sociais, políticas e econômicas
+
+Esta interdisciplinaridade revela camadas de significado e aplicação que permanecem ocultas em análises isoladas.
+
+## Desafios e Controvérsias
+
+Como qualquer campo intelectual vibrante, este tema incorpora debates ativos e questões não resolvidas:
+
+1. **Tensões conceituais**: Áreas onde definições e interpretações competem
+2. **Desafios metodológicos**: Obstáculos para pesquisa e aplicação efetiva
+3. **Questões éticas**: Considerações morais relevantes para teoria e prática
+4. **Limitações conhecidas**: Fronteiras reconhecidas do conhecimento atual
+
+Estas controvérsias, longe de enfraquecerem o campo, constituem o motor de seu desenvolvimento contínuo.
+
+## Prospectivas Futuras
+
+Olhando adiante, várias trajetórias potenciais emergem:
+
+- Desenvolvimento de novas ferramentas analíticas e metodológicas
+- Expansão para domínios de aplicação inexplorados
+- Síntese de perspectivas atualmente divergentes
+- Respostas a desafios emergentes em contextos globais
+
+Estas direções futuras prometem não apenas avanços incrementais, mas potencialmente transformações paradigmáticas.
+
+## Conclusão
+
+Este aprofundamento ilustra a riqueza multidimensional do tema, transcendendo explicações superficiais para revelar suas complexidades, nuances e profundidade. A apreciação destas dimensões ampliadas não apenas enriquece o conhecimento teórico, mas também potencializa aplicações mais sofisticadas e contextualmente apropriadas, demonstrando o valor intrínseco de uma compreensão verdadeiramente aprofundada.`;
+  }
+
+  return deepExplanation;
+};
+
+// Função auxiliar para extrair palavras-chave de um texto
+const extractKeywords = (text: string): string[] => {
+  // Lista de palavras de parada em português
+  const stopWords = ["de", "a", "o", "que", "e", "do", "da", "em", "um", "para", "é", "com", "não", "uma", "os", "no", "se", "na", "por", "mais", "as", "dos", "como", "mas", "foi", "ao", "ele", "das", "tem", "à", "seu", "sua", "ou", "ser", "quando", "muito", "há", "nos", "já", "está", "eu", "também", "só", "pelo", "pela", "até", "isso", "ela", "entre", "era", "depois", "sem", "mesmo", "aos", "ter", "seus", "quem", "nas", "me", "esse", "eles", "estão", "você", "tinha", "foram", "essa", "num", "nem", "suas", "meu", "às", "minha", "têm", "numa", "pelos", "elas", "havia", "seja", "qual", "será", "nós", "tenho", "lhe", "deles", "essas", "esses", "pelas", "este", "fosse", "dele", "tu", "te", "vocês", "vos", "lhes", "meus", "minhas", "teu", "tua", "teus", "tuas", "nosso", "nossa", "nossos", "nossas", "dela", "delas", "esta", "estes", "estas", "aquele", "aquela", "aqueles", "aquelas", "isto", "aquilo", "estou", "está", "estamos", "estão", "estive", "esteve", "estivemos", "estiveram", "estava", "estávamos", "estavam", "estivera", "estivéramos", "esteja", "estejamos", "estejam", "estivesse", "estivéssemos", "estivessem", "estiver", "estivermos", "estiverem", "sou", "somos", "são", "era", "éramos", "eram", "fui", "foi", "fomos", "foram", "fora", "fôramos", "seja", "sejamos", "sejam", "fosse", "fôssemos", "fossem", "for", "formos", "forem", "tenho", "tem", "temos", "tém", "tinha", "tínhamos", "tinham", "tive", "teve", "tivemos", "tiveram", "tivera", "tivéramos", "tenha", "tenhamos", "tenham", "tivesse", "tivéssemos", "tivessem", "tiver", "tivermos", "tiverem"];
+
+  // Normalize text: remove pontuação e converta para minúsculas
+  const normalizedText = text.toLowerCase()
+    .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
+    .replace(/\s{2,}/g, " ");
+
+  // Tokenize text (split by whitespace)
+  const allTokens = normalizedText.split(/\s+/);
+
+  // Filter out stop words
+  const significantTokens = allTokens.filter(token => 
+    !stopWords.includes(token) && token.length > 3
+  );
+
+  // Count frequency of each token
+  const tokenCounts = {};
+  significantTokens.forEach(token => {
+    tokenCounts[token] = (tokenCounts[token] || 0) + 1;
+  });
+
+  // Sort tokens by frequency and return top keywords
+  return Object.entries(tokenCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(entry => entry[0]);
+};
+
+// Função auxiliar para determinar o tema geral do conteúdo
+const determineTheme = (keywords: string[]): string => {
+  const themeKeywords = {
+    'matemática': ['número', 'equação', 'geometria', 'álgebra', 'cálculo', 'matemática', 'trigonometria', 'função', 'estatística', 'probabilidade'],
+    'história': ['história', 'civilização', 'guerra', 'revolução', 'século', 'antigo', 'medieval', 'moderno', 'contemporâneo', 'política', 'social', 'cultural', 'econômica'],
+    'ciências': ['ciência', 'método', 'científico', 'experimento', 'hipótese', 'teoria', 'observação', 'fenômeno', 'natureza', 'física', 'química', 'biologia'],
+    'tecnologia': ['tecnologia', 'computador', 'internet', 'digital', 'software', 'hardware', 'programação', 'algoritmo', 'inteligência', 'artificial', 'rede', 'dados', 'informação']
+  };
+
+  // Contar correspondências para cada tema
+  const themeScores = {};
+
+  for (const [theme, themeWords] of Object.entries(themeKeywords)) {
+    themeScores[theme] = keywords.reduce((score, keyword) => {
+      return score + (themeWords.includes(keyword) ? 1 : 0);
+    }, 0);
+  }
+
+  // Encontrar o tema com maior pontuação
+  let bestTheme = 'geral';
+  let highestScore = 0;
+
+  for (const [theme, score] of Object.entries(themeScores)) {
+    if (score > highestScore) {
+      highestScore = score as number;
+      bestTheme = theme;
+    }
+  }
+
+  return bestTheme;
 };

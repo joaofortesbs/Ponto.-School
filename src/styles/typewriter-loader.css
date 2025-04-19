@@ -1,4 +1,3 @@
-
 /* From Uiverse.io by Nawsome */ 
 .typewriter {
   --blue: #FF8736;
@@ -43,47 +42,6 @@
   top: 3px;
   height: 14px;
   width: 6px;
-
-/* Notebook Lines Styling */
-.notebook-lines {
-  padding: 0;
-  position: relative;
-}
-
-.notebook-lines::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 28px;
-  width: 1px;
-  height: 100%;
-  background: rgba(255, 0, 0, 0.2);
-  z-index: 1;
-}
-
-/* Custom scrollbar for notebook */
-.notebook-lines::-webkit-scrollbar {
-  width: 8px;
-}
-
-.notebook-lines::-webkit-scrollbar-track {
-  background: rgba(255, 240, 200, 0.5);
-}
-
-.notebook-lines::-webkit-scrollbar-thumb {
-  background-color: rgba(205, 133, 63, 0.5);
-  border-radius: 10px;
-}
-
-@font-face {
-  font-family: 'Architects Daughter';
-  font-style: normal;
-  font-weight: 400;
-  src: url('https://fonts.gstatic.com/s/architectsdaughter/v18/KtkxAKiDZI_td1Lkx62xHZHDtgO_Y-bvTYlg4w.woff2') format('woff2');
-  font-display: swap;
-}
-
-  border-radius: 3px;
 }
 
 .typewriter .slide i {
@@ -334,4 +292,104 @@
   position: relative;
   min-height: 24px;
   padding-left: 30px;
+}
+
+/* Typewriter Animation */
+.typewriter {
+  --bg: white;
+  --typewriter-color: #0000;
+  --paper: #fff;
+  --paper-lines: #0002;
+  --paper-behind: #fff;
+  --shadow: rgba(0, 0, 0, 0.1);
+  --duration: 3.75s;
+  width: 10ch;
+  height: 10ch;
+  position: relative;
+  margin: 0 auto;
+}
+
+.typewriter .slide {
+  width: 100%;
+  height: 100%;
+  border-radius: 5px;
+  position: absolute;
+  z-index: 2;
+  box-shadow: 0 0 0 1px var(--shadow);
+  top: -2px;
+  left: -2px;
+  padding: 1.6px;
+  background: linear-gradient(
+    var(--paper-behind),
+    var(--paper-behind) 28%,
+    var(--paper-lines) 28%,
+    var(--paper-lines) 29%,
+    var(--paper-behind) 29%,
+    var(--paper-behind) 57%,
+    var(--paper-lines) 57%,
+    var(--paper-lines) 58%,
+    var(--paper-behind) 58%,
+    var(--paper-behind) 86%,
+    var(--paper-lines) 86%,
+    var(--paper-lines) 87%,
+    var(--paper-behind) 87%
+  );
+}
+
+.typewriter .paper {
+  background-color: var(--paper);
+  background-image: linear-gradient(
+    90deg,
+    var(--paper-lines) 0,
+    var(--paper-lines) 2px,
+    var(--paper) 2px,
+    var(--paper)
+  );
+  height: 100%;
+  width: 100%;
+  position: relative;
+  z-index: 2;
+  animation: paper05 var(--duration) linear infinite;
+}
+
+/* Notebook Lines Styling */
+.notebook-lines {
+  padding: 0;
+  position: relative;
+}
+
+.notebook-lines::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 28px;
+  width: 1px;
+  height: 100%;
+  background: rgba(255, 0, 0, 0.2);
+  z-index: 1;
+}
+
+/* Custom scrollbar for notebook */
+.notebook-lines::-webkit-scrollbar {
+  width: 8px;
+}
+
+.notebook-lines::-webkit-scrollbar-track {
+  background: rgba(255, 240, 200, 0.5);
+}
+
+.notebook-lines::-webkit-scrollbar-thumb {
+  background-color: rgba(205, 133, 63, 0.5);
+  border-radius: 10px;
+}
+
+@font-face {
+  font-family: 'Architects Daughter';
+  font-style: normal;
+  font-weight: 400;
+  src: url('https://fonts.gstatic.com/s/architectsdaughter/v18/KtkxAKiDZI_td1Lkx62xHZHDtgO_Y-bvTYlg4w.woff2') format('woff2');
+  font-display: swap;
+}
+
+  border-radius: 3px;
 }
