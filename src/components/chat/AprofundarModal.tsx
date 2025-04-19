@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   Search,
@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { generateAIResponse } from '@/services/aiChatService';
+import { TypewriterEffect } from '@/components/ui/typewriter-effect';
 
 interface AprofundarModalProps {
   isOpen: boolean;
@@ -19,14 +21,154 @@ interface AprofundarModalProps {
   sessionId?: string; // Added sessionId prop type
   setShowAprofundarModal: any; // Added setShowAprofundarModal prop type
   toast: any; // Added toast prop type
-
 }
 
 type ContentType = 'main' | 'explicacao' | 'topicos' | 'exemplos' | 'erros' | 'fontes';
 
+interface AprofundadoContent {
+  contexto: string;
+  loading: boolean;
+  termos: Array<{termo: string, definicao: string}>;
+  aplicacoes: string;
+}
+
 const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, messages, sessionId, setShowAprofundarModal, toast }) => {
   const [activeContent, setActiveContent] = useState<ContentType>('main');
   const [loading, setLoading] = useState(false);
+  const [temaAtual, setTemaAtual] = useState<string>('');
+  const [aprofundadoContent, setAprofundadoContent] = useState<AprofundadoContent>({
+    contexto: '',
+    loading: true,
+    termos: [],
+    aplicacoes: ''
+  });
+
+  // Função para encontrar a última mensagem da IA (assistente)
+  const getLastAIMessage = () => {
+    if (!messages || messages.length === 0) return null;
+    
+    // Filtra as mensagens para obter apenas as do assistente (IA)
+    const aiMessages = messages.filter(msg => msg.sender === 'assistant' || msg.role === 'assistant');
+    
+    // Retorna a última mensagem da IA, se existir
+    return aiMessages.length > 0 ? aiMessages[aiMessages.length - 1] : null;
+  };
+
+  // Função para gerar conteúdo aprofundado
+  const generateAprofundadoContent = async () => {
+    const lastAIMessage = getLastAIMessage();
+    
+    if (!lastAIMessage) {
+      setAprofundadoContent({
+        contexto: 'Não foi possível encontrar uma resposta recente da IA para aprofundar.',
+        loading: false,
+        termos: [],
+        aplicacoes: ''
+      });
+      return;
+    }
+
+    // Extrai o conteúdo da mensagem
+    const messageContent = lastAIMessage.content || lastAIMessage.message || '';
+    
+    // Define o tema atual
+    setTemaAtual(messageContent.substring(0, 100) + '...');
+    
+    // Configura o estado de carregamento
+    setAprofundadoContent(prev => ({...prev, loading: true}));
+
+    try {
+      // Gera contexto aprofundado
+      const contextPrompt = `
+      Explique com profundidade o seguinte tema, detalhando o contexto histórico, 
+      causas, consequências, eventos importantes e aprofundando em partes mais complexas 
+      do assunto. Apresente uma análise avançada e completa sobre o tema. 
+      O conteúdo deve ser muito mais detalhado e extenso que o original, explorando 
+      aspectos complexos e pouco conhecidos do tema:
+      
+      "${messageContent}"
+      `;
+
+      // Chame a API apenas para o contexto inicialmente
+      const contextoResponse = await generateAIResponse(contextPrompt, sessionId || 'default_session');
+      
+      // Atualize o estado com o contexto obtido
+      setAprofundadoContent(prev => ({...prev, contexto: contextoResponse, loading: false}));
+
+      // Agora faça solicitações para os termos e aplicações em segundo plano
+      const termosPrompt = `
+      Liste e explique os principais termos técnicos relacionados ao tema abaixo. Para cada termo, forneça:
+      1. Definição clara e precisa
+      2. Exemplo prático ou contexto de uso
+      3. Se possível, uma analogia para facilitar o entendimento
+
+      O tema é:
+      "${messageContent}"
+
+      Responda em formato que possa ser facilmente convertido para JSON com estrutura
+      [{"termo": "Nome do Termo", "definicao": "Definição completa com exemplo e analogia"}, ...]
+      `;
+
+      const aplicacoesPrompt = `
+      Mostre como o conhecimento sobre o tema abaixo pode ser aplicado em diferentes contextos:
+      1. Em debates atuais e discussões contemporâneas
+      2. Em estudos interdisciplinares
+      3. Para resolução de problemas práticos
+      4. Em redações, artigos acadêmicos ou trabalhos escolares
+      5. Relações com outros temas históricos ou científicos semelhantes
+
+      O tema é:
+      "${messageContent}"
+      `;
+
+      // Execute estas chamadas em paralelo
+      Promise.all([
+        generateAIResponse(termosPrompt, sessionId || 'default_session'),
+        generateAIResponse(aplicacoesPrompt, sessionId || 'default_session')
+      ]).then(([termosResponse, aplicacoesResponse]) => {
+        // Tenta extrair os termos no formato JSON
+        let termosArray = [];
+        try {
+          // Procura por conteúdo que parece ser JSON
+          const jsonMatch = termosResponse.match(/\[\s*{.+}\s*\]/s);
+          if (jsonMatch) {
+            termosArray = JSON.parse(jsonMatch[0]);
+          } else {
+            // Fallback: cria um termo único com a resposta completa
+            termosArray = [{
+              termo: "Glossário Completo",
+              definicao: termosResponse
+            }];
+          }
+        } catch (e) {
+          console.error("Erro ao processar termos:", e);
+          termosArray = [{
+            termo: "Glossário Técnico",
+            definicao: termosResponse
+          }];
+        }
+
+        // Atualiza o estado com todos os dados
+        setAprofundadoContent(prev => ({
+          ...prev,
+          termos: termosArray,
+          aplicacoes: aplicacoesResponse,
+          loading: false
+        }));
+      });
+    } catch (error) {
+      console.error("Erro ao gerar conteúdo aprofundado:", error);
+      setAprofundadoContent(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  // Quando o modal abrir na seção de explicação, gerar o conteúdo
+  // Quando o modal abrir, verificar se precisa gerar conteúdo
+  useEffect(() => {
+    if (isOpen && activeContent === 'explicacao' && aprofundadoContent.contexto === '') {
+      generateAprofundadoContent();
+    }
+  }, [isOpen, activeContent]);
 
   const handleOptionClick = (option: ContentType) => {
     setLoading(true);
@@ -34,6 +176,11 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
     setTimeout(() => {
       setActiveContent(option);
       setLoading(false);
+      
+      // Se a opção escolhida for 'explicacao' e ainda não temos conteúdo, geramos
+      if (option === 'explicacao' && aprofundadoContent.contexto === '') {
+        generateAprofundadoContent();
+      }
     }, 500);
   };
 
@@ -134,26 +281,50 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
         <div className="space-y-6">
           <div>
             <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Contexto Aprofundado</h4>
-            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
-              Aqui aparecerá o contexto histórico e científico aprofundado sobre o tema discutido.
-            </p>
+            <div className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+              {aprofundadoContent.loading ? (
+                <div className="typewriter-loader">Preparando conteúdo...</div>
+              ) : (
+                <TypewriterEffect text={aprofundadoContent.contexto} typingSpeed={1} />
+              )}
+            </div>
           </div>
 
           <div>
             <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Termos Técnicos</h4>
             <div className="grid grid-cols-1 gap-3">
-              <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                <span className="block font-medium text-blue-600 dark:text-blue-400 mb-1">Termo técnico</span>
-                <span className="text-sm text-gray-700 dark:text-gray-300">Definição detalhada do termo aparecerá aqui.</span>
-              </div>
+              {aprofundadoContent.loading ? (
+                <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <span className="block font-medium text-blue-600 dark:text-blue-400 mb-1">Carregando termos...</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Os termos técnicos estão sendo preparados.</span>
+                </div>
+              ) : (
+                aprofundadoContent.termos.length > 0 ? (
+                  aprofundadoContent.termos.map((item, index) => (
+                    <div key={index} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <span className="block font-medium text-blue-600 dark:text-blue-400 mb-1">{item.termo}</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{item.definicao}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <span className="block font-medium text-blue-600 dark:text-blue-400 mb-1">Termos técnicos</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">Não foram encontrados termos técnicos específicos para este tema.</span>
+                  </div>
+                )
+              )}
             </div>
           </div>
 
           <div>
             <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Aplicações Expandidas</h4>
-            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
-              Aqui serão listadas as aplicações práticas e teóricas deste conhecimento.
-            </p>
+            <div className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+              {aprofundadoContent.loading ? (
+                <div className="typewriter-loader">Identificando aplicações...</div>
+              ) : (
+                aprofundadoContent.aplicacoes || "Aguardando geração de aplicações para este tema."
+              )}
+            </div>
           </div>
         </div>
       </ScrollArea>
