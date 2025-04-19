@@ -810,23 +810,22 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                   extractedData = { nodes, edges };
                 }
 
-                try {
-                  // Salvar os novos dados
-                  localStorage.setItem('fluxogramaData', JSON.stringify(extractedData));
+                // Salvar os novos dados
+                localStorage.setItem('fluxogramaData', JSON.stringify(extractedData));
 
-                  // Mostrar o fluxograma
-                  setIsLoading(false);
-                  setFluxogramaGerado(true);
-                  setShowFluxograma(true);
-                } catch (error) {
-                  console.error('Erro ao regenerar o fluxograma:', error);
-                  setIsLoading(false);
-                  alert('Ocorreu um erro ao regenerar o fluxograma. Por favor, tente novamente.');
-                }
-                    };
+                // Mostrar o fluxograma
+                setIsLoading(false);
+                setFluxogramaGerado(true);
+                setShowFluxograma(true);
+              } catch (error) {
+                console.error('Erro ao regenerar o fluxograma:', error);
+                setIsLoading(false);
+                alert('Ocorreu um erro ao regenerar o fluxograma. Por favor, tente novamente.');
+              }
+            };
 
-                    // Iniciar o processo de regeneração
-                    regenerateFluxograma();
+            // Iniciar o processo de regeneração
+            regenerateFluxograma();
                   }}
                   className="h-8 w-8 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
                 >
