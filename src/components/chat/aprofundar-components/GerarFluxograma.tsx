@@ -1273,12 +1273,63 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                 <Button 
                   variant="ghost" 
                   size="icon"
+                  onClick={(e) => {
+                    const exportMenu = document.getElementById('export-options-menu');
+                    if (exportMenu) {
+                      exportMenu.classList.toggle('hidden');
+                      // Posicionar o menu
+                      const buttonRect = e.currentTarget.getBoundingClientRect();
+                      exportMenu.style.top = `${buttonRect.bottom + 5}px`;
+                      exportMenu.style.left = `${buttonRect.left - 60}px`;
+                      
+                      // Fechar o menu ao clicar fora dele
+                      const closeMenu = (e: MouseEvent) => {
+                        if (!exportMenu.contains(e.target as Node) && 
+                            e.target !== e.currentTarget) {
+                          exportMenu.classList.add('hidden');
+                          document.removeEventListener('click', closeMenu);
+                        }
+                      };
+                      
+                      // Atrasar a adição do listener para evitar que ele feche imediatamente
+                      setTimeout(() => {
+                        document.addEventListener('click', closeMenu);
+                      }, 100);
+                    }
+                  }}
                   className="h-10 w-10 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
                 >
                   <Download className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </Button>
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
                   Exportar
+                </div>
+                
+                {/* Mini-modal para opções de exportação */}
+                <div id="export-options-menu" className="hidden absolute z-50 bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 border border-gray-200 dark:border-gray-700 w-40">
+                  <div className="flex flex-col space-y-1">
+                    <button 
+                      className="text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 opacity-60 cursor-not-allowed"
+                      disabled
+                    >
+                      <img src="/images/png-icon.svg" alt="" className="w-4 h-4 mr-2 opacity-60" />
+                      Exportar em Imagem
+                    </button>
+                    <button 
+                      className="text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 opacity-60 cursor-not-allowed"
+                      disabled
+                    >
+                      <img src="/images/pdf-icon.svg" alt="" className="w-4 h-4 mr-2 opacity-60" />
+                      Exportar em PDF
+                    </button>
+                    <button 
+                      className="text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 opacity-60 cursor-not-allowed"
+                      disabled
+                    >
+                      <img src="/images/txt-icon.svg" alt="" className="w-4 h-4 mr-2 opacity-60" />
+                      Exportar em Texto
+                    </button>
+                  </div>
                 </div>
               </div>
               
