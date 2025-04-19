@@ -174,7 +174,8 @@ Formato da resposta: Liste os termos no formato JSON como este exemplo:
       // Atualizar o estado com o contexto para exibição
       setAprofundadoContent(prev => ({
         ...prev,
-        contexto: contextoResponse
+        contexto: contextoResponse,
+        loading: false // Importante: desativar o carregamento aqui também
       }));
       
       console.log("Contexto definido com sucesso:", contextoResponse.substring(0, 50) + "...");
@@ -227,7 +228,7 @@ Formato da resposta: Liste os termos no formato JSON como este exemplo:
   useEffect(() => {
     if (isOpen && activeContent === 'explicacao') {
       // Se não tem conteúdo e não está carregando, gerar o conteúdo
-      if (!aprofundadoContent.contexto && !aprofundadoContent.loading) {
+      if ((!aprofundadoContent.contexto || aprofundadoContent.contexto === "Gerando contexto aprofundado...") && !aprofundadoContent.loading) {
         console.log("Iniciando geração de conteúdo aprofundado");
         generateDeepContent();
       } 
@@ -239,10 +240,16 @@ Formato da resposta: Liste os termos no formato JSON como este exemplo:
         // Garantir que o conteúdo seja definido corretamente
         if (aprofundadoContent.contexto.trim() === "Gerando contexto aprofundado...") {
           console.log("Corrigindo conteúdo temporário");
-          setAprofundadoContent(prev => ({
-            ...prev,
-            contexto: lastGeneratedContext || aprofundadoContent.contexto
-          }));
+          if (lastGeneratedContext) {
+            setAprofundadoContent(prev => ({
+              ...prev,
+              contexto: lastGeneratedContext,
+              loading: false
+            }));
+          } else {
+            // Se não tiver contexto gerado anteriormente, gerar novo conteúdo
+            generateDeepContent();
+          }
         }
       }
     }
