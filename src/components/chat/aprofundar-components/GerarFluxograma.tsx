@@ -1364,7 +1364,7 @@ fluxograma:
       </div>
 
       {showFluxograma ? (
-        <div className="space-y-4">
+        <div className="space-y-4 w-full max-w-5xl mx-auto">
           <div className="flex justify-between items-center mb-2">
             <h4 className="text-md font-medium text-gray-900 dark:text-white">Fluxograma Interativo</h4>
             <Button
@@ -1376,9 +1376,11 @@ fluxograma:
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <FluxogramaVisualizer onNodeClick={handleNodeClick} />
+          <div className="h-[70vh] w-full">
+            <FluxogramaVisualizer onNodeClick={handleNodeClick} />
+          </div>
           {/* Painel de ações fixo compacto */}
-          <div className="bg-white/90 dark:bg-gray-800/90 rounded-xl border border-gray-200/70 dark:border-gray-700/50 p-3 shadow-sm backdrop-blur-sm fixed bottom-4 right-4">
+          <div className="bg-white/90 dark:bg-gray-800/90 rounded-xl border border-gray-200/70 dark:border-gray-700/50 p-3 shadow-sm backdrop-blur-sm fixed bottom-8 right-8 z-50">
             <div className="flex items-center space-x-2">
               <div className="tooltip-container relative group">
                 <Button 

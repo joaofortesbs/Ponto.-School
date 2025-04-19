@@ -26,6 +26,14 @@
 @import "./styles/notebook.css";
 
 @tailwind base;
+
+/* Estilo personalizado para o modal de fluxograma */
+.fluxograma-modal-container:has(.h-[70vh]) {
+  max-width: 90vw !important;
+  width: 90vw !important;
+}
+
+
 @tailwind components;
 @tailwind utilities;
 
