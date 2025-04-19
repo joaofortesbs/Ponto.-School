@@ -69,6 +69,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
       return;
     }
 
+    // Imediatamente começar a mostrar o estado de carregamento
     setAprofundadoContent(prev => ({ ...prev, loading: true }));
 
     try {
@@ -130,15 +131,24 @@ Inclua:
 
 Forneça uma explicação detalhada e útil para um estudante que quer entender o valor prático e a relevância contemporânea deste conhecimento.`;
 
-      // Executa as chamadas em paralelo para economizar tempo
-      const [contextoResponse, termosResponse, aplicacoesResponse] = await Promise.all([
-        generateAIResponse(contextoPrompt, sessionId || 'aprofundar_session'),
+      // Primeiro, vamos obter só o contexto para mostrar rapidamente
+      const contextoResponse = await generateAIResponse(contextoPrompt, sessionId || 'aprofundar_session');
+      
+      // Armazenar o contexto gerado para uso posterior
+      setLastGeneratedContext(contextoResponse);
+      
+      // Atualizar o estado imediatamente com o contexto, mantendo loading como true
+      // para indicar que ainda estamos buscando os outros dados
+      setAprofundadoContent(prev => ({
+        ...prev,
+        contexto: contextoResponse
+      }));
+
+      // Agora vamos buscar os outros dados em paralelo
+      const [termosResponse, aplicacoesResponse] = await Promise.all([
         generateAIResponse(termosPrompt, sessionId || 'aprofundar_session'),
         generateAIResponse(aplicacoesPrompt, sessionId || 'aprofundar_session')
       ]);
-
-      // Armazenar o contexto gerado para uso posterior, mesmo se o usuário limpar o estado
-      setLastGeneratedContext(contextoResponse);
 
       // Processa a resposta dos termos técnicos (que deve estar em formato JSON)
       let termosParsed = [];
@@ -157,7 +167,7 @@ Forneça uma explicação detalhada e útil para um estudante que quer entender 
         termosParsed = [{ termo: "Termos técnicos", definicao: termosResponse }];
       }
 
-      // Atualiza o estado com o conteúdo gerado
+      // Atualiza o estado com todo o conteúdo gerado e finaliza o carregamento
       setAprofundadoContent({
         contexto: contextoResponse,
         termos: termosParsed,
@@ -178,10 +188,12 @@ Forneça uma explicação detalhada e útil para um estudante que quer entender 
 
   // Quando o modal abrir na seção de explicação, gerar o conteúdo
   useEffect(() => {
-    if (isOpen && activeContent === 'explicacao' && !aprofundadoContent.contexto) {
+    if (isOpen && activeContent === 'explicacao' && 
+        (!aprofundadoContent.contexto && !aprofundadoContent.loading)) {
+      // Iniciar carregamento imediatamente
       generateDeepContent();
     }
-  }, [isOpen, activeContent]);
+  }, [isOpen, activeContent, aprofundadoContent.contexto, aprofundadoContent.loading]);
 
   const handleOptionClick = (option: ContentType) => {
     setLoading(true);
@@ -309,7 +321,12 @@ Forneça uma explicação detalhada e útil para um estudante que quer entender 
               </div>
             ) : (
               <div className="text-sm text-gray-700 dark:text-gray-300 mb-3 whitespace-pre-line">
-                {aprofundadoContent.contexto || lastGeneratedContext || "O contexto histórico e científico aprofundado sobre o tema será gerado aqui."}
+                {aprofundadoContent.contexto || lastGeneratedContext || (
+                  <span className="flex items-center">
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Gerando contexto aprofundado...
+                  </span>
+                )}
               </div>
             )}
           </div>
