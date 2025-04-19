@@ -3414,9 +3414,6 @@ Exemplo de formato da resposta:
                                   const margin = 20;
                                   const textWidth = pageWidth - (margin * 2);
                                   
-                                  // Base64 da logo Ponto School
-                                  const logoBase64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAACICAYAAAC1aIlWAAAACXBIWXMAABYlAAAWJQFJUiTwAAAHE0lEQVR4nO3dvW7bRhCGYUkMoI4p0YLb//+qLSXgdtdIqKRZ7EFxuQMAAOBvHYuYPzzfD2Af/NN8XgAAAIChf7K2AAAAAGS/4QkAAAAAAHB3BAAAAAAAvDkCAAAAALg5AgAAAAA4OwEAAAAAOHsBAAAAAE4eAQAAAABOHgEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAATg8BAAAAAE4fAQAAAAAODwEAAAAA...";
-                                  
                                   // Adicionar cabeçalho
                                   doc.setFontSize(16);
                                   doc.setFont('helvetica', 'bold');
@@ -3453,49 +3450,8 @@ Exemplo de formato da resposta:
                                   const textLines = doc.splitTextToSize(contentText, textWidth);
                                   doc.text(textLines, margin, margin + 40);
                                   
-                                  // Marca d'água com logo
-                                  doc.saveGraphicsState();
-                                  doc.setGState(new doc.GState({ opacity: 0.08 }));
-                                  
-                                  // Tamanho proporcional da logo
-                                  const imgWidth = 100;
-                                  const imgHeight = 40;
-                                  
-                                  doc.addImage(
-                                    logoBase64,
-                                    "PNG",
-                                    (pageWidth - imgWidth) / 2,
-                                    (pageHeight - imgHeight) / 2,
-                                    imgWidth,
-                                    imgHeight
-                                  );
-                                  
-                                  doc.restoreGraphicsState();
-                                  
-                                  // Adicionar a frase elegante no rodapé
-                                  const quote = "Não é sobre conectar você com a tecnologia, é sobre conectar você com o futuro!";
-                                  
-                                  // Fundo sutil gradiente para a frase
-                                  const quoteY = pageHeight - 22;
-                                  
-                                  // Adicionar retângulo suave como base da frase
-                                  doc.saveGraphicsState();
-                                  doc.setFillColor(255, 240, 230); // Tom suave alaranjado
-                                  doc.roundedRect(margin, quoteY - 5, pageWidth - (margin * 2), 12, 3, 3, 'F');
-                                  doc.restoreGraphicsState();
-                                  
-                                  // Adicionar a frase com estilo elegante
-                                  doc.setFontSize(8);
-                                  doc.setFont('helvetica', 'italic');
-                                  doc.setTextColor(255, 107, 0); // Cor laranja da marca
-                                  doc.text(quote, pageWidth / 2, quoteY, { align: 'center' });
-                                  
-                                  // Reseta a cor do texto
-                                  doc.setTextColor(0, 0, 0);
-                                  
-                                  // Adicionar rodapé padrão
-                                  doc.setFontSize(9);
-                                  doc.setFont('helvetica', 'normal');
+                                  // Adicionar rodapé
+                                  doc.setFontSize(10);
                                   doc.text('Documento gerado automaticamente pela Ponto.School', pageWidth / 2, pageHeight - 10, { align: 'center' });
                                   
                                   // Salvar o PDF
