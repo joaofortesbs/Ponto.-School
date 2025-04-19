@@ -143,7 +143,9 @@ interface FluxogramaVisualizerProps {
     nodes: Node[];
     edges: Edge[];
   };
-  onNodeClick?: (node: Node) => void;os
+  onNodeClick?: (node: Node) => void;
+}
+
 const nodeTypes: NodeTypes = {
   start: ({ data, ...props }: any) => (
     <div
