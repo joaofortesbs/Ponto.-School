@@ -30,12 +30,52 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
   
   // Função para extrair seções da resposta da IA
   const parseAIResponse = (response: string) => {
-    // Padrões mais rigorosos para identificar as seções na resposta
-    const contextoMatch = response.match(/Contexto Aprofundado:(.+?)(?=Termos Técnicos:|$)/s);
-    const termosMatch = response.match(/Termos Técnicos:(.+?)(?=Aplicações Expandidas:|$)/s);
-    const aplicacoesMatch = response.match(/Aplicações Expandidas:(.+?)(?=$)/s);
+    console.log("Resposta da IA recebida:", response.substring(0, 200) + "...");
     
-    console.log("Resposta da IA:", response);
+    // Padrões mais rigorosos para identificar as seções específicas
+    // Busca por diversos formatos possíveis de cabeçalhos de seção
+    const contextoPatterns = [
+      /CONTEXTO APROFUNDADO[:\s]+(.+?)(?=(?:TERMOS TÉCNICOS|TERMOS TECNICOS|Termos Técnicos|Termos|2\.|2\s+TERMOS|$))/is,
+      /Contexto Aprofundado[:\s]+(.+?)(?=(?:TERMOS TÉCNICOS|TERMOS TECNICOS|Termos Técnicos|Termos|2\.|2\s+TERMOS|$))/is,
+      /1\.?\s*(?:CONTEXTO|Contexto)[:\s]+(.+?)(?=(?:TERMOS TÉCNICOS|TERMOS TECNICOS|Termos Técnicos|Termos|2\.|2\s+TERMOS|$))/is,
+      /Contexto[:\s]+(.+?)(?=(?:TERMOS TÉCNICOS|TERMOS TECNICOS|Termos Técnicos|Termos|2\.|2\s+TERMOS|$))/is
+    ];
+    
+    const termosPatterns = [
+      /TERMOS TÉCNICOS[:\s]+(.+?)(?=(?:APLICAÇÕES EXPANDIDAS|APLICACOES EXPANDIDAS|Aplicações|3\.|3\s+APLICAÇÕES|$))/is,
+      /Termos Técnicos[:\s]+(.+?)(?=(?:APLICAÇÕES EXPANDIDAS|APLICACOES EXPANDIDAS|Aplicações|3\.|3\s+APLICAÇÕES|$))/is,
+      /2\.?\s*(?:TERMOS|Termos)[:\s]+(.+?)(?=(?:APLICAÇÕES EXPANDIDAS|APLICACOES EXPANDIDAS|Aplicações|3\.|3\s+APLICAÇÕES|$))/is,
+      /Termos[:\s]+(.+?)(?=(?:APLICAÇÕES EXPANDIDAS|APLICACOES EXPANDIDAS|Aplicações|3\.|3\s+APLICAÇÕES|$))/is
+    ];
+    
+    const aplicacoesPatterns = [
+      /APLICAÇÕES EXPANDIDAS[:\s]+(.+?)(?=$)/is,
+      /Aplicações Expandidas[:\s]+(.+?)(?=$)/is,
+      /3\.?\s*(?:APLICAÇÕES|Aplicações)[:\s]+(.+?)(?=$)/is,
+      /Aplicações[:\s]+(.+?)(?=$)/is
+    ];
+    
+    // Tenta encontrar o contexto usando vários padrões
+    let contextoMatch = null;
+    for (const pattern of contextoPatterns) {
+      contextoMatch = response.match(pattern);
+      if (contextoMatch && contextoMatch[1]) break;
+    }
+    
+    // Tenta encontrar os termos usando vários padrões
+    let termosMatch = null;
+    for (const pattern of termosPatterns) {
+      termosMatch = response.match(pattern);
+      if (termosMatch && termosMatch[1]) break;
+    }
+    
+    // Tenta encontrar as aplicações usando vários padrões
+    let aplicacoesMatch = null;
+    for (const pattern of aplicacoesPatterns) {
+      aplicacoesMatch = response.match(pattern);
+      if (aplicacoesMatch && aplicacoesMatch[1]) break;
+    }
+    
     console.log("Contexto encontrado:", contextoMatch ? "Sim" : "Não");
     console.log("Termos encontrados:", termosMatch ? "Sim" : "Não");
     console.log("Aplicações encontradas:", aplicacoesMatch ? "Sim" : "Não");
@@ -44,46 +84,85 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
     const termosText = termosMatch ? termosMatch[1].trim() : "";
     let termosArray = [];
     
-    // Tentar diversos formatos possíveis para os termos técnicos
+    // Processamento dos termos técnicos - detecção de múltiplos formatos
     if (termosText) {
-      // Formato 1: Termo: Definição
-      const termFormat1 = termosText.split(/\n(?=[A-Za-z0-9]+:)/g).filter(t => t.trim() !== '');
+      // Tenta diferentes formatos para cobrir todas as possibilidades de saída da IA
       
-      // Formato 2: - Termo: Definição
-      const termFormat2 = termosText.split(/\n- /g).filter(t => t.trim() !== '');
-      
-      // Formato 3: Linha por linha (parágrafos separados)
-      const termFormat3 = termosText.split(/\n\n|\n/).filter(t => t.trim() !== '');
-      
-      // Escolher o formato que parece mais apropriado
-      const formatToUse = termFormat1.length > 1 ? termFormat1 : 
-                          (termFormat2.length > 1 ? termFormat2 : termFormat3);
-      
-      termosArray = formatToUse.map(termo => {
-        const parts = termo.split(/:(.*)/s); // Divide apenas no primeiro ':'
-        if (parts.length > 1) {
+      // Formato com hífen: - Termo: Definição
+      if (termosText.includes('- ')) {
+        const termsWithDash = termosText.split(/\n- |\r\n- /).filter(t => t.trim() !== '');
+        termosArray = termsWithDash.map(term => {
+          const parts = term.split(/:(.*)/s);
+          if (parts.length > 1) {
+            return {
+              termo: parts[0].trim().replace(/^- /, ''),
+              definicao: parts[1].trim()
+            };
+          }
           return { 
-            termo: parts[0].trim().replace(/^- /, ''), 
-            definicao: parts[1].trim() 
+            termo: term.split(' ')[0].trim(), 
+            definicao: term.trim() 
           };
-        }
-        return { 
-          termo: "Termo", 
-          definicao: termo.trim() 
-        };
-      });
+        });
+      } 
+      // Formato com números ou asteriscos: 1. Termo: / * Termo:
+      else if (termosText.match(/[0-9]+\.|[*•]\s+[A-Z]/)) {
+        const termsWithNumber = termosText.split(/\n[0-9]+\.|\n[*•]\s+/).filter(t => t.trim() !== '');
+        termosArray = termsWithNumber.map(term => {
+          const parts = term.split(/:(.*)/s);
+          if (parts.length > 1) {
+            return {
+              termo: parts[0].trim(),
+              definicao: parts[1].trim()
+            };
+          }
+          return { 
+            termo: term.split(' ')[0].trim(), 
+            definicao: term.trim() 
+          };
+        });
+      }
+      // Formato com cada termo em uma nova linha sem marcadores
+      else {
+        const termLines = termosText.split(/\n{2,}|\n(?=[A-Z])/).filter(t => t.trim() !== '');
+        termosArray = termLines.map(term => {
+          const parts = term.split(/:(.*)/s);
+          if (parts.length > 1) {
+            return {
+              termo: parts[0].trim(),
+              definicao: parts[1].trim()
+            };
+          }
+          // Se não conseguir dividir pelo ":", tenta identificar o termo e definição
+          const firstSentence = term.split('.')[0].trim();
+          const restText = term.substring(firstSentence.length).trim();
+          return { 
+            termo: firstSentence.length < 50 ? firstSentence : "Termo Técnico", 
+            definicao: restText || term.trim() 
+          };
+        });
+      }
     }
     
-    // Se não encontrou termos no formato esperado, tenta criar ao menos um item
+    // Garantir que temos pelo menos um item para exibir
     const finalTermos = termosArray.length > 0 ? termosArray : [{ 
-      termo: "Informação", 
-      definicao: termosText || "Nenhuma informação disponível sobre termos técnicos." 
+      termo: "Termo Técnico", 
+      definicao: "Para ver termos técnicos específicos deste tema, clique novamente em 'Explicação Avançada'." 
     }];
     
+    // Conteúdo de fallback para garantir que sempre tem algo para mostrar
+    const contextoContent = contextoMatch && contextoMatch[1].trim() 
+      ? contextoMatch[1].trim() 
+      : "Para ver o contexto aprofundado deste tema, clique novamente em 'Explicação Avançada'.";
+      
+    const aplicacoesContent = aplicacoesMatch && aplicacoesMatch[1].trim() 
+      ? aplicacoesMatch[1].trim() 
+      : "Para ver aplicações expandidas deste tema, clique novamente em 'Explicação Avançada'.";
+    
     return {
-      contexto: contextoMatch && contextoMatch[1].trim() ? contextoMatch[1].trim() : "Contexto não disponível.",
+      contexto: contextoContent,
       termos: finalTermos,
-      aplicacoes: aplicacoesMatch && aplicacoesMatch[1].trim() ? aplicacoesMatch[1].trim() : "Aplicações não disponíveis."
+      aplicacoes: aplicacoesContent
     };
   };
 
@@ -93,7 +172,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
     if (option === 'explicacao') {
       try {
         // Captura o tema atual (última mensagem da conversa)
-        let currentTopic = "tema atual";
+        let currentTopic = "";
         
         if (messages && messages.length > 0) {
           // Tenta obter a última resposta da IA (mais completa)
@@ -111,26 +190,42 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
           }
         }
         
+        // Verifica se temos um tema para aprofundar
+        if (!currentTopic || currentTopic.trim() === "") {
+          setExplainContent({
+            contexto: "Não foi possível identificar um tema para aprofundar. Inicie uma conversa primeiro.",
+            termos: [{ termo: "Atenção", definicao: "Converse com a IA primeiro para ter um tema para aprofundar." }],
+            aplicacoes: "Após conversar sobre um tema específico, tente a explicação avançada novamente."
+          });
+          setActiveContent(option);
+          setLoading(false);
+          return;
+        }
+        
         console.log("Tema capturado para aprofundamento:", currentTopic.substring(0, 100) + "...");
         
         // Prompt para a IA
-        const prompt = `Você é uma IA educacional. Expanda o tema abaixo fornecendo:
+        const prompt = `Você é uma IA educacional especializada em aprofundar temas para estudantes. 
 
-1. Contexto Aprofundado: forneça contexto histórico, científico e social detalhado sobre o tema.
-2. Termos Técnicos: liste e explique claramente os principais termos técnicos relacionados ao tema.
-3. Aplicações Expandidas: explique como esse conhecimento pode ser aplicado na prática e em outras disciplinas.
+Analise o seguinte conteúdo e crie uma explicação aprofundada sobre ele:
 
-Sua resposta DEVE seguir exatamente este formato, com estas três seções bem definidas:
+"${currentTopic}"
 
-Contexto Aprofundado: [seu texto aqui]
+Sua resposta DEVE conter estas três seções claramente delimitadas:
 
-Termos Técnicos: [liste os termos e suas definições]
+1. CONTEXTO APROFUNDADO: 
+Forneça um contexto histórico, científico e social detalhado sobre o tema. Inclua desenvolvimento histórico, principais teorias, descobertas e impacto social/cultural do tema. Seja específico e informativo.
 
-Aplicações Expandidas: [seu texto aqui]
+2. TERMOS TÉCNICOS:
+Liste pelo menos 5 termos técnicos importantes relacionados ao tema, cada um com sua definição completa. 
+Formato: 
+- Termo 1: Definição detalhada...
+- Termo 2: Definição detalhada...
 
-Seja didático, use exemplos e analogias quando possível.
+3. APLICAÇÕES EXPANDIDAS:
+Explique como esse conhecimento pode ser aplicado na prática e em diferentes campos ou disciplinas. Inclua exemplos concretos, casos de uso reais e conexões interdisciplinares.
 
-Tema: "${currentTopic}"`;
+IMPORTANTE: Certifique-se de incluir conteúdo substancial em cada seção, sendo específico e relevante ao tema principal. Use uma linguagem didática com exemplos e analogias quando possível.`;
 
         // Importar e usar o serviço de IA para gerar o conteúdo
         const { generateAIResponse } = await import('@/services/aiChatService');
@@ -249,9 +344,9 @@ Tema: "${currentTopic}"`;
   );
 
   const [explainContent, setExplainContent] = useState({
-    contexto: "Aqui aparecerá o contexto histórico e científico aprofundado sobre o tema discutido.",
-    termos: [{ termo: "Termo técnico", definicao: "Definição detalhada do termo aparecerá aqui." }],
-    aplicacoes: "Aqui serão listadas as aplicações práticas e teóricas deste conhecimento."
+    contexto: "O contexto histórico e científico do tema está sendo preparado. Por favor, aguarde...",
+    termos: [{ termo: "Carregando termos", definicao: "Os termos técnicos e suas definições estão sendo gerados..." }],
+    aplicacoes: "As aplicações práticas e teóricas deste tema estão sendo analisadas..."
   });
 
   const renderExplicacaoAvancada = () => (
@@ -518,9 +613,19 @@ Tema: "${currentTopic}"`;
       return (
         <div className="flex items-center justify-center h-60">
           <div className="animate-pulse flex flex-col items-center">
-            <div className="h-12 w-12 bg-blue-100 dark:bg-blue-900/40 rounded-full mb-3"></div>
-            <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+            <div className="h-12 w-12 bg-blue-100 dark:bg-blue-900/40 rounded-full mb-3 flex items-center justify-center">
+              <span className="text-blue-600 dark:text-blue-400 animate-spin">⚙️</span>
+            </div>
+            <div className="h-5 w-40 bg-gray-200 dark:bg-gray-700 rounded mb-3 flex items-center justify-center">
+              <span className="text-xs text-gray-600 dark:text-gray-300">Gerando conteúdo...</span>
+            </div>
+            <div className="h-3 w-56 bg-gray-100 dark:bg-gray-800 rounded mb-1"></div>
+            <div className="h-3 w-48 bg-gray-100 dark:bg-gray-800 rounded mb-1"></div>
             <div className="h-3 w-40 bg-gray-100 dark:bg-gray-800 rounded"></div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center max-w-sm">
+              Analisando o tema e aprofundando o conteúdo com contexto histórico, 
+              termos técnicos e aplicações práticas
+            </p>
           </div>
         </div>
       );
