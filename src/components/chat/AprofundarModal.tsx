@@ -308,9 +308,21 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
         if (!formattedContent.includes('###') && formattedContent.length > 300) {
           formattedContent += `\n\n### Aplicações Práticas\n\nEste conceito tem diversas aplicações no contexto educacional e profissional...`;
         }
+        
+        // Formata o conteúdo para garantir que tenha elementos visuais adequados
+        formattedContent = formattedContent
+          // Garante que todos os títulos secundários estão formatados corretamente
+          .replace(/^## /gm, "\n## ")
+          .replace(/^### /gm, "\n### ")
+          // Garante que listas estão com espaçamento correto
+          .replace(/^\- /gm, "\n- ")
+          // Formata parágrafos para melhor legibilidade
+          .replace(/\n\n/g, "\n\n")
+          // Garante negrito e itálico sejam renderizados corretamente
+          .replace(/\*\*(.*?)\*\*/g, "**$1**")
+          .replace(/\_(.*?)\_/g, "_$1_");
 
         // Atualiza imediatamente o contexto para mostrar ao usuário
-        // Garantir que o conteúdo seja renderizado corretamente, tratando possíveis caracteres de formatação
         setAprofundadoContent(prev => ({
           ...prev, 
           contexto: formattedContent,

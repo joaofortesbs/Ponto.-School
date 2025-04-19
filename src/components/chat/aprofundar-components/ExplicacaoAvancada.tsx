@@ -52,9 +52,19 @@ const ExplicacaoAvancada: React.FC<ExplicacaoAvancadaProps> = ({
               ) : (
                 aprofundadoContent.contexto ? (
                   <div className="relative bg-white/60 dark:bg-gray-800/60 rounded-lg border border-gray-200/70 dark:border-gray-700/50 p-4 shadow-sm">
-                    <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap break-words overflow-auto">
-                      {aprofundadoContent.contexto}
-                    </div>
+                    <div 
+                      className="prose prose-sm dark:prose-invert max-w-none break-words overflow-auto"
+                      dangerouslySetInnerHTML={{
+                        __html: aprofundadoContent.contexto
+                          .replace(/\n\n/g, '<br /><br />')
+                          .replace(/\n/g, '<br />')
+                          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                          .replace(/\_(.*?)\_/g, '<em>$1</em>')
+                          .replace(/\#\# (.*?)\n/g, '<h2 class="text-xl font-bold my-3 text-blue-800 dark:text-blue-300">$1</h2>')
+                          .replace(/\#\#\# (.*?)\n/g, '<h3 class="text-lg font-semibold my-2 text-blue-700 dark:text-blue-400">$1</h3>')
+                          .replace(/\- (.*?)(\n|$)/g, '<li class="ml-4">$1</li>')
+                      }}
+                    />
                     <button 
                       onClick={generateAprofundadoContent} 
                       className="absolute top-3 right-3 p-1.5 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-800/50 text-blue-600 dark:text-blue-400 rounded-md transition-colors text-xs flex items-center"
