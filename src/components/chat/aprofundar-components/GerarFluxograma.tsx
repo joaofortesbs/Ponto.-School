@@ -1829,7 +1829,7 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                 </div>
                 
                 {/* Área de animação do fluxograma */}
-                <div className="h-[260px] w-full relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/40 dark:from-gray-900/90 dark:via-blue-950/40 dark:to-indigo-950/30 flex items-center justify-center shadow-inner border border-blue-100/50 dark:border-blue-900/30 group-hover:border-blue-200 dark:group-hover:border-blue-800/50 transition-all duration-500">
+                <div className="h-[220px] w-full relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/40 dark:from-gray-900/90 dark:via-blue-950/40 dark:to-indigo-950/30 flex items-center justify-center shadow-inner border border-blue-100/50 dark:border-blue-900/30 group-hover:border-blue-200 dark:group-hover:border-blue-800/50 transition-all duration-500">
                   {/* Fundo com padrão de grade */}
                   <div className="absolute inset-0 bg-[url('/images/pattern-grid.svg')] bg-center opacity-5 dark:opacity-10"></div>
                   
@@ -1876,22 +1876,32 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                       </span>
                     </div>
                   </div>
+                  
+                  {/* Mensagem de sobreposição */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-white/60 via-transparent to-transparent dark:from-gray-900/60 dark:via-transparent dark:to-transparent flex items-end justify-center pb-5 z-20">
+                    <div className="bg-white/90 dark:bg-gray-800/90 px-4 py-2 rounded-full shadow-md backdrop-blur-sm border border-blue-100/50 dark:border-blue-900/30">
+                      <p className="text-sm text-blue-600 dark:text-blue-400 font-medium flex items-center">
+                        <span className="animate-blink mr-2 h-2 w-2 rounded-full bg-blue-500"></span>
+                        O fluxograma gerado aparecerá aqui!
+                      </p>
+                    </div>
+                  </div>
                 </div>
                 
-                {/* Rodapé simplificado */}
-                <div className="mt-4 h-4"></div>
-              </div>
-              
-              {/* Mensagem de visualização do fluxograma */}
-              <div className="w-full mt-4 flex justify-center">
-                <div className="bg-white/90 dark:bg-gray-800/90 px-5 py-3 rounded-lg shadow-md backdrop-blur-sm border border-blue-100/50 dark:border-blue-900/30 transform hover:scale-105 transition-all duration-300">
-                  <p className="text-sm text-blue-600 dark:text-blue-400 font-medium flex items-center">
-                    <span className="animate-blink mr-2 h-2 w-2 rounded-full bg-blue-500"></span>
-                    O fluxograma gerado aparecerá aqui!
+                {/* Rodapé com informações e dica de ação */}
+                <div className="mt-4 flex justify-between items-center">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 italic max-w-[70%]">
+                    Organize conceitos complexos em visualizações claras e estruturadas
                   </p>
+                  <div className="flex items-center text-xs font-medium text-blue-600 dark:text-blue-400">
+                    <span className="mr-1 opacity-70">Selecione uma fonte</span>
+                    <svg className="h-3 w-3 animate-bounce-x" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </div>
                 </div>
               </div>
-
+              
               <Button
                 onClick={() => setShowSavedFluxogramas(!showSavedFluxogramas)}
                 variant="outline"
