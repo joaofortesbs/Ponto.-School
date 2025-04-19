@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   Search,
@@ -7,10 +7,12 @@ import {
   FileText,
   AlertTriangle,
   ArrowLeft,
-  ExternalLink
+  ExternalLink,
+  Loader2
 } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { generateAIResponse } from '@/services/aiChatService';
 
 interface AprofundarModalProps {
   isOpen: boolean;
@@ -19,7 +21,13 @@ interface AprofundarModalProps {
   sessionId?: string; // Added sessionId prop type
   setShowAprofundarModal: any; // Added setShowAprofundarModal prop type
   toast: any; // Added toast prop type
+}
 
+interface AprofundadoContent {
+  contexto: string;
+  termos: { termo: string, definicao: string }[];
+  aplicacoes: string;
+  loading: boolean;
 }
 
 type ContentType = 'main' | 'explicacao' | 'topicos' | 'exemplos' | 'erros' | 'fontes';
@@ -27,6 +35,133 @@ type ContentType = 'main' | 'explicacao' | 'topicos' | 'exemplos' | 'erros' | 'f
 const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, messages, sessionId, setShowAprofundarModal, toast }) => {
   const [activeContent, setActiveContent] = useState<ContentType>('main');
   const [loading, setLoading] = useState(false);
+  const [aprofundadoContent, setAprofundadoContent] = useState<AprofundadoContent>({
+    contexto: '',
+    termos: [],
+    aplicacoes: '',
+    loading: false
+  });
+
+  // Obter a última mensagem do assistente (resposta da IA)
+  const getLastAIMessage = () => {
+    if (!messages || messages.length === 0) return '';
+    
+    // Filtra para obter apenas mensagens do assistente e pega a última
+    const assistantMessages = messages.filter(msg => msg.sender === 'assistant' || msg.role === 'assistant');
+    if (assistantMessages.length === 0) return '';
+    
+    const lastMessage = assistantMessages[assistantMessages.length - 1];
+    return lastMessage.content || '';
+  };
+
+  // Gerar conteúdo aprofundado usando a IA
+  const generateDeepContent = async () => {
+    if (aprofundadoContent.loading) return;
+    
+    const lastAIMessage = getLastAIMessage();
+    if (!lastAIMessage) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível encontrar o conteúdo para aprofundar.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setAprofundadoContent(prev => ({ ...prev, loading: true }));
+
+    try {
+      // Prompt para o contexto aprofundado
+      const contextoPrompt = `Você é um especialista em educação. Considere a seguinte resposta que foi dada a um estudante:
+      
+"${lastAIMessage}"
+
+Gere um contexto aprofundado sobre este tema, expandindo com detalhes históricos, científicos e teóricos que não foram abordados na resposta original. Explique conceitos subjacentes, origens e evolução dos conceitos, relacionando com o contexto acadêmico mais amplo. Seu texto deve ser educativo, estruturado e aprofundado, mantendo um tom didático.`;
+
+      // Prompt para os termos técnicos
+      const termosPrompt = `Você é um especialista em terminologia técnica. Considere a seguinte resposta que foi dada a um estudante:
+      
+"${lastAIMessage}"
+
+Identifique e explique 3-5 termos técnicos importantes relacionados a este tema. Para cada termo, forneça:
+1. O nome do termo
+2. Uma definição clara e precisa
+3. A importância deste termo no contexto do tema
+
+Formato da resposta: Liste os termos no formato JSON como este exemplo:
+[
+  {
+    "termo": "Nome do termo 1",
+    "definicao": "Definição completa do termo 1"
+  },
+  {
+    "termo": "Nome do termo 2",
+    "definicao": "Definição completa do termo 2"
+  }
+]`;
+
+      // Prompt para as aplicações expandidas
+      const aplicacoesPrompt = `Você é um especialista em aplicações práticas do conhecimento. Considere a seguinte resposta que foi dada a um estudante:
+      
+"${lastAIMessage}"
+
+Elabore sobre as aplicações práticas e teóricas deste conhecimento. Inclua:
+1. Como este conhecimento é aplicado em diferentes campos
+2. Exemplos práticos do mundo real
+3. Relevância para estudos futuros e pesquisas atuais
+4. Conexões interdisciplinares
+
+Forneça uma explicação detalhada e útil para um estudante que quer entender o valor prático deste conhecimento.`;
+
+      // Executa as chamadas em paralelo para economizar tempo
+      const [contextoResponse, termosResponse, aplicacoesResponse] = await Promise.all([
+        generateAIResponse(contextoPrompt, sessionId || 'aprofundar_session'),
+        generateAIResponse(termosPrompt, sessionId || 'aprofundar_session'),
+        generateAIResponse(aplicacoesPrompt, sessionId || 'aprofundar_session')
+      ]);
+
+      // Processa a resposta dos termos técnicos (que deve estar em formato JSON)
+      let termosParsed = [];
+      try {
+        // Tenta extrair JSON da resposta
+        const jsonMatch = termosResponse.match(/\[\s*\{.*\}\s*\]/s);
+        if (jsonMatch) {
+          termosParsed = JSON.parse(jsonMatch[0]);
+        } else {
+          // Fallback: cria uma estrutura básica a partir do texto
+          termosParsed = [{ termo: "Termos técnicos", definicao: termosResponse }];
+        }
+      } catch (e) {
+        console.error("Erro ao processar termos técnicos:", e);
+        // Fallback em caso de erro de parsing
+        termosParsed = [{ termo: "Termos técnicos", definicao: termosResponse }];
+      }
+
+      // Atualiza o estado com o conteúdo gerado
+      setAprofundadoContent({
+        contexto: contextoResponse,
+        termos: termosParsed,
+        aplicacoes: aplicacoesResponse,
+        loading: false
+      });
+
+    } catch (error) {
+      console.error("Erro ao gerar conteúdo aprofundado:", error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao gerar o conteúdo aprofundado. Tente novamente.",
+        variant: "destructive"
+      });
+      setAprofundadoContent(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  // Quando o modal abrir na seção de explicação, gerar o conteúdo
+  useEffect(() => {
+    if (isOpen && activeContent === 'explicacao' && !aprofundadoContent.contexto) {
+      generateDeepContent();
+    }
+  }, [isOpen, activeContent]);
 
   const handleOptionClick = (option: ContentType) => {
     setLoading(true);
@@ -34,6 +169,11 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
     setTimeout(() => {
       setActiveContent(option);
       setLoading(false);
+      
+      // Se selecionou explicação e ainda não tem conteúdo, gera
+      if (option === 'explicacao' && !aprofundadoContent.contexto && !aprofundadoContent.loading) {
+        generateDeepContent();
+      }
     }, 500);
   };
 
@@ -127,34 +267,84 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
       <ScrollArea className="h-[60vh] pr-4">
         <div className="bg-blue-50/50 dark:bg-blue-950/20 rounded-xl p-4 border border-blue-100 dark:border-blue-900/30 mb-4">
           <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-            O conteúdo solicitado está sendo preparado para você. Aqui você encontrará uma versão expandida da resposta original da IA, incluindo explicações mais detalhadas, termos técnicos, aplicações do conteúdo, contexto histórico e comparações com conceitos semelhantes.
+            {aprofundadoContent.loading ? (
+              <span className="flex items-center">
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Gerando conteúdo aprofundado para você...
+              </span>
+            ) : (
+              "Aqui você encontrará uma versão expandida da resposta original da IA, incluindo explicações mais detalhadas, termos técnicos, aplicações do conteúdo, contexto histórico e comparações com conceitos semelhantes."
+            )}
           </p>
         </div>
 
         <div className="space-y-6">
           <div>
             <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Contexto Aprofundado</h4>
-            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
-              Aqui aparecerá o contexto histórico e científico aprofundado sobre o tema discutido.
-            </p>
+            {aprofundadoContent.loading ? (
+              <div className="animate-pulse space-y-2">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/6"></div>
+              </div>
+            ) : (
+              <div className="text-sm text-gray-700 dark:text-gray-300 mb-3 whitespace-pre-line">
+                {aprofundadoContent.contexto || "O contexto histórico e científico aprofundado sobre o tema será gerado aqui."}
+              </div>
+            )}
           </div>
 
           <div>
             <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Termos Técnicos</h4>
-            <div className="grid grid-cols-1 gap-3">
-              <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                <span className="block font-medium text-blue-600 dark:text-blue-400 mb-1">Termo técnico</span>
-                <span className="text-sm text-gray-700 dark:text-gray-300">Definição detalhada do termo aparecerá aqui.</span>
+            {aprofundadoContent.loading ? (
+              <div className="animate-pulse space-y-3">
+                <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+                <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
               </div>
-            </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3">
+                {aprofundadoContent.termos && aprofundadoContent.termos.length > 0 ? (
+                  aprofundadoContent.termos.map((item, index) => (
+                    <div key={index} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <span className="block font-medium text-blue-600 dark:text-blue-400 mb-1">{item.termo}</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{item.definicao}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <span className="block font-medium text-blue-600 dark:text-blue-400 mb-1">Termos técnicos</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">Os termos técnicos relacionados ao tema serão listados aqui.</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div>
             <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Aplicações Expandidas</h4>
-            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
-              Aqui serão listadas as aplicações práticas e teóricas deste conhecimento.
-            </p>
+            {aprofundadoContent.loading ? (
+              <div className="animate-pulse space-y-2">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/6"></div>
+              </div>
+            ) : (
+              <div className="text-sm text-gray-700 dark:text-gray-300 mb-3 whitespace-pre-line">
+                {aprofundadoContent.aplicacoes || "As aplicações práticas e teóricas deste conhecimento serão listadas aqui."}
+              </div>
+            )}
           </div>
+          
+          {!aprofundadoContent.contexto && !aprofundadoContent.loading && (
+            <div className="mt-4 flex justify-center">
+              <Button 
+                onClick={generateDeepContent}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Gerar conteúdo aprofundado
+              </Button>
+            </div>
+          )}
         </div>
       </ScrollArea>
     </div>
