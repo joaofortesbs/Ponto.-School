@@ -299,7 +299,8 @@ interface FluxogramaVisualizerProps {
     nodes: Node[];
     edges: Edge[];
   };
-  onNodeClick?: (node: Node) =}
+  onNodeClick?: (node: Node) => void;
+}
 
 /**
  * Componente principal do visualizador de fluxograma
