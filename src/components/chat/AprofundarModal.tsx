@@ -41,6 +41,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
     aplicacoes: '',
     loading: false
   });
+  const [lastGeneratedContext, setLastGeneratedContext] = useState<string>('');
 
   // Obter a última mensagem do assistente (resposta da IA)
   const getLastAIMessage = () => {
@@ -71,19 +72,36 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
     setAprofundadoContent(prev => ({ ...prev, loading: true }));
 
     try {
-      // Prompt para o contexto aprofundado
-      const contextoPrompt = `Você é um especialista em educação. Considere a seguinte resposta que foi dada a um estudante:
+      // Extrair o tema principal da última mensagem
+      const extractThemePrompt = `Você é um especialista em análise de conteúdo. Dada a seguinte mensagem, identifique e extraia APENAS o tema principal em uma frase concisa sem introduções ou explicações adicionais:
       
 "${lastAIMessage}"
 
-Gere um contexto aprofundado sobre este tema, expandindo com detalhes históricos, científicos e teóricos que não foram abordados na resposta original. Explique conceitos subjacentes, origens e evolução dos conceitos, relacionando com o contexto acadêmico mais amplo. Seu texto deve ser educativo, estruturado e aprofundado, mantendo um tom didático.`;
+Formato esperado de resposta: apenas o tema principal, sem frases introdutórias ou explicativas.`;
+
+      // Obter o tema principal
+      const extractedTheme = await generateAIResponse(extractThemePrompt, sessionId || 'aprofundar_session_theme');
+      
+      // Limpar qualquer texto adicional para obter apenas o tema
+      const cleanTheme = extractedTheme.replace(/^[^a-zA-Z0-9áàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ]*|[^a-zA-Z0-9áàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ]*$/g, '');
+      console.log("Tema extraído:", cleanTheme);
+
+      // Prompt para o contexto aprofundado
+      const contextoPrompt = `Você é um especialista acadêmico. Gere um texto detalhado e aprofundado sobre o tema "${cleanTheme || lastAIMessage}".
+      
+Seu texto deve incluir:
+1. Contexto histórico e científico completo
+2. Fundamentos teóricos e evolução dos conceitos principais
+3. Marcos importantes e desenvolvimentos significativos
+4. Perspectivas críticas e debates acadêmicos atuais
+5. Relações com outras áreas do conhecimento
+
+Use uma linguagem acadêmica e didática, estruturando o texto em parágrafos bem organizados. Seu texto deve ser informativo, preciso e aprofundado, mantendo um tom educativo apropriado para estudantes que desejam aprender mais sobre este tema.`;
 
       // Prompt para os termos técnicos
-      const termosPrompt = `Você é um especialista em terminologia técnica. Considere a seguinte resposta que foi dada a um estudante:
+      const termosPrompt = `Você é um especialista em terminologia técnica. Sobre o tema "${cleanTheme || lastAIMessage}", identifique e explique 3-5 termos técnicos importantes.
       
-"${lastAIMessage}"
-
-Identifique e explique 3-5 termos técnicos importantes relacionados a este tema. Para cada termo, forneça:
+Para cada termo, forneça:
 1. O nome do termo
 2. Uma definição clara e precisa
 3. A importância deste termo no contexto do tema
@@ -101,17 +119,16 @@ Formato da resposta: Liste os termos no formato JSON como este exemplo:
 ]`;
 
       // Prompt para as aplicações expandidas
-      const aplicacoesPrompt = `Você é um especialista em aplicações práticas do conhecimento. Considere a seguinte resposta que foi dada a um estudante:
+      const aplicacoesPrompt = `Você é um especialista em aplicações práticas do conhecimento. Sobre o tema "${cleanTheme || lastAIMessage}", elabore sobre as aplicações práticas e teóricas.
       
-"${lastAIMessage}"
-
-Elabore sobre as aplicações práticas e teóricas deste conhecimento. Inclua:
+Inclua:
 1. Como este conhecimento é aplicado em diferentes campos
-2. Exemplos práticos do mundo real
+2. Exemplos práticos e concretos do mundo real
 3. Relevância para estudos futuros e pesquisas atuais
-4. Conexões interdisciplinares
+4. Conexões interdisciplinares e impactos sociais
+5. Inovações recentes e tendências emergentes
 
-Forneça uma explicação detalhada e útil para um estudante que quer entender o valor prático deste conhecimento.`;
+Forneça uma explicação detalhada e útil para um estudante que quer entender o valor prático e a relevância contemporânea deste conhecimento.`;
 
       // Executa as chamadas em paralelo para economizar tempo
       const [contextoResponse, termosResponse, aplicacoesResponse] = await Promise.all([
@@ -119,6 +136,9 @@ Forneça uma explicação detalhada e útil para um estudante que quer entender 
         generateAIResponse(termosPrompt, sessionId || 'aprofundar_session'),
         generateAIResponse(aplicacoesPrompt, sessionId || 'aprofundar_session')
       ]);
+
+      // Armazenar o contexto gerado para uso posterior, mesmo se o usuário limpar o estado
+      setLastGeneratedContext(contextoResponse);
 
       // Processa a resposta dos termos técnicos (que deve estar em formato JSON)
       let termosParsed = [];
@@ -289,7 +309,7 @@ Forneça uma explicação detalhada e útil para um estudante que quer entender 
               </div>
             ) : (
               <div className="text-sm text-gray-700 dark:text-gray-300 mb-3 whitespace-pre-line">
-                {aprofundadoContent.contexto || "O contexto histórico e científico aprofundado sobre o tema será gerado aqui."}
+                {aprofundadoContent.contexto || lastGeneratedContext || "O contexto histórico e científico aprofundado sobre o tema será gerado aqui."}
               </div>
             )}
           </div>
