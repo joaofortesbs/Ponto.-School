@@ -2155,22 +2155,21 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
           )}
 
           {isLoading && (
-            <div className="mt-6 bg-white/80 dark:bg-gray-800/80 rounded-xl border border-gray-200/70 dark:border-gray-700/50 p-6 shadow-sm backdrop-blur-sm">
-              <div className="flex flex-col items-center justify-center">
-                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-blue-100/80 dark:bg-blue-900/40 mb-4 relative">
-                  <div className="absolute inset-0 rounded-full bg-blue-500/10 animate-pulse"></div>
-                  <svg className="animate-spin h-8 w-8 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <div className="mt-6 bg-[#131A2B] rounded-xl p-6 shadow-lg flex flex-col items-center justify-center max-w-xl mx-auto">
+              <div className="mb-4">
+                <div className="h-16 w-16 rounded-full bg-[#2C3E87] flex items-center justify-center">
+                  <svg className="animate-spin h-8 w-8 text-[#6B8AFF]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                 </div>
-                <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-1">Processando o Fluxograma</h4>
-                <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-                  Estamos analisando o conteúdo e construindo um fluxograma visual para facilitar sua compreensão.
-                </p>
               </div>
-              <div className="mt-4 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2.5 rounded-full animate-progress"></div>
+              <h4 className="text-lg font-medium text-white mb-2">Processando o Fluxograma</h4>
+              <p className="text-sm text-gray-300 text-center mb-6">
+                Estamos analisando o conteúdo e construindo um fluxograma visual para facilitar sua compreensão.
+              </p>
+              <div className="w-full bg-[#1E2A45] rounded-full h-2.5 overflow-hidden">
+                <div className="bg-[#4C78FF] h-2.5 rounded-full animate-progress"></div>
               </div>
             </div>
           )}
