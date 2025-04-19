@@ -14,11 +14,8 @@ import {
   Maximize2,
   Save,
   X,
-  SendHorizonal,
-  Layout
+  SendHorizonal
 } from 'lucide-react';
-// @ts-ignore - Adicionar dagre que será usado pelo FluxogramaVisualizer
-import dagre from 'dagre';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import FluxogramaVisualizer from './FluxogramaVisualizer';
 import FluxogramaDetailModal from './FluxogramaDetailModal';
