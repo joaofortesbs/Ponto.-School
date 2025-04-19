@@ -177,23 +177,50 @@ Crie um fluxograma que:
           
           // ETAPA 2: Converter os dados da IA para o formato do fluxograma
           const nodes = extractedData.nodes.map((node, index) => {
-            // Determinar o tipo do nó (usando o tipo da IA ou fallback para posição)
+            // Determinar o tipo do nó (usando o tipo da IA ou inferindo por posição e conteúdo)
             let nodeType = node.type || 'default';
             if (!node.type) {
+              // Inferência baseada na posição
               if (index === 0) nodeType = 'start';
               else if (index === extractedData.nodes.length - 1) nodeType = 'end';
+              // Inferência baseada no conteúdo (opcional)
+              else if (node.title?.toLowerCase().includes('decis') || 
+                       node.title?.toLowerCase().includes('escolh') ||
+                       node.title?.toLowerCase().includes('opç') ||
+                       node.description?.toLowerCase().includes('se ') ||
+                       node.description?.toLowerCase().includes('caso ')) {
+                nodeType = 'decision';
+              }
             }
             
             // Calcular posicionamento para layout vertical ou horizontal
             let position;
             const flowDirection = 'vertical'; // ou 'horizontal'
             
+            // Cálculo de posição mais natural e com melhor espaçamento
             if (flowDirection === 'vertical') {
-              position = { x: 250, y: 100 + (index * 120) };
+              // No layout vertical, posicionamos os nós em coluna com espaçamento progressivo
+              const baseX = 250; // Centralizado
+              const baseY = 80; // Começa mais no topo
+              const spacing = 150; // Espaçamento maior entre nós
+              
+              position = { 
+                x: baseX + (Math.random() * 30 - 15), // Pequena variação horizontal para naturalidade
+                y: baseY + (index * spacing) 
+              };
             } else {
-              position = { x: 100 + (index * 220), y: 200 };
+              // No layout horizontal, posicionamos os nós em linha
+              const baseX = 100;
+              const baseY = 200;
+              const spacing = 250; // Espaçamento maior para nós horizontais (geralmente têm mais informações)
+              
+              position = { 
+                x: baseX + (index * spacing), 
+                y: baseY + (Math.random() * 30 - 15) // Pequena variação vertical para naturalidade
+              };
             }
             
+            // Retorna o nó formatado com todos os dados necessários
             return {
               id: node.id,
               data: { 
