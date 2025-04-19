@@ -1106,7 +1106,160 @@ fluxograma:
                 <Button 
                   variant="ghost" 
                   size="icon"
-                  onClick={() => handleCopyFlowchartPrompt(1)}
+                  onClick={() => {
+                    setIsLoading(true);
+                    setShowFluxograma(false);
+                    
+                    // Reutilizar a lógica de geração do fluxograma
+                    const regenerateFluxograma = async () => {
+                      // Remover dados anteriores
+                      localStorage.removeItem('fluxogramaData');
+                      
+                      // Gerar novo fluxograma usando o conteúdo já processado
+                      const sourceOption = selectedOption || 'ia';
+                      const contentToProcess = sourceOption === 'manual' 
+                        ? manualContent 
+                        : aprofundadoContent?.contexto || '';
+                      
+                      if (!contentToProcess.trim()) {
+                        setIsLoading(false);
+                        alert('Não há conteúdo disponível para regenerar o fluxograma.');
+                        return;
+                      }
+                      
+                      // Processar novamente seguindo a lógica existente
+                      try {
+                        // Importar o serviço de IA
+                        const { generateAIResponse } = await import('@/services/aiChatService');
+                        
+                        // Criar um ID de sessão único
+                        const sessionId = `fluxograma_regen_${Date.now()}`;
+                        
+                        // Usar o mesmo prompt para obter consistência
+                        const prompt = `
+Com base na seguinte explicação sobre o tema, gere um fluxograma interativo no formato do React Flow:
+
+${contentToProcess}
+
+Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
+
+1. Comece com um CONCEITO CENTRAL (nó inicial):
+   - Defina o tema de forma objetiva e clara
+   - Ex: "O que é fotossíntese?"
+
+2. Adicione CONTEXTUALIZAÇÃO E PRÉ-REQUISITOS:
+   - Conhecimentos prévios necessários
+   - Termos importantes para entender o tema
+   - Base científica/histórica relevante
+
+3. Detalhe o PROCESSO, MECANISMO OU LÓGICA DO TEMA:
+   - Passo a passo da explicação em etapas numeradas
+   - Fluxo de causa e efeito
+   - Ex: "Etapa 1: Captação de luz → Etapa 2: Transformação química → Etapa 3: Liberação de oxigênio"
+
+4. Inclua uma CAMADA DE APLICAÇÃO/PRÁTICA:
+   - Exemplos práticos ou situações-problema
+   - Destaque erros comuns e dicas
+   - Inclua nós de decisão do tipo: "Se o aluno pensar A → Mostrar que está errado" / "Se pensar B → Está correto"
+
+5. Finalize com CONCLUSÃO OU RESULTADO FINAL:
+   - Síntese do aprendizado
+   - Resumo visual
+   - Dica de ouro ou aplicação em provas
+
+// Outras instruções detalhadas mantidas...
+`;
+                        
+                        // Chamar a API de IA
+                        const response = await generateAIResponse(prompt, sessionId, {
+                          intelligenceLevel: 'advanced',
+                          detailedResponse: true
+                        });
+                        
+                        // Processar a resposta e salvar os dados
+                        // Usar a lógica existente, mas simplificada
+                        let extractedData;
+                        try {
+                          const jsonMatch = response.match(/```json\n([\s\S]*?)\n```/) || 
+                                         response.match(/```\n([\s\S]*?)\n```/) ||
+                                         response.match(/{[\s\S]*?}/);
+
+                          const jsonString = jsonMatch ? jsonMatch[0].replace(/```json\n|```\n|```/g, '') : response;
+                          extractedData = JSON.parse(jsonString);
+                          
+                          // Normalize data structure
+                          if (!extractedData.edges && extractedData.connections) {
+                            extractedData.edges = extractedData.connections.map(conn => ({
+                              id: `e${conn.source}-${conn.target}`,
+                              source: conn.source,
+                              target: conn.target,
+                              label: conn.label || '',
+                              type: 'smoothstep',
+                              animated: conn.animated || false
+                            }));
+                          } else if (!extractedData.edges) {
+                            extractedData.edges = [];
+                            if (extractedData.nodes && extractedData.nodes.length > 1) {
+                              for (let i = 0; i < extractedData.nodes.length - 1; i++) {
+                                extractedData.edges.push({
+                                  id: `e${extractedData.nodes[i].id}-${extractedData.nodes[i+1].id}`,
+                                  source: extractedData.nodes[i].id,
+                                  target: extractedData.nodes[i+1].id,
+                                  label: 'Segue para',
+                                  type: 'smoothstep',
+                                  animated: true
+                                });
+                              }
+                            }
+                          }
+                        } catch (error) {
+                          console.error('Erro ao extrair JSON da resposta da IA:', error);
+                          // Criar uma estrutura simples de fallback
+                          const paragraphs = contentToProcess.split(/\n\n+/);
+                          const sentences = contentToProcess.split(/[.!?]\s+/);
+                          const mainBlocks = paragraphs.length > 3 ? paragraphs.slice(0, paragraphs.length) : sentences.slice(0, Math.min(8, sentences.length));
+                          const nodes = mainBlocks.map((block, index) => ({
+                            id: (index + 1).toString(),
+                            data: { 
+                              label: `Conceito ${index + 1}`, 
+                              description: block
+                            },
+                            type: index === 0 ? 'start' : index === mainBlocks.length - 1 ? 'end' : 'default',
+                            position: { x: 250, y: 100 * (index + 1) }
+                          }));
+                          
+                          const edges = [];
+                          for (let i = 0; i < nodes.length - 1; i++) {
+                            edges.push({
+                              id: `e${i+1}-${i+2}`,
+                              source: (i + 1).toString(),
+                              target: (i + 2).toString(),
+                              animated: true,
+                              style: { stroke: '#3b82f6' }
+                            });
+                          }
+                          
+                          extractedData = { nodes, edges };
+                        }
+                        
+                        // Salvar os novos dados
+                        localStorage.setItem('fluxogramaData', JSON.stringify(extractedData));
+                        
+                        // Mostrar o fluxograma
+                        setIsLoading(false);
+                        setFluxogramaGerado(true);
+                        setShowFluxograma(true);
+                        
+                      } catch (error) {
+                        console.error('Erro ao regenerar o fluxograma:', error);
+                        setIsLoading(false);
+                        alert('Ocorreu um erro ao regenerar o fluxograma. Por favor, tente novamente.');
+                      }
+                    };
+                    
+                    // Iniciar o processo de regeneração
+                    regenerateFluxograma();
+                  }}
                   className="h-10 w-10 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
                 >
                   <RotateCw className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -1146,6 +1299,29 @@ fluxograma:
                 <Button 
                   variant="ghost" 
                   size="icon"
+                  onClick={() => {
+                    // Obter o elemento que contém o fluxograma
+                    const fluxogramaContainer = document.querySelector('.h-[60vh]');
+                    if (fluxogramaContainer) {
+                      // Alternar entre tamanho normal e ampliado
+                      if (fluxogramaContainer.classList.contains('h-[60vh]')) {
+                        fluxogramaContainer.classList.remove('h-[60vh]');
+                        fluxogramaContainer.classList.add('h-[90vh]', 'fixed', 'top-[5vh]', 'left-[5vw]', 'right-[5vw]', 'w-[90vw]', 'z-50');
+                      } else {
+                        fluxogramaContainer.classList.remove('h-[90vh]', 'fixed', 'top-[5vh]', 'left-[5vw]', 'right-[5vw]', 'w-[90vw]', 'z-50');
+                        fluxogramaContainer.classList.add('h-[60vh]');
+                      }
+                      
+                      // Ajustar o fluxograma para caber na nova visualização
+                      setTimeout(() => {
+                        const reactFlowInstance = document.querySelector('.react-flow');
+                        if (reactFlowInstance) {
+                          // Disparar evento de redimensionamento para atualizar a visualização
+                          window.dispatchEvent(new Event('resize'));
+                        }
+                      }, 100);
+                    }
+                  }}
                   className="h-10 w-10 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
                 >
                   <Maximize2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -1173,6 +1349,83 @@ fluxograma:
                 <Button 
                   variant="ghost" 
                   size="icon"
+                  onClick={async () => {
+                    // Verificar se o fluxograma está salvo
+                    const fluxogramaData = localStorage.getItem('fluxogramaData');
+                    if (!fluxogramaData) {
+                      alert('É necessário salvar o fluxograma antes de compartilhar.');
+                      return;
+                    }
+                    
+                    try {
+                      // Obter dados do usuário
+                      const userMetadata = JSON.parse(localStorage.getItem('supabase.auth.token') || '{}');
+                      const username = userMetadata?.currentSession?.user?.user_metadata?.username || 
+                                     localStorage.getItem('username') || 
+                                     sessionStorage.getItem('username') || 
+                                     'usuario';
+                      
+                      const userId = userMetadata?.currentSession?.user?.id || 'id_temporario';
+                      
+                      // Obter título do fluxograma (usar título fixo se não estiver salvo)
+                      const savedFluxogramas = JSON.parse(localStorage.getItem('savedFluxogramas') || '[]');
+                      const latestFluxograma = savedFluxogramas.length > 0 ? savedFluxogramas[savedFluxogramas.length - 1] : null;
+                      
+                      // Se não houver fluxograma salvo, perguntar ao usuário
+                      let fluxogramaTitle = latestFluxograma?.title || '';
+                      if (!fluxogramaTitle) {
+                        fluxogramaTitle = prompt('Digite um título para o fluxograma:') || 'fluxograma';
+                        
+                        // Salvar fluxograma automaticamente com o título fornecido
+                        if (fluxogramaTitle) {
+                          const newSavedFluxograma = {
+                            id: `flux_${Date.now()}`,
+                            title: fluxogramaTitle,
+                            description: selectedOption === 'manual' ? manualContent.substring(0, 100) + '...' : 'Gerado pela IA',
+                            date: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }),
+                            data: JSON.parse(fluxogramaData)
+                          };
+                          
+                          const updatedFluxogramas = [...savedFluxogramas, newSavedFluxograma];
+                          setSavedFluxogramas(updatedFluxogramas);
+                          localStorage.setItem('savedFluxogramas', JSON.stringify(updatedFluxogramas));
+                        }
+                      }
+                      
+                      // Formatar títulos para URL (remover espaços e caracteres especiais)
+                      const formattedTitle = fluxogramaTitle.toLowerCase()
+                        .replace(/[^\w\s-]/g, '')
+                        .replace(/\s+/g, '-');
+                      
+                      // Criar URL compartilhável
+                      const baseUrl = window.location.origin;
+                      const shareUrl = `${baseUrl}/fluxograma/${formattedTitle}/${username}/${userId}`;
+                      
+                      // Salvar dados no localStorage para acesso pela página compartilhada
+                      const shareData = {
+                        fluxogramaData: JSON.parse(fluxogramaData),
+                        title: fluxogramaTitle,
+                        username,
+                        userId,
+                        timestamp: Date.now()
+                      };
+                      
+                      localStorage.setItem(`shared_fluxograma_${formattedTitle}_${userId}`, JSON.stringify(shareData));
+                      
+                      // Copiar URL para área de transferência
+                      await navigator.clipboard.writeText(shareUrl);
+                      alert(`URL do fluxograma copiada para a área de transferência:\n${shareUrl}`);
+                      
+                      // Abrir nova página
+                      const openInNewTab = confirm('URL copiada! Deseja abrir a página compartilhada em uma nova aba?');
+                      if (openInNewTab) {
+                        window.open(shareUrl, '_blank');
+                      }
+                    } catch (error) {
+                      console.error('Erro ao compartilhar fluxograma:', error);
+                      alert('Ocorreu um erro ao compartilhar o fluxograma.');
+                    }
+                  }}
                   className="h-10 w-10 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all"
                 >
                   <Share2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
