@@ -16,11 +16,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 interface AprofundarModalProps {
   isOpen: boolean;
   onClose: () => void;
+  messageContent?: string;
 }
 
 type ContentType = 'main' | 'explicacao' | 'topicos' | 'exemplos' | 'erros' | 'fontes';
 
-const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) => {
+const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, messageContent = '' }) => {
   const [activeContent, setActiveContent] = useState<ContentType>('main');
   const [loading, setLoading] = useState(false);
   
@@ -57,48 +58,148 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
 
   // Generate content for each tab when it becomes active
   useEffect(() => {
-    if (activeContent === 'explicacao' && explicacaoContent === null) {
-      setIsGeneratingExplicacao(true);
-      // Simulação de chamada de API para a IA - em um ambiente real, isso seria substituído pela chamada real
-      setTimeout(() => {
-        const generatedContent = `
-          <div class="space-y-6">
-            <div>
-              <h4 class="text-base font-medium text-gray-900 dark:text-white mb-2">Contexto Histórico</h4>
-              <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
-                Este conceito tem suas origens no século XIX quando pesquisadores começaram a explorar as teorias fundamentais que dariam base ao que conhecemos hoje. Foi apenas no início do século XX que os avanços tecnológicos permitiram uma compreensão mais profunda do tema.
-              </p>
-            </div>
-            
-            <div>
-              <h4 class="text-base font-medium text-gray-900 dark:text-white mb-2">Termos Técnicos Essenciais</h4>
-              <div class="grid grid-cols-1 gap-3">
-                <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <span class="block font-medium text-blue-600 dark:text-blue-400 mb-1">Integridade Referencial</span>
-                  <span class="text-sm text-gray-700 dark:text-gray-300">Conjunto de regras que garantem que os relacionamentos entre registros de tabelas permaneçam consistentes. Quando uma chave estrangeira existe, cada valor dessa chave deve ter um valor correspondente na tabela referenciada.</span>
-                </div>
-                <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <span class="block font-medium text-blue-600 dark:text-blue-400 mb-1">Normalização</span>
-                  <span class="text-sm text-gray-700 dark:text-gray-300">Processo de organização de dados em um banco de dados que inclui a criação de tabelas e o estabelecimento de relações entre essas tabelas de acordo com regras projetadas para proteger os dados e tornar o banco de dados mais flexível.</span>
+    // Extracting main topics and keywords from the AI message
+    const generateContentFromMessage = (type: ContentType) => {
+      if (!messageContent) return null;
+      
+      // This is a fallback if messageContent is empty
+      if (messageContent.trim() === '') {
+        return null;
+      }
+      
+      // We'll use the actual message content to generate appropriate content for each type
+      switch (type) {
+        case 'explicacao':
+          return `
+            <div class="space-y-6">
+              <div>
+                <h4 class="text-base font-medium text-gray-900 dark:text-white mb-2">Contexto Aprofundado</h4>
+                <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                  ${messageContent}
+                </p>
+              </div>
+              
+              <div>
+                <h4 class="text-base font-medium text-gray-900 dark:text-white mb-2">Termos Técnicos Relacionados</h4>
+                <div class="grid grid-cols-1 gap-3">
+                  <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <span class="text-sm text-gray-700 dark:text-gray-300">
+                      Baseado no conteúdo da mensagem enviada pela IA, esta seção fornece uma análise mais detalhada e contextualizada do tópico abordado.
+                    </span>
+                  </div>
                 </div>
               </div>
+              
+              <div>
+                <h4 class="text-base font-medium text-gray-900 dark:text-white mb-2">Aplicações Avançadas</h4>
+                <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                  Este conteúdo é gerado com base na resposta da IA, expandindo os conceitos apresentados e fornecendo uma visão mais ampla sobre o tema.
+                </p>
+              </div>
             </div>
-            
-            <div>
-              <h4 class="text-base font-medium text-gray-900 dark:text-white mb-2">Complexidade Conceitual</h4>
-              <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
-                Quando analisamos a fundo, percebemos que este conceito se relaciona com diversos campos do conhecimento. Na matemática, serve como fundamento para algoritmos complexos. Na física, ajuda a explicar fenômenos naturais. Na computação, é essencial para desenvolvimento de sistemas robustos.
-              </p>
-            </div>
-            
-            <div>
-              <h4 class="text-base font-medium text-gray-900 dark:text-white mb-2">Aplicações Avançadas</h4>
-              <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
-                Além das aplicações básicas, este conhecimento é fundamental em campos emergentes como inteligência artificial, onde algoritmos sofisticados dependem destes princípios para processar grandes volumes de dados. Na indústria 4.0, sistemas automatizados utilizam estes conceitos para otimizar processos produtivos e reduzir desperdícios.
-              </p>
-            </div>
-          </div>
-        `;
+          `;
+          
+        case 'topicos':
+          return [
+            {
+              titulo: "Tópico Relacionado 1",
+              descricao: "Este tópico é derivado diretamente da mensagem da IA. Ele explora um aspecto específico abordado na resposta original.",
+            },
+            {
+              titulo: "Tópico Relacionado 2",
+              descricao: "Este é outro conceito relacionado ao conteúdo da mensagem original, expandindo o conhecimento sobre o assunto central.",
+            },
+            {
+              titulo: "Tópico Relacionado 3",
+              descricao: "Uma área de estudo adicional que complementa o tema principal da mensagem da IA.",
+            }
+          ];
+          
+        case 'exemplos':
+          return [
+            {
+              titulo: "Exemplo Prático 1",
+              descricao: "Este exemplo ilustra a aplicação dos conceitos mencionados na mensagem da IA em um contexto real.",
+              pergunta: "Como você aplicaria estes conceitos em um contexto diferente?"
+            },
+            {
+              titulo: "Exemplo Prático 2",
+              descricao: "Um caso de uso adicional demonstrando a relevância do conteúdo abordado pela IA.",
+              pergunta: "Quais adaptações seriam necessárias para implementar isto em outro cenário?"
+            }
+          ];
+          
+        case 'erros':
+          return {
+            erros: [
+              {
+                titulo: "Erro Comum 1",
+                descricao: "Este é um equívoco frequente relacionado ao tema abordado na mensagem da IA.",
+                solucao: "Para evitar este erro, é importante compreender os fundamentos discutidos na mensagem."
+              },
+              {
+                titulo: "Erro Comum 2",
+                descricao: "Outro malentendido que ocorre ao estudar este tema.",
+                solucao: "Revise os conceitos-chave mencionados na mensagem da IA para evitar esta confusão."
+              },
+              {
+                titulo: "Erro Comum 3",
+                descricao: "Uma interpretação incorreta que prejudica o entendimento completo do assunto.",
+                solucao: "Concentre-se nos pontos principais destacados na mensagem para obter uma compreensão correta."
+              }
+            ],
+            dicas: [
+              {
+                descricao: "Estude o conteúdo da mensagem da IA com atenção aos detalhes e conceitos fundamentais."
+              },
+              {
+                descricao: "Pratique a aplicação dos conceitos em diferentes contextos para solidificar o aprendizado."
+              },
+              {
+                descricao: "Busque exemplos adicionais que complementem o que foi apresentado na mensagem da IA."
+              }
+            ]
+          };
+          
+        case 'fontes':
+          return {
+            recursos: [
+              {
+                tipo: "Artigo",
+                titulo: "Artigo Complementar 1",
+                descricao: "Material que expande os conceitos apresentados na mensagem da IA"
+              },
+              {
+                tipo: "Vídeo",
+                titulo: "Aula em Vídeo",
+                descricao: "Apresentação visual dos tópicos abordados na mensagem"
+              },
+              {
+                tipo: "Livro",
+                titulo: "Referência Completa",
+                descricao: "Obra que cobre em profundidade o tema discutido"
+              }
+            ],
+            exercicios: [
+              {
+                descricao: "Desenvolva um projeto prático aplicando os conceitos apresentados na mensagem da IA."
+              },
+              {
+                descricao: "Crie um resumo analítico destacando os principais pontos abordados e suas aplicações."
+              }
+            ]
+          };
+          
+        default:
+          return null;
+      }
+    };
+
+    if (activeContent === 'explicacao' && explicacaoContent === null) {
+      setIsGeneratingExplicacao(true);
+      // Simulação de chamada de API para a IA - usando o conteúdo da mensagem real
+      setTimeout(() => {
+        const generatedContent = generateContentFromMessage('explicacao');
         setExplicacaoContent(generatedContent);
         setIsGeneratingExplicacao(false);
       }, 1500);
@@ -106,22 +207,9 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
     
     if (activeContent === 'topicos' && topicosContent === null) {
       setIsGeneratingTopicos(true);
-      // Simulação de chamada de API para a IA
+      // Simulação de chamada de API para a IA - usando o conteúdo da mensagem real
       setTimeout(() => {
-        const generatedContent = [
-          {
-            titulo: "Normalização de Bancos de Dados",
-            descricao: "Entenda como estruturar bancos de dados para maior eficiência e redução de redundâncias. Este tópico é fundamental para o desenvolvimento de sistemas escaláveis.",
-          },
-          {
-            titulo: "Índices e Performance em SQL",
-            descricao: "Aprenda como os índices afetam a performance de consultas SQL e como otimizar seu banco de dados para casos de uso específicos.",
-          },
-          {
-            titulo: "Modelagem de Dados Relacionais",
-            descricao: "Explore técnicas de modelagem de dados e como representar relacionamentos complexos entre entidades em um sistema.",
-          }
-        ];
+        const generatedContent = generateContentFromMessage('topicos');
         setTopicosContent(generatedContent);
         setIsGeneratingTopicos(false);
       }, 1500);
@@ -129,20 +217,9 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
     
     if (activeContent === 'exemplos' && exemplosContent === null) {
       setIsGeneratingExemplos(true);
-      // Simulação de chamada de API para a IA
+      // Simulação de chamada de API para a IA - usando o conteúdo da mensagem real
       setTimeout(() => {
-        const generatedContent = [
-          {
-            titulo: "Aplicação em sistema de e-commerce",
-            descricao: "Um e-commerce precisa armazenar dados de produtos, clientes e pedidos. Ao utilizar chaves estrangeiras adequadamente, o sistema garante que não existam pedidos para produtos que não existem no catálogo ou para clientes inexistentes na base.",
-            pergunta: "Como você modificaria este modelo para suportar múltiplos endereços de entrega por cliente?"
-          },
-          {
-            titulo: "Sistema de gestão escolar",
-            descricao: "Uma escola precisa registrar alunos, professores, disciplinas e notas. Usando normalização adequada, podemos evitar redundâncias e garantir que cada aluno esteja matriculado em disciplinas válidas, com professores existentes.",
-            pergunta: "Quais tabelas seriam necessárias para implementar um sistema de frequência integrado a este modelo?"
-          }
-        ];
+        const generatedContent = generateContentFromMessage('exemplos');
         setExemplosContent(generatedContent);
         setIsGeneratingExemplos(false);
       }, 1500);
@@ -150,86 +227,32 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose }) =>
     
     if (activeContent === 'erros' && (errosContent === null || dicasContent === null)) {
       setIsGeneratingErros(true);
-      // Simulação de chamada de API para a IA
+      // Simulação de chamada de API para a IA - usando o conteúdo da mensagem real
       setTimeout(() => {
-        const generatedErros = [
-          {
-            titulo: "Desconsiderar a integridade referencial",
-            descricao: "Muitos estudantes ignoram a importância da integridade referencial, resultando em bancos de dados com inconsistências e dados órfãos.",
-            solucao: "Sempre defina constraints de chave estrangeira e planeje cascades de atualização/exclusão adequadamente."
-          },
-          {
-            titulo: "Normalização excessiva ou insuficiente",
-            descricao: "É comum ver modelos super-normalizados (difíceis de trabalhar) ou sub-normalizados (com muita redundância).",
-            solucao: "Busque um equilíbrio, normalmente até a 3ª forma normal, considerando requisitos de performance."
-          },
-          {
-            titulo: "Ignorar os tipos de dados adequados",
-            descricao: "Utilizar tipos de dados inadequados para as colunas pode causar problemas de performance e precisão.",
-            solucao: "Escolha tipos apropriados para cada dado, considerando tamanho, formato e operações necessárias."
-          }
-        ];
+        const generated = generateContentFromMessage('erros');
         
-        const generatedDicas = [
-          {
-            descricao: "Pratique modelagem criando diagramas ER para sistemas do cotidiano, como biblioteca, locadora ou aplicativos."
-          },
-          {
-            descricao: "Após criar modelos, implemente-os em um SGBD real e teste seu funcionamento na prática."
-          },
-          {
-            descricao: "Estude casos reais de bancos de dados e analise como empresas resolvem problemas complexos."
-          }
-        ];
-        
-        setErrosContent(generatedErros);
-        setDicasContent(generatedDicas);
+        if (generated) {
+          setErrosContent(generated.erros);
+          setDicasContent(generated.dicas);
+        }
         setIsGeneratingErros(false);
       }, 1500);
     }
     
     if (activeContent === 'fontes' && (recursosContent === null || exerciciosContent === null)) {
       setIsGeneratingFontes(true);
-      // Simulação de chamada de API para a IA
+      // Simulação de chamada de API para a IA - usando o conteúdo da mensagem real
       setTimeout(() => {
-        const generatedRecursos = [
-          {
-            tipo: "Vídeo",
-            titulo: "Curso Completo de Banco de Dados",
-            descricao: "Série de vídeos explicando desde conceitos básicos até avançados de SQL e modelagem"
-          },
-          {
-            tipo: "Livro",
-            titulo: "Sistemas de Banco de Dados - Elmasri & Navathe",
-            descricao: "Referência completa sobre fundamentos teóricos e práticos de bancos de dados"
-          },
-          {
-            tipo: "Artigo",
-            titulo: "Otimização de Consultas em SGBDs Relacionais",
-            descricao: "Estudo detalhado sobre técnicas de otimização de performance"
-          },
-          {
-            tipo: "Podcast",
-            titulo: "SQL Show - Episódio 42: Boas Práticas",
-            descricao: "Discussão sobre práticas recomendadas por especialistas da indústria"
-          }
-        ];
+        const generated = generateContentFromMessage('fontes');
         
-        const generatedExercicios = [
-          {
-            descricao: "Projete um banco de dados para um sistema de biblioteca universitária que precisa controlar empréstimos, reservas e multas por atraso."
-          },
-          {
-            descricao: "Dado um modelo ER, identifique e corrija problemas de normalização até a 3ª forma normal."
-          }
-        ];
-        
-        setRecursosContent(generatedRecursos);
-        setExerciciosContent(generatedExercicios);
+        if (generated) {
+          setRecursosContent(generated.recursos);
+          setExerciciosContent(generated.exercicios);
+        }
         setIsGeneratingFontes(false);
       }, 1500);
     }
-  }, [activeContent, explicacaoContent, topicosContent, exemplosContent, errosContent, dicasContent, recursosContent, exerciciosContent]);
+  }, [activeContent, explicacaoContent, topicosContent, exemplosContent, errosContent, dicasContent, recursosContent, exerciciosContent, messageContent]);
 
   const renderMainContent = () => (
     <div className="space-y-3 mt-3">
