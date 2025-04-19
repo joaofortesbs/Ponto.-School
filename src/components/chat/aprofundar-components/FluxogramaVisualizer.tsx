@@ -504,7 +504,7 @@ const FluxogramaVisualizer: React.FC<FluxogramaVisualizerProps> = ({
         connectionLineType={ConnectionLineType.SmoothStep}
         defaultEdgeOptions={{
           type: 'smoothstep',
-          style: { strokeWidth: 2 },
+          style: { strokeWidth: 1.5, strokeDasharray: '3,3' },
           labelShowBg: true,
           labelBgPadding: [4, 2],
           labelBgBorderRadius: 4
