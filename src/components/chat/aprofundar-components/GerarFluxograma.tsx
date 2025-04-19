@@ -63,6 +63,19 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
       console.error('Erro ao carregar fluxogramas salvos:', error);
     }
   }, []);
+  
+  // Função para excluir um fluxograma salvo
+  const handleDeleteFluxograma = (index: number) => {
+    try {
+      const updatedFluxogramas = [...savedFluxogramas];
+      updatedFluxogramas.splice(index, 1);
+      setSavedFluxogramas(updatedFluxogramas);
+      localStorage.setItem('savedFluxogramas', JSON.stringify(updatedFluxogramas));
+    } catch (error) {
+      console.error('Erro ao excluir fluxograma:', error);
+      alert('Erro ao excluir o fluxograma. Por favor, tente novamente.');
+    }
+  };
 
   const handleGenerateFlowchart = (option: 'ia' | 'manual') => {
     if (option === 'manual') {
@@ -2146,6 +2159,7 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                               setSavedFluxogramas(updatedFluxogramas);
                               localStorage.setItem('savedFluxogramas', JSON.stringify(updatedFluxogramas));
                             }}
+                            onDeleteFluxograma={handleDeleteFluxograma}
                           />
                         );
                       })}

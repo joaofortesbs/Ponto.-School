@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { FileLineChart, PenLine, CheckCircle, X } from 'lucide-react';
+import { FileLineChart, PenLine, CheckCircle, X, Trash2 } from 'lucide-react';
 
 interface FluxogramaItemProps {
   fluxograma: {
@@ -14,13 +14,15 @@ interface FluxogramaItemProps {
   index: number;
   onLoadFluxograma: (fluxograma: any) => void;
   onUpdateTitle: (index: number, newTitle: string) => void;
+  onDeleteFluxograma?: (index: number) => void;
 }
 
 const FluxogramaItem: React.FC<FluxogramaItemProps> = ({ 
   fluxograma, 
   index, 
   onLoadFluxograma,
-  onUpdateTitle
+  onUpdateTitle,
+  onDeleteFluxograma
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(fluxograma.title || `Fluxograma ${index + 1}`);
@@ -36,6 +38,13 @@ const FluxogramaItem: React.FC<FluxogramaItemProps> = ({
       onUpdateTitle(index, editedTitle);
     }
     setIsEditing(false);
+  };
+  
+  const handleDeleteFluxograma = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDeleteFluxograma && window.confirm('Tem certeza que deseja excluir este fluxograma?')) {
+      onDeleteFluxograma(index);
+    }
   };
 
   return (
@@ -80,14 +89,26 @@ const FluxogramaItem: React.FC<FluxogramaItemProps> = ({
           ) : (
             <div className="flex items-center justify-between flex-grow">
               <span className="font-medium text-sm">{fluxograma.title || `Fluxograma ${index + 1}`}</span>
-              <Button 
-                size="sm" 
-                variant="ghost" 
-                onClick={handleEditTitle}
-                className="h-6 w-6 p-0 ml-2"
-              >
-                <PenLine className="h-3 w-3 text-blue-500" />
-              </Button>
+              <div className="flex items-center">
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  onClick={handleEditTitle}
+                  className="h-6 w-6 p-0 ml-2"
+                >
+                  <PenLine className="h-3 w-3 text-blue-500" />
+                </Button>
+                {onDeleteFluxograma && (
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={handleDeleteFluxograma}
+                    className="h-6 w-6 p-0 ml-1"
+                  >
+                    <Trash2 className="h-3 w-3 text-red-500" />
+                  </Button>
+                )}
+              </div>
             </div>
           )}
         </div>
