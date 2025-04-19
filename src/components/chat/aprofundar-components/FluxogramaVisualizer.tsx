@@ -228,9 +228,9 @@ const initialNodes: Node[] = [
 
 // Conexões de exemplo
 const initialEdges: Edge[] = [
-  { id: 'e1-2', source: '1', target: '2', animated: true, style: { stroke: '#3b82f6' } },
-  { id: 'e2-3', source: '2', target: '3', animated: true, style: { stroke: '#3b82f6' } },
-  { id: 'e3-4', source: '3', target: '4', animated: true, style: { stroke: '#3b82f6' } }
+  { id: 'e1-2', source: '1', target: '2', label: 'Segue o processo', animated: true, style: { stroke: '#3b82f6' } },
+  { id: 'e2-3', source: '2', target: '3', label: 'Segue o processo', animated: true, style: { stroke: '#3b82f6' } },
+  { id: 'e3-4', source: '3', target: '4', label: 'Segue o processo', animated: true, style: { stroke: '#3b82f6' } }
 ];
 
 interface FluxogramaVisualizerProps {
@@ -292,6 +292,13 @@ const FluxogramaVisualizer: React.FC<FluxogramaVisualizerProps> = ({
         fitView
         attributionPosition="bottom-right"
         connectionLineType={ConnectionLineType.SmoothStep}
+        defaultEdgeOptions={{
+          type: 'smoothstep',
+          style: { strokeWidth: 2 },
+          labelShowBg: true,
+          labelBgPadding: [4, 2],
+          labelBgBorderRadius: 4
+        }}
       >
         <Controls />
         <MiniMap

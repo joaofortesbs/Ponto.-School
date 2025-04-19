@@ -101,24 +101,26 @@ ${contentToAnalyze}
 
 Crie um fluxograma que:
 1. Identifique os principais blocos conceituais (etapas, partes, causas, consequências, tópicos)
-2. Classifique cada bloco como "início", "processo" ou "conclusão"
+2. Classifique cada bloco como "início", "processo", "decisão" ou "conclusão"
 3. Organize os blocos em uma sequência lógica
 4. Forneça uma breve descrição de cada bloco
-5. Retorne o resultado como um objeto JSON com a seguinte estrutura:
+5. Crie conexões entre os blocos, incluindo rótulos descritivos para cada conexão
+6. Para nós de decisão, crie conexões com condições (como "Sim" e "Não")
+7. Retorne o resultado como um objeto JSON com a seguinte estrutura:
 {
   "nodes": [
     {
       "id": "1",
       "title": "Título do nó",
       "description": "Descrição detalhada do nó",
-      "type": "start/default/end"
+      "type": "start/default/decision/end"
     }
   ],
   "connections": [
     {
       "source": "1",
       "target": "2",
-      "label": "Relação"
+      "label": "Descrição da relação ou condição (ex: 'Segue para', 'Sim', 'Não')"
     }
   ]
 }
@@ -239,19 +241,70 @@ Crie um fluxograma que:
             target: conn.target,
             label: conn.label || '',
             animated: true,
-            style: { stroke: '#3b82f6' }
+            style: { stroke: '#3b82f6' },
+            labelStyle: { fill: '#3b82f6', fontWeight: 500 },
+            labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
           })) || [];
           
           // Se não houver conexões definidas pela IA, criar conexões sequenciais padrão
           if (edges.length === 0 && nodes.length > 1) {
             for (let i = 0; i < nodes.length - 1; i++) {
-              edges.push({
-                id: `e${i+1}-${i+2}`,
-                source: nodes[i].id,
-                target: nodes[i+1].id,
-                animated: true,
-                style: { stroke: '#3b82f6' }
-              });
+              // Verificar se o nó de origem é um nó de decisão
+              const sourceNode = nodes[i];
+              const isDecisionNode = sourceNode.type === 'decision';
+              
+              // Se for um nó de decisão, criar dois caminhos (Sim/Não)
+              if (isDecisionNode && i < nodes.length - 2) {
+                // Conexão "Sim" para o próximo nó
+                edges.push({
+                  id: `e${i+1}-${i+2}`,
+                  source: sourceNode.id,
+                  target: nodes[i+1].id,
+                  label: 'Sim',
+                  animated: true,
+                  style: { stroke: '#3b82f6' },
+                  labelStyle: { fill: '#10b981', fontWeight: 500 },
+                  labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
+                });
+                
+                // Se existir um nó adicional, criar conexão "Não"
+                if (i+2 < nodes.length) {
+                  edges.push({
+                    id: `e${i+1}-${i+3}`,
+                    source: sourceNode.id,
+                    target: nodes[i+2].id,
+                    label: 'Não',
+                    animated: true, 
+                    style: { stroke: '#f43f5e' },
+                    labelStyle: { fill: '#f43f5e', fontWeight: 500 },
+                    labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
+                  });
+                }
+              } else {
+                // Para nós normais, criar conexão sequencial com rótulo descritivo
+                const sourceType = sourceNode.type;
+                let connectionLabel = '';
+                
+                // Gerar rótulos baseados no tipo do nó
+                if (sourceType === 'start') {
+                  connectionLabel = 'Inicia';
+                } else if (sourceType === 'end') {
+                  connectionLabel = 'Finaliza';
+                } else {
+                  connectionLabel = 'Segue para';
+                }
+                
+                edges.push({
+                  id: `e${i+1}-${i+2}`,
+                  source: sourceNode.id,
+                  target: nodes[i+1].id,
+                  label: connectionLabel,
+                  animated: true,
+                  style: { stroke: '#3b82f6' },
+                  labelStyle: { fill: '#3b82f6', fontWeight: 500 },
+                  labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
+                });
+              }
             }
           }
           
