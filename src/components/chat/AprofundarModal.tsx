@@ -195,7 +195,8 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
       }
     };
 
-    if (activeContent === 'explicacao' && explicacaoContent === null) {
+    // Gerar conteúdo para a aba selecionada
+    if (activeContent === 'explicacao') {
       setIsGeneratingExplicacao(true);
       // Simulação de chamada de API para a IA - usando o conteúdo da mensagem real
       setTimeout(() => {
@@ -205,7 +206,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
       }, 1500);
     }
     
-    if (activeContent === 'topicos' && topicosContent === null) {
+    if (activeContent === 'topicos') {
       setIsGeneratingTopicos(true);
       // Simulação de chamada de API para a IA - usando o conteúdo da mensagem real
       setTimeout(() => {
@@ -215,7 +216,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
       }, 1500);
     }
     
-    if (activeContent === 'exemplos' && exemplosContent === null) {
+    if (activeContent === 'exemplos') {
       setIsGeneratingExemplos(true);
       // Simulação de chamada de API para a IA - usando o conteúdo da mensagem real
       setTimeout(() => {
@@ -225,7 +226,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
       }, 1500);
     }
     
-    if (activeContent === 'erros' && (errosContent === null || dicasContent === null)) {
+    if (activeContent === 'erros') {
       setIsGeneratingErros(true);
       // Simulação de chamada de API para a IA - usando o conteúdo da mensagem real
       setTimeout(() => {
@@ -239,7 +240,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
       }, 1500);
     }
     
-    if (activeContent === 'fontes' && (recursosContent === null || exerciciosContent === null)) {
+    if (activeContent === 'fontes') {
       setIsGeneratingFontes(true);
       // Simulação de chamada de API para a IA - usando o conteúdo da mensagem real
       setTimeout(() => {
@@ -252,7 +253,7 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
         setIsGeneratingFontes(false);
       }, 1500);
     }
-  }, [activeContent, explicacaoContent, topicosContent, exemplosContent, errosContent, dicasContent, recursosContent, exerciciosContent, messageContent]);
+  }, [activeContent, messageContent]);
 
   const renderMainContent = () => (
     <div className="space-y-3 mt-3">
