@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/lib/supabase";
 import type { UserProfile } from "@/types/user-profile";
@@ -40,29 +41,7 @@ export const useProfileData = () => {
 
         if (error) {
           console.error("Error fetching user profile:", error);
-          // Use fallback profile data in case of error
-          const fallbackProfile: UserProfile = {
-            id: user.id,
-            username: localStorage.getItem('username') || user.email?.split('@')[0] || 'user',
-            email: user.email,
-            display_name: localStorage.getItem('display_name') || 'Usuário',
-            avatar_url: null,
-            level: 1,
-            rank: "Aprendiz",
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          };
-          const fallbackContactInfo: ContactInfo = {
-            email: user.email || "",
-            phone: "Adicionar telefone",
-            location: "Adicionar localização",
-            birthDate: "Adicionar data de nascimento",
-          };
-          setProfileData({
-            userProfile: fallbackProfile,
-            contactInfo: fallbackContactInfo,
-            aboutMe: null
-          });
+          setError(new Error(error.message));
           setLoading(false);
           return;
         }
@@ -97,11 +76,6 @@ export const useProfileData = () => {
           contactInfo,
           aboutMe
         });
-
-        // Store critical data in localStorage for resilience
-        if (data.username) localStorage.setItem('username', data.username);
-        if (data.display_name) localStorage.setItem('display_name', data.display_name);
-
       } catch (error) {
         console.error("Error:", error);
         setError(error instanceof Error ? error : new Error('Unknown error'));

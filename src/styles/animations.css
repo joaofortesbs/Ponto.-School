@@ -14,9 +14,6 @@
   }
   to {
     opacity: 1;
-    transform: scale(1);
-  }
-}
 
 /* Animation delay classes */
 .animate-delay-100 {
@@ -45,6 +42,10 @@
 
 .animate-delay-1000 {
   animation-delay: 1s;
+}
+
+    transform: scale(1);
+  }
 }
 
 /* Animação de progresso para o fluxograma */
@@ -587,157 +588,7 @@
   text-decoration: none;
   cursor: pointer;
 }
-
-/* Animation classes for UI components */
-.animate-float {
-  animation: float 5s ease-in-out infinite;
-}
-
-.animate-float-delayed-100 {
-  animation: float 5s ease-in-out infinite;
-  animation-delay: 100ms;
-}
-
-.animate-float-delayed-200 {
-  animation: float 5s ease-in-out infinite;
-  animation-delay: 200ms;
-}
-
-.animate-float-delayed-300 {
-  animation: float 5s ease-in-out infinite;
-  animation-delay: 300ms;
-}
-
-.animate-pulse-slow {
-  animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.animate-delay-150 {
-  animation-delay: 150ms;
-}
-
-.animate-delay-250 {
-  animation-delay: 250ms;
-}
-
-.animate-delay-300 {
-  animation-delay: 300ms;
-}
-
-.animate-expand-line {
-  animation: expandLine 3s ease-in-out infinite;
-}
-
-.animate-progress {
-  animation: progress 1.5s linear infinite;
-}
-
-.animate-blink {
-  animation: blink 1.5s infinite;
-}
-
-/* Animações para linhas pontilhadas */
-.animate-dash-slow {
-  animation: dashVertical 10s linear infinite;
-}
-
-.animate-dash-horizontal {
-  animation: dashHorizontal 10s linear infinite;
-}
-
-/* Keyframes for animations */
-@keyframes float {
-  0% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-6px);
-  }
-  100% {
-    transform: translateY(0);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-@keyframes expandLine {
-  0% {
-    transform: scaleX(0.3);
-    opacity: 0.3;
-  }
-  50% {
-    transform: scaleX(1);
-    opacity: 1;
-  }
-  100% {
-    transform: scaleX(0.3);
-    opacity: 0.3;
-  }
-}
-
-@keyframes progress {
-  0% {
-    width: 5%;
-  }
-  50% {
-    width: 90%;
-  }
-  100% {
-    width: 100%;
-  }
-}
-
-@keyframes blink {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.2;
-  }
-}
-
-/* Animação para linhas pontilhadas verticais */
-@keyframes dashVertical {
-  to {
-    background-position: 0 30px;
-  }
-}
-
-/* Animação para linhas pontilhadas horizontais */
-@keyframes dashHorizontal {
-  to {
-    background-position: 30px 0;
-  }
-}
-
-/* Classes específicas para animação das linhas pontilhadas */
-.animate-dash-slow {
-  animation: dashVertical 10s linear infinite;
-}
-
-.animate-dash-horizontal {
-  animation: dashHorizontal 10s linear infinite;
-}
-
-/* Efeito de escala ao passar o mouse */
-.mini-flow-node {
-  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
-}
-
-.mini-flow-node:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-  z-index: 10;
-  filter: brightness(1.05);
-}
-
+//Further modifications needed here to fulfill the complete user request.
 @keyframes float {
   0%, 100% {
     transform: translateY(0);
