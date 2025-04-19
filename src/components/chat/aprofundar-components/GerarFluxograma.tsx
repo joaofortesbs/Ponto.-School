@@ -754,38 +754,39 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                                          response.match(/```\n([\s\S]*?)\n```/) ||
                                          response.match(/{[\s\S]*?}/);
 
-                          const jsonString = jsonMatch ? jsonMatch[0].replace(/```json\n|```\n|```/g, '') : response;
-                          extractedData = JSON.parse(jsonString);
+                          try {
+                            const jsonString = jsonMatch ? jsonMatch[0].replace(/```json\n|```\n|```/g, '') : response;
+                            extractedData = JSON.parse(jsonString);
 
-                          // Normalize data structure
-                          if (!extractedData.edges && extractedData.connections) {
-                            extractedData.edges = extractedData.connections.map(conn => ({
-                              id: `e${conn.source}-${conn.target}`,
-                              source: conn.source,
-                              target: conn.target,
-                              label: conn.label || '',
-                              type: 'smoothstep',
-                              animated: conn.animated || false
-                            }));
-                          } else if (!extractedData.edges) {
-                            extractedData.edges = [];
-                            if (extractedData.nodes && extractedData.nodes.length > 1) {
-                              for (let i = 0; i < extractedData.nodes.length - 1; i++) {
-                                extractedData.edges.push({
-                                  id: `e${extractedData.nodes[i].id}-${extractedData.nodes[i+1].id}`,
-                                  source: extractedData.nodes[i].id,
-                                  target: extractedData.nodes[i+1].id,
-                                  label: 'Segue para',
-                                  type: 'smoothstep',
-                                  animated: true
-                                });
+                            // Normalize data structure
+                            if (!extractedData.edges && extractedData.connections) {
+                              extractedData.edges = extractedData.connections.map(conn => ({
+                                id: `e${conn.source}-${conn.target}`,
+                                source: conn.source,
+                                target: conn.target,
+                                label: conn.label || '',
+                                type: 'smoothstep',
+                                animated: conn.animated || false
+                              }));
+                            } else if (!extractedData.edges) {
+                              extractedData.edges = [];
+                              if (extractedData.nodes && extractedData.nodes.length > 1) {
+                                for (let i = 0; i < extractedData.nodes.length - 1; i++) {
+                                  extractedData.edges.push({
+                                    id: `e${extractedData.nodes[i].id}-${extractedData.nodes[i+1].id}`,
+                                    source: extractedData.nodes[i].id,
+                                    target: extractedData.nodes[i+1].id,
+                                    label: 'Segue para',
+                                    type: 'smoothstep',
+                                    animated: true
+                                  });
+                                }
                               }
                             }
-                          }
-                        } catch (error) {
-                          console.error('Erro ao extrair JSON da resposta da IA:', error);
-                          // Criar uma estrutura simples de fallback
-                          const paragraphs = contentToProcess.split(/\n\n+/);
+                          } catch (error) {
+                            console.error('Erro ao extrair JSON da resposta da IA:', error);
+                            // Criar uma estrutura simples de fallback
+                            const paragraphs = contentToProcess.split(/\n\n+/);
                           const sentences = contentToProcess.split(/[.!?]\s+/);
                           const mainBlocks = paragraphs.length > 3 ? paragraphs.slice(0, paragraphs.length) : sentences.slice(0, Math.min(8, sentences.length));
                           const nodes = mainBlocks.map((block, index) => ({
