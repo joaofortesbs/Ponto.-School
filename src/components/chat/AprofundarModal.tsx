@@ -27,14 +27,107 @@ type ContentType = 'main' | 'explicacao' | 'topicos' | 'exemplos' | 'erros' | 'f
 const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, messages, sessionId, setShowAprofundarModal, toast }) => {
   const [activeContent, setActiveContent] = useState<ContentType>('main');
   const [loading, setLoading] = useState(false);
+  
+  // Função para extrair seções da resposta da IA
+  const parseAIResponse = (response: string) => {
+    // Padrões para identificar as seções na resposta
+    const contextoMatch = response.match(/Contexto Aprofundado:(.+?)(?=Termos Técnicos:|Aplicações Expandidas:|$)/s);
+    const termosMatch = response.match(/Termos Técnicos:(.+?)(?=Aplicações Expandidas:|$)/s);
+    const aplicacoesMatch = response.match(/Aplicações Expandidas:(.+?)(?=$)/s);
+    
+    // Extrair e processar termos técnicos
+    const termosText = termosMatch ? termosMatch[1].trim() : "";
+    const termosArray = termosText.split(/\n\n|\n/).filter(t => t.trim() !== '').map(termo => {
+      const parts = termo.split(':');
+      if (parts.length > 1) {
+        return { 
+          termo: parts[0].trim(), 
+          definicao: parts.slice(1).join(':').trim() 
+        };
+      }
+      return { 
+        termo: "Termo", 
+        definicao: termo.trim() 
+      };
+    });
+    
+    // Se não encontrou termos no formato esperado, tenta outro formato
+    const finalTermos = termosArray.length > 0 ? termosArray : [{ 
+      termo: "Informação", 
+      definicao: termosText 
+    }];
+    
+    return {
+      contexto: contextoMatch ? contextoMatch[1].trim() : "Contexto não disponível.",
+      termos: finalTermos.length > 0 ? finalTermos : [{ termo: "Termo técnico", definicao: "Definição não disponível." }],
+      aplicacoes: aplicacoesMatch ? aplicacoesMatch[1].trim() : "Aplicações não disponíveis."
+    };
+  };
 
-  const handleOptionClick = (option: ContentType) => {
+  const handleOptionClick = async (option: ContentType) => {
     setLoading(true);
-    // Simula um tempo de carregamento
-    setTimeout(() => {
-      setActiveContent(option);
-      setLoading(false);
-    }, 500);
+    
+    if (option === 'explicacao') {
+      try {
+        // Captura o tema atual (última mensagem da conversa)
+        const currentTopic = messages && messages.length > 0 
+          ? messages[messages.length - 1].content 
+          : "tema atual";
+        
+        // Prompt para a IA
+        const prompt = `Você está ajudando um estudante a aprofundar um tema específico. Com base no conteúdo original da aula ou pergunta respondida anteriormente, forneça uma versão expandida com:
+
+Contexto Aprofundado: traga contexto histórico, científico ou social sobre o tema.
+
+Termos Técnicos: liste e explique os principais termos técnicos presentes no conteúdo.
+
+Aplicações Expandidas: explique como esse conhecimento pode ser aplicado na prática ou em outras disciplinas.
+
+Seja didático, direto e evite jargões excessivos. Se possível, use exemplos e analogias.
+
+Tema/Conteúdo original: ${currentTopic}`;
+
+        // Importar e usar o serviço de IA para gerar o conteúdo
+        const { generateAIResponse } = await import('@/services/aiChatService');
+        const response = await generateAIResponse(prompt, sessionId || 'default-session');
+        
+        // Processar a resposta da IA usando o parser
+        const parsedContent = parseAIResponse(response);
+        setExplainContent(parsedContent);
+        
+        // Atualizar o estado para mostrar o conteúdo
+        setActiveContent(option);
+        setLoading(false);
+        
+        // Toast de sucesso se implementado
+        if (toast) {
+          toast({
+            title: "Conteúdo gerado com sucesso",
+            description: "O aprofundamento do tema foi gerado pela IA.",
+            variant: "default",
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao gerar explicação avançada:', error);
+        setActiveContent(option);
+        setLoading(false);
+        
+        // Toast de erro se implementado
+        if (toast) {
+          toast({
+            title: "Erro ao gerar conteúdo",
+            description: "Não foi possível gerar o aprofundamento. Tente novamente.",
+            variant: "destructive",
+          });
+        }
+      }
+    } else {
+      // Para outras opções, mantém o comportamento original
+      setTimeout(() => {
+        setActiveContent(option);
+        setLoading(false);
+      }, 500);
+    }
   };
 
   const handleBack = () => {
@@ -110,6 +203,12 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
     </div>
   );
 
+  const [explainContent, setExplainContent] = useState({
+    contexto: "Aqui aparecerá o contexto histórico e científico aprofundado sobre o tema discutido.",
+    termos: [{ termo: "Termo técnico", definicao: "Definição detalhada do termo aparecerá aqui." }],
+    aplicacoes: "Aqui serão listadas as aplicações práticas e teóricas deste conhecimento."
+  });
+
   const renderExplicacaoAvancada = () => (
     <div className="space-y-4">
       <div className="flex items-center mb-2">
@@ -135,24 +234,26 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
           <div>
             <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Contexto Aprofundado</h4>
             <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
-              Aqui aparecerá o contexto histórico e científico aprofundado sobre o tema discutido.
+              {explainContent.contexto}
             </p>
           </div>
 
           <div>
             <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Termos Técnicos</h4>
             <div className="grid grid-cols-1 gap-3">
-              <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                <span className="block font-medium text-blue-600 dark:text-blue-400 mb-1">Termo técnico</span>
-                <span className="text-sm text-gray-700 dark:text-gray-300">Definição detalhada do termo aparecerá aqui.</span>
-              </div>
+              {explainContent.termos.map((item, index) => (
+                <div key={index} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <span className="block font-medium text-blue-600 dark:text-blue-400 mb-1">{item.termo}</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">{item.definicao}</span>
+                </div>
+              ))}
             </div>
           </div>
 
           <div>
             <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Aplicações Expandidas</h4>
             <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
-              Aqui serão listadas as aplicações práticas e teóricas deste conhecimento.
+              {explainContent.aplicacoes}
             </p>
           </div>
         </div>
