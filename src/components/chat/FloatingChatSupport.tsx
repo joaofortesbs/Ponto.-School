@@ -3392,13 +3392,87 @@ Exemplo de formato da resposta:
                               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // Exportar como PDF (simulado - na implementação real usaria uma biblioteca como jsPDF)
+                                // Exportar como PDF usando jsPDF
                                 toast({
-                                  title: "Exportando como PDF",
-                                  description: "Iniciando download do arquivo PDF",
-                                  duration: 3000,
+                                  title: "Gerando PDF",
+                                  description: "Preparando o documento para download...",
+                                  duration: 2000,
                                 });
                                 
+                                // Importar jsPDF dinamicamente
+                                import('jspdf').then(({ default: jsPDF }) => {
+                                  // Criar um novo documento PDF
+                                  const doc = new jsPDF({
+                                    orientation: 'portrait',
+                                    unit: 'mm',
+                                    format: 'a4'
+                                  });
+                                  
+                                  // Configurações de estilo
+                                  const pageWidth = doc.internal.pageSize.getWidth();
+                                  const pageHeight = doc.internal.pageSize.getHeight();
+                                  const margin = 20;
+                                  const textWidth = pageWidth - (margin * 2);
+                                  
+                                  // Adicionar cabeçalho
+                                  doc.setFontSize(16);
+                                  doc.setFont('helvetica', 'bold');
+                                  doc.text('PONTO.SCHOOL - MATERIAL DE ESTUDO', pageWidth / 2, margin, { align: 'center' });
+                                  
+                                  // Adicionar data
+                                  const currentDate = new Date().toLocaleDateString('pt-BR');
+                                  doc.setFontSize(10);
+                                  doc.setFont('helvetica', 'normal');
+                                  doc.text(`Data: ${currentDate}`, margin, margin + 10);
+                                  
+                                  // Adicionar nome do aluno
+                                  doc.text(`Aluno: ${userName || 'Estudante'}`, margin, margin + 15);
+                                  
+                                  // Linha separadora
+                                  doc.line(margin, margin + 20, pageWidth - margin, margin + 20);
+                                  
+                                  // Preparar o conteúdo da mensagem
+                                  doc.setFontSize(12);
+                                  doc.setFont('helvetica', 'bold');
+                                  doc.text('CONTEÚDO:', margin, margin + 30);
+                                  
+                                  // Processar o conteúdo da mensagem (remover tags HTML e formatação)
+                                  let contentText = message.content
+                                    .replace(/<br\s*\/?>/gi, '\n')
+                                    .replace(/<[^>]*>/g, '')
+                                    .replace(/\*\*(.*?)\*\*/g, '$1')
+                                    .replace(/\_(.*?)\_/g, '$1')
+                                    .replace(/\~\~(.*?)\~\~/g, '$1')
+                                    .replace(/\`(.*?)\`/g, '$1');
+                                  
+                                  // Adicionar conteúdo com quebra de linhas
+                                  doc.setFont('helvetica', 'normal');
+                                  const textLines = doc.splitTextToSize(contentText, textWidth);
+                                  doc.text(textLines, margin, margin + 40);
+                                  
+                                  // Adicionar rodapé
+                                  doc.setFontSize(10);
+                                  doc.text('Documento gerado automaticamente pela Ponto.School', pageWidth / 2, pageHeight - 10, { align: 'center' });
+                                  
+                                  // Salvar o PDF
+                                  doc.save(`ponto-school-material-${Date.now()}.pdf`);
+                                  
+                                  toast({
+                                    title: "PDF gerado com sucesso",
+                                    description: "O download do seu documento foi iniciado",
+                                    duration: 3000,
+                                  });
+                                }).catch(error => {
+                                  console.error('Erro ao gerar PDF:', error);
+                                  toast({
+                                    title: "Erro ao gerar PDF",
+                                    description: "Não foi possível criar o documento. Tente novamente.",
+                                    variant: "destructive",
+                                    duration: 3000,
+                                  });
+                                });
+                                
+                                // Fechar os menus de opções
                                 setMessages(prevMessages => 
                                   prevMessages.map(msg => ({...msg, showExportOptions: false, showExportFormats: false}))
                                 );
