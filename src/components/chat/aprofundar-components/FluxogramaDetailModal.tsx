@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { X } from 'lucide-react';
-import { Node } from 'react-flow-renderer';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Node } from 'reactflow';
+import { X } from 'lucide-react';
 
 interface FluxogramaDetailModalProps {
   isOpen: boolean;
@@ -17,48 +17,46 @@ const FluxogramaDetailModal: React.FC<FluxogramaDetailModalProps> = ({
   node
 }) => {
   if (!node) return null;
-  
-  // Mapeamento de ícones baseado no tipo do nó
-  const getIconClassByType = (type: string | undefined) => {
-    switch(type) {
-      case 'start': return 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30';
-      case 'process': return 'text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30';
-      case 'decision': return 'text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30';
-      case 'end': return 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30';
-      default: return 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800';
+
+  const addToCaderno = () => {
+    // Implementar a funcionalidade de adicionar ao caderno
+    const conteudo = `## ${node.data.label}\n\n${node.data.description}\n\n${node.data.example || ''}`;
+    
+    try {
+      // Salvar no localStorage como exemplo
+      const notebookContent = localStorage.getItem('caderno') || '';
+      localStorage.setItem('caderno', notebookContent + '\n\n' + conteudo);
+      
+      // Feedback visual
+      alert('Conteúdo adicionado ao caderno com sucesso!');
+    } catch (error) {
+      console.error('Erro ao adicionar ao caderno:', error);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => onClose()}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="flex items-center">
-            <div className={`w-8 h-8 rounded-full mr-2 flex items-center justify-center ${getIconClassByType(node.type)}`}>
-              {node.type === 'start' && <span className="text-sm">I</span>}
-              {node.type === 'process' && <span className="text-sm">P</span>}
-              {node.type === 'decision' && <span className="text-sm">?</span>}
-              {node.type === 'end' && <span className="text-sm">F</span>}
-            </div>
-            <span>{node.data.label}</span>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader className="flex justify-between items-center">
+          <DialogTitle className="text-xl font-semibold text-gray-900 dark:text-white">
+            Detalhes do Elemento
           </DialogTitle>
-          <Button
-            variant="ghost"
-            className="absolute right-4 top-4 p-0 w-6 h-6 rounded-full"
-            onClick={onClose}
-          >
+          <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 p-0">
             <X className="h-4 w-4" />
           </Button>
         </DialogHeader>
-
-        <div className="space-y-4">
-          <div>
-            <h4 className="text-sm font-medium mb-1">Explicação Detalhada</h4>
-            <p className="text-sm text-gray-700 dark:text-gray-300">
-              {node.data.description || 'Não há explicação detalhada disponível para este passo.'}
-            </p>
+        
+        <div className="space-y-4 mt-2">
+          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              {node.data.label}
+            </h3>
+            
+            <div className="text-sm text-gray-700 dark:text-gray-300">
+              {node.data.description}
+            </div>
           </div>
-
+          
           {node.data.example && (
             <div>
               <h4 className="text-sm font-medium mb-1">Exemplo</h4>
@@ -92,6 +90,7 @@ const FluxogramaDetailModal: React.FC<FluxogramaDetailModalProps> = ({
             </Button>
             <Button 
               className="text-sm bg-blue-600 hover:bg-blue-700"
+              onClick={addToCaderno}
             >
               Adicionar ao Caderno
             </Button>

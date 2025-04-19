@@ -1,121 +1,105 @@
-
-import React, { useCallback, useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import ReactFlow, {
+  MiniMap,
   Controls,
   Background,
-  MiniMap,
+  useNodesState,
+  useEdgesState,
   Node,
   Edge,
   NodeTypes,
-  Handle,
-  Position,
-  useNodesState,
-  useEdgesState
-} from 'react-flow-renderer';
-import { Card } from '@/components/ui/card';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { CircleHelp, Flag, HelpCircle, Target, Zap } from 'lucide-react';
+  ConnectionLineType,
+} from 'reactflow';
+import 'reactflow/dist/style.css';
 
-// Tipos de nós personalizados
-const StartNode = ({ data }: { data: any }) => (
-  <TooltipProvider>
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <div className="px-4 py-2 rounded-lg bg-green-100 dark:bg-green-900/30 border-2 border-green-300 dark:border-green-700 text-green-900 dark:text-green-300 text-sm font-medium w-40">
-          <div className="flex items-center justify-center mb-1">
-            <Flag className="h-4 w-4 mr-1" />
-            <span>Início</span>
-          </div>
-          <div className="text-xs text-center text-green-800 dark:text-green-400">
-            {data.label}
-          </div>
-          <Handle type="source" position={Position.Bottom} className="w-2 h-2 bg-green-500" />
-        </div>
-      </TooltipTrigger>
-      <TooltipContent>
-        <p className="max-w-xs text-xs">{data.description}</p>
-      </TooltipContent>
-    </Tooltip>
-  </TooltipProvider>
-);
+// Importando os estilos necessários
+import { cn } from '@/lib/utils';
 
-const ProcessNode = ({ data }: { data: any }) => (
-  <TooltipProvider>
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <div className="px-4 py-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 border-2 border-blue-300 dark:border-blue-700 text-blue-900 dark:text-blue-300 text-sm font-medium w-40">
-          <div className="flex items-center justify-center mb-1">
-            <Zap className="h-4 w-4 mr-1" />
-            <span>Processo</span>
-          </div>
-          <div className="text-xs text-center text-blue-800 dark:text-blue-400">
-            {data.label}
-          </div>
-          <Handle type="target" position={Position.Top} className="w-2 h-2 bg-blue-500" />
-          <Handle type="source" position={Position.Bottom} className="w-2 h-2 bg-blue-500" />
-        </div>
-      </TooltipTrigger>
-      <TooltipContent>
-        <p className="max-w-xs text-xs">{data.description}</p>
-      </TooltipContent>
-    </Tooltip>
-  </TooltipProvider>
-);
-
-const DecisionNode = ({ data }: { data: any }) => (
-  <TooltipProvider>
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <div className="px-4 py-2 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 border-2 border-yellow-300 dark:border-yellow-700 text-yellow-900 dark:text-yellow-300 text-sm font-medium w-40">
-          <div className="flex items-center justify-center mb-1">
-            <HelpCircle className="h-4 w-4 mr-1" />
-            <span>Decisão</span>
-          </div>
-          <div className="text-xs text-center text-yellow-800 dark:text-yellow-400">
-            {data.label}
-          </div>
-          <Handle type="target" position={Position.Top} className="w-2 h-2 bg-yellow-500" />
-          <Handle type="source" position={Position.Left} id="yes" className="w-2 h-2 bg-yellow-500" />
-          <Handle type="source" position={Position.Right} id="no" className="w-2 h-2 bg-yellow-500" />
-          <Handle type="source" position={Position.Bottom} id="continue" className="w-2 h-2 bg-yellow-500" />
-        </div>
-      </TooltipTrigger>
-      <TooltipContent>
-        <p className="max-w-xs text-xs">{data.description}</p>
-      </TooltipContent>
-    </Tooltip>
-  </TooltipProvider>
-);
-
-const EndNode = ({ data }: { data: any }) => (
-  <TooltipProvider>
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <div className="px-4 py-2 rounded-lg bg-red-100 dark:bg-red-900/30 border-2 border-red-300 dark:border-red-700 text-red-900 dark:text-red-300 text-sm font-medium w-40">
-          <div className="flex items-center justify-center mb-1">
-            <Target className="h-4 w-4 mr-1" />
-            <span>Fim</span>
-          </div>
-          <div className="text-xs text-center text-red-800 dark:text-red-400">
-            {data.label}
-          </div>
-          <Handle type="target" position={Position.Top} className="w-2 h-2 bg-red-500" />
-        </div>
-      </TooltipTrigger>
-      <TooltipContent>
-        <p className="max-w-xs text-xs">{data.description}</p>
-      </TooltipContent>
-    </Tooltip>
-  </TooltipProvider>
-);
-
-// Configuração dos tipos de nós personalizados
+// Definindo os tipos de nós personalizados
 const nodeTypes: NodeTypes = {
-  start: StartNode,
-  process: ProcessNode,
-  decision: DecisionNode,
-  end: EndNode,
+  start: ({ data, ...props }: any) => (
+    <div
+      className={cn(
+        "px-4 py-2 shadow-md rounded-lg border border-blue-300 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/40 dark:to-indigo-900/40",
+        "min-w-[150px] font-medium flex flex-col items-center justify-center"
+      )}
+    >
+      <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-800 mb-2">
+        <div className="w-4 h-4 bg-blue-500 dark:bg-blue-400 rounded-full" />
+      </div>
+      <div className="text-center">
+        <div className="text-sm font-semibold text-blue-800 dark:text-blue-300">
+          {data.label}
+        </div>
+      </div>
+    </div>
+  ),
+  default: ({ data, ...props }: any) => (
+    <div
+      className={cn(
+        "px-4 py-2 shadow-md rounded-lg border border-gray-200 bg-white dark:bg-gray-800 dark:border-gray-700",
+        "min-w-[150px] font-medium"
+      )}
+    >
+      <div className="text-center">
+        <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+          {data.label}
+        </div>
+      </div>
+    </div>
+  ),
+  end: ({ data, ...props }: any) => (
+    <div
+      className={cn(
+        "px-4 py-2 shadow-md rounded-lg border border-green-300 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/40 dark:to-emerald-900/40",
+        "min-w-[150px] font-medium flex flex-col items-center justify-center"
+      )}
+    >
+      <div className="text-center">
+        <div className="text-sm font-semibold text-green-800 dark:text-green-300">
+          {data.label}
+        </div>
+      </div>
+      <div className="p-2 rounded-full bg-green-100 dark:bg-green-800 mt-2">
+        <div className="w-4 h-4 bg-green-500 dark:bg-green-400 rounded-full" />
+      </div>
+    </div>
+  ),
 };
+
+// Exemplos de dados para desenvolvimento
+const initialNodes: Node[] = [
+  {
+    id: '1',
+    data: { label: 'Início do Processo', description: 'Ponto de partida para o fluxo de informações' },
+    position: { x: 250, y: 0 },
+    type: 'start',
+  },
+  {
+    id: '2',
+    data: { label: 'Conceito Principal', description: 'Elemento fundamental do tema abordado' },
+    position: { x: 250, y: 100 },
+    type: 'default',
+  },
+  {
+    id: '3',
+    data: { label: 'Aplicação Prática', description: 'Como o conceito é aplicado na prática' },
+    position: { x: 250, y: 200 },
+    type: 'default',
+  },
+  {
+    id: '4',
+    data: { label: 'Conclusão', description: 'Resultados e aprendizados principais' },
+    position: { x: 250, y: 300 },
+    type: 'end',
+  }
+];
+
+const initialEdges: Edge[] = [
+  { id: 'e1-2', source: '1', target: '2', animated: true, style: { stroke: '#3b82f6' } },
+  { id: 'e2-3', source: '2', target: '3', animated: true, style: { stroke: '#3b82f6' } },
+  { id: 'e3-4', source: '3', target: '4', animated: true, style: { stroke: '#3b82f6' } }
+];
 
 interface FluxogramaVisualizerProps {
   flowData?: {
@@ -125,91 +109,43 @@ interface FluxogramaVisualizerProps {
   onNodeClick?: (node: Node) => void;
 }
 
-// Dados de exemplo para fluxograma
-const exampleFlowData = {
-  nodes: [
-    {
-      id: '1',
-      type: 'start',
-      position: { x: 250, y: 0 },
-      data: { 
-        label: 'Começar estudo', 
-        description: 'Início do processo de estudo de um novo tema.' 
-      },
-    },
-    {
-      id: '2',
-      type: 'process',
-      position: { x: 250, y: 100 },
-      data: { 
-        label: 'Ler material base', 
-        description: 'Leitura dos materiais fundamentais sobre o tema.' 
-      },
-    },
-    {
-      id: '3',
-      type: 'decision',
-      position: { x: 250, y: 200 },
-      data: { 
-        label: 'Compreendeu o material?',
-        description: 'Verificar se o conteúdo básico foi compreendido antes de avançar.' 
-      },
-    },
-    {
-      id: '4',
-      type: 'process',
-      position: { x: 400, y: 300 },
-      data: { 
-        label: 'Resolver exercícios',
-        description: 'Aplicar o conhecimento em exercícios práticos.' 
-      },
-    },
-    {
-      id: '5',
-      type: 'process',
-      position: { x: 100, y: 300 },
-      data: { 
-        label: 'Rever conceitos',
-        description: 'Revisitar os conceitos básicos para melhor compreensão.' 
-      },
-    },
-    {
-      id: '6',
-      type: 'end',
-      position: { x: 250, y: 400 },
-      data: { 
-        label: 'Finalizar estudo',
-        description: 'Concluir o ciclo de estudos do tema.' 
-      },
-    },
-  ],
-  edges: [
-    { id: 'e1-2', source: '1', target: '2' },
-    { id: 'e2-3', source: '2', target: '3' },
-    { id: 'e3-4', source: '3', target: '4', sourceHandle: 'yes', label: 'Sim' },
-    { id: 'e3-5', source: '3', target: '5', sourceHandle: 'no', label: 'Não' },
-    { id: 'e4-6', source: '4', target: '6' },
-    { id: 'e5-2', source: '5', target: '2' },
-  ],
-};
-
 const FluxogramaVisualizer: React.FC<FluxogramaVisualizerProps> = ({ 
-  flowData = exampleFlowData,
+  flowData,
   onNodeClick 
 }) => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(flowData.nodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(flowData.edges);
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  // Carrega os dados do localStorage, se houver, ou usa os exemplos
+  const loadFlowData = () => {
+    try {
+      const savedData = localStorage.getItem('fluxogramaData');
+      if (savedData) {
+        return JSON.parse(savedData);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar dados do fluxograma:', error);
+    }
+    return { nodes: initialNodes, edges: initialEdges };
+  };
+
+  const data = flowData || loadFlowData();
+  const [nodes, setNodes, onNodesChange] = useNodesState(data.nodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(data.edges);
+
+  // Atualiza os nós e arestas quando os dados externos mudam
+  useEffect(() => {
+    if (flowData) {
+      setNodes(flowData.nodes);
+      setEdges(flowData.edges);
+    }
+  }, [flowData, setNodes, setEdges]);
 
   const handleNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
-    setSelectedNode(node);
     if (onNodeClick) {
       onNodeClick(node);
     }
   }, [onNodeClick]);
 
   return (
-    <div className="h-[500px] w-full bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
+    <div className="h-[60vh] bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -219,35 +155,23 @@ const FluxogramaVisualizer: React.FC<FluxogramaVisualizerProps> = ({
         nodeTypes={nodeTypes}
         fitView
         attributionPosition="bottom-right"
+        connectionLineType={ConnectionLineType.SmoothStep}
       >
         <Controls />
-        <MiniMap 
-          nodeStrokeColor="#aaa"
-          nodeColor="#ffffff"
-          nodeBorderRadius={10} 
-          maskColor="rgba(0, 0, 0, 0.1)"
+        <MiniMap
+          nodeStrokeColor={(n) => {
+            if (n.type === 'start') return '#3b82f6';
+            if (n.type === 'end') return '#10b981';
+            return '#aaa';
+          }}
+          nodeColor={(n) => {
+            if (n.type === 'start') return '#dbeafe';
+            if (n.type === 'end') return '#d1fae5';
+            return '#ffffff';
+          }}
         />
         <Background color="#aaa" gap={16} />
       </ReactFlow>
-      
-      {selectedNode && (
-        <Card className="p-4 mt-4 border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/30">
-          <div className="flex items-center mb-2">
-            <CircleHelp className="h-5 w-5 mr-2 text-blue-600 dark:text-blue-400" />
-            <h4 className="text-base font-medium text-blue-900 dark:text-blue-100">
-              {selectedNode.data.label}
-            </h4>
-          </div>
-          <p className="text-sm text-blue-800 dark:text-blue-300 mb-2">
-            {selectedNode.data.description}
-          </p>
-          {selectedNode.data.details && (
-            <div className="text-xs text-blue-700 dark:text-blue-400 bg-blue-100 dark:bg-blue-800/50 p-2 rounded">
-              {selectedNode.data.details}
-            </div>
-          )}
-        </Card>
-      )}
     </div>
   );
 };

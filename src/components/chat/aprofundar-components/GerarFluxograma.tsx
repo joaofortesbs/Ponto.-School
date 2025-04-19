@@ -67,11 +67,58 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
     setIsLoading(true);
     setShowManualInput(false);
 
-    // Simula o processamento do fluxograma com conteúdo manual
-    setTimeout(() => {
-      setIsLoading(false);
-      setFluxogramaGerado(true);
-    }, 3000);
+    // Processar o conteúdo e gerar o fluxograma
+    const processFluxogramaContent = async () => {
+      try {
+        // Aqui seria a chamada real para a API que processa o conteúdo
+        // Por enquanto, simularemos com uma estrutura de exemplo baseada no conteúdo
+        
+        // Simula o tempo de processamento
+        const fluxogramaData = await new Promise((resolve) => {
+          setTimeout(() => {
+            // Extrai palavras-chave do conteúdo
+            const keywords = manualContent
+              .split(/[.,!?;\n]/)
+              .map(word => word.trim())
+              .filter(word => word.length > 5)
+              .slice(0, 6);
+            
+            // Cria nós baseados nas palavras-chave
+            const nodes = keywords.map((keyword, index) => ({
+              id: (index + 1).toString(),
+              label: keyword.length > 15 ? keyword.substring(0, 15) + '...' : keyword,
+              description: `Conceito relacionado a: ${keyword}`,
+              type: index === 0 ? 'start' : index === keywords.length - 1 ? 'end' : 'default',
+              position: { x: 200, y: 50 + (index * 100) }
+            }));
+            
+            // Cria conexões entre os nós
+            const edges = [];
+            for (let i = 0; i < nodes.length - 1; i++) {
+              edges.push({
+                id: `e${i+1}-${i+2}`,
+                source: (i + 1).toString(),
+                target: (i + 2).toString(),
+                label: i === 0 ? 'Inicia' : i === nodes.length - 2 ? 'Finaliza' : 'Continua'
+              });
+            }
+            
+            resolve({ nodes, edges });
+          }, 3000);
+        });
+        
+        // Armazena os dados do fluxograma para uso posterior no visualizador
+        localStorage.setItem('fluxogramaData', JSON.stringify(fluxogramaData));
+        
+        setIsLoading(false);
+        setFluxogramaGerado(true);
+      } catch (error) {
+        console.error('Erro ao processar o fluxograma:', error);
+        setIsLoading(false);
+      }
+    };
+    
+    processFluxogramaContent();
   };
 
   const handleCancelManualInput = () => {
