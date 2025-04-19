@@ -27,260 +27,14 @@ type ContentType = 'main' | 'explicacao' | 'topicos' | 'exemplos' | 'erros' | 'f
 const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, messages, sessionId, setShowAprofundarModal, toast }) => {
   const [activeContent, setActiveContent] = useState<ContentType>('main');
   const [loading, setLoading] = useState(false);
-  
-  // Removida a função parseAIResponse que não é mais necessária
-  // já que estamos fazendo chamadas separadas para cada seção
 
-  const handleOptionClick = async (option: ContentType) => {
+  const handleOptionClick = (option: ContentType) => {
     setLoading(true);
-    
-    if (option === 'explicacao') {
-      try {
-        // Captura o tema atual (última mensagem da conversa)
-        let currentTopic = "";
-        let lastUserQuestion = "";
-        
-        if (messages && messages.length > 0) {
-          // Tenta obter a última pergunta do usuário
-          const userMessages = messages.filter(msg => msg.sender === 'user' || msg.role === 'user');
-          if (userMessages.length > 0) {
-            lastUserQuestion = userMessages[userMessages.length - 1].content;
-          }
-          
-          // Tenta obter a última resposta da IA (mais completa)
-          const aiMessages = messages.filter(msg => msg.sender === 'ai' || msg.role === 'assistant');
-          if (aiMessages.length > 0) {
-            currentTopic = aiMessages[aiMessages.length - 1].content;
-          } else {
-            // Se não houver mensagens da IA, pega a última mensagem do usuário
-            currentTopic = lastUserQuestion;
-          }
-          
-          // Limita o tamanho do tema para evitar tokens excessivos
-          if (currentTopic.length > 1500) {
-            currentTopic = currentTopic.substring(0, 1500) + "...";
-          }
-        }
-        
-        // Verifica se temos um tema para aprofundar
-        if (!currentTopic || currentTopic.trim() === "") {
-          setExplainContent({
-            contexto: "Não foi possível identificar um tema para aprofundar. Inicie uma conversa primeiro.",
-            termos: [{ termo: "Atenção", definicao: "Converse com a IA primeiro para ter um tema para aprofundar." }],
-            aplicacoes: "Após conversar sobre um tema específico, tente a explicação avançada novamente."
-          });
-          setActiveContent(option);
-          setLoading(false);
-          return;
-        }
-        
-        // Extrair um tema conciso do conteúdo
-        let temaExtract = "";
-        
-        // Se tiver pergunta do usuário, usa ela como base para o tema
-        if (lastUserQuestion) {
-          // Remove pontuações e perguntas mais comuns
-          temaExtract = lastUserQuestion
-            .replace(/^(o que é|me fale sobre|explique|como funciona|quais são|o que significa|qual é|me ajude com|me explique|poderia explicar|gostaria de aprender sobre|me ensine sobre|quero saber sobre|pode me falar de)/i, '')
-            .replace(/[?.,;!]/g, '')
-            .trim();
-            
-          // Se o tema extraído da pergunta for muito curto, complementa com o conteúdo da resposta
-          if (temaExtract.length < 10 && currentTopic) {
-            // Extrai o primeiro parágrafo da resposta da IA
-            const firstParagraph = currentTopic.split('\n')[0];
-            temaExtract = firstParagraph.substring(0, 100).trim();
-          }
-        } else if (currentTopic) {
-          // Extrai o título ou primeiro parágrafo da resposta da IA
-          const lines = currentTopic.split('\n').filter(line => line.trim() !== '');
-          
-          // Procura por um título (normalmente com # ou ## no markdown)
-          const titleLine = lines.find(line => /^#{1,3}\s+(.+)$/.test(line));
-          
-          if (titleLine) {
-            // Remove o marcador de título e usa o texto
-            temaExtract = titleLine.replace(/^#{1,3}\s+/, '').trim();
-          } else if (lines.length > 0) {
-            // Usa o primeiro parágrafo como tema
-            temaExtract = lines[0].substring(0, 100).trim();
-          }
-        }
-        
-        // Garantir que temos um tema válido
-        const temaAtual = temaExtract || currentTopic.substring(0, 50).trim();
-        
-        console.log("Tema extraído para aprofundamento:", temaAtual);
-        
-        // Importar o serviço de IA
-        const { generateAIResponse } = await import('@/services/aiChatService');
-        
-        // Criar prompts separados para cada seção, agora com instruções mais claras
-        const prompts = {
-          contexto: `Você é um assistente especializado em fornecer contexto aprofundado.
-          
-          TAREFA: Explique com profundidade o tema "${temaAtual}". 
-          
-          INCLUA:
-          - Contexto histórico
-          - Origens do conceito/tema
-          - Desenvolvimento ao longo do tempo
-          - Importância no campo de estudo
-          - Principais marcos ou eventos relacionados
-          
-          FORMATO:
-          - Responda de forma direta, sem mencionar esta instrução
-          - Use parágrafos bem estruturados
-          - NÃO use títulos, subtítulos ou numerações
-          - Seja didático e claro
-          - Máximo de 3-4 parágrafos`,
-          
-          termos: `Você é um assistente especializado em terminologia técnica.
-          
-          TAREFA: Liste e explique os 5 principais termos técnicos relacionados ao tema "${temaAtual}".
-          
-          REQUISITOS:
-          - Identifique os termos realmente técnicos e específicos deste tema
-          - Para cada termo, forneça uma definição clara e explicação
-          - Mencione a importância de cada termo no contexto geral
-          - Se possível, inclua um exemplo ou aplicação
-          
-          RESPONDA ESTRITAMENTE NO SEGUINTE FORMATO (um termo por marcador):
-          - [Nome do Termo]: [Definição completa e explicação]
-          - [Nome do Termo]: [Definição completa e explicação]
-          
-          Não adicione outra formatação ou texto introdutório, apenas a lista com os termos.`,
-          
-          aplicacoes: `Você é um assistente especializado em aplicações práticas de conhecimento.
-          
-          TAREFA: Explique como o conhecimento sobre "${temaAtual}" pode ser aplicado na prática.
-          
-          INCLUA:
-          - Aplicações em diferentes contextos (educacional, profissional, científico)
-          - Exemplos concretos de uso no dia a dia
-          - Conexões com outras áreas de conhecimento
-          - Benefícios práticos de entender este tema
-          
-          FORMATO:
-          - Responda de forma direta, sem mencionar esta instrução
-          - Use parágrafos bem estruturados
-          - NÃO use títulos, subtítulos ou numerações
-          - Seja específico e prático
-          - Máximo de 3-4 parágrafos`
-        };
-        
-        // Fazer chamadas separadas para a IA para cada seção
-        console.log("Gerando contexto aprofundado...");
-        const contextoResponse = await generateAIResponse(
-          prompts.contexto, 
-          `${sessionId}-contexto` || 'default-session-contexto'
-        );
-        
-        console.log("Gerando termos técnicos...");
-        const termosResponse = await generateAIResponse(
-          prompts.termos, 
-          `${sessionId}-termos` || 'default-session-termos'
-        );
-        
-        // Processar a resposta para extrair os termos e definições de maneira mais robusta
-        // Primeiro, remover qualquer texto introdutório
-        const cleanTermosResponse = termosResponse
-          .replace(/^(aqui estão|aqui está|segue|seguem|estes são|a seguir|os principais termos técnicos são|termos técnicos relacionados a|termos técnicos sobre).*?\n/i, '')
-          .trim();
-        
-        // Extrair cada linha que começa com um marcador
-        const termosLines = cleanTermosResponse.split('\n')
-          .filter(line => /^\s*[\-\*\•]\s+/.test(line))
-          .map(line => line.replace(/^\s*[\-\*\•]\s+/, '').trim());
-        
-        // Se não encontrou linhas com marcadores, tenta split por linhas não vazias
-        const termosList = termosLines.length > 0 ? 
-          termosLines : 
-          cleanTermosResponse.split('\n').filter(line => line.trim() !== '');
-        
-        // Transformar em array de objetos {termo, definicao} com processamento mais robusto
-        const termosArray = termosList.map(term => {
-          // Procura por padrões como "Termo: Definição" ou "Termo - Definição"
-          const termMatch = term.match(/^([^:]+)[:|-](.+)$/);
-          
-          if (termMatch) {
-            return {
-              termo: termMatch[1].trim(),
-              definicao: termMatch[2].trim()
-            };
-          }
-          
-          // Caso fallback: divide na primeira palavra se não encontrar padrão
-          const firstSpace = term.indexOf(' ');
-          if (firstSpace > 0) {
-            return {
-              termo: term.substring(0, firstSpace).trim(),
-              definicao: term.substring(firstSpace).trim()
-            };
-          }
-          
-          // Último recurso
-          return { 
-            termo: term, 
-            definicao: "Definição não disponível" 
-          };
-        });
-        
-        // Garantir que há ao menos um termo para exibir
-        const finalTermos = termosArray.length > 0 ? termosArray : [{ 
-          termo: "Termo Técnico", 
-          definicao: "Para ver termos técnicos específicos deste tema, clique novamente em 'Explicação Avançada'." 
-        }];
-        
-        console.log("Gerando aplicações expandidas...");
-        const aplicacoesResponse = await generateAIResponse(
-          prompts.aplicacoes, 
-          `${sessionId}-aplicacoes` || 'default-session-aplicacoes'
-        );
-        
-        // Armazenar todas as respostas
-        const respostas = {
-          contexto: contextoResponse,
-          termos: finalTermos,
-          aplicacoes: aplicacoesResponse
-        };
-        
-        // Atualizar o conteúdo de explicação com os dados gerados
-        setExplainContent(respostas);
-        
-        // Atualizar o estado para mostrar o conteúdo
-        setActiveContent(option);
-        setLoading(false);
-        
-        // Toast de sucesso se implementado
-        if (toast) {
-          toast({
-            title: "Conteúdo gerado com sucesso",
-            description: "O aprofundamento do tema foi gerado pela IA.",
-            variant: "default",
-          });
-        }
-      } catch (error) {
-        console.error('Erro ao gerar explicação avançada:', error);
-        setActiveContent(option);
-        setLoading(false);
-        
-        // Toast de erro se implementado
-        if (toast) {
-          toast({
-            title: "Erro ao gerar conteúdo",
-            description: "Não foi possível gerar o aprofundamento. Tente novamente.",
-            variant: "destructive",
-          });
-        }
-      }
-    } else {
-      // Para outras opções, mantém o comportamento original
-      setTimeout(() => {
-        setActiveContent(option);
-        setLoading(false);
-      }, 500);
-    }
+    // Simula um tempo de carregamento
+    setTimeout(() => {
+      setActiveContent(option);
+      setLoading(false);
+    }, 500);
   };
 
   const handleBack = () => {
@@ -356,12 +110,6 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
     </div>
   );
 
-  const [explainContent, setExplainContent] = useState({
-    contexto: "O contexto histórico e científico do tema está sendo preparado. Por favor, aguarde...",
-    termos: [{ termo: "Carregando termos", definicao: "Os termos técnicos e suas definições estão sendo gerados..." }],
-    aplicacoes: "As aplicações práticas e teóricas deste tema estão sendo analisadas..."
-  });
-
   const renderExplicacaoAvancada = () => (
     <div className="space-y-4">
       <div className="flex items-center mb-2">
@@ -387,26 +135,24 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
           <div>
             <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Contexto Aprofundado</h4>
             <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
-              {explainContent.contexto}
+              Aqui aparecerá o contexto histórico e científico aprofundado sobre o tema discutido.
             </p>
           </div>
 
           <div>
             <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Termos Técnicos</h4>
             <div className="grid grid-cols-1 gap-3">
-              {explainContent.termos.map((item, index) => (
-                <div key={index} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <span className="block font-medium text-blue-600 dark:text-blue-400 mb-1">{item.termo}</span>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">{item.definicao}</span>
-                </div>
-              ))}
+              <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                <span className="block font-medium text-blue-600 dark:text-blue-400 mb-1">Termo técnico</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">Definição detalhada do termo aparecerá aqui.</span>
+              </div>
             </div>
           </div>
 
           <div>
             <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Aplicações Expandidas</h4>
             <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
-              {explainContent.aplicacoes}
+              Aqui serão listadas as aplicações práticas e teóricas deste conhecimento.
             </p>
           </div>
         </div>
@@ -626,19 +372,9 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
       return (
         <div className="flex items-center justify-center h-60">
           <div className="animate-pulse flex flex-col items-center">
-            <div className="h-12 w-12 bg-blue-100 dark:bg-blue-900/40 rounded-full mb-3 flex items-center justify-center">
-              <span className="text-blue-600 dark:text-blue-400 animate-spin">⚙️</span>
-            </div>
-            <div className="h-5 w-40 bg-gray-200 dark:bg-gray-700 rounded mb-3 flex items-center justify-center">
-              <span className="text-xs text-gray-600 dark:text-gray-300">Gerando conteúdo...</span>
-            </div>
-            <div className="h-3 w-56 bg-gray-100 dark:bg-gray-800 rounded mb-1"></div>
-            <div className="h-3 w-48 bg-gray-100 dark:bg-gray-800 rounded mb-1"></div>
+            <div className="h-12 w-12 bg-blue-100 dark:bg-blue-900/40 rounded-full mb-3"></div>
+            <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
             <div className="h-3 w-40 bg-gray-100 dark:bg-gray-800 rounded"></div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center max-w-sm">
-              Analisando o tema e aprofundando o conteúdo com contexto histórico, 
-              termos técnicos e aplicações práticas
-            </p>
           </div>
         </div>
       );
