@@ -1877,15 +1877,7 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                     </div>
                   </div>
                   
-                  {/* Mensagem de sobreposição */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-white/60 via-transparent to-transparent dark:from-gray-900/60 dark:via-transparent dark:to-transparent flex items-end justify-center pb-5 z-20">
-                    <div className="bg-white/90 dark:bg-gray-800/90 px-4 py-2 rounded-full shadow-md backdrop-blur-sm border border-blue-100/50 dark:border-blue-900/30">
-                      <p className="text-sm text-blue-600 dark:text-blue-400 font-medium flex items-center">
-                        <span className="animate-blink mr-2 h-2 w-2 rounded-full bg-blue-500"></span>
-                        O fluxograma gerado aparecerá aqui!
-                      </p>
-                    </div>
-                  </div>
+                  {/* Área limpa para visualização do fluxograma */}
                 </div>
                 
                 {/* Rodapé com a mensagem do fluxograma */}
