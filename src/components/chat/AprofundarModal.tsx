@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
@@ -18,10 +19,10 @@ import TypewriterEffect from '@/components/ui/typewriter-effect';
 interface AprofundarModalProps {
   isOpen: boolean;
   onClose: () => void;
-  messages: any[]; // Added messages prop type
+  messages?: any[]; // Added messages prop type
   sessionId?: string; // Added sessionId prop type
-  setShowAprofundarModal: any; // Added setShowAprofundarModal prop type
-  toast: any; // Added toast prop type
+  setShowAprofundarModal?: any; // Added setShowAprofundarModal prop type
+  toast?: any; // Added toast prop type
 }
 
 interface AprofundadoContent {
@@ -33,7 +34,7 @@ interface AprofundadoContent {
 
 type ContentType = 'main' | 'explicacao' | 'topicos' | 'exemplos' | 'erros' | 'fontes';
 
-const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, messages, sessionId, setShowAprofundarModal, toast }) => {
+const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, messages = [], sessionId, setShowAprofundarModal, toast }) => {
   const [activeContent, setActiveContent] = useState<ContentType>('main');
   const [loading, setLoading] = useState(false);
   const [aprofundadoContent, setAprofundadoContent] = useState<AprofundadoContent>({
@@ -63,11 +64,13 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
     
     const lastAIMessage = getLastAIMessage();
     if (!lastAIMessage) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível encontrar o conteúdo para aprofundar.",
-        variant: "destructive"
-      });
+      if (toast) {
+        toast({
+          title: "Erro",
+          description: "Não foi possível encontrar o conteúdo para aprofundar.",
+          variant: "destructive"
+        });
+      }
       return;
     }
 
@@ -135,32 +138,28 @@ Formato da resposta: Liste os termos no formato JSON como este exemplo:
       // Iniciar a geração do contexto imediatamente
       const contextoResponsePromise = generateAIResponse(contextoPrompt, sessionId || 'aprofundar_session');
       
-      try {
-        // Aguardar o resultado do contexto para exibição imediata
-        const contextoResponse = await contextoResponsePromise;
-        
-        console.log("Contexto gerado com sucesso:", contextoResponse.substring(0, 50) + "...");
-        
-        // Armazenar o contexto gerado para uso posterior
-        setLastGeneratedContext(contextoResponse);
-        
-        // Ativar o efeito de digitação
-        setIsTyping(true);
-        
-        // Atualizar o estado com o contexto para exibição
-        setAprofundadoContent(prev => ({
-          ...prev,
-          contexto: contextoResponse
-        }));
-        
-        // Iniciar a obtenção dos outros dados em paralelo
-        const [termosResponse, aplicacoesResponse] = await Promise.all([
-          generateAIResponse(termosPrompt, sessionId || 'aprofundar_session'),
-          generateAIResponse(aplicacoesPrompt, sessionId || 'aprofundar_session')
-        ]);
+      // Aguardar o resultado do contexto para exibição imediata
+      const contextoResponse = await contextoResponsePromise;
       
-      // Aguardar o restante dos dados
-      const [_, termosResponse, aplicacoesResponse] = await outrasPromises;
+      console.log("Contexto gerado com sucesso:", contextoResponse.substring(0, 50) + "...");
+      
+      // Armazenar o contexto gerado para uso posterior
+      setLastGeneratedContext(contextoResponse);
+      
+      // Ativar o efeito de digitação
+      setIsTyping(true);
+      
+      // Atualizar o estado com o contexto para exibição
+      setAprofundadoContent(prev => ({
+        ...prev,
+        contexto: contextoResponse
+      }));
+      
+      // Iniciar a obtenção dos outros dados em paralelo
+      const [termosResponse, aplicacoesResponse] = await Promise.all([
+        generateAIResponse(termosPrompt, sessionId || 'aprofundar_session'),
+        generateAIResponse(aplicacoesPrompt, sessionId || 'aprofundar_session')
+      ]);
 
       // Processa a resposta dos termos técnicos (que deve estar em formato JSON)
       let termosParsed = [];
@@ -189,16 +188,17 @@ Formato da resposta: Liste os termos no formato JSON como este exemplo:
 
     } catch (error) {
       console.error("Erro ao gerar conteúdo aprofundado:", error);
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao gerar o conteúdo aprofundado. Tente novamente.",
-        variant: "destructive"
-      });
+      if (toast) {
+        toast({
+          title: "Erro",
+          description: "Ocorreu um erro ao gerar o conteúdo aprofundado. Tente novamente.",
+          variant: "destructive"
+        });
+      }
       setAprofundadoContent(prev => ({ ...prev, loading: false }));
     }
   };
 
-  // Quando o modal abrir na seção de explicação, gerar o conteúdo
   // Quando o modal abrir, verificar se precisa gerar conteúdo
   useEffect(() => {
     if (isOpen && activeContent === 'explicacao') {
