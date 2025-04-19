@@ -1,0 +1,432 @@
+[plugin:vite:react-swc] × the name `nodeTypes` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/chat/aprofundar-components/FluxogramaVisualizer.tsx:84:1]
+  84 │ };
+  85 │ 
+  86 │ // Registro de tipos de nós personalizados
+  87 │ const nodeTypes: NodeTypes = {
+     ·       ────┬────
+     ·           ╰── previous definition of `nodeTypes` here
+  88 │   start: StartNode,
+  89 │   default: DefaultNode,
+  90 │   end: EndNode,
+  91 │   decision: DecisionNode
+  92 │ };
+  93 │ 
+  94 │ // Dados de exemplo para inicialização (caso não tenha dados carregados)
+  95 │ const initialNodes: Node[] = [
+  96 │   {
+  97 │     id: '1',
+  98 │     data: { 
+  99 │       label: 'Início do processo', 
+ 100 │       description: 'Ponto inicial do fluxograma que representa o começo do processo'
+ 101 │     },
+ 102 │     position: { x: 250, y: 5 },
+ 103 │     type: 'start'
+ 104 │   },
+ 105 │   {
+ 106 │     id: '2',
+ 107 │     data: { 
+ 108 │       label: 'Etapa intermediária', 
+ 109 │       description: 'Etapa que detalha uma parte importante do processo ou conceito'
+ 110 │     },
+ 111 │     position: { x: 250, y: 100 },
+ 112 │     type: 'default'
+ 113 │   },
+ 114 │   {
+ 115 │     id: '3',
+ 116 │     data: { 
+ 117 │       label: 'Decisão importante', 
+ 118 │       description: 'Ponto de decisão que causa ramificação do fluxo'
+ 119 │     },
+ 120 │     position: { x: 250, y: 200 },
+ 121 │     type: 'decision'
+ 122 │   },
+ 123 │   {
+ 124 │     id: '4',
+ 125 │     data: { 
+ 126 │       label: 'Resultado final', 
+ 127 │       description: 'Conclusão do processo ou conceito explicado'
+ 128 │     },
+ 129 │     position: { x: 250, y: 300 },
+ 130 │     type: 'end'
+ 131 │   }
+ 132 │ ];
+ 133 │ 
+ 134 │ // Conexões de exemplo
+ 135 │ const initialEdges: Edge[] = [
+ 136 │   { id: 'e1-2', source: '1', target: '2', animated: true, style: { stroke: '#3b82f6' } },
+ 137 │   { id: 'e2-3', source: '2', target: '3', animated: true, style: { stroke: '#3b82f6' } },
+ 138 │   { id: 'e3-4', source: '3', target: '4', animated: true, style: { stroke: '#3b82f6' } }
+ 139 │ ];
+ 140 │ 
+ 141 │ interface FluxogramaVisualizerProps {
+ 142 │   flowData?: {
+ 143 │     nodes: Node[];
+ 144 │     edges: Edge[];
+ 145 │   };
+ 146 │   onNodeClick?: (node: Node) => void;
+ 147 │ }
+ 148 │ 
+ 149 │ const nodeTypes: NodeTypes = {
+     ·       ────┬────
+     ·           ╰── `nodeTypes` redefined here
+ 150 │   start: ({ data, ...props }: any) => (
+ 151 │     <div
+ 152 │       className={cn(
+     ╰────
+
+  × the name `initialNodes` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/chat/aprofundar-components/FluxogramaVisualizer.tsx:92:1]
+  92 │ };
+  93 │ 
+  94 │ // Dados de exemplo para inicialização (caso não tenha dados carregados)
+  95 │ const initialNodes: Node[] = [
+     ·       ──────┬─────
+     ·             ╰── previous definition of `initialNodes` here
+  96 │   {
+  97 │     id: '1',
+  98 │     data: { 
+  99 │       label: 'Início do processo', 
+ 100 │       description: 'Ponto inicial do fluxograma que representa o começo do processo'
+ 101 │     },
+ 102 │     position: { x: 250, y: 5 },
+ 103 │     type: 'start'
+ 104 │   },
+ 105 │   {
+ 106 │     id: '2',
+ 107 │     data: { 
+ 108 │       label: 'Etapa intermediária', 
+ 109 │       description: 'Etapa que detalha uma parte importante do processo ou conceito'
+ 110 │     },
+ 111 │     position: { x: 250, y: 100 },
+ 112 │     type: 'default'
+ 113 │   },
+ 114 │   {
+ 115 │     id: '3',
+ 116 │     data: { 
+ 117 │       label: 'Decisão importante', 
+ 118 │       description: 'Ponto de decisão que causa ramificação do fluxo'
+ 119 │     },
+ 120 │     position: { x: 250, y: 200 },
+ 121 │     type: 'decision'
+ 122 │   },
+ 123 │   {
+ 124 │     id: '4',
+ 125 │     data: { 
+ 126 │       label: 'Resultado final', 
+ 127 │       description: 'Conclusão do processo ou conceito explicado'
+ 128 │     },
+ 129 │     position: { x: 250, y: 300 },
+ 130 │     type: 'end'
+ 131 │   }
+ 132 │ ];
+ 133 │ 
+ 134 │ // Conexões de exemplo
+ 135 │ const initialEdges: Edge[] = [
+ 136 │   { id: 'e1-2', source: '1', target: '2', animated: true, style: { stroke: '#3b82f6' } },
+ 137 │   { id: 'e2-3', source: '2', target: '3', animated: true, style: { stroke: '#3b82f6' } },
+ 138 │   { id: 'e3-4', source: '3', target: '4', animated: true, style: { stroke: '#3b82f6' } }
+ 139 │ ];
+ 140 │ 
+ 141 │ interface FluxogramaVisualizerProps {
+ 142 │   flowData?: {
+ 143 │     nodes: Node[];
+ 144 │     edges: Edge[];
+ 145 │   };
+ 146 │   onNodeClick?: (node: Node) => void;
+ 147 │ }
+ 148 │ 
+ 149 │ const nodeTypes: NodeTypes = {
+ 150 │   start: ({ data, ...props }: any) => (
+ 151 │     <div
+ 152 │       className={cn(
+ 153 │         "px-4 py-2 shadow-md rounded-lg border border-blue-300 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/40 dark:to-indigo-900/40",
+ 154 │         "min-w-[150px] font-medium flex flex-col items-center justify-center"
+ 155 │       )}
+ 156 │     >
+ 157 │       <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-800 mb-2">
+ 158 │         <div className="w-4 h-4 bg-blue-500 dark:bg-blue-400 rounded-full" />
+ 159 │       </div>
+ 160 │       <div className="text-center">
+ 161 │         <div className="text-sm font-semibold text-blue-800 dark:text-blue-300">
+ 162 │           {data.label}
+ 163 │         </div>
+ 164 │         {data.description && (
+ 165 │           <div className="text-xs text-blue-600 dark:text-blue-400 opacity-75 mt-1 max-w-[200px] truncate">
+ 166 │             {typeof data.description === 'string' && data.description.length > 30 
+ 167 │               ? `${data.description.substring(0, 30)}...` 
+ 168 │               : data.description}
+ 169 │           </div>
+ 170 │         )}
+ 171 │       </div>
+ 172 │     </div>
+ 173 │   ),
+ 174 │   default: ({ data, ...props }: any) => (
+ 175 │     <div
+ 176 │       className={cn(
+ 177 │         "px-4 py-2 shadow-md rounded-lg border border-gray-200 bg-white dark:bg-gray-800 dark:border-gray-700",
+ 178 │         "min-w-[150px] font-medium"
+ 179 │       )}
+ 180 │     >
+ 181 │       <div className="text-center">
+ 182 │         <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+ 183 │           {data.label}
+ 184 │         </div>
+ 185 │         {data.description && (
+ 186 │           <div className="text-xs text-gray-600 dark:text-gray-400 opacity-75 mt-1 max-w-[200px] truncate">
+ 187 │             {typeof data.description === 'string' && data.description.length > 30 
+ 188 │               ? `${data.description.substring(0, 30)}...` 
+ 189 │               : data.description}
+ 190 │           </div>
+ 191 │         )}
+ 192 │       </div>
+ 193 │     </div>
+ 194 │   ),
+ 195 │   end: ({ data, ...props }: any) => (
+ 196 │     <div
+ 197 │       className={cn(
+ 198 │         "px-4 py-2 shadow-md rounded-lg border border-green-300 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/40 dark:to-emerald-900/40",
+ 199 │         "min-w-[150px] font-medium flex flex-col items-center justify-center"
+ 200 │       )}
+ 201 │     >
+ 202 │       <div className="text-center">
+ 203 │         <div className="text-sm font-semibold text-green-800 dark:text-green-300">
+ 204 │           {data.label}
+ 205 │         </div>
+ 206 │         {data.description && (
+ 207 │           <div className="text-xs text-green-600 dark:text-green-400 opacity-75 mt-1 max-w-[200px] truncate">
+ 208 │             {typeof data.description === 'string' && data.description.length > 30 
+ 209 │               ? `${data.description.substring(0, 30)}...` 
+ 210 │               : data.description}
+ 211 │           </div>
+ 212 │         )}
+ 213 │       </div>
+ 214 │       <div className="p-2 rounded-full bg-green-100 dark:bg-green-800 mt-2">
+ 215 │         <div className="w-4 h-4 bg-green-500 dark:bg-green-400 rounded-full" />
+ 216 │       </div>
+ 217 │     </div>
+ 218 │   ),
+ 219 │   process: ({ data, ...props }: any) => (
+ 220 │     <div
+ 221 │       className={cn(
+ 222 │         "px-4 py-2 shadow-md rounded-lg border border-purple-300 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/40 dark:to-indigo-900/40",
+ 223 │         "min-w-[150px] font-medium"
+ 224 │       )}
+ 225 │     >
+ 226 │       <div className="text-center">
+ 227 │         <div className="text-sm font-semibold text-purple-800 dark:text-purple-300">
+ 228 │           {data.label}
+ 229 │         </div>
+ 230 │         {data.description && (
+ 231 │           <div className="text-xs text-purple-600 dark:text-purple-400 opacity-75 mt-1 max-w-[200px] truncate">
+ 232 │             {typeof data.description === 'string' && data.description.length > 30 
+ 233 │               ? `${data.description.substring(0, 30)}...` 
+ 234 │               : data.description}
+ 235 │           </div>
+ 236 │         )}
+ 237 │       </div>
+ 238 │     </div>
+ 239 │   ),
+ 240 │   decision: ({ data, ...props }: any) => (
+ 241 │     <div
+ 242 │       className={cn(
+ 243 │         "px-4 py-2 shadow-md rounded-lg transform rotate-45 border border-amber-300 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/40 dark:to-yellow-900/40",
+ 244 │         "min-w-[150px] min-h-[150px] font-medium flex items-center justify-center"
+ 245 │       )}
+ 246 │     >
+ 247 │       <div className="text-center transform -rotate-45">
+ 248 │         <div className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+ 249 │           {data.label}
+ 250 │         </div>
+ 251 │         {data.description && (
+ 252 │           <div className="text-xs text-amber-600 dark:text-amber-400 opacity-75 mt-1 max-w-[150px] truncate">
+ 253 │             {typeof data.description === 'string' && data.description.length > 30 
+ 254 │               ? `${data.description.substring(0, 30)}...` 
+ 255 │               : data.description}
+ 256 │           </div>
+ 257 │         )}
+ 258 │       </div>
+ 259 │     </div>
+ 260 │   ),
+ 261 │ };
+ 262 │ 
+ 263 │ // Exemplos de dados para desenvolvimento
+ 264 │ const initialNodes: Node[] = [
+     ·       ──────┬─────
+     ·             ╰── `initialNodes` redefined here
+ 265 │   {
+ 266 │     id: '1',
+ 267 │     data: { label: 'Início do Processo', description: 'Ponto de partida para o fluxo de informações' },
+     ╰────
+
+  × the name `initialEdges` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/chat/aprofundar-components/FluxogramaVisualizer.tsx:132:1]
+ 132 │ ];
+ 133 │ 
+ 134 │ // Conexões de exemplo
+ 135 │ const initialEdges: Edge[] = [
+     ·       ──────┬─────
+     ·             ╰── previous definition of `initialEdges` here
+ 136 │   { id: 'e1-2', source: '1', target: '2', animated: true, style: { stroke: '#3b82f6' } },
+ 137 │   { id: 'e2-3', source: '2', target: '3', animated: true, style: { stroke: '#3b82f6' } },
+ 138 │   { id: 'e3-4', source: '3', target: '4', animated: true, style: { stroke: '#3b82f6' } }
+ 139 │ ];
+ 140 │ 
+ 141 │ interface FluxogramaVisualizerProps {
+ 142 │   flowData?: {
+ 143 │     nodes: Node[];
+ 144 │     edges: Edge[];
+ 145 │   };
+ 146 │   onNodeClick?: (node: Node) => void;
+ 147 │ }
+ 148 │ 
+ 149 │ const nodeTypes: NodeTypes = {
+ 150 │   start: ({ data, ...props }: any) => (
+ 151 │     <div
+ 152 │       className={cn(
+ 153 │         "px-4 py-2 shadow-md rounded-lg border border-blue-300 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/40 dark:to-indigo-900/40",
+ 154 │         "min-w-[150px] font-medium flex flex-col items-center justify-center"
+ 155 │       )}
+ 156 │     >
+ 157 │       <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-800 mb-2">
+ 158 │         <div className="w-4 h-4 bg-blue-500 dark:bg-blue-400 rounded-full" />
+ 159 │       </div>
+ 160 │       <div className="text-center">
+ 161 │         <div className="text-sm font-semibold text-blue-800 dark:text-blue-300">
+ 162 │           {data.label}
+ 163 │         </div>
+ 164 │         {data.description && (
+ 165 │           <div className="text-xs text-blue-600 dark:text-blue-400 opacity-75 mt-1 max-w-[200px] truncate">
+ 166 │             {typeof data.description === 'string' && data.description.length > 30 
+ 167 │               ? `${data.description.substring(0, 30)}...` 
+ 168 │               : data.description}
+ 169 │           </div>
+ 170 │         )}
+ 171 │       </div>
+ 172 │     </div>
+ 173 │   ),
+ 174 │   default: ({ data, ...props }: any) => (
+ 175 │     <div
+ 176 │       className={cn(
+ 177 │         "px-4 py-2 shadow-md rounded-lg border border-gray-200 bg-white dark:bg-gray-800 dark:border-gray-700",
+ 178 │         "min-w-[150px] font-medium"
+ 179 │       )}
+ 180 │     >
+ 181 │       <div className="text-center">
+ 182 │         <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+ 183 │           {data.label}
+ 184 │         </div>
+ 185 │         {data.description && (
+ 186 │           <div className="text-xs text-gray-600 dark:text-gray-400 opacity-75 mt-1 max-w-[200px] truncate">
+ 187 │             {typeof data.description === 'string' && data.description.length > 30 
+ 188 │               ? `${data.description.substring(0, 30)}...` 
+ 189 │               : data.description}
+ 190 │           </div>
+ 191 │         )}
+ 192 │       </div>
+ 193 │     </div>
+ 194 │   ),
+ 195 │   end: ({ data, ...props }: any) => (
+ 196 │     <div
+ 197 │       className={cn(
+ 198 │         "px-4 py-2 shadow-md rounded-lg border border-green-300 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/40 dark:to-emerald-900/40",
+ 199 │         "min-w-[150px] font-medium flex flex-col items-center justify-center"
+ 200 │       )}
+ 201 │     >
+ 202 │       <div className="text-center">
+ 203 │         <div className="text-sm font-semibold text-green-800 dark:text-green-300">
+ 204 │           {data.label}
+ 205 │         </div>
+ 206 │         {data.description && (
+ 207 │           <div className="text-xs text-green-600 dark:text-green-400 opacity-75 mt-1 max-w-[200px] truncate">
+ 208 │             {typeof data.description === 'string' && data.description.length > 30 
+ 209 │               ? `${data.description.substring(0, 30)}...` 
+ 210 │               : data.description}
+ 211 │           </div>
+ 212 │         )}
+ 213 │       </div>
+ 214 │       <div className="p-2 rounded-full bg-green-100 dark:bg-green-800 mt-2">
+ 215 │         <div className="w-4 h-4 bg-green-500 dark:bg-green-400 rounded-full" />
+ 216 │       </div>
+ 217 │     </div>
+ 218 │   ),
+ 219 │   process: ({ data, ...props }: any) => (
+ 220 │     <div
+ 221 │       className={cn(
+ 222 │         "px-4 py-2 shadow-md rounded-lg border border-purple-300 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/40 dark:to-indigo-900/40",
+ 223 │         "min-w-[150px] font-medium"
+ 224 │       )}
+ 225 │     >
+ 226 │       <div className="text-center">
+ 227 │         <div className="text-sm font-semibold text-purple-800 dark:text-purple-300">
+ 228 │           {data.label}
+ 229 │         </div>
+ 230 │         {data.description && (
+ 231 │           <div className="text-xs text-purple-600 dark:text-purple-400 opacity-75 mt-1 max-w-[200px] truncate">
+ 232 │             {typeof data.description === 'string' && data.description.length > 30 
+ 233 │               ? `${data.description.substring(0, 30)}...` 
+ 234 │               : data.description}
+ 235 │           </div>
+ 236 │         )}
+ 237 │       </div>
+ 238 │     </div>
+ 239 │   ),
+ 240 │   decision: ({ data, ...props }: any) => (
+ 241 │     <div
+ 242 │       className={cn(
+ 243 │         "px-4 py-2 shadow-md rounded-lg transform rotate-45 border border-amber-300 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/40 dark:to-yellow-900/40",
+ 244 │         "min-w-[150px] min-h-[150px] font-medium flex items-center justify-center"
+ 245 │       )}
+ 246 │     >
+ 247 │       <div className="text-center transform -rotate-45">
+ 248 │         <div className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+ 249 │           {data.label}
+ 250 │         </div>
+ 251 │         {data.description && (
+ 252 │           <div className="text-xs text-amber-600 dark:text-amber-400 opacity-75 mt-1 max-w-[150px] truncate">
+ 253 │             {typeof data.description === 'string' && data.description.length > 30 
+ 254 │               ? `${data.description.substring(0, 30)}...` 
+ 255 │               : data.description}
+ 256 │           </div>
+ 257 │         )}
+ 258 │       </div>
+ 259 │     </div>
+ 260 │   ),
+ 261 │ };
+ 262 │ 
+ 263 │ // Exemplos de dados para desenvolvimento
+ 264 │ const initialNodes: Node[] = [
+ 265 │   {
+ 266 │     id: '1',
+ 267 │     data: { label: 'Início do Processo', description: 'Ponto de partida para o fluxo de informações' },
+ 268 │     position: { x: 250, y: 0 },
+ 269 │     type: 'start',
+ 270 │   },
+ 271 │   {
+ 272 │     id: '2',
+ 273 │     data: { label: 'Conceito Principal', description: 'Elemento fundamental do tema abordado' },
+ 274 │     position: { x: 250, y: 100 },
+ 275 │     type: 'default',
+ 276 │   },
+ 277 │   {
+ 278 │     id: '3',
+ 279 │     data: { label: 'Aplicação Prática', description: 'Como o conceito é aplicado na prática' },
+ 280 │     position: { x: 250, y: 200 },
+ 281 │     type: 'default',
+ 282 │   },
+ 283 │   {
+ 284 │     id: '4',
+ 285 │     data: { label: 'Conclusão', description: 'Resultados e aprendizados principais' },
+ 286 │     position: { x: 250, y: 300 },
+ 287 │     type: 'end',
+ 288 │   }
+ 289 │ ];
+ 290 │ 
+ 291 │ const initialEdges: Edge[] = [
+     ·       ──────┬─────
+     ·             ╰── `initialEdges` redefined here
+ 292 │   { id: 'e1-2', source: '1', target: '2', animated: true, style: { stroke: '#3b82f6' } },
+ 293 │   { id: 'e2-3', source: '2', target: '3', animated: true, style: { stroke: '#3b82f6' } },
+ 294 │   { id: 'e3-4', source: '3', target: '4', animated: true, style: { stroke: '#3b82f6' } }
+     ╰────
+/home/runner/workspace/src/components/chat/aprofundar-components/FluxogramaVisualizer.tsx:84:1

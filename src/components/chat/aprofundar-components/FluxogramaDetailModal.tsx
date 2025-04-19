@@ -47,7 +47,14 @@ const FluxogramaDetailModal: React.FC<FluxogramaDetailModalProps> = ({
           borderColor: 'border-blue-200 dark:border-blue-700',
           iconBg: 'bg-blue-100 dark:bg-blue-800/50',
           iconColor: 'text-blue-600 dark:text-blue-400',
-          title: 'Início do Fluxo'
+          title: 'Início do Fluxo',
+          icon: (
+            <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="16" />
+              <line x1="8" y1="12" x2="16" y2="12" />
+            </svg>
+          )
         };
       case 'end':
         return {
@@ -55,7 +62,13 @@ const FluxogramaDetailModal: React.FC<FluxogramaDetailModalProps> = ({
           borderColor: 'border-green-200 dark:border-green-700',
           iconBg: 'bg-green-100 dark:bg-green-800/50',
           iconColor: 'text-green-600 dark:text-green-400',
-          title: 'Conclusão'
+          title: 'Conclusão',
+          icon: (
+            <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14" />
+              <path d="M12 5v14" />
+            </svg>
+          )
         };
       case 'process':
         return {
@@ -63,7 +76,15 @@ const FluxogramaDetailModal: React.FC<FluxogramaDetailModalProps> = ({
           borderColor: 'border-purple-200 dark:border-purple-700',
           iconBg: 'bg-purple-100 dark:bg-purple-800/50',
           iconColor: 'text-purple-600 dark:text-purple-400',
-          title: 'Processo'
+          title: 'Processo',
+          icon: (
+            <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="4" y="4" width="16" height="16" rx="2" />
+              <line x1="8" y1="8" x2="16" y2="8" />
+              <line x1="8" y1="12" x2="16" y2="12" />
+              <line x1="8" y1="16" x2="16" y2="16" />
+            </svg>
+          )
         };
       case 'decision':
         return {
@@ -71,7 +92,12 @@ const FluxogramaDetailModal: React.FC<FluxogramaDetailModalProps> = ({
           borderColor: 'border-amber-200 dark:border-amber-700',
           iconBg: 'bg-amber-100 dark:bg-amber-800/50',
           iconColor: 'text-amber-600 dark:text-amber-400',
-          title: 'Decisão'
+          title: 'Decisão',
+          icon: (
+            <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="22 3 2 3 12 21 22 3" />
+            </svg>
+          )
         };
       default:
         return {
