@@ -3452,7 +3452,14 @@ Exemplo de formato da resposta:
                                   
                                   // Adicionar rodapé
                                   doc.setFontSize(10);
-                                  doc.text('Documento gerado automaticamente pela Ponto.School', pageWidth / 2, pageHeight - 10, { align: 'center' });
+                                  doc.text('Documento gerado automaticamente pela Ponto.School', pageWidth / 2, pageHeight - 15, { align: 'center' });
+                                  
+                                  // Adicionar a frase personalizada de forma sutil e elegante
+                                  doc.setFontSize(8);
+                                  doc.setTextColor(150, 150, 150); // Cor cinza sutil
+                                  doc.setFont('helvetica', 'italic');
+                                  doc.text('"Não é sobre conectar você com a tecnologia, é sobre conectar você com o futuro!"', pageWidth / 2, pageHeight - 8, { align: 'center' });
+                                  doc.setTextColor(0, 0, 0); // Resetar para cor padrão
                                   
                                   // Salvar o PDF
                                   doc.save(`ponto-school-material-${Date.now()}.pdf`);
