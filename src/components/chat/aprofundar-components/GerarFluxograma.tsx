@@ -72,109 +72,54 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
       try {
         // ETAPA 1: Analisar o conteúdo usando a API de IA
         let fluxogramaData;
-
+        
         // Determinar a fonte do conteúdo (IA ou manual)
         const contentToAnalyze = selectedOption === 'manual' 
           ? manualContent 
           : aprofundadoContent?.contexto || '';
-
+          
         if (!contentToAnalyze.trim()) {
           throw new Error('Conteúdo vazio. Por favor, forneça um texto para gerar o fluxograma.');
         }
-
+        
         // Usar a API de IA para gerar o fluxograma
         try {
           // Mostrar indicador de carregamento enquanto processa
           setIsLoading(true);
-
+          
           // Importar o serviço de IA
           const { generateAIResponse } = await import('@/services/aiChatService');
-
+          
           // Criar um ID de sessão único para esta solicitação
           const sessionId = `fluxograma_${Date.now()}`;
-
+          
           // Prompt estruturado para a IA
           const prompt = `
-Com base na seguinte explicação sobre o tema, gere um fluxograma interativo no formato do React Flow:
+Analise o seguinte conteúdo e gere um fluxograma estruturado:
 
 ${contentToAnalyze}
 
-Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
-
-1. Comece com um CONCEITO CENTRAL (nó inicial):
-   - Defina o tema de forma objetiva e clara
-   - Ex: "O que é fotossíntese?"
-
-2. Adicione CONTEXTUALIZAÇÃO E PRÉ-REQUISITOS:
-   - Conhecimentos prévios necessários
-   - Termos importantes para entender o tema
-   - Base científica/histórica relevante
-
-3. Detalhe o PROCESSO, MECANISMO OU LÓGICA DO TEMA:
-   - Passo a passo da explicação em etapas numeradas
-   - Fluxo de causa e efeito
-   - Ex: "Etapa 1: Captação de luz → Etapa 2: Transformação química → Etapa 3: Liberação de oxigênio"
-
-4. Inclua uma CAMADA DE APLICAÇÃO/PRÁTICA:
-   - Exemplos práticos ou situações-problema
-   - Destaque erros comuns e dicas
-   - Inclua nós de decisão do tipo: "Se o aluno pensar A → Mostrar que está errado" / "Se pensar B → Está correto"
-
-5. Finalize com CONCLUSÃO OU RESULTADO FINAL:
-   - Síntese do aprendizado
-   - Resumo visual
-   - Dica de ouro ou aplicação em provas
-
-Adicione ELEMENTOS EXTRAS distribuídos no fluxograma:
-- Tópicos Relacionados (possíveis conexões para novos fluxos)
-- Comparações entre conceitos (quando aplicável)
-- Aplicações na vida real
-- Alertas sobre equívocos comuns
-
-Para cada nó (node), inclua:
-- id: único (numérico ou string)
-- title: título curto e claro
-- description: explicação resumida
-- type: um dos seguintes ("start", "context", "process", "practice", "decision", "tip", "end")
-- position: coordenadas x e y (posicione os nós em camadas, ex: y: 0, y: 100, y: 200...)
-
-Para cada conexão (edge), inclua:
-- id: formado por "eID1-ID2" (concatenando os IDs de origem e destino)
-- source: ID do nó de origem
-- target: ID do nó de destino
-- label: descrição da relação (ex: "Segue para", "Sim", "Não")
-- type: "smoothstep" para fluidez visual
-- animated: true para conexões importantes
-
-IMPORTANTE: Conecte todos os nós em sequência lógica de aprendizado, e se houver ramificações (ex: exemplos, erros), conecte como saídas alternativas do nó anterior.
-
-Dicas para posicionamento visual:
-- Posicione os y dos nós em camadas (0px, 100px, 200px, 300px...)
-- Varie o x para ramificações (ex: x: 100, x: 250, x: 400)
-- Use animated: true nos edges para as setas se moverem nas conexões importantes
-
-Retorne o resultado como um objeto JSON com a seguinte estrutura:
+Crie um fluxograma que:
+1. Identifique os principais blocos conceituais (etapas, partes, causas, consequências, tópicos)
+2. Classifique cada bloco como "início", "processo" ou "conclusão"
+3. Organize os blocos em uma sequência lógica
+4. Forneça uma breve descrição de cada bloco
+5. Retorne o resultado como um objeto JSON com a seguinte estrutura:
 {
   "nodes": [
     {
       "id": "1",
-      "title": "O que é Fotossíntese?",
-      "description": "Processo biológico pelo qual plantas transformam luz em energia",
-      "type": "start",
-      "position": { "x": 100, "y": 0 }
-    },
-    ...
+      "title": "Título do nó",
+      "description": "Descrição detalhada do nó",
+      "type": "start/default/end"
+    }
   ],
-  "edges": [
+  "connections": [
     {
-      "id": "e1-2",
       "source": "1",
       "target": "2",
-      "label": "Segue para",
-      "type": "smoothstep",
-      "animated": true
-    },
-    ...
+      "label": "Relação"
+    }
   ]
 }
 `;
@@ -184,7 +129,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
             intelligenceLevel: 'advanced',
             detailedResponse: true
           });
-
+          
           // Extrair o JSON da resposta
           let extractedData;
           try {
@@ -192,48 +137,19 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
             const jsonMatch = response.match(/```json\n([\s\S]*?)\n```/) || 
                              response.match(/```\n([\s\S]*?)\n```/) ||
                              response.match(/{[\s\S]*?}/);
-
+                             
             const jsonString = jsonMatch ? jsonMatch[0].replace(/```json\n|```\n|```/g, '') : response;
             extractedData = JSON.parse(jsonString);
-            
-            // Normalize data structure - ensure we have both nodes and edges
-            if (!extractedData.edges && extractedData.connections) {
-              // Convert connections to edges if needed
-              extractedData.edges = extractedData.connections.map(conn => ({
-                id: `e${conn.source}-${conn.target}`,
-                source: conn.source,
-                target: conn.target,
-                label: conn.label || '',
-                type: 'smoothstep',
-                animated: conn.animated || false
-              }));
-            } else if (!extractedData.edges) {
-              // Create default edges if none provided
-              extractedData.edges = [];
-              // If we have nodes, create sequential edges between them
-              if (extractedData.nodes && extractedData.nodes.length > 1) {
-                for (let i = 0; i < extractedData.nodes.length - 1; i++) {
-                  extractedData.edges.push({
-                    id: `e${extractedData.nodes[i].id}-${extractedData.nodes[i+1].id}`,
-                    source: extractedData.nodes[i].id,
-                    target: extractedData.nodes[i+1].id,
-                    label: 'Segue para',
-                    type: 'smoothstep',
-                    animated: true
-                  });
-                }
-              }
-            }
           } catch (error) {
             console.error('Erro ao extrair JSON da resposta da IA:', error);
-
+            
             // Se falhar em extrair o JSON, criar uma estrutura padrão baseada no texto
             // Implementação de fallback similar à original
             const paragraphs = contentToAnalyze.split(/\n\n+/);
             const sentences = contentToAnalyze.split(/[.!?]\s+/);
-
+            
             const mainBlocks = paragraphs.length > 3 ? paragraphs.slice(0, paragraphs.length) : sentences.slice(0, Math.min(8, sentences.length));
-
+            
             const keywords = mainBlocks.map(block => {
               const words = block.split(/\s+/).filter(word => word.length > 3);
               const mainWord = words.find(word => word.length > 5) || words[0] || 'Conceito';
@@ -242,607 +158,90 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                 keyword: mainWord.length > 20 ? mainWord.substring(0, 20) + '...' : mainWord
               };
             }).slice(0, 8);
-
+            
             // Preparar os dados no formato esperado
-            const nodes = keywords.map((item, index) => ({
-              id: (index + 1).toString(),
-              title: item.keyword.charAt(0).toUpperCase() + item.keyword.slice(1),
-              description: item.text,
-              type: index === 0 ? 'start' : index === keywords.length - 1 ? 'end' : 'default',
-              position: { x: 100 + (index % 3) * 50, y: 100 * Math.floor(index / 3) }
-            }));
-            
-            // Create edges to connect nodes
-            const edges = [];
-            for (let i = 0; i < nodes.length - 1; i++) {
-              edges.push({
-                id: `e${nodes[i].id}-${nodes[i+1].id}`,
-                source: nodes[i].id,
-                target: nodes[i+1].id,
-                label: 'Segue para',
-                type: 'smoothstep',
-                animated: true
-              });
-            }
-            
-            extractedData = { nodes, edges };
+            extractedData = {
+              nodes: keywords.map((item, index) => ({
+                id: (index + 1).toString(),
+                title: item.keyword.charAt(0).toUpperCase() + item.keyword.slice(1),
+                description: item.text,
+                type: index === 0 ? 'start' : index === keywords.length - 1 ? 'end' : 'default'
+              })),
+              connections: keywords.slice(0, -1).map((_, index) => ({
+                source: (index + 1).toString(),
+                target: (index + 2).toString(),
+                label: ''
+              }))
+            };
           }
-
+          
           // ETAPA 2: Converter os dados da IA para o formato do fluxograma
           const nodes = extractedData.nodes.map((node, index) => {
-            // Determinar o tipo do nó (usando o tipo da IA ou inferindo por conteúdo e posição)
+            // Determinar o tipo do nó (usando o tipo da IA ou fallback para posição)
             let nodeType = node.type || 'default';
-
-            // Se o tipo não estiver definido, tente inferir do conteúdo ou posição
             if (!node.type) {
-              // Mapeamento para as 5 camadas do fluxograma
-              if (index === 0) {
-                nodeType = 'start'; // CONCEITO CENTRAL
-              } 
-              else if (index === extractedData.nodes.length - 1) {
-                nodeType = 'end'; // CONCLUSÃO
-              }
-              else if (index < Math.ceil(extractedData.nodes.length * 0.25)) {
-                // Primeiros nós após o início são geralmente contexto e pré-requisitos
-                nodeType = 'context';
-              }
-              else if (index < Math.ceil(extractedData.nodes.length * 0.6)) {
-                // Nós intermediários são processos ou mecanismos
-                nodeType = 'process';
-              }
-              else {
-                // Nós finais antes da conclusão são aplicações práticas
-                nodeType = 'practice';
-              }
-
-              // Inferência baseada no conteúdo sobrepõe a inferência por posição
-              const titleLower = node.title?.toLowerCase() || '';
-              const descLower = node.description?.toLowerCase() || '';
-
-              if (titleLower.includes('pré-requisito') || 
-                  titleLower.includes('termo') || 
-                  titleLower.includes('context') ||
-                  titleLower.includes('você precisa saber')) {
-                nodeType = 'context';
-              }
-              else if (titleLower.includes('etapa') || 
-                       titleLower.includes('passo') || 
-                       titleLower.includes('processo') ||
-                       titleLower.includes('fase')) {
-                nodeType = 'process';
-              }
-              else if (titleLower.includes('exemplo') || 
-                       titleLower.includes('prática') || 
-                       titleLower.includes('aplicação') ||
-                       titleLower.includes('exercício')) {
-                nodeType = 'practice';
-              }
-              else if (titleLower.includes('dica') || 
-                       titleLower.includes('lembre') || 
-                       titleLower.includes('atenção') ||
-                       titleLower.includes('importante') ||
-                       titleLower.includes('nota')) {
-                nodeType = 'tip';
-              }
-              else if (titleLower.includes('decis') || 
-                       titleLower.includes('escolh') ||
-                       titleLower.includes('verif') ||
-                       titleLower.includes('se ') ||
-                       descLower.includes('se ') ||
-                       descLower.includes('caso ') ||
-                       descLower.includes('correto') ||
-                       descLower.includes('incorreto')) {
-                nodeType = 'decision';
-              }
+              if (index === 0) nodeType = 'start';
+              else if (index === extractedData.nodes.length - 1) nodeType = 'end';
             }
-
-            // Calcular posicionamento usando uma estratégia de layout para fluxograma educacional
-            // com as 5 camadas de aprendizado definidas
+            
+            // Calcular posicionamento para layout vertical ou horizontal
             let position;
-            const canvasWidth = 600;
-            const canvasHeight = extractedData.nodes.length * 150;
-            const verticalSections = 5; // Uma seção para cada camada do modelo de aprendizado
-            const sectionHeight = canvasHeight / verticalSections;
-
-            // Calcular a seção vertical com base no tipo de nó
-            let section = 0;
-            switch (nodeType) {
-              case 'start':
-                section = 0; // Topo para o conceito central
-                break;
-              case 'context':
-                section = 1; // Segunda seção para contextualização
-                break;
-              case 'process':
-                section = 2; // Terceira seção para processos
-                break;
-              case 'practice':
-              case 'decision':
-                section = 3; // Quarta seção para aplicações e decisões
-                break;
-              case 'tip':
-                // Os tips podem aparecer em qualquer lugar, então usar um cálculo específico
-                section = Math.floor(Math.random() * 4) + 1; 
-                break;
-              case 'end':
-                section = 4; // Fundo para conclusão
-                break;
-              default:
-                // Posicionar nós padrão com base no índice relativo
-                section = Math.floor((index / extractedData.nodes.length) * 4);
+            const flowDirection = 'vertical'; // ou 'horizontal'
+            
+            if (flowDirection === 'vertical') {
+              position = { x: 250, y: 100 + (index * 120) };
+            } else {
+              position = { x: 100 + (index * 220), y: 200 };
             }
-
-            // Contar quantos nós estão na mesma seção para calcular o posicionamento horizontal
-            const nodesInSameSection = extractedData.nodes.filter(n => {
-              // Simplificado para a demonstração, na prática precisaria de uma análise de tipo real
-              if (nodeType === 'start' && n.type === 'start') return true;
-              if (nodeType === 'context' && n.type === 'context') return true;
-              if (nodeType === 'process' && n.type === 'process') return true;
-              if ((nodeType === 'practice' || nodeType === 'decision') && 
-                  (n.type === 'practice' || n.type === 'decision')) return true;
-              if (nodeType === 'end' && n.type === 'end') return true;
-              return false;
-            }).length;
-
-            // Distribuir os nós horizontalmente dentro da seção
-            const horizontalPosition = nodesInSameSection > 1 
-              ? canvasWidth * (0.5 + ((index % nodesInSameSection) - (nodesInSameSection / 2)) * 0.15)
-              : canvasWidth * 0.5;
-
-            // Adicionar pequena variação aleatória para naturalidade e para evitar sobreposição
-            const jitterX = Math.random() * 40 - 20;
-            const jitterY = Math.random() * 40 - 20;
-
-            position = { 
-              x: horizontalPosition + jitterX,
-              y: sectionHeight * (section + 0.5) + jitterY
-            };
-
-            // Dados extras para processos (etapa/passo)
-            let extraData = {};
-            if (nodeType === 'process') {
-              // Tenta extrair um número de etapa do título
-              const stepMatch = node.title?.match(/etapa\s*(\d+)|passo\s*(\d+)|fase\s*(\d+)/i);
-              if (stepMatch) {
-                const stepNumber = stepMatch[1] || stepMatch[2] || stepMatch[3];
-                extraData = { stepNumber };
-              }
-            }
-
-            // Retorna o nó formatado com todos os dados necessários
+            
             return {
               id: node.id,
               data: { 
                 label: node.title || 'Conceito', 
-                description: node.description || 'Sem descrição disponível',
-                ...extraData
+                description: node.description || 'Sem descrição disponível'
               },
               type: nodeType,
               position
             };
           });
-
-          // ETAPA 3: Gerar as Conexões (Edges) para o fluxograma educacional
-          const edges = extractedData.edges?.map(edge => {
-            // Determinar o estilo e cor da conexão baseado nos tipos de nós conectados
-            const sourceNode = nodes.find(n => n.id === edge.source);
-            const targetNode = nodes.find(n => n.id === edge.target);
-
-            let edgeStyle = { stroke: '#3b82f6' }; // Azul padrão
-            let labelStyle = { fill: '#3b82f6', fontWeight: 500 };
-
-            // Estilizar com base no tipo de nós conectados
-            if (sourceNode?.type === 'decision') {
-              if (edge.label?.toLowerCase().includes('sim') || 
-                  edge.label?.toLowerCase().includes('correto') ||
-                  edge.label?.toLowerCase().includes('verdadeiro')) {
-                edgeStyle = { stroke: '#10b981' }; // Verde para caminhos positivos
-                labelStyle = { fill: '#10b981', fontWeight: 500 };
-              } else if (edge.label?.toLowerCase().includes('não') || 
-                         edge.label?.toLowerCase().includes('incorreto') ||
-                         edge.label?.toLowerCase().includes('falso')) {
-                edgeStyle = { stroke: '#f43f5e' }; // Vermelho para caminhos negativos
-                labelStyle = { fill: '#f43f5e', fontWeight: 500 };
-              }
-            } 
-            else if (sourceNode?.type === 'start') {
-              edgeStyle = { stroke: '#6366f1', strokeWidth: 2 }; // Indigo destaque para início
-            }
-            else if (targetNode?.type === 'end') {
-              edgeStyle = { stroke: '#10b981', strokeWidth: 2 }; // Verde destaque para conclusão
-            }
-            else if (sourceNode?.type === 'tip' || targetNode?.type === 'tip') {
-              edgeStyle = { stroke: '#0ea5e9', strokeDasharray: '5,5' }; // Azul tracejado para dicas
-              labelStyle = { fill: '#0ea5e9', fontWeight: 500 };
-            }
-
-            return {
-              id: edge.id || `e${edge.source}-${edge.target}`,
-              source: edge.source,
-              target: edge.target,
-              label: edge.label || '',
-              type: edge.type || 'smoothstep',
-              animated: edge.animated || edge.label?.toLowerCase().includes('importante') || false,
-              style: edgeStyle,
-              labelStyle: labelStyle,
-              labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
-            }
-          }) || [];
-
-          // Se não houver conexões definidas pela IA, criar conexões para as 5 camadas de aprendizado
+          
+          // ETAPA 3: Gerar as Conexões (Edges) a partir dos dados da IA
+          const edges = extractedData.connections?.map(conn => ({
+            id: `e${conn.source}-${conn.target}`,
+            source: conn.source,
+            target: conn.target,
+            label: conn.label || '',
+            animated: true,
+            style: { stroke: '#3b82f6' }
+          })) || [];
+          
+          // Se não houver conexões definidas pela IA, criar conexões sequenciais padrão
           if (edges.length === 0 && nodes.length > 1) {
-            // Agrupar nós por tipo para facilitar o gerenciamento das camadas
-            const nodesByType = {
-              start: nodes.filter(n => n.type === 'start'),
-              context: nodes.filter(n => n.type === 'context'),
-              process: nodes.filter(n => n.type === 'process'),
-              practice: nodes.filter(n => n.type === 'practice'),
-              decision: nodes.filter(n => n.type === 'decision'),
-              tip: nodes.filter(n => n.type === 'tip'),
-              end: nodes.filter(n => n.type === 'end'),
-              default: nodes.filter(n => n.type === 'default')
-            };
-
-            // 1. Conectar o nó inicial (conceito central) com os nós de contexto
-            if (nodesByType.start.length > 0) {
-              const startNode = nodesByType.start[0];
-
-              // Se há nós de contexto, conecte o início a eles
-              if (nodesByType.context.length > 0) {
-                nodesByType.context.forEach((contextNode, idx) => {
-                  edges.push({
-                    id: `e${startNode.id}-${contextNode.id}`,
-                    source: startNode.id,
-                    target: contextNode.id,
-                    label: idx === 0 ? 'Para entender' : '',
-                    animated: false,
-                    style: { stroke: '#3b82f6', strokeWidth: 2 },
-                    labelStyle: { fill: '#3b82f6', fontWeight: 500 },
-                    labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
-                  });
-                });
-              } 
-              // Se não há contexto, conectar diretamente aos processos ou próximo tipo disponível
-              else if (nodesByType.process.length > 0) {
-                edges.push({
-                  id: `e${startNode.id}-${nodesByType.process[0].id}`,
-                  source: startNode.id,
-                  target: nodesByType.process[0].id,
-                  label: 'Entenda como funciona',
-                  animated: false,
-                  style: { stroke: '#3b82f6', strokeWidth: 2 },
-                  labelStyle: { fill: '#3b82f6', fontWeight: 500 },
-                  labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
-                });
-              }
-            }
-
-            // 2. Conectar nós de contexto entre si (se houver mais de um)
-            if (nodesByType.context.length > 1) {
-              for (let i = 0; i < nodesByType.context.length - 1; i++) {
-                edges.push({
-                  id: `e${nodesByType.context[i].id}-${nodesByType.context[i+1].id}`,
-                  source: nodesByType.context[i].id,
-                  target: nodesByType.context[i+1].id,
-                  label: '',
-                  animated: false,
-                  style: { stroke: '#0d9488' }, // Teal
-                  labelStyle: { fill: '#0d9488', fontWeight: 500 },
-                  labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
-                });
-              }
-
-              // Conectar o último nó de contexto à primeira etapa do processo
-              if (nodesByType.process.length > 0) {
-                edges.push({
-                  id: `e${nodesByType.context[nodesByType.context.length-1].id}-${nodesByType.process[0].id}`,
-                  source: nodesByType.context[nodesByType.context.length-1].id,
-                  target: nodesByType.process[0].id,
-                  label: 'Com isso em mente',
-                  animated: false,
-                  style: { stroke: '#0d9488' }, // Teal
-                  labelStyle: { fill: '#0d9488', fontWeight: 500 },
-                  labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
-                });
-              }
-            }
-
-            // 3. Conectar nós de processo em sequência
-            if (nodesByType.process.length > 1) {
-              for (let i = 0; i < nodesByType.process.length - 1; i++) {
-                const sourceNode = nodesByType.process[i];
-                const targetNode = nodesByType.process[i+1];
-
-                // Extrair números de etapa se disponíveis
-                const sourceStep = sourceNode.data.stepNumber;
-                const targetStep = targetNode.data.stepNumber;
-
-                let label = '';
-                if (sourceStep && targetStep) {
-                  label = `Etapa ${sourceStep} → ${targetStep}`;
-                } else {
-                  label = 'Próxima etapa';
-                }
-
-                edges.push({
-                  id: `e${sourceNode.id}-${targetNode.id}`,
-                  source: sourceNode.id,
-                  target: targetNode.id,
-                  label: label,
-                  animated: false,
-                  style: { stroke: '#8b5cf6' }, // Roxo/Indigo
-                  labelStyle: { fill: '#8b5cf6', fontWeight: 500 },
-                  labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
-                });
-              }
-
-              // Conectar o último processo aos nós de aplicação prática
-              const lastProcess = nodesByType.process[nodesByType.process.length - 1];
-              if (nodesByType.practice.length > 0) {
-                nodesByType.practice.forEach((practiceNode, idx) => {
-                  edges.push({
-                    id: `e${lastProcess.id}-${practiceNode.id}`,
-                    source: lastProcess.id,
-                    target: practiceNode.id,
-                    label: idx === 0 ? 'Aplicação prática' : '',
-                    animated: false,
-                    style: { stroke: '#8b5cf6' }, // Roxo/Indigo
-                    labelStyle: { fill: '#8b5cf6', fontWeight: 500 },
-                    labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
-                  });
-                });
-              }
-            }
-
-            // 4. Conectar os nós de decisão com ramos "Correto" e "Incorreto"
-            if (nodesByType.decision.length > 0) {
-              nodesByType.decision.forEach((decisionNode, idx) => {
-                // Determinar para onde o ramo "Correto" deve ir
-                // Tipicamente para o próximo nó de prática ou conclusão
-                let correctTargetFound = false;
-
-                // Tentar encontrar um nó de prática não conectado como destino
-                const availablePracticeNodes = nodesByType.practice.filter(n => 
-                  n.id !== decisionNode.id && 
-                  !edges.some(e => e.target === n.id) &&
-                  !edges.some(e => e.source === decisionNode.id && e.target === n.id)
-                );
-
-                if (availablePracticeNodes.length > 0) {
-                  edges.push({
-                    id: `e${decisionNode.id}-${availablePracticeNodes[0].id}-correct`,
-                    source: decisionNode.id,
-                    target: availablePracticeNodes[0].id,
-                    label: 'Correto',
-                    animated: false,
-                    style: { stroke: '#10b981' }, // Verde
-                    labelStyle: { fill: '#10b981', fontWeight: 500 },
-                    labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
-                  });
-                  correctTargetFound = true;
-                }
-
-                // Se não encontrou alvo para o caminho correto, tente o nó de fim
-                if (!correctTargetFound && nodesByType.end.length > 0) {
-                  edges.push({
-                    id: `e${decisionNode.id}-${nodesByType.end[0].id}-correct`,
-                    source: decisionNode.id,
-                    target: nodesByType.end[0].id,
-                    label: 'Correto',
-                    animated: false,
-                    style: { stroke: '#10b981' }, // Verde 
-                    labelStyle: { fill: '#10b981', fontWeight: 500 },
-                    labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
-                  });
-                  correctTargetFound = true;
-                }
-
-                // Determinar para onde o ramo "Incorreto" deve ir
-                // Tipicamente para um nó de dica ou volta para um processo anterior
-                let incorrectTargetFound = false;
-
-                // Primeiro tente uma dica
-                if (nodesByType.tip.length > 0) {
-                  const availableTips = nodesByType.tip.filter(t => 
-                    !edges.some(e => e.source === decisionNode.id && e.target === t.id)
-                  );
-
-                  if (availableTips.length > 0) {
-                    edges.push({
-                      id: `e${decisionNode.id}-${availableTips[0].id}-incorrect`,
-                      source: decisionNode.id,
-                      target: availableTips[0].id,
-                      label: 'Incorreto',
-                      animated: false,
-                      style: { stroke: '#f43f5e' }, // Vermelho
-                      labelStyle: { fill: '#f43f5e', fontWeight: 500 },
-                      labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
-                    });
-                    incorrectTargetFound = true;
-                  }
-                }
-
-                // Se não encontrou dica, volte para um processo anterior
-                if (!incorrectTargetFound && nodesByType.process.length > 0) {
-                  const processToReview = nodesByType.process[Math.floor(nodesByType.process.length / 2)];
-                  edges.push({
-                    id: `e${decisionNode.id}-${processToReview.id}-incorrect`,
-                    source: decisionNode.id,
-                    target: processToReview.id,
-                    label: 'Incorreto - Revise',
-                    animated: false,
-                    style: { stroke: '#f43f5e' }, // Vermelho
-                    labelStyle: { fill: '#f43f5e', fontWeight: 500 },
-                    labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
-                  });
-                  incorrectTargetFound = true;
-                }
+            for (let i = 0; i < nodes.length - 1; i++) {
+              edges.push({
+                id: `e${i+1}-${i+2}`,
+                source: nodes[i].id,
+                target: nodes[i+1].id,
+                animated: true,
+                style: { stroke: '#3b82f6' }
               });
             }
-
-            // 5. Conectar nós de dica aos nós relevantes
-            if (nodesByType.tip.length > 0) {
-              nodesByType.tip.forEach(tipNode => {
-                // Se o nó de dica não é destino de nenhuma conexão ainda, conecte-o
-                if (!edges.some(e => e.target === tipNode.id)) {
-                  // Encontrar um nó de processo aleatório para receber a dica
-                  if (nodesByType.process.length > 0) {
-                    const randomProcessIndex = Math.floor(Math.random() * nodesByType.process.length);
-                    edges.push({
-                      id: `e${nodesByType.process[randomProcessIndex].id}-${tipNode.id}`,
-                      source: nodesByType.process[randomProcessIndex].id,
-                      target: tipNode.id,
-                      label: 'Dica importante',
-                      animated: true,
-                      style: { stroke: '#0ea5e9', strokeDasharray: '5,5' }, // Azul tracejado
-                      labelStyle: { fill: '#0ea5e9', fontWeight: 500 },
-                      labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
-                    });
-                  }
-                }
-
-                // Se o nó de dica não é origem de nenhuma conexão ainda,
-                // conecte-o de volta a um nó relevante
-                if (!edges.some(e => e.source === tipNode.id)) {
-                  // Tentar encontrar o próximo nó lógico
-                  let targetFound = false;
-
-                  // Primeiro tente qualquer nó de prática disponível
-                  if (!targetFound && nodesByType.practice.length > 0) {
-                    const availablePractice = nodesByType.practice.find(p => 
-                      !edges.some(e => e.source === tipNode.id && e.target === p.id)
-                    );
-
-                    if (availablePractice) {
-                      edges.push({
-                        id: `e${tipNode.id}-${availablePractice.id}`,
-                        source: tipNode.id,
-                        target: availablePractice.id,
-                        label: 'Continue',
-                        animated: false,
-                        style: { stroke: '#0ea5e9', strokeDasharray: '5,5' }, // Azul tracejado
-                        labelStyle: { fill: '#0ea5e9', fontWeight: 500 },
-                        labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
-                      });
-                      targetFound = true;
-                    }
-                  }
-
-                  // Ou então, vá para o nó final
-                  if (!targetFound && nodesByType.end.length > 0) {
-                    edges.push({
-                      id: `e${tipNode.id}-${nodesByType.end[0].id}`,
-                      source: tipNode.id,
-                      target: nodesByType.end[0].id,
-                      label: 'Prosseguir',
-                      animated: false,
-                      style: { stroke: '#0ea5e9', strokeDasharray: '5,5' }, // Azul tracejado
-                      labelStyle: { fill: '#0ea5e9', fontWeight: 500 },
-                      labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
-                    });
-                  }
-                }
-              });
-            }
-
-            // 6. Conectar nós de aplicação prática à conclusão
-            if (nodesByType.practice.length > 0 && nodesByType.end.length > 0) {
-              // Para cada nó de prática que não tem saída, conectar ao nó de conclusão
-              nodesByType.practice.forEach(practiceNode => {
-                if (!edges.some(e => e.source === practiceNode.id)) {
-                  edges.push({
-                    id: `e${practiceNode.id}-${nodesByType.end[0].id}`,
-                    source: practiceNode.id,
-                    target: nodesByType.end[0].id,
-                    label: 'Consolidar aprendizado',
-                    animated: false,
-                    style: { stroke: '#6366f1' }, // Indigo
-                    labelStyle: { fill: '#6366f1', fontWeight: 500 },
-                    labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
-                  });
-                }
-              });
-            }
-
-            // 7. Verificar nós não conectados e criar conexões adicionais
-            // Conectar qualquer nó sem saída ao próximo nó lógico no fluxo
-            nodes.forEach(node => {
-              // Se o nó não tem saída (exceto o nó final)
-              if (node.type !== 'end' && !edges.some(e => e.source === node.id)) {
-                // Determinar para qual tipo de nó deveria conectar com base na camada atual
-                let targetNodeType = 'default';
-                switch (node.type) {
-                  case 'start': targetNodeType = 'context'; break;
-                  case 'context': targetNodeType = 'process'; break;
-                  case 'process': targetNodeType = 'practice'; break;
-                  case 'practice': 
-                  case 'decision': 
-                  case 'tip': targetNodeType = 'end'; break;
-                  default: targetNodeType = 'end';
-                }
-
-                // Encontrar o primeiro nó do tipo alvo que não é destino deste nó
-                const targetNodes = nodesByType[targetNodeType] || [];
-                const targetNode = targetNodes.find(t => 
-                  t.id !== node.id && !edges.some(e => e.source === node.id && e.target === t.id)
-                );
-
-                // Se encontrou um nó alvo, crie a conexão
-                if (targetNode) {
-                  // Personalizar o rótulo com base nos tipos
-                  let label = 'Continua';
-                  if (node.type === 'start' && targetNode.type === 'context') {
-                    label = 'Para compreender';
-                  } else if (node.type === 'context' && targetNode.type === 'process') {
-                    label = 'Vamos ao processo';
-                  } else if (node.type === 'process' && targetNode.type === 'practice') {
-                    label = 'Aplicação';
-                  } else if (targetNode.type === 'end') {
-                    label = 'Concluindo';
-                  }
-
-                  edges.push({
-                    id: `e${node.id}-${targetNode.id}`,
-                    source: node.id,
-                    target: targetNode.id,
-                    label: label,
-                    animated: false,
-                    style: { stroke: '#3b82f6' }, // Azul padrão
-                    labelStyle: { fill: '#3b82f6', fontWeight: 500 },
-                    labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
-                  });
-                }
-                // Se não encontrou do tipo ideal, tente conectar ao nó final
-                else if (nodesByType.end.length > 0 && node.type !== 'end') {
-                  edges.push({
-                    id: `e${node.id}-${nodesByType.end[0].id}`,
-                    source: node.id,
-                    target: nodesByType.end[0].id,
-                    label: 'Finalizando',
-                    animated: false,
-                    style: { stroke: '#3b82f6' }, // Azul padrão
-                    labelStyle: { fill: '#3b82f6', fontWeight: 500 },
-                    labelBgStyle: { fill: 'rgba(255, 255, 255, 0.75)', rx: 4, ry: 4 }
-                  });
-                }
-              }
-            });
           }
-
+          
           fluxogramaData = { nodes, edges };
-
+          
         } catch (error) {
           console.error('Erro ao processar com IA:', error);
-
+          
           // Fallback para o método original se a IA falhar
           fluxogramaData = await new Promise((resolve) => {
             // ETAPA 1: Analisar e Estruturar o Conteúdo
             const paragraphs = contentToAnalyze.split(/\n\n+/);
             const sentences = contentToAnalyze.split(/[.!?]\s+/);
-
+            
             // Identificar blocos conceituais principais
             const mainBlocks = paragraphs.length > 3 ? paragraphs.slice(0, paragraphs.length) : sentences.slice(0, Math.min(8, sentences.length));
-
+            
             // Extrair palavras-chave significativas
             const keywords = mainBlocks.map(block => {
               const words = block.split(/\s+/).filter(word => word.length > 3);
@@ -852,29 +251,29 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                 keyword: mainWord.length > 20 ? mainWord.substring(0, 20) + '...' : mainWord
               };
             }).slice(0, 8); // Limitar a 8 nós para melhor visualização
-
+            
             // ETAPA 2: Gerar os Nós (Nodes) do Fluxograma
             const nodes = keywords.map((item, index) => {
               // Determinar o tipo do nó
               let type = 'default';
               if (index === 0) type = 'start';
               else if (index === keywords.length - 1) type = 'end';
-
+              
               // Criar descrição significativa
               const description = item.text.length > 100 
                 ? item.text.substring(0, 100) + '...' 
                 : item.text;
-
+              
               // Ajustar posicionamento para layout de fluxo
               let position;
               const flowDirection = 'vertical'; // ou 'horizontal'
-
+              
               if (flowDirection === 'vertical') {
                 position = { x: 250, y: 100 + (index * 120) };
               } else {
                 position = { x: 100 + (index * 220), y: 200 };
               }
-
+              
               return {
                 id: (index + 1).toString(),
                 data: { 
@@ -885,7 +284,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                 position
               };
             });
-
+            
             // ETAPA 3: Gerar as Conexões (Edges)
             const edges = [];
             for (let i = 0; i < nodes.length - 1; i++) {
@@ -897,17 +296,17 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
                 style: { stroke: '#3b82f6' }
               });
             }
-
+            
             // Simular um pequeno atraso antes de resolver (opcional)
             setTimeout(() => {
               resolve({ nodes, edges });
             }, 1000);
           });
         }
-
+        
         // Armazena os dados do fluxograma para uso posterior no visualizador
         localStorage.setItem('fluxogramaData', JSON.stringify(fluxogramaData));
-
+        
         setIsLoading(false);
         setFluxogramaGerado(true);
       } catch (error) {
@@ -915,7 +314,7 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
         setIsLoading(false);
       }
     };
-
+    
     processFluxogramaContent();
   };
 
@@ -937,67 +336,6 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
     setSelectedNode(node);
     setShowDetailModal(true);
   };
-
-  const handleCopyFlowchartPrompt = (promptNumber: 1 | 2) => {
-    const prompt = getFlowchartPrompt(promptNumber);
-    navigator.clipboard.writeText(prompt)
-      .then(() => alert('Prompt copiado para a área de transferência!'))
-      .catch(err => console.error('Erro ao copiar prompt:', err));
-  };
-
-
-  const getFlowchartPrompt = (promptNumber: 1 | 2): string => {
-    switch (promptNumber) {
-      case 1:
-        return `
-Prompts que você pode mandar para a IA programadora:
-
-🎯 Prompt 1 – Criação Avançada de Fluxograma
-Com base na explicação dada anteriormente sobre o tema, gere um fluxograma didático e aprofundado, dividido da seguinte forma:
-
-Conceito Central (1 nó)
-
-Contexto e Pré-requisitos (2 a 3 nós)
-
-Processo ou Lógica do Tema (3 a 6 nós)
-
-Aplicações, Exemplos e Erros comuns (2 a 4 nós)
-
-Conclusão/Resumo (1 ou 2 nós)
-
-Para cada nó, gere:
-
-id único
-
-label (curto e claro)
-
-description (resumo curto)
-
-details (explicação que pode ser expandida no clique)
-
-category (ex: definição, exemplo, erro, etapa, conclusão, etc.)
-
-position sugerida (apenas x e y simples para diferenciar os blocos visualmente)
-
-Em seguida, conecte os nós com edges organizando a sequência de aprendizado. Se houver bifurcações ou condições, especifique.
-        `;
-      case 2:
-        return `
-🛠 Prompt 2 – Formatação para React Flow
-O conteúdo gerado acima deve estar no seguinte formato JSON:
-
-fluxograma:
-
-{
-  "nodes": [ ... ],
-  "edges": [ ... ]
-}
-        `;
-      default:
-        return '';
-    }
-  };
-
 
   return (
     <div className="space-y-4">
@@ -1038,9 +376,7 @@ fluxograma:
             </h4>
 
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
-              <Button variant="outline" className="flex flex-col items-center justify-center h-auto py-3 px-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all"
-                onClick={() => handleCopyFlowchartPrompt(1)}
-              >
+              <Button variant="outline" className="flex flex-col items-center justify-center h-auto py-3 px-2 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all">
                 <RotateCw className="h-5 w-5 mb-1 text-blue-600 dark:text-blue-400" />
                 <span className="text-xs text-gray-700 dark:text-gray-300 text-center">Regenerar</span>
               </Button>
