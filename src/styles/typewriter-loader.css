@@ -1,3 +1,4 @@
+
 /* From Uiverse.io by Nawsome */ 
 .typewriter {
   --blue: #FF8736;
@@ -306,59 +307,4 @@
   position: relative;
   min-height: 24px;
   padding-left: 30px;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-.animate-blink {
-  animation: blink 1s infinite;
-}
-
-.typewriter-text {
-  display: inline-block;
-  white-space: pre-wrap;
-  word-break: break-word;
-  position: relative;
-}
-
-.typewriter-text::after {
-  content: '|';
-  display: inline-block;
-  color: #666;
-  animation: blink-caret 0.75s step-end infinite;
-}
-
-@keyframes blink-caret {
-  from, to { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-/* Estilos específicos para o contexto aprofundado */
-.typewriter-text p {
-  margin-bottom: 0.75em;
-}
-
-.typewriter-text ul, 
-.typewriter-text ol {
-  margin-left: 1.5em;
-  margin-bottom: 0.75em;
-}
-
-.typewriter-text h1,
-.typewriter-text h2,
-.typewriter-text h3,
-.typewriter-text h4 {
-  margin-top: 1em;
-  margin-bottom: 0.5em;
-  font-weight: 600;
-}
-
-.typewriter-text blockquote {
-  border-left: 3px solid #ccc;
-  padding-left: 1em;
-  margin-bottom: 0.75em;
-  font-style: italic;
 }

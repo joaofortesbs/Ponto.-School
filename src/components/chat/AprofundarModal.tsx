@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   Search,
@@ -8,265 +7,280 @@ import {
   FileText,
   AlertTriangle,
   ArrowLeft,
-  ExternalLink,
-  Loader2
+  ExternalLink
 } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { generateSimpleAIResponse } from '@/services/aiChatService';
-import TypewriterEffect from '@/components/ui/typewriter-effect';
 
 interface AprofundarModalProps {
   isOpen: boolean;
   onClose: () => void;
-  messages?: any[]; // Added messages prop type
+  messages: any[]; // Added messages prop type
   sessionId?: string; // Added sessionId prop type
-  setShowAprofundarModal?: any; // Added setShowAprofundarModal prop type
-  toast?: any; // Added toast prop type
-}
+  setShowAprofundarModal: any; // Added setShowAprofundarModal prop type
+  toast: any; // Added toast prop type
 
-interface AprofundadoContent {
-  contexto: string;
-  termos: { termo: string, definicao: string }[];
-  aplicacoes: string;
-  loading: boolean;
 }
 
 type ContentType = 'main' | 'explicacao' | 'topicos' | 'exemplos' | 'erros' | 'fontes';
 
-const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, messages = [], sessionId, setShowAprofundarModal, toast }) => {
+const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, messages, sessionId, setShowAprofundarModal, toast }) => {
   const [activeContent, setActiveContent] = useState<ContentType>('main');
   const [loading, setLoading] = useState(false);
-  const [aprofundadoContent, setAprofundadoContent] = useState<AprofundadoContent>({
-    contexto: '',
-    termos: [],
-    aplicacoes: '',
-    loading: false
-  });
-  const [lastGeneratedContext, setLastGeneratedContext] = useState<string>('');
-  const [isTyping, setIsTyping] = useState(false);
+  
+  // Removida a função parseAIResponse que não é mais necessária
+  // já que estamos fazendo chamadas separadas para cada seção
 
-  // Obter a última mensagem do assistente (resposta da IA)
-  const getLastAIMessage = () => {
-    if (!messages || messages.length === 0) return '';
+  const handleOptionClick = async (option: ContentType) => {
+    setLoading(true);
     
-    // Filtra para obter apenas mensagens do assistente e pega a última
-    const assistantMessages = messages.filter(msg => msg.sender === 'assistant' || msg.role === 'assistant');
-    if (assistantMessages.length === 0) return '';
-    
-    const lastMessage = assistantMessages[assistantMessages.length - 1];
-    return lastMessage.content || '';
-  };
-
-  // Gerar conteúdo aprofundado usando a IA
-  const generateDeepContent = async () => {
-    if (aprofundadoContent.loading) return;
-    
-    const lastAIMessage = getLastAIMessage();
-    if (!lastAIMessage) {
-      if (toast) {
-        toast({
-          title: "Erro",
-          description: "Não foi possível encontrar o conteúdo para aprofundar.",
-          variant: "destructive"
-        });
-      }
-      return;
-    }
-
-    // Imediatamente começar a mostrar o estado de carregamento
-    setAprofundadoContent(prev => ({ ...prev, loading: true }));
-
-    try {
-      // Extrair o tema principal da última mensagem
-      const extractThemePrompt = `Você é um especialista em análise de conteúdo. Dada a seguinte mensagem, identifique e extraia APENAS o tema principal em uma frase concisa sem introduções ou explicações adicionais:
-      
-"${lastAIMessage}"
-
-Formato esperado de resposta: apenas o tema principal, sem frases introdutórias ou explicativas.`;
-
-      // Mostrar imediatamente um texto de carregamento rápido
-      setAprofundadoContent(prev => ({
-        ...prev,
-        contexto: "Gerando contexto aprofundado..."
-      }));
-      
-      // Ativar o efeito de digitação enquanto o conteúdo é gerado
-      setIsTyping(true);
-
-      // Obter o tema principal - vamos fazer isso rapidamente
-      const extractedTheme = await generateSimpleAIResponse(extractThemePrompt, sessionId || 'aprofundar_session_theme');
-      
-      // Limpar qualquer texto adicional para obter apenas o tema
-      const cleanTheme = extractedTheme.replace(/^[^a-zA-Z0-9áàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ]*|[^a-zA-Z0-9áàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ]*$/g, '');
-      console.log("Tema extraído:", cleanTheme);
-
-      // Prompt para o contexto aprofundado - versão otimizada para resposta rápida
-      const contextoPrompt = `Você é um especialista acadêmico. Gere um texto detalhado e aprofundado sobre o tema "${cleanTheme || lastAIMessage}".
-      
-Seu texto deve incluir:
-1. Contexto histórico e científico completo
-2. Fundamentos teóricos e evolução dos conceitos principais
-3. Marcos importantes e desenvolvimentos significativos
-4. Perspectivas críticas e debates acadêmicos atuais
-5. Relações com outras áreas do conhecimento
-
-Seja conciso e direto, estruturando o texto em parágrafos bem organizados. Seu texto deve ser informativo e preciso.`;
-
-      // Prompt para os termos técnicos - versão simplificada
-      const termosPrompt = `Você é um especialista em terminologia técnica. Sobre o tema "${cleanTheme || lastAIMessage}", identifique e explique 3 termos técnicos importantes.
-      
-Para cada termo, forneça:
-1. O nome do termo
-2. Uma definição clara e precisa
-
-Formato da resposta: Liste os termos no formato JSON como este exemplo:
-[
-  {
-    "termo": "Nome do termo 1",
-    "definicao": "Definição completa do termo 1"
-  },
-  {
-    "termo": "Nome do termo 2",
-    "definicao": "Definição completa do termo 2"
-  }
-]`;
-
-      // Prompt para as aplicações expandidas - versão simplificada
-      const aplicacoesPrompt = `Você é um especialista em aplicações práticas do conhecimento. Sobre o tema "${cleanTheme || lastAIMessage}", elabore sobre as 3 principais aplicações práticas deste conhecimento.`;
-
-      // Iniciar a geração do contexto imediatamente
-      const contextoResponsePromise = generateSimpleAIResponse(contextoPrompt, sessionId || 'aprofundar_session');
-      
-      // Aguardar o resultado do contexto para exibição imediata
-      let contextoResponse;
+    if (option === 'explicacao') {
       try {
-        contextoResponse = await contextoResponsePromise;
-        console.log("Contexto gerado com sucesso:", contextoResponse.substring(0, 50) + "...");
-      } catch (error) {
-        console.error("Erro ao obter resposta do contexto:", error);
-        // Definir uma mensagem de erro para o usuário
-        setAprofundadoContent(prev => ({
-          ...prev,
-          contexto: "Ocorreu um erro ao gerar o conteúdo. Por favor, tente novamente.",
-          loading: false
-        }));
-        return; // Encerrar a função em caso de erro
-      }
-      
-      // Verificar se a resposta é válida
-      if (!contextoResponse || contextoResponse.trim() === "") {
-        console.error("Resposta de contexto vazia ou inválida");
-        setAprofundadoContent(prev => ({
-          ...prev,
-          contexto: "A resposta do servidor está vazia. Por favor, tente novamente.",
-          loading: false
-        }));
-        return; // Encerrar a função se a resposta estiver vazia
-      }
-      
-      // Resposta é válida, armazenar o contexto gerado para uso posterior
-      setLastGeneratedContext(contextoResponse);
-      
-      // Ativar o efeito de digitação
-      setIsTyping(true);
-      
-      // Atualizar o estado com o contexto para exibição
-      setAprofundadoContent(prev => ({
-        ...prev,
-        contexto: contextoResponse,
-        loading: false // Importante: desativar o carregamento aqui também
-      }));
-      
-      console.log("Contexto definido com sucesso:", contextoResponse.substring(0, 50) + "...");
-      
-      // Iniciar a obtenção dos outros dados em paralelo
-      const [termosResponse, aplicacoesResponse] = await Promise.all([
-        generateSimpleAIResponse(termosPrompt, sessionId || 'aprofundar_session'),
-        generateSimpleAIResponse(aplicacoesPrompt, sessionId || 'aprofundar_session')
-      ]);
-
-      // Processa a resposta dos termos técnicos (que deve estar em formato JSON)
-      let termosParsed = [];
-      try {
-        // Tenta extrair JSON da resposta
-        const jsonMatch = termosResponse.match(/\[\s*\{.*\}\s*\]/s);
-        if (jsonMatch) {
-          termosParsed = JSON.parse(jsonMatch[0]);
-        } else {
-          // Fallback: cria uma estrutura básica a partir do texto
-          termosParsed = [{ termo: "Termos técnicos", definicao: termosResponse }];
-        }
-      } catch (e) {
-        console.error("Erro ao processar termos técnicos:", e);
-        // Fallback em caso de erro de parsing
-        termosParsed = [{ termo: "Termos técnicos", definicao: termosResponse }];
-      }
-
-      // Atualiza o estado com todo o conteúdo gerado e finaliza o carregamento
-      setAprofundadoContent({
-        contexto: contextoResponse,
-        termos: termosParsed,
-        aplicacoes: aplicacoesResponse,
-        loading: false
-      });
-
-    } catch (error) {
-      console.error("Erro ao gerar conteúdo aprofundado:", error);
-      if (toast) {
-        toast({
-          title: "Erro",
-          description: "Ocorreu um erro ao gerar o conteúdo aprofundado. Tente novamente.",
-          variant: "destructive"
-        });
-      }
-      setAprofundadoContent(prev => ({ ...prev, loading: false }));
-    }
-  };
-
-  // Quando o modal abrir, verificar se precisa gerar conteúdo
-  useEffect(() => {
-    if (isOpen && activeContent === 'explicacao') {
-      // Se não tem conteúdo e não está carregando, gerar o conteúdo
-      if ((!aprofundadoContent.contexto || aprofundadoContent.contexto === "Gerando contexto aprofundado...") && !aprofundadoContent.loading) {
-        console.log("Iniciando geração de conteúdo aprofundado");
-        generateDeepContent();
-      } 
-      // Se já tem conteúdo e não está mais digitando, ativa o efeito de digitação
-      else if (aprofundadoContent.contexto && !isTyping) {
-        console.log("Reativando efeito de digitação para conteúdo existente");
-        setIsTyping(true);
+        // Captura o tema atual (última mensagem da conversa)
+        let currentTopic = "";
+        let lastUserQuestion = "";
         
-        // Garantir que o conteúdo seja definido corretamente
-        if (aprofundadoContent.contexto.trim() === "Gerando contexto aprofundado...") {
-          console.log("Corrigindo conteúdo temporário");
-          if (lastGeneratedContext) {
-            setAprofundadoContent(prev => ({
-              ...prev,
-              contexto: lastGeneratedContext,
-              loading: false
-            }));
+        if (messages && messages.length > 0) {
+          // Tenta obter a última pergunta do usuário
+          const userMessages = messages.filter(msg => msg.sender === 'user' || msg.role === 'user');
+          if (userMessages.length > 0) {
+            lastUserQuestion = userMessages[userMessages.length - 1].content;
+          }
+          
+          // Tenta obter a última resposta da IA (mais completa)
+          const aiMessages = messages.filter(msg => msg.sender === 'ai' || msg.role === 'assistant');
+          if (aiMessages.length > 0) {
+            currentTopic = aiMessages[aiMessages.length - 1].content;
           } else {
-            // Se não tiver contexto gerado anteriormente, gerar novo conteúdo
-            generateDeepContent();
+            // Se não houver mensagens da IA, pega a última mensagem do usuário
+            currentTopic = lastUserQuestion;
+          }
+          
+          // Limita o tamanho do tema para evitar tokens excessivos
+          if (currentTopic.length > 1500) {
+            currentTopic = currentTopic.substring(0, 1500) + "...";
           }
         }
+        
+        // Verifica se temos um tema para aprofundar
+        if (!currentTopic || currentTopic.trim() === "") {
+          setExplainContent({
+            contexto: "Não foi possível identificar um tema para aprofundar. Inicie uma conversa primeiro.",
+            termos: [{ termo: "Atenção", definicao: "Converse com a IA primeiro para ter um tema para aprofundar." }],
+            aplicacoes: "Após conversar sobre um tema específico, tente a explicação avançada novamente."
+          });
+          setActiveContent(option);
+          setLoading(false);
+          return;
+        }
+        
+        // Extrair um tema conciso do conteúdo
+        let temaExtract = "";
+        
+        // Se tiver pergunta do usuário, usa ela como base para o tema
+        if (lastUserQuestion) {
+          // Remove pontuações e perguntas mais comuns
+          temaExtract = lastUserQuestion
+            .replace(/^(o que é|me fale sobre|explique|como funciona|quais são|o que significa|qual é|me ajude com|me explique|poderia explicar|gostaria de aprender sobre|me ensine sobre|quero saber sobre|pode me falar de)/i, '')
+            .replace(/[?.,;!]/g, '')
+            .trim();
+            
+          // Se o tema extraído da pergunta for muito curto, complementa com o conteúdo da resposta
+          if (temaExtract.length < 10 && currentTopic) {
+            // Extrai o primeiro parágrafo da resposta da IA
+            const firstParagraph = currentTopic.split('\n')[0];
+            temaExtract = firstParagraph.substring(0, 100).trim();
+          }
+        } else if (currentTopic) {
+          // Extrai o título ou primeiro parágrafo da resposta da IA
+          const lines = currentTopic.split('\n').filter(line => line.trim() !== '');
+          
+          // Procura por um título (normalmente com # ou ## no markdown)
+          const titleLine = lines.find(line => /^#{1,3}\s+(.+)$/.test(line));
+          
+          if (titleLine) {
+            // Remove o marcador de título e usa o texto
+            temaExtract = titleLine.replace(/^#{1,3}\s+/, '').trim();
+          } else if (lines.length > 0) {
+            // Usa o primeiro parágrafo como tema
+            temaExtract = lines[0].substring(0, 100).trim();
+          }
+        }
+        
+        // Garantir que temos um tema válido
+        const temaAtual = temaExtract || currentTopic.substring(0, 50).trim();
+        
+        console.log("Tema extraído para aprofundamento:", temaAtual);
+        
+        // Importar o serviço de IA
+        const { generateAIResponse } = await import('@/services/aiChatService');
+        
+        // Criar prompts separados para cada seção, agora com instruções mais claras
+        const prompts = {
+          contexto: `Você é um assistente especializado em fornecer contexto aprofundado.
+          
+          TAREFA: Explique com profundidade o tema "${temaAtual}". 
+          
+          INCLUA:
+          - Contexto histórico
+          - Origens do conceito/tema
+          - Desenvolvimento ao longo do tempo
+          - Importância no campo de estudo
+          - Principais marcos ou eventos relacionados
+          
+          FORMATO:
+          - Responda de forma direta, sem mencionar esta instrução
+          - Use parágrafos bem estruturados
+          - NÃO use títulos, subtítulos ou numerações
+          - Seja didático e claro
+          - Máximo de 3-4 parágrafos`,
+          
+          termos: `Você é um assistente especializado em terminologia técnica.
+          
+          TAREFA: Liste e explique os 5 principais termos técnicos relacionados ao tema "${temaAtual}".
+          
+          REQUISITOS:
+          - Identifique os termos realmente técnicos e específicos deste tema
+          - Para cada termo, forneça uma definição clara e explicação
+          - Mencione a importância de cada termo no contexto geral
+          - Se possível, inclua um exemplo ou aplicação
+          
+          RESPONDA ESTRITAMENTE NO SEGUINTE FORMATO (um termo por marcador):
+          - [Nome do Termo]: [Definição completa e explicação]
+          - [Nome do Termo]: [Definição completa e explicação]
+          
+          Não adicione outra formatação ou texto introdutório, apenas a lista com os termos.`,
+          
+          aplicacoes: `Você é um assistente especializado em aplicações práticas de conhecimento.
+          
+          TAREFA: Explique como o conhecimento sobre "${temaAtual}" pode ser aplicado na prática.
+          
+          INCLUA:
+          - Aplicações em diferentes contextos (educacional, profissional, científico)
+          - Exemplos concretos de uso no dia a dia
+          - Conexões com outras áreas de conhecimento
+          - Benefícios práticos de entender este tema
+          
+          FORMATO:
+          - Responda de forma direta, sem mencionar esta instrução
+          - Use parágrafos bem estruturados
+          - NÃO use títulos, subtítulos ou numerações
+          - Seja específico e prático
+          - Máximo de 3-4 parágrafos`
+        };
+        
+        // Fazer chamadas separadas para a IA para cada seção
+        console.log("Gerando contexto aprofundado...");
+        const contextoResponse = await generateAIResponse(
+          prompts.contexto, 
+          `${sessionId}-contexto` || 'default-session-contexto'
+        );
+        
+        console.log("Gerando termos técnicos...");
+        const termosResponse = await generateAIResponse(
+          prompts.termos, 
+          `${sessionId}-termos` || 'default-session-termos'
+        );
+        
+        // Processar a resposta para extrair os termos e definições de maneira mais robusta
+        // Primeiro, remover qualquer texto introdutório
+        const cleanTermosResponse = termosResponse
+          .replace(/^(aqui estão|aqui está|segue|seguem|estes são|a seguir|os principais termos técnicos são|termos técnicos relacionados a|termos técnicos sobre).*?\n/i, '')
+          .trim();
+        
+        // Extrair cada linha que começa com um marcador
+        const termosLines = cleanTermosResponse.split('\n')
+          .filter(line => /^\s*[\-\*\•]\s+/.test(line))
+          .map(line => line.replace(/^\s*[\-\*\•]\s+/, '').trim());
+        
+        // Se não encontrou linhas com marcadores, tenta split por linhas não vazias
+        const termosList = termosLines.length > 0 ? 
+          termosLines : 
+          cleanTermosResponse.split('\n').filter(line => line.trim() !== '');
+        
+        // Transformar em array de objetos {termo, definicao} com processamento mais robusto
+        const termosArray = termosList.map(term => {
+          // Procura por padrões como "Termo: Definição" ou "Termo - Definição"
+          const termMatch = term.match(/^([^:]+)[:|-](.+)$/);
+          
+          if (termMatch) {
+            return {
+              termo: termMatch[1].trim(),
+              definicao: termMatch[2].trim()
+            };
+          }
+          
+          // Caso fallback: divide na primeira palavra se não encontrar padrão
+          const firstSpace = term.indexOf(' ');
+          if (firstSpace > 0) {
+            return {
+              termo: term.substring(0, firstSpace).trim(),
+              definicao: term.substring(firstSpace).trim()
+            };
+          }
+          
+          // Último recurso
+          return { 
+            termo: term, 
+            definicao: "Definição não disponível" 
+          };
+        });
+        
+        // Garantir que há ao menos um termo para exibir
+        const finalTermos = termosArray.length > 0 ? termosArray : [{ 
+          termo: "Termo Técnico", 
+          definicao: "Para ver termos técnicos específicos deste tema, clique novamente em 'Explicação Avançada'." 
+        }];
+        
+        console.log("Gerando aplicações expandidas...");
+        const aplicacoesResponse = await generateAIResponse(
+          prompts.aplicacoes, 
+          `${sessionId}-aplicacoes` || 'default-session-aplicacoes'
+        );
+        
+        // Armazenar todas as respostas
+        const respostas = {
+          contexto: contextoResponse,
+          termos: finalTermos,
+          aplicacoes: aplicacoesResponse
+        };
+        
+        // Atualizar o conteúdo de explicação com os dados gerados
+        setExplainContent(respostas);
+        
+        // Atualizar o estado para mostrar o conteúdo
+        setActiveContent(option);
+        setLoading(false);
+        
+        // Toast de sucesso se implementado
+        if (toast) {
+          toast({
+            title: "Conteúdo gerado com sucesso",
+            description: "O aprofundamento do tema foi gerado pela IA.",
+            variant: "default",
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao gerar explicação avançada:', error);
+        setActiveContent(option);
+        setLoading(false);
+        
+        // Toast de erro se implementado
+        if (toast) {
+          toast({
+            title: "Erro ao gerar conteúdo",
+            description: "Não foi possível gerar o aprofundamento. Tente novamente.",
+            variant: "destructive",
+          });
+        }
       }
+    } else {
+      // Para outras opções, mantém o comportamento original
+      setTimeout(() => {
+        setActiveContent(option);
+        setLoading(false);
+      }, 500);
     }
-  }, [isOpen, activeContent, aprofundadoContent.contexto, aprofundadoContent.loading, lastGeneratedContext]);
-
-  const handleOptionClick = (option: ContentType) => {
-    setLoading(true);
-    // Simula um tempo de carregamento
-    setTimeout(() => {
-      setActiveContent(option);
-      setLoading(false);
-      
-      // Se selecionou explicação e ainda não tem conteúdo, gera
-      if (option === 'explicacao' && !aprofundadoContent.contexto && !aprofundadoContent.loading) {
-        generateDeepContent();
-      }
-    }, 500);
   };
 
   const handleBack = () => {
@@ -342,6 +356,12 @@ Formato da resposta: Liste os termos no formato JSON como este exemplo:
     </div>
   );
 
+  const [explainContent, setExplainContent] = useState({
+    contexto: "O contexto histórico e científico do tema está sendo preparado. Por favor, aguarde...",
+    termos: [{ termo: "Carregando termos", definicao: "Os termos técnicos e suas definições estão sendo gerados..." }],
+    aplicacoes: "As aplicações práticas e teóricas deste tema estão sendo analisadas..."
+  });
+
   const renderExplicacaoAvancada = () => (
     <div className="space-y-4">
       <div className="flex items-center mb-2">
@@ -359,119 +379,36 @@ Formato da resposta: Liste os termos no formato JSON como este exemplo:
       <ScrollArea className="h-[60vh] pr-4">
         <div className="bg-blue-50/50 dark:bg-blue-950/20 rounded-xl p-4 border border-blue-100 dark:border-blue-900/30 mb-4">
           <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-            {aprofundadoContent.loading ? (
-              <span className="flex items-center">
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Gerando conteúdo aprofundado para você...
-              </span>
-            ) : (
-              "Aqui você encontrará uma versão expandida da resposta original da IA, incluindo explicações mais detalhadas, termos técnicos, aplicações do conteúdo, contexto histórico e comparações com conceitos semelhantes."
-            )}
+            O conteúdo solicitado está sendo preparado para você. Aqui você encontrará uma versão expandida da resposta original da IA, incluindo explicações mais detalhadas, termos técnicos, aplicações do conteúdo, contexto histórico e comparações com conceitos semelhantes.
           </p>
         </div>
 
         <div className="space-y-6">
           <div>
             <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Contexto Aprofundado</h4>
-            {aprofundadoContent.loading ? (
-              <div className="animate-pulse space-y-2">
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/6"></div>
-              </div>
-            ) : (
-              <div className="text-sm text-gray-700 dark:text-gray-300 mb-3 whitespace-pre-line">
-                {aprofundadoContent.loading ? (
-                  <span className="flex items-center">
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Gerando contexto aprofundado...
-                  </span>
-                ) : aprofundadoContent.contexto ? (
-                  isTyping && aprofundadoContent.contexto !== "Gerando contexto aprofundado..." ? (
-                    <TypewriterEffect 
-                      text={aprofundadoContent.contexto} 
-                      speed={5} 
-                      onComplete={() => setIsTyping(false)}
-                    />
-                  ) : (
-                    <div>{aprofundadoContent.contexto}</div>
-                  )
-                ) : (
-                  <span className="flex items-center">
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Preparando conteúdo...
-                  </span>
-                )}
-              </div>
-            )}
+            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+              {explainContent.contexto}
+            </p>
           </div>
 
           <div>
             <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Termos Técnicos</h4>
-            {aprofundadoContent.loading ? (
-              <div className="animate-pulse space-y-3">
-                <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
-                <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-3">
-                {aprofundadoContent.termos && aprofundadoContent.termos.length > 0 ? (
-                  aprofundadoContent.termos.map((item, index) => (
-                    <div key={index} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                      <span className="block font-medium text-blue-600 dark:text-blue-400 mb-1">{item.termo}</span>
-                      <span className="text-sm text-gray-700 dark:text-gray-300">{item.definicao}</span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <span className="block font-medium text-blue-600 dark:text-blue-400 mb-1">Termos técnicos</span>
-                    <span className="text-sm text-gray-700 dark:text-gray-300">Os termos técnicos relacionados ao tema serão listados aqui.</span>
-                  </div>
-                )}
-              </div>
-            )}
+            <div className="grid grid-cols-1 gap-3">
+              {explainContent.termos.map((item, index) => (
+                <div key={index} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <span className="block font-medium text-blue-600 dark:text-blue-400 mb-1">{item.termo}</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">{item.definicao}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div>
             <h4 className="text-base font-medium text-gray-900 dark:text-white mb-2">Aplicações Expandidas</h4>
-            {aprofundadoContent.loading ? (
-              <div className="animate-pulse space-y-2">
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/6"></div>
-              </div>
-            ) : (
-              <div className="text-sm text-gray-700 dark:text-gray-300 mb-3 whitespace-pre-line">
-                {aprofundadoContent.aplicacoes || "As aplicações práticas e teóricas deste conhecimento serão listadas aqui."}
-              </div>
-            )}
+            <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+              {explainContent.aplicacoes}
+            </p>
           </div>
-          
-          {(!aprofundadoContent.contexto || aprofundadoContent.contexto.includes("Desculpe, ocorreu um erro")) && !aprofundadoContent.loading ? (
-            <div className="mt-4 flex justify-center">
-              <Button 
-                onClick={generateDeepContent}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                {aprofundadoContent.contexto ? "Tentar novamente" : "Gerar conteúdo aprofundado"}
-              </Button>
-            </div>
-          ) : aprofundadoContent.contexto && !aprofundadoContent.loading && (
-            <div className="mt-4 flex justify-center">
-              <Button 
-                onClick={() => {
-                  setAprofundadoContent(prev => ({ ...prev, loading: true }));
-                  setTimeout(() => generateDeepContent(), 500);
-                }}
-                variant="outline"
-                size="sm"
-                className="text-blue-600 hover:text-blue-700 border-blue-200 hover:border-blue-300"
-              >
-                <Loader2 className="h-3 w-3 mr-2" />
-                Recarregar conteúdo
-              </Button>
-            </div>
-          )}
         </div>
       </ScrollArea>
     </div>
@@ -689,9 +626,19 @@ Formato da resposta: Liste os termos no formato JSON como este exemplo:
       return (
         <div className="flex items-center justify-center h-60">
           <div className="animate-pulse flex flex-col items-center">
-            <div className="h-12 w-12 bg-blue-100 dark:bg-blue-900/40 rounded-full mb-3"></div>
-            <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+            <div className="h-12 w-12 bg-blue-100 dark:bg-blue-900/40 rounded-full mb-3 flex items-center justify-center">
+              <span className="text-blue-600 dark:text-blue-400 animate-spin">⚙️</span>
+            </div>
+            <div className="h-5 w-40 bg-gray-200 dark:bg-gray-700 rounded mb-3 flex items-center justify-center">
+              <span className="text-xs text-gray-600 dark:text-gray-300">Gerando conteúdo...</span>
+            </div>
+            <div className="h-3 w-56 bg-gray-100 dark:bg-gray-800 rounded mb-1"></div>
+            <div className="h-3 w-48 bg-gray-100 dark:bg-gray-800 rounded mb-1"></div>
             <div className="h-3 w-40 bg-gray-100 dark:bg-gray-800 rounded"></div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center max-w-sm">
+              Analisando o tema e aprofundando o conteúdo com contexto histórico, 
+              termos técnicos e aplicações práticas
+            </p>
           </div>
         </div>
       );
