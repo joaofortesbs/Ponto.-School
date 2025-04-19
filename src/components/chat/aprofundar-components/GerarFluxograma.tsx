@@ -134,10 +134,16 @@ const GerarFluxograma: React.FC<GerarFluxogramaProps> = ({
       return;
     }
 
+    setSelectedOption('manual');
     setIsLoading(true);
 
     // Processar o conteúdo e gerar o fluxograma
-    const processFluxogramaContent = async () => {
+    processFluxogramaContent();
+  };
+
+  // Função para processar o conteúdo e gerar o fluxograma
+  const processFluxogramaContent = async () => {
+      console.log("Processando conteúdo para fluxograma:", manualContent);
       try {
         // ETAPA 1: Analisar o conteúdo usando a API de IA
         let fluxogramaData;
@@ -1939,6 +1945,12 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                     <Input 
                       value={manualContent}
                       onChange={(e) => setManualContent(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey && manualContent.trim()) {
+                          e.preventDefault();
+                          handleSubmitManualContent();
+                        }
+                      }}
                       placeholder="Insira seu conteúdo para gerar o fluxograma"
                       className="border-0 shadow-none bg-transparent focus-visible:ring-0 h-10"
                       disabled={isLoading}
