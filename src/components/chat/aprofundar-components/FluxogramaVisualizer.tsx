@@ -15,7 +15,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 // @ts-ignore - Import dagre for layout calculations
-import dagre from 'dagre';
+import * as dagre from 'dagre';
 
 // Importando os estilos necessários
 import { cn } from '@/lib/utils';
@@ -84,7 +84,7 @@ const DecisionNode = ({ data }: { data: any }) => {
         <div className="text-sm font-medium text-amber-700 dark:text-amber-300">{data.label}</div>
       </div>
       <div className="mt-1 text-xs text-gray-600 dark:text-gray-400 line-clamp-2">{data.description || 'Decisão a ser tomada'}</div>
-      
+
       {/* Indicadores de saída Sim/Não para nós de decisão */}
       <div className="absolute -bottom-1 right-1/4 transform translate-y-1/2 bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-300 text-xs py-0.5 px-2 rounded-full border border-green-200 dark:border-green-700">
         Sim
@@ -120,7 +120,7 @@ const nodeTypes: NodeTypes = {
       </div>
     </div>
   ),
-  
+
   context: ({ data, ...props }: any) => (
     <div
       className={cn(
@@ -145,7 +145,7 @@ const nodeTypes: NodeTypes = {
       )}
     </div>
   ),
-  
+
   default: ({ data, ...props }: any) => (
     <div
       className={cn(
@@ -165,7 +165,7 @@ const nodeTypes: NodeTypes = {
       </div>
     </div>
   ),
-  
+
   process: ({ data, ...props }: any) => (
     <div
       className={cn(
@@ -190,7 +190,7 @@ const nodeTypes: NodeTypes = {
       )}
     </div>
   ),
-  
+
   practice: ({ data, ...props }: any) => (
     <div
       className={cn(
@@ -215,7 +215,7 @@ const nodeTypes: NodeTypes = {
       )}
     </div>
   ),
-  
+
   decision: ({ data, ...props }: any) => (
     <div
       className={cn(
@@ -228,7 +228,7 @@ const nodeTypes: NodeTypes = {
           <polygon points="22 3 2 3 12 21 22 3" />
         </svg>
       </div>
-      
+
       <div className="text-center mt-2">
         <div className="text-sm font-semibold text-amber-800 dark:text-amber-300">
           {data.label}
@@ -239,7 +239,7 @@ const nodeTypes: NodeTypes = {
           </div>
         )}
       </div>
-      
+
       {/* Indicadores de saída */}
       <div className="absolute -bottom-2 right-8 transform translate-y-1/2 bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-300 text-xs py-0.5 px-2 rounded-full border border-green-200 dark:border-green-700 shadow-sm">
         Correto
@@ -249,7 +249,7 @@ const nodeTypes: NodeTypes = {
       </div>
     </div>
   ),
-  
+
   tip: ({ data, ...props }: any) => (
     <div
       className={cn(
@@ -274,7 +274,7 @@ const nodeTypes: NodeTypes = {
       )}
     </div>
   ),
-  
+
   end: ({ data, ...props }: any) => (
     <div
       className={cn(
@@ -350,7 +350,7 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => 
   // Cria um novo grafo
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
-  
+
   // Define as direções: TB (top to bottom) ou LR (left to right)
   dagreGraph.setGraph({ rankdir: direction, nodesep: 80, ranksep: 120, marginx: 20, marginy: 20 });
 
@@ -359,14 +359,14 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => 
     // Ajusta os tamanhos baseados no tipo do nó
     let width = nodeWidth;
     let height = nodeHeight;
-    
+
     // Nós de tipo start e end podem ter dimensões diferentes
     if (node.type === 'start' || node.type === 'end') {
       height = 100;
     } else if (node.type === 'decision') {
       height = 140; // Nós de decisão podem precisar de mais espaço vertical
     }
-    
+
     dagreGraph.setNode(node.id, { width, height });
   });
 
@@ -381,7 +381,7 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => 
   // Obtem os nós com as posições atualizadas
   const layoutedNodes = nodes.map((node) => {
     const nodeWithPosition = dagreGraph.node(node.id);
-    
+
     return {
       ...node,
       position: {
@@ -403,7 +403,7 @@ const FluxogramaVisualizer: React.FC<FluxogramaVisualizerProps> = ({
 }) => {
   const reactFlowInstance = useRef<ReactFlowInstance | null>(null);
   const [isLayouted, setIsLayouted] = useState(false);
-  
+
   // Carrega os dados do localStorage, se houver, ou usa os exemplos
   const loadFlowData = () => {
     try {
@@ -418,14 +418,14 @@ const FluxogramaVisualizer: React.FC<FluxogramaVisualizerProps> = ({
   };
 
   const data = flowData || loadFlowData();
-  
+
   // Aplicar o layout automático aos nós e arestas usando dagre
   const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
     data.nodes, 
     data.edges,
     'TB' // direção de cima para baixo
   );
-  
+
   const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges);
 
@@ -439,7 +439,7 @@ const FluxogramaVisualizer: React.FC<FluxogramaVisualizerProps> = ({
 
     setNodes([...layoutedNodes]);
     setEdges([...layoutedEdges]);
-    
+
     // Centralizar o fluxograma após o layout
     if (reactFlowInstance.current) {
       window.requestAnimationFrame(() => {
@@ -449,7 +449,7 @@ const FluxogramaVisualizer: React.FC<FluxogramaVisualizerProps> = ({
         });
       });
     }
-    
+
     setIsLayouted(true);
   }, [nodes, edges, setNodes, setEdges]);
 
@@ -461,13 +461,13 @@ const FluxogramaVisualizer: React.FC<FluxogramaVisualizerProps> = ({
         flowData.edges,
         'TB'
       );
-      
+
       setNodes(layoutedNodes);
       setEdges(layoutedEdges);
       setIsLayouted(false);
     }
   }, [flowData, setNodes, setEdges]);
-  
+
   // Aplica o layout automático na montagem inicial
   useEffect(() => {
     if (!isLayouted) {
@@ -582,10 +582,10 @@ export const processPromptResponse = (promptResponse: string): { nodes: Node[], 
     const jsonMatch = promptResponse.match(/```json\n([\s\S]*?)\n```/) || 
                       promptResponse.match(/```\n([\s\S]*?)\n```/) ||
                       promptResponse.match(/{[\s\S]*?}/);
-                      
+
     const jsonString = jsonMatch ? jsonMatch[0].replace(/```json\n|```\n|```/g, '') : promptResponse;
     const data = JSON.parse(jsonString);
-    
+
     // Mapeia os nós para o formato esperado pelo React Flow
     const nodes = data.nodes.map((node: any) => ({
       id: node.id,
@@ -598,7 +598,7 @@ export const processPromptResponse = (promptResponse: string): { nodes: Node[], 
       position: node.position || { x: 0, y: 0 },
       type: mapCategoryToNodeType(node.data.category) || node.type || 'default'
     }));
-    
+
     // Mapeia as arestas (edges) para o formato esperado pelo React Flow
     const edges = data.edges.map((edge: any) => ({
       id: edge.id,
@@ -608,7 +608,7 @@ export const processPromptResponse = (promptResponse: string): { nodes: Node[], 
       animated: edge.animated || false,
       style: edge.style || { stroke: '#3b82f6' }
     }));
-    
+
     return { nodes, edges };
   } catch (error) {
     console.error('Erro ao processar resposta do prompt:', error);
@@ -625,9 +625,9 @@ export const processPromptResponse = (promptResponse: string): { nodes: Node[], 
  */
 const mapCategoryToNodeType = (category?: string): string => {
   if (!category) return 'default';
-  
+
   const categoryLower = category.toLowerCase();
-  
+
   if (categoryLower.includes('defin') || categoryLower.includes('conceito')) {
     return 'start';
   }
@@ -649,7 +649,7 @@ const mapCategoryToNodeType = (category?: string): string => {
   if (categoryLower.includes('conc') || categoryLower.includes('resumo')) {
     return 'end';
   }
-  
+
   return 'default';
 };
 
