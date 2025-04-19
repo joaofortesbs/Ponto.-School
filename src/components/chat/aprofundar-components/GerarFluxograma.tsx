@@ -1811,7 +1811,7 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                 <div className="absolute -left-12 -bottom-12 w-24 h-24 bg-gradient-to-tr from-purple-400/10 to-pink-400/20 dark:from-purple-500/5 dark:to-pink-500/10 rounded-full blur-md"></div>
                 
                 {/* Cabeçalho */}
-                <div className="flex items-center justify-between mb-4 relative z-10">
+                <div className="flex items-center justify-between mb-3 relative z-10">
                   <div className="flex items-center space-x-2">
                     <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
                       <Eye className="h-5 w-5 text-white" />
@@ -1828,60 +1828,81 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                   </div>
                 </div>
                 
-                {/* Área de animação do fluxograma */}
-                <div className="h-[220px] w-full relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/40 dark:from-gray-900/90 dark:via-blue-950/40 dark:to-indigo-950/30 flex items-center justify-center shadow-inner border border-blue-100/50 dark:border-blue-900/30 group-hover:border-blue-200 dark:group-hover:border-blue-800/50 transition-all duration-500">
+                {/* Área de mini-fluxograma interativo */}
+                <div id="mini-flow-preview" className="h-[220px] w-full relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/40 dark:from-gray-900/90 dark:via-blue-950/40 dark:to-indigo-950/30 flex items-center justify-center shadow-inner border border-blue-100/50 dark:border-blue-900/30 group-hover:border-blue-200 dark:group-hover:border-blue-800/50 transition-all duration-500">
                   {/* Fundo com padrão de grade */}
                   <div className="absolute inset-0 bg-[url('/images/pattern-grid.svg')] bg-center opacity-5 dark:opacity-10"></div>
                   
-                  {/* Nós e conexões animadas */}
-                  <div className="relative flex flex-col items-center z-10 transform group-hover:scale-105 transition-transform duration-700">
-                    {/* Nó principal/conceito */}
-                    <div className="w-28 h-12 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-lg flex items-center justify-center text-white text-xs font-medium mb-3 shadow-lg group-hover:shadow-blue-400/20 dark:group-hover:shadow-blue-500/10 transition-all duration-500 animate-float">
-                      <span className="flex flex-col items-center">
-                        <span className="text-[10px] uppercase tracking-wider opacity-70">Conceito</span>
-                        <span className="font-semibold">Principal</span>
-                      </span>
+                  {/* Mini-fluxograma interativo com blocos arrastáveis */}
+                  <div className="mini-flow-container relative w-full h-full z-10 cursor-grab active:cursor-grabbing touch-none">
+                    {/* Nó inicial */}
+                    <div className="mini-flow-node absolute top-[20px] left-1/2 transform -translate-x-1/2 w-24 h-10 flex items-center justify-center rounded-md bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-blue-600 dark:to-indigo-600 text-white text-xs font-medium shadow-md hover:shadow-lg transition-shadow duration-200 cursor-move scale-100 hover:scale-105 transition-transform">
+                      <div className="flex flex-col items-center pointer-events-none">
+                        <span className="text-[9px] uppercase tracking-wider opacity-80">Conceito</span>
+                        <span className="text-[11px] font-semibold">Principal</span>
+                      </div>
+                      <div className="absolute -bottom-[21px] left-1/2 transform -translate-x-1/2 w-0.5 h-5 border-l border-dashed border-blue-400 dark:border-blue-500 z-0 animate-dash-slow pointer-events-none"></div>
                     </div>
                     
-                    {/* Linha de conexão animada */}
-                    <div className="w-[2px] h-8 bg-gradient-to-b from-blue-400 to-indigo-500 dark:from-blue-500 dark:to-indigo-600 animate-pulse-slow"></div>
-                    
-                    {/* Nós do meio com conexões */}
-                    <div className="flex items-center space-x-14 mb-3 relative">
-                      {/* Nó de contexto (esquerda) */}
-                      <div className="flex flex-col items-center">
-                        <div className="w-20 h-10 bg-gradient-to-r from-indigo-400 to-indigo-500 dark:from-indigo-500 dark:to-indigo-600 rounded-lg flex items-center justify-center text-white text-xs font-medium shadow-md group-hover:shadow-indigo-400/20 dark:group-hover:shadow-indigo-500/10 transition-all duration-500 animate-float-delayed-100">
-                          <span className="font-medium">Contexto</span>
-                        </div>
-                        <div className="w-[2px] h-6 bg-gradient-to-b from-indigo-400 to-purple-500 dark:from-indigo-500 dark:to-purple-600 mt-2 animate-pulse-slow animate-delay-150"></div>
-                      </div>
-                      
-                      {/* Linha conectora entre nós */}
-                      <div className="absolute top-5 left-[18px] w-[108px] h-[2px] bg-gradient-to-r from-indigo-400 to-purple-400 dark:from-indigo-500 dark:to-purple-500 animate-expand-line"></div>
-                      
-                      {/* Nó de detalhes (direita) */}
-                      <div className="flex flex-col items-center">
-                        <div className="w-20 h-10 bg-gradient-to-r from-purple-400 to-purple-500 dark:from-purple-500 dark:to-purple-600 rounded-lg flex items-center justify-center text-white text-xs font-medium shadow-md group-hover:shadow-purple-400/20 dark:group-hover:shadow-purple-500/10 transition-all duration-500 animate-float-delayed-200">
-                          <span className="font-medium">Detalhes</span>
-                        </div>
-                        <div className="w-[2px] h-6 bg-gradient-to-b from-purple-400 to-green-500 dark:from-purple-500 dark:to-green-600 mt-2 animate-pulse-slow animate-delay-250"></div>
-                      </div>
+                    {/* Nós de contexto */}
+                    <div className="mini-flow-node absolute top-[70px] left-[calc(50%-60px)] w-[20%] h-8 flex items-center justify-center rounded-md bg-gradient-to-r from-indigo-400 to-violet-500 dark:from-indigo-500 dark:to-violet-600 text-white text-[10px] font-medium shadow-md hover:shadow-lg cursor-move scale-100 hover:scale-105 transition-all">
+                      <span className="pointer-events-none">Contexto</span>
+                      <div className="mini-flow-connector absolute -bottom-[16px] left-1/2 transform -translate-x-1/2 w-0.5 h-4 border-l border-dashed border-indigo-400 dark:border-indigo-500 animate-dash-slow pointer-events-none"></div>
                     </div>
+                    
+                    {/* Conexão horizontal pontilhada */}
+                    <div className="absolute top-[74px] left-[calc(50%-38px)] w-[76px] h-0.5 border-t border-dashed border-purple-400 dark:border-purple-500 animate-dash-horizontal pointer-events-none"></div>
+                    
+                    <div className="mini-flow-node absolute top-[70px] left-[calc(50%+40px)] w-[20%] h-8 flex items-center justify-center rounded-md bg-gradient-to-r from-violet-500 to-purple-500 dark:from-violet-600 dark:to-purple-600 text-white text-[10px] font-medium shadow-md hover:shadow-lg cursor-move scale-100 hover:scale-105 transition-all">
+                      <span className="pointer-events-none">Detalhes</span>
+                      <div className="mini-flow-connector absolute -bottom-[16px] left-1/2 transform -translate-x-1/2 w-0.5 h-4 border-l border-dashed border-purple-400 dark:border-purple-500 animate-dash-slow pointer-events-none"></div>
+                    </div>
+                    
+                    {/* Nós de processo */}
+                    <div className="mini-flow-node absolute top-[110px] left-[calc(50%-70px)] w-[18%] h-7 flex items-center justify-center rounded-md bg-gradient-to-r from-purple-400 to-fuchsia-500 dark:from-purple-500 dark:to-fuchsia-600 text-white text-[9px] font-medium shadow-md hover:shadow-lg cursor-move scale-100 hover:scale-105 transition-all">
+                      <span className="pointer-events-none">Etapa 1</span>
+                      <div className="mini-flow-connector absolute -bottom-[11px] left-1/2 transform -translate-x-1/2 w-0.5 h-3 border-l border-dashed border-fuchsia-400 dark:border-fuchsia-500 animate-dash-slow pointer-events-none"></div>
+                    </div>
+                    
+                    {/* Linhas conectoras diagonais */}
+                    <div className="absolute top-[114px] left-[calc(50%-52px)] w-[32px] h-0.5 rotate-[25deg] origin-left border-t border-dashed border-fuchsia-400 dark:border-fuchsia-500 animate-dash-horizontal pointer-events-none"></div>
+                    <div className="absolute top-[114px] left-[calc(50%+20px)] w-[32px] h-0.5 rotate-[-25deg] origin-right border-t border-dashed border-fuchsia-400 dark:border-fuchsia-500 animate-dash-horizontal pointer-events-none"></div>
+                    
+                    <div className="mini-flow-node absolute top-[110px] left-1/2 transform -translate-x-1/2 w-[18%] h-7 flex items-center justify-center rounded-md bg-gradient-to-r from-fuchsia-400 to-pink-500 dark:from-fuchsia-500 dark:to-pink-600 text-white text-[9px] font-medium shadow-md hover:shadow-lg cursor-move scale-100 hover:scale-105 transition-all">
+                      <span className="pointer-events-none">Etapa 2</span>
+                      <div className="mini-flow-connector absolute -bottom-[11px] left-1/2 transform -translate-x-1/2 w-0.5 h-3 border-l border-dashed border-pink-400 dark:border-pink-500 animate-dash-slow pointer-events-none"></div>
+                    </div>
+                    
+                    <div className="mini-flow-node absolute top-[110px] left-[calc(50%+70px)] w-[18%] h-7 flex items-center justify-center rounded-md bg-gradient-to-r from-pink-400 to-rose-500 dark:from-pink-500 dark:to-rose-600 text-white text-[9px] font-medium shadow-md hover:shadow-lg cursor-move scale-100 hover:scale-105 transition-all">
+                      <span className="pointer-events-none">Etapa 3</span>
+                      <div className="mini-flow-connector absolute -bottom-[11px] left-1/2 transform -translate-x-1/2 w-0.5 h-3 border-l border-dashed border-rose-400 dark:border-rose-500 animate-dash-slow pointer-events-none"></div>
+                    </div>
+                    
+                    {/* Nós finais convergentes */}
+                    <div className="mini-flow-node absolute top-[142px] left-[calc(50%-40px)] w-[32%] h-8 flex items-center justify-center rounded-md bg-gradient-to-r from-amber-400 to-orange-500 dark:from-amber-500 dark:to-orange-600 text-white text-[10px] font-medium shadow-md hover:shadow-lg cursor-move scale-100 hover:scale-105 transition-all">
+                      <span className="pointer-events-none">Aplicações</span>
+                    </div>
+                    
+                    {/* Linha conectora para o nó de conclusão */}
+                    <div className="absolute top-[164px] left-1/2 transform -translate-x-1/2 w-0.5 h-6 border-l border-dashed border-emerald-400 dark:border-emerald-500 animate-dash-slow pointer-events-none"></div>
                     
                     {/* Nó de conclusão */}
-                    <div className="w-28 h-12 bg-gradient-to-r from-green-500 to-emerald-500 dark:from-green-600 dark:to-emerald-600 rounded-lg flex items-center justify-center text-white text-xs font-medium shadow-lg group-hover:shadow-green-400/20 dark:group-hover:shadow-green-500/10 transition-all duration-500 animate-float-delayed-300">
-                      <span className="flex flex-col items-center">
-                        <span className="text-[10px] uppercase tracking-wider opacity-70">Síntese</span>
-                        <span className="font-semibold">Conclusão</span>
-                      </span>
+                    <div className="mini-flow-node absolute top-[180px] left-1/2 transform -translate-x-1/2 w-24 h-9 flex items-center justify-center rounded-md bg-gradient-to-r from-emerald-500 to-green-500 dark:from-emerald-600 dark:to-green-600 text-white text-[10px] font-medium shadow-md hover:shadow-lg cursor-move scale-100 hover:scale-105 transition-all">
+                      <div className="flex flex-col items-center pointer-events-none">
+                        <span className="text-[8px] uppercase tracking-wider opacity-80">Conclusão</span>
+                        <span className="text-[10px] font-semibold">Síntese Final</span>
+                      </div>
                     </div>
                   </div>
                   
-                  {/* Área limpa para visualização do fluxograma */}
+                  {/* Instrução de interação */}
+                  <div className="absolute bottom-2 right-2 bg-white/40 dark:bg-gray-800/40 rounded-md px-2 py-1 text-[9px] text-gray-500 dark:text-gray-400 backdrop-blur-sm border border-gray-200/30 dark:border-gray-700/30 opacity-80 pointer-events-none">
+                    <span className="flex items-center"><span className="i-lucide-move-horizontal h-3 w-3 mr-1"></span> Arraste os blocos</span>
+                  </div>
                 </div>
                 
                 {/* Rodapé com a mensagem do fluxograma */}
-                <div className="mt-4 flex justify-center items-center">
+                <div className="mt-3 flex justify-center items-center">
                   <div className="bg-white/90 dark:bg-gray-800/90 px-4 py-2 rounded-full shadow-md backdrop-blur-sm border border-blue-100/50 dark:border-blue-900/30">
                     <p className="text-sm text-blue-600 dark:text-blue-400 font-medium flex items-center">
                       <span className="animate-blink mr-2 h-2 w-2 rounded-full bg-blue-500"></span>
@@ -2061,3 +2082,153 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
 };
 
 export default GerarFluxograma;
+
+  // Inicializar funcionalidade de drag and drop para os mini-nós do fluxograma
+  useEffect(() => {
+    if (!showManualInput && !showFluxograma) {
+      const miniFlowContainer = document.querySelector('.mini-flow-container');
+      const miniFlowNodes = document.querySelectorAll('.mini-flow-node');
+      
+      if (miniFlowContainer && miniFlowNodes.length > 0) {
+        // Função para gerenciar o drag and drop dos nós
+        let activeNode = null;
+        let initialX = 0;
+        let initialY = 0;
+        let currentX = 0;
+        let currentY = 0;
+        let xOffset = 0;
+        let yOffset = 0;
+        
+        const dragStart = (e) => {
+          if (e.target.classList.contains('mini-flow-node')) {
+            activeNode = e.target;
+            
+            // Obter a posição inicial do mouse ou toque
+            if (e.type === "touchstart") {
+              initialX = e.touches[0].clientX - xOffset;
+              initialY = e.touches[0].clientY - yOffset;
+            } else {
+              initialX = e.clientX - xOffset;
+              initialY = e.clientY - yOffset;
+            }
+            
+            // Adicionar classe de arrastar ativo
+            if (activeNode) {
+              activeNode.classList.add('active');
+              activeNode.style.zIndex = '30';
+              activeNode.style.cursor = 'grabbing';
+            }
+          }
+        };
+        
+        const dragEnd = () => {
+          if (activeNode) {
+            // Remover classe de arrastar ativo
+            activeNode.classList.remove('active');
+            activeNode.style.zIndex = '10';
+            activeNode.style.cursor = 'grab';
+            
+            // Reposicionar os conectores
+            updateConnectors();
+            
+            activeNode = null;
+          }
+        };
+        
+        const drag = (e) => {
+          if (activeNode) {
+            e.preventDefault();
+            
+            // Calcular a nova posição
+            if (e.type === "touchmove") {
+              currentX = e.touches[0].clientX - initialX;
+              currentY = e.touches[0].clientY - initialY;
+            } else {
+              currentX = e.clientX - initialX;
+              currentY = e.clientY - initialY;
+            }
+            
+            // Armazenar o deslocamento atual
+            xOffset = currentX;
+            yOffset = currentY;
+            
+            // Limitar o movimento dentro do contêiner
+            const containerRect = miniFlowContainer.getBoundingClientRect();
+            const nodeRect = activeNode.getBoundingClientRect();
+            
+            // Calcular os limites
+            const minX = 0;
+            const maxX = containerRect.width - nodeRect.width;
+            const minY = 0;
+            const maxY = containerRect.height - nodeRect.height;
+            
+            // Aplicar limites
+            currentX = Math.max(minX, Math.min(currentX, maxX));
+            currentY = Math.max(minY, Math.min(currentY, maxY));
+            
+            // Mover o nó
+            activeNode.style.transform = `translate(${currentX}px, ${currentY}px)`;
+            
+            // Atualizar as linhas conectoras em tempo real
+            updateConnectors();
+          }
+        };
+        
+        // Função para atualizar as linhas conectoras
+        const updateConnectors = () => {
+          // Esta é uma versão simplificada para o exemplo
+          // Em uma implementação completa, seria necessário calcular as posições reais
+          // e atualizar os elementos SVG ou desenhar linhas canvas
+          
+          // Este exemplo apenas faz um efeito visual simples
+          const connectors = document.querySelectorAll('.mini-flow-connector');
+          connectors.forEach(conn => {
+            // Pequeno efeito visual para mostrar a atualização
+            conn.style.opacity = '0.7';
+            setTimeout(() => {
+              conn.style.opacity = '1';
+            }, 100);
+          });
+        };
+        
+        // Adicionar event listeners para desktop
+        miniFlowContainer.addEventListener('mousedown', dragStart, false);
+        document.addEventListener('mouseup', dragEnd, false);
+        document.addEventListener('mousemove', drag, false);
+        
+        // Adicionar event listeners para dispositivos móveis
+        miniFlowContainer.addEventListener('touchstart', dragStart, false);
+        document.addEventListener('touchend', dragEnd, false);
+        document.addEventListener('touchmove', drag, false);
+        
+        // Adicionar comportamentos de hover para melhor feedback do usuário
+        miniFlowNodes.forEach(node => {
+          node.addEventListener('mouseover', () => {
+            node.style.zIndex = '20';
+          });
+          
+          node.addEventListener('mouseout', () => {
+            if (node !== activeNode) {
+              node.style.zIndex = '10';
+            }
+          });
+        });
+        
+        // Limpar event listeners quando o componente for desmontado
+        return () => {
+          miniFlowContainer.removeEventListener('mousedown', dragStart);
+          document.removeEventListener('mouseup', dragEnd);
+          document.removeEventListener('mousemove', drag);
+          
+          miniFlowContainer.removeEventListener('touchstart', dragStart);
+          document.removeEventListener('touchend', dragEnd);
+          document.removeEventListener('touchmove', drag);
+          
+          miniFlowNodes.forEach(node => {
+            node.removeEventListener('mouseover', () => {});
+            node.removeEventListener('mouseout', () => {});
+          });
+        };
+      }
+    }
+  }, [showManualInput, showFluxograma]);
