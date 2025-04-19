@@ -139,21 +139,55 @@ Formato da resposta: Liste os termos no formato JSON como este exemplo:
       const contextoResponsePromise = generateAIResponse(contextoPrompt, sessionId || 'aprofundar_session');
       
       // Aguardar o resultado do contexto para exibição imediata
-      const contextoResponse = await contextoResponsePromise;
+      let contextoResponse;
+      try {
+        contextoResponse = await contextoResponsePromise;
+        console.log("Contexto gerado com sucesso:", contextoResponse.substring(0, 50) + "...");
+      } catch (error) {
+        console.error("Erro ao obter resposta do contexto:", error);
+        // Definir uma mensagem de erro para o usuário
+        setAprofundadoContent(prev => ({
+          ...prev,
+          contexto: "Ocorreu um erro ao gerar o conteúdo. Por favor, tente novamente.",
+          loading: false
+        }));
+        return; // Encerrar a função em caso de erro
+      }
       
-      console.log("Contexto gerado com sucesso:", contextoResponse.substring(0, 50) + "...");
+      // Verificar se a resposta é válida
+      if (!contextoResponse || contextoResponse.trim() === "") {
+        console.error("Resposta de contexto vazia ou inválida");
+        setAprofundadoContent(prev => ({
+          ...prev,
+          contexto: "A resposta do servidor está vazia. Por favor, tente novamente.",
+          loading: false
+        }));
+        return; // Encerrar a função se a resposta estiver vazia
+      }
       
-      // Armazenar o contexto gerado para uso posterior
-      setLastGeneratedContext(contextoResponse);
-      
-      // Ativar o efeito de digitação
-      setIsTyping(true);
-      
-      // Atualizar o estado com o contexto para exibição
-      setAprofundadoContent(prev => ({
-        ...prev,
-        contexto: contextoResponse
-      }));
+      // Verificar se a resposta é válida
+      if (contextoResponse && contextoResponse.trim() !== "") {
+        // Armazenar o contexto gerado para uso posterior
+        setLastGeneratedContext(contextoResponse);
+        
+        // Ativar o efeito de digitação
+        setIsTyping(true);
+        
+        // Atualizar o estado com o contexto para exibição
+        setAprofundadoContent(prev => ({
+          ...prev,
+          contexto: contextoResponse
+        }));
+        
+        console.log("Contexto definido com sucesso:", contextoResponse.substring(0, 50) + "...");
+      } else {
+        console.error("Resposta de contexto vazia ou inválida");
+        // Definir uma mensagem de erro para o usuário
+        setAprofundadoContent(prev => ({
+          ...prev,
+          contexto: "Não foi possível gerar o conteúdo aprofundado. Por favor, tente novamente."
+        }));
+      }
       
       // Iniciar a obtenção dos outros dados em paralelo
       const [termosResponse, aplicacoesResponse] = await Promise.all([
@@ -211,9 +245,18 @@ Formato da resposta: Liste os termos no formato JSON como este exemplo:
       else if (aprofundadoContent.contexto && !isTyping) {
         console.log("Reativando efeito de digitação para conteúdo existente");
         setIsTyping(true);
+        
+        // Garantir que o conteúdo seja definido corretamente
+        if (aprofundadoContent.contexto.trim() === "Gerando contexto aprofundado...") {
+          console.log("Corrigindo conteúdo temporário");
+          setAprofundadoContent(prev => ({
+            ...prev,
+            contexto: lastGeneratedContext || aprofundadoContent.contexto
+          }));
+        }
       }
     }
-  }, [isOpen, activeContent, aprofundadoContent.contexto, aprofundadoContent.loading]);
+  }, [isOpen, activeContent, aprofundadoContent.contexto, aprofundadoContent.loading, lastGeneratedContext]);
 
   const handleOptionClick = (option: ContentType) => {
     setLoading(true);
@@ -407,13 +450,28 @@ Formato da resposta: Liste os termos no formato JSON como este exemplo:
             )}
           </div>
           
-          {!aprofundadoContent.contexto && !aprofundadoContent.loading && (
+          {(!aprofundadoContent.contexto || aprofundadoContent.contexto.includes("Desculpe, ocorreu um erro")) && !aprofundadoContent.loading ? (
             <div className="mt-4 flex justify-center">
               <Button 
                 onClick={generateDeepContent}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
-                Gerar conteúdo aprofundado
+                {aprofundadoContent.contexto ? "Tentar novamente" : "Gerar conteúdo aprofundado"}
+              </Button>
+            </div>
+          ) : aprofundadoContent.contexto && !aprofundadoContent.loading && (
+            <div className="mt-4 flex justify-center">
+              <Button 
+                onClick={() => {
+                  setAprofundadoContent(prev => ({ ...prev, loading: true }));
+                  setTimeout(() => generateDeepContent(), 500);
+                }}
+                variant="outline"
+                size="sm"
+                className="text-blue-600 hover:text-blue-700 border-blue-200 hover:border-blue-300"
+              >
+                <Loader2 className="h-3 w-3 mr-2" />
+                Recarregar conteúdo
               </Button>
             </div>
           )}

@@ -760,7 +760,7 @@ Este é o slogan que representa a essência da Ponto.School - nossa missão é p
 
     // Configuração da solicitação para a API Gemini com o histórico completo
     console.log(`Enviando histórico de conversa para Gemini com ${geminiContents.length} mensagens`);
-    
+
     // Usar o endpoint de chat que suporta contexto
     const response = await axios.post(
       `${GEMINI_BASE_URL}?key=${GEMINI_API_KEY}`,
@@ -872,7 +872,7 @@ Contexto do usuário:
 
               Histórico de mensagens anteriores:
               ${conversationHistory[sessionId].slice(1).map(msg => `${msg.role}: ${msg.content}`).join('\n\n')}
-              
+
               Responda à seguinte pergunta do usuário ${usernameFull} de forma extensa, detalhada e visualmente atrativa: ${message}`
             }
           ]
@@ -898,10 +898,10 @@ Contexto do usuário:
 
     // Adicionar a resposta da IA ao histórico
     conversationHistory[sessionId].push({ role: 'assistant', content: aiResponse });
-    
+
     // Salvar histórico atualizado no localStorage
     saveConversationHistory(sessionId, conversationHistory[sessionId]);
-    
+
     console.log(`Histórico de conversa atualizado para ${sessionId}. Total de mensagens: ${conversationHistory[sessionId].length}`);
 
     return aiResponse;
@@ -1172,4 +1172,45 @@ export const resetResponseState = (sessionId: string): void => {
   console.log(`Estados resetados para a sessão ${sessionId}. 
     Estado anterior: pausado=${wasPaused}, cancelado=${wasCancelled}. 
     Estado atual: pausado=${isPaused[sessionId]}, cancelado=${isCancelled[sessionId]}`);
+};
+
+export const generateAIResponse = async (prompt: string, sessionId?: string) => {
+  try {
+    // Adicionar timeout para a requisição
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos de timeout
+
+    const response = await fetch('/api/generate-response', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ prompt, sessionId }),
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId); // Limpar o timeout se a requisição completar
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Verificar se a resposta é válida
+    if (!data.response || typeof data.response !== 'string' || data.response.trim() === '') {
+      throw new Error('Resposta vazia ou inválida do servidor');
+    }
+
+    return data.response;
+  } catch (error) {
+    console.error('Error generating AI response:', error);
+
+    // Mensagem de erro personalizada baseada no tipo de erro
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      return "A solicitação excedeu o tempo limite. Por favor, tente novamente.";
+    }
+
+    return "Desculpe, ocorreu um erro ao gerar a resposta. Por favor, tente novamente.";
+  }
 };
