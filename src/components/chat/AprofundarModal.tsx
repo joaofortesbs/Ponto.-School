@@ -48,7 +48,29 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
     if (!messages || messages.length === 0) return null;
     
     // Filtra as mensagens para obter apenas as do assistente (IA)
-    const aiMessages = messages.filter(msg => msg.sender === 'assistant' || msg.role === 'assistant');
+    // Verifica todos os formatos possíveis de mensagens da IA (sender, role ou type)
+    const aiMessages = messages.filter(msg => 
+      msg.sender === 'assistant' || 
+      msg.role === 'assistant' || 
+      msg.type === 'assistant'
+    );
+    
+    // Se não encontrou mensagens da IA pelo método acima, tenta encontrar pelo conteúdo da mensagem
+    if (aiMessages.length === 0) {
+      // Percorre as mensagens na ordem inversa (da mais recente para a mais antiga)
+      for (let i = messages.length - 1; i >= 0; i--) {
+        const msg = messages[i];
+        // Verifica se existe uma propriedade de conteúdo (content, message ou text)
+        if (
+          (msg.content && typeof msg.content === 'string' && msg.content.length > 20) ||
+          (msg.message && typeof msg.message === 'string' && msg.message.length > 20) ||
+          (msg.text && typeof msg.text === 'string' && msg.text.length > 20)
+        ) {
+          // Presume que mensagens substanciais são da IA
+          return msg;
+        }
+      }
+    }
     
     // Retorna a última mensagem da IA, se existir
     return aiMessages.length > 0 ? aiMessages[aiMessages.length - 1] : null;
@@ -68,11 +90,13 @@ const AprofundarModal: React.FC<AprofundarModalProps> = ({ isOpen, onClose, mess
       return;
     }
 
-    // Extrai o conteúdo da mensagem
-    const messageContent = lastAIMessage.content || lastAIMessage.message || '';
+    // Extrai o conteúdo da mensagem, verificando todos os formatos possíveis
+    const messageContent = lastAIMessage.content || lastAIMessage.message || lastAIMessage.text || '';
     
-    // Define o tema atual
+    // Define o tema atual com uma prévia do conteúdo
     setTemaAtual(messageContent.substring(0, 100) + '...');
+    
+    console.log("Mensagem da IA encontrada:", messageContent.substring(0, 50) + "...");
     
     // Configura o estado de carregamento
     setAprofundadoContent(prev => ({...prev, loading: true}));
