@@ -301,9 +301,12 @@ Crie um fluxograma que:
           });
         }
             
-            resolve({ nodes, edges });
-          }, 3000);
-        });
+            // Resolver com os dados do fluxograma
+            setTimeout(() => {
+              resolve({ nodes, edges });
+            }, 3000);
+          });
+        }
         
         // Armazena os dados do fluxograma para uso posterior no visualizador
         localStorage.setItem('fluxogramaData', JSON.stringify(fluxogramaData));
