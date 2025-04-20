@@ -141,26 +141,18 @@ export default function EpictusIAComplete() {
     }
   }, [searchQuery]);
 
-  // Avança no carrossel
+  // Avança no carrossel com transição suave para loop infinito
   const nextSection = () => {
-    if (carouselIndex < sections.length - 1) {
-      setCarouselIndex(prev => prev + 1);
-      setActiveSection(sections[carouselIndex + 1].id);
-    } else {
-      setCarouselIndex(0);
-      setActiveSection(sections[0].id);
-    }
+    const newIndex = carouselIndex < sections.length - 1 ? carouselIndex + 1 : 0;
+    setCarouselIndex(newIndex);
+    setActiveSection(sections[newIndex].id);
   };
 
-  // Volta no carrossel
+  // Volta no carrossel com transição suave para loop infinito
   const prevSection = () => {
-    if (carouselIndex > 0) {
-      setCarouselIndex(prev => prev - 1);
-      setActiveSection(sections[carouselIndex - 1].id);
-    } else {
-      setCarouselIndex(sections.length - 1);
-      setActiveSection(sections[sections.length - 1].id);
-    }
+    const newIndex = carouselIndex > 0 ? carouselIndex - 1 : sections.length - 1;
+    setCarouselIndex(newIndex);
+    setActiveSection(sections[newIndex].id);
   };
 
   // Seleciona uma seção específica
@@ -462,11 +454,18 @@ export default function EpictusIAComplete() {
                 prevSection();
               }
             }}
+            animate={{ x: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 40 }}
           >
             <div className="flex items-center justify-center relative">
               {sections.map((section, index) => {
-                // Calcular a posição relativa ao item ativo
-                const position = index - carouselIndex;
+                // Calcular a posição relativa ao item ativo com lógica de rolagem infinita
+                let position = index - carouselIndex;
+                
+                // Ajustar posição para criar efeito de rolagem infinita
+                if (Math.abs(position) > sections.length / 2) {
+                  position = position - Math.sign(position) * sections.length;
+                }
 
                 return (
                   <motion.div
