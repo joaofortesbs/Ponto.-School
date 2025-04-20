@@ -115,6 +115,96 @@
   }
 }
 
+/* Estilos especiais para Epictus Turbo Card */
+.epictus-turbo-card {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(17, 24, 39, 0.95) 100%) !important;
+  border: 2px solid rgba(255, 107, 0, 0.5) !important;
+  box-shadow: 0 0 20px rgba(255, 107, 0, 0.3), inset 0 0 10px rgba(255, 107, 0, 0.2) !important;
+  transform: translateZ(0);
+  backdrop-filter: blur(10px);
+}
+
+.epictus-turbo-card::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(130deg, #ff6b00, #ff8c40, #ffaa33, #ff6b00);
+  border-radius: inherit;
+  z-index: -1;
+  animation: border-animate 4s linear infinite;
+  background-size: 300% 300%;
+  filter: blur(3px);
+  opacity: 0.7;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.epictus-turbo-card:hover::before {
+  opacity: 1;
+  filter: blur(2px);
+}
+
+@keyframes border-animate {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Partículas para o Epictus Turbo */
+.turbo-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background-color: rgba(255, 107, 0, 0.7);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 20;
+  animation: float-turbo-particle 5s ease-in-out infinite;
+  box-shadow: 0 0 5px 2px rgba(255, 107, 0, 0.3);
+}
+
+@keyframes float-turbo-particle {
+  0% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-30px) translateX(15px) scale(0);
+    opacity: 0;
+  }
+}
+
+/* Slow ping animation */
+.animate-ping-slow {
+  animation: ping 2.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Pulse slow animation */
+.animate-pulse-slow {
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+
 
 /* Efeito de partículas brilhantes para os cards destacados */
 @keyframes float-particle {

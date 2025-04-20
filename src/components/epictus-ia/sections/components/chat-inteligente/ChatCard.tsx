@@ -15,6 +15,7 @@ export interface ChatCardProps {
     badge: string | null;
     buttonText: string;
     highlight?: boolean;
+    customClass?: string;
   };
 }
 
@@ -24,7 +25,7 @@ export const ChatCard: React.FC<ChatCardProps> = ({ assistant }) => {
   return (
     <Card 
       key={assistant.id}
-      className={`p-5 h-full border overflow-hidden group relative ${theme === "dark" ? "bg-gray-800/70 border-gray-700" : "bg-white border-gray-200"} hover:shadow-lg transition-all duration-300 hover:translate-y-[-2px] ${assistant.highlight ? "glow-effect" : ""}`}
+      className={`p-5 h-full border overflow-hidden group relative ${theme === "dark" ? "bg-gray-800/70 border-gray-700" : "bg-white border-gray-200"} hover:shadow-lg transition-all duration-300 hover:translate-y-[-2px] ${assistant.highlight ? "glow-effect" : ""} ${assistant.customClass || ""}`}
       onMouseMove={(e) => {
         if (assistant.highlight) {
           // Capturar a posição do mouse em relação ao card
