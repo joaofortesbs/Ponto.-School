@@ -30,6 +30,45 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Animações e efeitos para o card Epictus Turbo */
+.perspective {
+  perspective: 1000px;
+}
+
+@keyframes gradient-x {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient-x {
+  background-size: 200% 200%;
+  animation: gradient-x 4s ease infinite;
+}
+
+.bg-grid-pattern {
+  background-size: 20px 20px;
+  background-image: 
+    linear-gradient(to right, rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
+}
+
+@keyframes grid-flow {
+  0% {
+    transform: translateX(0) translateY(0);
+  }
+  100% {
+    transform: translateX(-10px) translateY(-10px);
+  }
+}
+
+.animate-grid-flow {
+  animation: grid-flow 20s linear infinite;
+}
+
 :root {
   --primary: #FF6B00;
   --primary-lighter: #FF9B50;
