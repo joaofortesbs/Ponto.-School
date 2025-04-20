@@ -1,1217 +1,596 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useTheme } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import SectionCard from "@/components/epictus-ia/components/SectionCard";
+import SectionContent from "@/components/epictus-ia/components/SectionContent";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Progress } from "@/components/ui/progress";
-import ModoExploracaoInterface from "./ModoExploracaoInterface";
-import ResumosInterface from "./ResumosInterface";
-import DesempenhoInterface from "./DesempenhoInterface";
-import PlanoEstudosInterface from "./PlanoEstudosInterface";
+import { ChatInteligente, CriarConteudo, AprenderMaisRapido, AnalisarCorrigir, OrganizarOtimizar, FerramentasExtras } from "@/components/epictus-ia/sections";
+
 import {
   Brain,
-  Send,
+  Search,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  Sparkles,
+  Moon,
+  Sun,
+  Languages,
+  MessageSquare,
   BookOpen,
+  PenTool,
   FileText,
   BarChart3,
-  Compass,
-  MessageSquare,
-  Sparkles,
-  Clock,
-  Settings,
-  Paperclip,
-  Smile,
-  Mic,
-  ArrowRight,
-  ChevronRight,
-  ChevronLeft,
-  Volume2,
-  VolumeX,
-  Trash,
-  RefreshCw,
-  File,
-  Image,
-  Map,
-  PenTool,
-  Download,
-  Share2,
-  Plus,
-  Star,
-  Zap,
-  Lightbulb,
-  Target,
-  Award,
-  Bookmark,
-  BookMarked,
-  Filter,
-  Save,
-  Edit,
-  Bell,
-  Maximize2,
-  Minimize2,
-  X,
-  ExternalLink,
-  AlertCircle,
-  CheckCircle,
-  TrendingUp,
-  TrendingDown,
   Calendar,
-  Users,
+  Tool,
+  PlusCircle,
+  ArrowRight,
+  Lightbulb,
+  Zap,
+  BrainCircuit,
 } from "lucide-react";
 
+// Definição das abas/seções
+const sections = [
+  {
+    id: "chat-inteligente",
+    name: "Chat Inteligente",
+    icon: <MessageSquare className="h-6 w-6" />,
+    color: "from-blue-500 to-indigo-600",
+    borderColor: "border-blue-400",
+    component: ChatInteligente,
+    badge: "Popular",
+    description: "Converse com diferentes assistentes de IA especializados"
+  },
+  {
+    id: "criar-conteudo",
+    name: "Criar Conteúdo",
+    icon: <PenTool className="h-6 w-6" />,
+    color: "from-emerald-500 to-teal-600",
+    borderColor: "border-emerald-400",
+    component: CriarConteudo,
+    badge: "Novo",
+    description: "Ferramentas para criar materiais e conteúdos didáticos"
+  },
+  {
+    id: "aprender-mais-rapido",
+    name: "Aprender Mais Rápido",
+    icon: <Zap className="h-6 w-6" />,
+    color: "from-amber-500 to-orange-600",
+    borderColor: "border-amber-400",
+    component: AprenderMaisRapido,
+    badge: null,
+    description: "Resumos, mapas mentais e métodos para aprendizado eficiente"
+  },
+  {
+    id: "analisar-corrigir",
+    name: "Analisar e Corrigir",
+    icon: <BarChart3 className="h-6 w-6" />,
+    color: "from-purple-500 to-violet-600",
+    borderColor: "border-purple-400",
+    component: AnalisarCorrigir,
+    badge: "Beta",
+    description: "Ferramentas para análise de desempenho e correções"
+  },
+  {
+    id: "organizar-otimizar",
+    name: "Organizar e Otimizar",
+    icon: <Calendar className="h-6 w-6" />,
+    color: "from-red-500 to-pink-600",
+    borderColor: "border-red-400",
+    component: OrganizarOtimizar,
+    badge: null,
+    description: "Planejadores, cronogramas e ferramentas de organização"
+  },
+  {
+    id: "ferramentas-extras",
+    name: "Ferramentas Extras",
+    icon: <Tool className="h-6 w-6" />,
+    color: "from-cyan-500 to-blue-600",
+    borderColor: "border-cyan-400",
+    component: FerramentasExtras,
+    badge: "Experimental",
+    description: "Outras ferramentas especializadas para diversos fins"
+  }
+];
+
 export default function EpictusIAComplete() {
-  const [activeTab, setActiveTab] = useState("visao-geral");
-  const [inputMessage, setInputMessage] = useState("");
+  const { theme, setTheme } = useTheme();
+  const [activeSection, setActiveSection] = useState("chat-inteligente");
+  const [carouselIndex, setCarouselIndex] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [soundVolume, setSoundVolume] = useState(50);
-  const [messageTheme, setMessageTheme] = useState("default");
-  const [fontSizePreference, setFontSizePreference] = useState("medium");
-  const [autoSaveHistory, setAutoSaveHistory] = useState(true);
-  const [keyboardShortcuts, setKeyboardShortcuts] = useState(true);
-  const [aiIntelligenceLevel, setAiIntelligenceLevel] = useState("normal");
-  const [editingMessage, setEditingMessage] = useState(null);
-  const [userMessageSound] = useState(new Audio("/message-sound.mp3"));
-  const [aiMessageSound] = useState(new Audio("/message-sound.mp3"));
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      sender: "ai",
-      content:
-        "Olá! Sou o Epictus IA, seu assistente de estudos pessoal. Como posso ajudar você hoje?",
-      timestamp: new Date(Date.now() - 60000),
-    },
-    {
-      id: 2,
-      sender: "user",
-      content: "Crie um plano de estudos para o ENEM",
-      timestamp: new Date(Date.now() - 30000),
-    },
-    {
-      id: 3,
-      sender: "ai",
-      content: "Estou processando sua solicitação. Como posso ajudar mais?",
-      timestamp: new Date(),
-    },
-  ]);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredSections, setFilteredSections] = useState(sections);
 
-  const messagesEndRef = useRef(null);
-  const audioRef = useRef(null);
-  const fileInputRef = useRef(null);
-  const suggestionsScrollRef = useRef(null);
-  const chatContainerRef = useRef(null);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Efeito para rolar para o final das mensagens quando uma nova mensagem é adicionada
+  // Efeito para quando a busca é ativada, foca no input
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    if (showSearch && searchInputRef.current) {
+      searchInputRef.current.focus();
     }
-  }, [messages]);
+  }, [showSearch]);
 
-  // Configurar sons diferentes para mensagens do usuário e da IA
+  // Atualiza o índice do carrossel quando a seção ativa muda
   useEffect(() => {
-    // Configurar o som para mensagens do usuário
-    userMessageSound.volume = soundVolume / 100;
-    userMessageSound.playbackRate = 1.2; // Um pouco mais rápido
-
-    // Configurar o som para mensagens da IA
-    aiMessageSound.volume = soundVolume / 100;
-    aiMessageSound.playbackRate = 0.9; // Um pouco mais lento
-  }, [soundVolume, userMessageSound, aiMessageSound]);
-
-  // Função para reproduzir som de mensagem do usuário
-  const playUserMessageSound = () => {
-    if (soundEnabled) {
-      userMessageSound.currentTime = 0;
-      userMessageSound
-        .play()
-        .catch((e) => console.log("Erro ao reproduzir som do usuário:", e));
+    const index = sections.findIndex(section => section.id === activeSection);
+    if (index !== -1) {
+      setCarouselIndex(index);
     }
-  };
+  }, [activeSection]);
 
-  // Função para reproduzir som de mensagem da IA
-  const playAIMessageSound = () => {
-    if (soundEnabled) {
-      aiMessageSound.currentTime = 0;
-      aiMessageSound
-        .play()
-        .catch((e) => console.log("Erro ao reproduzir som da IA:", e));
-    }
-  };
-
-  // Função para enviar mensagem
-  const sendMessage = () => {
-    if (inputMessage.trim() === "") return;
-
-    // Se estiver editando uma mensagem
-    if (editingMessage) {
-      const updatedMessages = messages.map((msg) =>
-        msg.id === editingMessage.id
-          ? { ...msg, content: inputMessage, isEdited: true }
-          : msg,
+  // Filtra as seções com base na busca
+  useEffect(() => {
+    if (searchQuery) {
+      const filtered = sections.filter(section => 
+        section.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        section.description.toLowerCase().includes(searchQuery.toLowerCase())
       );
-
-      setMessages(updatedMessages);
-      setEditingMessage(null);
-      setInputMessage("");
-
-      // Reproduzir som de mensagem do usuário
-      playUserMessageSound();
-
-      // Simular resposta da IA para a mensagem editada
-      setTimeout(() => {
-        const aiResponse = {
-          id: Date.now(),
-          sender: "ai",
-          content:
-            "Entendi sua correção. Baseado na sua mensagem editada, posso ajudar melhor agora.",
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, aiResponse]);
-
-        // Reproduzir som de mensagem da IA
-        playAIMessageSound();
-      }, 1000);
-
-      return;
+      setFilteredSections(filtered);
+    } else {
+      setFilteredSections(sections);
     }
+  }, [searchQuery]);
 
-    // Adicionar mensagem do usuário
-    const newMessage = {
-      id: Date.now(),
-      sender: "user",
-      content: inputMessage,
-      timestamp: new Date(),
+  // Avança no carrossel
+  const nextSection = () => {
+    if (carouselIndex < sections.length - 1) {
+      setCarouselIndex(prev => prev + 1);
+      setActiveSection(sections[carouselIndex + 1].id);
+    } else {
+      setCarouselIndex(0);
+      setActiveSection(sections[0].id);
+    }
+  };
+
+  // Volta no carrossel
+  const prevSection = () => {
+    if (carouselIndex > 0) {
+      setCarouselIndex(prev => prev - 1);
+      setActiveSection(sections[carouselIndex - 1].id);
+    } else {
+      setCarouselIndex(sections.length - 1);
+      setActiveSection(sections[sections.length - 1].id);
+    }
+  };
+
+  // Seleciona uma seção específica
+  const selectSection = (index: number) => {
+    setCarouselIndex(index);
+    setActiveSection(sections[index].id);
+  };
+
+  // Fecha o painel de busca ao pressionar ESC
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowSearch(false);
+        setSearchQuery('');
+      }
     };
 
-    setMessages([...messages, newMessage]);
-    setInputMessage("");
-
-    // Reproduzir som de mensagem do usuário
-    playUserMessageSound();
-
-    // Simular resposta da IA (em uma aplicação real, isso seria uma chamada de API)
-    setTimeout(() => {
-      let responseContent = "";
-
-      // Ajustar resposta com base no nível de inteligência selecionado
-      switch (aiIntelligenceLevel) {
-        case "basic":
-          responseContent =
-            "Entendi seu pedido. Aqui está uma resposta simples e direta.";
-          break;
-        case "advanced":
-          responseContent =
-            "Analisando sua solicitação em profundidade. Estou elaborando uma resposta detalhada e abrangente, considerando múltiplas perspectivas e nuances do tema.";
-          break;
-        default: // normal
-          responseContent =
-            "Estou processando sua solicitação. Como posso ajudar mais?";
-      }
-
-      const aiResponse = {
-        id: Date.now() + 1,
-        sender: "ai",
-        content: responseContent,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiResponse]);
-
-      // Reproduzir som de mensagem da IA
-      playAIMessageSound();
-    }, 1000);
-  };
-
-  // Função para abrir o seletor de arquivos
-  const handleFileButtonClick = () => {
-    fileInputRef.current.click();
-  };
-
-  // Função para processar o arquivo selecionado
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    // Aqui você pode implementar o upload do arquivo
-    // Por enquanto, apenas mostraremos uma mensagem com o nome do arquivo
-    const fileMessage = {
-      id: Date.now(),
-      sender: "user",
-      content: `[Arquivo anexado: ${file.name}]`,
-      timestamp: new Date(),
-      isFile: true,
-      fileName: file.name,
-      fileType: file.type,
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
     };
-
-    setMessages([...messages, fileMessage]);
-
-    // Limpar o input de arquivo
-    e.target.value = null;
-
-    // Reproduzir som de mensagem do usuário
-    playUserMessageSound();
-
-    // Simular resposta da IA
-    setTimeout(() => {
-      const aiResponse = {
-        id: Date.now() + 1,
-        sender: "ai",
-        content: `Recebi seu arquivo "${file.name}". Estou analisando o conteúdo...`,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiResponse]);
-
-      // Reproduzir som de mensagem da IA
-      playAIMessageSound();
-    }, 1000);
-  };
-
-  // Função para editar uma mensagem
-  const startEditingMessage = (message) => {
-    if (message.sender === "user" && !message.isFile) {
-      setEditingMessage(message);
-      setInputMessage(message.content);
-    }
-  };
-
-  // Função para cancelar a edição
-  const cancelEditing = () => {
-    setEditingMessage(null);
-    setInputMessage("");
-  };
-
-  // Função para excluir uma mensagem
-  const deleteMessage = (messageId) => {
-    setMessages(messages.filter((msg) => msg.id !== messageId));
-    if (editingMessage && editingMessage.id === messageId) {
-      cancelEditing();
-    }
-  };
-
-  // Função para alternar entre tela cheia e normal para o chat
-  const toggleFullscreen = () => {
-    setIsFullscreen(!isFullscreen);
-  };
-
-  // Função para rolar horizontalmente as sugestões
-  const scrollSuggestions = (direction) => {
-    if (suggestionsScrollRef.current) {
-      const scrollAmount = 200; // pixels a rolar
-      if (direction === "left") {
-        suggestionsScrollRef.current.scrollBy({
-          left: -scrollAmount,
-          behavior: "smooth",
-        });
-      } else {
-        suggestionsScrollRef.current.scrollBy({
-          left: scrollAmount,
-          behavior: "smooth",
-        });
-      }
-    }
-  };
-
-  // Função para navegar para uma seção específica
-  const navigateToSection = (section) => {
-    setActiveTab(section);
-    if (isFullscreen) {
-      setIsFullscreen(false);
-    }
-  };
-
-  // Sugestões de perguntas rápidas
-  const quickSuggestions = [
-    "Criar um plano de estudos para o ENEM",
-    "Resumir o capítulo sobre termodinâmica",
-    "Explicar o teorema de Pitágoras",
-    "Gerar exercícios de matemática",
-    "Como funciona a fotossíntese?",
-    "Quais são os principais eventos da Segunda Guerra Mundial?",
-  ];
-
-  // Notificações
-  const notifications = [
-    {
-      id: 1,
-      title: "Novo plano de estudos disponível",
-      time: "Agora",
-      read: false,
-    },
-    {
-      id: 2,
-      title: "Lembrete: Revisar matemática",
-      time: "2h atrás",
-      read: false,
-    },
-    { id: 3, title: "Seu resumo foi gerado", time: "Ontem", read: true },
-  ];
-
-  // Últimas interações
-  const recentInteractions = [
-    {
-      title: "Plano de Estudos ENEM",
-      preview:
-        "Criação de um plano personalizado para o ENEM com foco em ciências da natureza e matemática...",
-      timestamp: "Hoje",
-      rating: 5,
-    },
-    {
-      title: "Resumo de Física",
-      preview:
-        "Resumo sobre termodinâmica e leis da física quântica para revisão...",
-      timestamp: "Ontem",
-      rating: 4,
-    },
-    {
-      title: "Dúvidas de Matemática",
-      preview:
-        "Resolução de exercícios sobre funções trigonométricas e cálculo diferencial...",
-      timestamp: "3 dias atrás",
-      rating: 5,
-    },
-  ];
+  }, []);
 
   return (
-    <div className="w-full h-full flex">
-      {/* Coluna Esquerda - Chatbot (fixa) */}
-      <div
-        ref={chatContainerRef}
-        className={`${isFullscreen ? "w-full" : "w-[400px]"} h-full flex flex-col bg-[#0A1628] text-white border-r border-[#29335C]/30 sticky top-0 left-0 overflow-hidden`}
-        style={{ height: "100vh" }}
-      >
-        {/* Cabeçalho do Chat */}
-        <div className="p-4 border-b border-[#29335C]/30 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#FF6B00] flex items-center justify-center">
-              <Brain className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-white">Epictus IA</h3>
-              <div className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                <span className="text-xs text-gray-300">
-                  Seu assistente de estudos
-                </span>
-              </div>
-            </div>
+    <div className={`w-full h-full overflow-hidden flex flex-col ${theme === "dark" ? "bg-[#0A1121]" : "bg-gray-50"} transition-colors duration-300`}>
+      {/* Header com título e informações da IA */}
+      <div className={`px-6 py-4 flex items-center justify-between border-b ${theme === "dark" ? "border-gray-800" : "border-gray-200"}`}>
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF9B50] flex items-center justify-center">
+            <BrainCircuit className="h-6 w-6 text-white" />
           </div>
-          <div className="flex gap-2">
-            {/* Botão de Tela Cheia */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white/70 hover:text-white hover:bg-[#29335C]/30 rounded-full"
-              onClick={toggleFullscreen}
-            >
-              {isFullscreen ? (
-                <Minimize2 className="h-5 w-5" />
-              ) : (
-                <Maximize2 className="h-5 w-5" />
-              )}
-            </Button>
-
-            {/* Botão de Notificações com Popover */}
-            <Popover
-              open={showNotifications}
-              onOpenChange={setShowNotifications}
-            >
-              <PopoverTrigger asChild>
+          <div>
+            <h1 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"} flex items-center gap-2`}>
+              Epictus IA
+              <Badge className="ml-2 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white hover:from-[#FF9B50] hover:to-[#FF6B00] transition-all duration-300">
+                <Sparkles className="h-3.5 w-3.5 mr-1" /> Premium
+              </Badge>
+            </h1>
+            <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+              Ferramenta com inteligência artificial para potencializar seus estudos
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-white/70 hover:text-white hover:bg-[#29335C]/30 rounded-full relative"
+                  className={`rounded-full ${theme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"}`}
+                  onClick={() => setShowSearch(!showSearch)}
                 >
-                  <Bell className="h-5 w-5" />
-                  {notifications.filter((n) => !n.read).length > 0 && (
-                    <span className="absolute top-0 right-0 w-2 h-2 bg-[#FF6B00] rounded-full"></span>
-                  )}
+                  <Search className={`h-5 w-5 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`} />
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                className="w-80 bg-[#0A1628] border-[#29335C]/50 text-white"
-                align="end"
-              >
-                <div className="p-4 border-b border-[#29335C]/30">
-                  <h3 className="font-semibold text-white">Notificações</h3>
-                </div>
-                <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
-                  <div className="p-2">
-                    {notifications.length > 0 ? (
-                      notifications.map((notification) => (
-                        <div
-                          key={notification.id}
-                          className={`p-3 mb-2 rounded-lg cursor-pointer hover:bg-[#29335C]/30 ${!notification.read ? "bg-[#FF6B00]/5" : ""}`}
-                        >
-                          <div className="flex justify-between items-start">
-                            <h4 className="font-medium text-white text-sm">
-                              {notification.title}
-                            </h4>
-                            <span className="text-xs text-gray-400">
-                              {notification.time}
-                            </span>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="p-4 text-center text-gray-400">
-                        Nenhuma notificação
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="p-2 border-t border-[#29335C]/30">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full text-[#FF6B00]"
-                  >
-                    Marcar todas como lidas
-                  </Button>
-                </div>
-              </PopoverContent>
-            </Popover>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Buscar ferramenta</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
-            {/* Botão de Configurações com Popover */}
-            <Popover open={showSettings} onOpenChange={setShowSettings}>
-              <PopoverTrigger asChild>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-white/70 hover:text-white hover:bg-[#29335C]/30 rounded-full"
+                  className={`rounded-full ${theme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"}`}
+                  onClick={() => setShowSettings(!showSettings)}
                 >
-                  <Settings className="h-5 w-5" />
+                  <Settings className={`h-5 w-5 ${theme === "dark" ? "text-gray-400" : "text-gray-600"} ${showSettings ? "animate-spin" : ""}`} style={{ animationDuration: '3s' }} />
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                className="w-80 bg-[#0A1628] border-[#29335C]/50 text-white"
-                align="end"
-              >
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-white flex items-center gap-2">
-                    <Settings className="h-4 w-4 text-[#FF6B00]" />{" "}
-                    Configurações
-                  </h3>
-
-                  <div className="space-y-3 pt-2 border-t border-[#29335C]/30">
-                    <h4 className="text-sm font-medium text-white/80">
-                      Inteligência Artificial
-                    </h4>
-
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">
-                        Nível de Inteligência
-                      </Label>
-                      <Select
-                        value={aiIntelligenceLevel}
-                        onValueChange={setAiIntelligenceLevel}
-                      >
-                        <SelectTrigger className="bg-[#29335C]/50 border-[#29335C]/50 text-white">
-                          <SelectValue placeholder="Selecione um nível" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-[#0A1628] border-[#29335C]/50 text-white">
-                          <SelectItem value="basic">Básico</SelectItem>
-                          <SelectItem value="normal">Normal</SelectItem>
-                          <SelectItem value="advanced">Avançado</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <p className="text-xs text-gray-400">
-                        {aiIntelligenceLevel === "basic" &&
-                          "Respostas simples e diretas."}
-                        {aiIntelligenceLevel === "normal" &&
-                          "Equilíbrio entre simplicidade e profundidade."}
-                        {aiIntelligenceLevel === "advanced" &&
-                          "Respostas detalhadas e abrangentes."}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 pt-2 border-t border-[#29335C]/30">
-                    <h4 className="text-sm font-medium text-white/80">
-                      Notificações
-                    </h4>
-
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label
-                          htmlFor="sound-notifications"
-                          className="text-sm font-medium"
-                        >
-                          Sons de notificação
-                        </Label>
-                        <p className="text-xs text-gray-400">
-                          Ativar sons ao enviar/receber mensagens
-                        </p>
-                      </div>
-                      <Switch
-                        id="sound-notifications"
-                        checked={soundEnabled}
-                        onCheckedChange={setSoundEnabled}
-                      />
-                    </div>
-
-                    {soundEnabled && (
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium">Volume</Label>
-                        <div className="flex items-center gap-2">
-                          <VolumeX className="h-4 w-4 text-gray-400" />
-                          <Slider
-                            value={[soundVolume]}
-                            onValueChange={(value) => setSoundVolume(value[0])}
-                            max={100}
-                            step={1}
-                            className="flex-1"
-                          />
-                          <Volume2 className="h-4 w-4 text-gray-400" />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-3 pt-2 border-t border-[#29335C]/30">
-                    <h4 className="text-sm font-medium text-white/80">
-                      Aparência
-                    </h4>
-
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">
-                        Tema das mensagens
-                      </Label>
-                      <Select
-                        value={messageTheme}
-                        onValueChange={setMessageTheme}
-                      >
-                        <SelectTrigger className="bg-[#29335C]/50 border-[#29335C]/50 text-white">
-                          <SelectValue placeholder="Selecione um tema" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-[#0A1628] border-[#29335C]/50 text-white">
-                          <SelectItem value="default">Padrão</SelectItem>
-                          <SelectItem value="modern">Moderno</SelectItem>
-                          <SelectItem value="compact">Compacto</SelectItem>
-                          <SelectItem value="bubble">Bolhas</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">
-                        Tamanho da fonte
-                      </Label>
-                      <Select
-                        value={fontSizePreference}
-                        onValueChange={setFontSizePreference}
-                      >
-                        <SelectTrigger className="bg-[#29335C]/50 border-[#29335C]/50 text-white">
-                          <SelectValue placeholder="Selecione um tamanho" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-[#0A1628] border-[#29335C]/50 text-white">
-                          <SelectItem value="small">Pequeno</SelectItem>
-                          <SelectItem value="medium">Médio</SelectItem>
-                          <SelectItem value="large">Grande</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 pt-2 border-t border-[#29335C]/30">
-                    <h4 className="text-sm font-medium text-white/80">
-                      Preferências
-                    </h4>
-
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label
-                          htmlFor="auto-save"
-                          className="text-sm font-medium"
-                        >
-                          Salvar histórico automaticamente
-                        </Label>
-                        <p className="text-xs text-gray-400">
-                          Salvar conversas para acesso posterior
-                        </p>
-                      </div>
-                      <Switch
-                        id="auto-save"
-                        checked={autoSaveHistory}
-                        onCheckedChange={setAutoSaveHistory}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label
-                          htmlFor="keyboard-shortcuts"
-                          className="text-sm font-medium"
-                        >
-                          Atalhos de teclado
-                        </Label>
-                        <p className="text-xs text-gray-400">
-                          Habilitar atalhos de teclado (Ctrl+Enter para enviar)
-                        </p>
-                      </div>
-                      <Switch
-                        id="keyboard-shortcuts"
-                        checked={keyboardShortcuts}
-                        onCheckedChange={setKeyboardShortcuts}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-2 border-t border-[#29335C]/30 flex justify-between">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-white border-[#29335C]/50 hover:bg-[#29335C]/30"
-                    >
-                      <Trash className="h-4 w-4 mr-1" /> Limpar histórico
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-white border-[#29335C]/50 hover:bg-[#29335C]/30"
-                    >
-                      <RefreshCw className="h-4 w-4 mr-1" /> Restaurar padrões
-                    </Button>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-
-        {/* Área de Mensagens */}
-        <div className="flex-1 p-4 overflow-y-auto custom-scrollbar">
-          <div className="space-y-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`group max-w-[85%] p-4 rounded-xl ${
-                    message.sender === "user"
-                      ? "bg-[#FF6B00] text-white"
-                      : "bg-[#29335C]/50 text-white"
-                  } relative`}
-                >
-                  {message.sender === "ai" && (
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-8 h-8 rounded-full bg-[#FF6B00] flex items-center justify-center">
-                        <Brain className="h-4 w-4 text-white" />
-                      </div>
-                      <span className="text-sm font-medium">Epictus IA</span>
-                    </div>
-                  )}
-
-                  {message.isFile ? (
-                    <div className="flex items-center gap-2 bg-white/10 p-2 rounded-lg">
-                      {message.fileType.startsWith("image/") ? (
-                        <Image className="h-5 w-5" />
-                      ) : (
-                        <File className="h-5 w-5" />
-                      )}
-                      <span>{message.fileName}</span>
-                    </div>
-                  ) : (
-                    <p className="text-base leading-relaxed">
-                      {message.content}
-                      {message.isEdited && (
-                        <span className="text-xs opacity-70 ml-2">
-                          (editado)
-                        </span>
-                      )}
-                    </p>
-                  )}
-
-                  <div className="mt-1 text-right">
-                    <span className="text-xs opacity-70">
-                      {message.timestamp.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                  </div>
-
-                  {/* Opções de mensagem (apenas para mensagens do usuário) */}
-                  {message.sender === "user" && (
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                      {!message.isFile && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 rounded-full bg-white/10 hover:bg-white/20"
-                          onClick={() => startEditingMessage(message)}
-                        >
-                          <Edit className="h-3 w-3 text-white" />
-                        </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 rounded-full bg-white/10 hover:bg-white/20"
-                        onClick={() => deleteMessage(message.id)}
-                      >
-                        <X className="h-3 w-3 text-white" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-        </div>
-
-        {/* Sugestões de Perguntas com rolagem horizontal */}
-        <div className="p-4 border-t border-[#29335C]/30 relative">
-          <div className="flex items-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 rounded-full flex-shrink-0 text-white/60 hover:text-white hover:bg-[#29335C]/30"
-              onClick={() => scrollSuggestions("left")}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-
-            <div
-              ref={suggestionsScrollRef}
-              className="flex overflow-x-auto gap-2 py-1 px-2 flex-1 custom-scrollbar"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-            >
-              {quickSuggestions.map((suggestion, index) => (
-                <div
-                  key={index}
-                  className="bg-[#29335C]/50 text-white rounded-full px-4 py-2 text-sm cursor-pointer hover:bg-[#29335C]/70 transition-colors whitespace-nowrap flex-shrink-0"
-                  onClick={() => {
-                    setInputMessage(suggestion);
-                  }}
-                >
-                  {suggestion}
-                </div>
-              ))}
-            </div>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 rounded-full flex-shrink-0 text-white/60 hover:text-white hover:bg-[#29335C]/30"
-              onClick={() => scrollSuggestions("right")}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Campo de Entrada */}
-        <div className="p-4 border-t border-[#29335C]/30">
-          {editingMessage ? (
-            <div className="mb-2 p-2 bg-[#FF6B00]/10 rounded-lg flex justify-between items-center">
-              <span className="text-sm text-white">Editando mensagem</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 text-[#FF6B00] hover:bg-[#FF6B00]/10 p-0 px-2"
-                onClick={cancelEditing}
-              >
-                Cancelar
-              </Button>
-            </div>
-          ) : null}
-
-          <div className="flex items-center gap-2 bg-[#29335C]/50 rounded-xl p-3">
-            {/* Input de arquivo oculto */}
-            <input
-              type="file"
-              ref={fileInputRef}
-              className="hidden"
-              onChange={handleFileChange}
-              accept="image/*,.pdf,.doc,.docx,.txt"
-            />
-
-            {/* Botão para anexar arquivos */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-gray-300 hover:text-white hover:bg-[#29335C]/30 rounded-full"
-              onClick={handleFileButtonClick}
-            >
-              <Paperclip className="h-5 w-5" />
-            </Button>
-
-            <Input
-              placeholder="Digite sua mensagem..."
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              className="flex-1 bg-transparent border-none text-white placeholder:text-white/50 focus-visible:ring-0 focus-visible:ring-offset-0 text-base h-10"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  sendMessage();
-                }
-              }}
-            />
-
-            {/* Botão de emoji */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-gray-300 hover:text-white hover:bg-[#29335C]/30 rounded-full"
-            >
-              <Smile className="h-5 w-5" />
-            </Button>
-
-            {/* Botão de áudio */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-gray-300 hover:text-white hover:bg-[#29335C]/30 rounded-full"
-            >
-              <Mic className="h-5 w-5" />
-            </Button>
-
-            <Button
-              className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white rounded-full p-2 h-10 w-10 shadow-md"
-              onClick={sendMessage}
-            >
-              <Send className="h-5 w-5" />
-            </Button>
-          </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Configurações</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
 
-      {/* Coluna Direita - Conteúdo (só mostra se não estiver em tela cheia) */}
-      {!isFullscreen && (
-        <div className="flex-1 flex flex-col bg-[#0A1628] text-white">
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="flex-1 flex flex-col"
+      {/* Painel de busca (aparece quando showSearch é true) */}
+      <AnimatePresence>
+        {showSearch && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className={`border-b ${theme === "dark" ? "border-gray-800 bg-gray-900/50" : "border-gray-200 bg-white"} backdrop-blur-lg`}
           >
-            {/* Navegação Superior */}
-            <div className="p-4 border-b border-[#29335C]/30 flex items-center">
-              <TabsList className="bg-transparent">
-                <TabsTrigger
-                  value="visao-geral"
-                  className="data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white text-white/60 hover:text-white hover:bg-[#29335C]/30 px-4 py-2"
-                >
-                  <Brain className="h-4 w-4 mr-2" /> Visão Geral
-                </TabsTrigger>
-                <TabsTrigger
-                  value="plano-estudos"
-                  className="data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white text-white/60 hover:text-white hover:bg-[#29335C]/30 px-4 py-2"
-                >
-                  <BookOpen className="h-4 w-4 mr-2" /> Plano de Estudos
-                </TabsTrigger>
-                <TabsTrigger
-                  value="resumos"
-                  className="data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white text-white/60 hover:text-white hover:bg-[#29335C]/30 px-4 py-2"
-                >
-                  <FileText className="h-4 w-4 mr-2" /> Resumos
-                </TabsTrigger>
-                <TabsTrigger
-                  value="desempenho"
-                  className="data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white text-white/60 hover:text-white hover:bg-[#29335C]/30 px-4 py-2"
-                >
-                  <BarChart3 className="h-4 w-4 mr-2" /> Desempenho
-                </TabsTrigger>
-                <TabsTrigger
-                  value="modo-exploracao"
-                  className="data-[state=active]:bg-[#FF6B00] data-[state=active]:text-white text-white/60 hover:text-white hover:bg-[#29335C]/30 px-4 py-2"
-                >
-                  <Compass className="h-4 w-4 mr-2" /> Modo Exploração
-                </TabsTrigger>
-              </TabsList>
+            <div className="p-4 flex items-center gap-3">
+              <Search className={`h-5 w-5 ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`} />
+              <input
+                ref={searchInputRef}
+                className={`flex-1 bg-transparent border-none outline-none text-lg ${theme === "dark" ? "text-white placeholder:text-gray-500" : "text-gray-900 placeholder:text-gray-400"}`}
+                placeholder="Buscar ferramentas..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full"
+                onClick={() => {
+                  setShowSearch(false);
+                  setSearchQuery('');
+                }}
+              >
+                <X className={`h-5 w-5 ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`} />
+              </Button>
             </div>
 
-            <div className="flex-1 overflow-auto custom-scrollbar">
-              <TabsContent value="visao-geral" className="h-full">
-                <div className="p-6 space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-bold">Olá, João Silva!</h2>
-                    <Badge className="bg-[#FF6B00] text-white">
-                      <Sparkles className="h-3.5 w-3.5 mr-1" /> Versão Premium
-                    </Badge>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-6 mb-6">
-                    {/* Estatísticas de Uso */}
-                    <div className="bg-[#29335C]/30 rounded-xl p-6 border border-[#29335C]/50">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-bold flex items-center gap-2">
-                          <Sparkles className="h-5 w-5 text-[#FF6B00]" />{" "}
-                          Estatísticas de Uso
-                        </h3>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-[#29335C]/30 p-4 rounded-lg">
-                          <p className="text-sm text-white/60 mb-1">
-                            Tempo de Estudo
-                          </p>
-                          <p className="text-2xl font-bold">42h 30min</p>
-                          <p className="text-xs text-green-500 mt-1">
-                            +15% que semana passada
-                          </p>
+            {searchQuery && (
+              <div className="px-4 pb-4">
+                <div className={`p-2 rounded-lg ${theme === "dark" ? "bg-gray-800/50" : "bg-gray-100"}`}>
+                  <h3 className={`text-sm font-medium mb-2 px-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+                    Resultados ({filteredSections.length})
+                  </h3>
+                  <div className="space-y-1">
+                    {filteredSections.map((section, index) => (
+                      <div
+                        key={section.id}
+                        className={`flex items-center gap-3 p-2 rounded-md cursor-pointer ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-200/70"} transition-colors`}
+                        onClick={() => {
+                          setActiveSection(section.id);
+                          setShowSearch(false);
+                          setSearchQuery('');
+                        }}
+                      >
+                        <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${section.color} flex items-center justify-center`}>
+                          {section.icon}
                         </div>
-                        <div className="bg-[#29335C]/30 p-4 rounded-lg">
-                          <p className="text-sm text-white/60 mb-1">
-                            Tarefas Concluídas
-                          </p>
-                          <p className="text-2xl font-bold">28/35</p>
-                          <p className="text-xs text-green-500 mt-1">
-                            80% concluídas
-                          </p>
+                        <div>
+                          <p className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>{section.name}</p>
+                          <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>{section.description}</p>
                         </div>
                       </div>
-                    </div>
+                    ))}
 
-                    {/* Ferramentas da IA */}
-                    <div className="bg-[#29335C]/30 rounded-xl p-6 border border-[#29335C]/50 hover:shadow-glow-cyan transition-all duration-300">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-bold flex items-center gap-2">
-                          <Brain className="h-5 w-5 text-[#FF6B00]" />{" "}
-                          Ferramentas da IA
-                        </h3>
+                    {filteredSections.length === 0 && (
+                      <div className={`p-3 text-center ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                        Nenhuma ferramenta encontrada com "{searchQuery}"
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <Button
-                          className="bg-[#29335C]/50 hover:bg-[#29335C]/70 text-white justify-start h-auto py-3 px-4 hover:scale-105 transition-all duration-300 animate-subtle-pulse"
-                          onClick={() => navigateToSection("plano-estudos")}
-                        >
-                          <div className="flex flex-col items-start">
-                            <span className="font-medium">
-                              Plano de Estudos
-                            </span>
-                            <span className="text-xs text-white/60">
-                              Personalize seu plano
-                            </span>
-                          </div>
-                        </Button>
-                        <Button
-                          className="bg-[#29335C]/50 hover:bg-[#29335C]/70 text-white justify-start h-auto py-3 px-4 hover:scale-105 transition-all duration-300 animate-subtle-pulse"
-                          onClick={() => navigateToSection("resumos")}
-                        >
-                          <div className="flex flex-col items-start">
-                            <span className="font-medium">Resumos</span>
-                            <span className="text-xs text-white/60">
-                              Resumos inteligentes
-                            </span>
-                          </div>
-                        </Button>
-                        <Button className="bg-[#29335C]/50 hover:bg-[#29335C]/70 text-white justify-start h-auto py-3 px-4 hover:scale-105 transition-all duration-300 animate-subtle-pulse">
-                          <div className="flex flex-col items-start">
-                            <span className="font-medium">Mapa Mental</span>
-                            <span className="text-xs text-white/60">
-                              Visualize conceitos
-                            </span>
-                          </div>
-                        </Button>
-                        <Button className="bg-[#29335C]/50 hover:bg-[#29335C]/70 text-white justify-start h-auto py-3 px-4 hover:scale-105 transition-all duration-300 animate-subtle-pulse">
-                          <div className="flex flex-col items-start">
-                            <span className="font-medium">Exercícios</span>
-                            <span className="text-xs text-white/60">
-                              Pratique o conteúdo
-                            </span>
-                          </div>
-                        </Button>
-                      </div>
-                    </div>
+                    )}
                   </div>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-                  {/* Insights Personalizados */}
-                  <div className="bg-gradient-to-r from-[#29335C] to-[#0A1628] p-6 rounded-xl border border-[#29335C]/50 mb-6">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-full bg-[#FF6B00] flex items-center justify-center flex-shrink-0">
-                        <Brain className="h-6 w-6 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
-                          Insights Personalizados{" "}
-                          <Sparkles className="h-4 w-4 text-[#FF6B00]" />
-                        </h3>
-                        <p className="text-white/80 mb-4">
-                          Com base na sua análise de desempenho, identificamos
-                          que você tem um desempenho melhor em Matemática e
-                          Biologia, mas pode melhorar em Química. Recomendamos
-                          dedicar mais tempo aos estudos de Química,
-                          especialmente nos tópicos de Química Orgânica.
-                        </p>
-                        <Button className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white">
-                          Ver Recomendações Detalhadas{" "}
-                          <ArrowRight className="h-4 w-4 ml-2" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
+      {/* Painel de configurações (aparece quando showSettings é true) */}
+      <AnimatePresence>
+        {showSettings && (
+          <motion.div
+            initial={{ x: "100%", opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: "100%", opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className={`fixed top-0 right-0 h-full w-80 z-50 border-l ${theme === "dark" ? "border-gray-800 bg-gray-900" : "border-gray-200 bg-white"} shadow-2xl`}
+          >
+            <div className="p-5 flex flex-col h-full">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className={`text-xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Configurações</h2>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full"
+                  onClick={() => setShowSettings(false)}
+                >
+                  <X className={`h-5 w-5 ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`} />
+                </Button>
+              </div>
 
-                  {/* Módulos Principais */}
-                  <div className="mb-6">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-bold">Módulos Principais</h3>
+              <div className="space-y-6 flex-1">
+                <div className="space-y-2">
+                  <h3 className={`text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Aparência</h3>
+                  <div className={`p-3 rounded-lg ${theme === "dark" ? "bg-gray-800" : "bg-gray-100"}`}>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Tema</span>
                       <Button
                         variant="outline"
                         size="sm"
-                        className="text-[#FF6B00] border-[#FF6B00]/20 hover:bg-[#FF6B00]/10"
+                        className={`gap-2 ${theme === "dark" ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-gray-700"}`}
+                        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                       >
-                        <Filter className="h-4 w-4 mr-1" /> Filtrar
+                        {theme === "dark" ? (
+                          <>
+                            <Moon className="h-4 w-4" />
+                            <span>Escuro</span>
+                          </>
+                        ) : (
+                          <>
+                            <Sun className="h-4 w-4" />
+                            <span>Claro</span>
+                          </>
+                        )}
                       </Button>
-                    </div>
-                    <div className="grid grid-cols-4 gap-4">
-                      {[
-                        {
-                          title: "Desempenho",
-                          description: "Análise do seu progresso",
-                          icon: (
-                            <BarChart3 className="h-6 w-6 text-[#FF6B00]" />
-                          ),
-                          section: "desempenho",
-                        },
-                        {
-                          title: "Modo Exploração",
-                          description: "Explore novos tópicos",
-                          icon: <Compass className="h-6 w-6 text-[#FF6B00]" />,
-                          section: "modo-exploracao",
-                        },
-                        {
-                          title: "Mapas Mentais",
-                          description: "Visualize conceitos",
-                          icon: <Map className="h-6 w-6 text-[#FF6B00]" />,
-                          section: "",
-                        },
-                        {
-                          title: "Exercícios",
-                          description: "Pratique o conteúdo",
-                          icon: <PenTool className="h-6 w-6 text-[#FF6B00]" />,
-                          section: "",
-                        },
-                      ].map((module, index) => (
-                        <div
-                          key={index}
-                          className="bg-[#29335C]/30 p-4 rounded-xl border border-[#29335C]/50 hover:border-[#FF6B00]/50 transition-all cursor-pointer hover:shadow-md hover:translate-y-[-2px]"
-                          onClick={() =>
-                            module.section && navigateToSection(module.section)
-                          }
-                        >
-                          <div className="flex flex-col items-center text-center">
-                            <div className="w-12 h-12 rounded-full bg-[#FF6B00]/20 flex items-center justify-center mb-3">
-                              {module.icon}
-                            </div>
-                            <h4 className="font-medium text-white mb-1">
-                              {module.title}
-                            </h4>
-                            <p className="text-xs text-white/60 mb-3">
-                              {module.description}
-                            </p>
-                            <Button
-                              variant="ghost"
-                              className="text-[#FF6B00] hover:bg-[#FF6B00]/20 w-full"
-                            >
-                              Acessar <ChevronRight className="h-4 w-4 ml-1" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Últimas Interações */}
-                  <div>
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-bold flex items-center gap-2">
-                        <MessageSquare className="h-5 w-5 text-[#FF6B00]" />{" "}
-                        Últimas Interações
-                      </h3>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-white/60 border-[#29335C]/50 hover:bg-[#29335C]/30 h-8"
-                        >
-                          <Download className="h-3.5 w-3.5 mr-1" /> Exportar
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          className="text-[#FF6B00] text-xs flex items-center gap-1 h-8"
-                        >
-                          Ver Todas <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      {recentInteractions.map((interaction, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between p-4 bg-[#29335C]/30 hover:bg-[#29335C]/50 rounded-xl transition-colors cursor-pointer border border-[#29335C]/50 hover:border-[#FF6B00]/30"
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full bg-[#FF6B00]/10 flex items-center justify-center">
-                              <MessageSquare className="h-6 w-6 text-[#FF6B00]" />
-                            </div>
-                            <div>
-                              <h4 className="font-medium text-white text-base">
-                                {interaction.title}
-                              </h4>
-                              <p className="text-sm text-white/60 line-clamp-1 mt-1">
-                                {interaction.preview}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex flex-col items-end gap-2">
-                            <Badge className="bg-[#FF6B00]/10 text-[#FF6B00] text-xs">
-                              {interaction.timestamp}
-                            </Badge>
-                            <div className="flex items-center">
-                              {Array.from({ length: 5 }).map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`h-3 w-3 ${i < interaction.rating ? "text-[#FF6B00]" : "text-gray-600"} mr-0.5`}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
                     </div>
                   </div>
                 </div>
-              </TabsContent>
 
-              <TabsContent value="plano-estudos" className="h-full">
-                <PlanoEstudosInterface />
-              </TabsContent>
+                <div className="space-y-2">
+                  <h3 className={`text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Idioma</h3>
+                  <div className={`p-3 rounded-lg ${theme === "dark" ? "bg-gray-800" : "bg-gray-100"}`}>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Idioma da interface</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={`gap-2 ${theme === "dark" ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-gray-700"}`}
+                      >
+                        <Languages className="h-4 w-4" />
+                        <span>Português</span>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
 
-              <TabsContent value="resumos" className="h-full">
-                <ResumosInterface />
-              </TabsContent>
+                <div className="space-y-2">
+                  <h3 className={`text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Acessibilidade</h3>
+                  <div className={`p-3 rounded-lg ${theme === "dark" ? "bg-gray-800" : "bg-gray-100"}`}>
+                    <div className="flex flex-col space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Reduzir animações</span>
+                        <div className="flex h-6 w-11 cursor-pointer items-center rounded-full bg-gray-600 px-1">
+                          <div className="h-4 w-4 rounded-full bg-white transition-all"></div>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Alto contraste</span>
+                        <div className="flex h-6 w-11 cursor-pointer items-center rounded-full bg-gray-600 px-1">
+                          <div className="h-4 w-4 rounded-full bg-white transition-all"></div>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Texto maior</span>
+                        <div className="flex h-6 w-11 cursor-pointer items-center rounded-full bg-gray-600 px-1">
+                          <div className="h-4 w-4 rounded-full bg-white transition-all"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-              <TabsContent value="desempenho" className="h-full">
-                <DesempenhoInterface />
-              </TabsContent>
-
-              <TabsContent value="modo-exploracao" className="h-full">
-                <ModoExploracaoInterface />
-              </TabsContent>
+              <div className="pt-4 border-t mt-auto">
+                <Button
+                  variant="default"
+                  className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] hover:from-[#FF9B50] hover:to-[#FF6B00]"
+                  onClick={() => setShowSettings(false)}
+                >
+                  Salvar alterações
+                </Button>
+              </div>
             </div>
-          </Tabs>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Carrossel 3D de seleção de seções */}
+        <div className="relative py-8 overflow-hidden">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
+            <Button
+              variant="outline"
+              size="icon"
+              className={`rounded-full ${theme === "dark" ? "bg-gray-800 border-gray-700 hover:bg-gray-700" : "bg-white border-gray-200 hover:bg-gray-50"}`}
+              onClick={prevSection}
+            >
+              <ChevronLeft className={`h-5 w-5 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`} />
+            </Button>
+          </div>
+
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10">
+            <Button
+              variant="outline"
+              size="icon"
+              className={`rounded-full ${theme === "dark" ? "bg-gray-800 border-gray-700 hover:bg-gray-700" : "bg-white border-gray-200 hover:bg-gray-50"}`}
+              onClick={nextSection}
+            >
+              <ChevronRight className={`h-5 w-5 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`} />
+            </Button>
+          </div>
+
+          <motion.div 
+            ref={carouselRef}
+            className="flex items-center justify-center"
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.2}
+            onDragEnd={(e, { offset, velocity }) => {
+              if (offset.x < -50 || velocity.x < -500) {
+                nextSection();
+              } else if (offset.x > 50 || velocity.x > 500) {
+                prevSection();
+              }
+            }}
+          >
+            <div className="flex items-center justify-center relative">
+              {sections.map((section, index) => {
+                // Calcular a posição relativa ao item ativo
+                const position = index - carouselIndex;
+
+                return (
+                  <motion.div
+                    key={section.id}
+                    className={`absolute select-none cursor-pointer`}
+                    animate={{
+                      scale: position === 0 ? 1 : 0.8 - Math.min(Math.abs(position) * 0.1, 0.3),
+                      x: position * 180,
+                      opacity: Math.abs(position) > 2 ? 0 : 1 - Math.abs(position) * 0.3,
+                      zIndex: 10 - Math.abs(position),
+                      rotateY: position * 10,
+                    }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    onClick={() => selectSection(index)}
+                  >
+                    <div 
+                      className={cn(
+                        `w-64 rounded-xl overflow-hidden border-2 transform transition-all group`,
+                        position === 0 ? `shadow-lg ${section.borderColor}` : 'border-transparent',
+                        theme === "dark" ? "bg-gray-800/80" : "bg-white/80"
+                      )}
+                      style={{
+                        backdropFilter: "blur(8px)",
+                        perspective: "1000px",
+                        height: position === 0 ? "180px" : "150px"
+                      }}
+                    >
+                      <div className={`h-full p-5 flex flex-col justify-between relative overflow-hidden`}>
+                        {/* Efeito de brilho quando é o item ativo */}
+                        {position === 0 && (
+                          <div className="absolute inset-0 overflow-hidden">
+                            <div className="absolute -inset-[50px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 rotate-45 translate-x-[-120%] group-hover:translate-x-[120%] duration-1500 transition-all ease-in-out"></div>
+                          </div>
+                        )}
+
+                        <div className="flex justify-between items-start">
+                          <div 
+                            className={`w-12 h-12 rounded-full bg-gradient-to-br ${section.color} flex items-center justify-center`}
+                          >
+                            {section.icon}
+                          </div>
+
+                          {section.badge && (
+                            <Badge 
+                              className={`bg-white/90 text-xs font-medium animate-pulse ${
+                                section.badge === "Novo" 
+                                  ? "text-emerald-600" 
+                                  : section.badge === "Beta" 
+                                  ? "text-purple-600" 
+                                  : section.badge === "Popular" 
+                                  ? "text-blue-600"
+                                  : "text-amber-600"
+                              }`}
+                            >
+                              {section.badge}
+                            </Badge>
+                          )}
+                        </div>
+
+                        <div>
+                          <h3 className={`text-base font-semibold mb-1 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                            {section.name}
+                          </h3>
+                          <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"} line-clamp-2`}>
+                            {section.description}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
+
+          {/* Indicadores (bolinhas) para o carrossel */}
+          <div className="flex justify-center mt-6 gap-2">
+            {sections.map((section, index) => (
+              <button
+                key={section.id}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  index === carouselIndex 
+                    ? "w-6 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50]" 
+                    : theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                }`}
+                onClick={() => selectSection(index)}
+              />
+            ))}
+          </div>
         </div>
-      )}
+
+        {/* Conteúdo da seção ativa */}
+        <div className="flex-1 overflow-hidden px-6 pb-6">
+          <motion.div 
+            key={activeSection}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="h-full"
+          >
+            <Tabs value={activeSection} onValueChange={setActiveSection} className="h-full">
+              <TabsContent value="chat-inteligente" className="mt-0 h-full">
+                <ChatInteligente />
+              </TabsContent>
+              <TabsContent value="criar-conteudo" className="mt-0 h-full">
+                <CriarConteudo />
+              </TabsContent>
+              <TabsContent value="aprender-mais-rapido" className="mt-0 h-full">
+                <AprenderMaisRapido />
+              </TabsContent>
+              <TabsContent value="analisar-corrigir" className="mt-0 h-full">
+                <AnalisarCorrigir />
+              </TabsContent>
+              <TabsContent value="organizar-otimizar" className="mt-0 h-full">
+                <OrganizarOtimizar />
+              </TabsContent>
+              <TabsContent value="ferramentas-extras" className="mt-0 h-full">
+                <FerramentasExtras />
+              </TabsContent>
+            </Tabs>
+          </motion.div>
+        </div>
+      </div>
     </div>
   );
 }

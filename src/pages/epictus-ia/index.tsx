@@ -1,6 +1,11 @@
 
 import React from "react";
+import EpictusIAInterface from "@/components/epictus-ia/EpictusIAComplete";
 
 export default function EpictusIAPage() {
-  return <div className="p-8 text-center">This feature has been removed.</div>;
+  return (
+    <div className="w-full h-full overflow-hidden">
+      <EpictusIAInterface />
+    </div>
+  );
 }

@@ -213,3 +213,153 @@ const RecentInteractions: React.FC<{ theme: string }> = ({ theme }) => {
 };
 
 export default VisaoGeralContent;
+import React from "react";
+import { motion } from "framer-motion";
+import { useTheme } from "@/components/ThemeProvider";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Sparkles, Zap, Star, BookOpen, BarChart3, Brain, MessageSquare } from "lucide-react";
+
+export default function VisaoGeralContent() {
+  const { theme } = useTheme();
+  
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-[#29335C]"}`}>
+          Bem-vindo ao Epictus IA
+        </h2>
+        <Badge className="bg-[#FF6B00] text-white">
+          <Sparkles className="h-3.5 w-3.5 mr-1" /> Premium
+        </Badge>
+      </div>
+
+      <div className={`bg-gradient-to-br from-[#001427] to-[#29335C] rounded-xl p-6 text-white`}>
+        <div className="flex flex-col md:flex-row items-start gap-4">
+          <div className="w-16 h-16 rounded-full bg-[#FF6B00] flex items-center justify-center flex-shrink-0">
+            <Brain className="h-8 w-8 text-white" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold mb-2">Potencialize seus estudos com IA</h2>
+            <p className="text-white/80 mb-4">
+              O Epictus IA utiliza inteligência artificial avançada para personalizar sua experiência de aprendizado, 
+              oferecendo resumos inteligentes, planos de estudo adaptados às suas necessidades e análises detalhadas do seu desempenho.
+            </p>
+            <Button className="bg-white text-[#29335C] hover:bg-white/90">
+              Começar a usar <MessageSquare className="h-4 w-4 ml-2" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <h3 className={`text-lg font-bold ${theme === "dark" ? "text-white" : "text-[#29335C]"}`}>
+        Ferramentas populares
+      </h3>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <motion.div 
+          whileHover={{ scale: 1.03 }}
+          className={`p-5 rounded-xl border ${theme === "dark" ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"} shadow-sm`}
+        >
+          <div className="w-12 h-12 rounded-full bg-[#FF6B00]/10 flex items-center justify-center mb-3">
+            <Zap className="h-6 w-6 text-[#FF6B00]" />
+          </div>
+          <h3 className={`font-medium ${theme === "dark" ? "text-white" : "text-[#29335C]"} mb-1`}>
+            Assistente Pessoal
+          </h3>
+          <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"} mb-3`}>
+            Tire dúvidas rápidas, peça sugestões e receba ajuda personalizada.
+          </p>
+          <Button variant="outline" className="w-full text-[#FF6B00] border-[#FF6B00]/30 hover:bg-[#FF6B00]/10">
+            Acessar
+          </Button>
+        </motion.div>
+
+        <motion.div 
+          whileHover={{ scale: 1.03 }}
+          className={`p-5 rounded-xl border ${theme === "dark" ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"} shadow-sm`}
+        >
+          <div className="w-12 h-12 rounded-full bg-[#FF6B00]/10 flex items-center justify-center mb-3">
+            <Star className="h-6 w-6 text-[#FF6B00]" />
+          </div>
+          <h3 className={`font-medium ${theme === "dark" ? "text-white" : "text-[#29335C]"} mb-1`}>
+            Resumos Inteligentes
+          </h3>
+          <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"} mb-3`}>
+            Gere resumos concisos de textos, vídeos ou PDFs para estudar melhor.
+          </p>
+          <Button variant="outline" className="w-full text-[#FF6B00] border-[#FF6B00]/30 hover:bg-[#FF6B00]/10">
+            Acessar
+          </Button>
+        </motion.div>
+
+        <motion.div 
+          whileHover={{ scale: 1.03 }}
+          className={`p-5 rounded-xl border ${theme === "dark" ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"} shadow-sm`}
+        >
+          <div className="w-12 h-12 rounded-full bg-[#FF6B00]/10 flex items-center justify-center mb-3">
+            <BookOpen className="h-6 w-6 text-[#FF6B00]" />
+          </div>
+          <h3 className={`font-medium ${theme === "dark" ? "text-white" : "text-[#29335C]"} mb-1`}>
+            Plano de Estudos
+          </h3>
+          <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"} mb-3`}>
+            Crie um plano personalizado com base nos seus objetivos e tempo disponível.
+          </p>
+          <Button variant="outline" className="w-full text-[#FF6B00] border-[#FF6B00]/30 hover:bg-[#FF6B00]/10">
+            Acessar
+          </Button>
+        </motion.div>
+      </div>
+
+      <div>
+        <h3 className={`text-lg font-bold mb-3 ${theme === "dark" ? "text-white" : "text-[#29335C]"}`}>
+          Estatísticas de uso
+        </h3>
+        
+        <div className={`p-5 rounded-xl border ${theme === "dark" ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}`}>
+          <div className="flex flex-wrap gap-6">
+            <div className="flex-1 min-w-[180px]">
+              <h4 className={`text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+                Assistente Pessoal
+              </h4>
+              <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-1">
+                <div className="h-full bg-blue-500 rounded-full" style={{ width: "75%" }}></div>
+              </div>
+              <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                <span>32 interações</span>
+                <span>75%</span>
+              </div>
+            </div>
+            
+            <div className="flex-1 min-w-[180px]">
+              <h4 className={`text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+                Resumos Inteligentes
+              </h4>
+              <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-1">
+                <div className="h-full bg-emerald-500 rounded-full" style={{ width: "45%" }}></div>
+              </div>
+              <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                <span>18 gerados</span>
+                <span>45%</span>
+              </div>
+            </div>
+            
+            <div className="flex-1 min-w-[180px]">
+              <h4 className={`text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+                Plano de Estudos
+              </h4>
+              <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-1">
+                <div className="h-full bg-purple-500 rounded-full" style={{ width: "25%" }}></div>
+              </div>
+              <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                <span>3 criados</span>
+                <span>25%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
