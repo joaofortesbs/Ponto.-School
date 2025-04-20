@@ -2,9 +2,12 @@ import React from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import {
   SectionHeader,
-  OrganizationToolCard,
   PendingTasksCard,
-  organizationTools
+  CronogramaEstudosCard,
+  TimerPomodoro,
+  GerenciadorTarefasCard,
+  RastreadorProgressoCard,
+  ConstrutorHabitosCard
 } from "./components/organizar-otimizar";
 
 export default function OrganizarOtimizar() {
@@ -15,9 +18,11 @@ export default function OrganizarOtimizar() {
       <SectionHeader />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {organizationTools.map(tool => (
-          <OrganizationToolCard key={tool.id} tool={tool} />
-        ))}
+        <CronogramaEstudosCard />
+        <TimerPomodoro />
+        <GerenciadorTarefasCard />
+        <RastreadorProgressoCard />
+        <ConstrutorHabitosCard />
       </div>
 
       <div className="mt-6 flex-1">
