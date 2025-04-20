@@ -4,9 +4,9 @@ import { Zap } from "lucide-react";
 import { 
   SectionHeader, 
   LearningToolCard, 
-  MethodCard,
-  learningTools
+  MethodCard
 } from "./components/aprender-mais-rapido";
+import { learningTools } from "./components/aprender-mais-rapido/learningToolsData.tsx";
 export default function AprenderMaisRapido() {
   const { theme } = useTheme();
 
