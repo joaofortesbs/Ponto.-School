@@ -252,5 +252,3 @@ div::-webkit-scrollbar-thumb:hover {
 .epictus-chat-card:hover::after {
   opacity: 1;
 }
-
-/* Garantir que não haja caracteres inválidos ou separadores incorretos */

@@ -82,7 +82,7 @@
   }
 }
 
-@keyframes fadeIn {
+@keyframes fadeInUp {
   from {
     opacity: 0;
     transform: translateY(10px);
@@ -587,7 +587,7 @@
   text-decoration: none;
   cursor: pointer;
 }
-/* Further modifications needed here to fulfill the complete user request. */
+/* Animações adicionais para interface interativa */
 @keyframes float {
   0%, 100% {
     transform: translateY(0);
