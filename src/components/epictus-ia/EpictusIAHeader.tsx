@@ -23,9 +23,16 @@ export default function EpictusIAHeader() {
   }, []);
 
   useEffect(() => {
-    // Quando a busca é aberta, foca no input
+    // Quando a busca é aberta, foca no input com um pequeno atraso
+    // para garantir que a animação comece primeiro
     if (searchOpen && searchInputRef.current) {
-      searchInputRef.current.focus();
+      const focusTimer = setTimeout(() => {
+        if (searchInputRef.current) {
+          searchInputRef.current.focus();
+        }
+      }, 100);
+      
+      return () => clearTimeout(focusTimer);
     }
   }, [searchOpen]);
 
@@ -38,7 +45,10 @@ export default function EpictusIAHeader() {
         !searchInputRef.current.contains(event.target as Node) &&
         !(event.target as Element).closest('.search-icon-container')
       ) {
-        setSearchOpen(false);
+        // Usar setTimeout para evitar conflitos de estado durante a animação
+        setTimeout(() => {
+          setSearchOpen(false);
+        }, 50);
       }
     };
 
@@ -152,12 +162,20 @@ export default function EpictusIAHeader() {
         <motion.div
           className="relative"
           initial={false}
-          animate={searchOpen ? "open" : "closed"}
         >
           {/* Search icon/button */}
           <motion.div
             className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
-            onClick={() => setSearchOpen(!searchOpen)}
+            onClick={() => {
+              // Evitar múltiplos cliques em rápida sucessão
+              if (!searchOpen) {
+                setSearchOpen(true);
+              } else {
+                setTimeout(() => {
+                  setSearchOpen(false);
+                }, 50);
+              }
+            }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -165,14 +183,19 @@ export default function EpictusIAHeader() {
           </motion.div>
           
           {/* Expanding search input */}
-          <AnimatePresence>
+          <AnimatePresence mode="wait">
             {searchOpen && (
               <motion.div
                 className="absolute right-0 top-0 z-20 flex items-center"
                 initial={{ width: 0, opacity: 0 }}
                 animate={{ width: "240px", opacity: 1 }}
                 exit={{ width: 0, opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
+                transition={{ 
+                  duration: 0.3, 
+                  ease: "easeInOut",
+                  opacity: { duration: 0.2 }
+                }}
+                key="search-input"
               >
                 <Input
                   ref={searchInputRef}
@@ -188,14 +211,19 @@ export default function EpictusIAHeader() {
           </AnimatePresence>
           
           {/* Typewriter suggestion modal */}
-          <AnimatePresence>
+          <AnimatePresence mode="wait">
             {searchOpen && (
               <motion.div
                 className="absolute right-0 top-12 bg-white/10 backdrop-blur-md border border-orange-500/30 rounded-lg p-4 shadow-lg w-[240px] mt-2"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
+                transition={{ 
+                  duration: 0.3, 
+                  delay: 0.2, 
+                  opacity: { duration: 0.2 } 
+                }}
+                key="search-suggestions"
               >
                 <div className="text-white font-medium">
                   <TypewriterEffect 
