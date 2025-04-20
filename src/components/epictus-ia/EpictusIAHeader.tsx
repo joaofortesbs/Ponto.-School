@@ -23,7 +23,7 @@ export default function EpictusIAHeader() {
     <div 
       className="card-container rounded-xl"
       style={{
-        "--background": "linear-gradient(to left, #FF6B00 0%, #FF9D5C 100%)"
+        "--background": "linear-gradient(to left, #FF6B00 0%, #FF8040 100%)"
       } as React.CSSProperties}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}

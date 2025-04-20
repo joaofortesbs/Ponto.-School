@@ -33,7 +33,7 @@
   --background: linear-gradient(to left, #f7ba2b 0%, #ea5358 100%);
   position: relative;
   z-index: 1;
-  padding: 2px; /* Espaço para o efeito em volta */
+  padding: 1px; /* Espaço mínimo para o contorno */
   border-radius: inherit;
 }
 
@@ -46,8 +46,9 @@
   bottom: 0;
   z-index: -1;
   border-radius: inherit;
-  filter: blur(25px);
+  filter: blur(6px); /* Blur reduzido para um contorno mais fino */
   background: var(--background);
+  opacity: 0.4; /* Opacidade reduzida */
   transition: opacity .5s;
 }
 
