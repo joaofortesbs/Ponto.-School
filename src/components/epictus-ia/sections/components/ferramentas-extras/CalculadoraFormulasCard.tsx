@@ -1,9 +1,12 @@
 
 import React from "react";
 import { Calculator } from "lucide-react";
-import ToolCard from "./ToolCard";
+import { ToolCard } from ".";
+import { useTheme } from "@/components/ThemeProvider";
 
-export default function CalculadoraFormulasCard() {
+const CalculadoraFormulasCard: React.FC = () => {
+  const { theme } = useTheme();
+
   return (
     <ToolCard
       title="Calculadora de Fórmulas"
@@ -11,6 +14,9 @@ export default function CalculadoraFormulasCard() {
       icon={<Calculator className="h-6 w-6 text-white" />}
       buttonText="Calcular"
       badge="Novo"
+      onClick={() => console.log("Calculadora de Fórmulas clicked")}
     />
   );
-}
+};
+
+export default CalculadoraFormulasCard;

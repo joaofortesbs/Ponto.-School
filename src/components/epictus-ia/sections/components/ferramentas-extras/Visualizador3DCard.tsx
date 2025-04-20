@@ -1,9 +1,12 @@
 
 import React from "react";
 import { Cube } from "lucide-react";
-import ToolCard from "./ToolCard";
+import { ToolCard } from ".";
+import { useTheme } from "@/components/ThemeProvider";
 
-export default function Visualizador3DCard() {
+const Visualizador3DCard: React.FC = () => {
+  const { theme } = useTheme();
+
   return (
     <ToolCard
       title="Visualizador 3D"
@@ -11,6 +14,9 @@ export default function Visualizador3DCard() {
       icon={<Cube className="h-6 w-6 text-white" />}
       buttonText="Visualizar"
       badge="Beta"
+      onClick={() => console.log("Visualizador 3D clicked")}
     />
   );
-}
+};
+
+export default Visualizador3DCard;
