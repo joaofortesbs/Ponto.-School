@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Search, Settings, Zap, Sparkles, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/ThemeProvider";
+import { createPortal } from "react-dom";
 
 export default function EpictusIAHeader() {
   const { theme } = useTheme();
@@ -46,6 +47,20 @@ export default function EpictusIAHeader() {
       };
     }
   }, [searchInputRef.current]);
+  
+  // Atualizar posição do dropdown quando a janela é redimensionada
+  useEffect(() => {
+    if (searchFocused && searchValue.length > 0) {
+      const handleResize = () => {
+        // Força uma re-renderização para atualizar a posição do dropdown
+        setSearchFocused(false);
+        setTimeout(() => setSearchFocused(true), 0);
+      };
+      
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, [searchFocused, searchValue]);
 
   const isDark = theme === "dark";
 
@@ -147,11 +162,12 @@ export default function EpictusIAHeader() {
       </div>
 
       {/* Right side controls */}
-      <div className="flex items-center gap-4 z-10">
+      <div className="flex items-center gap-4 z-20">
         <motion.div 
           className={`relative flex items-center ${searchFocused ? 'w-64' : 'w-40'} transition-all duration-300`}
           whileHover={{ scale: 1.02 }}
           transition={{ type: "spring", stiffness: 400, damping: 20 }}
+          style={{ zIndex: 50 }}
         >
           <div className="absolute inset-0 bg-white/10 backdrop-blur-md rounded-full"></div>
           <Search className="absolute left-3 h-4 w-4 text-white/70" />
@@ -174,9 +190,10 @@ export default function EpictusIAHeader() {
               // Delay hiding search results to allow for clicking on them
               setTimeout(() => setSearchFocused(false), 200);
             }}
-            className="bg-transparent w-full py-2 pl-10 pr-4 text-sm text-white placeholder:text-white/50 outline-none rounded-full border border-white/10 focus:border-orange-500/50 transition-colors cursor-text"
+            className="bg-transparent w-full py-2 pl-10 pr-4 text-sm text-white placeholder:text-white/50 outline-none rounded-full border border-white/10 focus:border-orange-500/50 transition-colors cursor-text relative z-50"
             autoComplete="off"
             spellCheck="false"
+            style={{ position: 'relative', zIndex: 50 }}
           />
           {searchValue && (
             <motion.button
@@ -195,14 +212,25 @@ export default function EpictusIAHeader() {
             </motion.button>
           )}
 
-          {/* Search Results Dropdown */}
+          {/* Search Results Dropdown - Renderizado via Portal fora do cabeçalho */}
           <AnimatePresence>
-            {searchFocused && searchValue.length > 0 && searchResults.length > 0 && (
+            {searchFocused && searchValue.length > 0 && searchResults.length > 0 && createPortal(
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="absolute top-full left-0 w-full mt-2 bg-white/10 backdrop-blur-xl rounded-lg shadow-lg z-50 border border-white/10 overflow-hidden"
+                className="fixed shadow-lg z-[9999] border border-white/10 overflow-hidden"
+                style={{
+                  width: searchFocused ? '264px' : '160px', // Largura correspondente à caixa de pesquisa
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(12px)',
+                  borderRadius: '0.5rem',
+                  // Posicionamento dinâmico baseado na posição do input
+                  top: searchInputRef.current ? 
+                    searchInputRef.current.getBoundingClientRect().bottom + 10 + 'px' : '80px',
+                  left: searchInputRef.current ? 
+                    searchInputRef.current.getBoundingClientRect().left + 'px' : 'auto',
+                }}
               >
                 <div className="p-2">
                   {searchResults.map((result) => (
@@ -220,7 +248,8 @@ export default function EpictusIAHeader() {
                     </div>
                   ))}
                 </div>
-              </motion.div>
+              </motion.div>,
+              document.body
             )}
           </AnimatePresence>
         </motion.div>
