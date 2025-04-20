@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Search, Settings, Zap, Sparkles, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,7 +11,7 @@ export default function EpictusIAHeader() {
   const [animationComplete, setAnimationComplete] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Mock search results - in a real app, these would come from a search API
   const searchResults = searchValue.length > 0 ? [
     { id: 1, title: "Matemática Avançada", category: "Conteúdo" },
@@ -26,7 +25,7 @@ export default function EpictusIAHeader() {
     const timer = setTimeout(() => {
       setAnimationComplete(true);
     }, 1200);
-    
+
     return () => clearTimeout(timer);
   }, []);
 
@@ -37,9 +36,9 @@ export default function EpictusIAHeader() {
         e.stopPropagation();
         searchInputRef.current.focus();
       };
-      
+
       searchInputRef.current.addEventListener('click', handleInputClick);
-      
+
       return () => {
         if (searchInputRef.current) {
           searchInputRef.current.removeEventListener('click', handleInputClick);
@@ -64,7 +63,7 @@ export default function EpictusIAHeader() {
         <div className={`absolute inset-0 bg-gradient-to-r from-[#FF6B00] via-[#FF8C40] to-[#FF9D5C] ${isHovered ? 'opacity-60' : 'opacity-30'} transition-opacity duration-700`}></div>
         <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
       </div>
-      
+
       {/* Glowing orbs */}
       <motion.div 
         className="absolute top-1/2 left-1/4 w-32 h-32 rounded-full bg-orange-500/10 blur-3xl"
@@ -78,7 +77,7 @@ export default function EpictusIAHeader() {
           repeatType: "reverse",
         }}
       />
-      
+
       <motion.div 
         className="absolute bottom-0 right-1/4 w-40 h-40 rounded-full bg-blue-500/10 blur-3xl"
         animate={{
@@ -126,7 +125,7 @@ export default function EpictusIAHeader() {
             </AnimatePresence>
           </motion.div>
         </div>
-        
+
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold text-white tracking-tight">
@@ -164,20 +163,18 @@ export default function EpictusIAHeader() {
             onChange={(e) => setSearchValue(e.target.value)}
             onFocus={() => {
               setSearchFocused(true);
-              // Garantir que o input mantenha o foco
-              if (searchInputRef.current) {
-                searchInputRef.current.focus();
-              }
             }}
             onClick={(e) => {
               // Prevenir que eventos de clique interfiram
               e.stopPropagation();
+              // Foco explícito no input quando clicado
+              e.currentTarget.focus();
             }}
             onBlur={() => {
               // Delay hiding search results to allow for clicking on them
               setTimeout(() => setSearchFocused(false), 200);
             }}
-            className="bg-transparent w-full py-2 pl-10 pr-4 text-sm text-white placeholder:text-white/50 outline-none rounded-full border border-white/10 focus:border-orange-500/50 transition-colors"
+            className="bg-transparent w-full py-2 pl-10 pr-4 text-sm text-white placeholder:text-white/50 outline-none rounded-full border border-white/10 focus:border-orange-500/50 transition-colors cursor-text"
             autoComplete="off"
             spellCheck="false"
           />
@@ -197,7 +194,7 @@ export default function EpictusIAHeader() {
               ×
             </motion.button>
           )}
-          
+
           {/* Search Results Dropdown */}
           <AnimatePresence>
             {searchFocused && searchValue.length > 0 && searchResults.length > 0 && (
@@ -227,7 +224,7 @@ export default function EpictusIAHeader() {
             )}
           </AnimatePresence>
         </motion.div>
-        
+
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -236,7 +233,7 @@ export default function EpictusIAHeader() {
           <Settings className="h-5 w-5" />
         </motion.button>
       </div>
-      
+
       {/* Hidden until expansion - will appear when user interaction happens */}
       <div className="absolute bottom-0 left-0 w-full h-1">
         <div className="h-full bg-gradient-to-r from-transparent via-orange-500 to-transparent opacity-30"></div>

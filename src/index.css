@@ -615,13 +615,22 @@ body.modal-open {
 
 a:hover,
 button:hover,
-input:hover,
 select:hover,
 .interactive-element:hover {
   cursor:
     url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="%23FF6B00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" fill="%23330D00" stroke="%23FF6B00"/><path d="M2 2l7 4" stroke="%23FF6B00"/><path d="M8.5 9.5L5 6" stroke="%23992900"/><path d="M18 13l-2.5-2.5" stroke="%23992900"/><path d="M13 18l-2.5-2.5" stroke="%23992900"/><circle cx="16.5" cy="11.5" r="0.8" fill="%23FF6B00" stroke="none"/><path d="M3 3l1 1" stroke="%23FF6B00" stroke-width="1"/></svg>')
       1 1,
     auto;
+}
+
+/* Adiciona cursor específico para inputs que permite digitação normal */
+input,
+input:hover,
+textarea,
+textarea:hover,
+[contenteditable="true"],
+[contenteditable="true"]:hover {
+  cursor: text !important;
 }
 
 @keyframes subtle-pulse {
