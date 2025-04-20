@@ -110,6 +110,7 @@ export default function EpictusIAComplete() {
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredSections, setFilteredSections] = useState(sections);
+  const [turboMode, setTurboMode] = useState(false);
 
   const carouselRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -177,10 +178,31 @@ export default function EpictusIAComplete() {
     };
   }, []);
 
+  // Verificar se o modo Turbo está ativado no localStorage
+  useEffect(() => {
+    const isTurboActive = localStorage.getItem("epictus_turbo_active");
+    if (isTurboActive === "true") {
+      setTurboMode(true);
+    }
+  }, []);
+
+  // Função para ativar o modo Turbo
+  const activateTurbo = () => {
+    localStorage.setItem("epictus_turbo_active", "true");
+    setTurboMode(true);
+  };
+
+  // Função para desativar o modo Turbo
+  const deactivateTurbo = () => {
+    localStorage.removeItem("epictus_turbo_active");
+    setTurboMode(false);
+  };
+
+
   return (
     <div className={`w-full flex flex-col ${theme === "dark" ? "bg-[#001427]" : "bg-gray-50"} transition-colors duration-300 overflow-y-auto min-h-screen`}>
       <div className="p-4"> {/* This is where the new header is inserted */}
-        <EpictusIAHeader />
+        <EpictusIAHeader activateTurbo={activateTurbo} deactivateTurbo={deactivateTurbo} turboMode={turboMode} />
       </div>
 
       {/* Painel de busca (aparece quando showSearch é true) */}
