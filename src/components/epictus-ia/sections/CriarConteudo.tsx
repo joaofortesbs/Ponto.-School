@@ -1,9 +1,4 @@
-
 import React from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useTheme } from "@/components/ThemeProvider";
 import { 
   PenTool, 
   FileSpreadsheet, 
@@ -12,57 +7,77 @@ import {
   Gamepad2, 
   UsersRound, 
   Sparkles,
-  ArrowRight,
   Crown
 } from "lucide-react";
+
+import {
+  SectionHeader,
+  CategoryHeader,
+  ToolsGrid
+} from "./components/criar-conteudo";
+import { ToolCardProps } from "./components/criar-conteudo/ToolCard";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useTheme } from "@/components/ThemeProvider";
+import { ArrowRight } from "lucide-react";
+
 
 export default function CriarConteudo() {
   const { theme } = useTheme();
 
-  const toolsForTeachers = [
+  const toolsForTeachers: ToolCardProps[] = [
     {
-      id: "planos-aula",
-      title: "Gerador de Planos de Aula",
-      description: "Crie planos de aula completos em minutos, baseados no tema, ano escolar e BNCC.",
-      icon: <PenTool className="h-6 w-6 text-white" />,
-      badge: null,
-      buttonText: "Gerar Plano"
+      id: "plano-aula",
+      title: "Plano de Aula",
+      description: "Crie planos de aula detalhados com objetivos, metodologia e avaliação em minutos.",
+      icon: <FileSpreadsheet className="h-6 w-6 text-white" />,
+      badge: "Popular",
+      buttonText: "Criar Plano de Aula"
     },
     {
-      id: "slides-didaticos",
-      title: "Gerador de Slides Didáticos",
-      description: "Transforme seus tópicos em apresentações de slides visualmente atraentes e organizadas.",
+      id: "gerador-slides",
+      title: "Gerador de Slides",
+      description: "Transforme qualquer conteúdo em apresentações profissionais com slides formatados.",
       icon: <Presentation className="h-6 w-6 text-white" />,
-      badge: "Novo",
+      badge: null,
       buttonText: "Criar Slides"
     },
     {
-      id: "lista-exercicios",
-      title: "Gerador de Lista de Exercícios",
-      description: "Crie listas de exercícios personalizadas (alternativas, dissertativas, V/F) com gabarito.",
+      id: "gerador-questoes",
+      title: "Gerador de Questões",
+      description: "Crie questões de múltipla escolha, dissertativas ou V/F com gabarito.",
       icon: <FileQuestion className="h-6 w-6 text-white" />,
-      badge: null,
-      buttonText: "Gerar Exercícios"
+      badge: "Novo",
+      buttonText: "Criar Questões"
     },
     {
-      id: "jogos-didaticos",
-      title: "Gerador de Jogos Didáticos",
-      description: "Crie caça-palavras, forcas e outros jogos interativos baseados no seu conteúdo.",
+      id: "gamificacao",
+      title: "Gamificação",
+      description: "Transforme conteúdos em atividades gamificadas para maior engajamento dos alunos.",
       icon: <Gamepad2 className="h-6 w-6 text-white" />,
       badge: null,
-      buttonText: "Criar Jogo"
+      buttonText: "Gamificar Conteúdo"
     },
     {
-      id: "atividades-interdisciplinares",
-      title: "Gerador de Atividades Interdisciplinares",
-      description: "Desenvolva propostas de atividades que conectam duas ou mais disciplinas.",
+      id: "dinâmicas-grupo",
+      title: "Dinâmicas de Grupo",
+      description: "Gere ideias para trabalhos em grupo, debates e atividades colaborativas.",
       icon: <UsersRound className="h-6 w-6 text-white" />,
       badge: null,
-      buttonText: "Gerar Atividade"
+      buttonText: "Criar Dinâmica"
+    },
+    {
+      id: "simplificador-conteudo",
+      title: "Simplificador de Conteúdo",
+      description: "Transforme textos complexos em explicações mais acessíveis para seus alunos.",
+      icon: <Sparkles className="h-6 w-6 text-white" />,
+      badge: null,
+      buttonText: "Simplificar Conteúdo"
     }
   ];
 
-  const toolsForStudents = [
+  const toolsForStudents: ToolCardProps[] = [
     {
       id: "assistente-apresentacao",
       title: "Assistente de Apresentação",
@@ -75,124 +90,23 @@ export default function CriarConteudo() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
-            <PenTool className="h-6 w-6 text-white" />
-          </div>
-          <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-            Criar Conteúdo
-          </h2>
-        </div>
-        <p className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"} ml-[60px]`}>
-          Ferramentas para professores e alunos criarem conteúdo educacional de forma rápida e eficiente
-        </p>
-      </div>
+      <SectionHeader />
 
       <div className="mb-6">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="p-1 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600">
-            <Crown className="h-5 w-5 text-white" />
-          </div>
-          <h3 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-            Para Professores
-          </h3>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {toolsForTeachers.map(tool => (
-            <Card 
-              key={tool.id}
-              className={`p-5 h-full border overflow-hidden group relative ${theme === "dark" ? "bg-gray-800/70 border-gray-700" : "bg-white border-gray-200"} hover:shadow-lg transition-all duration-300 hover:translate-y-[-2px]`}
-            >
-              <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-emerald-500/10 blur-3xl group-hover:bg-emerald-500/20 transition-all duration-700"></div>
-              
-              <div className="flex justify-between items-start mb-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500/90 to-teal-600/90 flex items-center justify-center shadow-md transform group-hover:scale-110 transition-transform duration-300">
-                  {tool.icon}
-                </div>
-
-                {tool.badge && (
-                  <Badge className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs shadow-sm">
-                    {tool.badge}
-                  </Badge>
-                )}
-              </div>
-
-              <h3 className={`text-lg font-semibold mb-2 ${theme === "dark" ? "text-white" : "text-gray-900"} inline-block`}>
-                <span className="relative">
-                  {tool.title}
-                  <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-gradient-to-r from-emerald-500 to-teal-600 group-hover:w-full transition-all duration-300"></span>
-                </span>
-              </h3>
-
-              <p className={`text-sm mb-4 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-                {tool.description}
-              </p>
-
-              <Button 
-                className="mt-auto w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white flex items-center justify-center gap-2"
-              >
-                {tool.buttonText}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Card>
-          ))}
-        </div>
+        <CategoryHeader 
+          icon={<Crown className="h-5 w-5 text-white" />}
+          title="Para Professores"
+        />
+        <ToolsGrid tools={toolsForTeachers} />
       </div>
 
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="p-1 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600">
-            <FileSpreadsheet className="h-5 w-5 text-white" />
-          </div>
-          <h3 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-            Para Alunos
-          </h3>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {toolsForStudents.map(tool => (
-            <Card 
-              key={tool.id}
-              className={`p-5 h-full border overflow-hidden group relative ${theme === "dark" ? "bg-gray-800/70 border-gray-700" : "bg-white border-gray-200"} hover:shadow-lg transition-all duration-300 hover:translate-y-[-2px]`}
-            >
-              <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-emerald-500/10 blur-3xl group-hover:bg-emerald-500/20 transition-all duration-700"></div>
-              
-              <div className="flex justify-between items-start mb-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500/90 to-teal-600/90 flex items-center justify-center shadow-md transform group-hover:scale-110 transition-transform duration-300">
-                  {tool.icon}
-                </div>
-
-                {tool.badge && (
-                  <Badge className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs shadow-sm">
-                    {tool.badge}
-                  </Badge>
-                )}
-              </div>
-
-              <h3 className={`text-lg font-semibold mb-2 ${theme === "dark" ? "text-white" : "text-gray-900"} inline-block`}>
-                <span className="relative">
-                  {tool.title}
-                  <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-gradient-to-r from-emerald-500 to-teal-600 group-hover:w-full transition-all duration-300"></span>
-                </span>
-              </h3>
-
-              <p className={`text-sm mb-4 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-                {tool.description}
-              </p>
-
-              <Button 
-                className="mt-auto w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white flex items-center justify-center gap-2"
-              >
-                {tool.buttonText}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Card>
-          ))}
-        </div>
+      <div>
+        <CategoryHeader 
+          icon={<UsersRound className="h-5 w-5 text-white" />}
+          title="Para Alunos"
+        />
+        <ToolsGrid tools={toolsForStudents} />
       </div>
-
       <div className={`mt-auto p-4 rounded-lg ${theme === "dark" ? "bg-gray-800/50" : "bg-gray-100"} text-center`}>
         <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"} flex items-center justify-center gap-2`}>
           <Sparkles className="h-4 w-4 text-emerald-500" />
