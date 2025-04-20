@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/ThemeProvider";
@@ -570,28 +569,26 @@ export default function EpictusIAComplete() {
             transition={{ duration: 0.3 }}
             className="h-full"
           >
-            <ScrollArea className="h-full w-full pb-4">
-              <Tabs value={activeSection} onValueChange={setActiveSection} className="h-full">
-                <TabsContent value="chat-inteligente" className="mt-0 h-full">
-                  <ChatInteligente />
-                </TabsContent>
-                <TabsContent value="criar-conteudo" className="mt-0 h-full">
-                  <CriarConteudo />
-                </TabsContent>
-                <TabsContent value="aprender-mais-rapido" className="mt-0 h-full">
-                  <AprenderMaisRapido />
-                </TabsContent>
-                <TabsContent value="analisar-corrigir" className="mt-0 h-full">
-                  <AnalisarCorrigir />
-                </TabsContent>
-                <TabsContent value="organizar-otimizar" className="mt-0 h-full">
-                  <OrganizarOtimizar />
-                </TabsContent>
-                <TabsContent value="ferramentas-extras" className="mt-0 h-full">
-                  <FerramentasExtras />
-                </TabsContent>
-              </Tabs>
-            </ScrollArea>
+            <Tabs value={activeSection} onValueChange={setActiveSection} className="h-full">
+              <TabsContent value="chat-inteligente" className="mt-0 h-full">
+                <ChatInteligente />
+              </TabsContent>
+              <TabsContent value="criar-conteudo" className="mt-0 h-full">
+                <CriarConteudo />
+              </TabsContent>
+              <TabsContent value="aprender-mais-rapido" className="mt-0 h-full">
+                <AprenderMaisRapido />
+              </TabsContent>
+              <TabsContent value="analisar-corrigir" className="mt-0 h-full">
+                <AnalisarCorrigir />
+              </TabsContent>
+              <TabsContent value="organizar-otimizar" className="mt-0 h-full">
+                <OrganizarOtimizar />
+              </TabsContent>
+              <TabsContent value="ferramentas-extras" className="mt-0 h-full">
+                <FerramentasExtras />
+              </TabsContent>
+            </Tabs>
           </motion.div>
         </div>
       </div>

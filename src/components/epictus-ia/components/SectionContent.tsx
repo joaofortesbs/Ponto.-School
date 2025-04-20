@@ -16,8 +16,8 @@ export default function SectionContent({ children }: SectionContentProps) {
       transition={{ duration: 0.3 }}
       className="h-full w-full"
     >
-      <ScrollArea className="h-full w-full pr-4">
-        <div className="pb-6">
+      <ScrollArea className="h-full w-full pr-2" style={{ overflow: "auto" }}>
+        <div className="pb-6 pr-4">
           {children}
         </div>
       </ScrollArea>
