@@ -28,7 +28,7 @@ export default function AprenderMaisRapido() {
       id: "resumos-inteligentes",
       title: "Resumos Inteligentes",
       description: "Obtenha resumos concisos e diretos de textos, vídeos, imagens ou PDFs.",
-      icon: <FileText className="h-6 w-6 text-amber-500" />,
+      icon: <FileText className="h-6 w-6 text-white" />,
       badge: null,
       buttonText: "Gerar Resumo"
     },
@@ -36,7 +36,7 @@ export default function AprenderMaisRapido() {
       id: "mapas-mentais",
       title: "Mapas Mentais",
       description: "Transforme qualquer conteúdo em um mapa mental visual e navegável para facilitar a compreensão.",
-      icon: <Network className="h-6 w-6 text-amber-500" />,
+      icon: <Network className="h-6 w-6 text-white" />,
       badge: "Popular",
       buttonText: "Criar Mapa"
     },
@@ -44,7 +44,7 @@ export default function AprenderMaisRapido() {
       id: "simulador-provas",
       title: "Simulador de Provas",
       description: "Faça quizzes e simulados com feedback instantâneo e análise de desempenho.",
-      icon: <FileQuestion className="h-6 w-6 text-amber-500" />,
+      icon: <FileQuestion className="h-6 w-6 text-white" />,
       badge: null,
       buttonText: "Simular Prova"
     },
@@ -52,7 +52,7 @@ export default function AprenderMaisRapido() {
       id: "estudo-competencia",
       title: "Estudo por Competência (BNCC)",
       description: "Encontre atividades e materiais focados em competências específicas da BNCC.",
-      icon: <BookOpen className="h-6 w-6 text-amber-500" />,
+      icon: <BookOpen className="h-6 w-6 text-white" />,
       badge: null,
       buttonText: "Estudar"
     },
@@ -60,7 +60,7 @@ export default function AprenderMaisRapido() {
       id: "revisao-guiada",
       title: "Revisão Guiada",
       description: "Deixe a IA montar uma rota de revisão personalizada com base nos seus erros passados.",
-      icon: <Undo className="h-6 w-6 text-amber-500" />,
+      icon: <Undo className="h-6 w-6 text-white" />,
       badge: "Novo",
       buttonText: "Revisar"
     }
@@ -69,10 +69,15 @@ export default function AprenderMaisRapido() {
   return (
     <div className="h-full flex flex-col">
       <div className="mb-6">
-        <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-          Aprender Mais Rápido
-        </h2>
-        <p className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg">
+            <Zap className="h-6 w-6 text-white" />
+          </div>
+          <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+            Aprender Mais Rápido
+          </h2>
+        </div>
+        <p className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"} ml-[60px]`}>
           Acelere seu aprendizado com ferramentas que transformam conteúdos complexos em formatos fáceis de entender
         </p>
       </div>
@@ -81,24 +86,27 @@ export default function AprenderMaisRapido() {
         {learningTools.map(tool => (
           <Card 
             key={tool.id}
-            className={`p-5 h-full border overflow-hidden group relative ${theme === "dark" ? "bg-gray-800/70 border-gray-700" : "bg-white border-gray-200"} hover:shadow-md transition-shadow duration-300`}
+            className={`p-5 h-full border overflow-hidden group relative ${theme === "dark" ? "bg-gray-800/70 border-gray-700" : "bg-white border-gray-200"} hover:shadow-lg transition-all duration-300 hover:translate-y-[-2px]`}
           >
             <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-amber-500/10 blur-3xl group-hover:bg-amber-500/20 transition-all duration-700"></div>
 
             <div className="flex justify-between items-start mb-4">
-              <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500/90 to-orange-600/90 flex items-center justify-center shadow-md transform group-hover:scale-110 transition-transform duration-300">
                 {tool.icon}
               </div>
 
               {tool.badge && (
-                <Badge className="bg-amber-500 hover:bg-amber-600 text-white text-xs">
+                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs shadow-sm">
                   {tool.badge}
                 </Badge>
               )}
             </div>
 
-            <h3 className={`text-lg font-semibold mb-2 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-              {tool.title}
+            <h3 className={`text-lg font-semibold mb-2 ${theme === "dark" ? "text-white" : "text-gray-900"} inline-block`}>
+              <span className="relative">
+                {tool.title}
+                <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-gradient-to-r from-amber-500 to-orange-600 group-hover:w-full transition-all duration-300"></span>
+              </span>
             </h3>
 
             <p className={`text-sm mb-4 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
@@ -118,12 +126,15 @@ export default function AprenderMaisRapido() {
       <div className="mt-6 flex-1">
         <Card className={`p-5 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-gray-50 border-gray-200"}`}>
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-md">
               <Zap className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h3 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                Método de Aprendizado Acelerado
+              <h3 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"} flex items-center`}>
+                <span className="relative">
+                  Método de Aprendizado Acelerado
+                  <span className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-amber-500 to-orange-600"></span>
+                </span>
               </h3>
               <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
                 Combine as ferramentas desta seção em um fluxo de estudo otimizado: resumo do conteúdo → criação de mapa mental → teste de simulado → revisão guiada. Esta sequência aproveita técnicas comprovadas de aprendizado eficiente.
