@@ -5,5 +5,5 @@ export default {
     'tailwindcss/nesting': {},
     tailwindcss: {},
     autoprefixer: {},
-  },
+  }
 }

@@ -14,6 +14,9 @@
   }
   to {
     opacity: 1;
+    transform: scale(1);
+  }
+}
 
 /* Animation delay classes */
 .animate-delay-100 {
@@ -42,10 +45,6 @@
 
 .animate-delay-1000 {
   animation-delay: 1s;
-}
-
-    transform: scale(1);
-  }
 }
 
 /* Animação de progresso para o fluxograma */
