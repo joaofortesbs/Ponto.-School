@@ -60,9 +60,20 @@ export default function EpictusIAHeader() {
       }
     };
 
+    // Recalcular posição em caso de redimensionamento
+    const handleResize = () => {
+      if (searchOpen && searchInputRef.current) {
+        // Forçar recálculo de posicionamento ao redimensionar
+        searchInputRef.current.focus();
+      }
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('resize', handleResize);
+    
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('resize', handleResize);
     };
   }, [searchOpen]);
 
@@ -175,17 +186,14 @@ export default function EpictusIAHeader() {
           <motion.div
             className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
             onClick={() => {
-              // Evitar múltiplos cliques em rápida sucessão
-              if (!searchOpen) {
-                setSearchOpen(true);
-              } else {
-                setTimeout(() => {
-                  setSearchOpen(false);
-                }, 50);
-              }
+              // Toggle search open/closed state
+              setSearchOpen(prevState => !prevState);
             }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            initial={false}
+            animate={searchOpen ? { rotate: [0, -10, 0] } : { rotate: 0 }}
+            transition={{ duration: 0.3 }}
           >
             <Search className="h-5 w-5 text-white" />
           </motion.div>
@@ -195,12 +203,13 @@ export default function EpictusIAHeader() {
             {searchOpen && (
               <motion.div
                 className="absolute right-0 top-0 z-50 flex items-center"
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ width: "240px", opacity: 1 }}
-                exit={{ width: 0, opacity: 0 }}
+                initial={{ width: 0, opacity: 0, scale: 0.9 }}
+                animate={{ width: "240px", opacity: 1, scale: 1 }}
+                exit={{ width: 0, opacity: 0, scale: 0.9 }}
                 transition={{ 
-                  duration: 0.3, 
-                  ease: "easeInOut",
+                  type: "spring",
+                  stiffness: 400,
+                  damping: 30,
                   opacity: { duration: 0.2 }
                 }}
                 key="search-input"
@@ -226,19 +235,26 @@ export default function EpictusIAHeader() {
             <AnimatePresence mode="wait">
               <motion.div
                 className="fixed bg-white/10 backdrop-blur-md border border-orange-500/30 rounded-lg p-4 shadow-lg w-[240px] z-[9999]"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
                 transition={{ 
-                  duration: 0.3, 
-                  delay: 0.2, 
-                  opacity: { duration: 0.2 } 
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 25,
+                  delay: 0.1,
                 }}
                 key="search-suggestions"
                 style={{
-                  top: searchInputRef.current ? searchInputRef.current.getBoundingClientRect().bottom + 10 : '5rem',
-                  right: searchInputRef.current ? window.innerWidth - searchInputRef.current.getBoundingClientRect().right : '1rem',
-                  boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)'
+                  position: "fixed",
+                  top: searchInputRef.current ? 
+                    searchInputRef.current.getBoundingClientRect().bottom + window.scrollY + 8 : 
+                    '5rem',
+                  left: searchInputRef.current ? 
+                    searchInputRef.current.getBoundingClientRect().left + window.scrollX : 
+                    'auto',
+                  boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)',
+                  transformOrigin: "top center"
                 }}
               >
                 <div className="text-white font-medium">
