@@ -1,24 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Search, Settings, Zap, Sparkles, ChevronDown } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Zap, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/ThemeProvider";
 
 export default function EpictusIAHeader() {
   const { theme } = useTheme();
   const [isHovered, setIsHovered] = useState(false);
-  const [searchFocused, setSearchFocused] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
   const [animationComplete, setAnimationComplete] = useState(false);
-  const [showSearchResults, setShowSearchResults] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement>(null);
-
-  // Mock search results - in a real app, these would come from a search API
-  const searchResults = searchValue.length > 0 ? [
-    { id: 1, title: "Matemática Avançada", category: "Conteúdo" },
-    { id: 2, title: "Química Orgânica", category: "Conteúdo" },
-    { id: 3, title: "Resumos de História", category: "Ferramenta" },
-    { id: 4, title: "Física Quântica", category: "Conteúdo" },
-  ].filter(item => item.title.toLowerCase().includes(searchValue.toLowerCase())) : [];
 
   useEffect(() => {
     // Trigger initial animation
@@ -28,24 +16,6 @@ export default function EpictusIAHeader() {
 
     return () => clearTimeout(timer);
   }, []);
-
-  // Garantir que o evento de click no input funcione corretamente
-  useEffect(() => {
-    if (searchInputRef.current) {
-      const handleInputClick = (e) => {
-        e.stopPropagation();
-        searchInputRef.current.focus();
-      };
-
-      searchInputRef.current.addEventListener('click', handleInputClick);
-
-      return () => {
-        if (searchInputRef.current) {
-          searchInputRef.current.removeEventListener('click', handleInputClick);
-        }
-      };
-    }
-  }, [searchInputRef.current]);
 
   const isDark = theme === "dark";
 
@@ -144,94 +114,6 @@ export default function EpictusIAHeader() {
             Ferramenta com inteligência artificial para potencializar seus estudos
           </p>
         </div>
-      </div>
-
-      {/* Right side controls */}
-      <div className="flex items-center gap-4 z-10">
-        <motion.div 
-          className={`relative flex items-center ${searchFocused ? 'w-64' : 'w-40'} transition-all duration-300`}
-          whileHover={{ scale: 1.02 }}
-          transition={{ type: "spring", stiffness: 400, damping: 20 }}
-        >
-          <div className="absolute inset-0 bg-white/10 backdrop-blur-md rounded-full"></div>
-          <Search className="absolute left-3 h-4 w-4 text-white/70" />
-          <input
-            type="text"
-            ref={searchInputRef}
-            placeholder="Pesquisar..."
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            onFocus={() => {
-              setSearchFocused(true);
-            }}
-            onClick={(e) => {
-              // Prevenir que eventos de clique interfiram
-              e.stopPropagation();
-              // Foco explícito no input quando clicado
-              e.currentTarget.focus();
-            }}
-            onBlur={() => {
-              // Delay hiding search results to allow for clicking on them
-              setTimeout(() => setSearchFocused(false), 200);
-            }}
-            className="bg-transparent w-full py-2 pl-10 pr-4 text-sm text-white placeholder:text-white/50 outline-none rounded-full border border-white/10 focus:border-orange-500/50 transition-colors cursor-text"
-            autoComplete="off"
-            spellCheck="false"
-          />
-          {searchValue && (
-            <motion.button
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              className="absolute right-3 text-white/60 hover:text-white"
-              onClick={() => {
-                setSearchValue("");
-                if (searchInputRef.current) {
-                  searchInputRef.current.focus();
-                }
-              }}
-            >
-              ×
-            </motion.button>
-          )}
-
-          {/* Search Results Dropdown */}
-          <AnimatePresence>
-            {searchFocused && searchValue.length > 0 && searchResults.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="absolute top-full left-0 w-full mt-2 bg-white/10 backdrop-blur-xl rounded-lg shadow-lg z-50 border border-white/10 overflow-hidden"
-              >
-                <div className="p-2">
-                  {searchResults.map((result) => (
-                    <div 
-                      key={result.id}
-                      className="py-2 px-3 hover:bg-white/10 rounded-md cursor-pointer transition-colors flex items-center justify-between group"
-                      onClick={() => {
-                        // In a real app, this would navigate to the result
-                        setSearchValue("");
-                        setSearchFocused(false);
-                      }}
-                    >
-                      <span className="text-white text-sm">{result.title}</span>
-                      <span className="text-white/50 text-xs group-hover:text-orange-400 transition-colors">{result.category}</span>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/80 hover:text-white transition-colors"
-        >
-          <Settings className="h-5 w-5" />
-        </motion.button>
       </div>
 
       {/* Hidden until expansion - will appear when user interaction happens */}
