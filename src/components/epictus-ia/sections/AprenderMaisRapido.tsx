@@ -6,7 +6,7 @@ import {
   LearningToolCard, 
   MethodCard
 } from "./components/aprender-mais-rapido";
-import { learningTools } from "./components/aprender-mais-rapido/learningToolsData.ts";
+import { learningTools } from "./components/aprender-mais-rapido/learningToolsData.tsx";
 export default function AprenderMaisRapido() {
   const { theme } = useTheme();
 
