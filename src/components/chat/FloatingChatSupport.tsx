@@ -1745,6 +1745,10 @@ Exemplo de formato da resposta:
             <img src="/vite.svg" alt="Logo" className="w-4 h-4" />
           </div>
           <span className="text-white font-semibold text-sm">Ponto.School</span>
+          <div className="flex items-center bg-purple-600 text-white text-xs py-0.5 px-2 rounded-full ml-1">
+            <span className="w-3.5 h-3.5 rounded-full bg-purple-400 flex items-center justify-center mr-1 font-bold">!</span>
+            <span className="font-medium">Versão BETA</span>
+          </div>
         </div>
         <div className="flex -space-x-2">
           <div className="relative">
