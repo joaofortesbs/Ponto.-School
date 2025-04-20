@@ -15,10 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Brain, Send, X, Sparkles, Lightbulb, Rocket } from "lucide-react";
 
-interface EpictusIAHelperProps {
-  context?: string;
-  suggestions?: string[];
-}
+// This file is marked for deletion
 
 const EpictusIAHelper: React.FC<EpictusIAHelperProps> = ({
   context = "turmas",

@@ -559,7 +559,7 @@ const FlowSessionCard: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <Brain className="h-4 w-4 text-[#FF6B00]" />
                       <span className="text-sm text-[#29335C] dark:text-white">
-                        Assistência do Epictus IA
+                        Assistência IA
                       </span>
                     </div>
                     <Select defaultValue="medium">
@@ -789,13 +789,13 @@ const FlowSessionCard: React.FC = () => {
                 </div>
               </div>
 
-              {/* Right Column - Epictus IA */}
+              {/* Right Column - AI Assistant */}
               <div className="md:col-span-1">
                 <div className="bg-gradient-to-br from-[#001427] to-[#29335C] text-white rounded-lg p-4 border border-[#FF6B00]/30 h-full flex flex-col">
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="font-semibold text-white flex items-center gap-2">
                       <Brain className="h-4 w-4 text-[#FF6B00]" />
-                      Epictus IA
+                      Assistente IA
                     </h4>
                     <Button
                       variant="ghost"

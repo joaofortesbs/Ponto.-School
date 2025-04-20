@@ -23,7 +23,7 @@ export default function Dashboard() {
             console.error('Erro ao parsear perfil em cache:', e);
           }
         }
-        
+
         // Buscar do backend em segundo plano
         const profile = await profileService.getCurrentUserProfile();
         if (profile) {
@@ -60,6 +60,7 @@ export default function Dashboard() {
       ) : (
         <MetricsGrid />
       )}
+      {/* Removed Epictus IA Card */}
     </div>
   );
 }
