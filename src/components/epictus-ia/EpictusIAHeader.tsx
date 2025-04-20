@@ -196,10 +196,20 @@ export default function EpictusIAHeader() {
               e.preventDefault();
               
               // Limpar a posição do modal antes de alternar o estado
+              // para forçar o recálculo da posição quando o input expandir
               modalPositionRef.current = null;
               
               // Toggle search open/closed state de forma imediata
               setSearchOpen(prevState => !prevState);
+              
+              // Precisamos de um pequeno delay para garantir que o input expandiu completamente
+              // antes de posicionar o modal
+              if (!searchOpen) {
+                setTimeout(() => {
+                  // Forçar recálculo da posição do modal após a expansão do input
+                  modalPositionRef.current = null;
+                }, 50);
+              }
             }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -259,35 +269,35 @@ export default function EpictusIAHeader() {
                 key="search-suggestions"
                 ref={(node) => {
                   if (node && searchInputRef.current) {
-                    // Calculamos a posição centralizada embaixo do campo de pesquisa
+                    // Obter as dimensões e posição do componente de pesquisa expandido
                     const inputRect = searchInputRef.current.getBoundingClientRect();
                     const modalWidth = 240; // largura do modal definida na classe w-[240px]
                     
-                    // Obter as coordenadas do campo de pesquisa para posicionar o modal adequadamente
-                    // O modal deve aparecer centralizado abaixo do campo de pesquisa como na imagem
+                    // Calcular a posição centralizada em relação ao campo de pesquisa expandido
+                    // Encontrar o centro do input e alinhar o modal com esse centro
+                    const inputCenter = inputRect.left + (inputRect.width / 2);
                     
-                    // Calcular o centro do campo de pesquisa - ajustando a posição conforme a imagem
-                    // A imagem mostra que o modal precisa estar mais centralizado com o campo
-                    const searchContainerWidth = inputRect.width;
-                    
-                    // Calcular a posição final, ajustada conforme a imagem referência
-                    // Reduzimos o offset para centralizar o modal com o campo de pesquisa
-                    const adjustedLeft = (inputRect.left + inputRect.width/2) - (modalWidth/2) - 40; // Offset ajustado
+                    // Posição left: centralizar o modal em relação ao campo de pesquisa
+                    // sem depender de offsets fixos que podem causar problemas
+                    const modalLeft = inputCenter - (modalWidth / 2);
                     
                     // Configurar posição fixa do modal
                     node.style.position = "fixed";
-                    node.style.top = `${inputRect.bottom + window.scrollY + 8}px`;
-                    node.style.left = `${adjustedLeft}px`;
+                    node.style.top = `${inputRect.bottom + window.scrollY + 8}px`; // 8px de espaço
+                    node.style.left = `${modalLeft}px`;
                     node.style.width = `${modalWidth}px`;
                     node.style.boxShadow = "0 10px 25px rgba(0, 0, 0, 0.3)";
                     node.style.transformOrigin = "top center";
+                    node.style.zIndex = "9999"; // Garantir que o modal fique acima de outros elementos
                     
-                    // Sempre atualizar a posição para garantir que fique correta
-                    // Isto evita problemas quando o modal precisar ser reposicionado
-                    modalPositionRef.current = {
-                      top: inputRect.bottom + window.scrollY + 8,
-                      left: adjustedLeft
-                    };
+                    // Atualizar a referência de posição para evitar recálculos constantes
+                    // que podem causar oscilações na posição do modal
+                    if (!modalPositionRef.current) {
+                      modalPositionRef.current = {
+                        top: inputRect.bottom + window.scrollY + 8,
+                        left: modalLeft
+                      };
+                    }
                   }
                 }}
                 style={modalPositionRef.current ? {
