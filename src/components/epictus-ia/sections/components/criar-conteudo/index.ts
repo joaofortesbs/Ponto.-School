@@ -1,12 +1,5 @@
 
-import SectionHeader from './SectionHeader';
-import CategoryHeader from './CategoryHeader';
-import ToolCard from './ToolCard';
-import ToolsGrid from './ToolsGrid';
-
-export {
-  SectionHeader,
-  CategoryHeader,
-  ToolCard,
-  ToolsGrid
-};
+export { default as SectionHeader } from './SectionHeader';
+export { default as CategoryHeader } from './CategoryHeader';
+export { default as ToolCard } from './ToolCard';
+export { default as ToolsGrid } from './ToolsGrid';

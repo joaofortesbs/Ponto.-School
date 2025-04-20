@@ -1,16 +1,14 @@
 
 import React from "react";
 import { useTheme } from "@/components/ThemeProvider";
-import { LucideIcon } from "lucide-react";
 
 interface CategoryHeaderProps {
-  icon: React.ReactNode;
+  icon: React.ReactElement;
   title: string;
 }
 
-const CategoryHeader: React.FC<CategoryHeaderProps> = ({ icon, title }) => {
+const CategoryHeader = ({ icon, title }: CategoryHeaderProps) => {
   const { theme } = useTheme();
-  
   return (
     <div className="flex items-center gap-2 mb-4">
       <div className="p-1 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600">
