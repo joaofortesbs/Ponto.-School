@@ -325,11 +325,6 @@ export function SidebarNav({
       isSpecial: true,
     },
     {
-      icon: <Brain className="h-5 w-5" />,
-      label: "Epictus IA",
-      path: "/epictus-ia",
-    },
-    {
       icon: <Calendar className="h-5 w-5" />,
       label: "Agenda",
       path: "/agenda",
