@@ -265,7 +265,6 @@ export default function EpictusIAHeader() {
                     
                     // Obter as coordenadas do campo de pesquisa para posicionar o modal adequadamente
                     // O modal deve aparecer centralizado abaixo do campo de pesquisa como na imagem
-                    const modalWidth = 240; // Largura fixa do modal
                     
                     // Calcular o centro do campo de pesquisa - ajustando a posição conforme a imagem
                     // A imagem mostra que o modal precisa estar mais centralizado com o campo
