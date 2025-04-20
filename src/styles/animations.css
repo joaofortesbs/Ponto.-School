@@ -14,9 +14,6 @@
   }
   to {
     opacity: 1;
-    transform: scale(1);
-  }
-}
 
 /* Animation delay classes */
 .animate-delay-100 {
@@ -45,6 +42,10 @@
 
 .animate-delay-1000 {
   animation-delay: 1s;
+}
+
+    transform: scale(1);
+  }
 }
 
 /* Animação de progresso para o fluxograma */
@@ -82,7 +83,7 @@
   }
 }
 
-@keyframes fadeInUp {
+@keyframes fadeIn {
   from {
     opacity: 0;
     transform: translateY(10px);
@@ -587,7 +588,7 @@
   text-decoration: none;
   cursor: pointer;
 }
-/* Animações adicionais para interface interativa */
+//Further modifications needed here to fulfill the complete user request.
 @keyframes float {
   0%, 100% {
     transform: translateY(0);
