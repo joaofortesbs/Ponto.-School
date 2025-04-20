@@ -1,13 +1,25 @@
-import React, { useState, useEffect } from "react";
-import { Zap, Sparkles } from "lucide-react";
-import { motion } from "framer-motion";
+import React, { useState, useEffect, useRef } from "react";
+import { Zap, Sparkles, Search } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/ThemeProvider";
-
+import { Input } from "@/components/ui/input";
+import TypewriterEffect from "@/components/ui/typewriter-effect";
+import { createPortal } from "react-dom";
 
 export default function EpictusIAHeader() {
   const { theme } = useTheme();
   const [isHovered, setIsHovered] = useState(false);
   const [animationComplete, setAnimationComplete] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [isMounted, setIsMounted] = useState(false);
+  
+  // Garante que o portal só será renderizado após a montagem do componente
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
 
   useEffect(() => {
     // Trigger initial animation
@@ -17,6 +29,58 @@ export default function EpictusIAHeader() {
 
     return () => clearTimeout(timer);
   }, []);
+
+  // Referência para guardar a posição inicial do modal
+  const modalPositionRef = useRef<{ top: number; left: number } | null>(null);
+
+  useEffect(() => {
+    // Quando a busca é aberta, foca no input imediatamente
+    if (searchOpen && searchInputRef.current) {
+      // Foco imediato sem atrasos
+      searchInputRef.current.focus();
+      
+      // Resetar a posição do modal para que seja recalculada
+      modalPositionRef.current = null;
+    } else {
+      // Limpar referência de posição quando fechar o campo de pesquisa
+      modalPositionRef.current = null;
+    }
+  }, [searchOpen]);
+
+  // Função para gerenciar cliques fora do componente de busca
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        searchOpen && 
+        searchInputRef.current && 
+        !searchInputRef.current.contains(event.target as Node) &&
+        !(event.target as Element).closest('.search-icon-container')
+      ) {
+        // Fechar imediatamente sem setTimeout para evitar estados intermediários
+        setSearchOpen(false);
+      }
+    };
+
+    // Lidar com redimensionamento apenas para casos de mudança drástica na tela
+    const handleResize = () => {
+      if (searchOpen && searchInputRef.current) {
+        // Recalcular posição apenas em caso de resize real, sem manipular foco
+        const rect = searchInputRef.current.getBoundingClientRect();
+        modalPositionRef.current = {
+          top: rect.bottom + window.scrollY + 8,
+          left: rect.left + window.scrollX
+        };
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [searchOpen]);
 
   const isDark = theme === "dark";
 
@@ -72,14 +136,28 @@ export default function EpictusIAHeader() {
             whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 400, damping: 10 }}
           >
-            <motion.div
-              key="icon"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex items-center justify-center"
-            >
-              <span className="text-white font-bold text-lg">IA</span>
-            </motion.div>
+            <AnimatePresence>
+              {animationComplete ? (
+                <motion.div
+                  key="icon"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="flex items-center justify-center"
+                >
+                  <span className="text-white font-bold text-lg">IA</span>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="loading"
+                  initial={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex items-center justify-center"
+                >
+                  <Sparkles className="h-6 w-6 text-white animate-pulse" />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </div>
 
@@ -103,6 +181,133 @@ export default function EpictusIAHeader() {
         </div>
       </div>
 
+      {/* Search component */}
+      <div className="flex items-center justify-center z-10 relative search-icon-container">
+        <motion.div
+          className="relative"
+          initial={false}
+        >
+          {/* Search icon/button */}
+          <motion.div
+            className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
+            onClick={(e) => {
+              // Prevenir qualquer propagação que possa causar recálculos
+              e.stopPropagation();
+              e.preventDefault();
+              
+              // Limpar a posição do modal antes de alternar o estado
+              modalPositionRef.current = null;
+              
+              // Toggle search open/closed state de forma imediata
+              setSearchOpen(prevState => !prevState);
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            initial={false}
+            animate={searchOpen ? { rotate: [0, -10, 0] } : { rotate: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Search className="h-5 w-5 text-white" />
+          </motion.div>
+          
+          {/* Expanding search input */}
+          <AnimatePresence mode="wait">
+            {searchOpen && (
+              <motion.div
+                className="absolute right-0 top-0 z-50 flex items-center"
+                initial={{ width: 0, opacity: 0, scale: 0.9 }}
+                animate={{ width: "240px", opacity: 1, scale: 1 }}
+                exit={{ width: 0, opacity: 0, scale: 0.9 }}
+                transition={{ 
+                  type: "spring",
+                  stiffness: 400,
+                  damping: 30,
+                  opacity: { duration: 0.2 }
+                }}
+                key="search-input"
+              >
+                <Input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Pesquisar..."
+                  className="h-10 pl-4 pr-10 rounded-full border-2 border-orange-500/50 focus:border-orange-500 bg-gradient-to-r from-[#0c2341]/90 to-[#0f3562]/90 backdrop-blur-md text-white placeholder:text-white/70 shadow-lg"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    boxShadow: '0 4px 12px rgba(255, 107, 0, 0.15)'
+                  }}
+                />
+                <Search className="h-5 w-5 text-white absolute right-3 pointer-events-none" />
+              </motion.div>
+            )}
+          </AnimatePresence>
+          
+          {/* Typewriter suggestion modal */}
+          {isMounted && searchOpen && createPortal(
+            <AnimatePresence mode="wait">
+              <motion.div
+                className="fixed bg-white/10 backdrop-blur-md border border-orange-500/30 rounded-lg p-4 shadow-lg w-[240px] z-[9999]"
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                transition={{ 
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 25,
+                  delay: 0.05,
+                }}
+                key="search-suggestions"
+                ref={(node) => {
+                  if (node && searchInputRef.current) {
+                    // Calculamos a posição centralizada embaixo do campo de pesquisa
+                    const inputRect = searchInputRef.current.getBoundingClientRect();
+                    const modalWidth = 240; // largura do modal definida na classe w-[240px]
+                    
+                    // Obter as coordenadas do campo de pesquisa para posicionar o modal adequadamente
+                    // O modal deve aparecer centralizado abaixo do campo de pesquisa como na imagem
+                    
+                    // Calcular o centro do campo de pesquisa - ajustando a posição conforme a imagem
+                    // A imagem mostra que o modal precisa estar mais centralizado com o campo
+                    const searchContainerWidth = inputRect.width;
+                    
+                    // Calcular a posição final, ajustada conforme a imagem referência
+                    // Reduzimos o offset para centralizar o modal com o campo de pesquisa
+                    const adjustedLeft = (inputRect.left + inputRect.width/2) - (modalWidth/2) - 40; // Offset ajustado
+                    
+                    // Configurar posição fixa do modal
+                    node.style.position = "fixed";
+                    node.style.top = `${inputRect.bottom + window.scrollY + 8}px`;
+                    node.style.left = `${adjustedLeft}px`;
+                    node.style.width = `${modalWidth}px`;
+                    node.style.boxShadow = "0 10px 25px rgba(0, 0, 0, 0.3)";
+                    node.style.transformOrigin = "top center";
+                    
+                    // Sempre atualizar a posição para garantir que fique correta
+                    // Isto evita problemas quando o modal precisar ser reposicionado
+                    modalPositionRef.current = {
+                      top: inputRect.bottom + window.scrollY + 8,
+                      left: adjustedLeft
+                    };
+                  }
+                }}
+                style={modalPositionRef.current ? {
+                  top: `${modalPositionRef.current.top}px`,
+                  left: `${modalPositionRef.current.left}px`
+                } : undefined}
+              >
+                <div className="text-white font-medium">
+                  <TypewriterEffect 
+                    text="O que você precisa fazer hoje?" 
+                    typingSpeed={30}
+                    className="text-sm"
+                  />
+                </div>
+              </motion.div>
+            </AnimatePresence>,
+            document.body
+          )}
+        </motion.div>
+      </div>
 
       {/* Hidden until expansion - will appear when user interaction happens */}
       <div className="absolute bottom-0 left-0 w-full h-1">
