@@ -118,6 +118,7 @@ export default function EpictusIAComplete() {
   // Verificar se o Turbo está ativo
   useEffect(() => {
     const turboActive = localStorage.getItem("epictus_turbo_active");
+    console.log("Estado do Turbo:", turboActive);
     setIsTurboActive(turboActive === "true");
   }, []);
 

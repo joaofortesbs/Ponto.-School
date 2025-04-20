@@ -8,6 +8,7 @@ export const EpictusTurboCard: React.FC = () => {
   const navigate = useNavigate();
   
   const handleActivateTurbo = () => {
+    console.log("Ativando modo Turbo...");
     // Armazenar no localStorage que o Turbo foi ativado
     localStorage.setItem("epictus_turbo_active", "true");
     // Recarregar a página atual para aplicar a interface Turbo
