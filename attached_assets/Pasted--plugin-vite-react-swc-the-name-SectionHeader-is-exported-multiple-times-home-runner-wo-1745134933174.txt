@@ -1,0 +1,68 @@
+[plugin:vite:react-swc] × the name `SectionHeader` is exported multiple times
+   ╭─[/home/runner/workspace/src/components/epictus-ia/sections/components/criar-conteudo/index.ts:1:1]
+ 1 │ 
+ 2 │ export { default as SectionHeader } from './SectionHeader';
+   ·                     ──────┬──────
+   ·                           ╰── previous exported here
+ 3 │ export { default as CategoryHeader } from './CategoryHeader';
+ 4 │ export { default as ToolCard } from './ToolCard';
+ 5 │ export { default as ToolsGrid } from './ToolsGrid';
+ 6 │ export { default as SectionHeader } from './SectionHeader';
+   ·                     ──────┬──────
+   ·                           ╰── exported more than once
+ 7 │ export { default as CategoryHeader } from './CategoryHeader';
+ 8 │ export { default as ToolsGrid } from './ToolsGrid';
+ 9 │ export { default as PlanoAulaCard } from './PlanoAulaCard';
+   ╰────
+
+Error: 
+  ☞ Exported identifiers must be unique
+
+  × the name `CategoryHeader` is exported multiple times
+    ╭─[/home/runner/workspace/src/components/epictus-ia/sections/components/criar-conteudo/index.ts:1:1]
+  1 │ 
+  2 │ export { default as SectionHeader } from './SectionHeader';
+  3 │ export { default as CategoryHeader } from './CategoryHeader';
+    ·                     ───────┬──────
+    ·                            ╰── previous exported here
+  4 │ export { default as ToolCard } from './ToolCard';
+  5 │ export { default as ToolsGrid } from './ToolsGrid';
+  6 │ export { default as SectionHeader } from './SectionHeader';
+  7 │ export { default as CategoryHeader } from './CategoryHeader';
+    ·                     ───────┬──────
+    ·                            ╰── exported more than once
+  8 │ export { default as ToolsGrid } from './ToolsGrid';
+  9 │ export { default as PlanoAulaCard } from './PlanoAulaCard';
+ 10 │ export { default as SlidesDidaticosCard } from './SlidesDidaticosCard';
+    ╰────
+
+Error: 
+  ☞ Exported identifiers must be unique
+
+  × the name `ToolsGrid` is exported multiple times
+    ╭─[/home/runner/workspace/src/components/epictus-ia/sections/components/criar-conteudo/index.ts:2:1]
+  2 │ export { default as SectionHeader } from './SectionHeader';
+  3 │ export { default as CategoryHeader } from './CategoryHeader';
+  4 │ export { default as ToolCard } from './ToolCard';
+  5 │ export { default as ToolsGrid } from './ToolsGrid';
+    ·                     ────┬────
+    ·                         ╰── previous exported here
+  6 │ export { default as SectionHeader } from './SectionHeader';
+  7 │ export { default as CategoryHeader } from './CategoryHeader';
+  8 │ export { default as ToolsGrid } from './ToolsGrid';
+    ·                     ────┬────
+    ·                         ╰── exported more than once
+  9 │ export { default as PlanoAulaCard } from './PlanoAulaCard';
+ 10 │ export { default as SlidesDidaticosCard } from './SlidesDidaticosCard';
+ 11 │ export { default as ListaExerciciosCard } from './ListaExerciciosCard';
+    ╰────
+
+Error: 
+  ☞ Exported identifiers must be unique
+/home/runner/workspace/src/components/epictus-ia/sections/components/criar-conteudo/index.ts:1:1
+1  |  
+2  |  export { default as SectionHeader } from './SectionHeader';
+   |  ^
+3  |  export { default as CategoryHeader } from './CategoryHeader';
+4  |  export { default as ToolCard } from './ToolCard';
+Click outside, press Esc key, or fix the code to dismiss.
