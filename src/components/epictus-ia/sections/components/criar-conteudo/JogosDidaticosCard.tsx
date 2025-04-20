@@ -2,21 +2,20 @@
 import React from "react";
 import { Gamepad2 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
-import ToolCard from "./ToolCard";
+import { ToolCard } from ".";
 
 const JogosDidaticosCard = () => {
   const { theme } = useTheme();
-
-  const tool = {
-    id: "jogos-didaticos",
-    title: "Gerador de Jogos Didáticos",
-    description: "Crie caça-palavras, forcas e outros jogos interativos baseados no seu conteúdo.",
-    icon: <Gamepad2 className="h-6 w-6 text-white" />,
-    badge: null,
-    buttonText: "Criar Jogo"
-  };
-
-  return <ToolCard tool={tool} />;
+  
+  return (
+    <ToolCard
+      title="Gerador de Jogos Didáticos"
+      description="Crie jogos educativos para engajar os alunos e tornar o aprendizado divertido"
+      icon={<Gamepad2 className="h-6 w-6 text-white" />}
+      iconBgColor="bg-emerald-500"
+      href="/epictus-ia/jogos-didaticos"
+    />
+  );
 };
 
 export default JogosDidaticosCard;

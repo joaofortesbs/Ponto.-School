@@ -1,22 +1,21 @@
 
 import React from "react";
-import { UsersRound } from "lucide-react";
+import { Network } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
-import ToolCard from "./ToolCard";
+import { ToolCard } from ".";
 
 const AtividadesInterdisciplinaresCard = () => {
   const { theme } = useTheme();
-
-  const tool = {
-    id: "atividades-interdisciplinares",
-    title: "Gerador de Atividades Interdisciplinares",
-    description: "Desenvolva propostas de atividades que conectam duas ou mais disciplinas.",
-    icon: <UsersRound className="h-6 w-6 text-white" />,
-    badge: null,
-    buttonText: "Gerar Atividade"
-  };
-
-  return <ToolCard tool={tool} />;
+  
+  return (
+    <ToolCard
+      title="Gerador de Atividades Interdisciplinares"
+      description="Crie atividades que integram diferentes disciplinas para um aprendizado holístico"
+      icon={<Network className="h-6 w-6 text-white" />}
+      iconBgColor="bg-emerald-500"
+      href="/epictus-ia/atividades-interdisciplinares"
+    />
+  );
 };
 
 export default AtividadesInterdisciplinaresCard;
