@@ -8,7 +8,16 @@ import {
   Undo
 } from "lucide-react";
 
-export const learningTools = [
+export type LearningTool = {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  badge: string | null;
+  buttonText: string;
+}
+
+export const learningTools: LearningTool[] = [
   {
     id: "resumos-inteligentes",
     title: "Resumos Inteligentes",
