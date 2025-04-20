@@ -11,7 +11,6 @@ import SectionCard from "@/components/epictus-ia/components/SectionCard";
 import SectionContent from "@/components/epictus-ia/components/SectionContent";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChatInteligente, CriarConteudo, AprenderMaisRapido, AnalisarCorrigir, OrganizarOtimizar, FerramentasExtras } from "@/components/epictus-ia/sections";
-
 import {
   Brain,
   Search,
@@ -36,6 +35,8 @@ import {
   Zap,
   BrainCircuit,
 } from "lucide-react";
+import EpictusIAHeader from "./EpictusIAHeader"; // Added import for the new header component
+
 
 // Definição das abas/seções
 const sections = [
@@ -131,7 +132,7 @@ export default function EpictusIAComplete() {
   // Filtra as seções com base na busca
   useEffect(() => {
     if (searchQuery) {
-      const filtered = sections.filter(section => 
+      const filtered = sections.filter(section =>
         section.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         section.description.toLowerCase().includes(searchQuery.toLowerCase())
       );
@@ -178,67 +179,14 @@ export default function EpictusIAComplete() {
 
   return (
     <div className={`w-full flex flex-col ${theme === "dark" ? "bg-[#001427]" : "bg-gray-50"} transition-colors duration-300 overflow-y-auto min-h-screen`}>
-      {/* Header com título e informações da IA */}
-      <div className={`px-6 py-4 flex items-center justify-between border-b ${theme === "dark" ? "border-gray-800" : "border-gray-200"} sticky top-0 z-30 ${theme === "dark" ? "bg-[#001427]" : "bg-gray-50"}`}>
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF9B50] flex items-center justify-center">
-            <BrainCircuit className="h-6 w-6 text-white" />
-          </div>
-          <div>
-            <h1 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"} flex items-center gap-2`}>
-              Epictus IA
-              <Badge className="ml-2 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white hover:from-[#FF9B50] hover:to-[#FF6B00] transition-all duration-300">
-                <Sparkles className="h-3.5 w-3.5 mr-1" /> Premium
-              </Badge>
-            </h1>
-            <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-              Ferramenta com inteligência artificial para potencializar seus estudos
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={`rounded-full ${theme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"}`}
-                  onClick={() => setShowSearch(!showSearch)}
-                >
-                  <Search className={`h-5 w-5 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Buscar ferramenta</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={`rounded-full ${theme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"}`}
-                  onClick={() => setShowSettings(!showSettings)}
-                >
-                  <Settings className={`h-5 w-5 ${theme === "dark" ? "text-gray-400" : "text-gray-600"} ${showSettings ? "animate-spin" : ""}`} style={{ animationDuration: '3s' }} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Configurações</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
+      <div className="p-4"> {/* This is where the new header is inserted */}
+        <EpictusIAHeader />
       </div>
 
       {/* Painel de busca (aparece quando showSearch é true) */}
       <AnimatePresence>
         {showSearch && (
-          <motion.div 
+          <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -441,7 +389,7 @@ export default function EpictusIAComplete() {
             </Button>
           </div>
 
-          <motion.div 
+          <motion.div
             ref={carouselRef}
             className="flex items-center justify-center h-[240px]"
             drag="x"
@@ -461,7 +409,7 @@ export default function EpictusIAComplete() {
               {sections.map((section, index) => {
                 // Calcular a posição relativa ao item ativo com lógica de rolagem infinita
                 let position = index - carouselIndex;
-                
+
                 // Ajustar posição para criar efeito de rolagem infinita
                 if (Math.abs(position) > sections.length / 2) {
                   position = position - Math.sign(position) * sections.length;
@@ -481,7 +429,7 @@ export default function EpictusIAComplete() {
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                     onClick={() => selectSection(index)}
                   >
-                    <div 
+                    <div
                       className={cn(
                         `w-64 rounded-xl overflow-hidden border-2 transform transition-all group`,
                         position === 0 ? `shadow-lg ${section.borderColor}` : 'border-transparent',
@@ -503,20 +451,20 @@ export default function EpictusIAComplete() {
                         )}
 
                         <div className="flex justify-between items-start">
-                          <div 
+                          <div
                             className={`w-12 h-12 rounded-full bg-gradient-to-br ${section.color} flex items-center justify-center`}
                           >
                             {section.icon}
                           </div>
 
                           {section.badge && (
-                            <Badge 
+                            <Badge
                               className={`bg-white/90 text-xs font-medium animate-pulse ${
-                                section.badge === "Novo" 
-                                  ? "text-emerald-600" 
-                                  : section.badge === "Beta" 
-                                  ? "text-purple-600" 
-                                  : section.badge === "Popular" 
+                                section.badge === "Novo"
+                                  ? "text-emerald-600"
+                                  : section.badge === "Beta"
+                                  ? "text-purple-600"
+                                  : section.badge === "Popular"
                                   ? "text-blue-600"
                                   : "text-amber-600"
                               }`}
@@ -548,8 +496,8 @@ export default function EpictusIAComplete() {
               <button
                 key={section.id}
                 className={`w-2 h-2 rounded-full transition-all ${
-                  index === carouselIndex 
-                    ? "w-6 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50]" 
+                  index === carouselIndex
+                    ? "w-6 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50]"
                     : theme === "dark" ? "bg-gray-700" : "bg-gray-300"
                 }`}
                 onClick={() => selectSection(index)}
@@ -560,7 +508,7 @@ export default function EpictusIAComplete() {
 
         {/* Conteúdo da seção ativa */}
         <div className="flex-1 px-6 pb-12 overflow-y-visible">
-          <motion.div 
+          <motion.div
             key={activeSection}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
