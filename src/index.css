@@ -27,44 +27,6 @@
 @import "./styles/header-animations.css";
 
 @tailwind base;
-
-/* Card glow effect */
-.card-container {
-  --background: linear-gradient(to left, #f7ba2b 0%, #ea5358 100%);
-  position: relative;
-  z-index: 1;
-  padding: 1px; /* Espaço mínimo para o contorno */
-  border-radius: inherit;
-}
-
-.card-container::after {
-  position: absolute;
-  content: "";
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: -1;
-  border-radius: inherit;
-  filter: blur(6px); /* Blur reduzido para um contorno mais fino */
-  background: var(--background);
-  opacity: 0.4; /* Opacidade reduzida */
-  transition: opacity .5s;
-}
-
-.card-container:hover::after {
-  opacity: 0;
-}
-
-.card-content {
-  background: inherit;
-  border-radius: inherit;
-  position: relative;
-  z-index: 2;
-  height: 100%;
-  width: 100%;
-}
-
 @tailwind components;
 @tailwind utilities;
 
