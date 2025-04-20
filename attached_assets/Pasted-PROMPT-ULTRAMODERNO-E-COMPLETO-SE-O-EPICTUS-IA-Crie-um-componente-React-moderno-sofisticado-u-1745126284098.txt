@@ -1,0 +1,152 @@
+PROMPT ULTRAMODERNO E COMPLETO — “SEÇÃO EPICTUS IA”
+Crie um componente React moderno, sofisticado, ultra visual e interativo, representando a interface principal da seção "Epictus IA" da minha plataforma educacional.
+
+Essa interface será o coração da plataforma, acessada diariamente por estudantes e professores. Por isso, precisa ser impressionante, fluida, clara, responsiva e com experiência de usuário de altíssimo nível.
+
+🎯 OBJETIVO PRINCIPAL:
+Exibir diferentes mini-seções de IA, cada uma com funcionalidades únicas.
+
+Interface com interação intuitiva, animações cativantes, visual premium.
+
+Design 100% responsivo, preparado para desktop, tablet e mobile.
+
+🧩 1. TOPO — SELETOR DE MINI-SEÇÕES (CARROSSEL 3D INTERATIVO)
+Estilo roleta carrossel em perspectiva 3D.
+
+O item central está em destaque com tamanho aumentado, brilho externo, sombra de profundidade e efeito de "zoom pop".
+
+Os cards laterais diminuem de tamanho, com rotação leve (parallax-like), simulando profundidade.
+
+Cards são ovalados com vidro fosco (glassmorphism), sombras suaves e contorno neon pulsante discreto.
+
+Cada card contém:
+
+Ícone animado (SVG/Lottie, se possível).
+
+Nome da mini-seção com fonte moderna (ex: Inter, Sora ou Poppins).
+
+Badge com status (Ex: “Beta”, “Novo”, etc.) com micro-animação.
+
+Rolagem por:
+
+Mouse scroll
+
+Drag com movimento suave
+
+Setas laterais (com hover reativo)
+
+Swipe no mobile
+
+Utilizar Framer Motion + Tailwind + perspectiva 3D + easing custom.
+
+🖥️ 2. CORPO — ÁREA DE CONTEÚDO DA MINI-SEÇÃO ATIVA
+Painel central modular, com transições suaves entre mini-seções.
+
+Animação ao trocar seção: fade + slide + scale, com Framer Motion.
+
+Layout interno com:
+
+Cards interativos com hover 3D tilt, microanimações e feedback tátil.
+
+Botões com efeitos futuristas (glow on hover, ripple effect, shadow pulse).
+
+Tooltips inteligentes ao passar o mouse nos elementos.
+
+Possível suporte a drag and drop interno.
+
+Design visual:
+
+Vidro fosco com blur e transparência ajustada por camada.
+
+Sombras projetadas suaves (box shadow em camadas).
+
+Separações visuais com linhas de luz neon finas ou glow linear.
+
+Transições com delay elegante e hierarquia visual clara.
+
+Componentes como “cards de função” podem conter:
+
+Título
+
+Descrição curta
+
+Ações principais (botões, toggles)
+
+Ícone temático (animado)
+
+🔍 3. CANTO ESQUERDO — BOTÃO DE BUSCA DE MINI-SEÇÕES
+Ícone de lupa estilizado com hover glow.
+
+Ao clicar, abre um campo de busca deslizante ou expansível com:
+
+Glassmorphism + sombra
+
+Animação de digitação reativa
+
+Auto-complete inteligente com scroll.
+
+Miniaturas/ícones ao lado dos nomes.
+
+Pressionar ESC ou clicar fora fecha o campo com efeito retrátil.
+
+⚙️ 4. CANTO DIREITO — BOTÃO DE CONFIGURAÇÕES
+Ícone animado de engrenagem (gira lentamente no hover).
+
+Ao clicar, abre um painel lateral com slide suave da direita, com:
+
+Toggle modo escuro/claro com animação (lua/sol).
+
+Seletor de idioma.
+
+Sistema de reordenar as mini-seções (arraste e solte, drag and drop com Framer Motion).
+
+Preferências de acessibilidade.
+
+Controle de transparência/tema (ajuste visual ao gosto do usuário).
+
+💠 5. DESIGN GERAL E ESTILO VISUAL
+Estética: ultramoderna, elegante, com identidade tecnológica e educacional.
+
+Use Tailwind CSS com classes personalizadas para o estilo avançado.
+
+Elementos com:
+
+Glassmorphism realista (blur, transparência, brilho).
+
+Bordas arredondadas (2xl+)
+
+Sombras suaves e multicamadas
+
+Gradientes suaves (roxo, azul, lilás, cinza claro, neon discreto).
+
+Fontes modernas com hierarchy clara (Inter, Sora, Manrope).
+
+Animações com Framer Motion — suaves, com easing personalizado.
+
+Adicionar transições entre seções, micro-interações e efeitos de movimento natural.
+
+Design 100% responsivo para funcionar perfeitamente em qualquer dispositivo.
+
+⚙️ TECNOLOGIAS E BIBLIOTECAS PERMITIDAS:
+React (com componentes funcionais e hooks)
+
+Tailwind CSS (estilização principal)
+
+Framer Motion (animações e transições)
+
+Lottie (opcional para ícones animados)
+
+React Icons ou Lucide (ícones limpos e modernos)
+
+Zustand ou Context (opcional para controle de estado leve)
+
+✅ RESULTADO ESPERADO:
+Um componente React com:
+
+Código modular e limpo, dividido por partes reutilizáveis.
+
+Animações sofisticadas e intuitivas.
+
+Visual profissional, fluido, responsivo, altamente atrativo.
+
+Fácil de integrar a funcionalidades internas posteriormente.

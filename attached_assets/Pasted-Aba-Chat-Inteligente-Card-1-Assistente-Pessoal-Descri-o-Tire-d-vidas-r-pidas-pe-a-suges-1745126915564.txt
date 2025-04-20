@@ -1,0 +1,96 @@
+Aba "(Chat Inteligente)":
+Card 1: Assistente Pessoal:
+Descrição: "Tire dúvidas rápidas, peça sugestões, receba ajuda personalizada e execute ações rápidas com comandos de voz ou texto."
+Botão: "Conversar".
+Card 2: Tutor Inteligente:
+Descrição: "Receba explicações detalhadas sobre qualquer assunto acadêmico, com exemplos e diferentes níveis de profundidade."
+Botão: "Aprender".
+Card 3: Tempestade de Ideias (Brainstorm):
+Descrição: "Gere ideias criativas, explore conceitos e estruture seus projetos com a ajuda da IA."
+Botão: "Criar".
+Aba "(Criar Conteúdo)":
+Card 1: Gerador de Planos de Aula: (Para Professores)
+Descrição: "Crie planos de aula completos em minutos, baseados no tema, ano escolar e BNCC."
+Botão: "Gerar Plano".
+Card 2: Gerador de Slides Didáticos: (Para Professores)
+Descrição: "Transforme seus tópicos em apresentações de slides visualmente atraentes e organizadas."
+Botão: "Criar Slides".
+Card 3: Gerador de Lista de Exercícios: (Para Professores)
+Descrição: "Crie listas de exercícios personalizadas (alternativas, dissertativas, V/F) com gabarito."
+Botão: "Gerar Exercícios".
+Card 4: Gerador de Jogos Didáticos: (Para Professores)
+Descrição: "Crie caça-palavras, forcas e outros jogos interativos baseados no seu conteúdo."
+Botão: "Criar Jogo".
+Card 5: Gerador de Atividades Interdisciplinares: (Para Professores)
+Descrição: "Desenvolva propostas de atividades que conectam duas ou mais disciplinas."
+Botão: "Gerar Atividade".
+Card 6: Assistente de Apresentação: (Para Alunos)
+Descrição: "Estruture sua apresentação oral, receba sugestões de tópicos e visualize como apresentar."
+Botão: "Criar Apresentação".
+Aba "(Aprender Mais Rápido)":
+Card 1: Resumos Inteligentes:
+Descrição: "Obtenha resumos concisos e diretos de textos, vídeos, imagens ou PDFs."
+Botão: "Gerar Resumo".
+Card 2: Mapas Mentais:
+Descrição: "Transforme qualquer conteúdo em um mapa mental visual e navegável para facilitar a compreensão."
+Botão: "Criar Mapa".
+Card 3: Simulador de Provas:
+Descrição: "Faça quizzes e simulados com feedback instantâneo e análise de desempenho."
+Botão: "Simular Prova".
+Card 4: Estudo por Competência (BNCC):
+Descrição: "Encontre atividades e materiais focados em competências específicas da BNCC."
+Botão: "Estudar".
+Card 5: Revisão Guiada:
+Descrição: "Deixe a IA montar uma rota de revisão personalizada com base nos seus erros passados."
+Botão: "Revisar".
+Card 6: Flashcards Inteligentes:
+Descrição: "Crie flashcards automaticamente e use a repetição espaçada (estilo Anki) para memorizar."
+Botão: "Gerar Flashcards".
+Card 7: Áudio Explicativo:
+Descrição: "Transforme resumos em áudio para revisar o conteúdo enquanto faz outras coisas."
+Botão: "Gerar Áudio".
+Aba "(Analisar e Corrigir)":
+Card 1: Correção de Avaliações: (Para Professores)
+Descrição: "Faça upload de provas com gabarito e receba correções automáticas, estatísticas e gráficos."
+Botão: "Corrigir Prova".
+Card 2: Correção de Redações: (Para Professores)
+Descrição: "Receba correções de redações (estilo ENEM ou personalizada) com notas por competência e sugestões."
+Botão: "Corrigir Redação".
+Card 3: Correção de Tarefas: (Para Professores)
+Descrição: "Corrija textos, questões discursivas ou imagens de tarefas enviadas pelos alunos."
+Botão: "Corrigir Tarefa".
+Card 4: Detector de Plágio: (Para Professores)
+Descrição: "Verifique a originalidade de redações e respostas com nosso detector de similaridade."
+Botão: "Verificar Plágio".
+Card 5: Painel de Progresso do Aluno:
+Descrição: "Visualize gráficos detalhados sobre sua evolução, tempo de estudo e acertos por matéria."
+Botão: "Ver Progresso".
+Aba "(Organizar e Otimizar)":
+Card 1: Planner de Estudos:
+Descrição: "Crie um cronograma de estudos automático e personalizado com base na sua rotina e metas."
+Botão: "Criar Planner".
+Card 2: Cronograma de Aulas: (Para Professores)
+Descrição: "Divida o conteúdo anual em blocos semanais e adapte conforme o progresso da turma."
+Botão: "Gerar Cronograma".
+Card 3: Caderno Digital:
+Descrição: "Transforme resumos, listas e slides em páginas de um caderno digital organizado."
+Botão: "Abrir Caderno".
+Card 4: Notificações Inteligentes:
+Descrição: "Configure alertas e lembretes inteligentes para não perder prazos ou esquecer de revisar."
+Botão: "Configurar Notificações".
+Aba "(Ferramentas Extras)":
+Card 1: Assistente de Provas: (Para Professores)
+Descrição: "Deixe a IA montar provas balanceadas automaticamente com base nos seus objetivos."
+Botão: "Montar Prova".
+Card 2: Gerador de Simulados (ENEM/Vestibulares):
+Descrição: "Crie simulados completos baseados em provas reais, com correção TRI simulada."
+Botão: "Gerar Simulado".
+Card 3: Assistente de TCC/Projetos: (Para Alunos)
+Descrição: "Receba ajuda para estruturar seu TCC ou projeto, encontrar referências e formatar (ABNT)."
+Botão: "Iniciar Projeto".
+Card 4: "Explique como se eu tivesse 10 anos":
+Descrição: "Adapte qualquer conteúdo para uma linguagem simples e fácil de entender."
+Botão: "Simplificar".
+Card 5: Explicador de Vídeos e PDFs:
+Descrição: "Envie um vídeo ou PDF e receba resumos, perguntas, mapas mentais e flashcards."
+Botão: "Explicar".
