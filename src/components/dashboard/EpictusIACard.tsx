@@ -1,7 +1,6 @@
-
 import React from "react";
 
 export default function EpictusIACard() {
-  // Componente removido
+  // Component removed
   return null;
 }
