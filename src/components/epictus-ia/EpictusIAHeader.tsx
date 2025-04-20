@@ -25,11 +25,16 @@ export default function EpictusIAHeader() {
   const suggestionPrompts = [
     "Preciso planejar uma aula",
     "Preciso resolver uma lista de exercícios",
-    "Preciso criar aprender o conteúdo do Bimestre"
+    "Preciso aprender o conteúdo do Bimestre"
   ];
   
   // Estado para controlar a exibição do modal de sugestões
   const [showSuggestionModal, setShowSuggestionModal] = useState(false);
+  
+  // Expor os refs e estados para depuração
+  useEffect(() => {
+    console.log("Estado do modal de sugestões:", showSuggestionModal);
+  }, [showSuggestionModal]);
 
   useEffect(() => {
     // Trigger initial animation
@@ -44,7 +49,11 @@ export default function EpictusIAHeader() {
         searchInputRef.current && 
         !searchInputRef.current.contains(event.target as Node)
       ) {
-        setShowSuggestionModal(false);
+        // Verifica se o clique foi fora do modal de sugestões também
+        const modalElement = document.querySelector('.suggestion-modal');
+        if (modalElement && !modalElement.contains(event.target as Node)) {
+          setShowSuggestionModal(false);
+        }
       }
     };
 
@@ -212,15 +221,15 @@ export default function EpictusIAHeader() {
               e.stopPropagation();
               // Foco explícito no input quando clicado
               e.currentTarget.focus();
+              // Forçar exibição do modal de sugestões ao clicar
               setShowSuggestionModal(true);
             }}
             onBlur={() => {
               // Delay hiding search results to allow for clicking on them
               setTimeout(() => {
                 setSearchFocused(false);
-                if (searchValue.length === 0) {
-                  setShowSuggestionModal(false);
-                }
+                // Não esconda o modal se o clique for dentro dele
+                // A lógica de clicar fora do modal já cuida disso
               }, 200);
             }}
             className="bg-transparent w-full py-2 pl-10 pr-4 text-sm text-white placeholder:text-white/50 outline-none rounded-full border border-white/10 focus:border-orange-500/50 transition-colors cursor-text relative z-50"
@@ -288,12 +297,13 @@ export default function EpictusIAHeader() {
           
           {/* Modal de Sugestões de Pesquisa */}
           <AnimatePresence>
-            {showSuggestionModal && searchValue.length === 0 && createPortal(
+            {showSuggestionModal && createPortal(
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="fixed shadow-lg z-[9999] border border-white/10 overflow-hidden"
+                transition={{ duration: 0.2 }}
+                className="fixed shadow-lg z-[9999] border border-white/10 overflow-hidden suggestion-modal"
                 style={{
                   minWidth: '350px',
                   maxWidth: '450px',
@@ -315,7 +325,9 @@ export default function EpictusIAHeader() {
                         className="p-3 bg-white/10 hover:bg-white/20 rounded-lg cursor-pointer transition-all duration-200 text-white text-sm flex items-center gap-2 border border-white/5"
                         onClick={() => {
                           setSearchValue(prompt);
-                          setShowSuggestionModal(false);
+                          setTimeout(() => {
+                            setShowSuggestionModal(false);
+                          }, 100);
                           if (searchInputRef.current) {
                             searchInputRef.current.focus();
                           }
