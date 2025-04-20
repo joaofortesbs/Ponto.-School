@@ -29,29 +29,39 @@
 @tailwind base;
 
 /* Card glow effect */
-.card {
+.card-container {
   --background: linear-gradient(to left, #f7ba2b 0%, #ea5358 100%);
   position: relative;
   z-index: 1;
+  padding: 2px; /* Espaço para o efeito em volta */
+  border-radius: inherit;
 }
 
-.card::after {
+.card-container::after {
   position: absolute;
   content: "";
-  top: 30px;
+  top: 0;
   left: 0;
   right: 0;
+  bottom: 0;
   z-index: -1;
-  height: 100%;
-  width: 100%;
-  transform: scale(0.8);
+  border-radius: inherit;
   filter: blur(25px);
   background: var(--background);
   transition: opacity .5s;
 }
 
-.card:hover::after {
+.card-container:hover::after {
   opacity: 0;
+}
+
+.card-content {
+  background: inherit;
+  border-radius: inherit;
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  width: 100%;
 }
 
 @tailwind components;

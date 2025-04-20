@@ -20,17 +20,20 @@ export default function EpictusIAHeader() {
   const isDark = theme === "dark";
 
   return (
-    <motion.header 
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className={`w-full ${isDark ? 'bg-gradient-to-r from-[#050e1d] to-[#0d1a30]' : 'bg-gradient-to-r from-[#0c2341] to-[#0f3562]'} backdrop-blur-lg z-10 py-4 px-5 flex items-center justify-between rounded-xl relative overflow-hidden card`}
+    <div 
+      className="card-container rounded-xl"
       style={{
         "--background": "linear-gradient(to left, #FF6B00 0%, #FF9D5C 100%)"
       } as React.CSSProperties}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
+      <motion.header 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className={`card-content w-full ${isDark ? 'bg-gradient-to-r from-[#050e1d] to-[#0d1a30]' : 'bg-gradient-to-r from-[#0c2341] to-[#0f3562]'} backdrop-blur-lg z-10 py-4 px-5 flex items-center justify-between rounded-xl relative overflow-hidden`}
+      >
       {/* Animated gradient background */}
       <div className="absolute inset-0 opacity-20">
         <div className={`absolute inset-0 bg-gradient-to-r from-[#FF6B00] via-[#FF8C40] to-[#FF9D5C] ${isHovered ? 'opacity-60' : 'opacity-30'} transition-opacity duration-700`}></div>
@@ -124,5 +127,6 @@ export default function EpictusIAHeader() {
         <div className="h-full bg-gradient-to-r from-transparent via-orange-500 to-transparent opacity-30"></div>
       </div>
     </motion.header>
+  </div>
   );
 }
