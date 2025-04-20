@@ -1,6 +1,6 @@
+
 import React from "react";
-import EpictusIAComplete from "@/components/epictus-ia/EpictusIAComplete";
 
 export default function EpictusIAPage() {
-  return <EpictusIAComplete />;
+  return <div className="p-8 text-center">This feature has been removed.</div>;
 }

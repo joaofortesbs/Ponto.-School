@@ -229,19 +229,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
           Carteira
         </Button>
 
-        <Button
-          variant="ghost"
-          className={cn(
-            "w-full justify-start text-sm font-medium h-10 px-3",
-            activeItem === "epictus-ia"
-              ? "bg-[#FF6B00]/10 text-[#FF6B00] hover:bg-[#FF6B00]/20"
-              : "text-gray-300 hover:bg-[#29335C]/30 hover:text-white",
-          )}
-          onClick={() => handleItemClick("epictus-ia", "/epictus-ia")}
-        >
-          <GraduationCap className="h-4 w-4 mr-3" />
-          Epictus IA
-        </Button>
+        {/* Epictus IA button removed */}
       </div>
 
       {/* Bottom Navigation */}
