@@ -1,0 +1,2700 @@
+[plugin:vite:react-swc] × the name `useTheme` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/epictus-ia/components/VisaoGeralContent.tsx:2:1]
+   2 │ import { Card } from "@/components/ui/card";
+   3 │ import { Button } from "@/components/ui/button";
+   4 │ import { Badge } from "@/components/ui/badge";
+   5 │ import { useTheme } from "@/components/ThemeProvider";
+     ·          ────┬───
+     ·              ╰── previous definition of `useTheme` here
+   6 │ import { 
+   7 │   Brain, 
+   8 │   Sparkles, 
+   9 │   MessageSquare, 
+  10 │   PenTool, 
+  11 │   Zap, 
+  12 │   BarChart3, 
+  13 │   Calendar, 
+  14 │   Wrench,
+  15 │   ArrowRight 
+  16 │ } from "lucide-react";
+  17 │ 
+  18 │ export default function VisaoGeralContent() {
+  19 │   const { theme } = useTheme();
+  20 │ 
+  21 │   const quickAccessTools = [
+  22 │     {
+  23 │       id: "assistente-chat",
+  24 │       title: "Assistente de Chat",
+  25 │       description: "Converse com a IA para obter ajuda rápida",
+  26 │       icon: <MessageSquare className="h-5 w-5 text-blue-500" />,
+  27 │       color: "bg-blue-500/10",
+  28 │       section: "chat-inteligente"
+  29 │     },
+  30 │     {
+  31 │       id: "planos-aula",
+  32 │       title: "Planos de Aula",
+  33 │       description: "Gere planos de aula personalizados",
+  34 │       icon: <PenTool className="h-5 w-5 text-emerald-500" />,
+  35 │       color: "bg-emerald-500/10",
+  36 │       section: "criar-conteudo"
+  37 │     },
+  38 │     {
+  39 │       id: "resumos",
+  40 │       title: "Resumos Inteligentes",
+  41 │       description: "Crie resumos concisos de qualquer conteúdo",
+  42 │       icon: <Zap className="h-5 w-5 text-amber-500" />,
+  43 │       color: "bg-amber-500/10",
+  44 │       section: "aprender-mais-rapido"
+  45 │     },
+  46 │     {
+  47 │       id: "analisar",
+  48 │       title: "Corretor de Redação",
+  49 │       description: "Analise e melhore suas redações",
+  50 │       icon: <BarChart3 className="h-5 w-5 text-purple-500" />,
+  51 │       color: "bg-purple-500/10",
+  52 │       section: "analisar-corrigir"
+  53 │     }
+  54 │   ];
+  55 │ 
+  56 │   return (
+  57 │     <div className="h-full flex flex-col">
+  58 │       <div className="mb-6">
+  59 │         <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+  60 │           Visão Geral do Epictus IA
+  61 │         </h2>
+  62 │         <p className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+  63 │           Acesse rapidamente as ferramentas mais populares ou explore por categoria
+  64 │         </p>
+  65 │       </div>
+  66 │ 
+  67 │       <div className="mb-6">
+  68 │         <Card className={`p-5 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+  69 │           <div className="flex items-start gap-4">
+  70 │             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF9B50] flex items-center justify-center">
+  71 │               <Brain className="h-6 w-6 text-white" />
+  72 │             </div>
+  73 │             <div>
+  74 │               <div className="flex items-center">
+  75 │                 <h3 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+  76 │                   Bem-vindo ao Epictus IA
+  77 │                 </h3>
+  78 │                 <Badge className="ml-2 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white">
+  79 │                   <Sparkles className="h-3.5 w-3.5 mr-1" /> Premium
+  80 │                 </Badge>
+  81 │               </div>
+  82 │               <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+  83 │                 Uma plataforma completa de inteligência artificial criada para potencializar seus estudos. Explore as diferentes categorias para acessar ferramentas especializadas para cada necessidade.
+  84 │               </p>
+  85 │               <div className="mt-4 flex flex-wrap gap-2">
+  86 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  87 │                   <MessageSquare className="h-3.5 w-3.5 mr-1 text-blue-500" />
+  88 │                   Chat Inteligente
+  89 │                 </Button>
+  90 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  91 │                   <PenTool className="h-3.5 w-3.5 mr-1 text-emerald-500" />
+  92 │                   Criar Conteúdo
+  93 │                 </Button>
+  94 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  95 │                   <Zap className="h-3.5 w-3.5 mr-1 text-amber-500" />
+  96 │                   Aprender Rápido
+  97 │                 </Button>
+  98 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  99 │                   <BarChart3 className="h-3.5 w-3.5 mr-1 text-purple-500" />
+ 100 │                   Analisar
+ 101 │                 </Button>
+ 102 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+ 103 │                   <Calendar className="h-3.5 w-3.5 mr-1 text-red-500" />
+ 104 │                   Organizar
+ 105 │                 </Button>
+ 106 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+ 107 │                   <Wrench className="h-3.5 w-3.5 mr-1 text-cyan-500" />
+ 108 │                   Ferramentas
+ 109 │                 </Button>
+ 110 │               </div>
+ 111 │             </div>
+ 112 │           </div>
+ 113 │         </Card>
+ 114 │       </div>
+ 115 │ 
+ 116 │       <h3 className={`text-lg font-semibold mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 117 │         Acesso Rápido
+ 118 │       </h3>
+ 119 │ 
+ 120 │       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+ 121 │         {quickAccessTools.map(tool => (
+ 122 │           <Card 
+ 123 │             key={tool.id}
+ 124 │             className={`p-4 border hover:shadow-md transition-all cursor-pointer ${theme === "dark" ? "bg-gray-800 border-gray-700 hover:bg-gray-800/80" : "bg-white border-gray-200 hover:bg-gray-50"}`}
+ 125 │           >
+ 126 │             <div className="flex flex-col h-full">
+ 127 │               <div className={`w-10 h-10 rounded-full ${tool.color} flex items-center justify-center mb-3`}>
+ 128 │                 {tool.icon}
+ 129 │               </div>
+ 130 │               <h4 className={`text-base font-medium mb-1 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 131 │                 {tool.title}
+ 132 │               </h4>
+ 133 │               <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"} mb-3`}>
+ 134 │                 {tool.description}
+ 135 │               </p>
+ 136 │               <Button 
+ 137 │                 size="sm"
+ 138 │                 variant="ghost" 
+ 139 │                 className={`mt-auto text-xs p-2 h-8 ${theme === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
+ 140 │               >
+ 141 │                 Acessar
+ 142 │                 <ArrowRight className="h-3.5 w-3.5 ml-1" />
+ 143 │               </Button>
+ 144 │             </div>
+ 145 │           </Card>
+ 146 │         ))}
+ 147 │       </div>
+ 148 │ 
+ 149 │       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+ 150 │         <Card className={`p-4 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+ 151 │           <h4 className={`text-base font-medium mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 152 │             Estatísticas de Uso
+ 153 │           </h4>
+ 154 │           <div className="space-y-3">
+ 155 │             <div>
+ 156 │               <div className="flex justify-between items-center mb-1">
+ 157 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 158 │                   Chat Inteligente
+ 159 │                 </span>
+ 160 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 161 │                   65%
+ 162 │                 </span>
+ 163 │               </div>
+ 164 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 165 │                 <div className="h-full bg-blue-500 rounded-full" style={{ width: "65%" }}></div>
+ 166 │               </div>
+ 167 │             </div>
+ 168 │             <div>
+ 169 │               <div className="flex justify-between items-center mb-1">
+ 170 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 171 │                   Criar Conteúdo
+ 172 │                 </span>
+ 173 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 174 │                   40%
+ 175 │                 </span>
+ 176 │               </div>
+ 177 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 178 │                 <div className="h-full bg-emerald-500 rounded-full" style={{ width: "40%" }}></div>
+ 179 │               </div>
+ 180 │             </div>
+ 181 │             <div>
+ 182 │               <div className="flex justify-between items-center mb-1">
+ 183 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 184 │                   Aprender Rápido
+ 185 │                 </span>
+ 186 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 187 │                   25%
+ 188 │                 </span>
+ 189 │               </div>
+ 190 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 191 │                 <div className="h-full bg-amber-500 rounded-full" style={{ width: "25%" }}></div>
+ 192 │               </div>
+ 193 │             </div>
+ 194 │           </div>
+ 195 │         </Card>
+ 196 │ 
+ 197 │         <Card className={`p-4 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+ 198 │           <h4 className={`text-base font-medium mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 199 │             Recursos Recentes
+ 200 │           </h4>
+ 201 │           <div className="space-y-2">
+ 202 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 203 │               <div className="flex items-center gap-2">
+ 204 │                 <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+ 205 │                   <MessageSquare className="h-4 w-4 text-blue-500" />
+ 206 │                 </div>
+ 207 │                 <div>
+ 208 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Conversou sobre "Revolução Industrial"</p>
+ 209 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>há 2 horas</p>
+ 210 │                 </div>
+ 211 │               </div>
+ 212 │             </div>
+ 213 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 214 │               <div className="flex items-center gap-2">
+ 215 │                 <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+ 216 │                   <PenTool className="h-4 w-4 text-emerald-500" />
+ 217 │                 </div>
+ 218 │                 <div>
+ 219 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Criou plano de aula "Ecossistemas"</p>
+ 220 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>ontem</p>
+ 221 │                 </div>
+ 222 │               </div>
+ 223 │             </div>
+ 224 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 225 │               <div className="flex items-center gap-2">
+ 226 │                 <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center">
+ 227 │                   <Zap className="h-4 w-4 text-amber-500" />
+ 228 │                 </div>
+ 229 │                 <div>
+ 230 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Gerou resumo "Equações Diferenciais"</p>
+ 231 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>há 3 dias</p>
+ 232 │                 </div>
+ 233 │               </div>
+ 234 │             </div>
+ 235 │           </div>
+ 236 │         </Card>
+ 237 │       </div>
+ 238 │     </div>
+ 239 │   );
+ 240 │ }
+ 241 │ import React from "react";
+ 242 │ import { useTheme } from "@/components/ThemeProvider";
+     ·          ────┬───
+     ·              ╰── `useTheme` redefined here
+ 243 │ import { Button } from "@/components/ui/button";
+ 244 │ import { Card } from "@/components/ui/card";
+ 245 │ import { Zap, BookOpen, BarChart3, Calendar, Wrench, MessageSquare, Lightbulb, Compass, ArrowRight } from "lucide-react";
+     ╰────
+
+  × the name `Button` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/epictus-ia/components/VisaoGeralContent.tsx:1:1]
+   1 │ import React from "react";
+   2 │ import { Card } from "@/components/ui/card";
+   3 │ import { Button } from "@/components/ui/button";
+     ·          ───┬──
+     ·             ╰── previous definition of `Button` here
+   4 │ import { Badge } from "@/components/ui/badge";
+   5 │ import { useTheme } from "@/components/ThemeProvider";
+   6 │ import { 
+   7 │   Brain, 
+   8 │   Sparkles, 
+   9 │   MessageSquare, 
+  10 │   PenTool, 
+  11 │   Zap, 
+  12 │   BarChart3, 
+  13 │   Calendar, 
+  14 │   Wrench,
+  15 │   ArrowRight 
+  16 │ } from "lucide-react";
+  17 │ 
+  18 │ export default function VisaoGeralContent() {
+  19 │   const { theme } = useTheme();
+  20 │ 
+  21 │   const quickAccessTools = [
+  22 │     {
+  23 │       id: "assistente-chat",
+  24 │       title: "Assistente de Chat",
+  25 │       description: "Converse com a IA para obter ajuda rápida",
+  26 │       icon: <MessageSquare className="h-5 w-5 text-blue-500" />,
+  27 │       color: "bg-blue-500/10",
+  28 │       section: "chat-inteligente"
+  29 │     },
+  30 │     {
+  31 │       id: "planos-aula",
+  32 │       title: "Planos de Aula",
+  33 │       description: "Gere planos de aula personalizados",
+  34 │       icon: <PenTool className="h-5 w-5 text-emerald-500" />,
+  35 │       color: "bg-emerald-500/10",
+  36 │       section: "criar-conteudo"
+  37 │     },
+  38 │     {
+  39 │       id: "resumos",
+  40 │       title: "Resumos Inteligentes",
+  41 │       description: "Crie resumos concisos de qualquer conteúdo",
+  42 │       icon: <Zap className="h-5 w-5 text-amber-500" />,
+  43 │       color: "bg-amber-500/10",
+  44 │       section: "aprender-mais-rapido"
+  45 │     },
+  46 │     {
+  47 │       id: "analisar",
+  48 │       title: "Corretor de Redação",
+  49 │       description: "Analise e melhore suas redações",
+  50 │       icon: <BarChart3 className="h-5 w-5 text-purple-500" />,
+  51 │       color: "bg-purple-500/10",
+  52 │       section: "analisar-corrigir"
+  53 │     }
+  54 │   ];
+  55 │ 
+  56 │   return (
+  57 │     <div className="h-full flex flex-col">
+  58 │       <div className="mb-6">
+  59 │         <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+  60 │           Visão Geral do Epictus IA
+  61 │         </h2>
+  62 │         <p className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+  63 │           Acesse rapidamente as ferramentas mais populares ou explore por categoria
+  64 │         </p>
+  65 │       </div>
+  66 │ 
+  67 │       <div className="mb-6">
+  68 │         <Card className={`p-5 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+  69 │           <div className="flex items-start gap-4">
+  70 │             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF9B50] flex items-center justify-center">
+  71 │               <Brain className="h-6 w-6 text-white" />
+  72 │             </div>
+  73 │             <div>
+  74 │               <div className="flex items-center">
+  75 │                 <h3 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+  76 │                   Bem-vindo ao Epictus IA
+  77 │                 </h3>
+  78 │                 <Badge className="ml-2 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white">
+  79 │                   <Sparkles className="h-3.5 w-3.5 mr-1" /> Premium
+  80 │                 </Badge>
+  81 │               </div>
+  82 │               <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+  83 │                 Uma plataforma completa de inteligência artificial criada para potencializar seus estudos. Explore as diferentes categorias para acessar ferramentas especializadas para cada necessidade.
+  84 │               </p>
+  85 │               <div className="mt-4 flex flex-wrap gap-2">
+  86 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  87 │                   <MessageSquare className="h-3.5 w-3.5 mr-1 text-blue-500" />
+  88 │                   Chat Inteligente
+  89 │                 </Button>
+  90 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  91 │                   <PenTool className="h-3.5 w-3.5 mr-1 text-emerald-500" />
+  92 │                   Criar Conteúdo
+  93 │                 </Button>
+  94 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  95 │                   <Zap className="h-3.5 w-3.5 mr-1 text-amber-500" />
+  96 │                   Aprender Rápido
+  97 │                 </Button>
+  98 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  99 │                   <BarChart3 className="h-3.5 w-3.5 mr-1 text-purple-500" />
+ 100 │                   Analisar
+ 101 │                 </Button>
+ 102 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+ 103 │                   <Calendar className="h-3.5 w-3.5 mr-1 text-red-500" />
+ 104 │                   Organizar
+ 105 │                 </Button>
+ 106 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+ 107 │                   <Wrench className="h-3.5 w-3.5 mr-1 text-cyan-500" />
+ 108 │                   Ferramentas
+ 109 │                 </Button>
+ 110 │               </div>
+ 111 │             </div>
+ 112 │           </div>
+ 113 │         </Card>
+ 114 │       </div>
+ 115 │ 
+ 116 │       <h3 className={`text-lg font-semibold mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 117 │         Acesso Rápido
+ 118 │       </h3>
+ 119 │ 
+ 120 │       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+ 121 │         {quickAccessTools.map(tool => (
+ 122 │           <Card 
+ 123 │             key={tool.id}
+ 124 │             className={`p-4 border hover:shadow-md transition-all cursor-pointer ${theme === "dark" ? "bg-gray-800 border-gray-700 hover:bg-gray-800/80" : "bg-white border-gray-200 hover:bg-gray-50"}`}
+ 125 │           >
+ 126 │             <div className="flex flex-col h-full">
+ 127 │               <div className={`w-10 h-10 rounded-full ${tool.color} flex items-center justify-center mb-3`}>
+ 128 │                 {tool.icon}
+ 129 │               </div>
+ 130 │               <h4 className={`text-base font-medium mb-1 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 131 │                 {tool.title}
+ 132 │               </h4>
+ 133 │               <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"} mb-3`}>
+ 134 │                 {tool.description}
+ 135 │               </p>
+ 136 │               <Button 
+ 137 │                 size="sm"
+ 138 │                 variant="ghost" 
+ 139 │                 className={`mt-auto text-xs p-2 h-8 ${theme === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
+ 140 │               >
+ 141 │                 Acessar
+ 142 │                 <ArrowRight className="h-3.5 w-3.5 ml-1" />
+ 143 │               </Button>
+ 144 │             </div>
+ 145 │           </Card>
+ 146 │         ))}
+ 147 │       </div>
+ 148 │ 
+ 149 │       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+ 150 │         <Card className={`p-4 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+ 151 │           <h4 className={`text-base font-medium mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 152 │             Estatísticas de Uso
+ 153 │           </h4>
+ 154 │           <div className="space-y-3">
+ 155 │             <div>
+ 156 │               <div className="flex justify-between items-center mb-1">
+ 157 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 158 │                   Chat Inteligente
+ 159 │                 </span>
+ 160 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 161 │                   65%
+ 162 │                 </span>
+ 163 │               </div>
+ 164 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 165 │                 <div className="h-full bg-blue-500 rounded-full" style={{ width: "65%" }}></div>
+ 166 │               </div>
+ 167 │             </div>
+ 168 │             <div>
+ 169 │               <div className="flex justify-between items-center mb-1">
+ 170 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 171 │                   Criar Conteúdo
+ 172 │                 </span>
+ 173 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 174 │                   40%
+ 175 │                 </span>
+ 176 │               </div>
+ 177 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 178 │                 <div className="h-full bg-emerald-500 rounded-full" style={{ width: "40%" }}></div>
+ 179 │               </div>
+ 180 │             </div>
+ 181 │             <div>
+ 182 │               <div className="flex justify-between items-center mb-1">
+ 183 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 184 │                   Aprender Rápido
+ 185 │                 </span>
+ 186 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 187 │                   25%
+ 188 │                 </span>
+ 189 │               </div>
+ 190 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 191 │                 <div className="h-full bg-amber-500 rounded-full" style={{ width: "25%" }}></div>
+ 192 │               </div>
+ 193 │             </div>
+ 194 │           </div>
+ 195 │         </Card>
+ 196 │ 
+ 197 │         <Card className={`p-4 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+ 198 │           <h4 className={`text-base font-medium mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 199 │             Recursos Recentes
+ 200 │           </h4>
+ 201 │           <div className="space-y-2">
+ 202 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 203 │               <div className="flex items-center gap-2">
+ 204 │                 <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+ 205 │                   <MessageSquare className="h-4 w-4 text-blue-500" />
+ 206 │                 </div>
+ 207 │                 <div>
+ 208 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Conversou sobre "Revolução Industrial"</p>
+ 209 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>há 2 horas</p>
+ 210 │                 </div>
+ 211 │               </div>
+ 212 │             </div>
+ 213 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 214 │               <div className="flex items-center gap-2">
+ 215 │                 <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+ 216 │                   <PenTool className="h-4 w-4 text-emerald-500" />
+ 217 │                 </div>
+ 218 │                 <div>
+ 219 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Criou plano de aula "Ecossistemas"</p>
+ 220 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>ontem</p>
+ 221 │                 </div>
+ 222 │               </div>
+ 223 │             </div>
+ 224 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 225 │               <div className="flex items-center gap-2">
+ 226 │                 <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center">
+ 227 │                   <Zap className="h-4 w-4 text-amber-500" />
+ 228 │                 </div>
+ 229 │                 <div>
+ 230 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Gerou resumo "Equações Diferenciais"</p>
+ 231 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>há 3 dias</p>
+ 232 │                 </div>
+ 233 │               </div>
+ 234 │             </div>
+ 235 │           </div>
+ 236 │         </Card>
+ 237 │       </div>
+ 238 │     </div>
+ 239 │   );
+ 240 │ }
+ 241 │ import React from "react";
+ 242 │ import { useTheme } from "@/components/ThemeProvider";
+ 243 │ import { Button } from "@/components/ui/button";
+     ·          ───┬──
+     ·             ╰── `Button` redefined here
+ 244 │ import { Card } from "@/components/ui/card";
+ 245 │ import { Zap, BookOpen, BarChart3, Calendar, Wrench, MessageSquare, Lightbulb, Compass, ArrowRight } from "lucide-react";
+     ╰────
+
+  × the name `Card` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/epictus-ia/components/VisaoGeralContent.tsx:1:1]
+   1 │ import React from "react";
+   2 │ import { Card } from "@/components/ui/card";
+     ·          ──┬─
+     ·            ╰── previous definition of `Card` here
+   3 │ import { Button } from "@/components/ui/button";
+   4 │ import { Badge } from "@/components/ui/badge";
+   5 │ import { useTheme } from "@/components/ThemeProvider";
+   6 │ import { 
+   7 │   Brain, 
+   8 │   Sparkles, 
+   9 │   MessageSquare, 
+  10 │   PenTool, 
+  11 │   Zap, 
+  12 │   BarChart3, 
+  13 │   Calendar, 
+  14 │   Wrench,
+  15 │   ArrowRight 
+  16 │ } from "lucide-react";
+  17 │ 
+  18 │ export default function VisaoGeralContent() {
+  19 │   const { theme } = useTheme();
+  20 │ 
+  21 │   const quickAccessTools = [
+  22 │     {
+  23 │       id: "assistente-chat",
+  24 │       title: "Assistente de Chat",
+  25 │       description: "Converse com a IA para obter ajuda rápida",
+  26 │       icon: <MessageSquare className="h-5 w-5 text-blue-500" />,
+  27 │       color: "bg-blue-500/10",
+  28 │       section: "chat-inteligente"
+  29 │     },
+  30 │     {
+  31 │       id: "planos-aula",
+  32 │       title: "Planos de Aula",
+  33 │       description: "Gere planos de aula personalizados",
+  34 │       icon: <PenTool className="h-5 w-5 text-emerald-500" />,
+  35 │       color: "bg-emerald-500/10",
+  36 │       section: "criar-conteudo"
+  37 │     },
+  38 │     {
+  39 │       id: "resumos",
+  40 │       title: "Resumos Inteligentes",
+  41 │       description: "Crie resumos concisos de qualquer conteúdo",
+  42 │       icon: <Zap className="h-5 w-5 text-amber-500" />,
+  43 │       color: "bg-amber-500/10",
+  44 │       section: "aprender-mais-rapido"
+  45 │     },
+  46 │     {
+  47 │       id: "analisar",
+  48 │       title: "Corretor de Redação",
+  49 │       description: "Analise e melhore suas redações",
+  50 │       icon: <BarChart3 className="h-5 w-5 text-purple-500" />,
+  51 │       color: "bg-purple-500/10",
+  52 │       section: "analisar-corrigir"
+  53 │     }
+  54 │   ];
+  55 │ 
+  56 │   return (
+  57 │     <div className="h-full flex flex-col">
+  58 │       <div className="mb-6">
+  59 │         <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+  60 │           Visão Geral do Epictus IA
+  61 │         </h2>
+  62 │         <p className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+  63 │           Acesse rapidamente as ferramentas mais populares ou explore por categoria
+  64 │         </p>
+  65 │       </div>
+  66 │ 
+  67 │       <div className="mb-6">
+  68 │         <Card className={`p-5 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+  69 │           <div className="flex items-start gap-4">
+  70 │             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF9B50] flex items-center justify-center">
+  71 │               <Brain className="h-6 w-6 text-white" />
+  72 │             </div>
+  73 │             <div>
+  74 │               <div className="flex items-center">
+  75 │                 <h3 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+  76 │                   Bem-vindo ao Epictus IA
+  77 │                 </h3>
+  78 │                 <Badge className="ml-2 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white">
+  79 │                   <Sparkles className="h-3.5 w-3.5 mr-1" /> Premium
+  80 │                 </Badge>
+  81 │               </div>
+  82 │               <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+  83 │                 Uma plataforma completa de inteligência artificial criada para potencializar seus estudos. Explore as diferentes categorias para acessar ferramentas especializadas para cada necessidade.
+  84 │               </p>
+  85 │               <div className="mt-4 flex flex-wrap gap-2">
+  86 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  87 │                   <MessageSquare className="h-3.5 w-3.5 mr-1 text-blue-500" />
+  88 │                   Chat Inteligente
+  89 │                 </Button>
+  90 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  91 │                   <PenTool className="h-3.5 w-3.5 mr-1 text-emerald-500" />
+  92 │                   Criar Conteúdo
+  93 │                 </Button>
+  94 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  95 │                   <Zap className="h-3.5 w-3.5 mr-1 text-amber-500" />
+  96 │                   Aprender Rápido
+  97 │                 </Button>
+  98 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  99 │                   <BarChart3 className="h-3.5 w-3.5 mr-1 text-purple-500" />
+ 100 │                   Analisar
+ 101 │                 </Button>
+ 102 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+ 103 │                   <Calendar className="h-3.5 w-3.5 mr-1 text-red-500" />
+ 104 │                   Organizar
+ 105 │                 </Button>
+ 106 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+ 107 │                   <Wrench className="h-3.5 w-3.5 mr-1 text-cyan-500" />
+ 108 │                   Ferramentas
+ 109 │                 </Button>
+ 110 │               </div>
+ 111 │             </div>
+ 112 │           </div>
+ 113 │         </Card>
+ 114 │       </div>
+ 115 │ 
+ 116 │       <h3 className={`text-lg font-semibold mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 117 │         Acesso Rápido
+ 118 │       </h3>
+ 119 │ 
+ 120 │       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+ 121 │         {quickAccessTools.map(tool => (
+ 122 │           <Card 
+ 123 │             key={tool.id}
+ 124 │             className={`p-4 border hover:shadow-md transition-all cursor-pointer ${theme === "dark" ? "bg-gray-800 border-gray-700 hover:bg-gray-800/80" : "bg-white border-gray-200 hover:bg-gray-50"}`}
+ 125 │           >
+ 126 │             <div className="flex flex-col h-full">
+ 127 │               <div className={`w-10 h-10 rounded-full ${tool.color} flex items-center justify-center mb-3`}>
+ 128 │                 {tool.icon}
+ 129 │               </div>
+ 130 │               <h4 className={`text-base font-medium mb-1 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 131 │                 {tool.title}
+ 132 │               </h4>
+ 133 │               <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"} mb-3`}>
+ 134 │                 {tool.description}
+ 135 │               </p>
+ 136 │               <Button 
+ 137 │                 size="sm"
+ 138 │                 variant="ghost" 
+ 139 │                 className={`mt-auto text-xs p-2 h-8 ${theme === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
+ 140 │               >
+ 141 │                 Acessar
+ 142 │                 <ArrowRight className="h-3.5 w-3.5 ml-1" />
+ 143 │               </Button>
+ 144 │             </div>
+ 145 │           </Card>
+ 146 │         ))}
+ 147 │       </div>
+ 148 │ 
+ 149 │       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+ 150 │         <Card className={`p-4 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+ 151 │           <h4 className={`text-base font-medium mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 152 │             Estatísticas de Uso
+ 153 │           </h4>
+ 154 │           <div className="space-y-3">
+ 155 │             <div>
+ 156 │               <div className="flex justify-between items-center mb-1">
+ 157 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 158 │                   Chat Inteligente
+ 159 │                 </span>
+ 160 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 161 │                   65%
+ 162 │                 </span>
+ 163 │               </div>
+ 164 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 165 │                 <div className="h-full bg-blue-500 rounded-full" style={{ width: "65%" }}></div>
+ 166 │               </div>
+ 167 │             </div>
+ 168 │             <div>
+ 169 │               <div className="flex justify-between items-center mb-1">
+ 170 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 171 │                   Criar Conteúdo
+ 172 │                 </span>
+ 173 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 174 │                   40%
+ 175 │                 </span>
+ 176 │               </div>
+ 177 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 178 │                 <div className="h-full bg-emerald-500 rounded-full" style={{ width: "40%" }}></div>
+ 179 │               </div>
+ 180 │             </div>
+ 181 │             <div>
+ 182 │               <div className="flex justify-between items-center mb-1">
+ 183 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 184 │                   Aprender Rápido
+ 185 │                 </span>
+ 186 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 187 │                   25%
+ 188 │                 </span>
+ 189 │               </div>
+ 190 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 191 │                 <div className="h-full bg-amber-500 rounded-full" style={{ width: "25%" }}></div>
+ 192 │               </div>
+ 193 │             </div>
+ 194 │           </div>
+ 195 │         </Card>
+ 196 │ 
+ 197 │         <Card className={`p-4 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+ 198 │           <h4 className={`text-base font-medium mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 199 │             Recursos Recentes
+ 200 │           </h4>
+ 201 │           <div className="space-y-2">
+ 202 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 203 │               <div className="flex items-center gap-2">
+ 204 │                 <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+ 205 │                   <MessageSquare className="h-4 w-4 text-blue-500" />
+ 206 │                 </div>
+ 207 │                 <div>
+ 208 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Conversou sobre "Revolução Industrial"</p>
+ 209 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>há 2 horas</p>
+ 210 │                 </div>
+ 211 │               </div>
+ 212 │             </div>
+ 213 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 214 │               <div className="flex items-center gap-2">
+ 215 │                 <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+ 216 │                   <PenTool className="h-4 w-4 text-emerald-500" />
+ 217 │                 </div>
+ 218 │                 <div>
+ 219 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Criou plano de aula "Ecossistemas"</p>
+ 220 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>ontem</p>
+ 221 │                 </div>
+ 222 │               </div>
+ 223 │             </div>
+ 224 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 225 │               <div className="flex items-center gap-2">
+ 226 │                 <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center">
+ 227 │                   <Zap className="h-4 w-4 text-amber-500" />
+ 228 │                 </div>
+ 229 │                 <div>
+ 230 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Gerou resumo "Equações Diferenciais"</p>
+ 231 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>há 3 dias</p>
+ 232 │                 </div>
+ 233 │               </div>
+ 234 │             </div>
+ 235 │           </div>
+ 236 │         </Card>
+ 237 │       </div>
+ 238 │     </div>
+ 239 │   );
+ 240 │ }
+ 241 │ import React from "react";
+ 242 │ import { useTheme } from "@/components/ThemeProvider";
+ 243 │ import { Button } from "@/components/ui/button";
+ 244 │ import { Card } from "@/components/ui/card";
+     ·          ──┬─
+     ·            ╰── `Card` redefined here
+ 245 │ import { Zap, BookOpen, BarChart3, Calendar, Wrench, MessageSquare, Lightbulb, Compass, ArrowRight } from "lucide-react";
+ 246 │ 
+ 247 │ interface VisaoGeralContentProps {
+     ╰────
+
+  × the name `Zap` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/epictus-ia/components/VisaoGeralContent.tsx:8:1]
+   8 │   Sparkles, 
+   9 │   MessageSquare, 
+  10 │   PenTool, 
+  11 │   Zap, 
+     ·   ─┬─
+     ·    ╰── previous definition of `Zap` here
+  12 │   BarChart3, 
+  13 │   Calendar, 
+  14 │   Wrench,
+  15 │   ArrowRight 
+  16 │ } from "lucide-react";
+  17 │ 
+  18 │ export default function VisaoGeralContent() {
+  19 │   const { theme } = useTheme();
+  20 │ 
+  21 │   const quickAccessTools = [
+  22 │     {
+  23 │       id: "assistente-chat",
+  24 │       title: "Assistente de Chat",
+  25 │       description: "Converse com a IA para obter ajuda rápida",
+  26 │       icon: <MessageSquare className="h-5 w-5 text-blue-500" />,
+  27 │       color: "bg-blue-500/10",
+  28 │       section: "chat-inteligente"
+  29 │     },
+  30 │     {
+  31 │       id: "planos-aula",
+  32 │       title: "Planos de Aula",
+  33 │       description: "Gere planos de aula personalizados",
+  34 │       icon: <PenTool className="h-5 w-5 text-emerald-500" />,
+  35 │       color: "bg-emerald-500/10",
+  36 │       section: "criar-conteudo"
+  37 │     },
+  38 │     {
+  39 │       id: "resumos",
+  40 │       title: "Resumos Inteligentes",
+  41 │       description: "Crie resumos concisos de qualquer conteúdo",
+  42 │       icon: <Zap className="h-5 w-5 text-amber-500" />,
+  43 │       color: "bg-amber-500/10",
+  44 │       section: "aprender-mais-rapido"
+  45 │     },
+  46 │     {
+  47 │       id: "analisar",
+  48 │       title: "Corretor de Redação",
+  49 │       description: "Analise e melhore suas redações",
+  50 │       icon: <BarChart3 className="h-5 w-5 text-purple-500" />,
+  51 │       color: "bg-purple-500/10",
+  52 │       section: "analisar-corrigir"
+  53 │     }
+  54 │   ];
+  55 │ 
+  56 │   return (
+  57 │     <div className="h-full flex flex-col">
+  58 │       <div className="mb-6">
+  59 │         <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+  60 │           Visão Geral do Epictus IA
+  61 │         </h2>
+  62 │         <p className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+  63 │           Acesse rapidamente as ferramentas mais populares ou explore por categoria
+  64 │         </p>
+  65 │       </div>
+  66 │ 
+  67 │       <div className="mb-6">
+  68 │         <Card className={`p-5 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+  69 │           <div className="flex items-start gap-4">
+  70 │             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF9B50] flex items-center justify-center">
+  71 │               <Brain className="h-6 w-6 text-white" />
+  72 │             </div>
+  73 │             <div>
+  74 │               <div className="flex items-center">
+  75 │                 <h3 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+  76 │                   Bem-vindo ao Epictus IA
+  77 │                 </h3>
+  78 │                 <Badge className="ml-2 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white">
+  79 │                   <Sparkles className="h-3.5 w-3.5 mr-1" /> Premium
+  80 │                 </Badge>
+  81 │               </div>
+  82 │               <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+  83 │                 Uma plataforma completa de inteligência artificial criada para potencializar seus estudos. Explore as diferentes categorias para acessar ferramentas especializadas para cada necessidade.
+  84 │               </p>
+  85 │               <div className="mt-4 flex flex-wrap gap-2">
+  86 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  87 │                   <MessageSquare className="h-3.5 w-3.5 mr-1 text-blue-500" />
+  88 │                   Chat Inteligente
+  89 │                 </Button>
+  90 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  91 │                   <PenTool className="h-3.5 w-3.5 mr-1 text-emerald-500" />
+  92 │                   Criar Conteúdo
+  93 │                 </Button>
+  94 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  95 │                   <Zap className="h-3.5 w-3.5 mr-1 text-amber-500" />
+  96 │                   Aprender Rápido
+  97 │                 </Button>
+  98 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  99 │                   <BarChart3 className="h-3.5 w-3.5 mr-1 text-purple-500" />
+ 100 │                   Analisar
+ 101 │                 </Button>
+ 102 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+ 103 │                   <Calendar className="h-3.5 w-3.5 mr-1 text-red-500" />
+ 104 │                   Organizar
+ 105 │                 </Button>
+ 106 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+ 107 │                   <Wrench className="h-3.5 w-3.5 mr-1 text-cyan-500" />
+ 108 │                   Ferramentas
+ 109 │                 </Button>
+ 110 │               </div>
+ 111 │             </div>
+ 112 │           </div>
+ 113 │         </Card>
+ 114 │       </div>
+ 115 │ 
+ 116 │       <h3 className={`text-lg font-semibold mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 117 │         Acesso Rápido
+ 118 │       </h3>
+ 119 │ 
+ 120 │       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+ 121 │         {quickAccessTools.map(tool => (
+ 122 │           <Card 
+ 123 │             key={tool.id}
+ 124 │             className={`p-4 border hover:shadow-md transition-all cursor-pointer ${theme === "dark" ? "bg-gray-800 border-gray-700 hover:bg-gray-800/80" : "bg-white border-gray-200 hover:bg-gray-50"}`}
+ 125 │           >
+ 126 │             <div className="flex flex-col h-full">
+ 127 │               <div className={`w-10 h-10 rounded-full ${tool.color} flex items-center justify-center mb-3`}>
+ 128 │                 {tool.icon}
+ 129 │               </div>
+ 130 │               <h4 className={`text-base font-medium mb-1 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 131 │                 {tool.title}
+ 132 │               </h4>
+ 133 │               <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"} mb-3`}>
+ 134 │                 {tool.description}
+ 135 │               </p>
+ 136 │               <Button 
+ 137 │                 size="sm"
+ 138 │                 variant="ghost" 
+ 139 │                 className={`mt-auto text-xs p-2 h-8 ${theme === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
+ 140 │               >
+ 141 │                 Acessar
+ 142 │                 <ArrowRight className="h-3.5 w-3.5 ml-1" />
+ 143 │               </Button>
+ 144 │             </div>
+ 145 │           </Card>
+ 146 │         ))}
+ 147 │       </div>
+ 148 │ 
+ 149 │       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+ 150 │         <Card className={`p-4 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+ 151 │           <h4 className={`text-base font-medium mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 152 │             Estatísticas de Uso
+ 153 │           </h4>
+ 154 │           <div className="space-y-3">
+ 155 │             <div>
+ 156 │               <div className="flex justify-between items-center mb-1">
+ 157 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 158 │                   Chat Inteligente
+ 159 │                 </span>
+ 160 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 161 │                   65%
+ 162 │                 </span>
+ 163 │               </div>
+ 164 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 165 │                 <div className="h-full bg-blue-500 rounded-full" style={{ width: "65%" }}></div>
+ 166 │               </div>
+ 167 │             </div>
+ 168 │             <div>
+ 169 │               <div className="flex justify-between items-center mb-1">
+ 170 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 171 │                   Criar Conteúdo
+ 172 │                 </span>
+ 173 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 174 │                   40%
+ 175 │                 </span>
+ 176 │               </div>
+ 177 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 178 │                 <div className="h-full bg-emerald-500 rounded-full" style={{ width: "40%" }}></div>
+ 179 │               </div>
+ 180 │             </div>
+ 181 │             <div>
+ 182 │               <div className="flex justify-between items-center mb-1">
+ 183 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 184 │                   Aprender Rápido
+ 185 │                 </span>
+ 186 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 187 │                   25%
+ 188 │                 </span>
+ 189 │               </div>
+ 190 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 191 │                 <div className="h-full bg-amber-500 rounded-full" style={{ width: "25%" }}></div>
+ 192 │               </div>
+ 193 │             </div>
+ 194 │           </div>
+ 195 │         </Card>
+ 196 │ 
+ 197 │         <Card className={`p-4 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+ 198 │           <h4 className={`text-base font-medium mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 199 │             Recursos Recentes
+ 200 │           </h4>
+ 201 │           <div className="space-y-2">
+ 202 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 203 │               <div className="flex items-center gap-2">
+ 204 │                 <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+ 205 │                   <MessageSquare className="h-4 w-4 text-blue-500" />
+ 206 │                 </div>
+ 207 │                 <div>
+ 208 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Conversou sobre "Revolução Industrial"</p>
+ 209 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>há 2 horas</p>
+ 210 │                 </div>
+ 211 │               </div>
+ 212 │             </div>
+ 213 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 214 │               <div className="flex items-center gap-2">
+ 215 │                 <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+ 216 │                   <PenTool className="h-4 w-4 text-emerald-500" />
+ 217 │                 </div>
+ 218 │                 <div>
+ 219 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Criou plano de aula "Ecossistemas"</p>
+ 220 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>ontem</p>
+ 221 │                 </div>
+ 222 │               </div>
+ 223 │             </div>
+ 224 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 225 │               <div className="flex items-center gap-2">
+ 226 │                 <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center">
+ 227 │                   <Zap className="h-4 w-4 text-amber-500" />
+ 228 │                 </div>
+ 229 │                 <div>
+ 230 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Gerou resumo "Equações Diferenciais"</p>
+ 231 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>há 3 dias</p>
+ 232 │                 </div>
+ 233 │               </div>
+ 234 │             </div>
+ 235 │           </div>
+ 236 │         </Card>
+ 237 │       </div>
+ 238 │     </div>
+ 239 │   );
+ 240 │ }
+ 241 │ import React from "react";
+ 242 │ import { useTheme } from "@/components/ThemeProvider";
+ 243 │ import { Button } from "@/components/ui/button";
+ 244 │ import { Card } from "@/components/ui/card";
+ 245 │ import { Zap, BookOpen, BarChart3, Calendar, Wrench, MessageSquare, Lightbulb, Compass, ArrowRight } from "lucide-react";
+     ·          ─┬─
+     ·           ╰── `Zap` redefined here
+ 246 │ 
+ 247 │ interface VisaoGeralContentProps {
+ 248 │   theme?: string;
+     ╰────
+
+  × the name `BarChart3` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/epictus-ia/components/VisaoGeralContent.tsx:9:1]
+   9 │   MessageSquare, 
+  10 │   PenTool, 
+  11 │   Zap, 
+  12 │   BarChart3, 
+     ·   ────┬────
+     ·       ╰── previous definition of `BarChart3` here
+  13 │   Calendar, 
+  14 │   Wrench,
+  15 │   ArrowRight 
+  16 │ } from "lucide-react";
+  17 │ 
+  18 │ export default function VisaoGeralContent() {
+  19 │   const { theme } = useTheme();
+  20 │ 
+  21 │   const quickAccessTools = [
+  22 │     {
+  23 │       id: "assistente-chat",
+  24 │       title: "Assistente de Chat",
+  25 │       description: "Converse com a IA para obter ajuda rápida",
+  26 │       icon: <MessageSquare className="h-5 w-5 text-blue-500" />,
+  27 │       color: "bg-blue-500/10",
+  28 │       section: "chat-inteligente"
+  29 │     },
+  30 │     {
+  31 │       id: "planos-aula",
+  32 │       title: "Planos de Aula",
+  33 │       description: "Gere planos de aula personalizados",
+  34 │       icon: <PenTool className="h-5 w-5 text-emerald-500" />,
+  35 │       color: "bg-emerald-500/10",
+  36 │       section: "criar-conteudo"
+  37 │     },
+  38 │     {
+  39 │       id: "resumos",
+  40 │       title: "Resumos Inteligentes",
+  41 │       description: "Crie resumos concisos de qualquer conteúdo",
+  42 │       icon: <Zap className="h-5 w-5 text-amber-500" />,
+  43 │       color: "bg-amber-500/10",
+  44 │       section: "aprender-mais-rapido"
+  45 │     },
+  46 │     {
+  47 │       id: "analisar",
+  48 │       title: "Corretor de Redação",
+  49 │       description: "Analise e melhore suas redações",
+  50 │       icon: <BarChart3 className="h-5 w-5 text-purple-500" />,
+  51 │       color: "bg-purple-500/10",
+  52 │       section: "analisar-corrigir"
+  53 │     }
+  54 │   ];
+  55 │ 
+  56 │   return (
+  57 │     <div className="h-full flex flex-col">
+  58 │       <div className="mb-6">
+  59 │         <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+  60 │           Visão Geral do Epictus IA
+  61 │         </h2>
+  62 │         <p className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+  63 │           Acesse rapidamente as ferramentas mais populares ou explore por categoria
+  64 │         </p>
+  65 │       </div>
+  66 │ 
+  67 │       <div className="mb-6">
+  68 │         <Card className={`p-5 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+  69 │           <div className="flex items-start gap-4">
+  70 │             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF9B50] flex items-center justify-center">
+  71 │               <Brain className="h-6 w-6 text-white" />
+  72 │             </div>
+  73 │             <div>
+  74 │               <div className="flex items-center">
+  75 │                 <h3 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+  76 │                   Bem-vindo ao Epictus IA
+  77 │                 </h3>
+  78 │                 <Badge className="ml-2 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white">
+  79 │                   <Sparkles className="h-3.5 w-3.5 mr-1" /> Premium
+  80 │                 </Badge>
+  81 │               </div>
+  82 │               <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+  83 │                 Uma plataforma completa de inteligência artificial criada para potencializar seus estudos. Explore as diferentes categorias para acessar ferramentas especializadas para cada necessidade.
+  84 │               </p>
+  85 │               <div className="mt-4 flex flex-wrap gap-2">
+  86 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  87 │                   <MessageSquare className="h-3.5 w-3.5 mr-1 text-blue-500" />
+  88 │                   Chat Inteligente
+  89 │                 </Button>
+  90 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  91 │                   <PenTool className="h-3.5 w-3.5 mr-1 text-emerald-500" />
+  92 │                   Criar Conteúdo
+  93 │                 </Button>
+  94 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  95 │                   <Zap className="h-3.5 w-3.5 mr-1 text-amber-500" />
+  96 │                   Aprender Rápido
+  97 │                 </Button>
+  98 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  99 │                   <BarChart3 className="h-3.5 w-3.5 mr-1 text-purple-500" />
+ 100 │                   Analisar
+ 101 │                 </Button>
+ 102 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+ 103 │                   <Calendar className="h-3.5 w-3.5 mr-1 text-red-500" />
+ 104 │                   Organizar
+ 105 │                 </Button>
+ 106 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+ 107 │                   <Wrench className="h-3.5 w-3.5 mr-1 text-cyan-500" />
+ 108 │                   Ferramentas
+ 109 │                 </Button>
+ 110 │               </div>
+ 111 │             </div>
+ 112 │           </div>
+ 113 │         </Card>
+ 114 │       </div>
+ 115 │ 
+ 116 │       <h3 className={`text-lg font-semibold mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 117 │         Acesso Rápido
+ 118 │       </h3>
+ 119 │ 
+ 120 │       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+ 121 │         {quickAccessTools.map(tool => (
+ 122 │           <Card 
+ 123 │             key={tool.id}
+ 124 │             className={`p-4 border hover:shadow-md transition-all cursor-pointer ${theme === "dark" ? "bg-gray-800 border-gray-700 hover:bg-gray-800/80" : "bg-white border-gray-200 hover:bg-gray-50"}`}
+ 125 │           >
+ 126 │             <div className="flex flex-col h-full">
+ 127 │               <div className={`w-10 h-10 rounded-full ${tool.color} flex items-center justify-center mb-3`}>
+ 128 │                 {tool.icon}
+ 129 │               </div>
+ 130 │               <h4 className={`text-base font-medium mb-1 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 131 │                 {tool.title}
+ 132 │               </h4>
+ 133 │               <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"} mb-3`}>
+ 134 │                 {tool.description}
+ 135 │               </p>
+ 136 │               <Button 
+ 137 │                 size="sm"
+ 138 │                 variant="ghost" 
+ 139 │                 className={`mt-auto text-xs p-2 h-8 ${theme === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
+ 140 │               >
+ 141 │                 Acessar
+ 142 │                 <ArrowRight className="h-3.5 w-3.5 ml-1" />
+ 143 │               </Button>
+ 144 │             </div>
+ 145 │           </Card>
+ 146 │         ))}
+ 147 │       </div>
+ 148 │ 
+ 149 │       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+ 150 │         <Card className={`p-4 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+ 151 │           <h4 className={`text-base font-medium mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 152 │             Estatísticas de Uso
+ 153 │           </h4>
+ 154 │           <div className="space-y-3">
+ 155 │             <div>
+ 156 │               <div className="flex justify-between items-center mb-1">
+ 157 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 158 │                   Chat Inteligente
+ 159 │                 </span>
+ 160 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 161 │                   65%
+ 162 │                 </span>
+ 163 │               </div>
+ 164 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 165 │                 <div className="h-full bg-blue-500 rounded-full" style={{ width: "65%" }}></div>
+ 166 │               </div>
+ 167 │             </div>
+ 168 │             <div>
+ 169 │               <div className="flex justify-between items-center mb-1">
+ 170 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 171 │                   Criar Conteúdo
+ 172 │                 </span>
+ 173 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 174 │                   40%
+ 175 │                 </span>
+ 176 │               </div>
+ 177 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 178 │                 <div className="h-full bg-emerald-500 rounded-full" style={{ width: "40%" }}></div>
+ 179 │               </div>
+ 180 │             </div>
+ 181 │             <div>
+ 182 │               <div className="flex justify-between items-center mb-1">
+ 183 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 184 │                   Aprender Rápido
+ 185 │                 </span>
+ 186 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 187 │                   25%
+ 188 │                 </span>
+ 189 │               </div>
+ 190 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 191 │                 <div className="h-full bg-amber-500 rounded-full" style={{ width: "25%" }}></div>
+ 192 │               </div>
+ 193 │             </div>
+ 194 │           </div>
+ 195 │         </Card>
+ 196 │ 
+ 197 │         <Card className={`p-4 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+ 198 │           <h4 className={`text-base font-medium mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 199 │             Recursos Recentes
+ 200 │           </h4>
+ 201 │           <div className="space-y-2">
+ 202 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 203 │               <div className="flex items-center gap-2">
+ 204 │                 <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+ 205 │                   <MessageSquare className="h-4 w-4 text-blue-500" />
+ 206 │                 </div>
+ 207 │                 <div>
+ 208 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Conversou sobre "Revolução Industrial"</p>
+ 209 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>há 2 horas</p>
+ 210 │                 </div>
+ 211 │               </div>
+ 212 │             </div>
+ 213 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 214 │               <div className="flex items-center gap-2">
+ 215 │                 <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+ 216 │                   <PenTool className="h-4 w-4 text-emerald-500" />
+ 217 │                 </div>
+ 218 │                 <div>
+ 219 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Criou plano de aula "Ecossistemas"</p>
+ 220 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>ontem</p>
+ 221 │                 </div>
+ 222 │               </div>
+ 223 │             </div>
+ 224 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 225 │               <div className="flex items-center gap-2">
+ 226 │                 <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center">
+ 227 │                   <Zap className="h-4 w-4 text-amber-500" />
+ 228 │                 </div>
+ 229 │                 <div>
+ 230 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Gerou resumo "Equações Diferenciais"</p>
+ 231 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>há 3 dias</p>
+ 232 │                 </div>
+ 233 │               </div>
+ 234 │             </div>
+ 235 │           </div>
+ 236 │         </Card>
+ 237 │       </div>
+ 238 │     </div>
+ 239 │   );
+ 240 │ }
+ 241 │ import React from "react";
+ 242 │ import { useTheme } from "@/components/ThemeProvider";
+ 243 │ import { Button } from "@/components/ui/button";
+ 244 │ import { Card } from "@/components/ui/card";
+ 245 │ import { Zap, BookOpen, BarChart3, Calendar, Wrench, MessageSquare, Lightbulb, Compass, ArrowRight } from "lucide-react";
+     ·                         ────┬────
+     ·                             ╰── `BarChart3` redefined here
+ 246 │ 
+ 247 │ interface VisaoGeralContentProps {
+ 248 │   theme?: string;
+     ╰────
+
+  × the name `Calendar` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/epictus-ia/components/VisaoGeralContent.tsx:10:1]
+  10 │   PenTool, 
+  11 │   Zap, 
+  12 │   BarChart3, 
+  13 │   Calendar, 
+     ·   ────┬───
+     ·       ╰── previous definition of `Calendar` here
+  14 │   Wrench,
+  15 │   ArrowRight 
+  16 │ } from "lucide-react";
+  17 │ 
+  18 │ export default function VisaoGeralContent() {
+  19 │   const { theme } = useTheme();
+  20 │ 
+  21 │   const quickAccessTools = [
+  22 │     {
+  23 │       id: "assistente-chat",
+  24 │       title: "Assistente de Chat",
+  25 │       description: "Converse com a IA para obter ajuda rápida",
+  26 │       icon: <MessageSquare className="h-5 w-5 text-blue-500" />,
+  27 │       color: "bg-blue-500/10",
+  28 │       section: "chat-inteligente"
+  29 │     },
+  30 │     {
+  31 │       id: "planos-aula",
+  32 │       title: "Planos de Aula",
+  33 │       description: "Gere planos de aula personalizados",
+  34 │       icon: <PenTool className="h-5 w-5 text-emerald-500" />,
+  35 │       color: "bg-emerald-500/10",
+  36 │       section: "criar-conteudo"
+  37 │     },
+  38 │     {
+  39 │       id: "resumos",
+  40 │       title: "Resumos Inteligentes",
+  41 │       description: "Crie resumos concisos de qualquer conteúdo",
+  42 │       icon: <Zap className="h-5 w-5 text-amber-500" />,
+  43 │       color: "bg-amber-500/10",
+  44 │       section: "aprender-mais-rapido"
+  45 │     },
+  46 │     {
+  47 │       id: "analisar",
+  48 │       title: "Corretor de Redação",
+  49 │       description: "Analise e melhore suas redações",
+  50 │       icon: <BarChart3 className="h-5 w-5 text-purple-500" />,
+  51 │       color: "bg-purple-500/10",
+  52 │       section: "analisar-corrigir"
+  53 │     }
+  54 │   ];
+  55 │ 
+  56 │   return (
+  57 │     <div className="h-full flex flex-col">
+  58 │       <div className="mb-6">
+  59 │         <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+  60 │           Visão Geral do Epictus IA
+  61 │         </h2>
+  62 │         <p className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+  63 │           Acesse rapidamente as ferramentas mais populares ou explore por categoria
+  64 │         </p>
+  65 │       </div>
+  66 │ 
+  67 │       <div className="mb-6">
+  68 │         <Card className={`p-5 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+  69 │           <div className="flex items-start gap-4">
+  70 │             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF9B50] flex items-center justify-center">
+  71 │               <Brain className="h-6 w-6 text-white" />
+  72 │             </div>
+  73 │             <div>
+  74 │               <div className="flex items-center">
+  75 │                 <h3 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+  76 │                   Bem-vindo ao Epictus IA
+  77 │                 </h3>
+  78 │                 <Badge className="ml-2 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white">
+  79 │                   <Sparkles className="h-3.5 w-3.5 mr-1" /> Premium
+  80 │                 </Badge>
+  81 │               </div>
+  82 │               <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+  83 │                 Uma plataforma completa de inteligência artificial criada para potencializar seus estudos. Explore as diferentes categorias para acessar ferramentas especializadas para cada necessidade.
+  84 │               </p>
+  85 │               <div className="mt-4 flex flex-wrap gap-2">
+  86 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  87 │                   <MessageSquare className="h-3.5 w-3.5 mr-1 text-blue-500" />
+  88 │                   Chat Inteligente
+  89 │                 </Button>
+  90 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  91 │                   <PenTool className="h-3.5 w-3.5 mr-1 text-emerald-500" />
+  92 │                   Criar Conteúdo
+  93 │                 </Button>
+  94 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  95 │                   <Zap className="h-3.5 w-3.5 mr-1 text-amber-500" />
+  96 │                   Aprender Rápido
+  97 │                 </Button>
+  98 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  99 │                   <BarChart3 className="h-3.5 w-3.5 mr-1 text-purple-500" />
+ 100 │                   Analisar
+ 101 │                 </Button>
+ 102 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+ 103 │                   <Calendar className="h-3.5 w-3.5 mr-1 text-red-500" />
+ 104 │                   Organizar
+ 105 │                 </Button>
+ 106 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+ 107 │                   <Wrench className="h-3.5 w-3.5 mr-1 text-cyan-500" />
+ 108 │                   Ferramentas
+ 109 │                 </Button>
+ 110 │               </div>
+ 111 │             </div>
+ 112 │           </div>
+ 113 │         </Card>
+ 114 │       </div>
+ 115 │ 
+ 116 │       <h3 className={`text-lg font-semibold mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 117 │         Acesso Rápido
+ 118 │       </h3>
+ 119 │ 
+ 120 │       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+ 121 │         {quickAccessTools.map(tool => (
+ 122 │           <Card 
+ 123 │             key={tool.id}
+ 124 │             className={`p-4 border hover:shadow-md transition-all cursor-pointer ${theme === "dark" ? "bg-gray-800 border-gray-700 hover:bg-gray-800/80" : "bg-white border-gray-200 hover:bg-gray-50"}`}
+ 125 │           >
+ 126 │             <div className="flex flex-col h-full">
+ 127 │               <div className={`w-10 h-10 rounded-full ${tool.color} flex items-center justify-center mb-3`}>
+ 128 │                 {tool.icon}
+ 129 │               </div>
+ 130 │               <h4 className={`text-base font-medium mb-1 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 131 │                 {tool.title}
+ 132 │               </h4>
+ 133 │               <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"} mb-3`}>
+ 134 │                 {tool.description}
+ 135 │               </p>
+ 136 │               <Button 
+ 137 │                 size="sm"
+ 138 │                 variant="ghost" 
+ 139 │                 className={`mt-auto text-xs p-2 h-8 ${theme === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
+ 140 │               >
+ 141 │                 Acessar
+ 142 │                 <ArrowRight className="h-3.5 w-3.5 ml-1" />
+ 143 │               </Button>
+ 144 │             </div>
+ 145 │           </Card>
+ 146 │         ))}
+ 147 │       </div>
+ 148 │ 
+ 149 │       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+ 150 │         <Card className={`p-4 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+ 151 │           <h4 className={`text-base font-medium mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 152 │             Estatísticas de Uso
+ 153 │           </h4>
+ 154 │           <div className="space-y-3">
+ 155 │             <div>
+ 156 │               <div className="flex justify-between items-center mb-1">
+ 157 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 158 │                   Chat Inteligente
+ 159 │                 </span>
+ 160 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 161 │                   65%
+ 162 │                 </span>
+ 163 │               </div>
+ 164 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 165 │                 <div className="h-full bg-blue-500 rounded-full" style={{ width: "65%" }}></div>
+ 166 │               </div>
+ 167 │             </div>
+ 168 │             <div>
+ 169 │               <div className="flex justify-between items-center mb-1">
+ 170 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 171 │                   Criar Conteúdo
+ 172 │                 </span>
+ 173 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 174 │                   40%
+ 175 │                 </span>
+ 176 │               </div>
+ 177 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 178 │                 <div className="h-full bg-emerald-500 rounded-full" style={{ width: "40%" }}></div>
+ 179 │               </div>
+ 180 │             </div>
+ 181 │             <div>
+ 182 │               <div className="flex justify-between items-center mb-1">
+ 183 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 184 │                   Aprender Rápido
+ 185 │                 </span>
+ 186 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 187 │                   25%
+ 188 │                 </span>
+ 189 │               </div>
+ 190 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 191 │                 <div className="h-full bg-amber-500 rounded-full" style={{ width: "25%" }}></div>
+ 192 │               </div>
+ 193 │             </div>
+ 194 │           </div>
+ 195 │         </Card>
+ 196 │ 
+ 197 │         <Card className={`p-4 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+ 198 │           <h4 className={`text-base font-medium mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 199 │             Recursos Recentes
+ 200 │           </h4>
+ 201 │           <div className="space-y-2">
+ 202 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 203 │               <div className="flex items-center gap-2">
+ 204 │                 <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+ 205 │                   <MessageSquare className="h-4 w-4 text-blue-500" />
+ 206 │                 </div>
+ 207 │                 <div>
+ 208 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Conversou sobre "Revolução Industrial"</p>
+ 209 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>há 2 horas</p>
+ 210 │                 </div>
+ 211 │               </div>
+ 212 │             </div>
+ 213 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 214 │               <div className="flex items-center gap-2">
+ 215 │                 <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+ 216 │                   <PenTool className="h-4 w-4 text-emerald-500" />
+ 217 │                 </div>
+ 218 │                 <div>
+ 219 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Criou plano de aula "Ecossistemas"</p>
+ 220 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>ontem</p>
+ 221 │                 </div>
+ 222 │               </div>
+ 223 │             </div>
+ 224 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 225 │               <div className="flex items-center gap-2">
+ 226 │                 <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center">
+ 227 │                   <Zap className="h-4 w-4 text-amber-500" />
+ 228 │                 </div>
+ 229 │                 <div>
+ 230 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Gerou resumo "Equações Diferenciais"</p>
+ 231 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>há 3 dias</p>
+ 232 │                 </div>
+ 233 │               </div>
+ 234 │             </div>
+ 235 │           </div>
+ 236 │         </Card>
+ 237 │       </div>
+ 238 │     </div>
+ 239 │   );
+ 240 │ }
+ 241 │ import React from "react";
+ 242 │ import { useTheme } from "@/components/ThemeProvider";
+ 243 │ import { Button } from "@/components/ui/button";
+ 244 │ import { Card } from "@/components/ui/card";
+ 245 │ import { Zap, BookOpen, BarChart3, Calendar, Wrench, MessageSquare, Lightbulb, Compass, ArrowRight } from "lucide-react";
+     ·                                    ────┬───
+     ·                                        ╰── `Calendar` redefined here
+ 246 │ 
+ 247 │ interface VisaoGeralContentProps {
+ 248 │   theme?: string;
+     ╰────
+
+  × the name `Wrench` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/epictus-ia/components/VisaoGeralContent.tsx:11:1]
+  11 │   Zap, 
+  12 │   BarChart3, 
+  13 │   Calendar, 
+  14 │   Wrench,
+     ·   ───┬──
+     ·      ╰── previous definition of `Wrench` here
+  15 │   ArrowRight 
+  16 │ } from "lucide-react";
+  17 │ 
+  18 │ export default function VisaoGeralContent() {
+  19 │   const { theme } = useTheme();
+  20 │ 
+  21 │   const quickAccessTools = [
+  22 │     {
+  23 │       id: "assistente-chat",
+  24 │       title: "Assistente de Chat",
+  25 │       description: "Converse com a IA para obter ajuda rápida",
+  26 │       icon: <MessageSquare className="h-5 w-5 text-blue-500" />,
+  27 │       color: "bg-blue-500/10",
+  28 │       section: "chat-inteligente"
+  29 │     },
+  30 │     {
+  31 │       id: "planos-aula",
+  32 │       title: "Planos de Aula",
+  33 │       description: "Gere planos de aula personalizados",
+  34 │       icon: <PenTool className="h-5 w-5 text-emerald-500" />,
+  35 │       color: "bg-emerald-500/10",
+  36 │       section: "criar-conteudo"
+  37 │     },
+  38 │     {
+  39 │       id: "resumos",
+  40 │       title: "Resumos Inteligentes",
+  41 │       description: "Crie resumos concisos de qualquer conteúdo",
+  42 │       icon: <Zap className="h-5 w-5 text-amber-500" />,
+  43 │       color: "bg-amber-500/10",
+  44 │       section: "aprender-mais-rapido"
+  45 │     },
+  46 │     {
+  47 │       id: "analisar",
+  48 │       title: "Corretor de Redação",
+  49 │       description: "Analise e melhore suas redações",
+  50 │       icon: <BarChart3 className="h-5 w-5 text-purple-500" />,
+  51 │       color: "bg-purple-500/10",
+  52 │       section: "analisar-corrigir"
+  53 │     }
+  54 │   ];
+  55 │ 
+  56 │   return (
+  57 │     <div className="h-full flex flex-col">
+  58 │       <div className="mb-6">
+  59 │         <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+  60 │           Visão Geral do Epictus IA
+  61 │         </h2>
+  62 │         <p className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+  63 │           Acesse rapidamente as ferramentas mais populares ou explore por categoria
+  64 │         </p>
+  65 │       </div>
+  66 │ 
+  67 │       <div className="mb-6">
+  68 │         <Card className={`p-5 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+  69 │           <div className="flex items-start gap-4">
+  70 │             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF9B50] flex items-center justify-center">
+  71 │               <Brain className="h-6 w-6 text-white" />
+  72 │             </div>
+  73 │             <div>
+  74 │               <div className="flex items-center">
+  75 │                 <h3 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+  76 │                   Bem-vindo ao Epictus IA
+  77 │                 </h3>
+  78 │                 <Badge className="ml-2 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white">
+  79 │                   <Sparkles className="h-3.5 w-3.5 mr-1" /> Premium
+  80 │                 </Badge>
+  81 │               </div>
+  82 │               <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+  83 │                 Uma plataforma completa de inteligência artificial criada para potencializar seus estudos. Explore as diferentes categorias para acessar ferramentas especializadas para cada necessidade.
+  84 │               </p>
+  85 │               <div className="mt-4 flex flex-wrap gap-2">
+  86 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  87 │                   <MessageSquare className="h-3.5 w-3.5 mr-1 text-blue-500" />
+  88 │                   Chat Inteligente
+  89 │                 </Button>
+  90 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  91 │                   <PenTool className="h-3.5 w-3.5 mr-1 text-emerald-500" />
+  92 │                   Criar Conteúdo
+  93 │                 </Button>
+  94 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  95 │                   <Zap className="h-3.5 w-3.5 mr-1 text-amber-500" />
+  96 │                   Aprender Rápido
+  97 │                 </Button>
+  98 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  99 │                   <BarChart3 className="h-3.5 w-3.5 mr-1 text-purple-500" />
+ 100 │                   Analisar
+ 101 │                 </Button>
+ 102 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+ 103 │                   <Calendar className="h-3.5 w-3.5 mr-1 text-red-500" />
+ 104 │                   Organizar
+ 105 │                 </Button>
+ 106 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+ 107 │                   <Wrench className="h-3.5 w-3.5 mr-1 text-cyan-500" />
+ 108 │                   Ferramentas
+ 109 │                 </Button>
+ 110 │               </div>
+ 111 │             </div>
+ 112 │           </div>
+ 113 │         </Card>
+ 114 │       </div>
+ 115 │ 
+ 116 │       <h3 className={`text-lg font-semibold mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 117 │         Acesso Rápido
+ 118 │       </h3>
+ 119 │ 
+ 120 │       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+ 121 │         {quickAccessTools.map(tool => (
+ 122 │           <Card 
+ 123 │             key={tool.id}
+ 124 │             className={`p-4 border hover:shadow-md transition-all cursor-pointer ${theme === "dark" ? "bg-gray-800 border-gray-700 hover:bg-gray-800/80" : "bg-white border-gray-200 hover:bg-gray-50"}`}
+ 125 │           >
+ 126 │             <div className="flex flex-col h-full">
+ 127 │               <div className={`w-10 h-10 rounded-full ${tool.color} flex items-center justify-center mb-3`}>
+ 128 │                 {tool.icon}
+ 129 │               </div>
+ 130 │               <h4 className={`text-base font-medium mb-1 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 131 │                 {tool.title}
+ 132 │               </h4>
+ 133 │               <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"} mb-3`}>
+ 134 │                 {tool.description}
+ 135 │               </p>
+ 136 │               <Button 
+ 137 │                 size="sm"
+ 138 │                 variant="ghost" 
+ 139 │                 className={`mt-auto text-xs p-2 h-8 ${theme === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
+ 140 │               >
+ 141 │                 Acessar
+ 142 │                 <ArrowRight className="h-3.5 w-3.5 ml-1" />
+ 143 │               </Button>
+ 144 │             </div>
+ 145 │           </Card>
+ 146 │         ))}
+ 147 │       </div>
+ 148 │ 
+ 149 │       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+ 150 │         <Card className={`p-4 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+ 151 │           <h4 className={`text-base font-medium mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 152 │             Estatísticas de Uso
+ 153 │           </h4>
+ 154 │           <div className="space-y-3">
+ 155 │             <div>
+ 156 │               <div className="flex justify-between items-center mb-1">
+ 157 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 158 │                   Chat Inteligente
+ 159 │                 </span>
+ 160 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 161 │                   65%
+ 162 │                 </span>
+ 163 │               </div>
+ 164 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 165 │                 <div className="h-full bg-blue-500 rounded-full" style={{ width: "65%" }}></div>
+ 166 │               </div>
+ 167 │             </div>
+ 168 │             <div>
+ 169 │               <div className="flex justify-between items-center mb-1">
+ 170 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 171 │                   Criar Conteúdo
+ 172 │                 </span>
+ 173 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 174 │                   40%
+ 175 │                 </span>
+ 176 │               </div>
+ 177 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 178 │                 <div className="h-full bg-emerald-500 rounded-full" style={{ width: "40%" }}></div>
+ 179 │               </div>
+ 180 │             </div>
+ 181 │             <div>
+ 182 │               <div className="flex justify-between items-center mb-1">
+ 183 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 184 │                   Aprender Rápido
+ 185 │                 </span>
+ 186 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 187 │                   25%
+ 188 │                 </span>
+ 189 │               </div>
+ 190 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 191 │                 <div className="h-full bg-amber-500 rounded-full" style={{ width: "25%" }}></div>
+ 192 │               </div>
+ 193 │             </div>
+ 194 │           </div>
+ 195 │         </Card>
+ 196 │ 
+ 197 │         <Card className={`p-4 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+ 198 │           <h4 className={`text-base font-medium mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 199 │             Recursos Recentes
+ 200 │           </h4>
+ 201 │           <div className="space-y-2">
+ 202 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 203 │               <div className="flex items-center gap-2">
+ 204 │                 <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+ 205 │                   <MessageSquare className="h-4 w-4 text-blue-500" />
+ 206 │                 </div>
+ 207 │                 <div>
+ 208 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Conversou sobre "Revolução Industrial"</p>
+ 209 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>há 2 horas</p>
+ 210 │                 </div>
+ 211 │               </div>
+ 212 │             </div>
+ 213 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 214 │               <div className="flex items-center gap-2">
+ 215 │                 <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+ 216 │                   <PenTool className="h-4 w-4 text-emerald-500" />
+ 217 │                 </div>
+ 218 │                 <div>
+ 219 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Criou plano de aula "Ecossistemas"</p>
+ 220 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>ontem</p>
+ 221 │                 </div>
+ 222 │               </div>
+ 223 │             </div>
+ 224 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 225 │               <div className="flex items-center gap-2">
+ 226 │                 <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center">
+ 227 │                   <Zap className="h-4 w-4 text-amber-500" />
+ 228 │                 </div>
+ 229 │                 <div>
+ 230 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Gerou resumo "Equações Diferenciais"</p>
+ 231 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>há 3 dias</p>
+ 232 │                 </div>
+ 233 │               </div>
+ 234 │             </div>
+ 235 │           </div>
+ 236 │         </Card>
+ 237 │       </div>
+ 238 │     </div>
+ 239 │   );
+ 240 │ }
+ 241 │ import React from "react";
+ 242 │ import { useTheme } from "@/components/ThemeProvider";
+ 243 │ import { Button } from "@/components/ui/button";
+ 244 │ import { Card } from "@/components/ui/card";
+ 245 │ import { Zap, BookOpen, BarChart3, Calendar, Wrench, MessageSquare, Lightbulb, Compass, ArrowRight } from "lucide-react";
+     ·                                              ───┬──
+     ·                                                 ╰── `Wrench` redefined here
+ 246 │ 
+ 247 │ interface VisaoGeralContentProps {
+ 248 │   theme?: string;
+     ╰────
+
+  × the name `MessageSquare` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/epictus-ia/components/VisaoGeralContent.tsx:6:1]
+   6 │ import { 
+   7 │   Brain, 
+   8 │   Sparkles, 
+   9 │   MessageSquare, 
+     ·   ──────┬──────
+     ·         ╰── previous definition of `MessageSquare` here
+  10 │   PenTool, 
+  11 │   Zap, 
+  12 │   BarChart3, 
+  13 │   Calendar, 
+  14 │   Wrench,
+  15 │   ArrowRight 
+  16 │ } from "lucide-react";
+  17 │ 
+  18 │ export default function VisaoGeralContent() {
+  19 │   const { theme } = useTheme();
+  20 │ 
+  21 │   const quickAccessTools = [
+  22 │     {
+  23 │       id: "assistente-chat",
+  24 │       title: "Assistente de Chat",
+  25 │       description: "Converse com a IA para obter ajuda rápida",
+  26 │       icon: <MessageSquare className="h-5 w-5 text-blue-500" />,
+  27 │       color: "bg-blue-500/10",
+  28 │       section: "chat-inteligente"
+  29 │     },
+  30 │     {
+  31 │       id: "planos-aula",
+  32 │       title: "Planos de Aula",
+  33 │       description: "Gere planos de aula personalizados",
+  34 │       icon: <PenTool className="h-5 w-5 text-emerald-500" />,
+  35 │       color: "bg-emerald-500/10",
+  36 │       section: "criar-conteudo"
+  37 │     },
+  38 │     {
+  39 │       id: "resumos",
+  40 │       title: "Resumos Inteligentes",
+  41 │       description: "Crie resumos concisos de qualquer conteúdo",
+  42 │       icon: <Zap className="h-5 w-5 text-amber-500" />,
+  43 │       color: "bg-amber-500/10",
+  44 │       section: "aprender-mais-rapido"
+  45 │     },
+  46 │     {
+  47 │       id: "analisar",
+  48 │       title: "Corretor de Redação",
+  49 │       description: "Analise e melhore suas redações",
+  50 │       icon: <BarChart3 className="h-5 w-5 text-purple-500" />,
+  51 │       color: "bg-purple-500/10",
+  52 │       section: "analisar-corrigir"
+  53 │     }
+  54 │   ];
+  55 │ 
+  56 │   return (
+  57 │     <div className="h-full flex flex-col">
+  58 │       <div className="mb-6">
+  59 │         <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+  60 │           Visão Geral do Epictus IA
+  61 │         </h2>
+  62 │         <p className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+  63 │           Acesse rapidamente as ferramentas mais populares ou explore por categoria
+  64 │         </p>
+  65 │       </div>
+  66 │ 
+  67 │       <div className="mb-6">
+  68 │         <Card className={`p-5 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+  69 │           <div className="flex items-start gap-4">
+  70 │             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF9B50] flex items-center justify-center">
+  71 │               <Brain className="h-6 w-6 text-white" />
+  72 │             </div>
+  73 │             <div>
+  74 │               <div className="flex items-center">
+  75 │                 <h3 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+  76 │                   Bem-vindo ao Epictus IA
+  77 │                 </h3>
+  78 │                 <Badge className="ml-2 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white">
+  79 │                   <Sparkles className="h-3.5 w-3.5 mr-1" /> Premium
+  80 │                 </Badge>
+  81 │               </div>
+  82 │               <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+  83 │                 Uma plataforma completa de inteligência artificial criada para potencializar seus estudos. Explore as diferentes categorias para acessar ferramentas especializadas para cada necessidade.
+  84 │               </p>
+  85 │               <div className="mt-4 flex flex-wrap gap-2">
+  86 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  87 │                   <MessageSquare className="h-3.5 w-3.5 mr-1 text-blue-500" />
+  88 │                   Chat Inteligente
+  89 │                 </Button>
+  90 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  91 │                   <PenTool className="h-3.5 w-3.5 mr-1 text-emerald-500" />
+  92 │                   Criar Conteúdo
+  93 │                 </Button>
+  94 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  95 │                   <Zap className="h-3.5 w-3.5 mr-1 text-amber-500" />
+  96 │                   Aprender Rápido
+  97 │                 </Button>
+  98 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  99 │                   <BarChart3 className="h-3.5 w-3.5 mr-1 text-purple-500" />
+ 100 │                   Analisar
+ 101 │                 </Button>
+ 102 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+ 103 │                   <Calendar className="h-3.5 w-3.5 mr-1 text-red-500" />
+ 104 │                   Organizar
+ 105 │                 </Button>
+ 106 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+ 107 │                   <Wrench className="h-3.5 w-3.5 mr-1 text-cyan-500" />
+ 108 │                   Ferramentas
+ 109 │                 </Button>
+ 110 │               </div>
+ 111 │             </div>
+ 112 │           </div>
+ 113 │         </Card>
+ 114 │       </div>
+ 115 │ 
+ 116 │       <h3 className={`text-lg font-semibold mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 117 │         Acesso Rápido
+ 118 │       </h3>
+ 119 │ 
+ 120 │       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+ 121 │         {quickAccessTools.map(tool => (
+ 122 │           <Card 
+ 123 │             key={tool.id}
+ 124 │             className={`p-4 border hover:shadow-md transition-all cursor-pointer ${theme === "dark" ? "bg-gray-800 border-gray-700 hover:bg-gray-800/80" : "bg-white border-gray-200 hover:bg-gray-50"}`}
+ 125 │           >
+ 126 │             <div className="flex flex-col h-full">
+ 127 │               <div className={`w-10 h-10 rounded-full ${tool.color} flex items-center justify-center mb-3`}>
+ 128 │                 {tool.icon}
+ 129 │               </div>
+ 130 │               <h4 className={`text-base font-medium mb-1 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 131 │                 {tool.title}
+ 132 │               </h4>
+ 133 │               <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"} mb-3`}>
+ 134 │                 {tool.description}
+ 135 │               </p>
+ 136 │               <Button 
+ 137 │                 size="sm"
+ 138 │                 variant="ghost" 
+ 139 │                 className={`mt-auto text-xs p-2 h-8 ${theme === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
+ 140 │               >
+ 141 │                 Acessar
+ 142 │                 <ArrowRight className="h-3.5 w-3.5 ml-1" />
+ 143 │               </Button>
+ 144 │             </div>
+ 145 │           </Card>
+ 146 │         ))}
+ 147 │       </div>
+ 148 │ 
+ 149 │       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+ 150 │         <Card className={`p-4 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+ 151 │           <h4 className={`text-base font-medium mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 152 │             Estatísticas de Uso
+ 153 │           </h4>
+ 154 │           <div className="space-y-3">
+ 155 │             <div>
+ 156 │               <div className="flex justify-between items-center mb-1">
+ 157 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 158 │                   Chat Inteligente
+ 159 │                 </span>
+ 160 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 161 │                   65%
+ 162 │                 </span>
+ 163 │               </div>
+ 164 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 165 │                 <div className="h-full bg-blue-500 rounded-full" style={{ width: "65%" }}></div>
+ 166 │               </div>
+ 167 │             </div>
+ 168 │             <div>
+ 169 │               <div className="flex justify-between items-center mb-1">
+ 170 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 171 │                   Criar Conteúdo
+ 172 │                 </span>
+ 173 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 174 │                   40%
+ 175 │                 </span>
+ 176 │               </div>
+ 177 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 178 │                 <div className="h-full bg-emerald-500 rounded-full" style={{ width: "40%" }}></div>
+ 179 │               </div>
+ 180 │             </div>
+ 181 │             <div>
+ 182 │               <div className="flex justify-between items-center mb-1">
+ 183 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 184 │                   Aprender Rápido
+ 185 │                 </span>
+ 186 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 187 │                   25%
+ 188 │                 </span>
+ 189 │               </div>
+ 190 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 191 │                 <div className="h-full bg-amber-500 rounded-full" style={{ width: "25%" }}></div>
+ 192 │               </div>
+ 193 │             </div>
+ 194 │           </div>
+ 195 │         </Card>
+ 196 │ 
+ 197 │         <Card className={`p-4 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+ 198 │           <h4 className={`text-base font-medium mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 199 │             Recursos Recentes
+ 200 │           </h4>
+ 201 │           <div className="space-y-2">
+ 202 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 203 │               <div className="flex items-center gap-2">
+ 204 │                 <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+ 205 │                   <MessageSquare className="h-4 w-4 text-blue-500" />
+ 206 │                 </div>
+ 207 │                 <div>
+ 208 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Conversou sobre "Revolução Industrial"</p>
+ 209 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>há 2 horas</p>
+ 210 │                 </div>
+ 211 │               </div>
+ 212 │             </div>
+ 213 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 214 │               <div className="flex items-center gap-2">
+ 215 │                 <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+ 216 │                   <PenTool className="h-4 w-4 text-emerald-500" />
+ 217 │                 </div>
+ 218 │                 <div>
+ 219 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Criou plano de aula "Ecossistemas"</p>
+ 220 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>ontem</p>
+ 221 │                 </div>
+ 222 │               </div>
+ 223 │             </div>
+ 224 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 225 │               <div className="flex items-center gap-2">
+ 226 │                 <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center">
+ 227 │                   <Zap className="h-4 w-4 text-amber-500" />
+ 228 │                 </div>
+ 229 │                 <div>
+ 230 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Gerou resumo "Equações Diferenciais"</p>
+ 231 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>há 3 dias</p>
+ 232 │                 </div>
+ 233 │               </div>
+ 234 │             </div>
+ 235 │           </div>
+ 236 │         </Card>
+ 237 │       </div>
+ 238 │     </div>
+ 239 │   );
+ 240 │ }
+ 241 │ import React from "react";
+ 242 │ import { useTheme } from "@/components/ThemeProvider";
+ 243 │ import { Button } from "@/components/ui/button";
+ 244 │ import { Card } from "@/components/ui/card";
+ 245 │ import { Zap, BookOpen, BarChart3, Calendar, Wrench, MessageSquare, Lightbulb, Compass, ArrowRight } from "lucide-react";
+     ·                                                      ──────┬──────
+     ·                                                            ╰── `MessageSquare` redefined here
+ 246 │ 
+ 247 │ interface VisaoGeralContentProps {
+ 248 │   theme?: string;
+     ╰────
+
+  × the name `ArrowRight` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/epictus-ia/components/VisaoGeralContent.tsx:12:1]
+  12 │   BarChart3, 
+  13 │   Calendar, 
+  14 │   Wrench,
+  15 │   ArrowRight 
+     ·   ─────┬────
+     ·        ╰── previous definition of `ArrowRight` here
+  16 │ } from "lucide-react";
+  17 │ 
+  18 │ export default function VisaoGeralContent() {
+  19 │   const { theme } = useTheme();
+  20 │ 
+  21 │   const quickAccessTools = [
+  22 │     {
+  23 │       id: "assistente-chat",
+  24 │       title: "Assistente de Chat",
+  25 │       description: "Converse com a IA para obter ajuda rápida",
+  26 │       icon: <MessageSquare className="h-5 w-5 text-blue-500" />,
+  27 │       color: "bg-blue-500/10",
+  28 │       section: "chat-inteligente"
+  29 │     },
+  30 │     {
+  31 │       id: "planos-aula",
+  32 │       title: "Planos de Aula",
+  33 │       description: "Gere planos de aula personalizados",
+  34 │       icon: <PenTool className="h-5 w-5 text-emerald-500" />,
+  35 │       color: "bg-emerald-500/10",
+  36 │       section: "criar-conteudo"
+  37 │     },
+  38 │     {
+  39 │       id: "resumos",
+  40 │       title: "Resumos Inteligentes",
+  41 │       description: "Crie resumos concisos de qualquer conteúdo",
+  42 │       icon: <Zap className="h-5 w-5 text-amber-500" />,
+  43 │       color: "bg-amber-500/10",
+  44 │       section: "aprender-mais-rapido"
+  45 │     },
+  46 │     {
+  47 │       id: "analisar",
+  48 │       title: "Corretor de Redação",
+  49 │       description: "Analise e melhore suas redações",
+  50 │       icon: <BarChart3 className="h-5 w-5 text-purple-500" />,
+  51 │       color: "bg-purple-500/10",
+  52 │       section: "analisar-corrigir"
+  53 │     }
+  54 │   ];
+  55 │ 
+  56 │   return (
+  57 │     <div className="h-full flex flex-col">
+  58 │       <div className="mb-6">
+  59 │         <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+  60 │           Visão Geral do Epictus IA
+  61 │         </h2>
+  62 │         <p className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+  63 │           Acesse rapidamente as ferramentas mais populares ou explore por categoria
+  64 │         </p>
+  65 │       </div>
+  66 │ 
+  67 │       <div className="mb-6">
+  68 │         <Card className={`p-5 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+  69 │           <div className="flex items-start gap-4">
+  70 │             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF9B50] flex items-center justify-center">
+  71 │               <Brain className="h-6 w-6 text-white" />
+  72 │             </div>
+  73 │             <div>
+  74 │               <div className="flex items-center">
+  75 │                 <h3 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+  76 │                   Bem-vindo ao Epictus IA
+  77 │                 </h3>
+  78 │                 <Badge className="ml-2 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white">
+  79 │                   <Sparkles className="h-3.5 w-3.5 mr-1" /> Premium
+  80 │                 </Badge>
+  81 │               </div>
+  82 │               <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+  83 │                 Uma plataforma completa de inteligência artificial criada para potencializar seus estudos. Explore as diferentes categorias para acessar ferramentas especializadas para cada necessidade.
+  84 │               </p>
+  85 │               <div className="mt-4 flex flex-wrap gap-2">
+  86 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  87 │                   <MessageSquare className="h-3.5 w-3.5 mr-1 text-blue-500" />
+  88 │                   Chat Inteligente
+  89 │                 </Button>
+  90 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  91 │                   <PenTool className="h-3.5 w-3.5 mr-1 text-emerald-500" />
+  92 │                   Criar Conteúdo
+  93 │                 </Button>
+  94 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  95 │                   <Zap className="h-3.5 w-3.5 mr-1 text-amber-500" />
+  96 │                   Aprender Rápido
+  97 │                 </Button>
+  98 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  99 │                   <BarChart3 className="h-3.5 w-3.5 mr-1 text-purple-500" />
+ 100 │                   Analisar
+ 101 │                 </Button>
+ 102 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+ 103 │                   <Calendar className="h-3.5 w-3.5 mr-1 text-red-500" />
+ 104 │                   Organizar
+ 105 │                 </Button>
+ 106 │                 <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+ 107 │                   <Wrench className="h-3.5 w-3.5 mr-1 text-cyan-500" />
+ 108 │                   Ferramentas
+ 109 │                 </Button>
+ 110 │               </div>
+ 111 │             </div>
+ 112 │           </div>
+ 113 │         </Card>
+ 114 │       </div>
+ 115 │ 
+ 116 │       <h3 className={`text-lg font-semibold mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 117 │         Acesso Rápido
+ 118 │       </h3>
+ 119 │ 
+ 120 │       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+ 121 │         {quickAccessTools.map(tool => (
+ 122 │           <Card 
+ 123 │             key={tool.id}
+ 124 │             className={`p-4 border hover:shadow-md transition-all cursor-pointer ${theme === "dark" ? "bg-gray-800 border-gray-700 hover:bg-gray-800/80" : "bg-white border-gray-200 hover:bg-gray-50"}`}
+ 125 │           >
+ 126 │             <div className="flex flex-col h-full">
+ 127 │               <div className={`w-10 h-10 rounded-full ${tool.color} flex items-center justify-center mb-3`}>
+ 128 │                 {tool.icon}
+ 129 │               </div>
+ 130 │               <h4 className={`text-base font-medium mb-1 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 131 │                 {tool.title}
+ 132 │               </h4>
+ 133 │               <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"} mb-3`}>
+ 134 │                 {tool.description}
+ 135 │               </p>
+ 136 │               <Button 
+ 137 │                 size="sm"
+ 138 │                 variant="ghost" 
+ 139 │                 className={`mt-auto text-xs p-2 h-8 ${theme === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
+ 140 │               >
+ 141 │                 Acessar
+ 142 │                 <ArrowRight className="h-3.5 w-3.5 ml-1" />
+ 143 │               </Button>
+ 144 │             </div>
+ 145 │           </Card>
+ 146 │         ))}
+ 147 │       </div>
+ 148 │ 
+ 149 │       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+ 150 │         <Card className={`p-4 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+ 151 │           <h4 className={`text-base font-medium mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 152 │             Estatísticas de Uso
+ 153 │           </h4>
+ 154 │           <div className="space-y-3">
+ 155 │             <div>
+ 156 │               <div className="flex justify-between items-center mb-1">
+ 157 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 158 │                   Chat Inteligente
+ 159 │                 </span>
+ 160 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 161 │                   65%
+ 162 │                 </span>
+ 163 │               </div>
+ 164 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 165 │                 <div className="h-full bg-blue-500 rounded-full" style={{ width: "65%" }}></div>
+ 166 │               </div>
+ 167 │             </div>
+ 168 │             <div>
+ 169 │               <div className="flex justify-between items-center mb-1">
+ 170 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 171 │                   Criar Conteúdo
+ 172 │                 </span>
+ 173 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 174 │                   40%
+ 175 │                 </span>
+ 176 │               </div>
+ 177 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 178 │                 <div className="h-full bg-emerald-500 rounded-full" style={{ width: "40%" }}></div>
+ 179 │               </div>
+ 180 │             </div>
+ 181 │             <div>
+ 182 │               <div className="flex justify-between items-center mb-1">
+ 183 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 184 │                   Aprender Rápido
+ 185 │                 </span>
+ 186 │                 <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 187 │                   25%
+ 188 │                 </span>
+ 189 │               </div>
+ 190 │               <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 191 │                 <div className="h-full bg-amber-500 rounded-full" style={{ width: "25%" }}></div>
+ 192 │               </div>
+ 193 │             </div>
+ 194 │           </div>
+ 195 │         </Card>
+ 196 │ 
+ 197 │         <Card className={`p-4 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+ 198 │           <h4 className={`text-base font-medium mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 199 │             Recursos Recentes
+ 200 │           </h4>
+ 201 │           <div className="space-y-2">
+ 202 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 203 │               <div className="flex items-center gap-2">
+ 204 │                 <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+ 205 │                   <MessageSquare className="h-4 w-4 text-blue-500" />
+ 206 │                 </div>
+ 207 │                 <div>
+ 208 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Conversou sobre "Revolução Industrial"</p>
+ 209 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>há 2 horas</p>
+ 210 │                 </div>
+ 211 │               </div>
+ 212 │             </div>
+ 213 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 214 │               <div className="flex items-center gap-2">
+ 215 │                 <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+ 216 │                   <PenTool className="h-4 w-4 text-emerald-500" />
+ 217 │                 </div>
+ 218 │                 <div>
+ 219 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Criou plano de aula "Ecossistemas"</p>
+ 220 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>ontem</p>
+ 221 │                 </div>
+ 222 │               </div>
+ 223 │             </div>
+ 224 │             <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 225 │               <div className="flex items-center gap-2">
+ 226 │                 <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center">
+ 227 │                   <Zap className="h-4 w-4 text-amber-500" />
+ 228 │                 </div>
+ 229 │                 <div>
+ 230 │                   <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Gerou resumo "Equações Diferenciais"</p>
+ 231 │                   <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>há 3 dias</p>
+ 232 │                 </div>
+ 233 │               </div>
+ 234 │             </div>
+ 235 │           </div>
+ 236 │         </Card>
+ 237 │       </div>
+ 238 │     </div>
+ 239 │   );
+ 240 │ }
+ 241 │ import React from "react";
+ 242 │ import { useTheme } from "@/components/ThemeProvider";
+ 243 │ import { Button } from "@/components/ui/button";
+ 244 │ import { Card } from "@/components/ui/card";
+ 245 │ import { Zap, BookOpen, BarChart3, Calendar, Wrench, MessageSquare, Lightbulb, Compass, ArrowRight } from "lucide-react";
+     ·                                                                                         ─────┬────
+     ·                                                                                              ╰── `ArrowRight` redefined here
+ 246 │ 
+ 247 │ interface VisaoGeralContentProps {
+ 248 │   theme?: string;
+     ╰────
+
+  × the name `default` is exported multiple times
+     ╭─[/home/runner/workspace/src/components/epictus-ia/components/VisaoGeralContent.tsx:15:1]
+  15 │       ArrowRight 
+  16 │     } from "lucide-react";
+  17 │     
+  18 │ ╭─▶ export default function VisaoGeralContent() {
+  19 │ │     const { theme } = useTheme();
+  20 │ │   
+  21 │ │     const quickAccessTools = [
+  22 │ │       {
+  23 │ │         id: "assistente-chat",
+  24 │ │         title: "Assistente de Chat",
+  25 │ │         description: "Converse com a IA para obter ajuda rápida",
+  26 │ │         icon: <MessageSquare className="h-5 w-5 text-blue-500" />,
+  27 │ │         color: "bg-blue-500/10",
+  28 │ │         section: "chat-inteligente"
+  29 │ │       },
+  30 │ │       {
+  31 │ │         id: "planos-aula",
+  32 │ │         title: "Planos de Aula",
+  33 │ │         description: "Gere planos de aula personalizados",
+  34 │ │         icon: <PenTool className="h-5 w-5 text-emerald-500" />,
+  35 │ │         color: "bg-emerald-500/10",
+  36 │ │         section: "criar-conteudo"
+  37 │ │       },
+  38 │ │       {
+  39 │ │         id: "resumos",
+  40 │ │         title: "Resumos Inteligentes",
+  41 │ │         description: "Crie resumos concisos de qualquer conteúdo",
+  42 │ │         icon: <Zap className="h-5 w-5 text-amber-500" />,
+  43 │ │         color: "bg-amber-500/10",
+  44 │ │         section: "aprender-mais-rapido"
+  45 │ │       },
+  46 │ │       {
+  47 │ │         id: "analisar",
+  48 │ │         title: "Corretor de Redação",
+  49 │ │         description: "Analise e melhore suas redações",
+  50 │ │         icon: <BarChart3 className="h-5 w-5 text-purple-500" />,
+  51 │ │         color: "bg-purple-500/10",
+  52 │ │         section: "analisar-corrigir"
+  53 │ │       }
+  54 │ │     ];
+  55 │ │   
+  56 │ │     return (
+  57 │ │       <div className="h-full flex flex-col">
+  58 │ │         <div className="mb-6">
+  59 │ │           <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+  60 │ │             Visão Geral do Epictus IA
+  61 │ │           </h2>
+  62 │ │           <p className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+  63 │ │             Acesse rapidamente as ferramentas mais populares ou explore por categoria
+  64 │ │           </p>
+  65 │ │         </div>
+  66 │ │   
+  67 │ │         <div className="mb-6">
+  68 │ │           <Card className={`p-5 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+  69 │ │             <div className="flex items-start gap-4">
+  70 │ │               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF9B50] flex items-center justify-center">
+  71 │ │                 <Brain className="h-6 w-6 text-white" />
+  72 │ │               </div>
+  73 │ │               <div>
+  74 │ │                 <div className="flex items-center">
+  75 │ │                   <h3 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+  76 │ │                     Bem-vindo ao Epictus IA
+  77 │ │                   </h3>
+  78 │ │                   <Badge className="ml-2 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white">
+  79 │ │                     <Sparkles className="h-3.5 w-3.5 mr-1" /> Premium
+  80 │ │                   </Badge>
+  81 │ │                 </div>
+  82 │ │                 <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+  83 │ │                   Uma plataforma completa de inteligência artificial criada para potencializar seus estudos. Explore as diferentes categorias para acessar ferramentas especializadas para cada necessidade.
+  84 │ │                 </p>
+  85 │ │                 <div className="mt-4 flex flex-wrap gap-2">
+  86 │ │                   <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  87 │ │                     <MessageSquare className="h-3.5 w-3.5 mr-1 text-blue-500" />
+  88 │ │                     Chat Inteligente
+  89 │ │                   </Button>
+  90 │ │                   <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  91 │ │                     <PenTool className="h-3.5 w-3.5 mr-1 text-emerald-500" />
+  92 │ │                     Criar Conteúdo
+  93 │ │                   </Button>
+  94 │ │                   <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  95 │ │                     <Zap className="h-3.5 w-3.5 mr-1 text-amber-500" />
+  96 │ │                     Aprender Rápido
+  97 │ │                   </Button>
+  98 │ │                   <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+  99 │ │                     <BarChart3 className="h-3.5 w-3.5 mr-1 text-purple-500" />
+ 100 │ │                     Analisar
+ 101 │ │                   </Button>
+ 102 │ │                   <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+ 103 │ │                     <Calendar className="h-3.5 w-3.5 mr-1 text-red-500" />
+ 104 │ │                     Organizar
+ 105 │ │                   </Button>
+ 106 │ │                   <Button variant="outline" className={`text-xs ${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+ 107 │ │                     <Wrench className="h-3.5 w-3.5 mr-1 text-cyan-500" />
+ 108 │ │                     Ferramentas
+ 109 │ │                   </Button>
+ 110 │ │                 </div>
+ 111 │ │               </div>
+ 112 │ │             </div>
+ 113 │ │           </Card>
+ 114 │ │         </div>
+ 115 │ │   
+ 116 │ │         <h3 className={`text-lg font-semibold mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 117 │ │           Acesso Rápido
+ 118 │ │         </h3>
+ 119 │ │   
+ 120 │ │         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+ 121 │ │           {quickAccessTools.map(tool => (
+ 122 │ │             <Card 
+ 123 │ │               key={tool.id}
+ 124 │ │               className={`p-4 border hover:shadow-md transition-all cursor-pointer ${theme === "dark" ? "bg-gray-800 border-gray-700 hover:bg-gray-800/80" : "bg-white border-gray-200 hover:bg-gray-50"}`}
+ 125 │ │             >
+ 126 │ │               <div className="flex flex-col h-full">
+ 127 │ │                 <div className={`w-10 h-10 rounded-full ${tool.color} flex items-center justify-center mb-3`}>
+ 128 │ │                   {tool.icon}
+ 129 │ │                 </div>
+ 130 │ │                 <h4 className={`text-base font-medium mb-1 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 131 │ │                   {tool.title}
+ 132 │ │                 </h4>
+ 133 │ │                 <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"} mb-3`}>
+ 134 │ │                   {tool.description}
+ 135 │ │                 </p>
+ 136 │ │                 <Button 
+ 137 │ │                   size="sm"
+ 138 │ │                   variant="ghost" 
+ 139 │ │                   className={`mt-auto text-xs p-2 h-8 ${theme === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
+ 140 │ │                 >
+ 141 │ │                   Acessar
+ 142 │ │                   <ArrowRight className="h-3.5 w-3.5 ml-1" />
+ 143 │ │                 </Button>
+ 144 │ │               </div>
+ 145 │ │             </Card>
+ 146 │ │           ))}
+ 147 │ │         </div>
+ 148 │ │   
+ 149 │ │         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+ 150 │ │           <Card className={`p-4 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+ 151 │ │             <h4 className={`text-base font-medium mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 152 │ │               Estatísticas de Uso
+ 153 │ │             </h4>
+ 154 │ │             <div className="space-y-3">
+ 155 │ │               <div>
+ 156 │ │                 <div className="flex justify-between items-center mb-1">
+ 157 │ │                   <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 158 │ │                     Chat Inteligente
+ 159 │ │                   </span>
+ 160 │ │                   <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 161 │ │                     65%
+ 162 │ │                   </span>
+ 163 │ │                 </div>
+ 164 │ │                 <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 165 │ │                   <div className="h-full bg-blue-500 rounded-full" style={{ width: "65%" }}></div>
+ 166 │ │                 </div>
+ 167 │ │               </div>
+ 168 │ │               <div>
+ 169 │ │                 <div className="flex justify-between items-center mb-1">
+ 170 │ │                   <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 171 │ │                     Criar Conteúdo
+ 172 │ │                   </span>
+ 173 │ │                   <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 174 │ │                     40%
+ 175 │ │                   </span>
+ 176 │ │                 </div>
+ 177 │ │                 <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 178 │ │                   <div className="h-full bg-emerald-500 rounded-full" style={{ width: "40%" }}></div>
+ 179 │ │                 </div>
+ 180 │ │               </div>
+ 181 │ │               <div>
+ 182 │ │                 <div className="flex justify-between items-center mb-1">
+ 183 │ │                   <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 184 │ │                     Aprender Rápido
+ 185 │ │                   </span>
+ 186 │ │                   <span className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+ 187 │ │                     25%
+ 188 │ │                   </span>
+ 189 │ │                 </div>
+ 190 │ │                 <div className={`w-full h-2 ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"} rounded-full overflow-hidden`}>
+ 191 │ │                   <div className="h-full bg-amber-500 rounded-full" style={{ width: "25%" }}></div>
+ 192 │ │                 </div>
+ 193 │ │               </div>
+ 194 │ │             </div>
+ 195 │ │           </Card>
+ 196 │ │   
+ 197 │ │           <Card className={`p-4 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+ 198 │ │             <h4 className={`text-base font-medium mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 199 │ │               Recursos Recentes
+ 200 │ │             </h4>
+ 201 │ │             <div className="space-y-2">
+ 202 │ │               <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 203 │ │                 <div className="flex items-center gap-2">
+ 204 │ │                   <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+ 205 │ │                     <MessageSquare className="h-4 w-4 text-blue-500" />
+ 206 │ │                   </div>
+ 207 │ │                   <div>
+ 208 │ │                     <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Conversou sobre "Revolução Industrial"</p>
+ 209 │ │                     <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>há 2 horas</p>
+ 210 │ │                   </div>
+ 211 │ │                 </div>
+ 212 │ │               </div>
+ 213 │ │               <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 214 │ │                 <div className="flex items-center gap-2">
+ 215 │ │                   <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+ 216 │ │                     <PenTool className="h-4 w-4 text-emerald-500" />
+ 217 │ │                   </div>
+ 218 │ │                   <div>
+ 219 │ │                     <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Criou plano de aula "Ecossistemas"</p>
+ 220 │ │                     <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>ontem</p>
+ 221 │ │                   </div>
+ 222 │ │                 </div>
+ 223 │ │               </div>
+ 224 │ │               <div className={`p-2 rounded-md ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-100"} transition-colors cursor-pointer`}>
+ 225 │ │                 <div className="flex items-center gap-2">
+ 226 │ │                   <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center">
+ 227 │ │                     <Zap className="h-4 w-4 text-amber-500" />
+ 228 │ │                   </div>
+ 229 │ │                   <div>
+ 230 │ │                     <p className={`text-xs font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Gerou resumo "Equações Diferenciais"</p>
+ 231 │ │                     <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>há 3 dias</p>
+ 232 │ │                   </div>
+ 233 │ │                 </div>
+ 234 │ │               </div>
+ 235 │ │             </div>
+ 236 │ │           </Card>
+ 237 │ │         </div>
+ 238 │ │       </div>
+ 239 │ │     );
+ 240 │ ├─▶ }
+     · ╰──── previous exported here
+ 241 │     import React from "react";
+ 242 │     import { useTheme } from "@/components/ThemeProvider";
+ 243 │     import { Button } from "@/components/ui/button";
+ 244 │     import { Card } from "@/components/ui/card";
+ 245 │     import { Zap, BookOpen, BarChart3, Calendar, Wrench, MessageSquare, Lightbulb, Compass, ArrowRight } from "lucide-react";
+ 246 │     
+ 247 │     interface VisaoGeralContentProps {
+ 248 │       theme?: string;
+ 249 │     }
+ 250 │     
+ 251 │     const VisaoGeralContent: React.FC<VisaoGeralContentProps> = ({ theme }) => {
+ 252 │       const themeContext = useTheme();
+ 253 │       const currentTheme = theme || themeContext.theme;
+ 254 │       
+ 255 │       return (
+ 256 │         <div className="space-y-8">
+ 257 │           <div className="text-center mb-8">
+ 258 │             <div className="w-16 h-16 rounded-full bg-[#FF6B00]/10 flex items-center justify-center mx-auto mb-4">
+ 259 │               <Lightbulb className="h-8 w-8 text-[#FF6B00]" />
+ 260 │             </div>
+ 261 │             <h2
+ 262 │               className={`text-xl font-bold ${currentTheme === "dark" ? "text-white" : "text-[#29335C]"} mb-2`}
+ 263 │             >
+ 264 │               Bem-vindo ao Epictus IA
+ 265 │             </h2>
+ 266 │             <p
+ 267 │               className={`${currentTheme === "dark" ? "text-white/60" : "text-[#64748B]"} max-w-md mx-auto mb-6`}
+ 268 │             >
+ 269 │               Explore todas as ferramentas inteligentes para potencializar seus estudos
+ 270 │             </p>
+ 271 │           </div>
+ 272 │     
+ 273 │           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+ 274 │             <Card
+ 275 │               className={`p-4 border ${currentTheme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"} hover:shadow-md transition-all`}
+ 276 │             >
+ 277 │               <div className="flex items-start gap-3">
+ 278 │                 <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+ 279 │                   <MessageSquare className="h-5 w-5 text-blue-500" />
+ 280 │                 </div>
+ 281 │                 <div>
+ 282 │                   <h3
+ 283 │                     className={`font-medium ${currentTheme === "dark" ? "text-white" : "text-[#29335C]"}`}
+ 284 │                   >
+ 285 │                     Chat Inteligente
+ 286 │                   </h3>
+ 287 │                   <p
+ 288 │                     className={`text-sm ${currentTheme === "dark" ? "text-white/60" : "text-[#64748B]"} mb-3`}
+ 289 │                   >
+ 290 │                     Converse com diferentes assistentes especializados
+ 291 │                   </p>
+ 292 │                   <Button
+ 293 │                     variant="link"
+ 294 │                     className="text-[#FF6B00] p-0 h-auto font-normal flex items-center"
+ 295 │                   >
+ 296 │                     Explorar <ArrowRight className="h-3 w-3 ml-1" />
+ 297 │                   </Button>
+ 298 │                 </div>
+ 299 │               </div>
+ 300 │             </Card>
+ 301 │     
+ 302 │             <Card
+ 303 │               className={`p-4 border ${currentTheme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"} hover:shadow-md transition-all`}
+ 304 │             >
+ 305 │               <div className="flex items-start gap-3">
+ 306 │                 <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
+ 307 │                   <BookOpen className="h-5 w-5 text-emerald-500" />
+ 308 │                 </div>
+ 309 │                 <div>
+ 310 │                   <h3
+ 311 │                     className={`font-medium ${currentTheme === "dark" ? "text-white" : "text-[#29335C]"}`}
+ 312 │                   >
+ 313 │                     Aprender Mais Rápido
+ 314 │                   </h3>
+ 315 │                   <p
+ 316 │                     className={`text-sm ${currentTheme === "dark" ? "text-white/60" : "text-[#64748B]"} mb-3`}
+ 317 │                   >
+ 318 │                     Resumos e mapas mentais para aprendizado eficiente
+ 319 │                   </p>
+ 320 │                   <Button
+ 321 │                     variant="link"
+ 322 │                     className="text-[#FF6B00] p-0 h-auto font-normal flex items-center"
+ 323 │                   >
+ 324 │                     Explorar <ArrowRight className="h-3 w-3 ml-1" />
+ 325 │                   </Button>
+ 326 │                 </div>
+ 327 │               </div>
+ 328 │             </Card>
+ 329 │     
+ 330 │             <Card
+ 331 │               className={`p-4 border ${currentTheme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"} hover:shadow-md transition-all`}
+ 332 │             >
+ 333 │               <div className="flex items-start gap-3">
+ 334 │                 <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
+ 335 │                   <BarChart3 className="h-5 w-5 text-purple-500" />
+ 336 │                 </div>
+ 337 │                 <div>
+ 338 │                   <h3
+ 339 │                     className={`font-medium ${currentTheme === "dark" ? "text-white" : "text-[#29335C]"}`}
+ 340 │                   >
+ 341 │                     Analisar e Corrigir
+ 342 │                   </h3>
+ 343 │                   <p
+ 344 │                     className={`text-sm ${currentTheme === "dark" ? "text-white/60" : "text-[#64748B]"} mb-3`}
+ 345 │                   >
+ 346 │                     Ferramentas para análise de desempenho e correções
+ 347 │                   </p>
+ 348 │                   <Button
+ 349 │                     variant="link"
+ 350 │                     className="text-[#FF6B00] p-0 h-auto font-normal flex items-center"
+ 351 │                   >
+ 352 │                     Explorar <ArrowRight className="h-3 w-3 ml-1" />
+ 353 │                   </Button>
+ 354 │                 </div>
+ 355 │               </div>
+ 356 │             </Card>
+ 357 │     
+ 358 │             <Card
+ 359 │               className={`p-4 border ${currentTheme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"} hover:shadow-md transition-all`}
+ 360 │             >
+ 361 │               <div className="flex items-start gap-3">
+ 362 │                 <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
+ 363 │                   <Zap className="h-5 w-5 text-amber-500" />
+ 364 │                 </div>
+ 365 │                 <div>
+ 366 │                   <h3
+ 367 │                     className={`font-medium ${currentTheme === "dark" ? "text-white" : "text-[#29335C]"}`}
+ 368 │                   >
+ 369 │                     Criar Conteúdo
+ 370 │                   </h3>
+ 371 │                   <p
+ 372 │                     className={`text-sm ${currentTheme === "dark" ? "text-white/60" : "text-[#64748B]"} mb-3`}
+ 373 │                   >
+ 374 │                     Ferramentas para criar materiais didáticos
+ 375 │                   </p>
+ 376 │                   <Button
+ 377 │                     variant="link"
+ 378 │                     className="text-[#FF6B00] p-0 h-auto font-normal flex items-center"
+ 379 │                   >
+ 380 │                     Explorar <ArrowRight className="h-3 w-3 ml-1" />
+ 381 │                   </Button>
+ 382 │                 </div>
+ 383 │               </div>
+ 384 │             </Card>
+ 385 │     
+ 386 │             <Card
+ 387 │               className={`p-4 border ${currentTheme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"} hover:shadow-md transition-all`}
+ 388 │             >
+ 389 │               <div className="flex items-start gap-3">
+ 390 │                 <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
+ 391 │                   <Calendar className="h-5 w-5 text-red-500" />
+ 392 │                 </div>
+ 393 │                 <div>
+ 394 │                   <h3
+ 395 │                     className={`font-medium ${currentTheme === "dark" ? "text-white" : "text-[#29335C]"}`}
+ 396 │                   >
+ 397 │                     Organizar e Otimizar
+ 398 │                   </h3>
+ 399 │                   <p
+ 400 │                     className={`text-sm ${currentTheme === "dark" ? "text-white/60" : "text-[#64748B]"} mb-3`}
+ 401 │                   >
+ 402 │                     Planejadores e ferramentas de organização
+ 403 │                   </p>
+ 404 │                   <Button
+ 405 │                     variant="link"
+ 406 │                     className="text-[#FF6B00] p-0 h-auto font-normal flex items-center"
+ 407 │                   >
+ 408 │                     Explorar <ArrowRight className="h-3 w-3 ml-1" />
+ 409 │                   </Button>
+ 410 │                 </div>
+ 411 │               </div>
+ 412 │             </Card>
+ 413 │     
+ 414 │             <Card
+ 415 │               className={`p-4 border ${currentTheme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"} hover:shadow-md transition-all`}
+ 416 │             >
+ 417 │               <div className="flex items-start gap-3">
+ 418 │                 <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center">
+ 419 │                   <Wrench className="h-5 w-5 text-cyan-500" />
+ 420 │                 </div>
+ 421 │                 <div>
+ 422 │                   <h3
+ 423 │                     className={`font-medium ${currentTheme === "dark" ? "text-white" : "text-[#29335C]"}`}
+ 424 │                   >
+ 425 │                     Ferramentas Extras
+ 426 │                   </h3>
+ 427 │                   <p
+ 428 │                     className={`text-sm ${currentTheme === "dark" ? "text-white/60" : "text-[#64748B]"} mb-3`}
+ 429 │                   >
+ 430 │                     Outras ferramentas especializadas para diversos fins
+ 431 │                   </p>
+ 432 │                   <Button
+ 433 │                     variant="link"
+ 434 │                     className="text-[#FF6B00] p-0 h-auto font-normal flex items-center"
+ 435 │                   >
+ 436 │                     Explorar <ArrowRight className="h-3 w-3 ml-1" />
+ 437 │                   </Button>
+ 438 │                 </div>
+ 439 │               </div>
+ 440 │             </Card>
+ 441 │           </div>
+ 442 │     
+ 443 │           <div className="text-center mt-8">
+ 444 │             <Button className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white">
+ 445 │               Modo Exploração <Compass className="ml-2 h-4 w-4" />
+ 446 │             </Button>
+ 447 │           </div>
+ 448 │         </div>
+ 449 │       );
+ 450 │     };
+ 451 │     
+ 452 │ ╭─▶ export default VisaoGeralContent;
+     · │────────────────┬────────────────
+     · │                ╰── exported more than once
+     ╰────
+
+Error: 
+  ☞ Exported identifiers must be unique
+/home/runner/workspace/src/components/epictus-ia/components/VisaoGeralContent.tsx:2:1
+7  |    Brain, 
+8  |    Sparkles, 
+9  |    MessageSquare, 
+   |                 ^
+10 |    PenTool, 
+11 |    Zap,
