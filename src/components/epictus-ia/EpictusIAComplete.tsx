@@ -11,6 +11,7 @@ import SectionCard from "@/components/epictus-ia/components/SectionCard";
 import SectionContent from "@/components/epictus-ia/components/SectionContent";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChatInteligente, CriarConteudo, AprenderMaisRapido, AnalisarCorrigir, OrganizarOtimizar, FerramentasExtras } from "@/components/epictus-ia/sections";
+import EpictusIAHeader from "./EpictusIAHeader"; // Added import for the new header
 
 import {
   Brain,
@@ -202,63 +203,7 @@ export default function EpictusIAComplete() {
   return (
     <div className={`w-full flex flex-col ${theme === "dark" ? "bg-[#001427]" : "bg-gray-50"} transition-colors duration-300 overflow-y-auto min-h-screen`}>
       {/* Header com título e informações da IA */}
-      <div className={`px-6 py-4 flex items-center justify-between border-b ${theme === "dark" ? "border-gray-800" : "border-gray-200"} sticky top-0 z-30 ${theme === "dark" ? "bg-[#001427]" : "bg-gray-50"}`}>
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF9B50] flex items-center justify-center">
-            <BrainCircuit className="h-6 w-6 text-white" />
-          </div>
-          <div>
-            <h1 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"} flex items-center gap-2`}>
-              Epictus IA
-              <Badge className="ml-2 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-white hover:from-[#FF9B50] hover:to-[#FF6B00] transition-all duration-300">
-                <Sparkles className="h-3.5 w-3.5 mr-1" /> Premium
-              </Badge>
-            </h1>
-            <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-              Ferramenta com inteligência artificial para potencializar seus estudos
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={`${theme === "dark" ? "text-gray-400 hover:text-white hover:bg-white/10" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"} transition-all duration-200`}
-                  onClick={() => setShowSearch(!showSearch)}
-                >
-                  <Search className="h-5 w-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                <p>Buscar ferramentas IA</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <ThemeToggle />
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={`${theme === "dark" ? "text-gray-400 hover:text-white hover:bg-white/10" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"} transition-all duration-200`}
-                  onClick={() => setShowSettings(!showSettings)}
-                >
-                  <Settings className="h-5 w-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                <p>Configurações</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      </div>
+      <EpictusIAHeader theme={theme} setShowSearch={setShowSearch} setShowSettings={setShowSettings} setTheme={setTheme}/> {/* Replaced the original header with the new component */}
 
       {/* Painel de busca (aparece quando showSearch é true) */}
       <AnimatePresence>
