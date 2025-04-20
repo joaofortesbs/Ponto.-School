@@ -141,18 +141,26 @@ export default function EpictusIAComplete() {
     }
   }, [searchQuery]);
 
-  // Avança no carrossel com rolagem infinita
+  // Avança no carrossel
   const nextSection = () => {
-    const newIndex = carouselIndex < sections.length - 1 ? carouselIndex + 1 : 0;
-    setCarouselIndex(newIndex);
-    setActiveSection(sections[newIndex].id);
+    if (carouselIndex < sections.length - 1) {
+      setCarouselIndex(prev => prev + 1);
+      setActiveSection(sections[carouselIndex + 1].id);
+    } else {
+      setCarouselIndex(0);
+      setActiveSection(sections[0].id);
+    }
   };
 
-  // Volta no carrossel com rolagem infinita
+  // Volta no carrossel
   const prevSection = () => {
-    const newIndex = carouselIndex > 0 ? carouselIndex - 1 : sections.length - 1;
-    setCarouselIndex(newIndex);
-    setActiveSection(sections[newIndex].id);
+    if (carouselIndex > 0) {
+      setCarouselIndex(prev => prev - 1);
+      setActiveSection(sections[carouselIndex - 1].id);
+    } else {
+      setCarouselIndex(sections.length - 1);
+      setActiveSection(sections[sections.length - 1].id);
+    }
   };
 
   // Seleciona uma seção específica
@@ -454,17 +462,11 @@ export default function EpictusIAComplete() {
                 prevSection();
               }
             }}
-            key={`carousel-${carouselIndex}`} // Forçar re-render quando índice muda para animação suave
           >
             <div className="flex items-center justify-center relative">
               {sections.map((section, index) => {
-                // Calcular a posição relativa ao item ativo com lógica de rolagem infinita
-                let position = index - carouselIndex;
-
-                // Ajustar posição para criar efeito de rolagem infinita
-                if (Math.abs(position) > sections.length / 2) {
-                  position = position - Math.sign(position) * sections.length;
-                }
+                // Calcular a posição relativa ao item ativo
+                const position = index - carouselIndex;
 
                 return (
                   <motion.div
@@ -482,22 +484,15 @@ export default function EpictusIAComplete() {
                   >
                     <div 
                       className={cn(
-                        `w-64 rounded-xl overflow-hidden border-2 transform transition-all group carousel-item`,
-                        position === 0 
-                          ? `shadow-xl ${section.borderColor} active-carousel-item interactive-shadow` 
-                          : 'border-transparent',
-                        theme === "dark" ? "bg-gray-800/80" : "bg-white/80",
-                        "backdrop-blur-md"
+                        `w-64 rounded-xl overflow-hidden border-2 transform transition-all group`,
+                        position === 0 ? `shadow-lg ${section.borderColor}` : 'border-transparent',
+                        theme === "dark" ? "bg-gray-800/80" : "bg-white/80"
                       )}
                       style={{
                         backdropFilter: "blur(8px)",
                         perspective: "1000px",
                         height: position === 0 ? "200px" : "180px",
-                        minHeight: position === 0 ? "200px" : "180px",
-                        boxShadow: position === 0 
-                          ? `0 10px 25px -5px ${theme === "dark" ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.1)'}, 
-                             0 8px 10px -6px ${theme === "dark" ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.05)'}` 
-                          : 'none'
+                        minHeight: position === 0 ? "200px" : "180px"
                       }}
                     >
                       <div className={`h-full p-5 flex flex-col justify-between relative overflow-hidden`}>

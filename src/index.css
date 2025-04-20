@@ -24,7 +24,6 @@
 @import "./styles/hide-scrollbar.css";
 @import "./styles/typewriter-loader.css";
 @import "./styles/notebook.css";
-@import "./styles/carousel-effects.css";
 
 @tailwind base;
 @tailwind components;
