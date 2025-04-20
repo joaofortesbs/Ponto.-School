@@ -1,168 +1,145 @@
-
 import React from "react";
-import { motion } from "framer-motion";
-import { useTheme } from "@/components/ThemeProvider";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import SectionContent from "../components/SectionContent";
-import { FileText, Map, BookOpen, ListChecks, Repeat, FlaskConical, Volume2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { useTheme } from "@/components/ThemeProvider";
+import { 
+  Zap, 
+  FileText, 
+  Network, 
+  FileQuestion, 
+  Sparkles,
+  Undo,
+  ArrowRight,
+  BookOpen,
+  Map,
+  ListChecks,
+  Repeat,
+  FlaskConical,
+  Volume2
+} from "lucide-react";
 
-const tools = [
-  {
-    id: "resumos",
-    title: "Resumos Inteligentes",
-    description: "Obtenha resumos concisos e diretos de textos, vídeos, imagens ou PDFs.",
-    icon: <FileText className="h-5 w-5 text-white" />,
-    color: "from-blue-500 to-indigo-600",
-    button: "Gerar Resumo"
-  },
-  {
-    id: "mapas",
-    title: "Mapas Mentais",
-    description: "Transforme qualquer conteúdo em um mapa mental visual e navegável para facilitar a compreensão.",
-    icon: <Map className="h-5 w-5 text-white" />,
-    color: "from-emerald-500 to-teal-600",
-    button: "Criar Mapa"
-  },
-  {
-    id: "simulador",
-    title: "Simulador de Provas",
-    description: "Faça quizzes e simulados com feedback instantâneo e análise de desempenho.",
-    icon: <ListChecks className="h-5 w-5 text-white" />,
-    color: "from-amber-500 to-orange-600",
-    button: "Simular Prova"
-  },
-  {
-    id: "bncc",
-    title: "Estudo por Competência (BNCC)",
-    description: "Encontre atividades e materiais focados em competências específicas da BNCC.",
-    icon: <BookOpen className="h-5 w-5 text-white" />,
-    color: "from-purple-500 to-violet-600",
-    button: "Estudar"
-  },
-  {
-    id: "revisao",
-    title: "Revisão Guiada",
-    description: "Deixe a IA montar uma rota de revisão personalizada com base nos seus erros passados.",
-    icon: <Repeat className="h-5 w-5 text-white" />,
-    color: "from-pink-500 to-rose-600",
-    button: "Revisar"
-  },
-  {
-    id: "flashcards",
-    title: "Flashcards Inteligentes",
-    description: "Crie flashcards automaticamente e use a repetição espaçada (estilo Anki) para memorizar.",
-    icon: <FlaskConical className="h-5 w-5 text-white" />,
-    color: "from-red-500 to-orange-600",
-    button: "Gerar Flashcards"
-  },
-  {
-    id: "audio",
-    title: "Áudio Explicativo",
-    description: "Transforme resumos em áudio para revisar o conteúdo enquanto faz outras coisas.",
-    icon: <Volume2 className="h-5 w-5 text-white" />,
-    color: "from-cyan-500 to-blue-600",
-    button: "Gerar Áudio"
-  }
-];
 
 export default function AprenderMaisRapido() {
   const { theme } = useTheme();
-  
+
+  const learningTools = [
+    {
+      id: "resumos-inteligentes",
+      title: "Resumos Inteligentes",
+      description: "Obtenha resumos concisos e diretos de textos, vídeos, imagens ou PDFs.",
+      icon: <FileText className="h-6 w-6 text-amber-500" />,
+      badge: null,
+      buttonText: "Gerar Resumo"
+    },
+    {
+      id: "mapas-mentais",
+      title: "Mapas Mentais",
+      description: "Transforme qualquer conteúdo em um mapa mental visual e navegável para facilitar a compreensão.",
+      icon: <Network className="h-6 w-6 text-amber-500" />,
+      badge: "Popular",
+      buttonText: "Criar Mapa"
+    },
+    {
+      id: "simulador-provas",
+      title: "Simulador de Provas",
+      description: "Faça quizzes e simulados com feedback instantâneo e análise de desempenho.",
+      icon: <FileQuestion className="h-6 w-6 text-amber-500" />,
+      badge: null,
+      buttonText: "Simular Prova"
+    },
+    {
+      id: "estudo-competencia",
+      title: "Estudo por Competência (BNCC)",
+      description: "Encontre atividades e materiais focados em competências específicas da BNCC.",
+      icon: <BookOpen className="h-6 w-6 text-amber-500" />,
+      badge: null,
+      buttonText: "Estudar"
+    },
+    {
+      id: "revisao-guiada",
+      title: "Revisão Guiada",
+      description: "Deixe a IA montar uma rota de revisão personalizada com base nos seus erros passados.",
+      icon: <Undo className="h-6 w-6 text-amber-500" />,
+      badge: "Novo",
+      buttonText: "Revisar"
+    }
+  ];
+
   return (
-    <SectionContent>
-      <div className="space-y-6">
-        <div>
-          <h2 className={`text-2xl font-bold mb-2 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-            Aprender Mais Rápido
-          </h2>
-          <p className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-            Ferramentas e técnicas para otimizar seu aprendizado e memorização
-          </p>
-        </div>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-          {tools.map((tool) => (
-            <motion.div
-              key={tool.id}
-              whileHover={{ scale: 1.02, y: -5 }}
-              whileTap={{ scale: 0.98 }}
-              className={`rounded-xl overflow-hidden border ${theme === "dark" ? "bg-gray-700/50 border-gray-600" : "bg-gray-50 border-gray-200"}`}
+    <div className="h-full flex flex-col">
+      <div className="mb-6">
+        <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+          Aprender Mais Rápido
+        </h2>
+        <p className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+          Acelere seu aprendizado com ferramentas que transformam conteúdos complexos em formatos fáceis de entender
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {learningTools.map(tool => (
+          <Card 
+            key={tool.id}
+            className={`p-5 h-full border overflow-hidden group relative ${theme === "dark" ? "bg-gray-800/70 border-gray-700" : "bg-white border-gray-200"} hover:shadow-md transition-shadow duration-300`}
+          >
+            <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-amber-500/10 blur-3xl group-hover:bg-amber-500/20 transition-all duration-700"></div>
+
+            <div className="flex justify-between items-start mb-4">
+              <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center">
+                {tool.icon}
+              </div>
+
+              {tool.badge && (
+                <Badge className="bg-amber-500 hover:bg-amber-600 text-white text-xs">
+                  {tool.badge}
+                </Badge>
+              )}
+            </div>
+
+            <h3 className={`text-lg font-semibold mb-2 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+              {tool.title}
+            </h3>
+
+            <p className={`text-sm mb-4 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+              {tool.description}
+            </p>
+
+            <Button 
+              className="mt-auto w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white flex items-center justify-center gap-2"
             >
-              <div className={`h-2 bg-gradient-to-r ${tool.color}`}></div>
-              <div className="p-5">
-                <div className="flex items-start gap-3 mb-4">
-                  <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${tool.color} flex items-center justify-center flex-shrink-0`}>
-                    {tool.icon}
-                  </div>
-                  <h3 className={`text-lg font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                    {tool.title}
-                  </h3>
-                </div>
-                
-                <p className={`text-sm mb-4 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
-                  {tool.description}
-                </p>
-                
-                <Button 
-                  className={`w-full bg-gradient-to-r ${tool.color} hover:brightness-110 transition-all`}
-                >
-                  {tool.button}
+              {tool.buttonText}
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Card>
+        ))}
+      </div>
+
+      <div className="mt-6 flex-1">
+        <Card className={`p-5 border ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-gray-50 border-gray-200"}`}>
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+              <Zap className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h3 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                Método de Aprendizado Acelerado
+              </h3>
+              <p className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                Combine as ferramentas desta seção em um fluxo de estudo otimizado: resumo do conteúdo → criação de mapa mental → teste de simulado → revisão guiada. Esta sequência aproveita técnicas comprovadas de aprendizado eficiente.
+              </p>
+              <div className="mt-4 flex items-center gap-2">
+                <Button variant="outline" className={`${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
+                  Ver detalhes
                 </Button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-        
-        <div className={`mt-6 p-6 rounded-xl ${theme === "dark" ? "bg-gray-800 border border-gray-700" : "bg-gray-100 border border-gray-200"}`}>
-          <h3 className={`text-lg font-medium mb-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-            Dicas para aprender mais rápido
-          </h3>
-          
-          <div className="space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center flex-shrink-0">
-                <span className="text-blue-600 dark:text-blue-300 font-medium">1</span>
-              </div>
-              <div>
-                <p className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                  Use várias ferramentas para o mesmo conteúdo
-                </p>
-                <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-                  Combine resumos + mapas mentais + flashcards para fixar melhor o conhecimento
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center flex-shrink-0">
-                <span className="text-green-600 dark:text-green-300 font-medium">2</span>
-              </div>
-              <div>
-                <p className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                  Teste seu conhecimento constantemente
-                </p>
-                <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-                  Use o Simulador de Provas para identificar lacunas no seu aprendizado
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center flex-shrink-0">
-                <span className="text-amber-600 dark:text-amber-300 font-medium">3</span>
-              </div>
-              <div>
-                <p className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                  Revise em períodos estratégicos
-                </p>
-                <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-                  Use a Revisão Guiada para aproveitar a curva de esquecimento a seu favor
-                </p>
+                <Button className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white">
+                  Ativar método <Sparkles className="h-4 w-4 ml-2" />
+                </Button>
               </div>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
-    </SectionContent>
+    </div>
   );
 }

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/ThemeProvider";
@@ -29,7 +30,7 @@ import {
   FileText,
   BarChart3,
   Calendar,
-  Tool,
+  Wrench, // Replacing Tool with Wrench
   PlusCircle,
   ArrowRight,
   Lightbulb,
@@ -92,7 +93,7 @@ const sections = [
   {
     id: "ferramentas-extras",
     name: "Ferramentas Extras",
-    icon: <Tool className="h-6 w-6" />,
+    icon: <Wrench className="h-6 w-6" />, // Changed from Tool to Wrench
     color: "from-cyan-500 to-blue-600",
     borderColor: "border-cyan-400",
     component: FerramentasExtras,
