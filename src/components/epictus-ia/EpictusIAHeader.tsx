@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Search, Settings, Zap, Sparkles, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/ThemeProvider";
-import { createPortal } from "react-dom";
 
 export default function EpictusIAHeader() {
   const { theme } = useTheme();
@@ -20,27 +19,6 @@ export default function EpictusIAHeader() {
     { id: 3, title: "Resumos de História", category: "Ferramenta" },
     { id: 4, title: "Física Quântica", category: "Conteúdo" },
   ].filter(item => item.title.toLowerCase().includes(searchValue.toLowerCase())) : [];
-  
-  // Sugestões de pesquisa
-  const suggestionPrompts = [
-    "Preciso planejar uma aula",
-    "Preciso resolver uma lista de exercícios",
-    "Preciso aprender o conteúdo do Bimestre"
-  ];
-  
-  // Estado para controlar a exibição do modal de sugestões
-  const [showSuggestionModal, setShowSuggestionModal] = useState(false);
-  
-  // Forçar a exibição do modal ao clicar na barra de pesquisa
-  const handleSearchFocus = () => {
-    setSearchFocused(true);
-    setShowSuggestionModal(true);
-  };
-  
-  // Expor os refs e estados para depuração
-  useEffect(() => {
-    console.log("Estado do modal de sugestões:", showSuggestionModal);
-  }, [showSuggestionModal]);
 
   useEffect(() => {
     // Trigger initial animation
@@ -48,28 +26,8 @@ export default function EpictusIAHeader() {
       setAnimationComplete(true);
     }, 1200);
 
-    // Adicionar listener para fechar o modal de sugestões ao clicar fora dele
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        showSuggestionModal && 
-        searchInputRef.current && 
-        !searchInputRef.current.contains(event.target as Node)
-      ) {
-        // Verifica se o clique foi fora do modal de sugestões também
-        const modalElement = document.querySelector('.suggestion-modal');
-        if (modalElement && !modalElement.contains(event.target as Node)) {
-          setShowSuggestionModal(false);
-        }
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showSuggestionModal]);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Garantir que o evento de click no input funcione corretamente
   useEffect(() => {
@@ -77,7 +35,6 @@ export default function EpictusIAHeader() {
       const handleInputClick = (e) => {
         e.stopPropagation();
         searchInputRef.current.focus();
-        setShowSuggestionModal(true); // Garantir que o modal seja mostrado ao clicar
       };
 
       searchInputRef.current.addEventListener('click', handleInputClick);
@@ -89,20 +46,6 @@ export default function EpictusIAHeader() {
       };
     }
   }, [searchInputRef.current]);
-  
-  // Atualizar posição do dropdown quando a janela é redimensionada
-  useEffect(() => {
-    if (searchFocused && searchValue.length > 0) {
-      const handleResize = () => {
-        // Força uma re-renderização para atualizar a posição do dropdown
-        setSearchFocused(false);
-        setTimeout(() => setSearchFocused(true), 0);
-      };
-      
-      window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
-    }
-  }, [searchFocused, searchValue]);
 
   const isDark = theme === "dark";
 
@@ -219,22 +162,18 @@ export default function EpictusIAHeader() {
             placeholder="Pesquisar..."
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
-            onFocus={handleSearchFocus}
+            onFocus={() => {
+              setSearchFocused(true);
+            }}
             onClick={(e) => {
               // Prevenir que eventos de clique interfiram
               e.stopPropagation();
               // Foco explícito no input quando clicado
               e.currentTarget.focus();
-              // Forçar exibição do modal de sugestões ao clicar
-              setShowSuggestionModal(true);
             }}
             onBlur={() => {
-              // Não esconde o modal ao perder o foco para permitir interação com ele
-              setTimeout(() => {
-                setSearchFocused(false);
-                // Não esconder o modal automaticamente
-                // O fechamento será controlado apenas pelo clique fora
-              }, 200);
+              // Delay hiding search results to allow for clicking on them
+              setTimeout(() => setSearchFocused(false), 200);
             }}
             className="bg-transparent w-full py-2 pl-10 pr-4 text-sm text-white placeholder:text-white/50 outline-none rounded-full border border-white/10 focus:border-orange-500/50 transition-colors cursor-text relative z-50"
             autoComplete="off"
@@ -258,25 +197,14 @@ export default function EpictusIAHeader() {
             </motion.button>
           )}
 
-          {/* Search Results Dropdown - Renderizado via Portal fora do cabeçalho */}
+          {/* Search Results Dropdown */}
           <AnimatePresence>
-            {searchFocused && searchValue.length > 0 && searchResults.length > 0 && createPortal(
+            {searchFocused && searchValue.length > 0 && searchResults.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="fixed shadow-lg z-[9999] border border-white/10 overflow-hidden"
-                style={{
-                  width: searchFocused ? '264px' : '160px', // Largura correspondente à caixa de pesquisa
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  backdropFilter: 'blur(12px)',
-                  borderRadius: '0.5rem',
-                  // Posicionamento dinâmico baseado na posição do input
-                  top: searchInputRef.current ? 
-                    searchInputRef.current.getBoundingClientRect().bottom + 10 + 'px' : '80px',
-                  left: searchInputRef.current ? 
-                    searchInputRef.current.getBoundingClientRect().left + 'px' : 'auto',
-                }}
+                className="absolute top-full left-0 w-full mt-2 bg-white/10 backdrop-blur-xl rounded-lg shadow-lg z-[100] border border-white/10 overflow-hidden"
               >
                 <div className="p-2">
                   {searchResults.map((result) => (
@@ -294,60 +222,7 @@ export default function EpictusIAHeader() {
                     </div>
                   ))}
                 </div>
-              </motion.div>,
-              document.body
-            )}
-          </AnimatePresence>
-          
-          {/* Modal de Sugestões de Pesquisa */}
-          <AnimatePresence>
-            {showSuggestionModal && createPortal(
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="fixed shadow-xl z-[99999] border border-orange-500/30 overflow-hidden suggestion-modal"
-                style={{
-                  minWidth: '350px',
-                  maxWidth: '450px',
-                  backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                  backdropFilter: 'blur(16px)',
-                  borderRadius: '0.75rem',
-                  boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 107, 0, 0.1)',
-                  top: searchInputRef.current ? 
-                    searchInputRef.current.getBoundingClientRect().bottom + 10 + 'px' : '80px',
-                  left: searchInputRef.current ? 
-                    searchInputRef.current.getBoundingClientRect().left + 'px' : 'auto',
-                }}
-              >
-                <div className="p-5">
-                  <h3 className="text-white font-semibold text-lg mb-4">O que você precisa fazer hoje?</h3>
-                  <div className="space-y-3">
-                    {suggestionPrompts.map((prompt, index) => (
-                      <div 
-                        key={index}
-                        className="p-3 bg-white/10 hover:bg-orange-500/20 rounded-lg cursor-pointer transition-all duration-200 text-white text-sm flex items-center gap-3 border border-white/10 hover:border-orange-500/40"
-                        onClick={() => {
-                          setSearchValue(prompt);
-                          setTimeout(() => {
-                            setShowSuggestionModal(false);
-                          }, 100);
-                          if (searchInputRef.current) {
-                            searchInputRef.current.focus();
-                          }
-                        }}
-                      >
-                        <div className="w-7 h-7 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full flex items-center justify-center text-white text-xs shadow-md">
-                          {index + 1}
-                        </div>
-                        <span>{prompt}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </motion.div>,
-              document.body
+              </motion.div>
             )}
           </AnimatePresence>
         </motion.div>
