@@ -185,7 +185,7 @@ export default function EpictusIAComplete() {
   }, []);
 
   return (
-    <div className={`w-full h-full flex flex-col ${theme === "dark" ? "bg-[#0A1121]" : "bg-gray-50"} transition-colors duration-300`}>
+    <div className={`w-full h-full flex flex-col ${theme === "dark" ? "bg-[#001427]" : "bg-gray-50"} transition-colors duration-300`}>
       {/* Header com título e informações da IA */}
       <div className={`px-6 py-4 flex items-center justify-between border-b ${theme === "dark" ? "border-gray-800" : "border-gray-200"}`}>
         <div className="flex items-center gap-3">
