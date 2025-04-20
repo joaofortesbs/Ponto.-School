@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { 
@@ -8,13 +9,18 @@ import {
   Gamepad2, 
   UsersRound, 
   Sparkles,
-  Crown,
-  ArrowRight
+  Crown
 } from "lucide-react";
 import { 
   SectionHeader, 
   CategoryHeader, 
-  ToolsGrid 
+  ToolsGrid,
+  PlanoAulaCard,
+  SlidesDidaticosCard,
+  ListaExerciciosCard,
+  JogosDidaticosCard,
+  AtividadesInterdisciplinaresCard,
+  AssistenteApresentacaoCard
 } from "./components/criar-conteudo";
 
 export default function CriarConteudo() {
@@ -74,6 +80,38 @@ export default function CriarConteudo() {
     }
   ];
 
+  const renderTeacherTools = () => (
+    <>
+      {toolsForTeachers.map((tool) => {
+        switch (tool.id) {
+          case "planos-aula":
+            return <PlanoAulaCard key={tool.id} tool={tool} />;
+          case "slides-didaticos":
+            return <SlidesDidaticosCard key={tool.id} tool={tool} />;
+          case "lista-exercicios":
+            return <ListaExerciciosCard key={tool.id} tool={tool} />;
+          case "jogos-didaticos":
+            return <JogosDidaticosCard key={tool.id} tool={tool} />;
+          case "atividades-interdisciplinares":
+            return <AtividadesInterdisciplinaresCard key={tool.id} tool={tool} />;
+          default:
+            return null;
+        }
+      })}
+    </>
+  );
+
+  const renderStudentTools = () => (
+    <>
+      {toolsForStudents.map((tool) => {
+        if (tool.id === "assistente-apresentacao") {
+          return <AssistenteApresentacaoCard key={tool.id} tool={tool} />;
+        }
+        return null;
+      })}
+    </>
+  );
+
   return (
     <div className="h-full flex flex-col">
       <SectionHeader />
@@ -84,7 +122,9 @@ export default function CriarConteudo() {
           title="Para Professores"
         />
 
-        <ToolsGrid tools={toolsForTeachers} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {renderTeacherTools()}
+        </div>
       </div>
 
       <div className="mb-6">
@@ -93,7 +133,9 @@ export default function CriarConteudo() {
           title="Para Alunos"
         />
 
-        <ToolsGrid tools={toolsForStudents} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {renderStudentTools()}
+        </div>
       </div>
 
       <div className={`mt-auto p-4 rounded-lg ${theme === "dark" ? "bg-gray-800/50" : "bg-gray-100"} text-center`}>
