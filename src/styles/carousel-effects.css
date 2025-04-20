@@ -9,6 +9,45 @@ div::-webkit-scrollbar {
 body::-webkit-scrollbar-track,
 .scrollbar-container::-webkit-scrollbar-track,
 div::-webkit-scrollbar-track {
+
+/* Efeito de contorno brilhoso */
+.glow-effect {
+  position: relative;
+  z-index: 1;
+}
+
+.glow-effect::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  padding: 3px;
+  background: linear-gradient(
+    to right, 
+    rgba(59, 130, 246, 0.6), 
+    rgba(99, 102, 241, 0.6), 
+    rgba(67, 56, 202, 0.6)
+  );
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
   background: rgba(0, 0, 0, 0.1);
   border-radius: 10px;
 }

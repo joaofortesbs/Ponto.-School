@@ -19,11 +19,12 @@ export default function ChatInteligente() {
   const assistants = [
     {
       id: "assistente-pessoal",
-      title: "Assistente Pessoal",
+      title: "Chat com Epictus IA",
       description: "Tire dúvidas rápidas, peça sugestões, receba ajuda personalizada e execute ações rápidas com comandos de voz ou texto.",
       icon: <MessageSquare className="h-6 w-6 text-white" />,
       badge: "Popular",
-      buttonText: "Conversar"
+      buttonText: "Conversar",
+      highlight: true
     },
     {
       id: "tutor-inteligente",
@@ -63,8 +64,11 @@ export default function ChatInteligente() {
         {assistants.map((assistant) => (
           <Card 
             key={assistant.id}
-            className={`p-5 h-full border overflow-hidden group relative ${theme === "dark" ? "bg-gray-800/70 border-gray-700" : "bg-white border-gray-200"} hover:shadow-lg transition-all duration-300 hover:translate-y-[-2px]`}
+            className={`p-5 h-full border overflow-hidden group relative ${theme === "dark" ? "bg-gray-800/70 border-gray-700" : "bg-white border-gray-200"} hover:shadow-lg transition-all duration-300 hover:translate-y-[-2px] ${assistant.highlight ? "glow-effect" : ""}`}
           >
+            {assistant.highlight && (
+              <div className="absolute inset-0 z-0 animate-pulse-slow rounded-lg border-2 border-blue-500/50 shadow-[0_0_15px_5px_rgba(59,130,246,0.3)]"></div>
+            )}
             <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-blue-500/10 blur-3xl group-hover:bg-blue-500/20 transition-all duration-700"></div>
             
             <div className="flex justify-between items-start mb-4">
