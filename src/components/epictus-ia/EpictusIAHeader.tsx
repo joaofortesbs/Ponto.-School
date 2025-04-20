@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
+import * as Portal from "@radix-ui/react-portal";
 
 // Componente TypewriterEffect para animação de digitação
 const TypewriterEffect = ({ text, className = "" }: { text: string; className?: string }) => {
@@ -58,13 +59,35 @@ export default function EpictusIAHeader() {
     if (searchOpen && searchInputRef.current) {
       // Foco imediato sem atrasos
       searchInputRef.current.focus();
-      // Mostrar o modal de pesquisa
-      setSearchModalVisible(true);
+      
+      // Pequeno atraso para garantir que a animação da barra de pesquisa tenha começado
+      const timer = setTimeout(() => {
+        // Mostrar o modal de pesquisa
+        setSearchModalVisible(true);
+        
+        // Forçar re-render para atualizar a posição do modal
+        setIsHovered(prev => prev);
+      }, 50);
+      
+      return () => clearTimeout(timer);
     } else {
       // Esconder o modal quando a busca for fechada
       setSearchModalVisible(false);
     }
   }, [searchOpen]);
+  
+  // Adicionar listener para atualizar posição do modal quando a janela é redimensionada
+  useEffect(() => {
+    const handleResize = () => {
+      if (searchModalVisible) {
+        // Forçar re-render para atualizar posição
+        setIsHovered(prev => prev);
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [searchModalVisible]);
 
   // Função para gerenciar cliques fora do componente de busca
   useEffect(() => {
@@ -247,15 +270,22 @@ export default function EpictusIAHeader() {
               )}
             </AnimatePresence>
 
-            {/* Modal de pesquisa */}
+            {/* Modal de pesquisa usando Portal para renderizar fora da hierarquia do DOM */}
             <AnimatePresence>
               {searchModalVisible && (
-                <motion.div
-                  className="absolute top-full left-1/2 z-50 mt-2 w-80"
+                <Portal.Root>
+                  <motion.div
+                  className="fixed top-[calc(var(--search-top-position)+48px)] left-[var(--search-left-position)] z-[9999] mt-2 w-80"
                   initial={{ opacity: 0, y: -10, x: "-50%" }}
                   animate={{ opacity: 1, y: 0, x: "-50%" }}
                   exit={{ opacity: 0, y: -10, x: "-50%" }}
                   transition={{ duration: 0.2 }}
+                  style={{
+                    // Isso garante que o modal ficará por cima de tudo
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+                    '--search-top-position': `${searchContainerRef.current?.getBoundingClientRect().top || 0}px`,
+                    '--search-left-position': `${searchContainerRef.current?.getBoundingClientRect().left + (searchContainerRef.current?.offsetWidth / 2) || 0}px`
+                  }}
                 >
                   <Card className="p-4 bg-white/10 backdrop-blur-lg border border-white/20 shadow-xl rounded-lg overflow-hidden">
                     <TypewriterEffect 
@@ -264,6 +294,7 @@ export default function EpictusIAHeader() {
                     />
                   </Card>
                 </motion.div>
+                </Portal.Root>
               )}
             </AnimatePresence>
           </motion.div>
