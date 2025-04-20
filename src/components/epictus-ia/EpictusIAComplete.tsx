@@ -559,7 +559,7 @@ export default function EpictusIAComplete() {
         </div>
 
         {/* Conteúdo da seção ativa */}
-        <div className="flex-1 overflow-hidden px-6 pb-6">
+        <div className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-container">
           <motion.div 
             key={activeSection}
             initial={{ opacity: 0, y: 20 }}
