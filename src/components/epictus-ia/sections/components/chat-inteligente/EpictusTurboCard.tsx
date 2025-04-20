@@ -2,8 +2,18 @@
 import React from "react";
 import { Zap } from "lucide-react";
 import { ChatCard } from "./ChatCard";
+import { useNavigate } from "react-router-dom";
 
 export const EpictusTurboCard: React.FC = () => {
+  const navigate = useNavigate();
+  
+  const handleActivateTurbo = () => {
+    // Armazenar no localStorage que o Turbo foi ativado
+    localStorage.setItem("epictus_turbo_active", "true");
+    // Recarregar a página atual para aplicar a interface Turbo
+    window.location.reload();
+  };
+  
   const assistantData = {
     id: "epictus-turbo",
     title: "Epictus Turbo",
@@ -11,7 +21,8 @@ export const EpictusTurboCard: React.FC = () => {
     icon: <Zap className="h-6 w-6 text-white" />,
     badge: "Único",
     buttonText: "Usar Turbo",
-    highlight: true
+    highlight: true,
+    onButtonClick: handleActivateTurbo
   };
 
   return (

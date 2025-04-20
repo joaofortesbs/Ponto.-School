@@ -35,6 +35,7 @@ import {
   Zap,
   BrainCircuit,
 } from "lucide-react";
+import React from "react";
 import EpictusIAHeader from "./EpictusIAHeader"; // Added import for the new header component
 
 
@@ -110,9 +111,16 @@ export default function EpictusIAComplete() {
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredSections, setFilteredSections] = useState(sections);
+  const [isTurboActive, setIsTurboActive] = useState(false);
 
   const carouselRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  
+  // Verificar se o Turbo está ativo
+  useEffect(() => {
+    const turboActive = localStorage.getItem("epictus_turbo_active");
+    setIsTurboActive(turboActive === "true");
+  }, []);
 
   // Efeito para quando a busca é ativada, foca no input
   useEffect(() => {
@@ -177,6 +185,24 @@ export default function EpictusIAComplete() {
     };
   }, []);
 
+  // Se o Turbo estiver ativo, renderizar a interface Turbo
+  if (isTurboActive) {
+    const EpictusTurboInterface = React.lazy(() => import('./EpictusTurboInterface'));
+    
+    return (
+      <React.Suspense fallback={
+        <div className="w-full h-screen flex items-center justify-center">
+          <div className="animate-pulse text-[#FF6B00] flex flex-col items-center">
+            <Zap className="h-12 w-12 mb-2" />
+            <p>Carregando Epictus Turbo...</p>
+          </div>
+        </div>
+      }>
+        <EpictusTurboInterface />
+      </React.Suspense>
+    );
+  }
+  
   return (
     <div className={`w-full flex flex-col ${theme === "dark" ? "bg-[#001427]" : "bg-gray-50"} transition-colors duration-300 overflow-y-auto min-h-screen`}>
       <div className="p-4"> {/* This is where the new header is inserted */}
