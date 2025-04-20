@@ -588,7 +588,7 @@
   text-decoration: none;
   cursor: pointer;
 }
-//Further modifications needed here to fulfill the complete user request.
+/* Further modifications needed here to fulfill the complete user request. */
 @keyframes float {
   0%, 100% {
     transform: translateY(0);
