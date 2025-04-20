@@ -9,6 +9,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils";
 import SectionCard from "@/components/epictus-ia/components/SectionCard";
 import SectionContent from "@/components/epictus-ia/components/SectionContent";
+import VisaoGeralContent from "@/components/epictus-ia/components/VisaoGeralContent";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChatInteligente, CriarConteudo, AprenderMaisRapido, AnalisarCorrigir, OrganizarOtimizar, FerramentasExtras } from "@/components/epictus-ia/sections";
 import {
@@ -544,6 +545,9 @@ export default function EpictusIAComplete() {
             className="w-full"
           >
             <Tabs value={activeSection} onValueChange={setActiveSection} className="h-full">
+              <TabsContent value="visao-geral" className="mt-0 h-full">
+                <VisaoGeralContent />
+              </TabsContent>
               <TabsContent value="chat-inteligente" className="mt-0 h-full">
                 <ChatInteligente />
               </TabsContent>
