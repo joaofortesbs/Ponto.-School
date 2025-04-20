@@ -5,16 +5,16 @@ import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/components/ThemeProvider";
 import { ArrowRight } from "lucide-react";
 
-export interface ChatCardProps {
+interface ChatCardProps {
   assistant: {
     id: string;
     title: string;
     description: string;
-    icon: React.ReactElement;
-    badge: string | null;
+    icon: React.ReactNode;
+    badge?: string;
     buttonText: string;
     highlight?: boolean;
-    onButtonClick?: () => void; // Added onButtonClick prop
+    onButtonClick?: () => void;
   };
 }
 
@@ -22,18 +22,15 @@ export const ChatCard: React.FC<ChatCardProps> = ({ assistant }) => {
   const { theme } = useTheme();
 
   return (
-    <Card 
+    <Card
       key={assistant.id}
       className={`p-5 h-full border overflow-hidden group relative ${theme === "dark" ? "bg-gray-800/70 border-gray-700" : "bg-white border-gray-200"} hover:shadow-lg transition-all duration-300 hover:translate-y-[-2px] ${assistant.highlight ? "glow-effect" : ""}`}
       onMouseMove={(e) => {
         if (assistant.highlight) {
-          // Capturar a posição do mouse em relação ao card
           const card = e.currentTarget;
           const rect = card.getBoundingClientRect();
           const x = (e.clientX - rect.left) / rect.width * 100;
           const y = (e.clientY - rect.top) / rect.height * 100;
-
-          // Atualizar variáveis CSS para o efeito de luz interativo
           card.style.setProperty('--x', `${x}%`);
           card.style.setProperty('--y', `${y}%`);
         }
@@ -42,7 +39,6 @@ export const ChatCard: React.FC<ChatCardProps> = ({ assistant }) => {
       {assistant.highlight && (
         <>
           <div className="absolute inset-0 z-0 animate-pulse-slow rounded-lg border-2 border-blue-500/50 shadow-[0_0_15px_5px_rgba(59,130,246,0.3)]"></div>
-          {/* Partículas brilhantes */}
           <div className="particle"></div>
           <div className="particle"></div>
           <div className="particle"></div>
@@ -75,14 +71,9 @@ export const ChatCard: React.FC<ChatCardProps> = ({ assistant }) => {
         {assistant.description}
       </p>
 
-      <Button 
+      <Button
+        onClick={assistant.onButtonClick}
         className="mt-auto w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white flex items-center justify-center gap-2"
-        onClick={() => {
-          console.log("Botão clicado:", assistant.buttonText);
-          if (typeof assistant.onButtonClick === 'function') {
-            assistant.onButtonClick();
-          }
-        }}
       >
         {assistant.buttonText}
         <ArrowRight className="h-4 w-4" />

@@ -119,6 +119,7 @@ export default function EpictusIAComplete() {
   useEffect(() => {
     const turboActive = localStorage.getItem("epictus_turbo_active");
     console.log("Estado do Turbo:", turboActive);
+    console.log("Ativando modo Turbo:", turboActive === "true");
     setIsTurboActive(turboActive === "true");
   }, []);
 
