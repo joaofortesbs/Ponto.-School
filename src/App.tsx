@@ -325,6 +325,7 @@ function App() {
                   <Route path="configuracoes" element={<Configuracoes />} />
                   <Route path="planos-estudo" element={<PlanosEstudo />} />
                   <Route path="portal" element={<Portal />} />
+                  <Route path="epictus-ia" element={<EpictusIA />} />
                 </Route>
 
                 {/* User Profile - Protegida */}
