@@ -27,6 +27,33 @@
 @import "./styles/header-animations.css";
 
 @tailwind base;
+
+/* Card glow effect */
+.card {
+  --background: linear-gradient(to left, #f7ba2b 0%, #ea5358 100%);
+  position: relative;
+  z-index: 1;
+}
+
+.card::after {
+  position: absolute;
+  content: "";
+  top: 30px;
+  left: 0;
+  right: 0;
+  z-index: -1;
+  height: 100%;
+  width: 100%;
+  transform: scale(0.8);
+  filter: blur(25px);
+  background: var(--background);
+  transition: opacity .5s;
+}
+
+.card:hover::after {
+  opacity: 0;
+}
+
 @tailwind components;
 @tailwind utilities;
 
