@@ -54,9 +54,13 @@ export const EpictusTurboCard: React.FC = () => {
       onMouseLeave={() => setIsHovering(false)}
       onMouseMove={handleMouseMove}
     >
-      {/* Grade em movimento no fundo */}
-      <div className="absolute inset-0 rounded-xl overflow-hidden z-0 opacity-20 group-hover:opacity-40 transition-opacity duration-500">
+      {/* Grade em movimento no fundo com padrão mais sutil e elegante */}
+      <div className="absolute inset-0 rounded-xl overflow-hidden z-0 opacity-20 group-hover:opacity-50 transition-opacity duration-500">
         <div className="absolute inset-0 bg-grid-pattern animate-grid-flow"></div>
+        {/* Camada adicional de grade para efeito de profundidade */}
+        <div className="absolute inset-0 bg-grid-pattern-large animate-grid-flow-slow opacity-50"></div>
+        {/* Brilho sutil nas interseções da grade */}
+        <div className="absolute inset-0 grid-glow"></div>
       </div>
       
       {/* Efeito de borda animada sofisticada */}
