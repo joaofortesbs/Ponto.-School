@@ -35,7 +35,6 @@ import {
   Zap,
   BrainCircuit,
 } from "lucide-react";
-import React from "react";
 import EpictusIAHeader from "./EpictusIAHeader"; // Added import for the new header component
 
 
