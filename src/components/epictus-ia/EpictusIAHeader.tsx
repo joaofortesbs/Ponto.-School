@@ -30,6 +30,24 @@ export default function EpictusIAHeader() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Garantir que o evento de click no input funcione corretamente
+  useEffect(() => {
+    if (searchInputRef.current) {
+      const handleInputClick = (e) => {
+        e.stopPropagation();
+        searchInputRef.current.focus();
+      };
+      
+      searchInputRef.current.addEventListener('click', handleInputClick);
+      
+      return () => {
+        if (searchInputRef.current) {
+          searchInputRef.current.removeEventListener('click', handleInputClick);
+        }
+      };
+    }
+  }, [searchInputRef.current]);
+
   const isDark = theme === "dark";
 
   return (
@@ -144,7 +162,17 @@ export default function EpictusIAHeader() {
             placeholder="Pesquisar..."
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
-            onFocus={() => setSearchFocused(true)}
+            onFocus={() => {
+              setSearchFocused(true);
+              // Garantir que o input mantenha o foco
+              if (searchInputRef.current) {
+                searchInputRef.current.focus();
+              }
+            }}
+            onClick={(e) => {
+              // Prevenir que eventos de clique interfiram
+              e.stopPropagation();
+            }}
             onBlur={() => {
               // Delay hiding search results to allow for clicking on them
               setTimeout(() => setSearchFocused(false), 200);
