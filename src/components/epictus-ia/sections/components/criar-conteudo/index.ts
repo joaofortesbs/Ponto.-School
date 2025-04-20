@@ -1,10 +1,5 @@
 
-export { SectionHeader } from "./SectionHeader";
-export { CategoryHeader } from "./CategoryHeader";
-export { ToolsGrid } from "./ToolsGrid";
-export { PlanoAulaCard } from "./PlanoAulaCard";
-export { SlidesDidaticosCard } from "./SlidesDidaticosCard";
-export { ListaExerciciosCard } from "./ListaExerciciosCard";
-export { JogosDidaticosCard } from "./JogosDidaticosCard";
-export { AtividadesInterdisciplinaresCard } from "./AtividadesInterdisciplinaresCard";
-export { AssistenteApresentacaoCard } from "./AssistenteApresentacaoCard";
+export { default as SectionHeader } from './SectionHeader';
+export { default as CategoryHeader } from './CategoryHeader';
+export { default as ToolCard } from './ToolCard';
+export { default as ToolsGrid } from './ToolsGrid';
