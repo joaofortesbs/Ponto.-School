@@ -1,0 +1,1079 @@
+[plugin:vite:react-swc] × the name `useTheme` is defined multiple times
+    ╭─[/home/runner/workspace/src/components/epictus-ia/sections/FerramentasExtras.tsx:7:1]
+  7 │ // src/components/epictus-ia/sections/ferramentas-extras/SectionHeader.tsx
+  8 │ import React from "react";
+  9 │ import { Wrench } from "lucide-react";
+ 10 │ import { useTheme } from "@/components/ThemeProvider";
+    ·          ────┬───
+    ·              ╰── previous definition of `useTheme` here
+ 11 │ 
+ 12 │ interface SectionHeaderProps {
+ 13 │   title: string;
+ 14 │   description: string;
+ 15 │ }
+ 16 │ 
+ 17 │ export const SectionHeader: React.FC<SectionHeaderProps> = ({ title, description }) => {
+ 18 │   const { theme } = useTheme();
+ 19 │   return (
+ 20 │     <div className="mb-6">
+ 21 │       <div className="flex items-center gap-3 mb-2">
+ 22 │         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg">
+ 23 │           <Wrench className="h-6 w-6 text-white" />
+ 24 │         </div>
+ 25 │         <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+ 26 │           {title}
+ 27 │         </h2>
+ 28 │       </div>
+ 29 │       <p className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"} ml-[60px]`}>
+ 30 │         {description}
+ 31 │       </p>
+ 32 │     </div>
+ 33 │   );
+ 34 │ };
+ 35 │ 
+ 36 │ 
+ 37 │ // src/components/epictus-ia/sections/ferramentas-extras/ToolCard.tsx
+ 38 │ import React from "react";
+ 39 │ import { Card, Badge } from "@/components/ui";
+ 40 │ import { Button } from "@/components/ui/button";
+ 41 │ import { ArrowRight } from "lucide-react";
+ 42 │ import { useTheme } from "@/components/ThemeProvider";
+    ·          ────┬───
+    ·              ╰── `useTheme` redefined here
+ 43 │ 
+ 44 │ interface ToolCardProps {
+ 45 │   tool: {
+    ╰────
+
+  × the name `Card` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/epictus-ia/sections/FerramentasExtras.tsx:36:1]
+  36 │ 
+  37 │ // src/components/epictus-ia/sections/ferramentas-extras/ToolCard.tsx
+  38 │ import React from "react";
+  39 │ import { Card, Badge } from "@/components/ui";
+     ·          ──┬─
+     ·            ╰── previous definition of `Card` here
+  40 │ import { Button } from "@/components/ui/button";
+  41 │ import { ArrowRight } from "lucide-react";
+  42 │ import { useTheme } from "@/components/ThemeProvider";
+  43 │ 
+  44 │ interface ToolCardProps {
+  45 │   tool: {
+  46 │     id: string;
+  47 │     title: string;
+  48 │     description: string;
+  49 │     icon: React.ReactElement;
+  50 │     badge?: string;
+  51 │     buttonText: string;
+  52 │   };
+  53 │ }
+  54 │ 
+  55 │ export const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
+  56 │   const { theme } = useTheme();
+  57 │   return (
+  58 │     <Card
+  59 │       key={tool.id}
+  60 │       className={`p-5 h-full border overflow-hidden group relative ${
+  61 │         theme === "dark" ? "bg-gray-800/70 border-gray-700" : "bg-white border-gray-200"
+  62 │       } hover:shadow-lg transition-all duration-300 hover:translate-y-[-2px]`}
+  63 │     >
+  64 │       <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-cyan-500/10 blur-3xl group-hover:bg-cyan-500/20 transition-all duration-700"></div>
+  65 │ 
+  66 │       <div className="flex justify-between items-start mb-4">
+  67 │         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500/90 to-blue-600/90 flex items-center justify-center shadow-md transform group-hover:scale-110 transition-transform duration-300">
+  68 │           {tool.icon}
+  69 │         </div>
+  70 │ 
+  71 │         {tool.badge && (
+  72 │           <Badge className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white text-xs shadow-sm">
+  73 │             {tool.badge}
+  74 │           </Badge>
+  75 │         )}
+  76 │       </div>
+  77 │ 
+  78 │       <h3 className={`text-lg font-semibold mb-2 ${theme === "dark" ? "text-white" : "text-gray-900"} inline-block`}>
+  79 │         <span className="relative">
+  80 │           {tool.title}
+  81 │           <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-gradient-to-r from-cyan-500 to-blue-600 group-hover:w-full transition-all duration-300"></span>
+  82 │         </span>
+  83 │       </h3>
+  84 │ 
+  85 │       <p className={`text-sm mb-4 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+  86 │         {tool.description}
+  87 │       </p>
+  88 │ 
+  89 │       <Button className="mt-auto w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white flex items-center justify-center gap-2">
+  90 │         {tool.buttonText}
+  91 │         <ArrowRight className="h-4 w-4" />
+  92 │       </Button>
+  93 │     </Card>
+  94 │   );
+  95 │ };
+  96 │ 
+  97 │ // src/components/epictus-ia/sections/ferramentas-extras/SuggestionCard.tsx
+  98 │ import React from "react";
+  99 │ import { Card, Button } from "@/components/ui";
+     ·          ──┬─
+     ·            ╰── `Card` redefined here
+ 100 │ import { Sparkles } from "lucide-react";
+ 101 │ import { useTheme } from "@/components/ThemeProvider";
+     ╰────
+
+  × the name `Button` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/epictus-ia/sections/FerramentasExtras.tsx:37:1]
+  37 │ // src/components/epictus-ia/sections/ferramentas-extras/ToolCard.tsx
+  38 │ import React from "react";
+  39 │ import { Card, Badge } from "@/components/ui";
+  40 │ import { Button } from "@/components/ui/button";
+     ·          ───┬──
+     ·             ╰── previous definition of `Button` here
+  41 │ import { ArrowRight } from "lucide-react";
+  42 │ import { useTheme } from "@/components/ThemeProvider";
+  43 │ 
+  44 │ interface ToolCardProps {
+  45 │   tool: {
+  46 │     id: string;
+  47 │     title: string;
+  48 │     description: string;
+  49 │     icon: React.ReactElement;
+  50 │     badge?: string;
+  51 │     buttonText: string;
+  52 │   };
+  53 │ }
+  54 │ 
+  55 │ export const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
+  56 │   const { theme } = useTheme();
+  57 │   return (
+  58 │     <Card
+  59 │       key={tool.id}
+  60 │       className={`p-5 h-full border overflow-hidden group relative ${
+  61 │         theme === "dark" ? "bg-gray-800/70 border-gray-700" : "bg-white border-gray-200"
+  62 │       } hover:shadow-lg transition-all duration-300 hover:translate-y-[-2px]`}
+  63 │     >
+  64 │       <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-cyan-500/10 blur-3xl group-hover:bg-cyan-500/20 transition-all duration-700"></div>
+  65 │ 
+  66 │       <div className="flex justify-between items-start mb-4">
+  67 │         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500/90 to-blue-600/90 flex items-center justify-center shadow-md transform group-hover:scale-110 transition-transform duration-300">
+  68 │           {tool.icon}
+  69 │         </div>
+  70 │ 
+  71 │         {tool.badge && (
+  72 │           <Badge className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white text-xs shadow-sm">
+  73 │             {tool.badge}
+  74 │           </Badge>
+  75 │         )}
+  76 │       </div>
+  77 │ 
+  78 │       <h3 className={`text-lg font-semibold mb-2 ${theme === "dark" ? "text-white" : "text-gray-900"} inline-block`}>
+  79 │         <span className="relative">
+  80 │           {tool.title}
+  81 │           <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-gradient-to-r from-cyan-500 to-blue-600 group-hover:w-full transition-all duration-300"></span>
+  82 │         </span>
+  83 │       </h3>
+  84 │ 
+  85 │       <p className={`text-sm mb-4 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+  86 │         {tool.description}
+  87 │       </p>
+  88 │ 
+  89 │       <Button className="mt-auto w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white flex items-center justify-center gap-2">
+  90 │         {tool.buttonText}
+  91 │         <ArrowRight className="h-4 w-4" />
+  92 │       </Button>
+  93 │     </Card>
+  94 │   );
+  95 │ };
+  96 │ 
+  97 │ // src/components/epictus-ia/sections/ferramentas-extras/SuggestionCard.tsx
+  98 │ import React from "react";
+  99 │ import { Card, Button } from "@/components/ui";
+     ·                ───┬──
+     ·                   ╰── `Button` redefined here
+ 100 │ import { Sparkles } from "lucide-react";
+ 101 │ import { useTheme } from "@/components/ThemeProvider";
+     ╰────
+
+  × the name `useTheme` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/epictus-ia/sections/FerramentasExtras.tsx:39:1]
+  39 │ import { Card, Badge } from "@/components/ui";
+  40 │ import { Button } from "@/components/ui/button";
+  41 │ import { ArrowRight } from "lucide-react";
+  42 │ import { useTheme } from "@/components/ThemeProvider";
+     ·          ────┬───
+     ·              ╰── previous definition of `useTheme` here
+  43 │ 
+  44 │ interface ToolCardProps {
+  45 │   tool: {
+  46 │     id: string;
+  47 │     title: string;
+  48 │     description: string;
+  49 │     icon: React.ReactElement;
+  50 │     badge?: string;
+  51 │     buttonText: string;
+  52 │   };
+  53 │ }
+  54 │ 
+  55 │ export const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
+  56 │   const { theme } = useTheme();
+  57 │   return (
+  58 │     <Card
+  59 │       key={tool.id}
+  60 │       className={`p-5 h-full border overflow-hidden group relative ${
+  61 │         theme === "dark" ? "bg-gray-800/70 border-gray-700" : "bg-white border-gray-200"
+  62 │       } hover:shadow-lg transition-all duration-300 hover:translate-y-[-2px]`}
+  63 │     >
+  64 │       <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-cyan-500/10 blur-3xl group-hover:bg-cyan-500/20 transition-all duration-700"></div>
+  65 │ 
+  66 │       <div className="flex justify-between items-start mb-4">
+  67 │         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500/90 to-blue-600/90 flex items-center justify-center shadow-md transform group-hover:scale-110 transition-transform duration-300">
+  68 │           {tool.icon}
+  69 │         </div>
+  70 │ 
+  71 │         {tool.badge && (
+  72 │           <Badge className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white text-xs shadow-sm">
+  73 │             {tool.badge}
+  74 │           </Badge>
+  75 │         )}
+  76 │       </div>
+  77 │ 
+  78 │       <h3 className={`text-lg font-semibold mb-2 ${theme === "dark" ? "text-white" : "text-gray-900"} inline-block`}>
+  79 │         <span className="relative">
+  80 │           {tool.title}
+  81 │           <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-gradient-to-r from-cyan-500 to-blue-600 group-hover:w-full transition-all duration-300"></span>
+  82 │         </span>
+  83 │       </h3>
+  84 │ 
+  85 │       <p className={`text-sm mb-4 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+  86 │         {tool.description}
+  87 │       </p>
+  88 │ 
+  89 │       <Button className="mt-auto w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white flex items-center justify-center gap-2">
+  90 │         {tool.buttonText}
+  91 │         <ArrowRight className="h-4 w-4" />
+  92 │       </Button>
+  93 │     </Card>
+  94 │   );
+  95 │ };
+  96 │ 
+  97 │ // src/components/epictus-ia/sections/ferramentas-extras/SuggestionCard.tsx
+  98 │ import React from "react";
+  99 │ import { Card, Button } from "@/components/ui";
+ 100 │ import { Sparkles } from "lucide-react";
+ 101 │ import { useTheme } from "@/components/ThemeProvider";
+     ·          ────┬───
+     ·              ╰── `useTheme` redefined here
+ 102 │ 
+ 103 │ export const SuggestionCard: React.FC = () => {
+ 104 │   const { theme } = useTheme();
+     ╰────
+
+  × the name `Wrench` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/epictus-ia/sections/FerramentasExtras.tsx:6:1]
+   6 │ 
+   7 │ // src/components/epictus-ia/sections/ferramentas-extras/SectionHeader.tsx
+   8 │ import React from "react";
+   9 │ import { Wrench } from "lucide-react";
+     ·          ───┬──
+     ·             ╰── previous definition of `Wrench` here
+  10 │ import { useTheme } from "@/components/ThemeProvider";
+  11 │ 
+  12 │ interface SectionHeaderProps {
+  13 │   title: string;
+  14 │   description: string;
+  15 │ }
+  16 │ 
+  17 │ export const SectionHeader: React.FC<SectionHeaderProps> = ({ title, description }) => {
+  18 │   const { theme } = useTheme();
+  19 │   return (
+  20 │     <div className="mb-6">
+  21 │       <div className="flex items-center gap-3 mb-2">
+  22 │         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg">
+  23 │           <Wrench className="h-6 w-6 text-white" />
+  24 │         </div>
+  25 │         <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+  26 │           {title}
+  27 │         </h2>
+  28 │       </div>
+  29 │       <p className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"} ml-[60px]`}>
+  30 │         {description}
+  31 │       </p>
+  32 │     </div>
+  33 │   );
+  34 │ };
+  35 │ 
+  36 │ 
+  37 │ // src/components/epictus-ia/sections/ferramentas-extras/ToolCard.tsx
+  38 │ import React from "react";
+  39 │ import { Card, Badge } from "@/components/ui";
+  40 │ import { Button } from "@/components/ui/button";
+  41 │ import { ArrowRight } from "lucide-react";
+  42 │ import { useTheme } from "@/components/ThemeProvider";
+  43 │ 
+  44 │ interface ToolCardProps {
+  45 │   tool: {
+  46 │     id: string;
+  47 │     title: string;
+  48 │     description: string;
+  49 │     icon: React.ReactElement;
+  50 │     badge?: string;
+  51 │     buttonText: string;
+  52 │   };
+  53 │ }
+  54 │ 
+  55 │ export const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
+  56 │   const { theme } = useTheme();
+  57 │   return (
+  58 │     <Card
+  59 │       key={tool.id}
+  60 │       className={`p-5 h-full border overflow-hidden group relative ${
+  61 │         theme === "dark" ? "bg-gray-800/70 border-gray-700" : "bg-white border-gray-200"
+  62 │       } hover:shadow-lg transition-all duration-300 hover:translate-y-[-2px]`}
+  63 │     >
+  64 │       <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-cyan-500/10 blur-3xl group-hover:bg-cyan-500/20 transition-all duration-700"></div>
+  65 │ 
+  66 │       <div className="flex justify-between items-start mb-4">
+  67 │         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500/90 to-blue-600/90 flex items-center justify-center shadow-md transform group-hover:scale-110 transition-transform duration-300">
+  68 │           {tool.icon}
+  69 │         </div>
+  70 │ 
+  71 │         {tool.badge && (
+  72 │           <Badge className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white text-xs shadow-sm">
+  73 │             {tool.badge}
+  74 │           </Badge>
+  75 │         )}
+  76 │       </div>
+  77 │ 
+  78 │       <h3 className={`text-lg font-semibold mb-2 ${theme === "dark" ? "text-white" : "text-gray-900"} inline-block`}>
+  79 │         <span className="relative">
+  80 │           {tool.title}
+  81 │           <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-gradient-to-r from-cyan-500 to-blue-600 group-hover:w-full transition-all duration-300"></span>
+  82 │         </span>
+  83 │       </h3>
+  84 │ 
+  85 │       <p className={`text-sm mb-4 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+  86 │         {tool.description}
+  87 │       </p>
+  88 │ 
+  89 │       <Button className="mt-auto w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white flex items-center justify-center gap-2">
+  90 │         {tool.buttonText}
+  91 │         <ArrowRight className="h-4 w-4" />
+  92 │       </Button>
+  93 │     </Card>
+  94 │   );
+  95 │ };
+  96 │ 
+  97 │ // src/components/epictus-ia/sections/ferramentas-extras/SuggestionCard.tsx
+  98 │ import React from "react";
+  99 │ import { Card, Button } from "@/components/ui";
+ 100 │ import { Sparkles } from "lucide-react";
+ 101 │ import { useTheme } from "@/components/ThemeProvider";
+ 102 │ 
+ 103 │ export const SuggestionCard: React.FC = () => {
+ 104 │   const { theme } = useTheme();
+ 105 │   return (
+ 106 │     <Card className={`p-5 border overflow-hidden relative ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-gray-50 border-gray-200"} group`}>
+ 107 │       <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-cyan-500/5 blur-3xl group-hover:bg-cyan-500/10 transition-all duration-700"></div>
+ 108 │       <div className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-blue-500/5 blur-3xl group-hover:bg-blue-500/10 transition-all duration-700"></div>
+ 109 │ 
+ 110 │       <div className="flex items-center justify-center gap-2 text-center">
+ 111 │         <Sparkles className="h-5 w-5 text-cyan-500" />
+ 112 │         <h3 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"} inline-block`}>
+ 113 │           <span className="relative">
+ 114 │             Sugestão de Ferramentas
+ 115 │             <span className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-cyan-500 to-blue-600"></span>
+ 116 │           </span>
+ 117 │         </h3>
+ 118 │       </div>
+ 119 │ 
+ 120 │       <p className={`text-sm mt-4 text-center ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+ 121 │         Tem uma sugestão de nova ferramenta? Compartilhe conosco e podemos desenvolvê-la para você!
+ 122 │       </p>
+ 123 │ 
+ 124 │       <div className="mt-4 flex justify-center">
+ 125 │         <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white">
+ 126 │           Enviar Sugestão
+ 127 │         </Button>
+ 128 │       </div>
+ 129 │     </Card>
+ 130 │   );
+ 131 │ };
+ 132 │ 
+ 133 │ 
+ 134 │ // src/components/epictus-ia/sections/ferramentas-extras/toolsData.tsx
+ 135 │ import { 
+ 136 │   Calculator, 
+ 137 │   FileText, 
+ 138 │   Lightbulb, 
+ 139 │   Globe, 
+ 140 │   Share2, 
+ 141 │   Wrench 
+     ·   ───┬──
+     ·      ╰── `Wrench` redefined here
+ 142 │ } from "lucide-react";
+ 143 │ 
+ 144 │ export const tools = [
+     ╰────
+
+  × the name `useTheme` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/epictus-ia/sections/FerramentasExtras.tsx:98:1]
+  98 │ import React from "react";
+  99 │ import { Card, Button } from "@/components/ui";
+ 100 │ import { Sparkles } from "lucide-react";
+ 101 │ import { useTheme } from "@/components/ThemeProvider";
+     ·          ────┬───
+     ·              ╰── previous definition of `useTheme` here
+ 102 │ 
+ 103 │ export const SuggestionCard: React.FC = () => {
+ 104 │   const { theme } = useTheme();
+ 105 │   return (
+ 106 │     <Card className={`p-5 border overflow-hidden relative ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-gray-50 border-gray-200"} group`}>
+ 107 │       <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-cyan-500/5 blur-3xl group-hover:bg-cyan-500/10 transition-all duration-700"></div>
+ 108 │       <div className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-blue-500/5 blur-3xl group-hover:bg-blue-500/10 transition-all duration-700"></div>
+ 109 │ 
+ 110 │       <div className="flex items-center justify-center gap-2 text-center">
+ 111 │         <Sparkles className="h-5 w-5 text-cyan-500" />
+ 112 │         <h3 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"} inline-block`}>
+ 113 │           <span className="relative">
+ 114 │             Sugestão de Ferramentas
+ 115 │             <span className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-cyan-500 to-blue-600"></span>
+ 116 │           </span>
+ 117 │         </h3>
+ 118 │       </div>
+ 119 │ 
+ 120 │       <p className={`text-sm mt-4 text-center ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+ 121 │         Tem uma sugestão de nova ferramenta? Compartilhe conosco e podemos desenvolvê-la para você!
+ 122 │       </p>
+ 123 │ 
+ 124 │       <div className="mt-4 flex justify-center">
+ 125 │         <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white">
+ 126 │           Enviar Sugestão
+ 127 │         </Button>
+ 128 │       </div>
+ 129 │     </Card>
+ 130 │   );
+ 131 │ };
+ 132 │ 
+ 133 │ 
+ 134 │ // src/components/epictus-ia/sections/ferramentas-extras/toolsData.tsx
+ 135 │ import { 
+ 136 │   Calculator, 
+ 137 │   FileText, 
+ 138 │   Lightbulb, 
+ 139 │   Globe, 
+ 140 │   Share2, 
+ 141 │   Wrench 
+ 142 │ } from "lucide-react";
+ 143 │ 
+ 144 │ export const tools = [
+ 145 │   {
+ 146 │     id: "calculadora-formulas",
+ 147 │     title: "Calculadora de Fórmulas",
+ 148 │     description: "Calcule resultados de fórmulas complexas com explicações passo a passo",
+ 149 │     icon: <Calculator className="h-6 w-6 text-white" />,
+ 150 │     badge: null,
+ 151 │     buttonText: "Calcular"
+ 152 │   },
+ 153 │   {
+ 154 │     id: "extrator-texto",
+ 155 │     title: "Extrator de Texto",
+ 156 │     description: "Extraia texto de imagens, PDFs e arquivos escaneados com reconhecimento OCR",
+ 157 │     icon: <FileText className="h-6 w-6 text-white" />,
+ 158 │     badge: "Novo",
+ 159 │     buttonText: "Extrair Texto"
+ 160 │   },
+ 161 │   {
+ 162 │     id: "gerador-ideias",
+ 163 │     title: "Gerador de Ideias",
+ 164 │     description: "Receba sugestões de ideias inovadoras para projetos escolares e acadêmicos",
+ 165 │     icon: <Lightbulb className="h-6 w-6 text-white" />,
+ 166 │     badge: null,
+ 167 │     buttonText: "Gerar Ideias"
+ 168 │   },
+ 169 │   {
+ 170 │     id: "tradutor-avancado",
+ 171 │     title: "Tradutor Avançado",
+ 172 │     description: "Traduza textos com contexto acadêmico preservado entre múltiplos idiomas",
+ 173 │     icon: <Globe className="h-6 w-6 text-white" />,
+ 174 │     badge: null,
+ 175 │     buttonText: "Traduzir"
+ 176 │   },
+ 177 │   {
+ 178 │     id: "visualizador-3d",
+ 179 │     title: "Visualizador 3D",
+ 180 │     description: "Visualize conceitos complexos em modelos tridimensionais interativos",
+ 181 │     icon: <Share2 className="h-6 w-6 text-white" />,
+ 182 │     badge: "Experimental",
+ 183 │     buttonText: "Visualizar"
+ 184 │   },
+ 185 │   {
+ 186 │     id: "conversor-unidades",
+ 187 │     title: "Conversor de Unidades",
+ 188 │     description: "Converta facilmente entre diferentes unidades de medida com explicações",
+ 189 │     icon: <Wrench className="h-6 w-6 text-white" />,
+ 190 │     badge: null,
+ 191 │     buttonText: "Converter"
+ 192 │   }
+ 193 │ ];
+ 194 │ 
+ 195 │ 
+ 196 │ // src/components/epictus-ia/sections/FerramentasExtras.tsx
+ 197 │ import React from "react";
+ 198 │ import { useTheme } from "@/components/ThemeProvider";
+     ·          ────┬───
+     ·              ╰── `useTheme` redefined here
+ 199 │ import { 
+ 200 │   SectionHeader, 
+ 201 │   ToolCard, 
+     ╰────
+
+  × the name `SectionHeader` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/epictus-ia/sections/FerramentasExtras.tsx:14:1]
+  14 │   description: string;
+  15 │ }
+  16 │ 
+  17 │ export const SectionHeader: React.FC<SectionHeaderProps> = ({ title, description }) => {
+     ·              ──────┬──────
+     ·                    ╰── previous definition of `SectionHeader` here
+  18 │   const { theme } = useTheme();
+  19 │   return (
+  20 │     <div className="mb-6">
+  21 │       <div className="flex items-center gap-3 mb-2">
+  22 │         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg">
+  23 │           <Wrench className="h-6 w-6 text-white" />
+  24 │         </div>
+  25 │         <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+  26 │           {title}
+  27 │         </h2>
+  28 │       </div>
+  29 │       <p className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"} ml-[60px]`}>
+  30 │         {description}
+  31 │       </p>
+  32 │     </div>
+  33 │   );
+  34 │ };
+  35 │ 
+  36 │ 
+  37 │ // src/components/epictus-ia/sections/ferramentas-extras/ToolCard.tsx
+  38 │ import React from "react";
+  39 │ import { Card, Badge } from "@/components/ui";
+  40 │ import { Button } from "@/components/ui/button";
+  41 │ import { ArrowRight } from "lucide-react";
+  42 │ import { useTheme } from "@/components/ThemeProvider";
+  43 │ 
+  44 │ interface ToolCardProps {
+  45 │   tool: {
+  46 │     id: string;
+  47 │     title: string;
+  48 │     description: string;
+  49 │     icon: React.ReactElement;
+  50 │     badge?: string;
+  51 │     buttonText: string;
+  52 │   };
+  53 │ }
+  54 │ 
+  55 │ export const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
+  56 │   const { theme } = useTheme();
+  57 │   return (
+  58 │     <Card
+  59 │       key={tool.id}
+  60 │       className={`p-5 h-full border overflow-hidden group relative ${
+  61 │         theme === "dark" ? "bg-gray-800/70 border-gray-700" : "bg-white border-gray-200"
+  62 │       } hover:shadow-lg transition-all duration-300 hover:translate-y-[-2px]`}
+  63 │     >
+  64 │       <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-cyan-500/10 blur-3xl group-hover:bg-cyan-500/20 transition-all duration-700"></div>
+  65 │ 
+  66 │       <div className="flex justify-between items-start mb-4">
+  67 │         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500/90 to-blue-600/90 flex items-center justify-center shadow-md transform group-hover:scale-110 transition-transform duration-300">
+  68 │           {tool.icon}
+  69 │         </div>
+  70 │ 
+  71 │         {tool.badge && (
+  72 │           <Badge className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white text-xs shadow-sm">
+  73 │             {tool.badge}
+  74 │           </Badge>
+  75 │         )}
+  76 │       </div>
+  77 │ 
+  78 │       <h3 className={`text-lg font-semibold mb-2 ${theme === "dark" ? "text-white" : "text-gray-900"} inline-block`}>
+  79 │         <span className="relative">
+  80 │           {tool.title}
+  81 │           <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-gradient-to-r from-cyan-500 to-blue-600 group-hover:w-full transition-all duration-300"></span>
+  82 │         </span>
+  83 │       </h3>
+  84 │ 
+  85 │       <p className={`text-sm mb-4 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+  86 │         {tool.description}
+  87 │       </p>
+  88 │ 
+  89 │       <Button className="mt-auto w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white flex items-center justify-center gap-2">
+  90 │         {tool.buttonText}
+  91 │         <ArrowRight className="h-4 w-4" />
+  92 │       </Button>
+  93 │     </Card>
+  94 │   );
+  95 │ };
+  96 │ 
+  97 │ // src/components/epictus-ia/sections/ferramentas-extras/SuggestionCard.tsx
+  98 │ import React from "react";
+  99 │ import { Card, Button } from "@/components/ui";
+ 100 │ import { Sparkles } from "lucide-react";
+ 101 │ import { useTheme } from "@/components/ThemeProvider";
+ 102 │ 
+ 103 │ export const SuggestionCard: React.FC = () => {
+ 104 │   const { theme } = useTheme();
+ 105 │   return (
+ 106 │     <Card className={`p-5 border overflow-hidden relative ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-gray-50 border-gray-200"} group`}>
+ 107 │       <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-cyan-500/5 blur-3xl group-hover:bg-cyan-500/10 transition-all duration-700"></div>
+ 108 │       <div className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-blue-500/5 blur-3xl group-hover:bg-blue-500/10 transition-all duration-700"></div>
+ 109 │ 
+ 110 │       <div className="flex items-center justify-center gap-2 text-center">
+ 111 │         <Sparkles className="h-5 w-5 text-cyan-500" />
+ 112 │         <h3 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"} inline-block`}>
+ 113 │           <span className="relative">
+ 114 │             Sugestão de Ferramentas
+ 115 │             <span className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-cyan-500 to-blue-600"></span>
+ 116 │           </span>
+ 117 │         </h3>
+ 118 │       </div>
+ 119 │ 
+ 120 │       <p className={`text-sm mt-4 text-center ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+ 121 │         Tem uma sugestão de nova ferramenta? Compartilhe conosco e podemos desenvolvê-la para você!
+ 122 │       </p>
+ 123 │ 
+ 124 │       <div className="mt-4 flex justify-center">
+ 125 │         <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white">
+ 126 │           Enviar Sugestão
+ 127 │         </Button>
+ 128 │       </div>
+ 129 │     </Card>
+ 130 │   );
+ 131 │ };
+ 132 │ 
+ 133 │ 
+ 134 │ // src/components/epictus-ia/sections/ferramentas-extras/toolsData.tsx
+ 135 │ import { 
+ 136 │   Calculator, 
+ 137 │   FileText, 
+ 138 │   Lightbulb, 
+ 139 │   Globe, 
+ 140 │   Share2, 
+ 141 │   Wrench 
+ 142 │ } from "lucide-react";
+ 143 │ 
+ 144 │ export const tools = [
+ 145 │   {
+ 146 │     id: "calculadora-formulas",
+ 147 │     title: "Calculadora de Fórmulas",
+ 148 │     description: "Calcule resultados de fórmulas complexas com explicações passo a passo",
+ 149 │     icon: <Calculator className="h-6 w-6 text-white" />,
+ 150 │     badge: null,
+ 151 │     buttonText: "Calcular"
+ 152 │   },
+ 153 │   {
+ 154 │     id: "extrator-texto",
+ 155 │     title: "Extrator de Texto",
+ 156 │     description: "Extraia texto de imagens, PDFs e arquivos escaneados com reconhecimento OCR",
+ 157 │     icon: <FileText className="h-6 w-6 text-white" />,
+ 158 │     badge: "Novo",
+ 159 │     buttonText: "Extrair Texto"
+ 160 │   },
+ 161 │   {
+ 162 │     id: "gerador-ideias",
+ 163 │     title: "Gerador de Ideias",
+ 164 │     description: "Receba sugestões de ideias inovadoras para projetos escolares e acadêmicos",
+ 165 │     icon: <Lightbulb className="h-6 w-6 text-white" />,
+ 166 │     badge: null,
+ 167 │     buttonText: "Gerar Ideias"
+ 168 │   },
+ 169 │   {
+ 170 │     id: "tradutor-avancado",
+ 171 │     title: "Tradutor Avançado",
+ 172 │     description: "Traduza textos com contexto acadêmico preservado entre múltiplos idiomas",
+ 173 │     icon: <Globe className="h-6 w-6 text-white" />,
+ 174 │     badge: null,
+ 175 │     buttonText: "Traduzir"
+ 176 │   },
+ 177 │   {
+ 178 │     id: "visualizador-3d",
+ 179 │     title: "Visualizador 3D",
+ 180 │     description: "Visualize conceitos complexos em modelos tridimensionais interativos",
+ 181 │     icon: <Share2 className="h-6 w-6 text-white" />,
+ 182 │     badge: "Experimental",
+ 183 │     buttonText: "Visualizar"
+ 184 │   },
+ 185 │   {
+ 186 │     id: "conversor-unidades",
+ 187 │     title: "Conversor de Unidades",
+ 188 │     description: "Converta facilmente entre diferentes unidades de medida com explicações",
+ 189 │     icon: <Wrench className="h-6 w-6 text-white" />,
+ 190 │     badge: null,
+ 191 │     buttonText: "Converter"
+ 192 │   }
+ 193 │ ];
+ 194 │ 
+ 195 │ 
+ 196 │ // src/components/epictus-ia/sections/FerramentasExtras.tsx
+ 197 │ import React from "react";
+ 198 │ import { useTheme } from "@/components/ThemeProvider";
+ 199 │ import { 
+ 200 │   SectionHeader, 
+     ·   ──────┬──────
+     ·         ╰── `SectionHeader` redefined here
+ 201 │   ToolCard, 
+ 202 │   SuggestionCard,
+ 203 │   tools
+     ╰────
+
+  × the name `ToolCard` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/epictus-ia/sections/FerramentasExtras.tsx:52:1]
+  52 │   };
+  53 │ }
+  54 │ 
+  55 │ export const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
+     ·              ────┬───
+     ·                  ╰── previous definition of `ToolCard` here
+  56 │   const { theme } = useTheme();
+  57 │   return (
+  58 │     <Card
+  59 │       key={tool.id}
+  60 │       className={`p-5 h-full border overflow-hidden group relative ${
+  61 │         theme === "dark" ? "bg-gray-800/70 border-gray-700" : "bg-white border-gray-200"
+  62 │       } hover:shadow-lg transition-all duration-300 hover:translate-y-[-2px]`}
+  63 │     >
+  64 │       <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-cyan-500/10 blur-3xl group-hover:bg-cyan-500/20 transition-all duration-700"></div>
+  65 │ 
+  66 │       <div className="flex justify-between items-start mb-4">
+  67 │         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500/90 to-blue-600/90 flex items-center justify-center shadow-md transform group-hover:scale-110 transition-transform duration-300">
+  68 │           {tool.icon}
+  69 │         </div>
+  70 │ 
+  71 │         {tool.badge && (
+  72 │           <Badge className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white text-xs shadow-sm">
+  73 │             {tool.badge}
+  74 │           </Badge>
+  75 │         )}
+  76 │       </div>
+  77 │ 
+  78 │       <h3 className={`text-lg font-semibold mb-2 ${theme === "dark" ? "text-white" : "text-gray-900"} inline-block`}>
+  79 │         <span className="relative">
+  80 │           {tool.title}
+  81 │           <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-gradient-to-r from-cyan-500 to-blue-600 group-hover:w-full transition-all duration-300"></span>
+  82 │         </span>
+  83 │       </h3>
+  84 │ 
+  85 │       <p className={`text-sm mb-4 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+  86 │         {tool.description}
+  87 │       </p>
+  88 │ 
+  89 │       <Button className="mt-auto w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white flex items-center justify-center gap-2">
+  90 │         {tool.buttonText}
+  91 │         <ArrowRight className="h-4 w-4" />
+  92 │       </Button>
+  93 │     </Card>
+  94 │   );
+  95 │ };
+  96 │ 
+  97 │ // src/components/epictus-ia/sections/ferramentas-extras/SuggestionCard.tsx
+  98 │ import React from "react";
+  99 │ import { Card, Button } from "@/components/ui";
+ 100 │ import { Sparkles } from "lucide-react";
+ 101 │ import { useTheme } from "@/components/ThemeProvider";
+ 102 │ 
+ 103 │ export const SuggestionCard: React.FC = () => {
+ 104 │   const { theme } = useTheme();
+ 105 │   return (
+ 106 │     <Card className={`p-5 border overflow-hidden relative ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-gray-50 border-gray-200"} group`}>
+ 107 │       <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-cyan-500/5 blur-3xl group-hover:bg-cyan-500/10 transition-all duration-700"></div>
+ 108 │       <div className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-blue-500/5 blur-3xl group-hover:bg-blue-500/10 transition-all duration-700"></div>
+ 109 │ 
+ 110 │       <div className="flex items-center justify-center gap-2 text-center">
+ 111 │         <Sparkles className="h-5 w-5 text-cyan-500" />
+ 112 │         <h3 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"} inline-block`}>
+ 113 │           <span className="relative">
+ 114 │             Sugestão de Ferramentas
+ 115 │             <span className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-cyan-500 to-blue-600"></span>
+ 116 │           </span>
+ 117 │         </h3>
+ 118 │       </div>
+ 119 │ 
+ 120 │       <p className={`text-sm mt-4 text-center ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+ 121 │         Tem uma sugestão de nova ferramenta? Compartilhe conosco e podemos desenvolvê-la para você!
+ 122 │       </p>
+ 123 │ 
+ 124 │       <div className="mt-4 flex justify-center">
+ 125 │         <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white">
+ 126 │           Enviar Sugestão
+ 127 │         </Button>
+ 128 │       </div>
+ 129 │     </Card>
+ 130 │   );
+ 131 │ };
+ 132 │ 
+ 133 │ 
+ 134 │ // src/components/epictus-ia/sections/ferramentas-extras/toolsData.tsx
+ 135 │ import { 
+ 136 │   Calculator, 
+ 137 │   FileText, 
+ 138 │   Lightbulb, 
+ 139 │   Globe, 
+ 140 │   Share2, 
+ 141 │   Wrench 
+ 142 │ } from "lucide-react";
+ 143 │ 
+ 144 │ export const tools = [
+ 145 │   {
+ 146 │     id: "calculadora-formulas",
+ 147 │     title: "Calculadora de Fórmulas",
+ 148 │     description: "Calcule resultados de fórmulas complexas com explicações passo a passo",
+ 149 │     icon: <Calculator className="h-6 w-6 text-white" />,
+ 150 │     badge: null,
+ 151 │     buttonText: "Calcular"
+ 152 │   },
+ 153 │   {
+ 154 │     id: "extrator-texto",
+ 155 │     title: "Extrator de Texto",
+ 156 │     description: "Extraia texto de imagens, PDFs e arquivos escaneados com reconhecimento OCR",
+ 157 │     icon: <FileText className="h-6 w-6 text-white" />,
+ 158 │     badge: "Novo",
+ 159 │     buttonText: "Extrair Texto"
+ 160 │   },
+ 161 │   {
+ 162 │     id: "gerador-ideias",
+ 163 │     title: "Gerador de Ideias",
+ 164 │     description: "Receba sugestões de ideias inovadoras para projetos escolares e acadêmicos",
+ 165 │     icon: <Lightbulb className="h-6 w-6 text-white" />,
+ 166 │     badge: null,
+ 167 │     buttonText: "Gerar Ideias"
+ 168 │   },
+ 169 │   {
+ 170 │     id: "tradutor-avancado",
+ 171 │     title: "Tradutor Avançado",
+ 172 │     description: "Traduza textos com contexto acadêmico preservado entre múltiplos idiomas",
+ 173 │     icon: <Globe className="h-6 w-6 text-white" />,
+ 174 │     badge: null,
+ 175 │     buttonText: "Traduzir"
+ 176 │   },
+ 177 │   {
+ 178 │     id: "visualizador-3d",
+ 179 │     title: "Visualizador 3D",
+ 180 │     description: "Visualize conceitos complexos em modelos tridimensionais interativos",
+ 181 │     icon: <Share2 className="h-6 w-6 text-white" />,
+ 182 │     badge: "Experimental",
+ 183 │     buttonText: "Visualizar"
+ 184 │   },
+ 185 │   {
+ 186 │     id: "conversor-unidades",
+ 187 │     title: "Conversor de Unidades",
+ 188 │     description: "Converta facilmente entre diferentes unidades de medida com explicações",
+ 189 │     icon: <Wrench className="h-6 w-6 text-white" />,
+ 190 │     badge: null,
+ 191 │     buttonText: "Converter"
+ 192 │   }
+ 193 │ ];
+ 194 │ 
+ 195 │ 
+ 196 │ // src/components/epictus-ia/sections/FerramentasExtras.tsx
+ 197 │ import React from "react";
+ 198 │ import { useTheme } from "@/components/ThemeProvider";
+ 199 │ import { 
+ 200 │   SectionHeader, 
+ 201 │   ToolCard, 
+     ·   ────┬───
+     ·       ╰── `ToolCard` redefined here
+ 202 │   SuggestionCard,
+ 203 │   tools
+ 204 │ } from "./components/ferramentas-extras";
+     ╰────
+
+  × the name `SuggestionCard` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/epictus-ia/sections/FerramentasExtras.tsx:100:1]
+ 100 │ import { Sparkles } from "lucide-react";
+ 101 │ import { useTheme } from "@/components/ThemeProvider";
+ 102 │ 
+ 103 │ export const SuggestionCard: React.FC = () => {
+     ·              ───────┬──────
+     ·                     ╰── previous definition of `SuggestionCard` here
+ 104 │   const { theme } = useTheme();
+ 105 │   return (
+ 106 │     <Card className={`p-5 border overflow-hidden relative ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-gray-50 border-gray-200"} group`}>
+ 107 │       <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-cyan-500/5 blur-3xl group-hover:bg-cyan-500/10 transition-all duration-700"></div>
+ 108 │       <div className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-blue-500/5 blur-3xl group-hover:bg-blue-500/10 transition-all duration-700"></div>
+ 109 │ 
+ 110 │       <div className="flex items-center justify-center gap-2 text-center">
+ 111 │         <Sparkles className="h-5 w-5 text-cyan-500" />
+ 112 │         <h3 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"} inline-block`}>
+ 113 │           <span className="relative">
+ 114 │             Sugestão de Ferramentas
+ 115 │             <span className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-cyan-500 to-blue-600"></span>
+ 116 │           </span>
+ 117 │         </h3>
+ 118 │       </div>
+ 119 │ 
+ 120 │       <p className={`text-sm mt-4 text-center ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+ 121 │         Tem uma sugestão de nova ferramenta? Compartilhe conosco e podemos desenvolvê-la para você!
+ 122 │       </p>
+ 123 │ 
+ 124 │       <div className="mt-4 flex justify-center">
+ 125 │         <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white">
+ 126 │           Enviar Sugestão
+ 127 │         </Button>
+ 128 │       </div>
+ 129 │     </Card>
+ 130 │   );
+ 131 │ };
+ 132 │ 
+ 133 │ 
+ 134 │ // src/components/epictus-ia/sections/ferramentas-extras/toolsData.tsx
+ 135 │ import { 
+ 136 │   Calculator, 
+ 137 │   FileText, 
+ 138 │   Lightbulb, 
+ 139 │   Globe, 
+ 140 │   Share2, 
+ 141 │   Wrench 
+ 142 │ } from "lucide-react";
+ 143 │ 
+ 144 │ export const tools = [
+ 145 │   {
+ 146 │     id: "calculadora-formulas",
+ 147 │     title: "Calculadora de Fórmulas",
+ 148 │     description: "Calcule resultados de fórmulas complexas com explicações passo a passo",
+ 149 │     icon: <Calculator className="h-6 w-6 text-white" />,
+ 150 │     badge: null,
+ 151 │     buttonText: "Calcular"
+ 152 │   },
+ 153 │   {
+ 154 │     id: "extrator-texto",
+ 155 │     title: "Extrator de Texto",
+ 156 │     description: "Extraia texto de imagens, PDFs e arquivos escaneados com reconhecimento OCR",
+ 157 │     icon: <FileText className="h-6 w-6 text-white" />,
+ 158 │     badge: "Novo",
+ 159 │     buttonText: "Extrair Texto"
+ 160 │   },
+ 161 │   {
+ 162 │     id: "gerador-ideias",
+ 163 │     title: "Gerador de Ideias",
+ 164 │     description: "Receba sugestões de ideias inovadoras para projetos escolares e acadêmicos",
+ 165 │     icon: <Lightbulb className="h-6 w-6 text-white" />,
+ 166 │     badge: null,
+ 167 │     buttonText: "Gerar Ideias"
+ 168 │   },
+ 169 │   {
+ 170 │     id: "tradutor-avancado",
+ 171 │     title: "Tradutor Avançado",
+ 172 │     description: "Traduza textos com contexto acadêmico preservado entre múltiplos idiomas",
+ 173 │     icon: <Globe className="h-6 w-6 text-white" />,
+ 174 │     badge: null,
+ 175 │     buttonText: "Traduzir"
+ 176 │   },
+ 177 │   {
+ 178 │     id: "visualizador-3d",
+ 179 │     title: "Visualizador 3D",
+ 180 │     description: "Visualize conceitos complexos em modelos tridimensionais interativos",
+ 181 │     icon: <Share2 className="h-6 w-6 text-white" />,
+ 182 │     badge: "Experimental",
+ 183 │     buttonText: "Visualizar"
+ 184 │   },
+ 185 │   {
+ 186 │     id: "conversor-unidades",
+ 187 │     title: "Conversor de Unidades",
+ 188 │     description: "Converta facilmente entre diferentes unidades de medida com explicações",
+ 189 │     icon: <Wrench className="h-6 w-6 text-white" />,
+ 190 │     badge: null,
+ 191 │     buttonText: "Converter"
+ 192 │   }
+ 193 │ ];
+ 194 │ 
+ 195 │ 
+ 196 │ // src/components/epictus-ia/sections/FerramentasExtras.tsx
+ 197 │ import React from "react";
+ 198 │ import { useTheme } from "@/components/ThemeProvider";
+ 199 │ import { 
+ 200 │   SectionHeader, 
+ 201 │   ToolCard, 
+ 202 │   SuggestionCard,
+     ·   ───────┬──────
+     ·          ╰── `SuggestionCard` redefined here
+ 203 │   tools
+ 204 │ } from "./components/ferramentas-extras";
+     ╰────
+
+  × the name `tools` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/epictus-ia/sections/FerramentasExtras.tsx:141:1]
+ 141 │   Wrench 
+ 142 │ } from "lucide-react";
+ 143 │ 
+ 144 │ export const tools = [
+     ·              ──┬──
+     ·                ╰── previous definition of `tools` here
+ 145 │   {
+ 146 │     id: "calculadora-formulas",
+ 147 │     title: "Calculadora de Fórmulas",
+ 148 │     description: "Calcule resultados de fórmulas complexas com explicações passo a passo",
+ 149 │     icon: <Calculator className="h-6 w-6 text-white" />,
+ 150 │     badge: null,
+ 151 │     buttonText: "Calcular"
+ 152 │   },
+ 153 │   {
+ 154 │     id: "extrator-texto",
+ 155 │     title: "Extrator de Texto",
+ 156 │     description: "Extraia texto de imagens, PDFs e arquivos escaneados com reconhecimento OCR",
+ 157 │     icon: <FileText className="h-6 w-6 text-white" />,
+ 158 │     badge: "Novo",
+ 159 │     buttonText: "Extrair Texto"
+ 160 │   },
+ 161 │   {
+ 162 │     id: "gerador-ideias",
+ 163 │     title: "Gerador de Ideias",
+ 164 │     description: "Receba sugestões de ideias inovadoras para projetos escolares e acadêmicos",
+ 165 │     icon: <Lightbulb className="h-6 w-6 text-white" />,
+ 166 │     badge: null,
+ 167 │     buttonText: "Gerar Ideias"
+ 168 │   },
+ 169 │   {
+ 170 │     id: "tradutor-avancado",
+ 171 │     title: "Tradutor Avançado",
+ 172 │     description: "Traduza textos com contexto acadêmico preservado entre múltiplos idiomas",
+ 173 │     icon: <Globe className="h-6 w-6 text-white" />,
+ 174 │     badge: null,
+ 175 │     buttonText: "Traduzir"
+ 176 │   },
+ 177 │   {
+ 178 │     id: "visualizador-3d",
+ 179 │     title: "Visualizador 3D",
+ 180 │     description: "Visualize conceitos complexos em modelos tridimensionais interativos",
+ 181 │     icon: <Share2 className="h-6 w-6 text-white" />,
+ 182 │     badge: "Experimental",
+ 183 │     buttonText: "Visualizar"
+ 184 │   },
+ 185 │   {
+ 186 │     id: "conversor-unidades",
+ 187 │     title: "Conversor de Unidades",
+ 188 │     description: "Converta facilmente entre diferentes unidades de medida com explicações",
+ 189 │     icon: <Wrench className="h-6 w-6 text-white" />,
+ 190 │     badge: null,
+ 191 │     buttonText: "Converter"
+ 192 │   }
+ 193 │ ];
+ 194 │ 
+ 195 │ 
+ 196 │ // src/components/epictus-ia/sections/FerramentasExtras.tsx
+ 197 │ import React from "react";
+ 198 │ import { useTheme } from "@/components/ThemeProvider";
+ 199 │ import { 
+ 200 │   SectionHeader, 
+ 201 │   ToolCard, 
+ 202 │   SuggestionCard,
+ 203 │   tools
+     ·   ──┬──
+     ·     ╰── `tools` redefined here
+ 204 │ } from "./components/ferramentas-extras";
+ 205 │ 
+ 206 │ export default function FerramentasExtras() {
+     ╰────
+/home/runner/workspace/src/components/epictus-ia/sections/FerramentasExtras.tsx:7:1
+59 |        key={tool.id}
+60 |        className={`p-5 h-full border overflow-hidden group relative ${
+61 |          theme === "dark" ? "bg-gray-800/70 border-gray-700" : "bg-white border-gray-200"
+   |                                                                      ^
+62 |        } hover:shadow-lg transition-all duration-300 hover:translate-y-[-2px]`}
+63 |      >
