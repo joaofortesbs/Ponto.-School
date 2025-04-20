@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/ThemeProvider";
 import { Input } from "@/components/ui/input";
 import TypewriterEffect from "@/components/ui/typewriter-effect";
+import { createPortal } from "react-dom";
 
 export default function EpictusIAHeader() {
   const { theme } = useTheme();
@@ -12,6 +13,13 @@ export default function EpictusIAHeader() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [isMounted, setIsMounted] = useState(false);
+  
+  // Garante que o portal só será renderizado após a montagem do componente
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
 
   useEffect(() => {
     // Trigger initial animation
@@ -186,7 +194,7 @@ export default function EpictusIAHeader() {
           <AnimatePresence mode="wait">
             {searchOpen && (
               <motion.div
-                className="absolute right-0 top-0 z-20 flex items-center"
+                className="absolute right-0 top-0 z-50 flex items-center"
                 initial={{ width: 0, opacity: 0 }}
                 animate={{ width: "240px", opacity: 1 }}
                 exit={{ width: 0, opacity: 0 }}
@@ -201,9 +209,12 @@ export default function EpictusIAHeader() {
                   ref={searchInputRef}
                   type="text"
                   placeholder="Pesquisar..."
-                  className="h-10 pl-4 pr-10 rounded-full border-2 border-orange-500/50 focus:border-orange-500 bg-white/10 backdrop-blur-md text-white placeholder:text-white/70 shadow-lg"
+                  className="h-10 pl-4 pr-10 rounded-full border-2 border-orange-500/50 focus:border-orange-500 bg-gradient-to-r from-[#0c2341]/90 to-[#0f3562]/90 backdrop-blur-md text-white placeholder:text-white/70 shadow-lg"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    boxShadow: '0 4px 12px rgba(255, 107, 0, 0.15)'
+                  }}
                 />
                 <Search className="h-5 w-5 text-white absolute right-3 pointer-events-none" />
               </motion.div>
@@ -211,10 +222,10 @@ export default function EpictusIAHeader() {
           </AnimatePresence>
           
           {/* Typewriter suggestion modal */}
-          <AnimatePresence mode="wait">
-            {searchOpen && (
+          {isMounted && searchOpen && createPortal(
+            <AnimatePresence mode="wait">
               <motion.div
-                className="absolute right-0 top-12 bg-white/10 backdrop-blur-md border border-orange-500/30 rounded-lg p-4 shadow-lg w-[240px] mt-2"
+                className="fixed bg-white/10 backdrop-blur-md border border-orange-500/30 rounded-lg p-4 shadow-lg w-[240px] z-[9999]"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
@@ -224,6 +235,11 @@ export default function EpictusIAHeader() {
                   opacity: { duration: 0.2 } 
                 }}
                 key="search-suggestions"
+                style={{
+                  top: searchInputRef.current ? searchInputRef.current.getBoundingClientRect().bottom + 10 : '5rem',
+                  right: searchInputRef.current ? window.innerWidth - searchInputRef.current.getBoundingClientRect().right : '1rem',
+                  boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)'
+                }}
               >
                 <div className="text-white font-medium">
                   <TypewriterEffect 
@@ -233,8 +249,9 @@ export default function EpictusIAHeader() {
                   />
                 </div>
               </motion.div>
-            )}
-          </AnimatePresence>
+            </AnimatePresence>,
+            document.body
+          )}
         </motion.div>
       </div>
 
