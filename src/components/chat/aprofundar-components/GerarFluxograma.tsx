@@ -1415,6 +1415,361 @@ Retorne o resultado como um objeto JSON com a seguinte estrutura:
     }
   };
 
+  // Função para exportar o fluxograma como texto estruturado
+  const exportAsText = async () => {
+    try {
+      // Mostrar indicador visual de carregamento
+      const loadingIndicator = document.createElement('div');
+      loadingIndicator.className = 'fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-[9999]';
+      loadingIndicator.innerHTML = `
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 flex flex-col items-center">
+          <svg class="animate-spin h-8 w-8 text-blue-600 dark:text-blue-400 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span class="text-sm text-gray-700 dark:text-gray-300">Processando texto do fluxograma...</span>
+        </div>
+      `;
+      document.body.appendChild(loadingIndicator);
+      
+      // Impedir que o indicador de carregamento feche o modal ao ser clicado
+      loadingIndicator.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+      });
+      
+      try {
+        // Obter os dados do fluxograma
+        const fluxogramaDataStr = localStorage.getItem('fluxogramaData');
+        if (!fluxogramaDataStr) {
+          loadingIndicator.remove();
+          alert('Não foi possível encontrar dados do fluxograma para exportar.');
+          return false;
+        }
+        
+        // Converter para objeto
+        const fluxogramaData = JSON.parse(fluxogramaDataStr);
+        const { nodes, edges } = fluxogramaData;
+        
+        if (!nodes || !edges || nodes.length === 0) {
+          loadingIndicator.remove();
+          alert('Dados do fluxograma incompletos ou vazios.');
+          return false;
+        }
+        
+        // Encontrar o título do fluxograma (geralmente o primeiro nó ou nó do tipo 'start')
+        const startNode = nodes.find(node => node.type === 'start') || nodes[0];
+        const fluxogramaTitle = startNode?.data?.label || 'Fluxograma';
+        
+        // Ordenar os nós para seguir o fluxo lógico (tentativa simples)
+        // 1. Iniciar com o nó inicial (tipo 'start')
+        // 2. Seguir as conexões para ordenar os demais nós
+        let orderedNodes = [];
+        const startingNode = nodes.find(node => node.type === 'start') || nodes[0];
+        const visitedNodeIds = new Set();
+        
+        // Função recursiva para percorrer os nós na ordem do fluxo
+        const traverseNodes = (nodeId) => {
+          if (visitedNodeIds.has(nodeId)) return;
+          
+          const currentNode = nodes.find(node => node.id === nodeId);
+          if (!currentNode) return;
+          
+          visitedNodeIds.add(nodeId);
+          orderedNodes.push(currentNode);
+          
+          // Encontrar todas as conexões que saem deste nó
+          const outgoingEdges = edges.filter(edge => edge.source === nodeId);
+          
+          // Continuar a partir dos nós conectados
+          for (const edge of outgoingEdges) {
+            traverseNodes(edge.target);
+          }
+        };
+        
+        // Iniciar a ordenação a partir do nó inicial
+        traverseNodes(startingNode.id);
+        
+        // Se algum nó não foi visitado, adicione-o ao final
+        nodes.forEach(node => {
+          if (!visitedNodeIds.has(node.id)) {
+            orderedNodes.push(node);
+          }
+        });
+        
+        // Gerar texto formatado no estilo Markdown
+        let markdownText = `# 🧩 Fluxograma: ${fluxogramaTitle}\n\n`;
+        
+        // Adicionar nós organizados por tipo (ou categoria se disponível)
+        const nodesByType = {
+          start: orderedNodes.filter(n => n.type === 'start'),
+          context: orderedNodes.filter(n => n.type === 'context'),
+          process: orderedNodes.filter(n => n.type === 'process'),
+          practice: orderedNodes.filter(n => n.type === 'practice'),
+          decision: orderedNodes.filter(n => n.type === 'decision'),
+          tip: orderedNodes.filter(n => n.type === 'tip'),
+          end: orderedNodes.filter(n => n.type === 'end'),
+          default: orderedNodes.filter(n => !['start', 'context', 'process', 'practice', 'decision', 'tip', 'end'].includes(n.type))
+        };
+        
+        // Adicionar o conceito central (nó inicial)
+        if (nodesByType.start.length > 0) {
+          markdownText += `## Conceito Central\n\n`;
+          nodesByType.start.forEach(node => {
+            markdownText += `**${node.data.label}**: ${node.data.description || ''}\n\n`;
+          });
+        }
+        
+        // Adicionar contexto e pré-requisitos
+        if (nodesByType.context.length > 0) {
+          markdownText += `## Contextualização e Pré-requisitos\n\n`;
+          nodesByType.context.forEach(node => {
+            markdownText += `- **${node.data.label}**: ${node.data.description || ''}\n`;
+          });
+          markdownText += '\n';
+        }
+        
+        // Adicionar processo/mecanismo
+        if (nodesByType.process.length > 0) {
+          markdownText += `## Processo/Mecanismo\n\n`;
+          nodesByType.process.forEach((node, index) => {
+            markdownText += `${index + 1}. **${node.data.label}**: ${node.data.description || ''}\n`;
+          });
+          markdownText += '\n';
+        }
+        
+        // Adicionar aplicações práticas
+        if (nodesByType.practice.length > 0) {
+          markdownText += `## Aplicações Práticas\n\n`;
+          nodesByType.practice.forEach(node => {
+            markdownText += `- **${node.data.label}**: ${node.data.description || ''}\n`;
+          });
+          markdownText += '\n';
+        }
+        
+        // Adicionar pontos de decisão
+        if (nodesByType.decision.length > 0) {
+          markdownText += `## Pontos de Decisão\n\n`;
+          nodesByType.decision.forEach(node => {
+            markdownText += `### ${node.data.label}\n`;
+            markdownText += `${node.data.description || ''}\n\n`;
+            
+            // Adicionar opções de decisão (conexões de saída)
+            const decisionEdges = edges.filter(edge => edge.source === node.id);
+            if (decisionEdges.length > 0) {
+              markdownText += `Opções:\n`;
+              decisionEdges.forEach(edge => {
+                const targetNode = nodes.find(n => n.id === edge.target);
+                if (targetNode) {
+                  markdownText += `- ${edge.label || 'Seguir para'}: **${targetNode.data.label}**\n`;
+                }
+              });
+              markdownText += '\n';
+            }
+          });
+        }
+        
+        // Adicionar dicas
+        if (nodesByType.tip.length > 0) {
+          markdownText += `## Dicas Importantes\n\n`;
+          nodesByType.tip.forEach(node => {
+            markdownText += `> 💡 **${node.data.label}**: ${node.data.description || ''}\n\n`;
+          });
+        }
+        
+        // Adicionar conclusão
+        if (nodesByType.end.length > 0) {
+          markdownText += `## Conclusão\n\n`;
+          nodesByType.end.forEach(node => {
+            markdownText += `**${node.data.label}**: ${node.data.description || ''}\n\n`;
+          });
+        }
+        
+        // Adicionar nós não categorizados ou padrão
+        if (nodesByType.default.length > 0) {
+          markdownText += `## Outros Elementos\n\n`;
+          nodesByType.default.forEach(node => {
+            markdownText += `- **${node.data.label}**: ${node.data.description || ''}\n`;
+          });
+          markdownText += '\n';
+        }
+        
+        // Adicionar informações de conexões (opcional - pode ser removido para conteúdo mais limpo)
+        markdownText += `## Relações e Conexões\n\n`;
+        edges.forEach(edge => {
+          const sourceNode = nodes.find(n => n.id === edge.source);
+          const targetNode = nodes.find(n => n.id === edge.target);
+          if (sourceNode && targetNode) {
+            markdownText += `- **${sourceNode.data.label}** ${edge.label || '→'} **${targetNode.data.label}**\n`;
+          }
+        });
+        
+        // Adicionar rodapé
+        markdownText += `\n---\n\nFluxograma gerado em: ${new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}\n`;
+        
+        // Remover indicador de carregamento
+        loadingIndicator.remove();
+        
+        // Mostrar modal para escolher o formato de texto para baixar
+        const modalOverlay = document.createElement('div');
+        modalOverlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]';
+        modalOverlay.id = 'text-export-modal';
+        
+        const modalContent = document.createElement('div');
+        modalContent.className = 'bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl';
+        
+        modalContent.innerHTML = `
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Exportar como Texto</h3>
+            <button id="close-text-modal" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
+          <div class="mb-4">
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">Escolha o formato de exportação:</p>
+            <div class="flex space-x-2">
+              <button id="download-md" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md flex items-center justify-center text-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+                Markdown (.md)
+              </button>
+              <button id="download-txt" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-md flex items-center justify-center text-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+                Texto (.txt)
+              </button>
+            </div>
+          </div>
+          <div class="mb-4">
+            <button id="copy-text" class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md flex items-center justify-center text-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+              </svg>
+              Copiar para Área de Transferência
+            </button>
+          </div>
+          <div class="max-h-60 overflow-y-auto p-3 bg-gray-100 dark:bg-gray-900 rounded-md mb-4">
+            <pre id="text-preview" class="text-xs text-gray-800 dark:text-gray-300 whitespace-pre-wrap"></pre>
+          </div>
+        `;
+        
+        modalOverlay.appendChild(modalContent);
+        document.body.appendChild(modalOverlay);
+        
+        // Adicionar conteúdo de prévia
+        const previewElement = document.getElementById('text-preview');
+        if (previewElement) {
+          // Mostrar versão limitada para a prévia
+          const previewText = markdownText.length > 800 
+            ? markdownText.substring(0, 800) + '...\n(prévia limitada)'
+            : markdownText;
+          
+          previewElement.textContent = previewText;
+        }
+        
+        // Configurar eventos dos botões
+        document.getElementById('close-text-modal')?.addEventListener('click', () => {
+          modalOverlay.remove();
+        });
+        
+        document.getElementById('download-md')?.addEventListener('click', () => {
+          // Baixar como arquivo markdown
+          const blob = new Blob([markdownText], { type: 'text/markdown' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `fluxograma_${fluxogramaTitle.toLowerCase().replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.md`;
+          a.click();
+          URL.revokeObjectURL(url);
+          
+          // Notificar sucesso
+          const successMessage = document.createElement('div');
+          successMessage.className = 'fixed bottom-4 right-4 bg-green-50 dark:bg-green-900 text-green-800 dark:text-green-100 px-4 py-2 rounded-md shadow-md border border-green-200 dark:border-green-800 z-50';
+          successMessage.innerHTML = 'Fluxograma exportado como Markdown com sucesso!';
+          document.body.appendChild(successMessage);
+          
+          setTimeout(() => {
+            successMessage.remove();
+          }, 3000);
+        });
+        
+        document.getElementById('download-txt')?.addEventListener('click', () => {
+          // Baixar como arquivo de texto simples
+          const blob = new Blob([markdownText], { type: 'text/plain' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `fluxograma_${fluxogramaTitle.toLowerCase().replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.txt`;
+          a.click();
+          URL.revokeObjectURL(url);
+          
+          // Notificar sucesso
+          const successMessage = document.createElement('div');
+          successMessage.className = 'fixed bottom-4 right-4 bg-green-50 dark:bg-green-900 text-green-800 dark:text-green-100 px-4 py-2 rounded-md shadow-md border border-green-200 dark:border-green-800 z-50';
+          successMessage.innerHTML = 'Fluxograma exportado como Texto com sucesso!';
+          document.body.appendChild(successMessage);
+          
+          setTimeout(() => {
+            successMessage.remove();
+          }, 3000);
+        });
+        
+        document.getElementById('copy-text')?.addEventListener('click', () => {
+          // Copiar texto para a área de transferência
+          navigator.clipboard.writeText(markdownText)
+            .then(() => {
+              const copyButton = document.getElementById('copy-text');
+              if (copyButton) {
+                copyButton.innerHTML = `
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                  Copiado com Sucesso!
+                `;
+                
+                setTimeout(() => {
+                  copyButton.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                      <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+                    </svg>
+                    Copiar para Área de Transferência
+                  `;
+                }, 2000);
+              }
+            })
+            .catch(err => {
+              console.error('Erro ao copiar para a área de transferência:', err);
+              alert('Erro ao copiar o texto. Por favor, tente novamente.');
+            });
+        });
+        
+        // Fechar o modal ao clicar fora
+        modalOverlay.addEventListener('click', (e) => {
+          if (e.target === modalOverlay) {
+            modalOverlay.remove();
+          }
+        });
+        
+        return true;
+      } catch (error) {
+        console.error('Erro ao exportar como texto:', error);
+        loadingIndicator.remove();
+        alert('Ocorreu um erro ao exportar o fluxograma como texto. Por favor, tente novamente.');
+        return false;
+      }
+    } catch (error) {
+      console.error('Erro geral na exportação como texto:', error);
+      alert('Ocorreu um erro ao exportar o fluxograma como texto. Por favor, tente novamente.');
+      return false;
+    }
+  };
+
 
   const getFlowchartPrompt = (promptNumber: 1 | 2): string => {
     switch (promptNumber) {
@@ -1690,7 +2045,7 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                     
                     // Posicionar o menu em relação ao botão
                     const buttonRect = e.currentTarget.getBoundingClientRect();
-                    exportMenu.style.top = `${buttonRect.top - 120}px`;
+                    exportMenu.style.top = `${buttonRect.top - 160}px`;
                     exportMenu.style.left = `${buttonRect.left - 20}px`;
                     
                     // Importante: garantir que receba eventos de mouse
@@ -1751,15 +2106,14 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                     const pdfText = document.createTextNode('Exportar em PDF');
                     exportPdfButton.appendChild(pdfText);
                     
-                    // Botão Texto (desativado)
+                    // Botão Texto (ativo)
                     const exportTextButton = document.createElement('button');
-                    exportTextButton.className = 'text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 opacity-60 cursor-not-allowed';
-                    exportTextButton.disabled = true;
+                    exportTextButton.className = 'text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center text-gray-700 dark:text-gray-300 cursor-pointer';
                     
                     // Ícone para o botão de texto
                     const textIcon = document.createElement('svg');
                     textIcon.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-                    textIcon.setAttribute('class', 'w-4 h-4 mr-2 opacity-60');
+                    textIcon.setAttribute('class', 'w-4 h-4 mr-2');
                     textIcon.setAttribute('fill', 'none');
                     textIcon.setAttribute('viewBox', '0 0 24 24');
                     textIcon.setAttribute('stroke', 'currentColor');
@@ -1908,6 +2262,68 @@ Crie um fluxograma educacional estruturado em 5 camadas de aprendizado que:
                         }).catch(error => {
                           console.error('Erro ao exportar PDF:', error);
                           alert('Ocorreu um erro ao exportar o fluxograma em PDF. Por favor, tente novamente.');
+                        });
+                      }, 50);
+                    };
+                    
+                    // Configurar evento de clique para exportar em Texto
+                    exportTextButton.onclick = (event) => {
+                      event.stopPropagation();
+                      event.preventDefault();
+                      
+                      // Remover o menu de exportação sem fechar o modal principal
+                      const exportMenu = document.getElementById('export-options-menu');
+                      if (exportMenu) {
+                        exportMenu.remove();
+                      }
+                      
+                      // Indicador de carregamento no botão
+                      exportTextButton.innerHTML = '';
+                      
+                      // Ícone de loading
+                      const loadingIcon = document.createElement('svg');
+                      loadingIcon.setAttribute('class', 'animate-spin w-4 h-4 mr-2');
+                      loadingIcon.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                      loadingIcon.setAttribute('fill', 'none');
+                      loadingIcon.setAttribute('viewBox', '0 0 24 24');
+                      
+                      const loadingCircle = document.createElement('circle');
+                      loadingCircle.setAttribute('class', 'opacity-25');
+                      loadingCircle.setAttribute('cx', '12');
+                      loadingCircle.setAttribute('cy', '12');
+                      loadingCircle.setAttribute('r', '10');
+                      loadingCircle.setAttribute('stroke', 'currentColor');
+                      loadingCircle.setAttribute('stroke-width', '2');
+                      
+                      const loadingPath = document.createElement('path');
+                      loadingPath.setAttribute('class', 'opacity-75');
+                      loadingPath.setAttribute('fill', 'currentColor');
+                      loadingPath.setAttribute('d', 'M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z');
+                      
+                      loadingIcon.appendChild(loadingCircle);
+                      loadingIcon.appendChild(loadingPath);
+                      exportTextButton.appendChild(loadingIcon);
+                      
+                      // Texto de carregamento
+                      const loadingText = document.createTextNode('Exportando...');
+                      exportTextButton.appendChild(loadingText);
+                      
+                      exportTextButton.disabled = true;
+                      exportTextButton.className = 'text-left px-3 py-2 text-sm rounded-md transition-colors flex items-center text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700';
+                      
+                      // Remover a escuta do evento de clique para evitar fechamento indesejado
+                      document.removeEventListener('click', closeMenu);
+                      
+                      // Criar uma função que executa a exportação sem fechar o modal principal
+                      setTimeout(() => {
+                        // Exportar como texto estruturado
+                        exportAsText().then((success) => {
+                          if (!success) {
+                            console.error('Falha ao exportar texto');
+                          }
+                        }).catch(error => {
+                          console.error('Erro ao exportar texto:', error);
+                          alert('Ocorreu um erro ao exportar o fluxograma como texto. Por favor, tente novamente.');
                         });
                       }, 50);
                     };
