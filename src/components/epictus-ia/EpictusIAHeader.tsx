@@ -3,8 +3,6 @@ import { Zap, Sparkles, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/ThemeProvider";
 import { Input } from "@/components/ui/input";
-import TypewriterEffect from "@/components/ui/typewriter-effect";
-import { createPortal } from "react-dom";
 
 export default function EpictusIAHeader() {
   const { theme } = useTheme();
@@ -13,13 +11,6 @@ export default function EpictusIAHeader() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [isMounted, setIsMounted] = useState(false);
-  
-  // Garante que o portal só será renderizado após a montagem do componente
-  useEffect(() => {
-    setIsMounted(true);
-    return () => setIsMounted(false);
-  }, []);
 
   useEffect(() => {
     // Trigger initial animation
@@ -30,20 +21,11 @@ export default function EpictusIAHeader() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Referência para guardar a posição inicial do modal
-  const modalPositionRef = useRef<{ top: number; left: number } | null>(null);
-
   useEffect(() => {
     // Quando a busca é aberta, foca no input imediatamente
     if (searchOpen && searchInputRef.current) {
       // Foco imediato sem atrasos
       searchInputRef.current.focus();
-      
-      // Resetar a posição do modal para que seja recalculada
-      modalPositionRef.current = null;
-    } else {
-      // Limpar referência de posição quando fechar o campo de pesquisa
-      modalPositionRef.current = null;
     }
   }, [searchOpen]);
 
@@ -56,29 +38,15 @@ export default function EpictusIAHeader() {
         !searchInputRef.current.contains(event.target as Node) &&
         !(event.target as Element).closest('.search-icon-container')
       ) {
-        // Fechar imediatamente sem setTimeout para evitar estados intermediários
+        // Fechar imediatamente
         setSearchOpen(false);
       }
     };
 
-    // Lidar com redimensionamento apenas para casos de mudança drástica na tela
-    const handleResize = () => {
-      if (searchOpen && searchInputRef.current) {
-        // Recalcular posição apenas em caso de resize real, sem manipular foco
-        const rect = searchInputRef.current.getBoundingClientRect();
-        modalPositionRef.current = {
-          top: rect.bottom + window.scrollY + 8,
-          left: rect.left + window.scrollX
-        };
-      }
-    };
-
     document.addEventListener('mousedown', handleClickOutside);
-    window.addEventListener('resize', handleResize);
     
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-      window.removeEventListener('resize', handleResize);
     };
   }, [searchOpen]);
 
@@ -195,21 +163,8 @@ export default function EpictusIAHeader() {
               e.stopPropagation();
               e.preventDefault();
               
-              // Limpar a posição do modal antes de alternar o estado
-              // para forçar o recálculo da posição quando o input expandir
-              modalPositionRef.current = null;
-              
-              // Toggle search open/closed state de forma imediata
+              // Toggle search open/closed state
               setSearchOpen(prevState => !prevState);
-              
-              // Precisamos de um pequeno delay para garantir que o input expandiu completamente
-              // antes de posicionar o modal
-              if (!searchOpen) {
-                setTimeout(() => {
-                  // Forçar recálculo da posição do modal após a expansão do input
-                  modalPositionRef.current = null;
-                }, 50);
-              }
             }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -252,70 +207,7 @@ export default function EpictusIAHeader() {
             )}
           </AnimatePresence>
           
-          {/* Typewriter suggestion modal */}
-          {isMounted && searchOpen && createPortal(
-            <AnimatePresence mode="wait">
-              <motion.div
-                className="fixed bg-white/10 backdrop-blur-md border border-orange-500/30 rounded-lg p-4 shadow-lg w-[240px] z-[9999]"
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                transition={{ 
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 25,
-                  delay: 0.05,
-                }}
-                key="search-suggestions"
-                ref={(node) => {
-                  if (node && searchInputRef.current) {
-                    // Obter as dimensões e posição do componente de pesquisa expandido
-                    const inputRect = searchInputRef.current.getBoundingClientRect();
-                    const modalWidth = 240; // largura do modal definida na classe w-[240px]
-                    
-                    // Calcular a posição centralizada em relação ao campo de pesquisa expandido
-                    // Encontrar o centro do input e alinhar o modal com esse centro
-                    const inputCenter = inputRect.left + (inputRect.width / 2);
-                    
-                    // Posição left: centralizar o modal em relação ao campo de pesquisa
-                    // sem depender de offsets fixos que podem causar problemas
-                    const modalLeft = inputCenter - (modalWidth / 2);
-                    
-                    // Configurar posição fixa do modal
-                    node.style.position = "fixed";
-                    node.style.top = `${inputRect.bottom + window.scrollY + 8}px`; // 8px de espaço
-                    node.style.left = `${modalLeft}px`;
-                    node.style.width = `${modalWidth}px`;
-                    node.style.boxShadow = "0 10px 25px rgba(0, 0, 0, 0.3)";
-                    node.style.transformOrigin = "top center";
-                    node.style.zIndex = "9999"; // Garantir que o modal fique acima de outros elementos
-                    
-                    // Atualizar a referência de posição para evitar recálculos constantes
-                    // que podem causar oscilações na posição do modal
-                    if (!modalPositionRef.current) {
-                      modalPositionRef.current = {
-                        top: inputRect.bottom + window.scrollY + 8,
-                        left: modalLeft
-                      };
-                    }
-                  }
-                }}
-                style={modalPositionRef.current ? {
-                  top: `${modalPositionRef.current.top}px`,
-                  left: `${modalPositionRef.current.left}px`
-                } : undefined}
-              >
-                <div className="text-white font-medium">
-                  <TypewriterEffect 
-                    text="O que você precisa fazer hoje?" 
-                    typingSpeed={30}
-                    className="text-sm"
-                  />
-                </div>
-              </motion.div>
-            </AnimatePresence>,
-            document.body
-          )}
+          {/* Campo de pesquisa removido - nenhum modal de sugestões */}
         </motion.div>
       </div>
 
