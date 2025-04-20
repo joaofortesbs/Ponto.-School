@@ -1,6 +1,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SectionContentProps {
   children: React.ReactNode;
@@ -13,9 +14,13 @@ export default function SectionContent({ children }: SectionContentProps) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
-      className="h-full overflow-y-auto"
+      className="h-full w-full"
     >
-      {children}
+      <ScrollArea className="h-full w-full pr-4">
+        <div className="pb-6">
+          {children}
+        </div>
+      </ScrollArea>
     </motion.div>
   );
 }

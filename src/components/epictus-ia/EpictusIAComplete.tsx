@@ -427,7 +427,7 @@ export default function EpictusIAComplete() {
 
       <div className="flex-1 flex flex-col">
         {/* Carrossel 3D de seleção de seções */}
-        <div className="relative py-8">
+        <div className="relative py-10">
           <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
             <Button
               variant="outline"
@@ -452,7 +452,7 @@ export default function EpictusIAComplete() {
 
           <motion.div 
             ref={carouselRef}
-            className="flex items-center justify-center"
+            className="flex items-center justify-center h-[240px]"
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.2}
@@ -474,8 +474,8 @@ export default function EpictusIAComplete() {
                     key={section.id}
                     className={`absolute select-none cursor-pointer`}
                     animate={{
-                      scale: position === 0 ? 1 : 0.8 - Math.min(Math.abs(position) * 0.1, 0.3),
-                      x: position * 180,
+                      scale: position === 0 ? 1 : 0.85 - Math.min(Math.abs(position) * 0.1, 0.3),
+                      x: position * 200,
                       opacity: Math.abs(position) > 2 ? 0 : 1 - Math.abs(position) * 0.3,
                       zIndex: 10 - Math.abs(position),
                       rotateY: position * 10,
@@ -492,7 +492,8 @@ export default function EpictusIAComplete() {
                       style={{
                         backdropFilter: "blur(8px)",
                         perspective: "1000px",
-                        height: position === 0 ? "180px" : "150px"
+                        height: position === 0 ? "200px" : "180px",
+                        minHeight: position === 0 ? "200px" : "180px"
                       }}
                     >
                       <div className={`h-full p-5 flex flex-col justify-between relative overflow-hidden`}>
@@ -528,10 +529,10 @@ export default function EpictusIAComplete() {
                         </div>
 
                         <div>
-                          <h3 className={`text-base font-semibold mb-1 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                          <h3 className={`text-base font-semibold mb-2 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
                             {section.name}
                           </h3>
-                          <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"} line-clamp-2`}>
+                          <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"} line-clamp-3`}>
                             {section.description}
                           </p>
                         </div>
@@ -567,9 +568,9 @@ export default function EpictusIAComplete() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="h-full overflow-auto"
+            className="h-full"
           >
-            <ScrollArea className="h-full w-full">
+            <ScrollArea className="h-full w-full pb-4">
               <Tabs value={activeSection} onValueChange={setActiveSection} className="h-full">
                 <TabsContent value="chat-inteligente" className="mt-0 h-full">
                   <ChatInteligente />
