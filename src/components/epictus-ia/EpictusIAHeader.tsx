@@ -263,12 +263,17 @@ export default function EpictusIAHeader() {
                     const inputRect = searchInputRef.current.getBoundingClientRect();
                     const modalWidth = 240; // largura do modal definida na classe w-[240px]
                     
-                    // Centralizar o modal com o campo de pesquisa (não com o ícone)
-                    const inputCenterX = inputRect.left + (inputRect.width / 2);
+                    // Obter as coordenadas do campo de pesquisa para posicionar o modal adequadamente
+                    // O modal deve aparecer centralizado abaixo do campo de pesquisa como na imagem
+                    const modalWidth = 240; // Largura fixa do modal
                     
-                    // Ajustar a posição para compensar o deslocamento para a direita visto na imagem
-                    // Movemos o modal mais para a esquerda para centralizar corretamente
-                    const adjustedLeft = inputCenterX - (modalWidth / 2);
+                    // Calcular o centro do campo de pesquisa - ajustando a posição conforme a imagem
+                    // A imagem mostra que o modal precisa estar mais centralizado com o campo
+                    const searchContainerWidth = inputRect.width;
+                    
+                    // Calcular a posição final, ajustada conforme a imagem referência
+                    // Reduzimos o offset para centralizar o modal com o campo de pesquisa
+                    const adjustedLeft = (inputRect.left + inputRect.width/2) - (modalWidth/2) - 40; // Offset ajustado
                     
                     // Configurar posição fixa do modal
                     node.style.position = "fixed";
@@ -278,13 +283,12 @@ export default function EpictusIAHeader() {
                     node.style.boxShadow = "0 10px 25px rgba(0, 0, 0, 0.3)";
                     node.style.transformOrigin = "top center";
                     
-                    // Armazenar posição imediatamente para evitar recálculos que causam problemas
-                    if (!modalPositionRef.current) {
-                      modalPositionRef.current = {
-                        top: inputRect.bottom + window.scrollY + 8,
-                        left: adjustedLeft
-                      };
-                    }
+                    // Sempre atualizar a posição para garantir que fique correta
+                    // Isto evita problemas quando o modal precisar ser reposicionado
+                    modalPositionRef.current = {
+                      top: inputRect.bottom + window.scrollY + 8,
+                      left: adjustedLeft
+                    };
                   }
                 }}
                 style={modalPositionRef.current ? {
