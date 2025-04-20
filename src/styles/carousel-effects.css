@@ -1,4 +1,3 @@
-
 /* Estilos para a barra de rolagem global */
 body::-webkit-scrollbar,
 .scrollbar-container::-webkit-scrollbar,
@@ -9,6 +8,9 @@ div::-webkit-scrollbar {
 body::-webkit-scrollbar-track,
 .scrollbar-container::-webkit-scrollbar-track,
 div::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
 
 /* Efeito de contorno brilhoso avançado */
 .glow-effect {
@@ -31,8 +33,8 @@ div::-webkit-scrollbar-track {
     rgba(59, 130, 246, 0.8)
   );
   background-size: 300% 100%;
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) content-box, 
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -106,10 +108,6 @@ div::-webkit-scrollbar-track {
   animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 10px;
-}
-
 body::-webkit-scrollbar-thumb,
 .scrollbar-container::-webkit-scrollbar-thumb,
 div::-webkit-scrollbar-thumb {
@@ -130,6 +128,7 @@ div::-webkit-scrollbar-thumb:hover {
 .dark .scrollbar-container::-webkit-scrollbar-track,
 .dark div::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.05);
+}
 
 /* Estilos específicos para o componente Epictus IA */
 .epictus-ia-container {
@@ -157,8 +156,6 @@ div::-webkit-scrollbar-thumb:hover {
   height: auto !important;
 }
 
-}
-
 .dark body::-webkit-scrollbar-thumb,
 .dark .scrollbar-container::-webkit-scrollbar-thumb,
 .dark div::-webkit-scrollbar-thumb {
@@ -172,8 +169,87 @@ div::-webkit-scrollbar-thumb:hover {
 }
 
 /* Garantir que os containers com scroll tenham espaço para o conteúdo */
-.overflow-y-auto, 
+.overflow-y-auto,
 .overflow-auto {
   scrollbar-width: thin;
 }
 
+/* Efeito de brilho no cartão destacado */
+.enhanced-glow-card {
+  position: relative;
+  z-index: 1;
+}
+
+.enhanced-glow-card::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  background: linear-gradient(45deg, 
+    #4870FF, #3B82F6, #60a5fa, #4870FF, 
+    #3B82F6, #4870FF);
+  background-size: 400% 400%;
+  z-index: -1;
+  border-radius: 16px;
+  animation: glowingBorder 6s ease infinite;
+  filter: blur(4px);
+  opacity: 0.8;
+}
+
+.enhanced-glow-card:hover::before {
+  animation: glowingBorder 3s ease infinite;
+  filter: blur(6px);
+  opacity: 1;
+}
+
+@keyframes glowingBorder {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Efeito de partículas flutuantes */
+.enhanced-glow-card::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(circle, #ffffff 1px, transparent 1px);
+  background-size: 20px 20px;
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.3s ease;
+  animation: floatingParticles 6s linear infinite;
+  pointer-events: none;
+}
+
+.enhanced-glow-card:hover::after {
+  opacity: 0.05;
+}
+
+@keyframes floatingParticles {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* Efeito de interação ao passar o mouse */
+.enhanced-glow-card .bg-gradient-to-r {
+  transition: all 0.3s ease;
+}
+
+.enhanced-glow-card:hover .bg-gradient-to-r {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4);
+}
