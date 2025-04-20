@@ -177,7 +177,7 @@ export default function EpictusIAComplete() {
   }, []);
 
   return (
-    <div className={`w-full h-full flex flex-col ${theme === "dark" ? "bg-[#001427]" : "bg-gray-50"} transition-colors duration-300`}>
+    <div className={`w-full flex flex-col ${theme === "dark" ? "bg-[#001427]" : "bg-gray-50"} transition-colors duration-300 overflow-y-auto`}>
       {/* Header com título e informações da IA */}
       <div className={`px-6 py-4 flex items-center justify-between border-b ${theme === "dark" ? "border-gray-800" : "border-gray-200"}`}>
         <div className="flex items-center gap-3">
@@ -416,7 +416,7 @@ export default function EpictusIAComplete() {
         )}
       </AnimatePresence>
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-[600px]">
         {/* Carrossel 3D de seleção de seções */}
         <div className="relative py-10">
           <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
@@ -559,7 +559,7 @@ export default function EpictusIAComplete() {
         </div>
 
         {/* Conteúdo da seção ativa */}
-        <div className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-container">
+        <div className="flex-1 px-6 pb-6 scrollbar-container">
           <motion.div 
             key={activeSection}
             initial={{ opacity: 0, y: 20 }}
