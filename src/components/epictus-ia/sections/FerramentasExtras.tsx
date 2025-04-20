@@ -3,9 +3,13 @@ import React from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { 
   SectionHeader, 
-  ToolCard, 
   SuggestionCard,
-  tools
+  CalculadoraFormulasCard,
+  ExtratorTextoCard,
+  GeradorIdeiasCard,
+  TradutorAvancadoCard,
+  Visualizador3DCard,
+  ConversorUnidadesCard
 } from "./components/ferramentas-extras";
 
 export default function FerramentasExtras() {
@@ -19,9 +23,12 @@ export default function FerramentasExtras() {
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {tools.map(tool => (
-          <ToolCard key={tool.id} tool={tool} />
-        ))}
+        <CalculadoraFormulasCard />
+        <ExtratorTextoCard />
+        <GeradorIdeiasCard />
+        <TradutorAvancadoCard />
+        <Visualizador3DCard />
+        <ConversorUnidadesCard />
       </div>
 
       <div className="mt-6 flex-1">

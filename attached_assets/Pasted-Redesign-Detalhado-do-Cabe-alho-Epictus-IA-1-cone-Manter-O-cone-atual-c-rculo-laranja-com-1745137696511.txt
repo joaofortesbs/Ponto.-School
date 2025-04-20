@@ -1,0 +1,65 @@
+Redesign Detalhado do Cabeçalho "Epictus IA":
+1. Ícone:
+Manter: O ícone atual (círculo laranja com símbolo) é forte e reconhecível.
+Adicionar (Sutileza):
+Efeito de "Glow" Sutil: Aplicar um box-shadow ou filter: drop-shadow() muito suave na cor laranja (a mesma do ícone) ao redor do círculo. Isso cria um efeito de brilho discreto, sugerindo "inteligência" e "energia".
+Animação Hover (Opcional): Ao passar o mouse sobre o ícone, o "glow" pode se intensificar ligeiramente ou o ícone interno pode ter uma animação mínima (ex: um pulso leve).
+2. Título:
+Manter: "Epictus IA". É o nome da ferramenta, deve ser claro.
+Refinar:
+Fonte: Confirmar que é Montserrat, Bold.
+Tamanho: Talvez aumentar ligeiramente o tamanho da fonte para dar mais presença.
+Cor: Manter branco (bom contraste com o fundo escuro).
+Alinhamento: Alinhar verticalmente perfeitamente com o centro do ícone.
+3. Selo "Premium":
+Manter: A funcionalidade é importante.
+Refinar:
+Posição: Colocá-lo diretamente ao lado do título "Epictus IA", talvez ligeiramente acima ou alinhado verticalmente ao topo do título.
+Tamanho: Torná-lo um pouco menor e mais delicado.
+Ícone: O ícone de estrela (✨) pode ser mais estilizado (ex: um contorno fino).
+Fonte (Texto "Premium"): Usar uma fonte um pouco menor e talvez menos pesada (ex: Montserrat SemiBold).
+4. Tagline (Subtítulo):
+Substituir: A tagline atual é muito longa. Substituir por algo mais curto, impactante e focado no benefício ou na essência da IA.
+Sugestões:
+"Seu Copiloto de Aprendizado." (Sugere parceria e inteligência)
+"Inteligência Artificial para Seus Estudos." (Direto e claro)
+"Potencialize Seu Conhecimento." (Foco no benefício)
+"Estudo Inteligente, Resultados Reais." (Foco no resultado)
+"O Futuro do Aprendizado, Agora." (Enfatiza inovação)
+Design:
+Fonte: Open Sans, Regular.
+Tamanho: Manter um tamanho menor que o título.
+Cor: Cinza claro (para criar contraste com o título).
+Posição: Diretamente abaixo do título "Epictus IA".
+5. Ícones à Direita (Busca e Configurações):
+Refinar:
+Estilo dos Ícones: Usar ícones com exatamente o mesmo estilo do restante da plataforma (ex: se os outros ícones são de contorno fino, usar contorno fino aqui também).
+Cor: Usar uma cor cinza claro (melhor visibilidade no fundo escuro) ou branco.
+Efeito Hover: Ao passar o mouse, o ícone deve mudar de cor (ex: para branco ou laranja) e/ou ter um fundo circular sutil aparecendo atrás dele.
+Espaçamento: Garantir espaçamento adequado entre os dois ícones e em relação à borda direita.
+Funcionalidade (Interação Detalhada):
+Busca (Lupa):
+Clique:
+Opção 1 (Expansão): A barra de busca se expande horizontalmente a partir do ícone (com animação suave), sobrepondo parte do título/tagline (se necessário). Um campo de texto aparece com placeholder "Buscar ferramentas IA...". O ícone da lupa permanece visível (agora como um botão para iniciar a busca, se não for busca instantânea). Um ícone "X" aparece para fechar a busca.
+Opção 2 (Modal): Abre um modal centralizado com o campo de busca. Menos recomendado para uma busca rápida.
+Digitação: Resultados aparecem abaixo da barra de busca (ou no modal), filtrando os cards de funcionalidade em tempo real.
+Fechar: Clicar no "X" ou fora da área de busca fecha a barra/modal.
+Configurações (Engrenagem):
+Clique:
+Abre um modal (pop-up) centralizado com as configurações específicas do Epictus IA (Preferências de Geração, Notificações do IA, Histórico, Gerenciar Assinatura – se aplicável).
+Design do Modal: Fundo branco, título "Configurações do Epictus IA", opções organizadas, botões "Salvar" e "Cancelar".
+Feedback Visual: O ícone da engrenagem pode girar sutilmente ao ser clicado.
+6. Fundo:
+Substituir: O fundo azul escuro sólido.
+Nova Proposta:
+Usar um gradiente muito sutil (quase imperceptível) de azul escuro para um azul ainda mais escuro (ou preto) na vertical. Isso adiciona profundidade.
+Opcional (Avançado): Adicionar um padrão de fundo abstrato, muito sutil e escuro (ex: linhas finas que lembram circuitos, uma textura leve). Cuidado para não poluir.
+7. Separador:
+Substituir: A linha fina atual.
+Nova Proposta:
+Opção 1: Um gradiente suave que faz a transição do fundo do cabeçalho para o fundo do conteúdo abaixo.
+Opção 2: Uma linha muito fina (1px) em um tom de azul ligeiramente mais claro que o fundo.
+8. Animação de Entrada (Opcional):
+Ao carregar a seção "Epictus IA", os elementos do cabeçalho podem ter uma animação de entrada suave (ex: fade-in ou slide-down sutil).
+Exemplo (Descrição Visual do Novo Cabeçalho):
+Imagine uma barra no topo da página com um fundo em gradiente sutil (azul escuro para quase preto). À esquerda, um círculo laranja vibrante com o ícone do cérebro/circuito, emitindo um leve brilho laranja. Ao lado, o texto "Epictus IA" em branco (Montserrat Bold, grande), e logo acima/ao lado dele, uma pequena tag laranja "Premium". Abaixo do título, o texto "Seu copiloto de aprendizado." em cinza claro (Open Sans Regular, menor). No canto direito, dois ícones de contorno fino em cinza claro (Lupa e Engrenagem), que mudam para branco/laranja ao passar o mouse. Uma transição suave (gradiente ou linha fina) separa o cabeçalho do carrossel abaixo. Ao carregar a página, os elementos do cabeçalho aparecem com um leve fade-in.
