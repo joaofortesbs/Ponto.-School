@@ -30,17 +30,23 @@ export default function EpictusIAHeader() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Referência para guardar a posição inicial do modal
+  const modalPositionRef = useRef<{ top: number; left: number } | null>(null);
+
   useEffect(() => {
-    // Quando a busca é aberta, foca no input com um pequeno atraso
-    // para garantir que a animação comece primeiro
+    // Quando a busca é aberta, foca no input imediatamente
     if (searchOpen && searchInputRef.current) {
-      const focusTimer = setTimeout(() => {
-        if (searchInputRef.current) {
-          searchInputRef.current.focus();
-        }
-      }, 100);
+      // Foco imediato sem atrasos
+      searchInputRef.current.focus();
       
-      return () => clearTimeout(focusTimer);
+      // Calcular e salvar a posição inicial do campo de busca para uso no modal
+      if (searchInputRef.current) {
+        const rect = searchInputRef.current.getBoundingClientRect();
+        modalPositionRef.current = {
+          top: rect.bottom + window.scrollY + 8,
+          left: rect.left + window.scrollX
+        };
+      }
     }
   }, [searchOpen]);
 
@@ -53,18 +59,20 @@ export default function EpictusIAHeader() {
         !searchInputRef.current.contains(event.target as Node) &&
         !(event.target as Element).closest('.search-icon-container')
       ) {
-        // Usar setTimeout para evitar conflitos de estado durante a animação
-        setTimeout(() => {
-          setSearchOpen(false);
-        }, 50);
+        // Fechar imediatamente sem setTimeout para evitar estados intermediários
+        setSearchOpen(false);
       }
     };
 
-    // Recalcular posição em caso de redimensionamento
+    // Lidar com redimensionamento apenas para casos de mudança drástica na tela
     const handleResize = () => {
       if (searchOpen && searchInputRef.current) {
-        // Forçar recálculo de posicionamento ao redimensionar
-        searchInputRef.current.focus();
+        // Recalcular posição apenas em caso de resize real, sem manipular foco
+        const rect = searchInputRef.current.getBoundingClientRect();
+        modalPositionRef.current = {
+          top: rect.bottom + window.scrollY + 8,
+          left: rect.left + window.scrollX
+        };
       }
     };
 
@@ -185,9 +193,25 @@ export default function EpictusIAHeader() {
           {/* Search icon/button */}
           <motion.div
             className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
-            onClick={() => {
-              // Toggle search open/closed state
+            onClick={(e) => {
+              // Prevenir qualquer propagação que possa causar recálculos
+              e.stopPropagation();
+              
+              // Toggle search open/closed state de forma imediata
               setSearchOpen(prevState => !prevState);
+              
+              // Pequeno atraso para permitir que o input renderize antes de calcular sua posição
+              if (!searchOpen) {
+                setTimeout(() => {
+                  if (searchInputRef.current) {
+                    const rect = searchInputRef.current.getBoundingClientRect();
+                    modalPositionRef.current = {
+                      top: rect.bottom + window.scrollY + 8,
+                      left: rect.left + window.scrollX
+                    };
+                  }
+                }, 10);
+              }
             }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -242,19 +266,19 @@ export default function EpictusIAHeader() {
                   type: "spring",
                   stiffness: 300,
                   damping: 25,
-                  delay: 0.1,
+                  delay: 0.05,
                 }}
                 key="search-suggestions"
-                style={{
-                  position: "fixed",
-                  top: searchInputRef.current ? 
-                    searchInputRef.current.getBoundingClientRect().bottom + window.scrollY + 8 : 
-                    '5rem',
-                  left: searchInputRef.current ? 
-                    searchInputRef.current.getBoundingClientRect().left + window.scrollX : 
-                    'auto',
-                  boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)',
-                  transformOrigin: "top center"
+                ref={(node) => {
+                  if (node && searchInputRef.current) {
+                    // Calculamos a posição uma vez quando o modal aparece
+                    const inputRect = searchInputRef.current.getBoundingClientRect();
+                    node.style.position = "fixed";
+                    node.style.top = `${inputRect.bottom + window.scrollY + 8}px`;
+                    node.style.left = `${inputRect.left + window.scrollX}px`;
+                    node.style.boxShadow = "0 10px 25px rgba(0, 0, 0, 0.3)";
+                    node.style.transformOrigin = "top center";
+                  }
                 }}
               >
                 <div className="text-white font-medium">
