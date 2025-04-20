@@ -39,14 +39,11 @@ export default function EpictusIAHeader() {
       // Foco imediato sem atrasos
       searchInputRef.current.focus();
       
-      // Calcular e salvar a posição inicial do campo de busca para uso no modal
-      if (searchInputRef.current) {
-        const rect = searchInputRef.current.getBoundingClientRect();
-        modalPositionRef.current = {
-          top: rect.bottom + window.scrollY + 8,
-          left: rect.left + window.scrollX
-        };
-      }
+      // Resetar a posição do modal para que seja recalculada
+      modalPositionRef.current = null;
+    } else {
+      // Limpar referência de posição quando fechar o campo de pesquisa
+      modalPositionRef.current = null;
     }
   }, [searchOpen]);
 
@@ -196,22 +193,13 @@ export default function EpictusIAHeader() {
             onClick={(e) => {
               // Prevenir qualquer propagação que possa causar recálculos
               e.stopPropagation();
+              e.preventDefault();
+              
+              // Limpar a posição do modal antes de alternar o estado
+              modalPositionRef.current = null;
               
               // Toggle search open/closed state de forma imediata
               setSearchOpen(prevState => !prevState);
-              
-              // Pequeno atraso para permitir que o input renderize antes de calcular sua posição
-              if (!searchOpen) {
-                setTimeout(() => {
-                  if (searchInputRef.current) {
-                    const rect = searchInputRef.current.getBoundingClientRect();
-                    modalPositionRef.current = {
-                      top: rect.bottom + window.scrollY + 8,
-                      left: rect.left + window.scrollX
-                    };
-                  }
-                }, 10);
-              }
             }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -271,15 +259,35 @@ export default function EpictusIAHeader() {
                 key="search-suggestions"
                 ref={(node) => {
                   if (node && searchInputRef.current) {
-                    // Calculamos a posição uma vez quando o modal aparece
+                    // Calculamos a posição centralizada embaixo do campo de pesquisa
                     const inputRect = searchInputRef.current.getBoundingClientRect();
+                    const modalWidth = 240; // largura do modal definida na classe w-[240px]
+                    
+                    // Calcular a posição central do input
+                    const inputCenterX = inputRect.left + (inputRect.width / 2);
+                    
+                    // Posicionar o modal centralizado com o input
                     node.style.position = "fixed";
                     node.style.top = `${inputRect.bottom + window.scrollY + 8}px`;
-                    node.style.left = `${inputRect.left + window.scrollX}px`;
+                    node.style.left = `${inputCenterX - (modalWidth / 2)}px`;
+                    node.style.width = `${modalWidth}px`;
                     node.style.boxShadow = "0 10px 25px rgba(0, 0, 0, 0.3)";
                     node.style.transformOrigin = "top center";
+                    
+                    // Fixar a posição para evitar alterações enquanto o mouse se move
+                    // Armazenar a posição original para que não mude com eventos subsequentes
+                    if (!modalPositionRef.current) {
+                      modalPositionRef.current = {
+                        top: inputRect.bottom + window.scrollY + 8,
+                        left: inputCenterX - (modalWidth / 2)
+                      };
+                    }
                   }
                 }}
+                style={modalPositionRef.current ? {
+                  top: `${modalPositionRef.current.top}px`,
+                  left: `${modalPositionRef.current.left}px`
+                } : undefined}
               >
                 <div className="text-white font-medium">
                   <TypewriterEffect 
