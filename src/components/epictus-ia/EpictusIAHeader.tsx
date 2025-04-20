@@ -263,23 +263,26 @@ export default function EpictusIAHeader() {
                     const inputRect = searchInputRef.current.getBoundingClientRect();
                     const modalWidth = 240; // largura do modal definida na classe w-[240px]
                     
-                    // Calcular a posição central do input
+                    // Centralizar o modal com o campo de pesquisa (não com o ícone)
                     const inputCenterX = inputRect.left + (inputRect.width / 2);
                     
-                    // Posicionar o modal centralizado com o input
+                    // Ajustar a posição para compensar o deslocamento para a direita visto na imagem
+                    // Movemos o modal mais para a esquerda para centralizar corretamente
+                    const adjustedLeft = inputCenterX - (modalWidth / 2);
+                    
+                    // Configurar posição fixa do modal
                     node.style.position = "fixed";
                     node.style.top = `${inputRect.bottom + window.scrollY + 8}px`;
-                    node.style.left = `${inputCenterX - (modalWidth / 2)}px`;
+                    node.style.left = `${adjustedLeft}px`;
                     node.style.width = `${modalWidth}px`;
                     node.style.boxShadow = "0 10px 25px rgba(0, 0, 0, 0.3)";
                     node.style.transformOrigin = "top center";
                     
-                    // Fixar a posição para evitar alterações enquanto o mouse se move
-                    // Armazenar a posição original para que não mude com eventos subsequentes
+                    // Armazenar posição imediatamente para evitar recálculos que causam problemas
                     if (!modalPositionRef.current) {
                       modalPositionRef.current = {
                         top: inputRect.bottom + window.scrollY + 8,
-                        left: inputCenterX - (modalWidth / 2)
+                        left: adjustedLeft
                       };
                     }
                   }
