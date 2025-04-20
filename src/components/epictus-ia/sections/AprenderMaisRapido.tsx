@@ -3,11 +3,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/components/ThemeProvider";
-import { 
-  Zap, 
-  FileText, 
-  Network, 
-  FileQuestion, 
+import {
+  Zap,
+  FileText,
+  Network,
+  FileQuestion,
   Sparkles,
   Undo,
   ArrowRight,
@@ -16,7 +16,10 @@ import {
   ListChecks,
   Repeat,
   FlaskConical,
-  Volume2
+  Volume2,
+  Lightbulb,
+  LayoutCards,
+  CheckSquare
 } from "lucide-react";
 
 
@@ -79,7 +82,7 @@ export default function AprenderMaisRapido() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {learningTools.map(tool => (
-          <Card 
+          <Card
             key={tool.id}
             className={`p-5 h-full border overflow-hidden group relative ${theme === "dark" ? "bg-gray-800/70 border-gray-700" : "bg-white border-gray-200"} hover:shadow-md transition-shadow duration-300`}
           >
@@ -97,15 +100,16 @@ export default function AprenderMaisRapido() {
               )}
             </div>
 
-            <h3 className={`text-lg font-semibold mb-2 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-              {tool.title}
+            <h3 className={`text-lg font-semibold mb-2 flex items-center gap-2 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+              {tool.icon}
+              <span>{tool.title}</span>
             </h3>
 
             <p className={`text-sm mb-4 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
               {tool.description}
             </p>
 
-            <Button 
+            <Button
               className="mt-auto w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white flex items-center justify-center gap-2"
             >
               {tool.buttonText}
