@@ -186,7 +186,7 @@ export default function EpictusIAComplete() {
   }, []);
 
   return (
-    <div className={`w-full h-full overflow-hidden flex flex-col ${theme === "dark" ? "bg-[#0A1121]" : "bg-gray-50"} transition-colors duration-300`}>
+    <div className={`w-full h-full flex flex-col ${theme === "dark" ? "bg-[#0A1121]" : "bg-gray-50"} transition-colors duration-300`}>
       {/* Header com título e informações da IA */}
       <div className={`px-6 py-4 flex items-center justify-between border-b ${theme === "dark" ? "border-gray-800" : "border-gray-200"}`}>
         <div className="flex items-center gap-3">
@@ -425,9 +425,9 @@ export default function EpictusIAComplete() {
         )}
       </AnimatePresence>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col">
         {/* Carrossel 3D de seleção de seções */}
-        <div className="relative py-8 overflow-hidden">
+        <div className="relative py-8">
           <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
             <Button
               variant="outline"
@@ -567,28 +567,30 @@ export default function EpictusIAComplete() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="h-full"
+            className="h-full overflow-auto"
           >
-            <Tabs value={activeSection} onValueChange={setActiveSection} className="h-full">
-              <TabsContent value="chat-inteligente" className="mt-0 h-full">
-                <ChatInteligente />
-              </TabsContent>
-              <TabsContent value="criar-conteudo" className="mt-0 h-full">
-                <CriarConteudo />
-              </TabsContent>
-              <TabsContent value="aprender-mais-rapido" className="mt-0 h-full">
-                <AprenderMaisRapido />
-              </TabsContent>
-              <TabsContent value="analisar-corrigir" className="mt-0 h-full">
-                <AnalisarCorrigir />
-              </TabsContent>
-              <TabsContent value="organizar-otimizar" className="mt-0 h-full">
-                <OrganizarOtimizar />
-              </TabsContent>
-              <TabsContent value="ferramentas-extras" className="mt-0 h-full">
-                <FerramentasExtras />
-              </TabsContent>
-            </Tabs>
+            <ScrollArea className="h-full w-full">
+              <Tabs value={activeSection} onValueChange={setActiveSection} className="h-full">
+                <TabsContent value="chat-inteligente" className="mt-0 h-full">
+                  <ChatInteligente />
+                </TabsContent>
+                <TabsContent value="criar-conteudo" className="mt-0 h-full">
+                  <CriarConteudo />
+                </TabsContent>
+                <TabsContent value="aprender-mais-rapido" className="mt-0 h-full">
+                  <AprenderMaisRapido />
+                </TabsContent>
+                <TabsContent value="analisar-corrigir" className="mt-0 h-full">
+                  <AnalisarCorrigir />
+                </TabsContent>
+                <TabsContent value="organizar-otimizar" className="mt-0 h-full">
+                  <OrganizarOtimizar />
+                </TabsContent>
+                <TabsContent value="ferramentas-extras" className="mt-0 h-full">
+                  <FerramentasExtras />
+                </TabsContent>
+              </Tabs>
+            </ScrollArea>
           </motion.div>
         </div>
       </div>
