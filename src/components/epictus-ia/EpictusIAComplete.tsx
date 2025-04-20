@@ -176,29 +176,6 @@ export default function EpictusIAComplete() {
     };
   }, []);
 
-  const ThemeToggle = () => {
-    return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className={`${theme === "dark" ? "text-gray-400 hover:text-white hover:bg-white/10" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"} transition-all duration-200`}
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            >
-              {theme === "dark" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">
-            <p>{theme === "dark" ? "Ativar tema claro" : "Ativar tema escuro"}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    );
-  };
-
-
   return (
     <div className={`w-full flex flex-col ${theme === "dark" ? "bg-[#001427]" : "bg-gray-50"} transition-colors duration-300 overflow-y-auto min-h-screen`}>
       {/* Header com título e informações da IA */}
@@ -219,40 +196,38 @@ export default function EpictusIAComplete() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`${theme === "dark" ? "text-gray-400 hover:text-white hover:bg-white/10" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"} transition-all duration-200`}
+                  className={`rounded-full ${theme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"}`}
                   onClick={() => setShowSearch(!showSearch)}
                 >
-                  <Search className="h-5 w-5" />
+                  <Search className={`h-5 w-5 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="bottom">
-                <p>Buscar ferramentas IA</p>
+              <TooltipContent>
+                <p>Buscar ferramenta</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
 
-          <ThemeToggle />
-
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`${theme === "dark" ? "text-gray-400 hover:text-white hover:bg-white/10" : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"} transition-all duration-200`}
+                  className={`rounded-full ${theme === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-100"}`}
                   onClick={() => setShowSettings(!showSettings)}
                 >
-                  <Settings className="h-5 w-5" />
+                  <Settings className={`h-5 w-5 ${theme === "dark" ? "text-gray-400" : "text-gray-600"} ${showSettings ? "animate-spin" : ""}`} style={{ animationDuration: '3s' }} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="bottom">
+              <TooltipContent>
                 <p>Configurações</p>
               </TooltipContent>
             </Tooltip>
@@ -486,7 +461,7 @@ export default function EpictusIAComplete() {
               {sections.map((section, index) => {
                 // Calcular a posição relativa ao item ativo com lógica de rolagem infinita
                 let position = index - carouselIndex;
-
+                
                 // Ajustar posição para criar efeito de rolagem infinita
                 if (Math.abs(position) > sections.length / 2) {
                   position = position - Math.sign(position) * sections.length;
