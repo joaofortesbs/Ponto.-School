@@ -1,8 +1,7 @@
-
 import React from "react";
-import { Lightbulb } from "lucide-react";
-import { ToolCard } from ".";
 import { useTheme } from "@/components/ThemeProvider";
+import { Lightbulb } from "lucide-react";
+import { tools } from "./toolsData.tsx";
 
 const GeradorIdeiasCard: React.FC = () => {
   const { theme } = useTheme();

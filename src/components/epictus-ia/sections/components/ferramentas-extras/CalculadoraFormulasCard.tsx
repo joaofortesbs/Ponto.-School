@@ -1,8 +1,8 @@
-
 import React from "react";
 import { Calculator } from "lucide-react";
 import { ToolCard } from ".";
 import { useTheme } from "@/components/ThemeProvider";
+import { tools } from "./toolsData.tsx"; //Corrected import path
 
 const CalculadoraFormulasCard: React.FC = () => {
   const { theme } = useTheme();

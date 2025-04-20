@@ -1,8 +1,7 @@
-
 import React from "react";
-import { Languages } from "lucide-react";
-import { ToolCard } from ".";
 import { useTheme } from "@/components/ThemeProvider";
+import { Languages } from "lucide-react";
+import { tools } from "./toolsData.tsx";
 
 const TradutorAvancadoCard: React.FC = () => {
   const { theme } = useTheme();

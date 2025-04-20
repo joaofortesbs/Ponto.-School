@@ -3,7 +3,6 @@ import React from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { 
   SectionHeader, 
-  ToolCard,
   CalculadoraFormulasCard,
   ExtratorTextoCard,
   GeradorIdeiasCard,

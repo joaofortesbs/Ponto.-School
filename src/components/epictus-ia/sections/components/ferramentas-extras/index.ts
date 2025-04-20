@@ -11,6 +11,3 @@ export { default as GeradorIdeiasCard } from './GeradorIdeiasCard';
 export { default as TradutorAvancadoCard } from './TradutorAvancadoCard';
 export { default as Visualizador3DCard } from './Visualizador3DCard';
 export { default as ConversorUnidadesCard } from './ConversorUnidadesCard';
-
-// Exportação dos dados de ferramentas
-export { tools } from './toolsData';
