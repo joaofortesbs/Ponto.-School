@@ -2,9 +2,12 @@ import React from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { 
   SectionHeader, 
-  AnalyticToolCard, 
-  ProgressCard, 
-  analyticTools 
+  ProgressCard,
+  CorretorRedacaoCard,
+  RevisorTextosCard,
+  DetectorPlagioCard,
+  AnaliseDesempenhoCard,
+  ChecklistPreparacaoCard
 } from "./components/analisar-corrigir";
 
 export default function AnalisarCorrigir() {
@@ -15,17 +18,11 @@ export default function AnalisarCorrigir() {
       <SectionHeader />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {analyticTools.map(tool => (
-          <AnalyticToolCard 
-            key={tool.id}
-            id={tool.id}
-            title={tool.title}
-            description={tool.description}
-            icon={tool.icon}
-            badge={tool.badge}
-            buttonText={tool.buttonText}
-          />
-        ))}
+        <CorretorRedacaoCard />
+        <RevisorTextosCard />
+        <DetectorPlagioCard />
+        <AnaliseDesempenhoCard />
+        <ChecklistPreparacaoCard />
       </div>
 
       <div className="mt-6 flex-1">
