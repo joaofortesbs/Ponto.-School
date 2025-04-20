@@ -31,6 +31,12 @@ export default function EpictusIAHeader() {
   // Estado para controlar a exibição do modal de sugestões
   const [showSuggestionModal, setShowSuggestionModal] = useState(false);
   
+  // Forçar a exibição do modal ao clicar na barra de pesquisa
+  const handleSearchFocus = () => {
+    setSearchFocused(true);
+    setShowSuggestionModal(true);
+  };
+  
   // Expor os refs e estados para depuração
   useEffect(() => {
     console.log("Estado do modal de sugestões:", showSuggestionModal);
@@ -71,6 +77,7 @@ export default function EpictusIAHeader() {
       const handleInputClick = (e) => {
         e.stopPropagation();
         searchInputRef.current.focus();
+        setShowSuggestionModal(true); // Garantir que o modal seja mostrado ao clicar
       };
 
       searchInputRef.current.addEventListener('click', handleInputClick);
@@ -212,10 +219,7 @@ export default function EpictusIAHeader() {
             placeholder="Pesquisar..."
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
-            onFocus={() => {
-              setSearchFocused(true);
-              setShowSuggestionModal(true);
-            }}
+            onFocus={handleSearchFocus}
             onClick={(e) => {
               // Prevenir que eventos de clique interfiram
               e.stopPropagation();
@@ -225,11 +229,11 @@ export default function EpictusIAHeader() {
               setShowSuggestionModal(true);
             }}
             onBlur={() => {
-              // Delay hiding search results to allow for clicking on them
+              // Não esconde o modal ao perder o foco para permitir interação com ele
               setTimeout(() => {
                 setSearchFocused(false);
-                // Não esconda o modal se o clique for dentro dele
-                // A lógica de clicar fora do modal já cuida disso
+                // Não esconder o modal automaticamente
+                // O fechamento será controlado apenas pelo clique fora
               }, 200);
             }}
             className="bg-transparent w-full py-2 pl-10 pr-4 text-sm text-white placeholder:text-white/50 outline-none rounded-full border border-white/10 focus:border-orange-500/50 transition-colors cursor-text relative z-50"
@@ -303,26 +307,27 @@ export default function EpictusIAHeader() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="fixed shadow-lg z-[9999] border border-white/10 overflow-hidden suggestion-modal"
+                className="fixed shadow-xl z-[99999] border border-orange-500/30 overflow-hidden suggestion-modal"
                 style={{
                   minWidth: '350px',
                   maxWidth: '450px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  backdropFilter: 'blur(12px)',
-                  borderRadius: '0.5rem',
+                  backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                  backdropFilter: 'blur(16px)',
+                  borderRadius: '0.75rem',
+                  boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 107, 0, 0.1)',
                   top: searchInputRef.current ? 
                     searchInputRef.current.getBoundingClientRect().bottom + 10 + 'px' : '80px',
                   left: searchInputRef.current ? 
                     searchInputRef.current.getBoundingClientRect().left + 'px' : 'auto',
                 }}
               >
-                <div className="p-4">
-                  <h3 className="text-white font-semibold text-lg mb-3">O que você precisa fazer hoje?</h3>
-                  <div className="space-y-2">
+                <div className="p-5">
+                  <h3 className="text-white font-semibold text-lg mb-4">O que você precisa fazer hoje?</h3>
+                  <div className="space-y-3">
                     {suggestionPrompts.map((prompt, index) => (
                       <div 
                         key={index}
-                        className="p-3 bg-white/10 hover:bg-white/20 rounded-lg cursor-pointer transition-all duration-200 text-white text-sm flex items-center gap-2 border border-white/5"
+                        className="p-3 bg-white/10 hover:bg-orange-500/20 rounded-lg cursor-pointer transition-all duration-200 text-white text-sm flex items-center gap-3 border border-white/10 hover:border-orange-500/40"
                         onClick={() => {
                           setSearchValue(prompt);
                           setTimeout(() => {
@@ -333,7 +338,7 @@ export default function EpictusIAHeader() {
                           }
                         }}
                       >
-                        <div className="w-6 h-6 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full flex items-center justify-center text-white text-xs">
+                        <div className="w-7 h-7 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full flex items-center justify-center text-white text-xs shadow-md">
                           {index + 1}
                         </div>
                         <span>{prompt}</span>

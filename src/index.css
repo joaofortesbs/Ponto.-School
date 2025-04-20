@@ -27,6 +27,19 @@
 @import "./styles/header-animations.css";
 
 @tailwind base;
+
+/* Estilos para o modal de sugestões - Garantindo que fique acima de tudo */
+.suggestion-modal {
+  position: fixed;
+  z-index: 99999 !important;
+}
+
+/* Garantir que o modal tenha prioridade sobre outros elementos */
+#root {
+  position: relative;
+  z-index: 1;
+}
+
 @tailwind components;
 @tailwind utilities;
 
