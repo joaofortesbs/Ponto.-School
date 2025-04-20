@@ -184,10 +184,10 @@ export default function EpictusIAHeader() {
             <AnimatePresence mode="wait">
               {searchOpen && (
                 <motion.div
-                  className="absolute left-0 top-0 z-50 flex items-center"
-                  initial={{ width: 0, opacity: 0, scale: 0.9, x: "100%" }}
-                  animate={{ width: "240px", opacity: 1, scale: 1, x: 0 }}
-                  exit={{ width: 0, opacity: 0, scale: 0.9, x: "100%" }}
+                  className="absolute right-0 top-0 z-50 flex items-center"
+                  initial={{ width: 0, opacity: 0, scale: 0.9 }}
+                  animate={{ width: "240px", opacity: 1, scale: 1 }}
+                  exit={{ width: 0, opacity: 0, scale: 0.9 }}
                   transition={{ 
                     type: "spring",
                     stiffness: 400,
@@ -195,7 +195,6 @@ export default function EpictusIAHeader() {
                     opacity: { duration: 0.2 }
                   }}
                   key="search-input"
-                  style={{ transformOrigin: "right center" }}
                 >
                   <Input
                     ref={searchInputRef}
