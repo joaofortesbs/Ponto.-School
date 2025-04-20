@@ -1,12 +1,17 @@
-import React, { useState, useEffect } from "react";
-import { Zap, Sparkles } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Zap, Sparkles, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/ThemeProvider";
+import { Input } from "@/components/ui/input";
+import TypewriterEffect from "@/components/ui/typewriter-effect";
 
 export default function EpictusIAHeader() {
   const { theme } = useTheme();
   const [isHovered, setIsHovered] = useState(false);
   const [animationComplete, setAnimationComplete] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // Trigger initial animation
@@ -16,6 +21,32 @@ export default function EpictusIAHeader() {
 
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    // Quando a busca é aberta, foca no input
+    if (searchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [searchOpen]);
+
+  // Função para gerenciar cliques fora do componente de busca
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        searchOpen && 
+        searchInputRef.current && 
+        !searchInputRef.current.contains(event.target as Node) &&
+        !(event.target as Element).closest('.search-icon-container')
+      ) {
+        setSearchOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [searchOpen]);
 
   const isDark = theme === "dark";
 
@@ -63,7 +94,7 @@ export default function EpictusIAHeader() {
       />
 
       {/* Logo and title section */}
-      <div className="flex items-center gap-4 z-10">
+      <div className="flex items-center gap-4 z-10 flex-1">
         <div className="relative group">
           <div className={`absolute inset-0 bg-gradient-to-br from-orange-500 via-orange-400 to-amber-500 rounded-full ${isHovered ? 'blur-[6px]' : 'blur-[3px]'} opacity-80 group-hover:opacity-100 transition-all duration-300 scale-110`}></div>
           <motion.div 
@@ -114,6 +145,69 @@ export default function EpictusIAHeader() {
             Ferramenta com inteligência artificial para potencializar seus estudos
           </p>
         </div>
+      </div>
+
+      {/* Search component */}
+      <div className="flex items-center justify-center z-10 relative search-icon-container">
+        <motion.div
+          className="relative"
+          initial={false}
+          animate={searchOpen ? "open" : "closed"}
+        >
+          {/* Search icon/button */}
+          <motion.div
+            className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
+            onClick={() => setSearchOpen(!searchOpen)}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Search className="h-5 w-5 text-white" />
+          </motion.div>
+          
+          {/* Expanding search input */}
+          <AnimatePresence>
+            {searchOpen && (
+              <motion.div
+                className="absolute right-0 top-0 z-20 flex items-center"
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: "240px", opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+              >
+                <Input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Pesquisar..."
+                  className="h-10 pl-4 pr-10 rounded-full border-2 border-orange-500/50 focus:border-orange-500 bg-white/10 backdrop-blur-md text-white placeholder:text-white/70 shadow-lg"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <Search className="h-5 w-5 text-white absolute right-3 pointer-events-none" />
+              </motion.div>
+            )}
+          </AnimatePresence>
+          
+          {/* Typewriter suggestion modal */}
+          <AnimatePresence>
+            {searchOpen && (
+              <motion.div
+                className="absolute right-0 top-12 bg-white/10 backdrop-blur-md border border-orange-500/30 rounded-lg p-4 shadow-lg w-[240px] mt-2"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3, delay: 0.1 }}
+              >
+                <div className="text-white font-medium">
+                  <TypewriterEffect 
+                    text="O que você precisa fazer hoje?" 
+                    typingSpeed={30}
+                    className="text-sm"
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </div>
 
       {/* Hidden until expansion - will appear when user interaction happens */}
