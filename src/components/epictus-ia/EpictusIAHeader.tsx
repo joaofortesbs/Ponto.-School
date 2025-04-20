@@ -5,6 +5,33 @@ import { useTheme } from "@/components/ThemeProvider";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
+
+// Componente TypewriterEffect para animação de digitação
+const TypewriterEffect = ({ text, className = "" }: { text: string; className?: string }) => {
+  const [displayText, setDisplayText] = useState("");
+  const [currentIndex, setCurrentIndex] = useState(0);
+  
+  useEffect(() => {
+    if (currentIndex < text.length) {
+      const timeout = setTimeout(() => {
+        setDisplayText(prev => prev + text[currentIndex]);
+        setCurrentIndex(prev => prev + 1);
+      }, 100); // velocidade da digitação
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [currentIndex, text]);
+  
+  return (
+    <div className={className}>
+      {displayText}
+      {currentIndex < text.length && (
+        <span className="inline-block w-1 h-5 bg-white/70 ml-1 animate-pulse"></span>
+      )}
+    </div>
+  );
+};
 
 export default function EpictusIAHeader() {
   const { theme } = useTheme();
@@ -13,7 +40,9 @@ export default function EpictusIAHeader() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [searchModalVisible, setSearchModalVisible] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Trigger initial animation
@@ -25,10 +54,15 @@ export default function EpictusIAHeader() {
   }, []);
 
   useEffect(() => {
-    // Quando a busca é aberta, foca no input imediatamente
+    // Quando a busca é aberta, foca no input imediatamente e mostra o modal
     if (searchOpen && searchInputRef.current) {
       // Foco imediato sem atrasos
       searchInputRef.current.focus();
+      // Mostrar o modal de pesquisa
+      setSearchModalVisible(true);
+    } else {
+      // Esconder o modal quando a busca for fechada
+      setSearchModalVisible(false);
     }
   }, [searchOpen]);
 
@@ -41,8 +75,9 @@ export default function EpictusIAHeader() {
         !searchInputRef.current.contains(event.target as Node) &&
         !(event.target as Element).closest('.search-icon-container')
       ) {
-        // Fechar imediatamente
+        // Fechar imediatamente tanto a barra quanto o modal
         setSearchOpen(false);
+        setSearchModalVisible(false);
       }
     };
 
@@ -155,7 +190,7 @@ export default function EpictusIAHeader() {
       {/* Search and Settings components */}
       <div className="flex items-center justify-center z-10 relative gap-3">
         {/* Search component */}
-        <div className="relative search-icon-container">
+        <div className="relative search-icon-container" ref={searchContainerRef}>
           <motion.div
             className="relative"
             initial={false}
@@ -208,6 +243,26 @@ export default function EpictusIAHeader() {
                     }}
                   />
                   <Search className="h-5 w-5 text-white absolute right-3 pointer-events-none" />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Modal de pesquisa */}
+            <AnimatePresence>
+              {searchModalVisible && (
+                <motion.div
+                  className="absolute top-full left-1/2 z-50 mt-2 w-80"
+                  initial={{ opacity: 0, y: -10, x: "-50%" }}
+                  animate={{ opacity: 1, y: 0, x: "-50%" }}
+                  exit={{ opacity: 0, y: -10, x: "-50%" }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Card className="p-4 bg-white/10 backdrop-blur-lg border border-white/20 shadow-xl rounded-lg overflow-hidden">
+                    <TypewriterEffect 
+                      text="O que você precisa fazer hoje?" 
+                      className="text-center font-bold text-white text-lg mb-0"
+                    />
+                  </Card>
                 </motion.div>
               )}
             </AnimatePresence>
