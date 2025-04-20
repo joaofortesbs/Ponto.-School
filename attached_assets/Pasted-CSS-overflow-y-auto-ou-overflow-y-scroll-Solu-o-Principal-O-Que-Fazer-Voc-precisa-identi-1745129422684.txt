@@ -1,0 +1,50 @@
+CSS: overflow-y: auto; ou overflow-y: scroll; (Solução Principal):
+O Que Fazer: Você precisa identificar o elemento HTML que contém toda a seção "Epictus IA" (ou pelo menos a parte que deve rolar, que é a área abaixo do cabeçalho fixo da plataforma).
+Como Fazer (CSS):
+Adicione a propriedade overflow-y: auto; a este elemento.
+auto: A barra de rolagem vertical aparecerá somente se o conteúdo for maior do que a altura disponível do container. Esta é geralmente a melhor opção visualmente.
+Alternativa: overflow-y: scroll;
+A barra de rolagem vertical estará sempre visível, mesmo que o conteúdo caiba na tela (pode ser menos estético).
+Importante: Você também pode precisar definir uma altura máxima (max-height) ou uma altura específica (height) para este container, para que o overflow funcione corretamente. A altura pode ser definida em vh (viewport height – porcentagem da altura da janela) para se adaptar a diferentes telas.
+/* Exemplo: Supondo que o container principal tenha a classe 'epictus-ia-section' */
+.epictus-ia-section {
+  /* Certifique-se de que o container tenha uma altura definida ou máxima */
+  height: calc(100vh - 60px); /* Exemplo: 100% da altura da tela menos a altura do cabeçalho */
+  /* Ou use max-height: */
+  /* max-height: 800px; */ /* Um valor fixo, se preferir */
+
+  /* Adiciona a barra de rolagem vertical quando necessário */
+  overflow-y: auto;
+
+  /* Opcional: Estilizar a barra de rolagem (para navegadores WebKit - Chrome, Safari, Edge) */
+  &::-webkit-scrollbar {
+    width: 8px; /* Largura da barra */
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #2c3e50; /* Cor do fundo da barra (ajuste para sua paleta) */
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #888; /* Cor da barra de rolagem (ajuste) */
+    border-radius: 10px;
+    border: 2px solid #2c3e50; /* Adiciona uma borda para combinar com o fundo */
+  }
+
+   &::-webkit-scrollbar-thumb:hover {
+    background-color: #555; /* Cor da barra ao passar o mouse */
+   }
+}
+Use code with caution.
+Css
+Estrutura HTML (Verificação):
+Certifique-se de que a estrutura HTML está correta. O ideal é ter:
+Um container principal para toda a seção "Epictus IA".
+Dentro dele:
+O carrossel de categorias.
+A área onde os cards de funcionalidade são carregados dinamicamente (esta área é a que provavelmente precisa do overflow-y).
+Evite elementos com position: fixed; ou position: absolute; que possam estar sobrepondo o conteúdo e impedindo a rolagem, a menos que seja intencional (como o cabeçalho principal da plataforma).
+JavaScript (Menos Provável, mas Possível):
+Em alguns casos raros, scripts JavaScript podem estar interferindo na rolagem (ex: bloqueando eventos de scroll). Verifique se há algum script que possa estar causando isso.
+Se você estiver carregando o conteúdo dos cards dinamicamente (via AJAX), certifique-se de que a altura do container é recalculada após o carregamento do conteúdo.
