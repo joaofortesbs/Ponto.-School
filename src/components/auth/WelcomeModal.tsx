@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, useAnimationControls } from "framer-motion";
-import { AnimatePresence } from "framer-motion";
+import { motion, useAnimationControls, AnimatePresence } from "framer-motion";
 import { X, Settings, MapPin, CheckCircle, Bell, Calendar, MessageSquare, Globe, Users, Sparkles, Zap, Lightbulb, PanelRight, Rocket } from "lucide-react";
 import { Button } from "../ui/button";
 import Confetti from 'react-confetti';
