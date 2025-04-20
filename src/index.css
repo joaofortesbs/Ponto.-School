@@ -27,76 +27,97 @@
 @import "./styles/header-animations.css";
 
 @tailwind base;
-@tailwind components;
-@tailwind utilities;
 
-/* Animações e efeitos para o card Epictus Turbo */
-.perspective {
-  perspective: 1000px;
+/* Epictus Turbo Card special styling */
+.turbo-card {
+  position: relative;
+  z-index: 10;
 }
 
-@keyframes gradient-x {
-  0%, 100% {
-    background-position: 0% 50%;
+.turbo-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(120deg, #4299e1, #3182ce);
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.turbo-card:hover::before {
+  opacity: 0.9;
+}
+
+.turbo-card [class*="badge"] {
+  background: linear-gradient(90deg, #2c5282, #3182ce);
+  box-shadow: 0 0 10px rgba(49, 130, 206, 0.5);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  animation: pulse-badge 2s infinite;
+}
+
+@keyframes pulse-badge {
+  0% {
+    box-shadow: 0 0 10px rgba(49, 130, 206, 0.5);
   }
   50% {
-    background-position: 100% 50%;
-  }
-}
-
-.animate-gradient-x {
-  background-size: 200% 200%;
-  animation: gradient-x 4s ease infinite;
-}
-
-.bg-grid-pattern {
-  background-size: 20px 20px;
-  background-image: 
-    linear-gradient(to right, rgba(59, 130, 246, 0.1) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
-}
-
-.bg-grid-pattern-large {
-  background-size: 40px 40px;
-  background-image: 
-    linear-gradient(to right, rgba(14, 165, 233, 0.15) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(14, 165, 233, 0.15) 1px, transparent 1px);
-}
-
-.grid-glow {
-  background-size: 20px 20px;
-  background-image: radial-gradient(
-    circle at 10px 10px,
-    rgba(59, 130, 246, 0.2) 0,
-    transparent 10px
-  );
-}
-
-@keyframes grid-flow {
-  0% {
-    transform: translateX(0) translateY(0);
+    box-shadow: 0 0 15px rgba(49, 130, 206, 0.8);
   }
   100% {
-    transform: translateX(-20px) translateY(-20px);
+    box-shadow: 0 0 10px rgba(49, 130, 206, 0.5);
   }
 }
 
-@keyframes grid-flow-slow {
+/* Shimmer effect for Turbo card */
+.turbo-card [class*="button"] {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg, #3182ce, #4299e1);
+  transition: all 0.3s ease;
+  border: none;
+  font-weight: 600;
+  transform-style: preserve-3d;
+}
+
+.turbo-card [class*="button"]:hover {
+  background: linear-gradient(90deg, #4299e1, #3182ce);
+  box-shadow: 0 0 15px rgba(49, 130, 206, 0.7);
+  transform: translateY(-2px);
+}
+
+.turbo-card [class*="button"]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transform: skewX(-25deg);
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
   0% {
-    transform: translateX(0) translateY(0);
+    left: -100%;
   }
   100% {
-    transform: translateX(-40px) translateY(-40px);
+    left: 200%;
   }
 }
 
-.animate-grid-flow {
-  animation: grid-flow 20s linear infinite;
+.turbo-card [class*="title"] {
+  background: linear-gradient(90deg, #fff, #e2e8f0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.animate-grid-flow-slow {
-  animation: grid-flow-slow 30s linear infinite;
-}
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --primary: #FF6B00;
