@@ -15,6 +15,8 @@ interface ChatCardProps {
     buttonText: string;
     highlight?: boolean;
     onButtonClick?: () => void;
+    customHoverState?: boolean;
+    setCustomHoverState?: (state: boolean) => void;
   };
 }
 
@@ -73,10 +75,19 @@ export const ChatCard: React.FC<ChatCardProps> = ({ assistant }) => {
 
       <Button
         onClick={assistant.onButtonClick}
-        className="mt-auto w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white flex items-center justify-center gap-2"
+        className={`mt-auto w-full bg-gradient-to-r ${
+          assistant.customHoverState 
+            ? "from-blue-600 to-indigo-700 shadow-lg scale-[1.02]" 
+            : "from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+        } text-white flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer relative overflow-hidden`}
+        onMouseEnter={() => assistant.setCustomHoverState?.(true)}
+        onMouseLeave={() => assistant.setCustomHoverState?.(false)}
       >
-        {assistant.buttonText}
-        <ArrowRight className="h-4 w-4" />
+        <span className="relative z-10 flex items-center justify-center gap-2">
+          {assistant.buttonText}
+          <ArrowRight className={`h-4 w-4 transition-transform duration-300 ${assistant.customHoverState ? "translate-x-1" : ""}`} />
+        </span>
+        <span className="absolute inset-0 bg-gradient-to-r from-[#FF6B00] to-indigo-600 opacity-0 hover:opacity-100 transition-opacity duration-500 z-0"></span>
       </Button>
     </Card>
   );
