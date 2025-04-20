@@ -22,6 +22,20 @@
 
 @import "./styles/animations.css";
 @import "./styles/hide-scrollbar.css";
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
 @import "./styles/typewriter-loader.css";
 @import "./styles/notebook.css";
 @import "./styles/header-animations.css";
