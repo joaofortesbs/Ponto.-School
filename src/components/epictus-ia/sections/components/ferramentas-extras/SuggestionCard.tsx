@@ -1,62 +1,37 @@
 
 import React from "react";
-import { useTheme } from "@/components/ThemeProvider";
-import { Lightbulb } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Sparkles } from "lucide-react";
+import { useTheme } from "@/components/ThemeProvider";
 
-interface SuggestionCardProps {
-  title: string;
-  description: string;
-  onClick: () => void;
-}
-
-const SuggestionCard: React.FC<SuggestionCardProps> = ({
-  title,
-  description,
-  onClick,
-}) => {
+export default function SuggestionCard() {
   const { theme } = useTheme();
-  
+
   return (
-    <div 
-      className={`rounded-xl border ${
-        theme === "dark" 
-          ? "bg-gray-900/60 border-purple-900/30 hover:border-purple-700/50" 
-          : "bg-white/90 border-purple-100 hover:border-purple-200"
-      } p-4 transition-all hover:shadow-md`}
-    >
-      <div className="flex items-start gap-3 mb-2">
-        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-md flex-shrink-0">
-          <Lightbulb className="h-5 w-5 text-white" />
-        </div>
-        
-        <div>
-          <h3 className={`text-base font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-            {title}
-          </h3>
-          
-          <p className={`text-xs mt-1 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-            {description}
-          </p>
-        </div>
+    <Card className={`p-5 border overflow-hidden relative ${theme === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-gray-50 border-gray-200"} group`}>
+      <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-cyan-500/5 blur-3xl group-hover:bg-cyan-500/10 transition-all duration-700"></div>
+      <div className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-blue-500/5 blur-3xl group-hover:bg-blue-500/10 transition-all duration-700"></div>
+      
+      <div className="flex items-center justify-center gap-2 text-center">
+        <Sparkles className="h-5 w-5 text-cyan-500" />
+        <h3 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"} inline-block`}>
+          <span className="relative">
+            Sugestão de Ferramentas
+            <span className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-cyan-500 to-blue-600"></span>
+          </span>
+        </h3>
       </div>
       
-      <div className="ml-12">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={onClick}
-          className={`text-xs ${
-            theme === "dark" 
-              ? "border-purple-800 hover:bg-purple-900/30 text-purple-300" 
-              : "border-purple-200 hover:bg-purple-50 text-purple-700"
-          }`}
-        >
-          Experimentar
+      <p className={`text-sm mt-4 text-center ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+        Tem uma sugestão de nova ferramenta? Compartilhe conosco e podemos desenvolvê-la para você!
+      </p>
+      
+      <div className="mt-4 flex justify-center">
+        <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white">
+          Enviar Sugestão
         </Button>
       </div>
-    </div>
+    </Card>
   );
-};
-
-export default SuggestionCard;
+}

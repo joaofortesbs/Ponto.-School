@@ -1,12 +1,3 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@import "./styles/animations.css";
-@import "./styles/hide-scrollbar.css";
-@import "./styles/typewriter-loader.css";
-@import "./styles/notebook.css";
-
 /* Pulse animation for the scroll to bottom button */
 @keyframes pulse {
   0% {
@@ -28,6 +19,13 @@
 .animate-pulse {
   animation: pulse 2s infinite;
 }
+
+@import "./styles/animations.css";
+@import "./styles/hide-scrollbar.css";
+@import "./styles/typewriter-loader.css";
+@import "./styles/notebook.css";
+
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 

@@ -3,34 +3,30 @@ import React from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { 
   SectionHeader, 
-  CalculadoraFormulasCard,
-  ExtratorTextoCard,
-  GeradorIdeiasCard,
-  TradutorAvancadoCard,
-  Visualizador3DCard,
-  ConversorUnidadesCard
+  ToolCard, 
+  SuggestionCard,
+  tools
 } from "./components/ferramentas-extras";
 
-const FerramentasExtras: React.FC = () => {
+export default function FerramentasExtras() {
   const { theme } = useTheme();
-  
+
   return (
-    <div className="py-6">
+    <div className="h-full flex flex-col">
       <SectionHeader 
         title="Ferramentas Extras" 
-        description="Recursos especializados para potencializar sua produtividade nos estudos"
+        description="Conjunto de ferramentas auxiliares para tornar seu aprendizado ainda mais completo"
       />
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-        <CalculadoraFormulasCard />
-        <ExtratorTextoCard />
-        <GeradorIdeiasCard />
-        <TradutorAvancadoCard />
-        <Visualizador3DCard />
-        <ConversorUnidadesCard />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {tools.map(tool => (
+          <ToolCard key={tool.id} tool={tool} />
+        ))}
+      </div>
+
+      <div className="mt-6 flex-1">
+        <SuggestionCard />
       </div>
     </div>
   );
-};
-
-export default FerramentasExtras;
+}
