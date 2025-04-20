@@ -45,6 +45,7 @@ import {
   CalendarClock,
   Upload,
 } from "lucide-react";
+import MentorAI from "@/components/mentor/MentorAI";
 import AgendaNav from "./AgendaNav";
 import TurmasNav from "./TurmasNav";
 
@@ -61,6 +62,7 @@ export function SidebarNav({
 }: SidebarNavProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const [showMentorAI, setShowMentorAI] = useState(false);
   const [showNovidadesPopup, setShowNovidadesPopup] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -258,10 +260,18 @@ export function SidebarNav({
   };
 
   const handleNavigation = (path: string, isSpecial?: boolean) => {
-    navigate(path);
+    if (path === "/mentor-ia") {
+      setShowMentorAI(true);
+    } else {
+      setShowMentorAI(false);
+      navigate(path);
+    }
   };
 
   const isActive = (path: string) => {
+    if (path === "/mentor-ia") {
+      return showMentorAI;
+    }
     return location.pathname === path;
   };
 
@@ -314,7 +324,11 @@ export function SidebarNav({
       path: "/pedidos-ajuda",
       isSpecial: true,
     },
-    
+    {
+      icon: <Brain className="h-5 w-5" />,
+      label: "Epictus IA",
+      path: "/epictus-ia",
+    },
     {
       icon: <Calendar className="h-5 w-5" />,
       label: "Agenda",
@@ -401,7 +415,29 @@ export function SidebarNav({
 
   return (
     <div className="relative h-full">
-      {/* MentorAI modal removed */}
+      {showMentorAI && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm">
+          <div className="fixed inset-10 z-50 bg-white dark:bg-[#121212] rounded-xl shadow-xl overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b">
+              <div className="flex items-center gap-2">
+                <Brain className="h-5 w-5 text-[#00FFFF]" />
+                <h2 className="text-xl font-semibold">Mentor IA</h2>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowMentorAI(false)}
+                className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <MentorAI />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Novidades Popup - Center of the screen */}
       {showNovidadesPopup && (

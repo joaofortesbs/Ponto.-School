@@ -228,6 +228,8 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
           <Wallet className="h-4 w-4 mr-3" />
           Carteira
         </Button>
+
+        {/* Epictus IA button removed */}
       </div>
 
       {/* Bottom Navigation */}
