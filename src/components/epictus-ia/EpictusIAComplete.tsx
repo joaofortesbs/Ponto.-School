@@ -177,9 +177,9 @@ export default function EpictusIAComplete() {
   }, []);
 
   return (
-    <div className={`w-full flex flex-col ${theme === "dark" ? "bg-[#001427]" : "bg-gray-50"} transition-colors duration-300 overflow-y-auto`}>
+    <div className={`w-full flex flex-col ${theme === "dark" ? "bg-[#001427]" : "bg-gray-50"} transition-colors duration-300 overflow-y-auto min-h-screen`}>
       {/* Header com título e informações da IA */}
-      <div className={`px-6 py-4 flex items-center justify-between border-b ${theme === "dark" ? "border-gray-800" : "border-gray-200"}`}>
+      <div className={`px-6 py-4 flex items-center justify-between border-b ${theme === "dark" ? "border-gray-800" : "border-gray-200"} sticky top-0 z-30 ${theme === "dark" ? "bg-[#001427]" : "bg-gray-50"}`}>
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF9B50] flex items-center justify-center">
             <BrainCircuit className="h-6 w-6 text-white" />
@@ -416,9 +416,9 @@ export default function EpictusIAComplete() {
         )}
       </AnimatePresence>
 
-      <div className="flex-1 flex flex-col min-h-[600px]">
+      <div className="flex-1 flex flex-col">
         {/* Carrossel 3D de seleção de seções */}
-        <div className="relative py-10">
+        <div className="relative py-10 w-full">
           <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
             <Button
               variant="outline"
@@ -559,14 +559,14 @@ export default function EpictusIAComplete() {
         </div>
 
         {/* Conteúdo da seção ativa */}
-        <div className="flex-1 px-6 pb-6 scrollbar-container">
+        <div className="flex-1 px-6 pb-12 overflow-y-visible">
           <motion.div 
             key={activeSection}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="h-full"
+            className="w-full"
           >
             <Tabs value={activeSection} onValueChange={setActiveSection} className="h-full">
               <TabsContent value="chat-inteligente" className="mt-0 h-full">

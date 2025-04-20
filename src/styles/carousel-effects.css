@@ -1,35 +1,82 @@
 
-/* Estilos para a barra de rolagem */
-.scrollbar-container::-webkit-scrollbar {
+/* Estilos para a barra de rolagem global */
+body::-webkit-scrollbar,
+.scrollbar-container::-webkit-scrollbar,
+div::-webkit-scrollbar {
   width: 8px;
 }
 
-.scrollbar-container::-webkit-scrollbar-track {
+body::-webkit-scrollbar-track,
+.scrollbar-container::-webkit-scrollbar-track,
+div::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.1);
   border-radius: 10px;
 }
 
-.scrollbar-container::-webkit-scrollbar-thumb {
+body::-webkit-scrollbar-thumb,
+.scrollbar-container::-webkit-scrollbar-thumb,
+div::-webkit-scrollbar-thumb {
   background-color: rgba(100, 100, 100, 0.5);
   border-radius: 10px;
   border: 2px solid transparent;
   background-clip: content-box;
 }
 
-.scrollbar-container::-webkit-scrollbar-thumb:hover {
+body::-webkit-scrollbar-thumb:hover,
+.scrollbar-container::-webkit-scrollbar-thumb:hover,
+div::-webkit-scrollbar-thumb:hover {
   background-color: rgba(100, 100, 100, 0.7);
 }
 
 /* Modo escuro */
-.dark .scrollbar-container::-webkit-scrollbar-track {
+.dark body::-webkit-scrollbar-track,
+.dark .scrollbar-container::-webkit-scrollbar-track,
+.dark div::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.05);
+
+/* Estilos específicos para o componente Epictus IA */
+.epictus-ia-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
+  overflow-y: auto;
 }
 
-.dark .scrollbar-container::-webkit-scrollbar-thumb {
+/* Garantir que as seções dentro do epictus-ia possam crescer conforme necessário */
+.epictus-ia-section {
+  flex: 1;
+  min-height: fit-content;
+}
+
+/* Corrigir comportamento de tabs que podem limitar altura */
+[role="tabpanel"] {
+  height: auto !important;
+  min-height: 200px;
+}
+
+/* Garantir que os painéis de conteúdo sejam totalmente exibidos */
+[role="tabpanel"] > div {
+  height: auto !important;
+}
+
+}
+
+.dark body::-webkit-scrollbar-thumb,
+.dark .scrollbar-container::-webkit-scrollbar-thumb,
+.dark div::-webkit-scrollbar-thumb {
   background-color: rgba(200, 200, 200, 0.3);
 }
 
-.dark .scrollbar-container::-webkit-scrollbar-thumb:hover {
+.dark body::-webkit-scrollbar-thumb:hover,
+.dark .scrollbar-container::-webkit-scrollbar-thumb:hover,
+.dark div::-webkit-scrollbar-thumb:hover {
   background-color: rgba(200, 200, 200, 0.5);
+}
+
+/* Garantir que os containers com scroll tenham espaço para o conteúdo */
+.overflow-y-auto, 
+.overflow-auto {
+  scrollbar-width: thin;
 }
 
