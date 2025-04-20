@@ -25,7 +25,6 @@
 @import "./styles/typewriter-loader.css";
 @import "./styles/notebook.css";
 @import "./styles/header-animations.css";
-@import "./styles/epictus-header.css";
 
 @tailwind base;
 @tailwind components;
