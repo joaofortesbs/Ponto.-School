@@ -30,17 +30,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Garantir que os elementos de pesquisa fiquem acima de outros elementos */
-.search-overlay {
-  position: relative;
-  z-index: 100 !important;
-}
-
-input[type="text"] {
-  position: relative;
-  z-index: 50;
-}
-
 :root {
   --primary: #FF6B00;
   --primary-lighter: #FF9B50;

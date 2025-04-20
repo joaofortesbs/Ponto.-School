@@ -147,12 +147,11 @@ export default function EpictusIAHeader() {
       </div>
 
       {/* Right side controls */}
-      <div className="flex items-center gap-4 z-20">
+      <div className="flex items-center gap-4 z-10">
         <motion.div 
           className={`relative flex items-center ${searchFocused ? 'w-64' : 'w-40'} transition-all duration-300`}
           whileHover={{ scale: 1.02 }}
           transition={{ type: "spring", stiffness: 400, damping: 20 }}
-          style={{ zIndex: 50 }}
         >
           <div className="absolute inset-0 bg-white/10 backdrop-blur-md rounded-full"></div>
           <Search className="absolute left-3 h-4 w-4 text-white/70" />
@@ -175,10 +174,9 @@ export default function EpictusIAHeader() {
               // Delay hiding search results to allow for clicking on them
               setTimeout(() => setSearchFocused(false), 200);
             }}
-            className="bg-transparent w-full py-2 pl-10 pr-4 text-sm text-white placeholder:text-white/50 outline-none rounded-full border border-white/10 focus:border-orange-500/50 transition-colors cursor-text relative z-50"
+            className="bg-transparent w-full py-2 pl-10 pr-4 text-sm text-white placeholder:text-white/50 outline-none rounded-full border border-white/10 focus:border-orange-500/50 transition-colors cursor-text"
             autoComplete="off"
             spellCheck="false"
-            style={{ position: 'relative', zIndex: 50 }}
           />
           {searchValue && (
             <motion.button
@@ -204,7 +202,7 @@ export default function EpictusIAHeader() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="absolute top-full left-0 w-full mt-2 bg-white/10 backdrop-blur-xl rounded-lg shadow-lg z-[100] border border-white/10 overflow-hidden"
+                className="absolute top-full left-0 w-full mt-2 bg-white/10 backdrop-blur-xl rounded-lg shadow-lg z-50 border border-white/10 overflow-hidden"
               >
                 <div className="p-2">
                   {searchResults.map((result) => (
