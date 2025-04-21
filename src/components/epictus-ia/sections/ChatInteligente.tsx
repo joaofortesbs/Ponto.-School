@@ -33,8 +33,8 @@ export default function ChatInteligente() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <TutorInteligenteCard />
         <TutorInteligente2Card />
+        <TutorInteligenteCard />
         <BrainstormCard />
       </div>
 
