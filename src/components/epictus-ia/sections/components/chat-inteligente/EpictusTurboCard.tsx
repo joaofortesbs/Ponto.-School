@@ -2,11 +2,15 @@
 import React from "react";
 import { Zap } from "lucide-react";
 import { ChatCard } from "./ChatCard";
-import { useTurboMode } from "../../../context/TurboModeContext";
+import { useTurboModeContext } from "../../../context/TurboModeContext";
 
 export const EpictusTurboCard: React.FC = () => {
-  const { setTurboMode } = useTurboMode();
-  
+  const { activateTurboMode } = useTurboModeContext();
+
+  const handleTurboClick = () => {
+    activateTurboMode();
+  };
+
   const assistantData = {
     id: "epictus-turbo",
     title: "Epictus Turbo",
@@ -14,17 +18,14 @@ export const EpictusTurboCard: React.FC = () => {
     icon: <Zap className="h-6 w-6 text-white" />,
     badge: "Único",
     buttonText: "Usar Turbo",
-    highlight: true
-  };
-
-  const handleTurboMode = () => {
-    setTurboMode(true);
+    highlight: true,
+    onButtonClick: handleTurboClick
   };
 
   return (
     <div className="relative">
       <div className="absolute inset-0 bg-grid-pattern opacity-10 rounded-xl pointer-events-none"></div>
-      <ChatCard assistant={assistantData} onButtonClick={handleTurboMode} />
+      <ChatCard assistant={assistantData} />
     </div>
   );
 };
