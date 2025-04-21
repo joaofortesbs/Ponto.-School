@@ -62,6 +62,12 @@ const ChatInteligentContent: React.FC = () => {
           <p className="text-2xl text-center mt-8 text-gray-200 font-poppins">
             Esta seção está em desenvolvimento
           </p>
+          <button 
+            onClick={() => setTurboMode(false)}
+            className="mt-8 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-md hover:from-blue-600 hover:to-indigo-700 transition-all"
+          >
+            Voltar
+          </button>
         </div>
       ) : (
         <>

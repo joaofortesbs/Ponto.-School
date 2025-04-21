@@ -17,14 +17,17 @@ export interface ChatCardProps {
     buttonText: string;
     highlight?: boolean;
   };
+  onButtonClick?: () => void;
 }
 
-export const ChatCard: React.FC<ChatCardProps> = ({ assistant }) => {
+export const ChatCard: React.FC<ChatCardProps> = ({ assistant, onButtonClick }) => {
   const { theme } = useTheme();
   const { setTurboMode } = useTurboMode();
 
   const handleButtonClick = () => {
-    if (assistant.id === "epictus-turbo") {
+    if (onButtonClick) {
+      onButtonClick();
+    } else if (assistant.id === "epictus-turbo") {
       setTurboMode(true);
     }
   };
