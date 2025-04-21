@@ -8,8 +8,6 @@ import {
   Sparkles
 } from "lucide-react";
 import { 
-  EpictusTurboCard,
-  EpictusIACard, 
   TutorInteligenteCard, 
   BrainstormCard,
   Epictus20Card,
@@ -36,8 +34,6 @@ export default function ChatInteligente() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <EpictusTurboCard />
-        <EpictusIACard />
         <TutorInteligenteCard />
         <TutorInteligente2Card />
         <Epictus20Card />
