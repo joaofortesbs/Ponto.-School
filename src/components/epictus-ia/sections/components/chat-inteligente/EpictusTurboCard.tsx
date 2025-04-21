@@ -2,15 +2,8 @@
 import React from "react";
 import { Zap } from "lucide-react";
 import { ChatCard } from "./ChatCard";
-import { useTurboModeContext } from "../../../context/TurboModeContext";
 
 export const EpictusTurboCard: React.FC = () => {
-  const { activateTurboMode } = useTurboModeContext();
-
-  const handleTurboClick = () => {
-    activateTurboMode();
-  };
-
   const assistantData = {
     id: "epictus-turbo",
     title: "Epictus Turbo",
@@ -18,8 +11,7 @@ export const EpictusTurboCard: React.FC = () => {
     icon: <Zap className="h-6 w-6 text-white" />,
     badge: "Único",
     buttonText: "Usar Turbo",
-    highlight: true,
-    onButtonClick: handleTurboClick
+    highlight: true
   };
 
   return (
