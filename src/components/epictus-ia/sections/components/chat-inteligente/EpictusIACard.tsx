@@ -8,10 +8,9 @@ export const EpictusIACard: React.FC = () => {
     id: "assistente-pessoal",
     title: "Chat com Epictus IA",
     description: "Tire dúvidas rápidas, peça sugestões, receba ajuda personalizada e execute ações rápidas com comandos de voz ou texto.",
-    icon: <MessageSquare className="h-6 w-6 text-white" />,
+    icon: <MessageSquare className="h-5 w-5 text-white" />,
     badge: "Popular",
-    buttonText: "Conversar",
-    highlight: true
+    buttonText: "Conversar"
   };
 
   return <ChatCard assistant={assistantData} />;

@@ -8,7 +8,7 @@ export const BrainstormCard: React.FC = () => {
     id: "brainstorm",
     title: "Tempestade de Ideias (Brainstorm)",
     description: "Gere ideias criativas, explore conceitos e estruture seus projetos com a ajuda da IA.",
-    icon: <Lightbulb className="h-6 w-6 text-white" />,
+    icon: <Lightbulb className="h-5 w-5 text-white" />,
     badge: null,
     buttonText: "Criar"
   };
