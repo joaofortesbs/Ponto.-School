@@ -1,12 +1,13 @@
+
 import React from "react";
 import { Book } from "lucide-react";
 import { ChatCard } from "./ChatCard";
 
 export const TutorInteligente2Card: React.FC = () => {
   const assistantData = {
-    id: "tutor-inteligente-2",
-    title: "Tutor Inteligente 2",
-    description: "Receba explicações detalhadas sobre qualquer assunto acadêmico, com exemplos e diferentes níveis de profundidade.",
+    id: "epictus-turbo",
+    title: "Epictus Turbo",
+    description: "O único Agente IA que você precisa para ter o boletim e desempenhos dos sonhos, com apenas um comando, a revolução da educação começa aqui!",
     icon: <Book className="h-6 w-6 text-white" />,
     badge: null,
     buttonText: "Aprender"
