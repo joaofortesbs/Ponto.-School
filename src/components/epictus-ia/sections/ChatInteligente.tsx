@@ -29,7 +29,7 @@ export default function ChatInteligente() {
 // Inner component that uses the TurboModeContext
 const ChatInteligentContent: React.FC = () => {
   const { theme } = useTheme();
-  const { isTurboMode } = useTurboMode();
+  const { isTurboMode, setTurboMode } = useTurboMode();
 
   return (
     <div className="h-full flex flex-col">
