@@ -10,7 +10,6 @@ import {
 import { 
   TutorInteligenteCard, 
   BrainstormCard,
-  Epictus20Card,
   TutorInteligente2Card
 } from "./components/chat-inteligente";
 
@@ -36,7 +35,6 @@ export default function ChatInteligente() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <TutorInteligenteCard />
         <TutorInteligente2Card />
-        <Epictus20Card />
         <BrainstormCard />
       </div>
 
