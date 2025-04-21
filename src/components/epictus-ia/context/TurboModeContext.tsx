@@ -13,18 +13,18 @@ export const TurboModeProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [isTurboMode, setIsTurboMode] = useState(false);
 
   const activateTurboMode = () => {
-    console.log("🔥 TURBO: Ativando TurboMode no contexto global");
+    console.log("Ativando TurboMode no contexto");
     setIsTurboMode(true);
   };
 
   const deactivateTurboMode = () => {
-    console.log("❄️ TURBO: Desativando TurboMode no contexto global");
+    console.log("Desativando TurboMode no contexto");
     setIsTurboMode(false);
   };
 
   // Log quando o estado do contexto muda
   useEffect(() => {
-    console.log("🔄 TURBO: Estado do TurboMode mudou para:", isTurboMode ? "ATIVADO ✅" : "DESATIVADO ❌");
+    console.log("Estado do TurboMode mudou para:", isTurboMode);
   }, [isTurboMode]);
 
   return (

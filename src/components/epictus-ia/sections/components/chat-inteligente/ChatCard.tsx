@@ -6,7 +6,18 @@ import { useTheme } from "@/components/ThemeProvider";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-import { useTurboMode } from "../../../context/TurboModeContext";
+const TurboModeContext = createContext(false);
+
+export const TurboModeProvider = ({ children }: { children: React.ReactNode }) => {
+  const [isTurboMode, setIsTurboMode] = useState(false);
+  return (
+    <TurboModeContext.Provider value={{ isTurboMode, setIsTurboMode }}>
+      {children}
+    </TurboModeContext.Provider>
+  );
+};
+
+export const useTurboMode = () => useContext(TurboModeContext);
 
 export interface ChatCardProps {
   assistant: {
@@ -18,21 +29,21 @@ export interface ChatCardProps {
     buttonText: string;
     highlight?: boolean;
     onButtonClick?: () => void;
-    secondaryButton?: React.ReactNode;
   };
 }
 
 export const ChatCard: React.FC<ChatCardProps> = ({ assistant }) => {
   const { theme } = useTheme();
-  const { activateTurboMode } = useTurboMode();
+  const { setIsTurboMode } = useTurboMode();
 
   const handleButtonClick = () => {
-    console.log(`Botão ${assistant.buttonText} clicado para ${assistant.id}!`);
-    if (assistant.onButtonClick) {
-      assistant.onButtonClick();
-    } else if (assistant.id === "epictus-turbo") {
-      console.log("Ativando modo turbo via fallback no ChatCard");
-      activateTurboMode();
+    setIsTurboMode(true);
+    const contentSection = document.getElementById(`content-${assistant.id}`);
+    if (contentSection) {
+      contentSection.innerHTML = `
+        <h2 style="text-align: center;">Epictus Turbo</h2>
+        <p style="text-align: center;">Esta seção está em desenvolvimento</p>
+      `;
     }
   };
 
@@ -109,12 +120,6 @@ export const ChatCard: React.FC<ChatCardProps> = ({ assistant }) => {
         >
           {assistant.buttonText}
         </Button>
-        
-        {assistant.secondaryButton && (
-          <div className="mt-2">
-            {assistant.secondaryButton}
-          </div>
-        )}
       </div>
     </Card>
   );
