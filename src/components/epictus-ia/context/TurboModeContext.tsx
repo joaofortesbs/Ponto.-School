@@ -2,43 +2,45 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 interface TurboModeContextType {
-  isTurboModeActive: boolean;
-  activateTurboMode: () => void;
-  deactivateTurboMode: () => void;
+  isTurboMode: boolean;
+  toggleTurboMode: () => void;
+  enableTurboMode: () => void;
+  disableTurboMode: () => void;
 }
 
 const TurboModeContext = createContext<TurboModeContextType | undefined>(undefined);
 
-export const useTurboMode = () => {
-  const context = useContext(TurboModeContext);
-  if (!context) {
-    throw new Error("useTurboMode must be used within a TurboModeProvider");
-  }
-  return context;
-};
+export function TurboModeProvider({ children }: { children: ReactNode }) {
+  const [isTurboMode, setIsTurboMode] = useState(false);
 
-export const TurboModeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [isTurboModeActive, setIsTurboModeActive] = useState(false);
-
-  const activateTurboMode = () => {
-    console.log("Ativando modo Turbo");
-    setIsTurboModeActive(true);
+  const toggleTurboMode = () => {
+    setIsTurboMode(prev => !prev);
   };
 
-  const deactivateTurboMode = () => {
-    console.log("Desativando modo Turbo");
-    setIsTurboModeActive(false);
+  const enableTurboMode = () => {
+    setIsTurboMode(true);
+  };
+
+  const disableTurboMode = () => {
+    setIsTurboMode(false);
   };
 
   return (
-    <TurboModeContext.Provider 
-      value={{ 
-        isTurboModeActive, 
-        activateTurboMode,
-        deactivateTurboMode
-      }}
-    >
+    <TurboModeContext.Provider value={{ 
+      isTurboMode, 
+      toggleTurboMode,
+      enableTurboMode,
+      disableTurboMode
+    }}>
       {children}
     </TurboModeContext.Provider>
   );
-};
+}
+
+export function useTurboMode() {
+  const context = useContext(TurboModeContext);
+  if (context === undefined) {
+    throw new Error('useTurboMode must be used within a TurboModeProvider');
+  }
+  return context;
+}

@@ -1,57 +1,30 @@
 import React from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { MessageSquare } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useTheme } from "@/components/ThemeProvider";
+import { Button } from "@/components/ui/button";
 
-interface AssistantData {
-  id: string;
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  badge?: string;
-  buttonText: string;
-  highlight?: boolean;
-  onButtonClick?: () => void;
-}
-
-interface ChatCardProps {
-  assistant: AssistantData;
-}
-
-export const ChatCard: React.FC<ChatCardProps> = ({ assistant }) => {
-  const { theme } = useTheme();
-
+export function ChatCard() {
   return (
-    <Card className={`w-full overflow-hidden transition-all duration-300 hover:shadow-lg ${
-      theme === "dark" ? "bg-[#0A2540] hover:bg-[#0F2D4A] border-gray-700" : "bg-white hover:bg-gray-50 border-gray-200"
-    }`}>
-      <div className="p-4">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-500">
-            {assistant.icon}
+    <div className="bg-[#0F172A] rounded-lg overflow-hidden h-[180px] flex flex-col transition-all duration-300 shadow-md border border-[#1E293B]">
+      <div className="p-4 flex-1">
+        <div className="flex items-center mb-2">
+          <div className="mr-2 bg-blue-600 rounded-full p-1.5">
+            <MessageSquare className="h-4 w-4 text-white" />
           </div>
-          <div className="flex items-center">
-            <h3 className={`text-base font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-              {assistant.title}
-            </h3>
-            {assistant.badge && (
-              <Badge className="ml-2 bg-blue-500 text-white text-xs">
-                {assistant.badge}
-              </Badge>
-            )}
-          </div>
+          <h3 className="font-semibold text-white">Chat Inteligente</h3>
+          <Badge className="ml-2 bg-blue-600 text-white text-[10px] font-medium py-0.5 h-4">Popular</Badge>
         </div>
-        <p className={`text-sm mb-3 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
-          {assistant.description}
+        <p className="text-white/70 text-sm">
+          Assistente com recursos avançados para ajudar nos estudos e aprendizado com inteligência artificial.
         </p>
+      </div>
+      <div className="p-2 bg-gradient-to-r from-blue-700 to-blue-500">
         <Button 
-          className="w-full text-sm"
-          onClick={assistant.onButtonClick}
+          className="w-full bg-transparent hover:bg-white/10 text-white font-medium border-none"
         >
-          {assistant.buttonText}
+          Conversar
         </Button>
       </div>
-    </Card>
+    </div>
   );
-};
+}

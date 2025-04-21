@@ -11,6 +11,7 @@ import SectionCard from "@/components/epictus-ia/components/SectionCard";
 import SectionContent from "@/components/epictus-ia/components/SectionContent";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChatInteligente, CriarConteudo, AprenderMaisRapido, AnalisarCorrigir, OrganizarOtimizar, FerramentasExtras } from "@/components/epictus-ia/sections";
+import { TurboModeProvider } from "./context/TurboModeContext";
 import {
   Brain,
   Search,
@@ -28,77 +29,57 @@ import {
   FileText,
   BarChart3,
   Calendar,
-  Wrench, // Replacing Tool with Wrench
+  Wrench,
   PlusCircle,
   ArrowRight,
   Lightbulb,
   Zap,
   BrainCircuit,
 } from "lucide-react";
-import EpictusIAHeader from "./EpictusIAHeader"; // Added import for the new header component
-
+import EpictusIAHeader from "./EpictusIAHeader";
 
 // Definição das abas/seções
 const sections = [
   {
     id: "chat-inteligente",
     name: "Chat Inteligente",
-    icon: <MessageSquare className="h-6 w-6" />,
-    color: "from-blue-500 to-indigo-600",
-    borderColor: "border-blue-400",
-    component: ChatInteligente,
-    badge: "Popular",
-    description: "Converse com diferentes assistentes de IA especializados"
+    icon: <MessageSquare className="h-5 w-5" />,
+    description: "Converse com assistentes especializados",
+    content: <ChatInteligente />
   },
   {
     id: "criar-conteudo",
     name: "Criar Conteúdo",
-    icon: <PenTool className="h-6 w-6" />,
-    color: "from-emerald-500 to-teal-600",
-    borderColor: "border-emerald-400",
-    component: CriarConteudo,
-    badge: "Novo",
-    description: "Ferramentas para criar materiais e conteúdos didáticos"
+    icon: <PenTool className="h-5 w-5" />,
+    description: "Gere materiais didáticos e recursos",
+    content: <CriarConteudo />
   },
   {
     id: "aprender-mais-rapido",
     name: "Aprender Mais Rápido",
-    icon: <Zap className="h-6 w-6" />,
-    color: "from-amber-500 to-orange-600",
-    borderColor: "border-amber-400",
-    component: AprenderMaisRapido,
-    badge: null,
-    description: "Resumos, mapas mentais e métodos para aprendizado eficiente"
+    icon: <Zap className="h-5 w-5" />,
+    description: "Ferr. para acelerar seu aprendizado",
+    content: <AprenderMaisRapido />
   },
   {
     id: "analisar-corrigir",
     name: "Analisar e Corrigir",
-    icon: <BarChart3 className="h-6 w-6" />,
-    color: "from-purple-500 to-violet-600",
-    borderColor: "border-purple-400",
-    component: AnalisarCorrigir,
-    badge: "Beta",
-    description: "Ferramentas para análise de desempenho e correções"
+    icon: <BarChart3 className="h-5 w-5" />,
+    description: "Correção inteligente de conteúdos",
+    content: <AnalisarCorrigir />
   },
   {
     id: "organizar-otimizar",
     name: "Organizar e Otimizar",
-    icon: <Calendar className="h-6 w-6" />,
-    color: "from-red-500 to-pink-600",
-    borderColor: "border-red-400",
-    component: OrganizarOtimizar,
-    badge: null,
-    description: "Planejadores, cronogramas e ferramentas de organização"
+    icon: <Calendar className="h-5 w-5" />,
+    description: "Técnicas para melhorar eficiência",
+    content: <OrganizarOtimizar />
   },
   {
     id: "ferramentas-extras",
     name: "Ferramentas Extras",
-    icon: <Wrench className="h-6 w-6" />, // Changed from Tool to Wrench
-    color: "from-cyan-500 to-blue-600",
-    borderColor: "border-cyan-400",
-    component: FerramentasExtras,
-    badge: "Experimental",
-    description: "Outras ferramentas especializadas para diversos fins"
+    icon: <Wrench className="h-5 w-5" />,
+    description: "Recursos adicionais para diversos fins"
   }
 ];
 
@@ -178,367 +159,217 @@ export default function EpictusIAComplete() {
   }, []);
 
   return (
-    <div className={`w-full flex flex-col ${theme === "dark" ? "bg-[#001427]" : "bg-gray-50"} transition-colors duration-300 overflow-y-auto min-h-screen`}>
-      <div className="p-4"> {/* This is where the new header is inserted */}
-        <EpictusIAHeader />
-      </div>
+    <TurboModeProvider>
+      <div className={`w-full flex flex-col ${theme === "dark" ? "bg-[#001427]" : "bg-gray-50"} transition-colors duration-300 overflow-y-auto min-h-screen`}>
+        <div className="p-4">
+          <EpictusIAHeader />
+        </div>
 
-      {/* Painel de busca (aparece quando showSearch é true) */}
-      <AnimatePresence>
-        {showSearch && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className={`border-b ${theme === "dark" ? "border-gray-800 bg-gray-900/50" : "border-gray-200 bg-white"} backdrop-blur-lg`}
-          >
-            <div className="p-4 flex items-center gap-3">
-              <Search className={`h-5 w-5 ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`} />
-              <input
-                ref={searchInputRef}
-                className={`flex-1 bg-transparent border-none outline-none text-lg ${theme === "dark" ? "text-white placeholder:text-gray-500" : "text-gray-900 placeholder:text-gray-400"}`}
-                placeholder="Buscar ferramentas..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full"
-                onClick={() => {
-                  setShowSearch(false);
-                  setSearchQuery('');
-                }}
+        {/* Barra de controles (fixa) */}
+        <div className="sticky top-0 z-10 bg-white dark:bg-[#0F172A] border-b border-gray-200 dark:border-[#1E293B] shadow-sm">
+          <div className="max-w-[1400px] mx-auto px-4 py-2 flex items-center justify-between">
+            {/* Título e navegação */}
+            <div className="flex items-center space-x-2">
+              <Brain className="h-5 w-5 text-[#FF6B00]" />
+              <span className="font-medium text-[#29335C] dark:text-white">Epictus IA</span>
+              <Badge
+                variant="outline"
+                className="bg-[#FF6B00]/10 text-[#FF6B00] border-[#FF6B00]/20 px-1.5 py-0 text-[10px] font-medium"
               >
-                <X className={`h-5 w-5 ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`} />
-              </Button>
+                Premium
+              </Badge>
             </div>
 
-            {searchQuery && (
-              <div className="px-4 pb-4">
-                <div className={`p-2 rounded-lg ${theme === "dark" ? "bg-gray-800/50" : "bg-gray-100"}`}>
-                  <h3 className={`text-sm font-medium mb-2 px-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
-                    Resultados ({filteredSections.length})
-                  </h3>
-                  <div className="space-y-1">
-                    {filteredSections.map((section, index) => (
-                      <div
-                        key={section.id}
-                        className={`flex items-center gap-3 p-2 rounded-md cursor-pointer ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-200/70"} transition-colors`}
-                        onClick={() => {
-                          setActiveSection(section.id);
-                          setShowSearch(false);
-                          setSearchQuery('');
-                        }}
-                      >
-                        <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${section.color} flex items-center justify-center`}>
-                          {section.icon}
-                        </div>
-                        <div>
-                          <p className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>{section.name}</p>
-                          <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>{section.description}</p>
-                        </div>
-                      </div>
-                    ))}
+            {/* Controles */}
+            <div className="flex items-center space-x-1">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => setShowSearch(!showSearch)}
+                      className="h-8 w-8 rounded-full text-[#64748B] dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1E293B]"
+                    >
+                      <Search className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Buscar</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
 
-                    {filteredSections.length === 0 && (
-                      <div className={`p-3 text-center ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-                        Nenhuma ferramenta encontrada com "{searchQuery}"
-                      </div>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                      className="h-8 w-8 rounded-full text-[#64748B] dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1E293B]"
+                    >
+                      {theme === "dark" ? (
+                        <Sun className="h-4 w-4" />
+                      ) : (
+                        <Moon className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Alternar tema</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => setShowSettings(!showSettings)}
+                      className="h-8 w-8 rounded-full text-[#64748B] dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1E293B]"
+                    >
+                      <Settings className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Configurações</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </div>
+
+          {/* Barra de busca */}
+          <AnimatePresence>
+            {showSearch && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="border-t border-gray-200 dark:border-[#1E293B]"
+              >
+                <div className="max-w-[1400px] mx-auto px-4 py-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      ref={searchInputRef}
+                      placeholder="Buscar funcionalidade..."
+                      className="pl-10 pr-10 h-10 bg-gray-50 dark:bg-[#1E293B] border-gray-200 dark:border-[#2D3A4F] focus-visible:ring-[#FF6B00]"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    {searchQuery && (
+                      <button
+                        className="absolute right-3 top-1/2 -translate-y-1/2"
+                        onClick={() => setSearchQuery("")}
+                      >
+                        <X className="h-4 w-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200" />
+                      </button>
                     )}
                   </div>
-                </div>
-              </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
 
-      {/* Painel de configurações (aparece quando showSettings é true) */}
-      <AnimatePresence>
-        {showSettings && (
-          <motion.div
-            initial={{ x: "100%", opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: "100%", opacity: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className={`fixed top-0 right-0 h-full w-80 z-50 border-l ${theme === "dark" ? "border-gray-800 bg-gray-900" : "border-gray-200 bg-white"} shadow-2xl`}
-          >
-            <div className="p-5 flex flex-col h-full">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className={`text-xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Configurações</h2>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="rounded-full"
-                  onClick={() => setShowSettings(false)}
-                >
-                  <X className={`h-5 w-5 ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`} />
-                </Button>
-              </div>
-
-              <div className="space-y-6 flex-1">
-                <div className="space-y-2">
-                  <h3 className={`text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Aparência</h3>
-                  <div className={`p-3 rounded-lg ${theme === "dark" ? "bg-gray-800" : "bg-gray-100"}`}>
-                    <div className="flex items-center justify-between">
-                      <span className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Tema</span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className={`gap-2 ${theme === "dark" ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-gray-700"}`}
-                        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                      >
-                        {theme === "dark" ? (
-                          <>
-                            <Moon className="h-4 w-4" />
-                            <span>Escuro</span>
-                          </>
-                        ) : (
-                          <>
-                            <Sun className="h-4 w-4" />
-                            <span>Claro</span>
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h3 className={`text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Idioma</h3>
-                  <div className={`p-3 rounded-lg ${theme === "dark" ? "bg-gray-800" : "bg-gray-100"}`}>
-                    <div className="flex items-center justify-between">
-                      <span className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Idioma da interface</span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className={`gap-2 ${theme === "dark" ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-gray-700"}`}
-                      >
-                        <Languages className="h-4 w-4" />
-                        <span>Português</span>
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h3 className={`text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Acessibilidade</h3>
-                  <div className={`p-3 rounded-lg ${theme === "dark" ? "bg-gray-800" : "bg-gray-100"}`}>
-                    <div className="flex flex-col space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Reduzir animações</span>
-                        <div className="flex h-6 w-11 cursor-pointer items-center rounded-full bg-gray-600 px-1">
-                          <div className="h-4 w-4 rounded-full bg-white transition-all"></div>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Alto contraste</span>
-                        <div className="flex h-6 w-11 cursor-pointer items-center rounded-full bg-gray-600 px-1">
-                          <div className="h-4 w-4 rounded-full bg-white transition-all"></div>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Texto maior</span>
-                        <div className="flex h-6 w-11 cursor-pointer items-center rounded-full bg-gray-600 px-1">
-                          <div className="h-4 w-4 rounded-full bg-white transition-all"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t mt-auto">
-                <Button
-                  variant="default"
-                  className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] hover:from-[#FF9B50] hover:to-[#FF6B00]"
-                  onClick={() => setShowSettings(false)}
-                >
-                  Salvar alterações
-                </Button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className="flex-1 flex flex-col">
-        {/* Carrossel 3D de seleção de seções */}
-        <div className="relative py-10 w-full">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
-            <Button
-              variant="outline"
-              size="icon"
-              className={`rounded-full ${theme === "dark" ? "bg-gray-800 border-gray-700 hover:bg-gray-700" : "bg-white border-gray-200 hover:bg-gray-50"}`}
-              onClick={prevSection}
-            >
-              <ChevronLeft className={`h-5 w-5 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`} />
-            </Button>
-          </div>
-
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10">
-            <Button
-              variant="outline"
-              size="icon"
-              className={`rounded-full ${theme === "dark" ? "bg-gray-800 border-gray-700 hover:bg-gray-700" : "bg-white border-gray-200 hover:bg-gray-50"}`}
-              onClick={nextSection}
-            >
-              <ChevronRight className={`h-5 w-5 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`} />
-            </Button>
-          </div>
-
-          <motion.div
-            ref={carouselRef}
-            className="flex items-center justify-center h-[240px]"
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.2}
-            onDragEnd={(e, { offset, velocity }) => {
-              if (offset.x < -50 || velocity.x < -500) {
-                nextSection();
-              } else if (offset.x > 50 || velocity.x > 500) {
-                prevSection();
-              }
-            }}
-            animate={{ x: 0 }}
-            transition={{ type: "spring", stiffness: 400, damping: 40 }}
-          >
-            <div className="flex items-center justify-center relative">
-              {sections.map((section, index) => {
-                // Calcular a posição relativa ao item ativo com lógica de rolagem infinita
-                let position = index - carouselIndex;
-
-                // Ajustar posição para criar efeito de rolagem infinita
-                if (Math.abs(position) > sections.length / 2) {
-                  position = position - Math.sign(position) * sections.length;
-                }
-
-                return (
-                  <motion.div
-                    key={section.id}
-                    className={`absolute select-none cursor-pointer`}
-                    animate={{
-                      scale: position === 0 ? 1 : 0.85 - Math.min(Math.abs(position) * 0.1, 0.3),
-                      x: position * 200,
-                      opacity: Math.abs(position) > 2 ? 0 : 1 - Math.abs(position) * 0.3,
-                      zIndex: 10 - Math.abs(position),
-                      rotateY: position * 10,
-                    }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    onClick={() => selectSection(index)}
-                  >
-                    <div
-                      className={cn(
-                        `w-64 rounded-xl overflow-hidden border-2 transform transition-all group`,
-                        position === 0 ? `shadow-lg ${section.borderColor}` : 'border-transparent',
-                        theme === "dark" ? "bg-gray-800/80" : "bg-white/80"
-                      )}
-                      style={{
-                        backdropFilter: "blur(8px)",
-                        perspective: "1000px",
-                        height: position === 0 ? "200px" : "180px",
-                        minHeight: position === 0 ? "200px" : "180px"
-                      }}
-                    >
-                      <div className={`h-full p-5 flex flex-col justify-between relative overflow-hidden`}>
-                        {/* Efeito de brilho quando é o item ativo */}
-                        {position === 0 && (
-                          <div className="absolute inset-0 overflow-hidden">
-                            <div className="absolute -inset-[50px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 rotate-45 translate-x-[-120%] group-hover:translate-x-[120%] duration-1500 transition-all ease-in-out"></div>
-                          </div>
-                        )}
-
-                        <div className="flex justify-between items-start">
-                          <div
-                            className={`w-12 h-12 rounded-full bg-gradient-to-br ${section.color} flex items-center justify-center`}
-                          >
-                            {section.icon}
-                          </div>
-
-                          {section.badge && (
-                            <Badge
-                              className={`bg-white/90 text-xs font-medium animate-pulse ${
-                                section.badge === "Novo"
-                                  ? "text-emerald-600"
-                                  : section.badge === "Beta"
-                                  ? "text-purple-600"
-                                  : section.badge === "Popular"
-                                  ? "text-blue-600"
-                                  : "text-amber-600"
-                              }`}
+                  {/* Resultados da busca */}
+                  {searchQuery && (
+                    <div className="mt-2 bg-white dark:bg-[#0F172A] border border-gray-200 dark:border-[#1E293B] rounded-md shadow-lg">
+                      {filteredSections.length > 0 ? (
+                        <div className="max-h-60 overflow-y-auto p-1">
+                          {filteredSections.map((section, index) => (
+                            <button
+                              key={section.id}
+                              className="w-full text-left p-2 hover:bg-gray-100 dark:hover:bg-[#1E293B] rounded-md flex items-center space-x-2"
+                              onClick={() => {
+                                setActiveSection(section.id);
+                                setShowSearch(false);
+                                setSearchQuery("");
+                              }}
                             >
-                              {section.badge}
-                            </Badge>
-                          )}
+                              <span className="text-[#FF6B00]">{section.icon}</span>
+                              <div>
+                                <div className="font-medium text-[#29335C] dark:text-white">
+                                  {section.name}
+                                </div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  {section.description}
+                                </div>
+                              </div>
+                            </button>
+                          ))}
                         </div>
-
-                        <div>
-                          <h3 className={`text-base font-semibold mb-2 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                            {section.name}
-                          </h3>
-                          <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"} line-clamp-3`}>
-                            {section.description}
-                          </p>
+                      ) : (
+                        <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                          Nenhum resultado encontrado
                         </div>
-                      </div>
+                      )}
                     </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </motion.div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          {/* Indicadores (bolinhas) para o carrossel */}
-          <div className="flex justify-center mt-6 gap-2">
-            {sections.map((section, index) => (
-              <button
-                key={section.id}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  index === carouselIndex
-                    ? "w-6 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50]"
-                    : theme === "dark" ? "bg-gray-700" : "bg-gray-300"
-                }`}
-                onClick={() => selectSection(index)}
-              />
-            ))}
+          {/* Navegação por abas */}
+          <div className="w-full overflow-x-auto scrollbar-hide">
+            <div className="max-w-[1400px] mx-auto px-4">
+              <Tabs
+                value={activeSection}
+                onValueChange={setActiveSection}
+                className="w-full"
+              >
+                <div className="flex items-center justify-between">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-full text-[#64748B] dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1E293B] lg:hidden"
+                    onClick={prevSection}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+
+                  <TabsList className="bg-transparent h-auto p-0 flex space-x-1 overflow-x-auto">
+                    {sections.map((section, index) => (
+                      <TabsTrigger
+                        key={section.id}
+                        value={section.id}
+                        className={cn(
+                          "py-2 px-3 whitespace-nowrap data-[state=active]:bg-[#FF6B00]/10 data-[state=active]:text-[#FF6B00] data-[state=active]:shadow-none rounded-md text-[#64748B] dark:text-gray-400 font-medium",
+                          "focus-visible:ring-1 focus-visible:ring-[#FF6B00] focus-visible:outline-none transition-colors"
+                        )}
+                        onClick={() => selectSection(index)}
+                      >
+                        <div className="flex items-center gap-2">
+                          {section.icon}
+                          <span>{section.name}</span>
+                        </div>
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-full text-[#64748B] dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#1E293B] lg:hidden"
+                    onClick={nextSection}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </Tabs>
+            </div>
           </div>
         </div>
 
-        {/* Conteúdo da seção ativa */}
-        <div className="flex-1 px-6 pb-12 overflow-y-visible">
-          <motion.div
-            key={activeSection}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="w-full"
-          >
-            <Tabs value={activeSection} onValueChange={setActiveSection} className="h-full">
-              <TabsContent value="chat-inteligente" className="mt-0 h-full">
-                <ChatInteligente />
+        {/* Conteúdo principal */}
+        <div className="flex-1 max-w-[1400px] mx-auto px-4 py-6 w-full">
+          <Tabs value={activeSection} className="w-full">
+            {sections.map((section) => (
+              <TabsContent
+                key={section.id}
+                value={section.id}
+                className="w-full mt-0 h-full"
+              >
+                {section.id === "ferramentas-extras" ? <FerramentasExtras /> : section.content}
               </TabsContent>
-              <TabsContent value="criar-conteudo" className="mt-0 h-full">
-                <CriarConteudo />
-              </TabsContent>
-              <TabsContent value="aprender-mais-rapido" className="mt-0 h-full">
-                <AprenderMaisRapido />
-              </TabsContent>
-              <TabsContent value="analisar-corrigir" className="mt-0 h-full">
-                <AnalisarCorrigir />
-              </TabsContent>
-              <TabsContent value="organizar-otimizar" className="mt-0 h-full">
-                <OrganizarOtimizar />
-              </TabsContent>
-              <TabsContent value="ferramentas-extras" className="mt-0 h-full">
-                <FerramentasExtras />
-              </TabsContent>
-            </Tabs>
-          </motion.div>
+            ))}
+          </Tabs>
         </div>
       </div>
-    </div>
+    </TurboModeProvider>
   );
 }
