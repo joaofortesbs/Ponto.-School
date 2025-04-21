@@ -2,16 +2,14 @@
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, Sparkles, Search, Settings } from "lucide-react";
+import { Zap, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 const EpictusTurboMode: React.FC = () => {
   const { theme } = useTheme();
   const [isHovered, setIsHovered] = useState(false);
   const [animationComplete, setAnimationComplete] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  // States removed as icons are currently inactive
   
   useEffect(() => {
     // Trigger initial animation
@@ -126,79 +124,87 @@ const EpictusTurboMode: React.FC = () => {
             </div>
           </div>
 
-          {/* Search and Settings components */}
+          {/* New header icons */}
           <div className="flex items-center justify-center z-10 relative gap-3">
-            {/* Search component */}
-            <div className="relative search-icon-container">
-              <motion.div
-                className="relative"
-                initial={false}
-              >
-                {/* Search icon/button */}
-                <motion.div
-                  className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    setSearchOpen(prevState => !prevState);
-                  }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  initial={false}
-                  animate={searchOpen ? { rotate: [0, -10, 0] } : { rotate: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Search className="h-5 w-5 text-white" />
-                </motion.div>
-                
-                {/* Expanding search input */}
-                <AnimatePresence mode="wait">
-                  {searchOpen && (
-                    <motion.div
-                      className="absolute right-0 top-0 z-50 flex items-center"
-                      initial={{ width: 0, opacity: 0, scale: 0.9 }}
-                      animate={{ width: "240px", opacity: 1, scale: 1 }}
-                      exit={{ width: 0, opacity: 0, scale: 0.9 }}
-                      transition={{ 
-                        type: "spring",
-                        stiffness: 400,
-                        damping: 30,
-                        opacity: { duration: 0.2 }
-                      }}
-                      key="search-input"
-                    >
-                      <Input
-                        type="text"
-                        placeholder="Pesquisar..."
-                        className="h-10 pl-4 pr-10 rounded-full border-2 border-[#1230CC]/50 focus:border-[#1230CC] bg-gradient-to-r from-[#0c2341]/90 to-[#0f3562]/90 backdrop-blur-md text-white placeholder:text-white/70 shadow-lg"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        style={{
-                          boxShadow: '0 4px 12px rgba(13, 35, 160, 0.15)'
-                        }}
-                      />
-                      <Search className="h-5 w-5 text-white absolute right-3 pointer-events-none" />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            </div>
-
-            {/* Settings component */}
-            <div className="relative settings-icon-container">
+            {/* History icon */}
+            <div className="relative icon-container">
               <motion.div
                 className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  setSettingsOpen(true);
-                }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 initial={false}
                 transition={{ duration: 0.3 }}
               >
-                <Settings className="h-5 w-5 text-white" />
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+              </motion.div>
+            </div>
+
+            {/* Favorites icon */}
+            <div className="relative icon-container">
+              <motion.div
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                initial={false}
+                transition={{ duration: 0.3 }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+              </motion.div>
+            </div>
+
+            {/* Calendar icon */}
+            <div className="relative icon-container">
+              <motion.div
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                initial={false}
+                transition={{ duration: 0.3 }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+              </motion.div>
+            </div>
+
+            {/* Notifications icon */}
+            <div className="relative icon-container">
+              <motion.div
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                initial={false}
+                transition={{ duration: 0.3 }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg>
+              </motion.div>
+            </div>
+
+            {/* Profile picture - a bit more spaced */}
+            <div className="relative profile-icon-container ml-4">
+              <motion.div
+                className="w-11 h-11 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] p-[2px] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow overflow-hidden"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                initial={false}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="w-full h-full rounded-full bg-[#0f2a4e] flex items-center justify-center overflow-hidden">
+                  <div className="w-full h-full rounded-full bg-gradient-to-r from-[#0c2341]/80 to-[#0f3562]/80 flex items-center justify-center text-white text-lg font-bold">
+                    JF
+                  </div>
+                </div>
               </motion.div>
             </div>
           </div>
