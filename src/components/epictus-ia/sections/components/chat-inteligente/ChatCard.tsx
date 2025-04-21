@@ -15,6 +15,7 @@ export interface ChatCardProps {
     badge: string | null;
     buttonText: string;
     highlight?: boolean;
+    onButtonClick?: () => void;
   };
 }
 
@@ -77,6 +78,7 @@ export const ChatCard: React.FC<ChatCardProps> = ({ assistant }) => {
 
       <Button 
         className="mt-auto w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white flex items-center justify-center gap-2"
+        onClick={assistant.onButtonClick}
       >
         {assistant.buttonText}
         <ArrowRight className="h-4 w-4" />

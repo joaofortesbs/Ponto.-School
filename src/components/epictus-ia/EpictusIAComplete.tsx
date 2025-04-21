@@ -110,6 +110,7 @@ export default function EpictusIAComplete() {
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredSections, setFilteredSections] = useState(sections);
+  const [turboModeActive, setTurboModeActive] = useState(false);
 
   const carouselRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -174,6 +175,25 @@ export default function EpictusIAComplete() {
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  // Check URL params for turbo mode on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('mode') === 'turbo') {
+      setTurboModeActive(true);
+    }
+
+    // Listen for custom turbo mode activation event
+    const handleTurboActivation = () => {
+      setTurboModeActive(true);
+    };
+
+    window.addEventListener('activateTurboMode', handleTurboActivation);
+    
+    return () => {
+      window.removeEventListener('activateTurboMode', handleTurboActivation);
     };
   }, []);
 
@@ -365,6 +385,13 @@ export default function EpictusIAComplete() {
       </AnimatePresence>
 
       <div className="flex-1 flex flex-col">
+        {turboModeActive ? (
+          // Import and use the EpictusTurboMode component when in turbo mode
+          <React.Suspense fallback={<div className="w-full h-40 flex items-center justify-center"><p className={theme === "dark" ? "text-white" : "text-gray-800"}>Carregando...</p></div>}>
+            {React.createElement(React.lazy(() => import('./EpictusTurboMode')))}
+          </React.Suspense>
+        ) : (
+        <>
         {/* Carrossel 3D de seleção de seções */}
         <div className="relative py-10 w-full">
           <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
@@ -538,6 +565,8 @@ export default function EpictusIAComplete() {
             </Tabs>
           </motion.div>
         </div>
+        </>
+        )}
       </div>
     </div>
   );
