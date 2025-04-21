@@ -1,30 +1,71 @@
 import React from "react";
-import { MessageSquare } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useTheme } from "@/components/ThemeProvider";
 
-export function ChatCard() {
+interface AssistantData {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  badge?: string;
+  buttonText: string;
+  highlight?: boolean;
+  onButtonClick?: () => void;
+}
+
+interface ChatCardProps {
+  assistant: AssistantData;
+}
+
+export const ChatCard: React.FC<ChatCardProps> = ({ assistant }) => {
+  const { theme } = useTheme();
+
   return (
-    <div className="bg-[#0F172A] rounded-lg overflow-hidden h-[180px] flex flex-col transition-all duration-300 shadow-md border border-[#1E293B]">
-      <div className="p-4 flex-1">
-        <div className="flex items-center mb-2">
-          <div className="mr-2 bg-blue-600 rounded-full p-1.5">
-            <MessageSquare className="h-4 w-4 text-white" />
+    <Card className={`w-full overflow-hidden transition-all duration-300 hover:shadow-lg ${
+      assistant.highlight 
+        ? "bg-gradient-to-br from-[#0A2540] to-[#1B3A5D] border-blue-400/20 hover:border-blue-400/30" 
+        : theme === "dark" 
+          ? "bg-[#0A2540] hover:bg-[#0F2D4A] border-gray-700" 
+          : "bg-white hover:bg-gray-50 border-gray-200"
+    }`}>
+      <div className="p-6">
+        <div className="flex items-center gap-4 mb-3">
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+            assistant.highlight 
+              ? "bg-gradient-to-br from-blue-500 to-indigo-600" 
+              : "bg-blue-500"
+          }`}>
+            {assistant.icon}
           </div>
-          <h3 className="font-semibold text-white">Chat Inteligente</h3>
-          <Badge className="ml-2 bg-blue-600 text-white text-[10px] font-medium py-0.5 h-4">Popular</Badge>
+          <div>
+            <div className="flex items-center">
+              <h3 className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                {assistant.title}
+              </h3>
+              {assistant.badge && (
+                <Badge className="ml-2 bg-blue-500 text-white">
+                  {assistant.badge}
+                </Badge>
+              )}
+            </div>
+          </div>
         </div>
-        <p className="text-white/70 text-sm">
-          Assistente com recursos avançados para ajudar nos estudos e aprendizado com inteligência artificial.
+        <p className={`mb-4 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+          {assistant.description}
         </p>
-      </div>
-      <div className="p-2 bg-gradient-to-r from-blue-700 to-blue-500">
         <Button 
-          className="w-full bg-transparent hover:bg-white/10 text-white font-medium border-none"
+          className={`w-full ${
+            assistant.highlight 
+              ? "bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
+              : ""
+          }`}
+          onClick={assistant.onButtonClick}
         >
-          Conversar
+          {assistant.buttonText}
         </Button>
       </div>
-    </div>
+    </Card>
   );
-}
+};
