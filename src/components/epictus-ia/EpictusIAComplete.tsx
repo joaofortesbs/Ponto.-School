@@ -11,6 +11,7 @@ import SectionCard from "@/components/epictus-ia/components/SectionCard";
 import SectionContent from "@/components/epictus-ia/components/SectionContent";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChatInteligente, CriarConteudo, AprenderMaisRapido, AnalisarCorrigir, OrganizarOtimizar, FerramentasExtras } from "@/components/epictus-ia/sections";
+import { TurboModeProvider } from "@/components/epictus-ia/context/TurboModeContext";
 import {
   Brain,
   Search,
@@ -178,7 +179,8 @@ export default function EpictusIAComplete() {
   }, []);
 
   return (
-    <div className={`w-full flex flex-col ${theme === "dark" ? "bg-[#001427]" : "bg-gray-50"} transition-colors duration-300 overflow-y-auto min-h-screen`}>
+    <TurboModeProvider>
+      <div className={`w-full flex flex-col ${theme === "dark" ? "bg-[#001427]" : "bg-gray-50"} transition-colors duration-300 overflow-y-auto min-h-screen`}>
       <div className="p-4"> {/* This is where the new header is inserted */}
         <EpictusIAHeader />
       </div>
@@ -540,5 +542,6 @@ export default function EpictusIAComplete() {
         </div>
       </div>
     </div>
+    </TurboModeProvider>
   );
 }
