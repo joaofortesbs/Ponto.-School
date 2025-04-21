@@ -6,18 +6,7 @@ import { useTheme } from "@/components/ThemeProvider";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const TurboModeContext = createContext(false);
-
-export const TurboModeProvider = ({ children }: { children: React.ReactNode }) => {
-  const [isTurboMode, setIsTurboMode] = useState(false);
-  return (
-    <TurboModeContext.Provider value={{ isTurboMode, setIsTurboMode }}>
-      {children}
-    </TurboModeContext.Provider>
-  );
-};
-
-export const useTurboMode = () => useContext(TurboModeContext);
+import { useTurboMode } from "../../../context/TurboModeContext";
 
 export interface ChatCardProps {
   assistant: {
@@ -34,16 +23,14 @@ export interface ChatCardProps {
 
 export const ChatCard: React.FC<ChatCardProps> = ({ assistant }) => {
   const { theme } = useTheme();
-  const { setIsTurboMode } = useTurboMode();
+  const { activateTurboMode } = useTurboMode();
 
   const handleButtonClick = () => {
-    setIsTurboMode(true);
-    const contentSection = document.getElementById(`content-${assistant.id}`);
-    if (contentSection) {
-      contentSection.innerHTML = `
-        <h2 style="text-align: center;">Epictus Turbo</h2>
-        <p style="text-align: center;">Esta seção está em desenvolvimento</p>
-      `;
+    console.log("Botão Usar Turbo clicado no ChatCard!");
+    if (assistant.onButtonClick) {
+      assistant.onButtonClick();
+    } else {
+      activateTurboMode();
     }
   };
 
