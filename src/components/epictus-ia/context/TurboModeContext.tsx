@@ -11,8 +11,13 @@ const TurboModeContext = createContext<TurboModeContextType | undefined>(undefin
 export const TurboModeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isTurboMode, setIsTurboMode] = useState(false);
 
+  const handleTurboModeChange = (value: boolean) => {
+    console.log("Mudando modo Turbo para:", value);
+    setIsTurboMode(value);
+  };
+
   return (
-    <TurboModeContext.Provider value={{ isTurboMode, setTurboMode: setIsTurboMode }}>
+    <TurboModeContext.Provider value={{ isTurboMode, setTurboMode: handleTurboModeChange }}>
       {children}
     </TurboModeContext.Provider>
   );

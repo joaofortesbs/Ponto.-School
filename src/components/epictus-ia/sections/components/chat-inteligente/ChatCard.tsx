@@ -24,9 +24,12 @@ export const ChatCard: React.FC<ChatCardProps> = ({ assistant, onButtonClick }) 
   const { setTurboMode } = useTurboMode();
 
   const handleButtonClick = () => {
+    console.log("Botão clicado:", assistant.id);
     if (onButtonClick) {
+      console.log("Usando callback onButtonClick");
       onButtonClick();
     } else if (assistant.id === "epictus-turbo") {
+      console.log("Usando setTurboMode diretamente");
       setTurboMode(true);
     }
   };

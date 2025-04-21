@@ -30,6 +30,8 @@ const ChatInteligentContent: React.FC = () => {
   const { theme } = useTheme();
   const { isTurboMode, setTurboMode } = useTurboMode();
 
+  console.log("Estado atual do modo Turbo:", isTurboMode);
+  
   return (
     <div className="h-full flex flex-col">
       {isTurboMode ? (
