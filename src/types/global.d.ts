@@ -1,4 +1,3 @@
-
 // Definições globais para TypeScript
 
 // Extendendo a interface Window
@@ -14,11 +13,14 @@ interface Window {
       conexaoExpert: boolean;
     };
   };
-  
+
   // Adicionar outras propriedades globais conforme necessário
   __SUPABASE_INITIALIZED__?: boolean;
   __DEVELOPMENT_MODE__?: boolean;
   __USERNAME_INITIALIZED__?: boolean;
+  electron?: any;
+  api?: any;
+  activateTurboMode?: () => void;
 }
 
 // Tipos para temas

@@ -12,8 +12,14 @@ export const TutorInteligente2Card: React.FC = () => {
     badge: null,
     buttonText: "Usar Turbo",
     onClick: () => {
-      // Navigate to the Epictus IA page with the turbo mode
-      window.location.href = "/epictus-ia?mode=turbo";
+      // Ativar o modo turbo sem redirecionar
+      if (window.activateTurboMode) {
+        window.activateTurboMode();
+      } else {
+        // Evento customizado para ativar o modo turbo
+        const event = new CustomEvent('activate-turbo-mode');
+        window.dispatchEvent(event);
+      }
     }
   };
 

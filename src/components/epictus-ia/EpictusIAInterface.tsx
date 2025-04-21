@@ -49,6 +49,23 @@ export default function EpictusIAInterface() {
     if (searchParams.get('mode') === 'turbo') {
       setIsTurboMode(true);
     }
+
+    // Expor a função de ativação do modo turbo para o componente TutorInteligente2Card
+    window.activateTurboMode = () => {
+      setIsTurboMode(true);
+    };
+
+    // Adicionar um listener para o evento customizado
+    const handleTurboActivation = () => {
+      setIsTurboMode(true);
+    };
+    
+    window.addEventListener('activate-turbo-mode', handleTurboActivation);
+    
+    return () => {
+      window.removeEventListener('activate-turbo-mode', handleTurboActivation);
+      delete window.activateTurboMode;
+    };
   }, [location]);
 
   // Mini-seções - ativar ou desativar
@@ -117,11 +134,19 @@ export default function EpictusIAInterface() {
       <div className="flex flex-1 overflow-hidden">
         {/* Main Content Panel */}
         <div className="flex-1 flex flex-col">
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="flex-1 flex flex-col"
-          >
+          {isTurboMode ? (
+            <div className="flex flex-col items-center justify-start pt-10 px-6 w-full">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-[#1E3A8A] to-[#F97316] text-transparent bg-clip-text font-sans mb-8 text-center" style={{textShadow: '0 0 10px rgba(249, 115, 22, 0.5)'}}>
+                Epictus Turbo
+              </h1>
+              <p className="text-2xl text-center text-gray-300 mt-6">Esta seção está em desenvolvimento</p>
+            </div>
+          ) : (
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="flex-1 flex flex-col"
+            >
             <div
               className={`border-b ${theme === "dark" ? "border-gray-800" : "border-gray-200"} p-2`}
             >
@@ -262,9 +287,10 @@ export default function EpictusIAInterface() {
               </TabsContent>
             </ScrollArea>
           </Tabs>
+          )}
 
           {/* Chat Input (apenas mostrado quando não estamos na tela de conversação) */}
-          {!showChat && (
+          {!showChat && !isTurboMode && (
             <div
               className={`p-4 border-t ${theme === "dark" ? "border-gray-800 bg-[#0A2540]" : "border-gray-200 bg-white"}`}
             >
