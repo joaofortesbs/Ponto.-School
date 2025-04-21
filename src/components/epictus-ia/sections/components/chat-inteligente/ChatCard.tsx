@@ -28,7 +28,9 @@ export interface ChatCardProps {
     badge: string | null;
     buttonText: string;
     highlight?: boolean;
+    buttonId?: string; // ID opcional para o botão principal
     onButtonClick?: () => void;
+    secondaryButton?: React.ReactNode;
   };
 }
 
@@ -37,13 +39,26 @@ export const ChatCard: React.FC<ChatCardProps> = ({ assistant }) => {
   const { setIsTurboMode } = useTurboMode();
 
   const handleButtonClick = () => {
-    setIsTurboMode(true);
-    const contentSection = document.getElementById(`content-${assistant.id}`);
-    if (contentSection) {
-      contentSection.innerHTML = `
-        <h2 style="text-align: center;">Epictus Turbo</h2>
-        <p style="text-align: center;">Esta seção está em desenvolvimento</p>
-      `;
+    console.log(`Botão ${assistant.buttonText} clicado para ${assistant.id}!`);
+
+    // Feedback visual ao clicar no botão
+    const buttonId = assistant.buttonId || `button-${assistant.id}`;
+    const button = document.getElementById(buttonId);
+
+    if (button) {
+      // Adiciona classe para feedback visual
+      button.classList.add('scale-95');
+      setTimeout(() => {
+        button.classList.remove('scale-95');
+      }, 150);
+    }
+
+    // Executa a função de clique
+    if (assistant.onButtonClick) {
+      assistant.onButtonClick();
+    } else if (assistant.id === "epictus-turbo") {
+      console.log("Ativando modo turbo via fallback no ChatCard");
+      activateTurboMode();
     }
   };
 
@@ -100,27 +115,28 @@ export const ChatCard: React.FC<ChatCardProps> = ({ assistant }) => {
       </div>
       <div className="mt-4">
         <Button
-          id={`button-${assistant.id}`}
+          id={assistant.buttonId || `button-${assistant.id}`}
           className={cn(
-            "w-full",
-            assistant.highlight
-              ? "bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] hover:from-[#FF9B50] hover:to-[#FF6B00] text-white"
-              : theme === "dark"
-              ? "bg-gray-700 text-white hover:bg-gray-600"
-              : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+            "w-full transition-all duration-200",
+            theme === "dark"
+              ? assistant.highlight
+                ? "bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
+                : "bg-blue-600 hover:bg-blue-500 text-white"
+              : assistant.highlight
+              ? "bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
+              : "bg-blue-500 hover:bg-blue-400 text-white"
           )}
-          onClick={() => {
-            console.log(`Botão ${assistant.id} clicado`);
-            if (assistant.onButtonClick) {
-              assistant.onButtonClick();
-            } else {
-              handleButtonClick();
-            }
-          }}
+          onClick={handleButtonClick}
         >
           {assistant.buttonText}
         </Button>
       </div>
     </Card>
   );
+};
+
+// Placeholder function - needs to be implemented elsewhere
+const activateTurboMode = () => {
+  console.log("Modo Turbo ativado!");
+  // Add your Turbo Mode activation logic here.
 };
