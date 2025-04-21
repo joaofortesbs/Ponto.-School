@@ -18,6 +18,7 @@ export interface ChatCardProps {
     buttonText: string;
     highlight?: boolean;
     onButtonClick?: () => void;
+    secondaryButton?: React.ReactNode;
   };
 }
 
@@ -108,6 +109,12 @@ export const ChatCard: React.FC<ChatCardProps> = ({ assistant }) => {
         >
           {assistant.buttonText}
         </Button>
+        
+        {assistant.secondaryButton && (
+          <div className="mt-2">
+            {assistant.secondaryButton}
+          </div>
+        )}
       </div>
     </Card>
   );
