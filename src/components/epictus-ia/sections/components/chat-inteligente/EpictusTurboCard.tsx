@@ -8,7 +8,7 @@ export const EpictusTurboCard: React.FC = () => {
   const { activateTurboMode } = useTurboMode();
 
   const handleTurboClick = () => {
-    console.log("🚀 TURBO: Botão Usar Turbo clicado! Ativando modo turbo...");
+    console.log("Ativando modo turbo do EpictusTurboCard");
     activateTurboMode();
   };
 
