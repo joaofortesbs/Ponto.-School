@@ -26,10 +26,11 @@ export const ChatCard: React.FC<ChatCardProps> = ({ assistant }) => {
   const { activateTurboMode } = useTurboMode();
 
   const handleButtonClick = () => {
-    console.log("Botão Usar Turbo clicado no ChatCard!");
+    console.log(`Botão ${assistant.buttonText} clicado para ${assistant.id}!`);
     if (assistant.onButtonClick) {
       assistant.onButtonClick();
-    } else {
+    } else if (assistant.id === "epictus-turbo") {
+      console.log("Ativando modo turbo via fallback no ChatCard");
       activateTurboMode();
     }
   };
