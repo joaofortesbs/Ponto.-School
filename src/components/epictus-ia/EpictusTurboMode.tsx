@@ -24,6 +24,8 @@ const EpictusTurboMode: React.FC = () => {
   
   const isDark = theme === "dark";
   
+  // New color scheme is now directly applied in the class names
+  
   return (
     <div className="w-full flex flex-col items-center">
       {/* Header copied from EpictusIAHeader but with title changed to "Epictus Turbo" */}
@@ -38,13 +40,13 @@ const EpictusTurboMode: React.FC = () => {
         >
           {/* Animated gradient background */}
           <div className="absolute inset-0 opacity-20">
-            <div className={`absolute inset-0 bg-gradient-to-r from-[#FF6B00] via-[#FF8C40] to-[#FF9D5C] ${isHovered ? 'opacity-60' : 'opacity-30'} transition-opacity duration-700`}></div>
+            <div className={`absolute inset-0 bg-gradient-to-r from-[#0D23A0] via-[#1230CC] to-[#4A0D9F] ${isHovered ? 'opacity-60' : 'opacity-30'} transition-opacity duration-700`}></div>
             <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
           </div>
 
           {/* Glowing orbs */}
           <motion.div 
-            className="absolute top-1/2 left-1/4 w-32 h-32 rounded-full bg-orange-500/10 blur-3xl"
+            className="absolute top-1/2 left-1/4 w-32 h-32 rounded-full bg-[#0D23A0]/10 blur-3xl"
             animate={{
               scale: [1, 1.2, 1],
               opacity: [0.2, 0.3, 0.2],
@@ -57,7 +59,7 @@ const EpictusTurboMode: React.FC = () => {
           />
 
           <motion.div 
-            className="absolute bottom-0 right-1/4 w-40 h-40 rounded-full bg-blue-500/10 blur-3xl"
+            className="absolute bottom-0 right-1/4 w-40 h-40 rounded-full bg-[#4A0D9F]/10 blur-3xl"
             animate={{
               scale: [1, 1.3, 1],
               opacity: [0.15, 0.25, 0.15],
@@ -73,9 +75,9 @@ const EpictusTurboMode: React.FC = () => {
           {/* Logo and title section */}
           <div className="flex items-center gap-4 z-10 flex-1">
             <div className="relative group">
-              <div className={`absolute inset-0 bg-gradient-to-br from-orange-500 via-orange-400 to-amber-500 rounded-full ${isHovered ? 'blur-[6px]' : 'blur-[3px]'} opacity-80 group-hover:opacity-100 transition-all duration-300 scale-110`}></div>
+              <div className={`absolute inset-0 bg-gradient-to-br from-[#0D23A0] via-[#1230CC] to-[#4A0D9F] rounded-full ${isHovered ? 'blur-[6px]' : 'blur-[3px]'} opacity-80 group-hover:opacity-100 transition-all duration-300 scale-110`}></div>
               <motion.div 
-                className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center relative z-10 border-2 border-white/10 shadow-xl"
+                className="w-12 h-12 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center relative z-10 border-2 border-white/10 shadow-xl"
                 whileHover={{ scale: 1.05 }}
                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
               >
@@ -110,7 +112,7 @@ const EpictusTurboMode: React.FC = () => {
                   Epictus Turbo
                 </h1>
                 <motion.div
-                  className="flex items-center px-1.5 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-orange-600 text-xs font-medium text-white shadow-lg"
+                  className="flex items-center px-1.5 py-0.5 rounded-md bg-gradient-to-r from-[#0D23A0] to-[#4A0D9F] text-xs font-medium text-white shadow-lg"
                   whileHover={{ scale: 1.05 }}
                   transition={{ type: "spring", stiffness: 400, damping: 10 }}
                 >
@@ -134,7 +136,7 @@ const EpictusTurboMode: React.FC = () => {
               >
                 {/* Search icon/button */}
                 <motion.div
-                  className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
+                  className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
@@ -168,11 +170,11 @@ const EpictusTurboMode: React.FC = () => {
                       <Input
                         type="text"
                         placeholder="Pesquisar..."
-                        className="h-10 pl-4 pr-10 rounded-full border-2 border-orange-500/50 focus:border-orange-500 bg-gradient-to-r from-[#0c2341]/90 to-[#0f3562]/90 backdrop-blur-md text-white placeholder:text-white/70 shadow-lg"
+                        className="h-10 pl-4 pr-10 rounded-full border-2 border-[#1230CC]/50 focus:border-[#1230CC] bg-gradient-to-r from-[#0c2341]/90 to-[#0f3562]/90 backdrop-blur-md text-white placeholder:text-white/70 shadow-lg"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         style={{
-                          boxShadow: '0 4px 12px rgba(255, 107, 0, 0.15)'
+                          boxShadow: '0 4px 12px rgba(13, 35, 160, 0.15)'
                         }}
                       />
                       <Search className="h-5 w-5 text-white absolute right-3 pointer-events-none" />
@@ -185,7 +187,7 @@ const EpictusTurboMode: React.FC = () => {
             {/* Settings component */}
             <div className="relative settings-icon-container">
               <motion.div
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
@@ -203,7 +205,7 @@ const EpictusTurboMode: React.FC = () => {
 
           {/* Hidden until expansion - will appear when user interaction happens */}
           <div className="absolute bottom-0 left-0 w-full h-1">
-            <div className="h-full bg-gradient-to-r from-transparent via-orange-500 to-transparent opacity-30"></div>
+            <div className="h-full bg-gradient-to-r from-transparent via-[#1230CC] to-transparent opacity-30"></div>
           </div>
         </motion.header>
       </div>
