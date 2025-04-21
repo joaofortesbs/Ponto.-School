@@ -110,6 +110,7 @@ export default function EpictusIAComplete() {
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredSections, setFilteredSections] = useState(sections);
+  const [turboMessage, setTurboMessage] = useState(""); //State to manage the turbo message
 
   const carouselRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -176,6 +177,10 @@ export default function EpictusIAComplete() {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
+
+  const handleTurboClick = () => {
+    setTurboMessage("Em desenvolvimento");
+  };
 
   return (
     <div className={`w-full flex flex-col ${theme === "dark" ? "bg-[#001427]" : "bg-gray-50"} transition-colors duration-300 overflow-y-auto min-h-screen`}>
@@ -482,6 +487,10 @@ export default function EpictusIAComplete() {
                             {section.description}
                           </p>
                         </div>
+                        {section.id === "chat-inteligente" && ( // Add button only to Chat Inteligente section
+                          <Button onClick={handleTurboClick}>Usar Turbo</Button>
+                        )}
+                        {turboMessage && <p>{turboMessage}</p>}
                       </div>
                     </div>
                   </motion.div>
