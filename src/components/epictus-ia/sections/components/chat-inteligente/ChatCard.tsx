@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/components/ThemeProvider";
 import { ArrowRight } from "lucide-react";
+import { useTurboMode } from "@/components/epictus-ia/context/TurboModeContext";
 
 export interface ChatCardProps {
   assistant: {
@@ -20,6 +21,13 @@ export interface ChatCardProps {
 
 export const ChatCard: React.FC<ChatCardProps> = ({ assistant }) => {
   const { theme } = useTheme();
+  const { setTurboMode } = useTurboMode();
+
+  const handleButtonClick = () => {
+    if (assistant.id === "epictus-turbo") {
+      setTurboMode(true);
+    }
+  };
 
   return (
     <Card 
@@ -77,6 +85,7 @@ export const ChatCard: React.FC<ChatCardProps> = ({ assistant }) => {
 
       <Button 
         className="mt-auto w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white flex items-center justify-center gap-2"
+        onClick={handleButtonClick}
       >
         {assistant.buttonText}
         <ArrowRight className="h-4 w-4" />
