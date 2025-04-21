@@ -12,11 +12,11 @@ import {
   TutorInteligenteCard, 
   BrainstormCard 
 } from "./components/chat-inteligente";
-import { TurboModeProvider, useTurboModeContext } from "../context/TurboModeContext";
+import { TurboModeProvider, useTurboMode } from "../context/TurboModeContext";
 
 const ChatInteligenteContent: React.FC = () => {
   const { theme } = useTheme();
-  const { isTurboModeActive } = useTurboModeContext();
+  const { isTurboModeActive, deactivateTurboMode } = useTurboMode();
 
   return (
     <div className="h-full flex flex-col">
@@ -35,13 +35,21 @@ const ChatInteligenteContent: React.FC = () => {
       </div>
 
       {isTurboModeActive ? (
-        <div className="flex flex-col items-center justify-center flex-grow">
-          <h1 className="text-4xl font-bold mb-6 text-center bg-gradient-to-r from-[#1E3A8A] to-[#F97316] text-transparent bg-clip-text font-sans" style={{ textShadow: "0 0 10px rgba(249, 115, 22, 0.5)" }}>
-            Epictus Turbo
-          </h1>
-          <p className="text-2xl text-gray-300 text-center">
-            Esta seção está em desenvolvimento
-          </p>
+        <div className="flex-1 overflow-auto">
+          <div className="flex flex-col items-center justify-center py-8">
+            <h1 className="text-4xl font-bold mb-6 text-center bg-gradient-to-r from-[#1E3A8A] to-[#F97316] text-transparent bg-clip-text font-sans" style={{ textShadow: "0 0 10px rgba(249, 115, 22, 0.5)" }}>
+              Epictus Turbo
+            </h1>
+            <p className="text-2xl text-gray-300 text-center mb-6">
+              Esta seção está em desenvolvimento
+            </p>
+            <button 
+              onClick={deactivateTurboMode}
+              className="px-6 py-2.5 bg-gradient-to-r from-[#1E3A8A] to-[#F97316] text-white rounded-full hover:opacity-90 transition-opacity"
+            >
+              Voltar
+            </button>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

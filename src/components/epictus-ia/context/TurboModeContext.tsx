@@ -7,32 +7,36 @@ interface TurboModeContextType {
   deactivateTurboMode: () => void;
 }
 
-const TurboModeContext = createContext<TurboModeContextType>({
-  isTurboModeActive: false,
-  activateTurboMode: () => {},
-  deactivateTurboMode: () => {},
-});
+const TurboModeContext = createContext<TurboModeContextType | undefined>(undefined);
 
-export const useTurboModeContext = () => useContext(TurboModeContext);
+export const useTurboMode = () => {
+  const context = useContext(TurboModeContext);
+  if (!context) {
+    throw new Error("useTurboMode must be used within a TurboModeProvider");
+  }
+  return context;
+};
 
-interface TurboModeProviderProps {
-  children: ReactNode;
-}
-
-export const TurboModeProvider: React.FC<TurboModeProviderProps> = ({ children }) => {
+export const TurboModeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isTurboModeActive, setIsTurboModeActive] = useState(false);
 
   const activateTurboMode = () => {
+    console.log("Ativando modo Turbo");
     setIsTurboModeActive(true);
   };
 
   const deactivateTurboMode = () => {
+    console.log("Desativando modo Turbo");
     setIsTurboModeActive(false);
   };
 
   return (
-    <TurboModeContext.Provider
-      value={{ isTurboModeActive, activateTurboMode, deactivateTurboMode }}
+    <TurboModeContext.Provider 
+      value={{ 
+        isTurboModeActive, 
+        activateTurboMode,
+        deactivateTurboMode
+      }}
     >
       {children}
     </TurboModeContext.Provider>

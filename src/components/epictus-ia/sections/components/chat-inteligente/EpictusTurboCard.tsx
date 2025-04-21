@@ -2,12 +2,13 @@
 import React from "react";
 import { Zap } from "lucide-react";
 import { ChatCard } from "./ChatCard";
-import { useTurboModeContext } from "../../../context/TurboModeContext";
+import { useTurboMode } from "../../../context/TurboModeContext";
 
 export const EpictusTurboCard: React.FC = () => {
-  const { activateTurboMode } = useTurboModeContext();
+  const { activateTurboMode } = useTurboMode();
 
   const handleTurboClick = () => {
+    console.log("Clicou em usar Turbo");
     activateTurboMode();
   };
 
