@@ -12,7 +12,8 @@ import {
   EpictusIACard, 
   TutorInteligenteCard, 
   BrainstormCard,
-  Epictus20Card
+  Epictus20Card,
+  TutorInteligente2Card
 } from "./components/chat-inteligente";
 
 export default function ChatInteligente() {
@@ -38,6 +39,7 @@ export default function ChatInteligente() {
         <EpictusTurboCard />
         <EpictusIACard />
         <TutorInteligenteCard />
+        <TutorInteligente2Card />
         <Epictus20Card />
         <BrainstormCard />
       </div>
