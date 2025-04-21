@@ -1,0 +1,43 @@
+Prompt Atualizado para Implementação em Vibe Code
+Objetivo
+Implementar uma funcionalidade na interface onde, ao clicar no botão "Usar Turbo" dentro do card "Epictus Turbo", a interface deve ser reorganizada da seguinte forma:
+
+O cabeçalho da seção (que contém o título "Chat Inteligente" e a descrição "Escolha o assistente ideal para suas necessidades de aprendizado") deve permanecer fixo e inalterado.
+Todo o conteúdo abaixo do cabeçalho (incluindo os cards "Epictus Turbo", "Chat com Epictus IA", "Tutor Inteligente" e as mini-seções em carrossel como "Organizar e Otimizar", "Ferramentas Extras", etc.) deve desaparecer completamente.
+Abaixo do cabeçalho, deve ser exibido um título com o nome do card acessado ("Epictus Turbo") em um estilo moderno e sofisticado.
+Abaixo do título, deve ser exibida uma mensagem centralizada na tela com o texto: "Esta seção está em desenvolvimento".
+
+Detalhes da Interface
+Título "Epictus Turbo"
+
+O título "Epictus Turbo" deve ser exibido logo abaixo do cabeçalho.
+O estilo do título deve ser moderno e sofisticado:
+Fonte: Uma fonte sans-serif elegante (exemplo: "Montserrat" ou "Poppins" com peso bold).
+Tamanho: Grande, como 36px ou 40px.
+Cor: Um gradiente que combine com o tema da interface, como um gradiente de azul escuro (#1E3A8A) para laranja (#F97316).
+Efeitos: Adicione um leve brilho (text-shadow) para destacar o título, como text-shadow: 0 0 10px rgba(249, 115, 22, 0.5);.
+Alinhamento: Centralizado horizontalmente.
+Espaçamento: Adicione um padding inferior de 20px para separar o título da mensagem abaixo.
+
+
+
+Mensagem "Esta seção está em desenvolvimento"
+
+A mensagem deve ser exibida no centro da tela (tanto horizontal quanto verticalmente) abaixo do título.
+A mensagem deve ter uma fonte legível e um tamanho adequado (exemplo: 24px), com cor que contraste bem com o fundo escuro da interface (exemplo: branco ou cinza claro, como #D1D5DB).
+O fundo da área onde o conteúdo foi removido deve permanecer com a mesma cor de fundo atual da interface (um tom escuro, como visto na imagem).
+
+Comportamento Esperado
+
+O usuário clica no botão "Usar Turbo" dentro do card "Epictus Turbo".
+Todo o conteúdo abaixo do cabeçalho, incluindo as mini-seções em carrossel, desaparece imediatamente.
+Um título "Epictus Turbo" aparece abaixo do cabeçalho, estilizado de forma moderna e sofisticada.
+A mensagem "Esta seção está em desenvolvimento" aparece centralizada na área anteriormente ocupada pelo conteúdo.
+
+Considerações
+
+Preservação do Design: Não altere o design das outras mini-seções em carrossel (como "Organizar e Otimizar", "Ferramentas Extras", etc.) ou dos outros cards (como "Chat com Epictus IA" e "Tutor Inteligente"). O design dessas áreas deve permanecer intocado, incluindo estilos, cores, fontes, espaçamentos e qualquer outro aspecto visual. A única mudança deve ser a remoção dessas seções e a adição do título e da mensagem conforme descrito.
+A transição pode ser instantânea, sem necessidade de animações, a menos que o padrão do projeto exija.
+Certifique-se de que o cabeçalho não seja afetado de forma alguma (posição, estilo ou funcionalidade).
+O layout deve ser responsivo, garantindo que o título e a mensagem centralizada se ajustem bem em diferentes tamanhos de tela.
+
