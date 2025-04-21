@@ -12,7 +12,8 @@ const EpictusTurboMode: React.FC = () => {
         style={{
           backgroundImage: "linear-gradient(to right, #1E3A8A, #F97316)",
           fontFamily: "'Montserrat', 'Poppins', sans-serif",
-          textShadow: "0 0 10px rgba(249, 115, 22, 0.5)"
+          textShadow: "0 0 10px rgba(249, 115, 22, 0.5)",
+          paddingBottom: "20px"
         }}
       >
         Epictus Turbo

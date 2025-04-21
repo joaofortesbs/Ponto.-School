@@ -36,6 +36,7 @@ import {
   BrainCircuit,
 } from "lucide-react";
 import EpictusIAHeader from "./EpictusIAHeader"; // Added import for the new header component
+import EpictusTurboMode from "./EpictusTurboMode"; // Added import for EpictusTurboMode
 
 
 // Definição das abas/seções
@@ -191,7 +192,7 @@ export default function EpictusIAComplete() {
     };
 
     window.addEventListener('activateTurboMode', handleTurboActivation);
-    
+
     return () => {
       window.removeEventListener('activateTurboMode', handleTurboActivation);
     };
@@ -388,184 +389,184 @@ export default function EpictusIAComplete() {
         {turboModeActive ? (
           // Import and use the EpictusTurboMode component when in turbo mode
           <React.Suspense fallback={<div className="w-full h-40 flex items-center justify-center"><p className={theme === "dark" ? "text-white" : "text-gray-800"}>Carregando...</p></div>}>
-            {React.createElement(React.lazy(() => import('./EpictusTurboMode')))}
+            <EpictusTurboMode />
           </React.Suspense>
         ) : (
-        <>
-        {/* Carrossel 3D de seleção de seções */}
-        <div className="relative py-10 w-full">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
-            <Button
-              variant="outline"
-              size="icon"
-              className={`rounded-full ${theme === "dark" ? "bg-gray-800 border-gray-700 hover:bg-gray-700" : "bg-white border-gray-200 hover:bg-gray-50"}`}
-              onClick={prevSection}
-            >
-              <ChevronLeft className={`h-5 w-5 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`} />
-            </Button>
-          </div>
+          <>
+            {/* Carrossel 3D de seleção de seções */}
+            <div className="relative py-10 w-full">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={`rounded-full ${theme === "dark" ? "bg-gray-800 border-gray-700 hover:bg-gray-700" : "bg-white border-gray-200 hover:bg-gray-50"}`}
+                  onClick={prevSection}
+                >
+                  <ChevronLeft className={`h-5 w-5 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`} />
+                </Button>
+              </div>
 
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10">
-            <Button
-              variant="outline"
-              size="icon"
-              className={`rounded-full ${theme === "dark" ? "bg-gray-800 border-gray-700 hover:bg-gray-700" : "bg-white border-gray-200 hover:bg-gray-50"}`}
-              onClick={nextSection}
-            >
-              <ChevronRight className={`h-5 w-5 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`} />
-            </Button>
-          </div>
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={`rounded-full ${theme === "dark" ? "bg-gray-800 border-gray-700 hover:bg-gray-700" : "bg-white border-gray-200 hover:bg-gray-50"}`}
+                  onClick={nextSection}
+                >
+                  <ChevronRight className={`h-5 w-5 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`} />
+                </Button>
+              </div>
 
-          <motion.div
-            ref={carouselRef}
-            className="flex items-center justify-center h-[240px]"
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.2}
-            onDragEnd={(e, { offset, velocity }) => {
-              if (offset.x < -50 || velocity.x < -500) {
-                nextSection();
-              } else if (offset.x > 50 || velocity.x > 500) {
-                prevSection();
-              }
-            }}
-            animate={{ x: 0 }}
-            transition={{ type: "spring", stiffness: 400, damping: 40 }}
-          >
-            <div className="flex items-center justify-center relative">
-              {sections.map((section, index) => {
-                // Calcular a posição relativa ao item ativo com lógica de rolagem infinita
-                let position = index - carouselIndex;
+              <motion.div
+                ref={carouselRef}
+                className="flex items-center justify-center h-[240px]"
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.2}
+                onDragEnd={(e, { offset, velocity }) => {
+                  if (offset.x < -50 || velocity.x < -500) {
+                    nextSection();
+                  } else if (offset.x > 50 || velocity.x > 500) {
+                    prevSection();
+                  }
+                }}
+                animate={{ x: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 40 }}
+              >
+                <div className="flex items-center justify-center relative">
+                  {sections.map((section, index) => {
+                    // Calcular a posição relativa ao item ativo com lógica de rolagem infinita
+                    let position = index - carouselIndex;
 
-                // Ajustar posição para criar efeito de rolagem infinita
-                if (Math.abs(position) > sections.length / 2) {
-                  position = position - Math.sign(position) * sections.length;
-                }
+                    // Ajustar posição para criar efeito de rolagem infinita
+                    if (Math.abs(position) > sections.length / 2) {
+                      position = position - Math.sign(position) * sections.length;
+                    }
 
-                return (
-                  <motion.div
-                    key={section.id}
-                    className={`absolute select-none cursor-pointer`}
-                    animate={{
-                      scale: position === 0 ? 1 : 0.85 - Math.min(Math.abs(position) * 0.1, 0.3),
-                      x: position * 200,
-                      opacity: Math.abs(position) > 2 ? 0 : 1 - Math.abs(position) * 0.3,
-                      zIndex: 10 - Math.abs(position),
-                      rotateY: position * 10,
-                    }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    onClick={() => selectSection(index)}
-                  >
-                    <div
-                      className={cn(
-                        `w-64 rounded-xl overflow-hidden border-2 transform transition-all group`,
-                        position === 0 ? `shadow-lg ${section.borderColor}` : 'border-transparent',
-                        theme === "dark" ? "bg-gray-800/80" : "bg-white/80"
-                      )}
-                      style={{
-                        backdropFilter: "blur(8px)",
-                        perspective: "1000px",
-                        height: position === 0 ? "200px" : "180px",
-                        minHeight: position === 0 ? "200px" : "180px"
-                      }}
-                    >
-                      <div className={`h-full p-5 flex flex-col justify-between relative overflow-hidden`}>
-                        {/* Efeito de brilho quando é o item ativo */}
-                        {position === 0 && (
-                          <div className="absolute inset-0 overflow-hidden">
-                            <div className="absolute -inset-[50px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 rotate-45 translate-x-[-120%] group-hover:translate-x-[120%] duration-1500 transition-all ease-in-out"></div>
-                          </div>
-                        )}
-
-                        <div className="flex justify-between items-start">
-                          <div
-                            className={`w-12 h-12 rounded-full bg-gradient-to-br ${section.color} flex items-center justify-center`}
-                          >
-                            {section.icon}
-                          </div>
-
-                          {section.badge && (
-                            <Badge
-                              className={`bg-white/90 text-xs font-medium animate-pulse ${
-                                section.badge === "Novo"
-                                  ? "text-emerald-600"
-                                  : section.badge === "Beta"
-                                  ? "text-purple-600"
-                                  : section.badge === "Popular"
-                                  ? "text-blue-600"
-                                  : "text-amber-600"
-                              }`}
-                            >
-                              {section.badge}
-                            </Badge>
+                    return (
+                      <motion.div
+                        key={section.id}
+                        className={`absolute select-none cursor-pointer`}
+                        animate={{
+                          scale: position === 0 ? 1 : 0.85 - Math.min(Math.abs(position) * 0.1, 0.3),
+                          x: position * 200,
+                          opacity: Math.abs(position) > 2 ? 0 : 1 - Math.abs(position) * 0.3,
+                          zIndex: 10 - Math.abs(position),
+                          rotateY: position * 10,
+                        }}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        onClick={() => selectSection(index)}
+                      >
+                        <div
+                          className={cn(
+                            `w-64 rounded-xl overflow-hidden border-2 transform transition-all group`,
+                            position === 0 ? `shadow-lg ${section.borderColor}` : 'border-transparent',
+                            theme === "dark" ? "bg-gray-800/80" : "bg-white/80"
                           )}
-                        </div>
+                          style={{
+                            backdropFilter: "blur(8px)",
+                            perspective: "1000px",
+                            height: position === 0 ? "200px" : "180px",
+                            minHeight: position === 0 ? "200px" : "180px"
+                          }}
+                        >
+                          <div className={`h-full p-5 flex flex-col justify-between relative overflow-hidden`}>
+                            {/* Efeito de brilho quando é o item ativo */}
+                            {position === 0 && (
+                              <div className="absolute inset-0 overflow-hidden">
+                                <div className="absolute -inset-[50px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 rotate-45 translate-x-[-120%] group-hover:translate-x-[120%] duration-1500 transition-all ease-in-out"></div>
+                              </div>
+                            )}
 
-                        <div>
-                          <h3 className={`text-base font-semibold mb-2 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                            {section.name}
-                          </h3>
-                          <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"} line-clamp-3`}>
-                            {section.description}
-                          </p>
+                            <div className="flex justify-between items-start">
+                              <div
+                                className={`w-12 h-12 rounded-full bg-gradient-to-br ${section.color} flex items-center justify-center`}
+                              >
+                                {section.icon}
+                              </div>
+
+                              {section.badge && (
+                                <Badge
+                                  className={`bg-white/90 text-xs font-medium animate-pulse ${
+                                    section.badge === "Novo"
+                                      ? "text-emerald-600"
+                                      : section.badge === "Beta"
+                                      ? "text-purple-600"
+                                      : section.badge === "Popular"
+                                      ? "text-blue-600"
+                                      : "text-amber-600"
+                                  }`}
+                                >
+                                  {section.badge}
+                                </Badge>
+                              )}
+                            </div>
+
+                            <div>
+                              <h3 className={`text-base font-semibold mb-2 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                                {section.name}
+                              </h3>
+                              <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"} line-clamp-3`}>
+                                {section.description}
+                              </p>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+
+              {/* Indicadores (bolinhas) para o carrossel */}
+              <div className="flex justify-center mt-6 gap-2">
+                {sections.map((section, index) => (
+                  <button
+                    key={section.id}
+                    className={`w-2 h-2 rounded-full transition-all ${
+                      index === carouselIndex
+                        ? "w-6 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50]"
+                        : theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                    }`}
+                    onClick={() => selectSection(index)}
+                  />
+                ))}
+              </div>
             </div>
-          </motion.div>
 
-          {/* Indicadores (bolinhas) para o carrossel */}
-          <div className="flex justify-center mt-6 gap-2">
-            {sections.map((section, index) => (
-              <button
-                key={section.id}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  index === carouselIndex
-                    ? "w-6 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50]"
-                    : theme === "dark" ? "bg-gray-700" : "bg-gray-300"
-                }`}
-                onClick={() => selectSection(index)}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Conteúdo da seção ativa */}
-        <div className="flex-1 px-6 pb-12 overflow-y-visible">
-          <motion.div
-            key={activeSection}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="w-full"
-          >
-            <Tabs value={activeSection} onValueChange={setActiveSection} className="h-full">
-              <TabsContent value="chat-inteligente" className="mt-0 h-full">
-                <ChatInteligente />
-              </TabsContent>
-              <TabsContent value="criar-conteudo" className="mt-0 h-full">
-                <CriarConteudo />
-              </TabsContent>
-              <TabsContent value="aprender-mais-rapido" className="mt-0 h-full">
-                <AprenderMaisRapido />
-              </TabsContent>
-              <TabsContent value="analisar-corrigir" className="mt-0 h-full">
-                <AnalisarCorrigir />
-              </TabsContent>
-              <TabsContent value="organizar-otimizar" className="mt-0 h-full">
-                <OrganizarOtimizar />
-              </TabsContent>
-              <TabsContent value="ferramentas-extras" className="mt-0 h-full">
-                <FerramentasExtras />
-              </TabsContent>
-            </Tabs>
-          </motion.div>
-        </div>
-        </>
+            {/* Conteúdo da seção ativa */}
+            <div className="flex-1 px-6 pb-12 overflow-y-visible">
+              <motion.div
+                key={activeSection}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="w-full"
+              >
+                <Tabs value={activeSection} onValueChange={setActiveSection} className="h-full">
+                  <TabsContent value="chat-inteligente" className="mt-0 h-full">
+                    <ChatInteligente />
+                  </TabsContent>
+                  <TabsContent value="criar-conteudo" className="mt-0 h-full">
+                    <CriarConteudo />
+                  </TabsContent>
+                  <TabsContent value="aprender-mais-rapido" className="mt-0 h-full">
+                    <AprenderMaisRapido />
+                  </TabsContent>
+                  <TabsContent value="analisar-corrigir" className="mt-0 h-full">
+                    <AnalisarCorrigir />
+                  </TabsContent>
+                  <TabsContent value="organizar-otimizar" className="mt-0 h-full">
+                    <OrganizarOtimizar />
+                  </TabsContent>
+                  <TabsContent value="ferramentas-extras" className="mt-0 h-full">
+                    <FerramentasExtras />
+                  </TabsContent>
+                </Tabs>
+              </motion.div>
+            </div>
+          </>
         )}
       </div>
     </div>
