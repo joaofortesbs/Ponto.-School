@@ -200,9 +200,11 @@ export default function EpictusIAComplete() {
 
   return (
     <div className={`w-full flex flex-col ${theme === "dark" ? "bg-[#001427]" : "bg-gray-50"} transition-colors duration-300 overflow-y-auto min-h-screen`}>
-      <div className="p-4"> {/* This is where the new header is inserted */}
-        <EpictusIAHeader />
-      </div>
+      {!turboModeActive && (
+        <div className="p-4"> {/* This is where the new header is inserted */}
+          <EpictusIAHeader />
+        </div>
+      )}
 
       {/* Painel de busca (aparece quando showSearch é true) */}
       <AnimatePresence>
