@@ -20,11 +20,7 @@ const EpictusTurboMode: React.FC = () => {
       </h2>
       
       <div className="w-full h-[60vh] flex items-center justify-center">
-        <p 
-          className={`text-2xl ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}
-        >
-          Esta seção está em desenvolvimento
-        </p>
+        {/* Content area is now empty but maintains same layout structure */}
       </div>
     </div>
   );
