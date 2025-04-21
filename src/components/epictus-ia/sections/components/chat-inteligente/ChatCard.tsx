@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/components/ThemeProvider";
 import { ArrowRight } from "lucide-react";
-import cn from 'classnames';
+import { cn } from "@/lib/utils";
 
 // Create context for Turbo mode
 const TurboModeContext = createContext(false);
