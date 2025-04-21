@@ -37,6 +37,13 @@ export const ChatCard: React.FC<ChatCardProps> = ({ assistant }) => {
 
   const handleButtonClick = () => {
     setIsTurboMode(true);
+    const contentSection = document.getElementById(`content-${assistant.id}`);
+    if (contentSection) {
+      contentSection.innerHTML = `
+        <h2 style="text-align: center;">Epictus Turbo</h2>
+        <p style="text-align: center;">Esta seção está em desenvolvimento</p>
+      `;
+    }
   };
 
   return (
@@ -88,14 +95,31 @@ export const ChatCard: React.FC<ChatCardProps> = ({ assistant }) => {
       <p className={`text-sm mb-4 ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
         {assistant.description}
       </p>
-
-      <Button
-        className="mt-auto w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white flex items-center justify-center gap-2"
-        onClick={handleButtonClick}
-      >
-        {assistant.buttonText}
-        <ArrowRight className="h-4 w-4" />
-      </Button>
+      <div id={`content-${assistant.id}`}>{/* Content to be replaced */}
+      </div>
+      <div className="mt-4">
+        <Button
+          id={`button-${assistant.id}`}
+          className={cn(
+            "w-full",
+            assistant.highlight
+              ? "bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] hover:from-[#FF9B50] hover:to-[#FF6B00] text-white"
+              : theme === "dark"
+              ? "bg-gray-700 text-white hover:bg-gray-600"
+              : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+          )}
+          onClick={() => {
+            console.log(`Botão ${assistant.id} clicado`);
+            if (assistant.onButtonClick) {
+              assistant.onButtonClick();
+            } else {
+              handleButtonClick();
+            }
+          }}
+        >
+          {assistant.buttonText}
+        </Button>
+      </div>
     </Card>
   );
 };

@@ -1,5 +1,5 @@
 
-import React, { createContext, useState, useContext, ReactNode } from "react";
+import React, { createContext, useState, useContext, ReactNode, useEffect } from "react";
 
 interface TurboModeContextType {
   isTurboMode: boolean;
@@ -13,12 +13,19 @@ export const TurboModeProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [isTurboMode, setIsTurboMode] = useState(false);
 
   const activateTurboMode = () => {
+    console.log("Ativando TurboMode no contexto");
     setIsTurboMode(true);
   };
 
   const deactivateTurboMode = () => {
+    console.log("Desativando TurboMode no contexto");
     setIsTurboMode(false);
   };
+
+  // Log quando o estado do contexto muda
+  useEffect(() => {
+    console.log("Estado do TurboMode mudou para:", isTurboMode);
+  }, [isTurboMode]);
 
   return (
     <TurboModeContext.Provider value={{ isTurboMode, activateTurboMode, deactivateTurboMode }}>

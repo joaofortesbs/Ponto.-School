@@ -21,6 +21,8 @@ import { motion } from "framer-motion";
 export default function ChatInteligente() {
   const { theme } = useTheme();
   const { isTurboMode } = useTurboMode();
+  
+  console.log("ChatInteligente renderizado - Modo Turbo:", isTurboMode);
 
   const renderHeader = () => (
     <div className="mb-6">

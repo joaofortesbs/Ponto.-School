@@ -7,6 +7,11 @@ import { useTurboMode } from "../../../context/TurboModeContext";
 export const EpictusTurboCard: React.FC = () => {
   const { activateTurboMode } = useTurboMode();
 
+  const handleTurboClick = () => {
+    console.log("Ativando modo turbo do EpictusTurboCard");
+    activateTurboMode();
+  };
+
   const assistantData = {
     id: "epictus-turbo",
     title: "Epictus Turbo",
@@ -15,7 +20,7 @@ export const EpictusTurboCard: React.FC = () => {
     badge: "Único",
     buttonText: "Usar Turbo",
     highlight: true,
-    onButtonClick: activateTurboMode
+    onButtonClick: handleTurboClick
   };
 
   return (
