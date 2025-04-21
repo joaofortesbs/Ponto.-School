@@ -12,6 +12,7 @@ import SectionContent from "@/components/epictus-ia/components/SectionContent";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChatInteligente, CriarConteudo, AprenderMaisRapido, AnalisarCorrigir, OrganizarOtimizar, FerramentasExtras } from "@/components/epictus-ia/sections";
 import { TurboModeProvider } from "@/components/epictus-ia/context/TurboModeContext";
+import { createContext, useContext } from "react";
 import {
   Brain,
   Search,

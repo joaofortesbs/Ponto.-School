@@ -40,28 +40,31 @@ export default function ChatInteligente() {
     </div>
   );
 
-  const renderTurboMode = () => (
-    <div className="flex flex-col items-center justify-center h-[calc(100vh-300px)]">
-      <motion.h1 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="text-4xl font-bold text-center mb-8 font-montserrat bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-transparent bg-clip-text"
-      >
-        <Zap className="inline-block mr-2 h-8 w-8 text-[#FF6B00]" />
-        Epictus Turbo
-      </motion.h1>
-      
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className={`text-2xl text-center ${theme === "dark" ? "text-gray-300" : "text-gray-600"} max-w-xl`}
-      >
-        Esta seção está em desenvolvimento
-      </motion.div>
-    </div>
-  );
+  const renderTurboMode = () => {
+    console.log("🎯 Renderizando modo TURBO!");
+    return (
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-300px)]">
+        <motion.h1 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-4xl font-bold text-center mb-8 font-montserrat bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] text-transparent bg-clip-text"
+        >
+          <Zap className="inline-block mr-2 h-8 w-8 text-[#FF6B00]" />
+          Epictus Turbo
+        </motion.h1>
+        
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className={`text-2xl text-center ${theme === "dark" ? "text-gray-300" : "text-gray-600"} max-w-xl`}
+        >
+          Esta seção está em desenvolvimento
+        </motion.div>
+      </div>
+    );
+  };
 
   const renderDefaultContent = () => (
     <>
