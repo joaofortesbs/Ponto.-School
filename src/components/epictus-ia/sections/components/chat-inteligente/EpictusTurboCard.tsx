@@ -3,7 +3,11 @@ import React from "react";
 import { Zap } from "lucide-react";
 import { ChatCard } from "./ChatCard";
 
-export const EpictusTurboCard: React.FC = () => {
+interface EpictusTurboCardProps {
+  onTurboClick?: () => void;
+}
+
+export const EpictusTurboCard: React.FC<EpictusTurboCardProps> = ({ onTurboClick }) => {
   const assistantData = {
     id: "epictus-turbo",
     title: "Epictus Turbo",
@@ -11,7 +15,8 @@ export const EpictusTurboCard: React.FC = () => {
     icon: <Zap className="h-6 w-6 text-white" />,
     badge: "Único",
     buttonText: "Usar Turbo",
-    highlight: true
+    highlight: true,
+    onButtonClick: onTurboClick
   };
 
   return (
