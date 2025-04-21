@@ -1,15 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTheme } from "@/components/ThemeProvider";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ThemeToggle } from "./ThemeToggle";
-import PlanoEstudosInterface from "./PlanoEstudosInterface";
-import EpictusChatInterface from "./EpictusChatInterface";
-import ChatEpictus from "./ChatEpictus";
+import { useLocation } from "react-router-dom";
+import VisaoGeralContent from "./components/VisaoGeralContent";
+import ChatInteligente from "./sections/ChatInteligente";
+import OrganizarOtimizar from "./sections/OrganizarOtimizar";
+import AprenderMaisRapido from "./sections/AprenderMaisRapido";
+import CriarConteudo from "./sections/CriarConteudo";
+import AnalisarCorrigir from "./sections/AnalisarCorrigir";
+import FerramentasExtras from "./sections/FerramentasExtras";
 import {
   Brain,
   BookOpen,
@@ -42,6 +40,16 @@ export default function EpictusIAInterface() {
   const [activeTab, setActiveTab] = useState(tabParam || "conversation");
   const [inputMessage, setInputMessage] = useState("");
   const [showChat, setShowChat] = useState(true);
+  const [isTurboMode, setIsTurboMode] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    // Check if the URL has the turbo mode parameter
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get('mode') === 'turbo') {
+      setIsTurboMode(true);
+    }
+  }, [location]);
 
   // Mini-seções - ativar ou desativar
   const [showMiniChat, setShowMiniChat] = useState(false);
@@ -182,8 +190,8 @@ export default function EpictusIAInterface() {
               </TabsContent>
 
               <TabsContent value="visao-geral" className="mt-0 p-6 space-y-6">
-              <VisaoGeralContent theme={theme} />
-            </TabsContent>
+                <VisaoGeralContent theme={theme} />
+              </TabsContent>
 
               <TabsContent value="plano-estudos" className="mt-0">
                 <PlanoEstudosInterface />

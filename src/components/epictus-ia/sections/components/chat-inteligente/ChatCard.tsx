@@ -1,20 +1,18 @@
-
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/components/ThemeProvider";
 import { ArrowRight } from "lucide-react";
 
-export interface ChatCardProps {
+interface ChatCardProps {
   assistant: {
     id: string;
     title: string;
     description: string;
-    icon: React.ReactElement;
-    badge: string | null;
+    icon: React.ReactNode;
+    badge: React.ReactNode | null;
     buttonText: string;
-    highlight?: boolean;
+    onClick?: () => void;
   };
 }
 
@@ -32,7 +30,7 @@ export const ChatCard: React.FC<ChatCardProps> = ({ assistant }) => {
           const rect = card.getBoundingClientRect();
           const x = (e.clientX - rect.left) / rect.width * 100;
           const y = (e.clientY - rect.top) / rect.height * 100;
-          
+
           // Atualizar variáveis CSS para o efeito de luz interativo
           card.style.setProperty('--x', `${x}%`);
           card.style.setProperty('--y', `${y}%`);
@@ -51,7 +49,7 @@ export const ChatCard: React.FC<ChatCardProps> = ({ assistant }) => {
         </>
       )}
       <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-blue-500/10 blur-3xl group-hover:bg-blue-500/20 transition-all duration-700"></div>
-      
+
       <div className="flex justify-between items-start mb-4">
         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500/90 to-indigo-600/90 flex items-center justify-center shadow-md transform group-hover:scale-110 transition-transform duration-300">
           {assistant.icon}
@@ -75,12 +73,20 @@ export const ChatCard: React.FC<ChatCardProps> = ({ assistant }) => {
         {assistant.description}
       </p>
 
-      <Button 
-        className="mt-auto w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white flex items-center justify-center gap-2"
-      >
-        {assistant.buttonText}
-        <ArrowRight className="h-4 w-4" />
-      </Button>
+      <div className="mt-4 flex justify-center">
+        <Button 
+          className={`w-full bg-gradient-to-r ${
+            theme === "dark" 
+              ? "from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800" 
+              : "from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+          } text-white border-none`}
+          onClick={assistant.onClick}
+        >
+          {assistant.buttonText} <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
     </Card>
   );
 };
+
+export default ChatCard;
