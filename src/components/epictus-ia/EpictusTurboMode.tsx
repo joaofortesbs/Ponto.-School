@@ -365,11 +365,20 @@ const EpictusTurboMode: React.FC = () => {
       </div>
       
       {/* Content area now below the header */}
-      <div className="w-full h-[60vh] flex items-center justify-center mt-4">
-        {/* Mini-section selector will go here in the future */}
+      <div className="w-full flex flex-col items-center justify-center mt-4 mb-8">
+        {/* Mini-section selector */}
+        <div className="w-full flex-grow flex items-center justify-center">
+          {/* Aqui virá o conteúdo principal (histórico de conversas, resultados, etc.) */}
+        </div>
+        
+        {/* Caixa de mensagens na parte inferior */}
+        <div className="w-full bottom-0 left-0 right-0 z-30 mt-auto">
+          <TurboMessageBox />
+        </div>
       </div>
     </div>
   );
 };
 
+import TurboMessageBox from "./TurboMessageBox";
 export default EpictusTurboMode;
