@@ -15,10 +15,10 @@ export const EpictusIACard: React.FC = () => {
   const assistantData = {
     id: "epictus-ia",
     title: "Epictus IA",
-    description: "Experimente como é receber uma aula de conteúdos que nem as instituições mais renomadas do Brasil conseguiriam te entregar, personalizado exclusivamente para você!",
+    description: "Experimente como é receber uma aula de conteúdos que nem as instituições mais renomadas do Brasil conseguiriam te entregar, personalizado para você!",
     icon: <Brain className="h-6 w-6 text-white" />,
     badge: null,
-    buttonText: "Criar",
+    buttonText: "Usar Epictus",
     onButtonClick: handleActivation
   };
 
