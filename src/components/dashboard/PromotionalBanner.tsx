@@ -144,32 +144,16 @@ const PromotionalBanner = () => {
           className={`
             relative w-full rounded-xl overflow-hidden shadow-2xl 
             bg-gradient-to-r ${currentBanner.gradientFrom} ${currentBanner.gradientVia} ${currentBanner.gradientTo} 
-            border-0 backdrop-blur-sm
+            border border-blue-500/20 backdrop-blur-sm
             transition-all duration-300 ease-in-out
-            modern-banner
             ${isHovered ? "scale-[1.01] shadow-blue-500/20" : ""}
           `}
         >
           {/* Animated background elements */}
           <div className="absolute inset-0 overflow-hidden">
             <div className="absolute -inset-[10px] bg-grid-white/[0.02] [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black_70%)]" />
-            {/* Bordas animadas */}
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#FF6B00]/30 via-blue-500/60 to-purple-500/30 animate-gradient-x" />
-            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-purple-500/30 via-blue-500/60 to-[#FF6B00]/30 animate-gradient-x" />
-            <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-[#FF6B00]/30 via-blue-500/60 to-purple-500/30 animate-gradient-y" />
-            <div className="absolute right-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-purple-500/30 via-blue-500/60 to-[#FF6B00]/30 animate-gradient-y" />
-            
-            {/* Cantos iluminados */}
-            <div className="absolute top-0 left-0 w-[20px] h-[20px] border-t-[2px] border-l-[2px] border-[#FF6B00] rounded-tl-xl" />
-            <div className="absolute top-0 right-0 w-[20px] h-[20px] border-t-[2px] border-r-[2px] border-blue-500 rounded-tr-xl" />
-            <div className="absolute bottom-0 left-0 w-[20px] h-[20px] border-b-[2px] border-l-[2px] border-blue-500 rounded-bl-xl" />
-            <div className="absolute bottom-0 right-0 w-[20px] h-[20px] border-b-[2px] border-r-[2px] border-[#FF6B00] rounded-br-xl" />
-            
-            {/* Efeito de brilho nos cantos */}
-            <div className="absolute top-[-5px] left-[-5px] w-[15px] h-[15px] bg-[#FF6B00]/30 blur-[8px] rounded-full" />
-            <div className="absolute top-[-5px] right-[-5px] w-[15px] h-[15px] bg-blue-500/30 blur-[8px] rounded-full" />
-            <div className="absolute bottom-[-5px] left-[-5px] w-[15px] h-[15px] bg-blue-500/30 blur-[8px] rounded-full" />
-            <div className="absolute bottom-[-5px] right-[-5px] w-[15px] h-[15px] bg-[#FF6B00]/30 blur-[8px] rounded-full" />
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/20 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/20 to-transparent" />
           </div>
 
           <div className="flex flex-col md:flex-row items-center relative z-10">
