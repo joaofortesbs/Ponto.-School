@@ -98,6 +98,69 @@
   animation: fadeIn 0.5s ease-out forwards;
 }
 
+/* Animações para o banner moderno */
+.modern-banner {
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+}
+
+.modern-banner::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #FF6B00, #3B82F6, #8B5CF6, #FF6B00);
+  border-radius: 16px;
+  z-index: -1;
+  background-size: 400% 400%;
+  animation: border-animation 8s ease infinite;
+  opacity: 0.6;
+}
+
+@keyframes border-animation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes gradient-x {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes gradient-y {
+  0% {
+    background-position: 50% 0%;
+  }
+  100% {
+    background-position: 50% 100%;
+  }
+}
+
+.animate-gradient-x {
+  background-size: 200% 200%;
+  animation: gradient-x 3s linear infinite;
+}
+
+.animate-gradient-y {
+  background-size: 200% 200%;
+  animation: gradient-y 3s linear infinite;
+}
+
+
 @keyframes gradientAnimation {
   0% {
     background-position: 0% 50%;
