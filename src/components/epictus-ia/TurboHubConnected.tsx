@@ -161,10 +161,10 @@ const TurboHubConnected: React.FC = () => {
     : null;
 
   return (
-    <div className="w-full mx-auto p-2 mt-0 mb-2">
+    <div className="w-full mx-auto p-4 mt-1 mb-3">
       <div 
         ref={containerRef}
-        className="relative min-h-[420px] w-full bg-gradient-to-r from-[#050e1d] to-[#0d1a30] rounded-2xl shadow-xl border border-white/5 overflow-hidden"
+        className="relative min-h-[450px] w-full bg-gradient-to-r from-[#050e1d] to-[#0d1a30] rounded-2xl shadow-xl border border-white/5 overflow-hidden"
         style={{ zIndex: 10 }} // Set a lower z-index for the hub container
       >
         {/* Partículas de fundo */}
@@ -398,10 +398,10 @@ const TurboHubConnected: React.FC = () => {
         <AnimatePresence>
           {focusedNodeData && (
             <motion.div 
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-40 bg-gradient-to-r from-[#0c2341]/80 to-[#0f3562]/80 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl max-w-xs"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
+              className="absolute right-8 top-10 z-40 bg-gradient-to-r from-[#0c2341]/80 to-[#0f3562]/80 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl max-w-xs"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.3 }}
             >
               <div className="p-5">
