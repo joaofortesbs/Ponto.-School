@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronLeft, Brain, PenLine, BookOpen, Calendar, PresentationChart, CheckSquare, Sparkles } from "lucide-react";
+import { X, ChevronLeft, Brain, PenLine, BookOpen, Calendar, PieChart, CheckSquare, Sparkles } from "lucide-react";
 
 // Tipos para os nódulos
 interface Nodule {
@@ -77,7 +77,7 @@ const TurboHubConnected: React.FC = () => {
     {
       id: "creator",
       name: "Criador de Aula",
-      icon: <PresentationChart className="h-6 w-6" />,
+      icon: <PieChart className="h-6 w-6" />,
       description: "Monta aulas completas com IA + material visual personalizado.",
       color: "from-orange-500 to-red-600",
       functions: [
