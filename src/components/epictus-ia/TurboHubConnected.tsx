@@ -165,7 +165,7 @@ const TurboHubConnected: React.FC = () => {
       <div 
         ref={containerRef}
         className="relative min-h-[420px] w-full bg-gradient-to-r from-[#050e1d] to-[#0d1a30] rounded-2xl shadow-xl border border-white/5 overflow-hidden"
-        style={{ zIndex: 1 }} // Reduzido o z-index para ficar atrás de todos os componentes
+        style={{ zIndex: 10 }} // Set a lower z-index for the hub container
       >
         {/* Partículas de fundo */}
         {particlesArray.map((particle, index) => (
@@ -186,7 +186,7 @@ const TurboHubConnected: React.FC = () => {
         <div className="absolute inset-0 bg-grid-pattern opacity-10 z-0"></div>
 
         {/* Linhas de conexão - Versão Ultra Tecnológica */}
-        <svg className="absolute inset-0 w-full h-full pointer-events-none z-2 neural-connections">
+        <svg className="absolute inset-0 w-full h-full pointer-events-none z-30 neural-connections">
           <defs>
             <linearGradient id="lineGradient1" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#0D23A0" stopOpacity="1" />
@@ -365,7 +365,7 @@ const TurboHubConnected: React.FC = () => {
           };
 
           return (
-            <div key={nodule.id} style={positionStyle} className="absolute -translate-x-1/2 -translate-y-1/2 z-2">
+            <div key={nodule.id} style={positionStyle} className="absolute -translate-x-1/2 -translate-y-1/2 z-10">
               <motion.div
                 className={`relative ${isBlurred ? 'opacity-30 blur-sm scale-75' : ''} transition-all duration-500`}
                 animate={isFocused ? {
@@ -398,7 +398,7 @@ const TurboHubConnected: React.FC = () => {
         <AnimatePresence>
           {focusedNodeData && (
             <motion.div 
-              className="absolute right-8 top-4 z-5 bg-gradient-to-r from-[#0c2341]/80 to-[#0f3562]/80 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl max-w-xs max-h-[580px] overflow-y-auto" // Posicionado mais para cima (top-4) com z-index reduzido
+              className="absolute right-8 top-4 z-50 bg-gradient-to-r from-[#0c2341]/80 to-[#0f3562]/80 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl max-w-xs max-h-[580px] overflow-y-auto" // Posicionado mais para cima (top-4)
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
