@@ -52,6 +52,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Estilos auxiliares para o Hub Conectado */
+@keyframes pulse-glow {
+  0% { filter: drop-shadow(0 0 5px rgba(13, 35, 160, 0.3)); }
+  50% { filter: drop-shadow(0 0 10px rgba(91, 33, 189, 0.6)); }
+  100% { filter: drop-shadow(0 0 5px rgba(13, 35, 160, 0.3)); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s infinite ease-in-out;
+}
+
 :root {
   --primary: #FF6B00;
   --primary-lighter: #FF9B50;
@@ -848,7 +859,7 @@ textarea:hover,
   border-radius: 16px;
   box-shadow:
     0 10px 25px -5px rgba(0, 0, 0, 0.1),
-    0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    0 8px10px -6px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   transform-origin: top right;
 }
