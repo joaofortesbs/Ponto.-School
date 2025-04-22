@@ -20,7 +20,8 @@ export const ChatInteligente: React.FC = () => {
   const [epictusMode, setEpictusMode] = useState(false);
 
   useEffect(() => {
-    const handleEpictusActivation = () => {
+    const handleEpictusActivation = (event: Event) => {
+      console.log("Modo Epictus ativado via evento");
       setEpictusMode(true);
     };
 
@@ -28,6 +29,7 @@ export const ChatInteligente: React.FC = () => {
 
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('mode') === 'epictus') {
+      console.log("Modo Epictus ativado via URL");
       setEpictusMode(true);
     }
 

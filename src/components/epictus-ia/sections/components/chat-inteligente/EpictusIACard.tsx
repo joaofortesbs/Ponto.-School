@@ -15,6 +15,8 @@ export const EpictusIACard: React.FC<EpictusIACardProps> = ({ onActivateEpictus 
     // Dispatch um evento personalizado para ativar o modo Epictus IA
     window.history.pushState({}, "", "/epictus-ia?mode=epictus");
     
+    console.log("Ativando modo Epictus IA via card");
+    
     // Aciona callback se fornecido
     if (onActivateEpictus) {
       onActivateEpictus();
