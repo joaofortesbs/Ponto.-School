@@ -58,7 +58,7 @@ const TurboMessageBox: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto mb-2 px-4">
+    <div className="w-full max-w-5xl mx-auto mb-8 px-4">
       <motion.div 
         className="relative bg-gradient-to-r from-[#050e1d]/90 to-[#0d1a30]/90 rounded-2xl shadow-xl 
                    border border-white/5 backdrop-blur-sm overflow-hidden"
@@ -72,17 +72,17 @@ const TurboMessageBox: React.FC = () => {
         </div>
         
         {/* Container principal */}
-        <div className="relative z-10 p-5">
+        <div className="relative z-10 p-4">
           {/* Área de input */}
           <div className="flex items-center gap-2">
             <motion.button
-              className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+              className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
                          flex items-center justify-center shadow-lg text-white"
               whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsExpanded(!isExpanded)}
             >
-              <Plus size={22} />
+              <Plus size={20} />
             </motion.button>
             
             <div className={`relative flex-grow flex items-center overflow-hidden 
@@ -97,7 +97,7 @@ const TurboMessageBox: React.FC = () => {
                 onFocus={() => setIsInputFocused(true)}
                 onBlur={() => setIsInputFocused(false)}
                 placeholder="Digite um comando ou pergunta para o Epictus Turbo..."
-                className="w-full bg-transparent text-white py-4 px-4 outline-none placeholder:text-gray-400"
+                className="w-full bg-transparent text-white py-3 px-4 outline-none placeholder:text-gray-400"
               />
               
               {/* Botão de microfone */}
@@ -131,7 +131,7 @@ const TurboMessageBox: React.FC = () => {
           {/* Ações rápidas */}
           <AnimatePresence>
             <motion.div 
-              className="quick-actions mt-4 pb-2 flex gap-2 overflow-x-auto scrollbar-hide"
+              className="quick-actions mt-3 pb-1 flex gap-2 overflow-x-auto scrollbar-hide"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
