@@ -161,10 +161,10 @@ const TurboHubConnected: React.FC = () => {
     : null;
 
   return (
-    <div className="w-full max-w-full mx-auto px-4 mt-2 mb-6">
+    <div className="w-full mx-auto p-4 mt-2 mb-6">
       <div 
         ref={containerRef}
-        className="relative min-h-[500px] w-full max-w-full mx-auto bg-gradient-to-r from-[#050e1d] to-[#0d1a30] rounded-2xl shadow-xl border border-white/5 overflow-hidden"
+        className="relative min-h-[500px] w-full bg-gradient-to-r from-[#050e1d] to-[#0d1a30] rounded-2xl shadow-xl border border-white/5 overflow-hidden"
       >
         {/* Partículas de fundo */}
         {particlesArray.map((particle, index) => (
