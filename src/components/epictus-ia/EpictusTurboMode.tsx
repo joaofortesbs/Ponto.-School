@@ -1,7 +1,7 @@
+
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/ThemeProvider";
-import TurboHubConnected from "./TurboHubConnected";
+import { motion, AnimatePresence } from "framer-motion";
 import { Zap, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -18,7 +18,7 @@ const EpictusTurboMode: React.FC = () => {
   );
   const [profileName, setProfileName] = useState("Personalidades");
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
-
+  
   useEffect(() => {
     // Trigger initial animation
     const timer = setTimeout(() => {
@@ -27,23 +27,23 @@ const EpictusTurboMode: React.FC = () => {
 
     return () => clearTimeout(timer);
   }, []);
-
+  
   // Ouvir o evento de seleção de perfil
   useEffect(() => {
     const handleProfileSelection = (event: any) => {
       setProfileIcon(event.detail.icon);
       setProfileName(event.detail.name);
     };
-
+    
     window.addEventListener('profileSelected', handleProfileSelection);
-
+    
     return () => {
       window.removeEventListener('profileSelected', handleProfileSelection);
     };
   }, []);
-
+  
   const isDark = theme === "dark";
-
+  
   // Opções de perfil para o dropdown
   const profileOptions = [
     { 
@@ -53,7 +53,7 @@ const EpictusTurboMode: React.FC = () => {
       name: "Estudante",
       onClick: () => {
         setSelectedProfile("Estudante");
-
+        
         // Disparar um evento customizado para atualizar o texto do botão
         const event = new CustomEvent('profileSelected', { 
           detail: { 
@@ -71,7 +71,7 @@ const EpictusTurboMode: React.FC = () => {
       name: "Professor",
       onClick: () => {
         setSelectedProfile("Professor");
-
+        
         // Disparar um evento customizado para atualizar o texto do botão
         const event = new CustomEvent('profileSelected', { 
           detail: { 
@@ -89,7 +89,7 @@ const EpictusTurboMode: React.FC = () => {
       name: "Coordenador",
       onClick: () => {
         setSelectedProfile("Coordenador");
-
+        
         // Disparar um evento customizado para atualizar o texto do botão
         const event = new CustomEvent('profileSelected', { 
           detail: { 
@@ -107,7 +107,7 @@ const EpictusTurboMode: React.FC = () => {
       name: "Expert",
       onClick: () => {
         setSelectedProfile("Expert");
-
+        
         // Disparar um evento customizado para atualizar o texto do botão
         const event = new CustomEvent('profileSelected', { 
           detail: { 
@@ -119,9 +119,9 @@ const EpictusTurboMode: React.FC = () => {
       }
     }
   ];
-
+  
   // New color scheme is now directly applied in the class names
-
+  
   return (
     <div className="w-full flex flex-col items-center">
       {/* Header copied from EpictusIAHeader but with title changed to "Epictus Turbo" */}
@@ -241,7 +241,7 @@ const EpictusTurboMode: React.FC = () => {
                   </svg>
                 </div>
               </motion.div>
-
+              
               {/* Dropdown content - absolute positioning relative to its container */}
               <div className="absolute group-hover:opacity-100 group-hover:visible opacity-0 invisible transition-all duration-300 z-[9999] left-0 top-full mt-2">
                 <div className="w-52 bg-gradient-to-r from-[#0c2341] to-[#0f3562] rounded-lg shadow-xl overflow-hidden border border-white/10 backdrop-blur-md">
@@ -363,19 +363,16 @@ const EpictusTurboMode: React.FC = () => {
           </div>
         </motion.header>
       </div>
-
+      
       {/* Content area now below the header */}
       <div className="w-full flex flex-col items-center justify-center mt-4 mb-8">
-        {/* Hub Conectado */}
-        <TurboHubConnected />
-
         {/* Mini-section selector */}
         <div className="w-full flex-grow flex items-center justify-center">
           {/* Aqui virá o conteúdo principal (histórico de conversas, resultados, etc.) */}
         </div>
-
-        {/* Caixa de mensagens posicionada mais acima */}
-        <div className="w-full bottom-0 left-0 right-0 z-30 mt-auto pb-20">
+        
+        {/* Caixa de mensagens na parte inferior */}
+        <div className="w-full bottom-0 left-0 right-0 z-30 mt-auto">
           <TurboMessageBox />
         </div>
       </div>
