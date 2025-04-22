@@ -178,7 +178,6 @@ const EpictusTurboMode: React.FC = () => {
               <div className="absolute group-hover:opacity-100 group-hover:visible opacity-0 invisible transition-all duration-300 z-[9999] left-0 top-full mt-2">
                 <div className="w-52 bg-gradient-to-r from-[#0c2341] to-[#0f3562] rounded-lg shadow-xl overflow-hidden border border-white/10 backdrop-blur-md">
                   <div className="max-h-60 overflow-y-auto py-2">
-                    {/* Estado para controlar o perfil selecionado */}
                     {React.useMemo(() => {
                       const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
                       
@@ -274,10 +273,11 @@ const EpictusTurboMode: React.FC = () => {
                             }}
                           >
                             {item.icon}
-                        </div>
-                        <span className="text-white text-sm">{item.name}</span>
-                      </div>
-                    ))}
+                          </div>
+                          <span className="text-white text-sm">{item.name}</span>
+                        </motion.div>
+                      ));
+                    }, [])}
                   </div>
                 </div>
               </div>
