@@ -1018,6 +1018,68 @@ textarea:hover,
 
 /* Estilos adicionais para botões interativos no modal */
 .welcome-modal-overlay button {
+
+/* Animações para linhas tecnológicas */
+@keyframes line-pulse {
+  0%, 100% {
+    opacity: 0.8;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    opacity: 1;
+    stroke-dashoffset: 12;
+  }
+}
+
+.tech-line {
+  animation: line-pulse 3s linear infinite;
+}
+
+@keyframes data-flow {
+  0% {
+    stroke-dashoffset: 24;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.data-flow-line {
+  stroke-dasharray: 4 2;
+  animation: data-flow 2s linear infinite;
+}
+
+/* Efeito de borda digital */
+.digital-border {
+  position: relative;
+  overflow: hidden;
+}
+
+.digital-border:after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 200%;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.2) 25%, 
+    rgba(255, 255, 255, 0.5) 50%, 
+    rgba(255, 255, 255, 0.2) 75%, 
+    transparent 100%);
+  animation: digital-scan 3s linear infinite;
+}
+
+@keyframes digital-scan {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0%);
+  }
+}
+
   cursor: pointer;
 }
 

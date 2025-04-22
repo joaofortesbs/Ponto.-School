@@ -209,23 +209,34 @@ const TurboHubConnected: React.FC = () => {
         <svg className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-visible">
           <defs>
             <linearGradient id="lineGradient1" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#0D23A0" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#5B21BD" stopOpacity="0.6" />
+              <stop offset="0%" stopColor="#0D23A0" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#4A2FA0" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#5B21BD" stopOpacity="0.8" />
             </linearGradient>
             <linearGradient id="lineGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#1230CC" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#4A0D9F" stopOpacity="0.6" />
+              <stop offset="0%" stopColor="#1230CC" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#3726BB" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#4A0D9F" stopOpacity="0.8" />
             </linearGradient>
             <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
               <feGaussianBlur stdDeviation="4" result="blur" />
               <feComposite in="SourceGraphic" in2="blur" operator="over" />
             </filter>
+            <filter id="techGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
             
             {/* Animação das partículas nas linhas */}
             <linearGradient id="particleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#4A0D9F" stopOpacity="0.6" />
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#4A0D9F" stopOpacity="0.8" />
             </linearGradient>
+            
+            {/* Padrão de linha tecnológica */}
+            <pattern id="techLinePattern" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
+              <rect x="0" y="3.5" width="8" height="1" fill="rgba(255, 255, 255, 0.3)" />
+            </pattern>
           </defs>
 
           {/* Linhas conectando nódulos ao centro */}
@@ -239,38 +250,80 @@ const TurboHubConnected: React.FC = () => {
                 opacity={isActive ? 1 : 0.3} 
                 className="transition-opacity duration-500"
               >
+                {/* Linha base (mais grossa e brilhante) */}
                 <path 
                   d={`M 50% 50% L ${50 + 35 * Math.cos(angle)}% ${50 + 35 * Math.sin(angle)}%`}
                   stroke={`url(#lineGradient${index % 2 + 1})`}
-                  strokeWidth="2"
-                  strokeDasharray={isActive ? "0" : "4 2"}
+                  strokeWidth="3"
+                  fill="none"
+                  filter="url(#techGlow)"
+                  className="transition-all duration-500"
+                />
+                
+                {/* Linha tecnológica sobreposta (efeito digital) */}
+                <path 
+                  d={`M 50% 50% L ${50 + 35 * Math.cos(angle)}% ${50 + 35 * Math.sin(angle)}%`}
+                  stroke={`url(#lineGradient${index % 2 + 1})`}
+                  strokeWidth="1.5"
+                  strokeDasharray={isActive ? "8 4" : "4 2"}
                   fill="none"
                   className="transition-all duration-500"
                 />
                 
-                {/* Partículas pulsantes nas linhas */}
-                {Array.from({ length: 3 }).map((_, i) => (
+                {/* Partículas pulsantes nas linhas com efeito tecnológico*/}
+                {Array.from({ length: 5 }).map((_, i) => (
                   <motion.circle 
                     key={`particle-${index}-${i}`}
-                    cx={`${50 + (20 + i * 6) * Math.cos(angle)}%`}
-                    cy={`${50 + (20 + i * 6) * Math.sin(angle)}%`}
+                    cx={`${50 + (20 + i * 5) * Math.cos(angle)}%`}
+                    cy={`${50 + (20 + i * 5) * Math.sin(angle)}%`}
                     r="2"
-                    fill="#4A0D9F"
+                    fill="white"
+                    stroke={`rgba(${index % 2 ? '74, 13, 159' : '13, 35, 160'}, 0.8)`}
+                    strokeWidth="0.5"
                     animate={{ 
-                      cx: [`${50 + (35 - i * 10) * Math.cos(angle)}%`, `${50 + 5 * Math.cos(angle)}%`],
-                      cy: [`${50 + (35 - i * 10) * Math.sin(angle)}%`, `${50 + 5 * Math.sin(angle)}%`],
+                      cx: [`${50 + (35 - i * 7) * Math.cos(angle)}%`, `${50 + 5 * Math.cos(angle)}%`],
+                      cy: [`${50 + (35 - i * 7) * Math.sin(angle)}%`, `${50 + 5 * Math.sin(angle)}%`],
                       opacity: [0.8, 1, 0.2],
-                      r: ["2px", "3px", "1px"]
+                      r: ["1.5px", "2.5px", "1px"],
+                      filter: [
+                        "drop-shadow(0 0 2px rgba(255, 255, 255, 0.8))",
+                        "drop-shadow(0 0 4px rgba(255, 255, 255, 0.9))",
+                        "drop-shadow(0 0 1px rgba(255, 255, 255, 0.7))"
+                      ]
                     }}
                     transition={{ 
                       repeat: Infinity,
-                      duration: 3 + i * 0.5,
-                      delay: i * 1,
+                      duration: 2 + i * 0.4,
+                      delay: i * 0.7,
                       ease: "linear",
                       times: [0, 0.8, 1]
                     }}
                     style={{
                       display: isActive ? "block" : "none"
+                    }}
+                  />
+                ))}
+                
+                {/* Pequenos pulsos digitais ao longo da linha */}
+                {isActive && Array.from({ length: 2 }).map((_, i) => (
+                  <motion.circle 
+                    key={`digital-pulse-${index}-${i}`}
+                    cx="50%"
+                    cy="50%"
+                    r="1.5"
+                    fill="rgba(255, 255, 255, 0.9)"
+                    filter="drop-shadow(0 0 2px rgba(255, 255, 255, 0.8))"
+                    animate={{ 
+                      cx: [`${50}%`, `${50 + 35 * Math.cos(angle) * 0.6}%`],
+                      cy: [`${50}%`, `${50 + 35 * Math.sin(angle) * 0.6}%`],
+                      opacity: [0.9, 0],
+                      r: ["1.5px", "0.5px"]
+                    }}
+                    transition={{ 
+                      repeat: Infinity,
+                      duration: 1.5,
+                      delay: i * 0.75,
+                      ease: "linear" 
                     }}
                   />
                 ))}
