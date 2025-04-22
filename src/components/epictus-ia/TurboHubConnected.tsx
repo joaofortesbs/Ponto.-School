@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, Brain, PenLine, BookOpen, Calendar, PieChart, CheckSquare, Sparkles } from "lucide-react";
@@ -110,10 +109,10 @@ const TurboHubConnected: React.FC = () => {
     const containerHeight = containerRef.current.offsetHeight;
 
     // Criar array de partículas
-    const particles = Array.from({ length: 100 }, () => ({
+    const particles = Array.from({ length: 80 }, () => ({
       x: Math.random() * containerWidth,
       y: Math.random() * containerHeight,
-      size: Math.random() * 2 + 0.5,
+      size: Math.random() * 2 + 1,
       speed: Math.random() * 0.5 + 0.1,
       opacity: Math.random() * 0.5 + 0.2
     }));
@@ -126,7 +125,7 @@ const TurboHubConnected: React.FC = () => {
         prev.map(particle => ({
           ...particle,
           y: particle.y - particle.speed,
-          x: particle.x + (Math.random() - 0.5) * 0.3,
+          x: particle.x + (Math.random() - 0.5) * 0.5,
           // Resetar partícula quando sai da tela
           ...(particle.y < 0 ? {
             y: containerHeight,
@@ -138,27 +137,7 @@ const TurboHubConnected: React.FC = () => {
 
     const animationFrame = setInterval(animateParticles, 50);
 
-    // Ajustar partículas ao redimensionar a janela
-    const handleResize = () => {
-      if (!containerRef.current) return;
-      const newWidth = containerRef.current.offsetWidth;
-      const newHeight = containerRef.current.offsetHeight;
-      
-      setParticlesArray(prev => 
-        prev.map(particle => ({
-          ...particle,
-          x: (particle.x / containerWidth) * newWidth,
-          y: (particle.y / containerHeight) * newHeight
-        }))
-      );
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      clearInterval(animationFrame);
-      window.removeEventListener('resize', handleResize);
-    };
+    return () => clearInterval(animationFrame);
   }, []);
 
   // Função para lidar com o clique em um nódulo
@@ -187,7 +166,7 @@ const TurboHubConnected: React.FC = () => {
         ref={containerRef}
         className="relative min-h-[500px] w-full bg-gradient-to-r from-[#050e1d] to-[#0d1a30] rounded-2xl shadow-xl border border-white/5 overflow-hidden"
       >
-        {/* Partículas de fundo - estrelas */}
+        {/* Partículas de fundo */}
         {particlesArray.map((particle, index) => (
           <div
             key={index}
@@ -202,41 +181,24 @@ const TurboHubConnected: React.FC = () => {
           />
         ))}
 
-        {/* Grade de fundo - sistema cibernético */}
+        {/* Grade de fundo */}
         <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
 
-        {/* Linhas de conexão com SVG */}
-        <svg className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-visible">
+        {/* Linhas de conexão */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
           <defs>
             <linearGradient id="lineGradient1" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#0D23A0" stopOpacity="0.8" />
-              <stop offset="50%" stopColor="#4A2FA0" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#5B21BD" stopOpacity="0.8" />
+              <stop offset="0%" stopColor="#0D23A0" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#5B21BD" stopOpacity="0.6" />
             </linearGradient>
             <linearGradient id="lineGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#1230CC" stopOpacity="0.8" />
-              <stop offset="50%" stopColor="#3726BB" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#4A0D9F" stopOpacity="0.8" />
+              <stop offset="0%" stopColor="#1230CC" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#4A0D9F" stopOpacity="0.6" />
             </linearGradient>
             <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
               <feGaussianBlur stdDeviation="4" result="blur" />
               <feComposite in="SourceGraphic" in2="blur" operator="over" />
             </filter>
-            <filter id="techGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="1.5" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
-            
-            {/* Animação das partículas nas linhas */}
-            <linearGradient id="particleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#4A0D9F" stopOpacity="0.8" />
-            </linearGradient>
-            
-            {/* Padrão de linha tecnológica */}
-            <pattern id="techLinePattern" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
-              <rect x="0" y="3.5" width="8" height="1" fill="rgba(255, 255, 255, 0.3)" />
-            </pattern>
           </defs>
 
           {/* Linhas conectando nódulos ao centro */}
@@ -246,131 +208,58 @@ const TurboHubConnected: React.FC = () => {
 
             return (
               <g key={nodule.id} 
-                filter={isActive ? "url(#glow)" : ""} 
-                opacity={isActive ? 1 : 0.3} 
-                className="transition-opacity duration-500"
-              >
-                {/* Linha base (mais grossa e brilhante) */}
+                 filter={isActive ? "url(#glow)" : ""} 
+                 opacity={isActive ? 1 : 0.3} 
+                 className="transition-opacity duration-500">
                 <path 
                   d={`M 50% 50% L ${50 + 35 * Math.cos(angle)}% ${50 + 35 * Math.sin(angle)}%`}
                   stroke={`url(#lineGradient${index % 2 + 1})`}
-                  strokeWidth="3"
-                  fill="none"
-                  filter="url(#techGlow)"
-                  className="transition-all duration-500"
-                />
-                
-                {/* Linha tecnológica sobreposta (efeito digital) */}
-                <path 
-                  d={`M 50% 50% L ${50 + 35 * Math.cos(angle)}% ${50 + 35 * Math.sin(angle)}%`}
-                  stroke={`url(#lineGradient${index % 2 + 1})`}
-                  strokeWidth="1.5"
-                  strokeDasharray={isActive ? "8 4" : "4 2"}
+                  strokeWidth="2"
                   fill="none"
                   className="transition-all duration-500"
                 />
-                
-                {/* Partículas pulsantes nas linhas com efeito tecnológico*/}
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <motion.circle 
-                    key={`particle-${index}-${i}`}
-                    cx={`${50 + (20 + i * 5) * Math.cos(angle)}%`}
-                    cy={`${50 + (20 + i * 5) * Math.sin(angle)}%`}
-                    r="2"
-                    fill="white"
-                    stroke={`rgba(${index % 2 ? '74, 13, 159' : '13, 35, 160'}, 0.8)`}
-                    strokeWidth="0.5"
-                    animate={{ 
-                      cx: [`${50 + (35 - i * 7) * Math.cos(angle)}%`, `${50 + 5 * Math.cos(angle)}%`],
-                      cy: [`${50 + (35 - i * 7) * Math.sin(angle)}%`, `${50 + 5 * Math.sin(angle)}%`],
-                      opacity: [0.8, 1, 0.2],
-                      r: ["1.5px", "2.5px", "1px"],
-                      filter: [
-                        "drop-shadow(0 0 2px rgba(255, 255, 255, 0.8))",
-                        "drop-shadow(0 0 4px rgba(255, 255, 255, 0.9))",
-                        "drop-shadow(0 0 1px rgba(255, 255, 255, 0.7))"
-                      ]
-                    }}
-                    transition={{ 
-                      repeat: Infinity,
-                      duration: 2 + i * 0.4,
-                      delay: i * 0.7,
-                      ease: "linear",
-                      times: [0, 0.8, 1]
-                    }}
-                    style={{
-                      display: isActive ? "block" : "none"
-                    }}
-                  />
-                ))}
-                
-                {/* Pequenos pulsos digitais ao longo da linha */}
-                {isActive && Array.from({ length: 2 }).map((_, i) => (
-                  <motion.circle 
-                    key={`digital-pulse-${index}-${i}`}
-                    cx="50%"
-                    cy="50%"
-                    r="1.5"
-                    fill="rgba(255, 255, 255, 0.9)"
-                    filter="drop-shadow(0 0 2px rgba(255, 255, 255, 0.8))"
-                    animate={{ 
-                      cx: [`${50}%`, `${50 + 35 * Math.cos(angle) * 0.6}%`],
-                      cy: [`${50}%`, `${50 + 35 * Math.sin(angle) * 0.6}%`],
-                      opacity: [0.9, 0],
-                      r: ["1.5px", "0.5px"]
-                    }}
-                    transition={{ 
-                      repeat: Infinity,
-                      duration: 1.5,
-                      delay: i * 0.75,
-                      ease: "linear" 
-                    }}
-                  />
-                ))}
+                {/* Pontos pulsantes nas linhas */}
+                <motion.circle 
+                  cx={`${50 + 20 * Math.cos(angle)}%`}
+                  cy={`${50 + 20 * Math.sin(angle)}%`}
+                  r="2"
+                  fill="#4A0D9F"
+                  initial={{ opacity: 0.2 }}
+                  animate={{ 
+                    opacity: [0.2, 0.8, 0.2],
+                    r: ["2px", "3px", "2px"]
+                  }}
+                  transition={{ 
+                    repeat: Infinity,
+                    duration: 2 + index * 0.3,
+                    ease: "easeInOut"
+                  }}
+                />
               </g>
             );
           })}
         </svg>
 
-        {/* Núcleo central - Epictus Turbo */}
+        {/* Núcleo central */}
         <motion.div 
           className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 ${
-            focusedNodule ? 'scale-90 opacity-80' : 'opacity-100'
+            focusedNodule ? 'opacity-50 blur-sm' : 'opacity-100'
           } transition-all duration-500`}
           animate={{
-            boxShadow: [
-              '0 0 15px rgba(13, 35, 160, 0.5)', 
-              '0 0 25px rgba(91, 33, 189, 0.7)', 
-              '0 0 15px rgba(13, 35, 160, 0.5)'
-            ]
+            boxShadow: ['0 0 15px rgba(13, 35, 160, 0.5)', '0 0 25px rgba(91, 33, 189, 0.7)', '0 0 15px rgba(13, 35, 160, 0.5)']
           }}
           transition={{
             duration: 3,
             repeat: Infinity,
             repeatType: "reverse",
-            ease: "easeInOut"
+            ease: "linear"
           }}
         >
-          <div className="relative w-28 h-28 rounded-[22px] bg-gradient-to-br from-[#2B27A9] to-[#3C2BD6] flex items-center justify-center shadow-2xl">
-            <div className="absolute inset-0 rounded-[22px] bg-gradient-to-br from-[#0D23A0]/30 to-[#5B21BD]/30 blur-lg animate-pulse"></div>
-            
-            {/* Efeito de pulso recebendo dados */}
-            <motion.div 
-              className="absolute inset-0 rounded-[22px] bg-gradient-to-br from-[#0D23A0]/10 to-[#5B21BD]/10"
-              animate={{
-                scale: [1, 1.1, 1],
-                opacity: [0.2, 0.4, 0.2]
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-            />
-            
+          <div className="relative w-24 h-24 rounded-[20px] bg-gradient-to-br from-[#2B27A9] to-[#3C2BD6] flex items-center justify-center shadow-2xl">
+            <div className="absolute inset-0 rounded-[20px] bg-gradient-to-br from-[#0D23A0]/30 to-[#5B21BD]/30 blur-lg animate-pulse"></div>
             <span className="text-white font-bold text-xl relative z-10">
               <div className="flex items-center justify-center flex-col">
-                <Sparkles className="h-7 w-7 text-white mb-1" />
+                <Sparkles className="h-6 w-6 text-white mb-1" />
                 <span>Turbo</span>
               </div>
             </span>
@@ -392,11 +281,7 @@ const TurboHubConnected: React.FC = () => {
           };
 
           return (
-            <div 
-              key={nodule.id} 
-              style={positionStyle} 
-              className="absolute -translate-x-1/2 -translate-y-1/2 z-10"
-            >
+            <div key={nodule.id} style={positionStyle} className="absolute -translate-x-1/2 -translate-y-1/2 z-10">
               <motion.div
                 className={`relative ${isBlurred ? 'opacity-30 blur-sm scale-75' : ''} transition-all duration-500`}
                 animate={isFocused ? {
@@ -411,16 +296,13 @@ const TurboHubConnected: React.FC = () => {
                 onClick={() => handleNoduleClick(nodule.id)}
               >
                 <motion.div 
-                  className={`w-18 h-18 rounded-2xl bg-gradient-to-br ${nodule.color} flex items-center justify-center shadow-xl cursor-pointer border border-white/20`}
+                  className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${nodule.color} flex items-center justify-center shadow-xl cursor-pointer border border-white/20`}
                   whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(255, 255, 255, 0.3)" }}
                   whileTap={{ scale: 0.95 }}
-                  style={{ width: "4.5rem", height: "4.5rem" }}
                 >
-                  <div className="text-white">
-                    {nodule.icon}
-                  </div>
+                  {nodule.icon}
                 </motion.div>
-                <div className="text-center mt-2 text-white text-sm font-medium w-24 mx-auto">
+                <div className="text-center mt-2 text-white text-sm font-medium max-w-[100px] mx-auto">
                   {nodule.name}
                 </div>
               </motion.div>
