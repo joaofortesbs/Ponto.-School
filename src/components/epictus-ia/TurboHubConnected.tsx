@@ -184,56 +184,131 @@ const TurboHubConnected: React.FC = () => {
         {/* Grade de fundo */}
         <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
 
-        {/* Linhas de conexão */}
+        {/* Linhas de conexão - Versão Ultra Tecnológica */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
           <defs>
             <linearGradient id="lineGradient1" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#0D23A0" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#5B21BD" stopOpacity="0.6" />
+              <stop offset="0%" stopColor="#0D23A0" stopOpacity="0.7" />
+              <stop offset="50%" stopColor="#4A2DB9" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#5B21BD" stopOpacity="0.7" />
             </linearGradient>
             <linearGradient id="lineGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#1230CC" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#4A0D9F" stopOpacity="0.6" />
+              <stop offset="0%" stopColor="#1230CC" stopOpacity="0.7" />
+              <stop offset="50%" stopColor="#3526B5" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#4A0D9F" stopOpacity="0.7" />
             </linearGradient>
             <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feGaussianBlur stdDeviation="3" result="blur" />
               <feComposite in="SourceGraphic" in2="blur" operator="over" />
             </filter>
+            
+            {/* Padrão de traços para linhas tecnológicas */}
+            <pattern id="techPattern" x="0" y="0" width="8" height="1" patternUnits="userSpaceOnUse">
+              <line x1="0" y1="0" x2="4" y2="0" stroke="#4A0D9F" strokeWidth="0.5" />
+            </pattern>
+            
+            {/* Marcadores para as linhas */}
+            <marker id="dot" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="4" markerHeight="4">
+              <circle cx="4" cy="4" r="2" fill="#8A63E8" />
+            </marker>
           </defs>
 
-          {/* Linhas conectando nódulos ao centro */}
+          {/* Linhas conectando nódulos ao centro - Estilo ultra tecnológico */}
           {nodules.map((nodule, index) => {
             const angle = (index * (2 * Math.PI / nodules.length));
             const isActive = focusedNodule === null || focusedNodule === nodule.id;
+            
+            // Cálculos para curvas Bezier estilizadas
+            const centerX = 50;
+            const centerY = 50;
+            const endX = 50 + 35 * Math.cos(angle);
+            const endY = 50 + 35 * Math.sin(angle);
+            
+            // Pontos de controle para curva elegante
+            const ctrlDist = 25;
+            const ctrlX1 = centerX + ctrlDist * Math.cos(angle + 0.2);
+            const ctrlY1 = centerY + ctrlDist * Math.sin(angle + 0.2);
+            const ctrlX2 = endX - 10 * Math.cos(angle - 0.2);
+            const ctrlY2 = endY - 10 * Math.sin(angle - 0.2);
 
             return (
               <g key={nodule.id} 
                  filter={isActive ? "url(#glow)" : ""} 
                  opacity={isActive ? 1 : 0.3} 
                  className="transition-opacity duration-500">
+                
+                {/* Linha curva principal - estilo tecnológico */}
                 <path 
-                  d={`M 50% 50% L ${50 + 35 * Math.cos(angle)}% ${50 + 35 * Math.sin(angle)}%`}
+                  d={`M ${centerX}% ${centerY}% C ${ctrlX1}% ${ctrlY1}%, ${ctrlX2}% ${ctrlY2}%, ${endX}% ${endY}%`}
                   stroke={`url(#lineGradient${index % 2 + 1})`}
-                  strokeWidth="2"
+                  strokeWidth="1"
+                  strokeDasharray={isActive ? "5,3" : "3,2"}
                   fill="none"
-                  className="transition-all duration-500"
+                  className="tech-line transition-all duration-500"
                 />
-                {/* Pontos pulsantes nas linhas */}
+                
+                {/* Linha brilhante de destaque */}
+                <path 
+                  d={`M ${centerX}% ${centerY}% C ${ctrlX1}% ${ctrlY1}%, ${ctrlX2}% ${ctrlY2}%, ${endX}% ${endY}%`}
+                  stroke="#6246EA"
+                  strokeWidth="0.5"
+                  strokeDasharray="1,12"
+                  strokeLinecap="round"
+                  fill="none"
+                  opacity={isActive ? 0.9 : 0.2}
+                  className="tech-highlight"
+                />
+                
+                {/* Pontos de dados nas linhas - animados */}
+                {[0.2, 0.5, 0.8].map((pos, i) => (
+                  <motion.circle 
+                    key={`dot-${index}-${i}`}
+                    cx={`${centerX + (endX - centerX) * pos}%`}
+                    cy={`${centerY + (endY - centerY) * pos}%`}
+                    r={isActive ? "1.2" : "0.8"}
+                    fill={i === 1 ? "#8A63E8" : "#4A0D9F"}
+                    initial={{ opacity: 0.3 }}
+                    animate={{ 
+                      opacity: [0.3, 0.8, 0.3],
+                      r: isActive ? ["1.2px", "1.8px", "1.2px"] : ["0.8px", "1.2px", "0.8px"]
+                    }}
+                    transition={{ 
+                      repeat: Infinity,
+                      duration: 1.5 + (i * 0.5),
+                      delay: index * 0.1 + i * 0.2,
+                      ease: "easeInOut"
+                    }}
+                  />
+                ))}
+                
+                {/* Partícula fluindo do nódulo para o centro - visualização de dados */}
                 <motion.circle 
-                  cx={`${50 + 20 * Math.cos(angle)}%`}
-                  cy={`${50 + 20 * Math.sin(angle)}%`}
-                  r="2"
-                  fill="#4A0D9F"
-                  initial={{ opacity: 0.2 }}
+                  cx="0%"
+                  cy="0%"
+                  r="1.5"
+                  fill="#8A63E8"
+                  filter="url(#glow)"
+                  initial={{ opacity: 0 }}
                   animate={{ 
-                    opacity: [0.2, 0.8, 0.2],
-                    r: ["2px", "3px", "2px"]
+                    opacity: [0, 0.9, 0],
+                    cx: [`${endX}%`, `${centerX}%`],
+                    cy: [`${endY}%`, `${centerY}%`] 
                   }}
                   transition={{ 
                     repeat: Infinity,
-                    duration: 2 + index * 0.3,
-                    ease: "easeInOut"
+                    duration: 3 + index * 0.5,
+                    delay: index * 0.8,
+                    ease: "linear"
                   }}
+                />
+                
+                {/* Conector no final da linha */}
+                <circle 
+                  cx={`${endX}%`} 
+                  cy={`${endY}%`} 
+                  r="0.8" 
+                  fill={isActive ? "#8A63E8" : "#4A0D9F"} 
+                  className="transition-all duration-300"
                 />
               </g>
             );
