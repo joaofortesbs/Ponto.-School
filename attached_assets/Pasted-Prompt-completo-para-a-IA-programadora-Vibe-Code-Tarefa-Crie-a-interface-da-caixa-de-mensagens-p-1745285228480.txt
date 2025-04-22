@@ -1,0 +1,110 @@
+Prompt completo para a IA programadora (Vibe Code):
+Tarefa:
+Crie a interface da caixa de mensagens principal do Epictus Turbo, com base nas referências visuais enviadas (semelhantes às interfaces do ChatGPT, Gemini, Manus e Grok) e nas funcionalidades específicas da seção "Epictus Turbo" da plataforma educacional.
+
+🧠 Objetivo da Caixa de Mensagem
+Permitir que o usuário digite comandos ou perguntas para a IA "Epictus Turbo", com botões de ação rápida, aparência futurista e foco total na experiência interativa e educacional.
+
+🎯 Funcionalidades obrigatórias
+Campo de entrada de texto grande e chamativo, com placeholder do tipo:
+
+“Digite um comando ou pergunta para o Epictus Turbo…”
+
+Botão de envio animado (ícone de IA)
+
+Fica do lado direito do campo de texto.
+
+Com microanimação ou pulso leve quando o campo está preenchido.
+
+Ícone com estilo futurista (ex: linhas neon, pulsação, ou ícone de "turbo").
+
+Botões de ação rápida abaixo ou ao lado do input, como:
+
+📌 Criar Fluxograma
+
+📘 Gerar Caderno
+
+🧠 Análise de Redação
+
+🎯 Simulador de Provas
+
+🔁 Resumir Conteúdo
+
+💬 Reescrever Explicação
+
+Esses botões devem ter estilo pill button, com animação hover e ícone relacionado. Também devem ser scrolláveis horizontalmente, se houver muitos.
+
+Botão "+" lateral para abrir atalhos ou opções avançadas, como:
+
+Escolher tema/competência
+
+Modo estudo ou modo resposta rápida
+
+Adicionar mídia
+
+Botão de microfone para ativar entrada por voz
+
+Modo “Compacto” e “Expansivo”
+
+Compacto: mostra só o campo de texto + ícones
+
+Expansivo: revela botões adicionais com sugestões inteligentes
+
+Feedback visual ao digitar (sombra leve, brilho ou borda animada)
+
+✨ Design visual (UI)
+Estilo geral: ultramoderno, minimalista, com curvas suaves e aspecto high-tech.
+
+Fundo: degradê escuro ou translúcido com partículas flutuando lentamente ao fundo (como se fosse uma camada de partículas 3D).
+
+Input: com bordas arredondadas (border-radius alto) e leve brilho ao focar.
+
+Fonte: sans-serif moderna (ex: Inter, Poppins ou Space Grotesk)
+
+Sombras internas e leves transições em todos os elementos.
+
+Partículas flutuantes:
+
+Use alguma lib JS como tsParticles, particles.js, ou react-tsparticles para implementar.
+
+Cor: tons neutros ou azuis suaves.
+
+Velocidade baixa.
+
+Deixe pausadas por padrão, e com um botão “ativar movimento” se possível (ou ativa em hover).
+
+Integração suave no background da caixa de entrada.
+
+💡 Exemplo de estrutura do componente (em React):
+tsx
+Copiar
+Editar
+<div className="epictus-input-container relative bg-dark rounded-2xl shadow-xl p-4">
+  <ParticlesBackground paused />
+  <div className="input-area flex items-center gap-2">
+    <button className="btn-more">+</button>
+    <input
+      type="text"
+      placeholder="Digite um comando ou pergunta para o Epictus Turbo…"
+      className="epictus-input w-full px-4 py-3 rounded-xl bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+    />
+    <button className="btn-mic"><MicIcon /></button>
+    <button className="btn-send animate-pulse"><AIIcon /></button>
+  </div>
+
+  <div className="quick-actions mt-3 flex gap-2 overflow-x-auto">
+    <QuickAction icon={<Brain />} label="Simulador" />
+    <QuickAction icon={<BookOpen />} label="Caderno" />
+    <QuickAction icon={<Flowchart />} label="Fluxograma" />
+    <QuickAction icon={<Redo />} label="Reescrever" />
+  </div>
+</div>
+🔧 Considerações adicionais
+Responsividade: a interface deve se adaptar perfeitamente a dispositivos móveis e desktop.
+
+Animação de partículas: deve ser leve, pausável, e esteticamente integrada ao fundo.
+
+Acessibilidade: adicione aria-labels, contraste adequado e foco no teclado.
+
+Performance: evite renderizações pesadas ou animações em excesso.
+
