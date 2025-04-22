@@ -146,7 +146,7 @@ const EpictusTurboMode: React.FC = () => {
   return (
     <div className="w-full flex flex-col items-center">
       {/* Header copied from EpictusIAHeader but with title changed to "Epictus Turbo" */}
-      <div className="w-full p-4">
+      <div className="w-full p-2 max-w-[1200px] mx-auto">
         <motion.header 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
