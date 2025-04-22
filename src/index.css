@@ -77,10 +77,20 @@
 
 .tech-line {
   animation: pulse-tech-line 3s linear infinite;
+  stroke-width: 1.5px !important;
+  opacity: 1 !important;
 }
 
 .tech-highlight {
   animation: flow-pulse 2s ease-in-out infinite;
+  stroke-width: 1.2px !important;
+  opacity: 0.9 !important;
+}
+
+/* Certificar que as linhas SVG estejam sempre visíveis */
+svg.neural-connections {
+  z-index: 30 !important;
+  position: relative;
 }
 
 /* Efeito de brilho para conectores */

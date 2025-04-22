@@ -182,35 +182,41 @@ const TurboHubConnected: React.FC = () => {
         ))}
 
         {/* Grade de fundo */}
-        <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
+        <div className="absolute inset-0 bg-grid-pattern opacity-10 z-0"></div>
 
         {/* Linhas de conexão - Versão Ultra Tecnológica */}
-        <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
+        <svg className="absolute inset-0 w-full h-full pointer-events-none z-30 neural-connections">
           <defs>
             <linearGradient id="lineGradient1" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#0D23A0" stopOpacity="0.7" />
-              <stop offset="50%" stopColor="#4A2DB9" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#5B21BD" stopOpacity="0.7" />
+              <stop offset="0%" stopColor="#0D23A0" stopOpacity="1" />
+              <stop offset="50%" stopColor="#4A2DB9" stopOpacity="1" />
+              <stop offset="100%" stopColor="#5B21BD" stopOpacity="1" />
             </linearGradient>
             <linearGradient id="lineGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#1230CC" stopOpacity="0.7" />
-              <stop offset="50%" stopColor="#3526B5" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#4A0D9F" stopOpacity="0.7" />
+              <stop offset="0%" stopColor="#1230CC" stopOpacity="1" />
+              <stop offset="50%" stopColor="#3526B5" stopOpacity="1" />
+              <stop offset="100%" stopColor="#4A0D9F" stopOpacity="1" />
             </linearGradient>
             <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feGaussianBlur stdDeviation="2" result="blur" />
               <feComposite in="SourceGraphic" in2="blur" operator="over" />
             </filter>
             
             {/* Padrão de traços para linhas tecnológicas */}
             <pattern id="techPattern" x="0" y="0" width="8" height="1" patternUnits="userSpaceOnUse">
-              <line x1="0" y1="0" x2="4" y2="0" stroke="#4A0D9F" strokeWidth="0.5" />
+              <line x1="0" y1="0" x2="4" y2="0" stroke="#6246EA" strokeWidth="1" />
             </pattern>
             
             {/* Marcadores para as linhas */}
             <marker id="dot" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="4" markerHeight="4">
-              <circle cx="4" cy="4" r="2" fill="#8A63E8" />
+              <circle cx="4" cy="4" r="3" fill="#8A63E8" />
             </marker>
+            
+            {/* Novo filtro de brilho mais intenso */}
+            <filter id="strongGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
           </defs>
 
           {/* Linhas conectando nódulos ao centro - Estilo ultra tecnológico */}
@@ -241,22 +247,24 @@ const TurboHubConnected: React.FC = () => {
                 <path 
                   d={`M ${centerX}% ${centerY}% C ${ctrlX1}% ${ctrlY1}%, ${ctrlX2}% ${ctrlY2}%, ${endX}% ${endY}%`}
                   stroke={`url(#lineGradient${index % 2 + 1})`}
-                  strokeWidth="1"
+                  strokeWidth="2"
                   strokeDasharray={isActive ? "5,3" : "3,2"}
                   fill="none"
                   className="tech-line transition-all duration-500"
+                  filter="url(#glow)"
                 />
                 
                 {/* Linha brilhante de destaque */}
                 <path 
                   d={`M ${centerX}% ${centerY}% C ${ctrlX1}% ${ctrlY1}%, ${ctrlX2}% ${ctrlY2}%, ${endX}% ${endY}%`}
-                  stroke="#6246EA"
-                  strokeWidth="0.5"
+                  stroke="#8A63E8"
+                  strokeWidth="1"
                   strokeDasharray="1,12"
                   strokeLinecap="round"
                   fill="none"
-                  opacity={isActive ? 0.9 : 0.2}
+                  opacity="1"
                   className="tech-highlight"
+                  filter="url(#strongGlow)"
                 />
                 
                 {/* Pontos de dados nas linhas - animados */}
@@ -317,7 +325,7 @@ const TurboHubConnected: React.FC = () => {
 
         {/* Núcleo central */}
         <motion.div 
-          className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 ${
+          className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 ${
             focusedNodule ? 'opacity-50 blur-sm' : 'opacity-100'
           } transition-all duration-500`}
           animate={{
