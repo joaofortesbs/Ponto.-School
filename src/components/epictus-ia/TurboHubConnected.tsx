@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, Brain, PenLine, BookOpen, Calendar, PieChart, CheckSquare, Sparkles } from "lucide-react";
@@ -109,10 +110,10 @@ const TurboHubConnected: React.FC = () => {
     const containerHeight = containerRef.current.offsetHeight;
 
     // Criar array de partículas
-    const particles = Array.from({ length: 80 }, () => ({
+    const particles = Array.from({ length: 100 }, () => ({
       x: Math.random() * containerWidth,
       y: Math.random() * containerHeight,
-      size: Math.random() * 2 + 1,
+      size: Math.random() * 2 + 0.5,
       speed: Math.random() * 0.5 + 0.1,
       opacity: Math.random() * 0.5 + 0.2
     }));
@@ -125,7 +126,7 @@ const TurboHubConnected: React.FC = () => {
         prev.map(particle => ({
           ...particle,
           y: particle.y - particle.speed,
-          x: particle.x + (Math.random() - 0.5) * 0.5,
+          x: particle.x + (Math.random() - 0.5) * 0.3,
           // Resetar partícula quando sai da tela
           ...(particle.y < 0 ? {
             y: containerHeight,
@@ -137,7 +138,27 @@ const TurboHubConnected: React.FC = () => {
 
     const animationFrame = setInterval(animateParticles, 50);
 
-    return () => clearInterval(animationFrame);
+    // Ajustar partículas ao redimensionar a janela
+    const handleResize = () => {
+      if (!containerRef.current) return;
+      const newWidth = containerRef.current.offsetWidth;
+      const newHeight = containerRef.current.offsetHeight;
+      
+      setParticlesArray(prev => 
+        prev.map(particle => ({
+          ...particle,
+          x: (particle.x / containerWidth) * newWidth,
+          y: (particle.y / containerHeight) * newHeight
+        }))
+      );
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      clearInterval(animationFrame);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   // Função para lidar com o clique em um nódulo
@@ -166,7 +187,7 @@ const TurboHubConnected: React.FC = () => {
         ref={containerRef}
         className="relative min-h-[500px] w-full bg-gradient-to-r from-[#050e1d] to-[#0d1a30] rounded-2xl shadow-xl border border-white/5 overflow-hidden"
       >
-        {/* Partículas de fundo */}
+        {/* Partículas de fundo - estrelas */}
         {particlesArray.map((particle, index) => (
           <div
             key={index}
@@ -181,11 +202,11 @@ const TurboHubConnected: React.FC = () => {
           />
         ))}
 
-        {/* Grade de fundo */}
+        {/* Grade de fundo - sistema cibernético */}
         <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
 
-        {/* Linhas de conexão */}
-        <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
+        {/* Linhas de conexão com SVG */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-visible">
           <defs>
             <linearGradient id="lineGradient1" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#0D23A0" stopOpacity="0.6" />
@@ -199,6 +220,12 @@ const TurboHubConnected: React.FC = () => {
               <feGaussianBlur stdDeviation="4" result="blur" />
               <feComposite in="SourceGraphic" in2="blur" operator="over" />
             </filter>
+            
+            {/* Animação das partículas nas linhas */}
+            <linearGradient id="particleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#4A0D9F" stopOpacity="0.6" />
+            </linearGradient>
           </defs>
 
           {/* Linhas conectando nódulos ao centro */}
@@ -208,58 +235,89 @@ const TurboHubConnected: React.FC = () => {
 
             return (
               <g key={nodule.id} 
-                 filter={isActive ? "url(#glow)" : ""} 
-                 opacity={isActive ? 1 : 0.3} 
-                 className="transition-opacity duration-500">
+                filter={isActive ? "url(#glow)" : ""} 
+                opacity={isActive ? 1 : 0.3} 
+                className="transition-opacity duration-500"
+              >
                 <path 
                   d={`M 50% 50% L ${50 + 35 * Math.cos(angle)}% ${50 + 35 * Math.sin(angle)}%`}
                   stroke={`url(#lineGradient${index % 2 + 1})`}
                   strokeWidth="2"
+                  strokeDasharray={isActive ? "0" : "4 2"}
                   fill="none"
                   className="transition-all duration-500"
                 />
-                {/* Pontos pulsantes nas linhas */}
-                <motion.circle 
-                  cx={`${50 + 20 * Math.cos(angle)}%`}
-                  cy={`${50 + 20 * Math.sin(angle)}%`}
-                  r="2"
-                  fill="#4A0D9F"
-                  initial={{ opacity: 0.2 }}
-                  animate={{ 
-                    opacity: [0.2, 0.8, 0.2],
-                    r: ["2px", "3px", "2px"]
-                  }}
-                  transition={{ 
-                    repeat: Infinity,
-                    duration: 2 + index * 0.3,
-                    ease: "easeInOut"
-                  }}
-                />
+                
+                {/* Partículas pulsantes nas linhas */}
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <motion.circle 
+                    key={`particle-${index}-${i}`}
+                    cx={`${50 + (20 + i * 6) * Math.cos(angle)}%`}
+                    cy={`${50 + (20 + i * 6) * Math.sin(angle)}%`}
+                    r="2"
+                    fill="#4A0D9F"
+                    animate={{ 
+                      cx: [`${50 + (35 - i * 10) * Math.cos(angle)}%`, `${50 + 5 * Math.cos(angle)}%`],
+                      cy: [`${50 + (35 - i * 10) * Math.sin(angle)}%`, `${50 + 5 * Math.sin(angle)}%`],
+                      opacity: [0.8, 1, 0.2],
+                      r: ["2px", "3px", "1px"]
+                    }}
+                    transition={{ 
+                      repeat: Infinity,
+                      duration: 3 + i * 0.5,
+                      delay: i * 1,
+                      ease: "linear",
+                      times: [0, 0.8, 1]
+                    }}
+                    style={{
+                      display: isActive ? "block" : "none"
+                    }}
+                  />
+                ))}
               </g>
             );
           })}
         </svg>
 
-        {/* Núcleo central */}
+        {/* Núcleo central - Epictus Turbo */}
         <motion.div 
           className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 ${
-            focusedNodule ? 'opacity-50 blur-sm' : 'opacity-100'
+            focusedNodule ? 'scale-90 opacity-80' : 'opacity-100'
           } transition-all duration-500`}
           animate={{
-            boxShadow: ['0 0 15px rgba(13, 35, 160, 0.5)', '0 0 25px rgba(91, 33, 189, 0.7)', '0 0 15px rgba(13, 35, 160, 0.5)']
+            boxShadow: [
+              '0 0 15px rgba(13, 35, 160, 0.5)', 
+              '0 0 25px rgba(91, 33, 189, 0.7)', 
+              '0 0 15px rgba(13, 35, 160, 0.5)'
+            ]
           }}
           transition={{
             duration: 3,
             repeat: Infinity,
             repeatType: "reverse",
-            ease: "linear"
+            ease: "easeInOut"
           }}
         >
-          <div className="relative w-24 h-24 rounded-[20px] bg-gradient-to-br from-[#2B27A9] to-[#3C2BD6] flex items-center justify-center shadow-2xl">
-            <div className="absolute inset-0 rounded-[20px] bg-gradient-to-br from-[#0D23A0]/30 to-[#5B21BD]/30 blur-lg animate-pulse"></div>
+          <div className="relative w-28 h-28 rounded-[22px] bg-gradient-to-br from-[#2B27A9] to-[#3C2BD6] flex items-center justify-center shadow-2xl">
+            <div className="absolute inset-0 rounded-[22px] bg-gradient-to-br from-[#0D23A0]/30 to-[#5B21BD]/30 blur-lg animate-pulse"></div>
+            
+            {/* Efeito de pulso recebendo dados */}
+            <motion.div 
+              className="absolute inset-0 rounded-[22px] bg-gradient-to-br from-[#0D23A0]/10 to-[#5B21BD]/10"
+              animate={{
+                scale: [1, 1.1, 1],
+                opacity: [0.2, 0.4, 0.2]
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            />
+            
             <span className="text-white font-bold text-xl relative z-10">
               <div className="flex items-center justify-center flex-col">
-                <Sparkles className="h-6 w-6 text-white mb-1" />
+                <Sparkles className="h-7 w-7 text-white mb-1" />
                 <span>Turbo</span>
               </div>
             </span>
@@ -281,7 +339,11 @@ const TurboHubConnected: React.FC = () => {
           };
 
           return (
-            <div key={nodule.id} style={positionStyle} className="absolute -translate-x-1/2 -translate-y-1/2 z-10">
+            <div 
+              key={nodule.id} 
+              style={positionStyle} 
+              className="absolute -translate-x-1/2 -translate-y-1/2 z-10"
+            >
               <motion.div
                 className={`relative ${isBlurred ? 'opacity-30 blur-sm scale-75' : ''} transition-all duration-500`}
                 animate={isFocused ? {
@@ -296,13 +358,16 @@ const TurboHubConnected: React.FC = () => {
                 onClick={() => handleNoduleClick(nodule.id)}
               >
                 <motion.div 
-                  className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${nodule.color} flex items-center justify-center shadow-xl cursor-pointer border border-white/20`}
+                  className={`w-18 h-18 rounded-2xl bg-gradient-to-br ${nodule.color} flex items-center justify-center shadow-xl cursor-pointer border border-white/20`}
                   whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(255, 255, 255, 0.3)" }}
                   whileTap={{ scale: 0.95 }}
+                  style={{ width: "4.5rem", height: "4.5rem" }}
                 >
-                  {nodule.icon}
+                  <div className="text-white">
+                    {nodule.icon}
+                  </div>
                 </motion.div>
-                <div className="text-center mt-2 text-white text-sm font-medium max-w-[100px] mx-auto">
+                <div className="text-center mt-2 text-white text-sm font-medium w-24 mx-auto">
                   {nodule.name}
                 </div>
               </motion.div>

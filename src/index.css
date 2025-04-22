@@ -45,6 +45,27 @@
   background-size: 20px 20px;
 }
 
+/* Animação de pulsação para os nódulos do Hub Conectado */
+@keyframes nodule-pulse {
+  0% { box-shadow: 0 0 5px rgba(255, 255, 255, 0.3); }
+  50% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.6); }
+  100% { box-shadow: 0 0 5px rgba(255, 255, 255, 0.3); }
+}
+
+.nodule-pulse {
+  animation: nodule-pulse 3s infinite ease-in-out;
+}
+
+/* Animação de partículas em movimento */
+@keyframes particle-flow {
+  0% { transform: translateX(0%) translateY(0%); opacity: 0.8; }
+  100% { transform: translateX(-100%) translateY(-50%); opacity: 0.2; }
+}
+
+.particle-flow {
+  animation: particle-flow 4s linear infinite;
+}
+
 
 @tailwind base;
 @tailwind components;
