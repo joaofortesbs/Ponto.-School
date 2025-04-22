@@ -136,42 +136,144 @@ const EpictusTurboMode: React.FC = () => {
                 transition={{ duration: 0.3 }}
               >
                 <div className="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                  </svg>
-                  <span className="text-white text-sm font-medium">Personalidades</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white transition-transform duration-300 group-hover:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
+                  {/* Ícone dinâmico que muda quando um perfil é selecionado */}
+                  {(() => {
+                    const [profileIcon, setProfileIcon] = useState(
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                      </svg>
+                    );
+                    
+                    const [profileName, setProfileName] = useState("Personalidades");
+                    
+                    // Ouvir o evento de seleção de perfil
+                    useEffect(() => {
+                      const handleProfileSelection = (event: any) => {
+                        setProfileIcon(event.detail.icon);
+                        setProfileName(event.detail.name);
+                      };
+                      
+                      window.addEventListener('profileSelected', handleProfileSelection);
+                      
+                      return () => {
+                        window.removeEventListener('profileSelected', handleProfileSelection);
+                      };
+                    }, []);
+                    
+                    return (
+                      <>
+                        {profileIcon}
+                        <span className="text-white text-sm font-medium">{profileName}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white transition-transform duration-300 group-hover:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                      </>
+                    );
+                  })()}
                 </div>
               </motion.div>
               
               {/* Dropdown content - absolute positioning relative to its container */}
               <div className="absolute group-hover:opacity-100 group-hover:visible opacity-0 invisible transition-all duration-300 z-[9999] left-0 top-full mt-2">
-                <div className="w-52 bg-gradient-to-r from-[#0c2341] to-[#0f3562] rounded-lg shadow-xl overflow-hidden border border-white/10">
-                  <div className="py-1 border-b border-white/10">
-                    <div className="px-3 py-2 text-white/70 text-xs font-medium">Escolha uma personalidade</div>
-                  </div>
-                  <div className="max-h-60 overflow-y-auto">
-                    {[
-                      { icon: "📰", color: "#4A85C4", name: "Notícias mais recentes" },
-                      { icon: "❤️", color: "#E5508F", name: "Companhia" },
-                      { icon: "😄", color: "#F8AE1C", name: "Comediante sem limites" },
-                      { icon: "👫", color: "#E47D57", name: "Amigo leal" },
-                      { icon: "📚", color: "#57B481", name: "Professor particular" },
-                      { icon: "🔬", color: "#9A73EF", name: "Não é um médico" },
-                      { icon: "🧠", color: "#4FC4CA", name: "Não é um terapeuta" }
-                    ].map((item, index) => (
-                      <div 
-                        key={index} 
-                        className="flex items-center gap-2 px-3 py-2 hover:bg-white/5 cursor-pointer transition-colors duration-150"
-                      >
-                        <div 
-                          className="w-5 h-5 rounded-md flex items-center justify-center text-xs"
-                          style={{ backgroundColor: `${item.color}20` }}
+                <div className="w-52 bg-gradient-to-r from-[#0c2341] to-[#0f3562] rounded-lg shadow-xl overflow-hidden border border-white/10 backdrop-blur-md">
+                  <div className="max-h-60 overflow-y-auto py-2">
+                    {/* Estado para controlar o perfil selecionado */}
+                    {React.useMemo(() => {
+                      const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
+                      
+                      return [
+                        { 
+                          id: "estudante",
+                          icon: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#0D23A0]"><path d="M12 10v-2a2 2 0 0 0-2-2V4"></path><path d="M10 4H8a2 2 0 0 0-2 2v1a2 2 0 0 0-2 2v1"></path><path d="M14 4h2a2 2 0 0 1 2 2v1a2 2 0 0 1 2 2v1"></path><path d="M18 15v1a2 2 0 0 1-2 2h-1a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2h-1a2 2 0 0 1-2-2v-1a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2Z"></path></svg>, 
+                          color: "#0D23A0", 
+                          name: "Estudante",
+                          onClick: () => {
+                            setSelectedProfile("Estudante");
+                            
+                            // Disparar um evento customizado para atualizar o texto do botão
+                            const event = new CustomEvent('profileSelected', { 
+                              detail: { 
+                                name: "Estudante", 
+                                icon: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M12 10v-2a2 2 0 0 0-2-2V4"></path><path d="M10 4H8a2 2 0 0 0-2 2v1a2 2 0 0 0-2 2v1"></path><path d="M14 4h2a2 2 0 0 1 2 2v1a2 2 0 0 1 2 2v1"></path><path d="M18 15v1a2 2 0 0 1-2 2h-1a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2h-1a2 2 0 0 1-2-2v-1a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2Z"></path></svg>
+                              } 
+                            });
+                            window.dispatchEvent(event);
+                          }
+                        },
+                        { 
+                          id: "professor",
+                          icon: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#5B21BD]"><path d="M8 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3.93a2 2 0 0 1-1.66-.9L15.12 4a2 2 0 0 0-1.66-.9H8.83A3 3 0 0 0 6 5.17V17"></path><path d="M2 14h7"></path><path d="M6 10 2 14l4 4"></path></svg>, 
+                          color: "#5B21BD", 
+                          name: "Professor",
+                          onClick: () => {
+                            setSelectedProfile("Professor");
+                            
+                            // Disparar um evento customizado para atualizar o texto do botão
+                            const event = new CustomEvent('profileSelected', { 
+                              detail: { 
+                                name: "Professor", 
+                                icon: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M8 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3.93a2 2 0 0 1-1.66-.9L15.12 4a2 2 0 0 0-1.66-.9H8.83A3 3 0 0 0 6 5.17V17"></path><path d="M2 14h7"></path><path d="M6 10 2 14l4 4"></path></svg>
+                              } 
+                            });
+                            window.dispatchEvent(event);
+                          }
+                        },
+                        { 
+                          id: "coordenador",
+                          icon: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#1230CC]"><path d="M15.5 2H8.6c-.4 0-.8.2-1.1.5-.3.3-.5.7-.5 1.1v12.8c0 .4.2.8.5 1.1.3.3.7.5 1.1.5h9.8c.4 0 .8-.2 1.1-.5.3-.3.5-.7.5-1.1V6.5L15.5 2z"></path><path d="M3 7.6v12.8c0 .4.2.8.5 1.1.3.3.7.5 1.1.5h9.8"></path><path d="M15 2v5h5"></path></svg>, 
+                          color: "#1230CC", 
+                          name: "Coordenador",
+                          onClick: () => {
+                            setSelectedProfile("Coordenador");
+                            
+                            // Disparar um evento customizado para atualizar o texto do botão
+                            const event = new CustomEvent('profileSelected', { 
+                              detail: { 
+                                name: "Coordenador", 
+                                icon: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M15.5 2H8.6c-.4 0-.8.2-1.1.5-.3.3-.5.7-.5 1.1v12.8c0 .4.2.8.5 1.1.3.3.7.5 1.1.5h9.8c.4 0 .8-.2 1.1-.5.3-.3.5-.7.5-1.1V6.5L15.5 2z"></path><path d="M3 7.6v12.8c0 .4.2.8.5 1.1.3.3.7.5 1.1.5h9.8"></path><path d="M15 2v5h5"></path></svg>
+                              } 
+                            });
+                            window.dispatchEvent(event);
+                          }
+                        },
+                        { 
+                          id: "expert",
+                          icon: <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#4A0D9F]"><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"></path><path d="M8.5 8.5v.01"></path><path d="M16 15.5v.01"></path><path d="M12 12v.01"></path><path d="M11 17v.01"></path><path d="M7 14v.01"></path></svg>, 
+                          color: "#4A0D9F", 
+                          name: "Expert",
+                          onClick: () => {
+                            setSelectedProfile("Expert");
+                            
+                            // Disparar um evento customizado para atualizar o texto do botão
+                            const event = new CustomEvent('profileSelected', { 
+                              detail: { 
+                                name: "Expert", 
+                                icon: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"></path><path d="M8.5 8.5v.01"></path><path d="M16 15.5v.01"></path><path d="M12 12v.01"></path><path d="M11 17v.01"></path><path d="M7 14v.01"></path></svg>
+                              } 
+                            });
+                            window.dispatchEvent(event);
+                          }
+                        }
+                      ].map((item, index) => (
+                        <motion.div 
+                          key={index} 
+                          className="flex items-center gap-3 px-4 py-3 cursor-pointer mb-1 mx-2 rounded-lg hover:bg-white/10 transition-all"
+                          whileHover={{ 
+                            y: -2, 
+                            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+                            scale: 1.02
+                          }}
+                          onClick={item.onClick}
                         >
-                          {item.icon}
+                          <div 
+                            className="w-9 h-9 rounded-md flex items-center justify-center shadow-inner"
+                            style={{ 
+                              background: `linear-gradient(135deg, ${item.color}30, ${item.color}50)`,
+                              boxShadow: `0 0 15px ${item.color}40`
+                            }}
+                          >
+                            {item.icon}
                         </div>
                         <span className="text-white text-sm">{item.name}</span>
                       </div>
