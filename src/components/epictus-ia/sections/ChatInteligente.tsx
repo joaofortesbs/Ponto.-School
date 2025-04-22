@@ -47,7 +47,7 @@ export default function ChatInteligente() {
       {epictusMode ? (
         <div className="w-full h-full flex flex-col">
           {/* Barra de navegação para voltar */}
-          <div className="w-full p-2 mb-2">
+          <div className="w-full p-2">
             <Button
               variant="ghost"
               size="sm"
@@ -62,9 +62,37 @@ export default function ChatInteligente() {
             </Button>
           </div>
           
-          {/* Interface do modo Epictus IA */}
+          {/* Interface do modo Epictus IA sem cabeçalho fixo */}
           <div className="flex-grow overflow-hidden">
-            <EpictusIAMode />
+            <div className="h-full">
+              <EpictusIAMode />
+            </div>
+          </div>
+        </div>
+</old_str>
+<new_str>
+        <div className="w-full h-full flex flex-col">
+          {/* Barra de navegação para voltar */}
+          <div className="w-full p-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+              onClick={() => {
+                setEpictusMode(false);
+                window.history.pushState({}, "", "/epictus-ia");
+              }}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Voltar para Cards
+            </Button>
+          </div>
+          
+          {/* Interface do modo Epictus IA sem cabeçalho fixo */}
+          <div className="flex-grow overflow-hidden">
+            <div className="h-full">
+              <EpictusIAMode />
+            </div>
           </div>
         </div>
       ) : (

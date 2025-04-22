@@ -144,16 +144,7 @@ const EpictusIAMode: React.FC = () => {
 
   return (
     <div className="w-full flex flex-col items-center">
-      {/* Header específico para o Epictus IA */}
-      <div className="w-full p-4">
-        <motion.header 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className={`w-full hub-connected-width ${isDark ? 'bg-gradient-to-r from-[#050e1d] to-[#0d1a30]' : 'bg-gradient-to-r from-[#0c2341] to-[#0f3562]'} backdrop-blur-lg py-4 px-5 flex items-center justify-between rounded-xl relative`}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
+      {/* Removido o cabeçalho fixo */}
           {/* Animated gradient background */}
           <div className="absolute inset-0 opacity-20">
             <div className={`absolute inset-0 bg-gradient-to-r from-[#FF6B00] via-[#FF8736] to-[#FFA776] ${isHovered ? 'opacity-60' : 'opacity-30'} transition-opacity duration-700`}></div>
@@ -376,15 +367,8 @@ const EpictusIAMode: React.FC = () => {
             </div>
           </div>
 
-          {/* Hidden until expansion - will appear when user interaction happens */}
-          <div className="absolute bottom-0 left-0 w-full h-1">
-            <div className="h-full bg-gradient-to-r from-transparent via-[#FF8736] to-transparent opacity-30"></div>
-          </div>
-        </motion.header>
-      </div>
-
-      {/* Content area now below the header */}
-      <div className="w-full flex flex-col items-center justify-center mt-0 mb-2">
+          {/* Content area sem o cabeçalho fixo */}
+      <div className="w-full flex flex-col items-center justify-center mt-2 mb-2">
         {/* Hub Conectado - novo componente entre o cabeçalho e a caixa de mensagens */}
         <div className="w-full">
           <IAHubConnected />
