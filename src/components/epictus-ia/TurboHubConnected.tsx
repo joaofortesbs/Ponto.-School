@@ -161,10 +161,10 @@ const TurboHubConnected: React.FC = () => {
     : null;
 
   return (
-    <div className="w-full mx-auto p-2 mt-0 mb-2">
+    <div className="w-full mx-auto p-4 mt-1 mb-3">
       <div 
         ref={containerRef}
-        className="relative min-h-[420px] w-full bg-gradient-to-r from-[#050e1d] to-[#0d1a30] rounded-2xl shadow-xl border border-white/5 overflow-hidden"
+        className="relative min-h-[450px] w-full bg-gradient-to-r from-[#050e1d] to-[#0d1a30] rounded-2xl shadow-xl border border-white/5 overflow-hidden"
         style={{ zIndex: 10 }} // Set a lower z-index for the hub container
       >
         {/* Partículas de fundo */}
@@ -202,17 +202,17 @@ const TurboHubConnected: React.FC = () => {
               <feGaussianBlur stdDeviation="2" result="blur" />
               <feComposite in="SourceGraphic" in2="blur" operator="over" />
             </filter>
-            
+
             {/* Padrão de traços para linhas tecnológicas */}
             <pattern id="techPattern" x="0" y="0" width="8" height="1" patternUnits="userSpaceOnUse">
               <line x1="0" y1="0" x2="4" y2="0" stroke="#6246EA" strokeWidth="1" />
             </pattern>
-            
+
             {/* Marcadores para as linhas */}
             <marker id="dot" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="4" markerHeight="4">
               <circle cx="4" cy="4" r="3" fill="#8A63E8" />
             </marker>
-            
+
             {/* Novo filtro de brilho mais intenso */}
             <filter id="strongGlow" x="-30%" y="-30%" width="160%" height="160%">
               <feGaussianBlur stdDeviation="4" result="blur" />
@@ -224,13 +224,13 @@ const TurboHubConnected: React.FC = () => {
           {nodules.map((nodule, index) => {
             const angle = (index * (2 * Math.PI / nodules.length));
             const isActive = focusedNodule === null || focusedNodule === nodule.id;
-            
+
             // Cálculos para curvas Bezier estilizadas
             const centerX = 50;
             const centerY = 50;
             const endX = 50 + 35 * Math.cos(angle);
             const endY = 50 + 35 * Math.sin(angle);
-            
+
             // Pontos de controle para curva elegante
             const ctrlDist = 25;
             const ctrlX1 = centerX + ctrlDist * Math.cos(angle + 0.2);
@@ -243,7 +243,7 @@ const TurboHubConnected: React.FC = () => {
                  filter={isActive ? "url(#glow)" : ""} 
                  opacity={isActive ? 1 : 0.3} 
                  className="transition-opacity duration-500">
-                
+
                 {/* Linha curva principal - estilo tecnológico */}
                 <path 
                   d={`M ${centerX}% ${centerY}% C ${ctrlX1}% ${ctrlY1}%, ${ctrlX2}% ${ctrlY2}%, ${endX}% ${endY}%`}
@@ -254,7 +254,7 @@ const TurboHubConnected: React.FC = () => {
                   className="tech-line transition-all duration-500"
                   filter="url(#glow)"
                 />
-                
+
                 {/* Linha brilhante de destaque */}
                 <path 
                   d={`M ${centerX}% ${centerY}% C ${ctrlX1}% ${ctrlY1}%, ${ctrlX2}% ${ctrlY2}%, ${endX}% ${endY}%`}
@@ -267,7 +267,7 @@ const TurboHubConnected: React.FC = () => {
                   className="tech-highlight"
                   filter="url(#strongGlow)"
                 />
-                
+
                 {/* Pontos de dados nas linhas - animados */}
                 {[0.2, 0.5, 0.8].map((pos, i) => (
                   <motion.circle 
@@ -289,7 +289,7 @@ const TurboHubConnected: React.FC = () => {
                     }}
                   />
                 ))}
-                
+
                 {/* Partícula fluindo do nódulo para o centro - visualização de dados */}
                 <motion.circle 
                   cx="0%"
@@ -310,7 +310,7 @@ const TurboHubConnected: React.FC = () => {
                     ease: "linear"
                   }}
                 />
-                
+
                 {/* Conector no final da linha */}
                 <circle 
                   cx={`${endX}%`} 
@@ -398,10 +398,10 @@ const TurboHubConnected: React.FC = () => {
         <AnimatePresence>
           {focusedNodeData && (
             <motion.div 
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-40 bg-gradient-to-r from-[#0c2341]/80 to-[#0f3562]/80 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl max-w-xs"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
+              className="absolute right-8 top-10 z-50 bg-gradient-to-r from-[#0c2341]/80 to-[#0f3562]/80 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl max-w-xs" // Increased z-index here
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.3 }}
             >
               <div className="p-5">
