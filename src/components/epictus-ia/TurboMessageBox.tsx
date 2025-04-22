@@ -274,6 +274,9 @@ const TurboMessageBox: React.FC = () => {
               </motion.div>
             )}
           </AnimatePresence>
+        <div className="w-full max-w-full px-4">
+            {/* Conteúdo da caixa de mensagens */}
+          </div>
         </div>
       </motion.div>
     </div>
