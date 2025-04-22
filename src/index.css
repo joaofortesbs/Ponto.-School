@@ -49,7 +49,7 @@
 .personalidades-dropdown,
 .group:hover .personalidades-dropdown,
 [role="menu"].personalidades-dropdown {
-  z-index: 99999 !important;
+  z-index: 999999 !important;
   position: relative !important;
 }
 
@@ -61,7 +61,47 @@
 
 /* Regra específica para o portal de personalidades */
 div[data-radix-popper-content-wrapper] {
-  z-index: 99999 !important;
+  z-index: 999999 !important;
+  position: fixed !important;
+}
+
+/* Regras adicionais para garantir que o dropdown de personalidades fique por cima */
+.personalidades-button,
+.personalidades-container {
+  position: relative !important;
+  z-index: 999999 !important;
+}
+
+/* Adicionar camada de isolamento para elementos dropdown */
+.dropdown-isolate {
+  isolation: isolate !important;
+  position: relative !important;
+  z-index: 999999 !important;
+}
+
+/* Elemento base para personalidades tem que estar por cima de tudo */
+.personalidades-root,
+[role="dialog"].personalidades-root {
+  position: relative !important;
+  z-index: 999999 !important;
+}
+
+/* Estilização avançada para portais do Radix UI */
+[data-radix-popper-content-wrapper],
+div[data-radix-portal],
+div[data-radix-focus-guard] {
+  z-index: 999999 !important;
+  position: fixed !important;
+  top: auto !important;
+  left: auto !important;
+}
+
+/* Tratamento específico para a lista de personalidades */
+.personalidades-list {
+  position: absolute !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
+  backdrop-filter: blur(12px) !important;
+  z-index: 999999 !important;
 }
 
 
