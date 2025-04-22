@@ -76,21 +76,21 @@ div[data-radix-popper-content-wrapper] {
 .dropdown-isolate {
   isolation: isolate !important;
   position: relative !important;
-  z-index: 1000000 !important;
+  z-index: 9999999 !important;
 }
 
 /* Elemento base para personalidades tem que estar por cima de tudo */
 .personalidades-root,
 [role="dialog"].personalidades-root {
   position: relative !important;
-  z-index: 1000000 !important;
+  z-index: 9999999 !important;
 }
 
 /* Estilização avançada para portais do Radix UI */
 [data-radix-popper-content-wrapper],
 div[data-radix-portal],
 div[data-radix-focus-guard] {
-  z-index: 1000000 !important;
+  z-index: 9999999 !important;
   position: fixed !important;
   top: auto !important;
   left: auto !important;
@@ -101,19 +101,19 @@ div[data-radix-focus-guard] {
   position: absolute !important;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
   backdrop-filter: blur(12px) !important;
-  z-index: 1000000 !important;
+  z-index: 9999999 !important;
 }
 
 /* Ajustes para o portal de personalidades */
 .personalidades-portal {
-  z-index: 1000000 !important;
-  position: fixed !important;
+  z-index: 9999999 !important;
+  position: absolute !important;
   pointer-events: auto !important;
 }
 
 .personalidades-dropdown-container {
-  z-index: 1000000 !important;
-  position: relative !important;
+  z-index: 9999999 !important;
+  position: absolute !important; 
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4) !important;
 }
 
@@ -121,19 +121,40 @@ div[data-radix-focus-guard] {
 .hub-container,
 div.hub-container,
 [ref="containerRef"] {
+  z-index: 5 !important;
+  position: relative !important;
+}
+
+/* Portal host com alta prioridade - agora com ainda mais prioridade e no topo do DOM */
+.portal-host {
+  z-index: 9999999 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  pointer-events: none !important;
+  overflow: visible !important;
+}
+
+/* Nova classe especial para o portal de personalidades */
+.personalidades-master-host {
+  z-index: 9999999 !important; 
+}
+
+/* Certificar-se que todas as linhas SVG e elementos do hub fiquem atrás */
+svg.neural-connections {
   z-index: 10 !important;
   position: relative !important;
 }
 
-/* Portal host com alta prioridade */
-.portal-host {
-  z-index: 1000000 !important;
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
+/* Remover qualquer interação que possa afetar o portal */
+body.portal-visible .hub-container * {
   pointer-events: none !important;
+}
+
+.personalidades-portal * {
+  pointer-events: auto !important;
 }
 
 /* Certificar que o dropdown de personalidades se sobreponha ao hub */

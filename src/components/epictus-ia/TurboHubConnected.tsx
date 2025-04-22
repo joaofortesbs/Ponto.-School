@@ -165,7 +165,7 @@ const TurboHubConnected: React.FC = () => {
       <div 
         ref={containerRef}
         className="relative min-h-[450px] w-full bg-gradient-to-r from-[#050e1d] to-[#0d1a30] rounded-2xl shadow-xl border border-white/5 overflow-hidden hub-container"
-        style={{ zIndex: 10 }} // Set a lower z-index for the hub container
+        style={{ zIndex: 5 }} // Z-index ainda mais baixo para o hub
       >
         {/* Partículas de fundo */}
         {particlesArray.map((particle, index) => (
