@@ -50,12 +50,7 @@ export default function ChatInteligente() {
             </Button>
           </div>
           
-          {/* Cabeçalho do Epictus IA */}
-          <div className="mb-4">
-            <EpictusChatHeader />
-          </div>
-          
-          {/* Área de conteúdo */}
+          {/* Área de conteúdo do Epictus IA */}
           <div className="flex-1 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-transparent to-orange-50/10 dark:to-orange-950/10 rounded-lg border border-orange-100/20 dark:border-orange-900/20">
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center mb-4">
               <span className="text-white font-bold text-2xl">IA</span>
