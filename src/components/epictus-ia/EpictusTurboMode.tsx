@@ -371,8 +371,8 @@ const EpictusTurboMode: React.FC = () => {
           {/* Aqui virá o conteúdo principal (histórico de conversas, resultados, etc.) */}
         </div>
         
-        {/* Caixa de mensagens na parte inferior */}
-        <div className="w-full bottom-0 left-0 right-0 z-30 mt-auto">
+        {/* Caixa de mensagens posicionada um pouco acima da parte inferior */}
+        <div className="w-full bottom-0 left-0 right-0 z-30 mt-auto pb-6">
           <TurboMessageBox />
         </div>
       </div>

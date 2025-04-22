@@ -58,7 +58,7 @@ const TurboMessageBox: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto mb-8 px-4">
+    <div className="w-full max-w-5xl mx-auto mb-2 px-4">
       <motion.div 
         className="relative bg-gradient-to-r from-[#050e1d]/90 to-[#0d1a30]/90 rounded-2xl shadow-xl 
                    border border-white/5 backdrop-blur-sm overflow-hidden"
