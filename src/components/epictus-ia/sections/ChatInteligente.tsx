@@ -1,74 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
-import {
+import { 
   MessageSquare,
   Brain,
-  Sparkles,
+  Sparkles
 } from "lucide-react";
-import {
-  TutorInteligente2Card,
+import { 
+  TutorInteligenteCard, 
   BrainstormCard,
-  TutorInteligenteCard,
-  EpictusIACard,
+  TutorInteligente2Card,
+  EpictusIACard
 } from "./components/chat-inteligente";
-import EpictusModeInterface from "@/components/epictus-ia/EpictusModeInterface";
 
-export const ChatInteligente: React.FC = () => {
+export default function ChatInteligente() {
   const { theme } = useTheme();
-  const [epictusMode, setEpictusMode] = useState(false);
-
-  // Função para ativar o modo Epictus
-  const activateEpictusMode = () => {
-    console.log("Ativando modo Epictus");
-    setEpictusMode(true);
-  };
-
-  useEffect(() => {
-    // Manipulador de evento para ativação via evento personalizado
-    const handleEpictusActivation = () => {
-      console.log("Modo Epictus ativado via evento");
-      setEpictusMode(true);
-    };
-
-    // Verificar parâmetros de URL para ativar o modo Epictus
-    const checkUrlParams = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('mode') === 'epictus') {
-        console.log("Modo Epictus ativado via URL");
-        setEpictusMode(true);
-      }
-    };
-
-    // Adicionar event listener e verificar URL
-    window.addEventListener('activateEpictusMode', handleEpictusActivation);
-    checkUrlParams();
-
-    // Limpar event listener ao desmontar
-    return () => {
-      window.removeEventListener('activateEpictusMode', handleEpictusActivation);
-    };
-  }, []);
-
-  // Desativar o modo Epictus
-  const deactivateEpictusMode = () => {
-    console.log("Desativando modo Epictus");
-    setEpictusMode(false);
-    
-    // Atualizar a URL para remover o parâmetro mode=epictus
-    const url = new URL(window.location.href);
-    url.searchParams.delete('mode');
-    window.history.pushState({}, '', url);
-  };
-
-  if (epictusMode) {
-    return (
-      <div className="h-full w-full">
-        <EpictusModeInterface onExit={deactivateEpictusMode} />
-      </div>
-    );
-  }
 
   return (
     <div className="h-full flex flex-col">
@@ -88,7 +35,7 @@ export const ChatInteligente: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <TutorInteligente2Card />
-        <EpictusIACard onActivateEpictus={activateEpictusMode} />
+        <EpictusIACard />
         <TutorInteligenteCard />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
@@ -115,10 +62,7 @@ export const ChatInteligente: React.FC = () => {
                 <Button variant="outline" className={`${theme === "dark" ? "border-gray-700 hover:bg-gray-700" : "border-gray-200 hover:bg-gray-100"}`}>
                   Saiba mais
                 </Button>
-                <Button 
-                  className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
-                  onClick={activateEpictusMode}
-                >
+                <Button className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white">
                   Experimentar <Sparkles className="h-4 w-4 ml-2" />
                 </Button>
               </div>
@@ -128,4 +72,4 @@ export const ChatInteligente: React.FC = () => {
       </div>
     </div>
   );
-};
+}

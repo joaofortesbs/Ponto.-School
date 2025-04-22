@@ -1,29 +1,15 @@
+
 import React from "react";
 import { Brain } from "lucide-react";
 import { ChatCard } from "./ChatCard";
 import { useNavigate } from "react-router-dom";
 
-interface EpictusIACardProps {
-  onActivateEpictus?: () => void;
-}
-
-export const EpictusIACard: React.FC<EpictusIACardProps> = ({ onActivateEpictus }) => {
+export const EpictusIACard: React.FC = () => {
   const navigate = useNavigate();
-
+  
   const handleActivation = () => {
-    console.log("EpictusIACard: Ativando modo Epictus");
-
-    // Atualizar a URL
-    window.history.pushState({}, "", "/epictus-ia?mode=epictus");
-
-    // Aciona callback se fornecido
-    if (onActivateEpictus) {
-      onActivateEpictus();
-    } else {
-      // Se não houver callback, dispare um evento personalizado
-      const event = new CustomEvent("activateEpictusMode");
-      window.dispatchEvent(event);
-    }
+    // Navegar para a página do Epictus IA
+    navigate("/epictus-ia");
   };
 
   const assistantData = {

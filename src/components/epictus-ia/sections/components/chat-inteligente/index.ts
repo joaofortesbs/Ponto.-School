@@ -1,6 +1,5 @@
-
-export { BrainstormCard } from "./BrainstormCard";
-export { TutorInteligenteCard } from "./TutorInteligenteCard";
-export { TutorInteligente2Card } from "./TutorInteligente2Card";
-export { EpictusIACard } from "./EpictusIACard";
-export { ChatCard } from "./ChatCard";
+export * from "./ChatCard";
+export * from "./TutorInteligenteCard";
+export * from "./TutorInteligente2Card";
+export * from "./BrainstormCard";
+export * from "./EpictusIACard";
