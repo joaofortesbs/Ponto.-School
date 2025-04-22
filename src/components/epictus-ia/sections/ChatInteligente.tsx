@@ -1,21 +1,40 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
-import { 
+import {
   MessageSquare,
   Brain,
-  Sparkles
+  Sparkles,
 } from "lucide-react";
-import { 
-  TutorInteligenteCard, 
-  BrainstormCard,
+import {
   TutorInteligente2Card,
-  EpictusIACard
+  BrainstormCard,
+  TutorInteligenteCard,
+  EpictusIACard,
 } from "./components/chat-inteligente";
+import EpictusModeInterface from "../../EpictusModeInterface"; // Assuming this component exists
 
-export default function ChatInteligente() {
+export const ChatInteligente: React.FC = () => {
   const { theme } = useTheme();
+  const [epictusMode, setEpictusMode] = useState(false);
+
+  useEffect(() => {
+    const handleEpictusActivation = () => {
+      setEpictusMode(true);
+    };
+
+    window.addEventListener('activateEpictusMode', handleEpictusActivation);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('mode') === 'epictus') {
+      setEpictusMode(true);
+    }
+
+    return () => {
+      window.removeEventListener('activateEpictusMode', handleEpictusActivation);
+    };
+  }, []);
 
   return (
     <div className="h-full flex flex-col">
@@ -35,7 +54,11 @@ export default function ChatInteligente() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <TutorInteligente2Card />
-        <EpictusIACard />
+        <EpictusIACard onActivateEpictus={() => {
+          // Dispatch custom event to activate Epictus mode.  This needs to be handled by EpictusIACard
+          const event = new CustomEvent('activateEpictusMode');
+          window.dispatchEvent(event);
+        }} /> {/* Added event dispatcher */}
         <TutorInteligenteCard />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
@@ -70,6 +93,7 @@ export default function ChatInteligente() {
           </div>
         </Card>
       </div>
+      {epictusMode && <EpictusModeInterface />} {/* Conditional rendering of the Epictus mode interface */}
     </div>
   );
-}
+};

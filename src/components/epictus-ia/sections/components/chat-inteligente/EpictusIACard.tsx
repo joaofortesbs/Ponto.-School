@@ -8,8 +8,15 @@ export const EpictusIACard: React.FC = () => {
   const navigate = useNavigate();
   
   const handleActivation = () => {
-    // Navegar para a página do Epictus IA
-    navigate("/epictus-ia");
+    // Dispatch um evento personalizado para ativar o modo Epictus IA
+    // similar ao que é feito com o Turbo mode
+    window.history.pushState({}, "", "/epictus-ia?mode=epictus");
+    
+    // Dispatch um evento customizado que o componente pai pode ouvir
+    const event = new CustomEvent("activateEpictusMode", {
+      detail: { mode: "epictus" }
+    });
+    window.dispatchEvent(event);
   };
 
   const assistantData = {
