@@ -222,22 +222,24 @@ const EpictusTurboMode: React.FC = () => {
                 </AnimatePresence>
               </motion.div>
             </div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-white tracking-tight">
-                Epictus Turbo
-              </h1>
-              <motion.div
-                className="flex items-center px-1.5 py-0.5 rounded-md bg-gradient-to-r from-[#0D23A0] to-[#4A0D9F] text-xs font-medium text-white shadow-lg dropdown-isolate personalidades-root"
-                whileHover={{ scale: 1.05 }}
-                transition={{ type: "spring", stiffness: 400, damping: 10 }}
-              >
-                <Zap className="h-3 w-3 mr-1" />
-                Premium
-              </motion.div>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-white tracking-tight">
+                  Epictus Turbo
+                </h1>
+                <motion.div
+                  className="flex items-center px-1.5 py-0.5 rounded-md bg-gradient-to-r from-[#0D23A0] to-[#4A0D9F] text-xs font-medium text-white shadow-lg dropdown-isolate personalidades-root"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                >
+                  <Zap className="h-3 w-3 mr-1" />
+                  Premium
+                </motion.div>
+              </div>
+              <p className="text-white/70 text-sm mt-0.5 font-medium tracking-wide">
+                IA avançada com processamento ultra-rápido para suas necessidades
+              </p>
             </div>
-            <p className="text-white/70 text-sm mt-0.5 font-medium tracking-wide">
-              IA avançada com processamento ultra-rápido para suas necessidades
-            </p>
           </div>
 
           {/* New header icons */}
