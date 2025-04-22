@@ -1182,3 +1182,24 @@ textarea:hover,
 .animate-fadeOut {
   animation: fadeOut 0.2s ease-in-out forwards;
 }
+
+/* Garantir que o dropdown de Personalidades fique por cima de tudo */
+.personalidades-dropdown,
+.group:hover .personalidades-dropdown,
+[role="menu"].personalidades-dropdown {
+  z-index: 99999 !important;
+  position: relative !important;
+}
+
+/* Estilos para o modal de nódulos no Hub Conectado */
+.neural-connections {
+  z-index: 30;
+}
+
+.absolute.rounded-full.bg-white {
+  z-index: 5;
+}
+
+.motion.div[role="dialog"] {
+  z-index: 9999 !important;
+}
