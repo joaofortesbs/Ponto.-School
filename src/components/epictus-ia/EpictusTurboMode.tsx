@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,7 +18,7 @@ const EpictusTurboMode: React.FC = () => {
   );
   const [profileName, setProfileName] = useState("Personalidades");
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
-
+  
   // Adicionar estilos globais para garantir que o modal de personalidades fique por cima
   useEffect(() => {
     // Adicionar estilos CSS para os modais de personalidades
@@ -34,12 +35,12 @@ const EpictusTurboMode: React.FC = () => {
       }
     `;
     document.head.appendChild(style);
-
+    
     return () => {
       document.head.removeChild(style);
     };
   }, []);
-
+  
   useEffect(() => {
     // Trigger initial animation
     const timer = setTimeout(() => {
@@ -48,23 +49,23 @@ const EpictusTurboMode: React.FC = () => {
 
     return () => clearTimeout(timer);
   }, []);
-
+  
   // Ouvir o evento de seleção de perfil
   useEffect(() => {
     const handleProfileSelection = (event: any) => {
       setProfileIcon(event.detail.icon);
       setProfileName(event.detail.name);
     };
-
+    
     window.addEventListener('profileSelected', handleProfileSelection);
-
+    
     return () => {
       window.removeEventListener('profileSelected', handleProfileSelection);
     };
   }, []);
-
+  
   const isDark = theme === "dark";
-
+  
   // Opções de perfil para o dropdown
   const profileOptions = [
     { 
@@ -74,7 +75,7 @@ const EpictusTurboMode: React.FC = () => {
       name: "Estudante",
       onClick: () => {
         setSelectedProfile("Estudante");
-
+        
         // Disparar um evento customizado para atualizar o texto do botão
         const event = new CustomEvent('profileSelected', { 
           detail: { 
@@ -92,7 +93,7 @@ const EpictusTurboMode: React.FC = () => {
       name: "Professor",
       onClick: () => {
         setSelectedProfile("Professor");
-
+        
         // Disparar um evento customizado para atualizar o texto do botão
         const event = new CustomEvent('profileSelected', { 
           detail: { 
@@ -110,7 +111,7 @@ const EpictusTurboMode: React.FC = () => {
       name: "Coordenador",
       onClick: () => {
         setSelectedProfile("Coordenador");
-
+        
         // Disparar um evento customizado para atualizar o texto do botão
         const event = new CustomEvent('profileSelected', { 
           detail: { 
@@ -128,7 +129,7 @@ const EpictusTurboMode: React.FC = () => {
       name: "Expert",
       onClick: () => {
         setSelectedProfile("Expert");
-
+        
         // Disparar um evento customizado para atualizar o texto do botão
         const event = new CustomEvent('profileSelected', { 
           detail: { 
@@ -140,9 +141,9 @@ const EpictusTurboMode: React.FC = () => {
       }
     }
   ];
-
+  
   // New color scheme is now directly applied in the class names
-
+  
   return (
     <div className="w-full flex flex-col items-center">
       {/* Header copied from EpictusIAHeader but with title changed to "Epictus Turbo" */}
@@ -191,22 +192,56 @@ const EpictusTurboMode: React.FC = () => {
 
           {/* Logo and title section */}
           <div className="flex items-center gap-4 z-10 flex-1">
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-white tracking-tight">
-                Epictus Turbo
-              </h1>
-              <motion.div
-                className="flex items-center px-1.5 py-0.5 rounded-md bg-gradient-to-r from-[#0D23A0] to-[#4A0D9F] text-xs font-medium text-white shadow-lg dropdown-isolate personalidades-root"
+            <div className="relative group">
+              <div className={`absolute inset-0 bg-gradient-to-br from-[#0D23A0] via-[#1230CC] to-[#4A0D9F] rounded-full ${isHovered ? 'blur-[6px]' : 'blur-[3px]'} opacity-80 group-hover:opacity-100 transition-all duration-300 scale-110`}></div>
+              <motion.div 
+                className="w-12 h-12 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center relative z-10 border-2 border-white/10 shadow-xl"
                 whileHover={{ scale: 1.05 }}
                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
               >
-                <Zap className="h-3 w-3 mr-1" />
-                Premium
+                <AnimatePresence>
+                  {animationComplete ? (
+                    <motion.div
+                      key="icon"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      className="flex items-center justify-center"
+                    >
+                      <span className="text-white font-bold text-lg">IA</span>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="loading"
+                      initial={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="flex items-center justify-center"
+                    >
+                      <Sparkles className="h-6 w-6 text-white animate-pulse" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             </div>
-            <p className="text-white/70 text-sm mt-0.5 font-medium tracking-wide">
-              IA avançada com processamento ultra-rápido para suas necessidades
-            </p>
+
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-white tracking-tight">
+                  Epictus Turbo
+                </h1>
+                <motion.div
+                  className="flex items-center px-1.5 py-0.5 rounded-md bg-gradient-to-r from-[#0D23A0] to-[#4A0D9F] text-xs font-medium text-white shadow-lg"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                >
+                  <Zap className="h-3 w-3 mr-1" />
+                  Premium
+                </motion.div>
+              </div>
+              <p className="text-white/70 text-sm mt-0.5 font-medium tracking-wide">
+                IA avançada com processamento ultra-rápido para suas necessidades
+              </p>
+            </div>
           </div>
 
           {/* New header icons */}
@@ -228,7 +263,7 @@ const EpictusTurboMode: React.FC = () => {
                   </svg>
                 </div>
               </motion.div>
-
+              
               {/* Dropdown content - absolute positioning relative to its container */}
               <div className="fixed group-hover:opacity-100 group-hover:visible opacity-0 invisible transition-all duration-300 z-[99999] left-auto mt-2 personalidades-dropdown" style={{ top: "calc(100% + 10px)" }}>
                 <div className="w-52 bg-gradient-to-r from-[#0c2341] to-[#0f3562] rounded-lg shadow-xl overflow-hidden border border-white/10 backdrop-blur-md" style={{ position: "relative", zIndex: 99999 }}>
@@ -350,21 +385,21 @@ const EpictusTurboMode: React.FC = () => {
           </div>
         </motion.header>
       </div>
-
+      
       {/* Content area now below the header */}
-      <div className="w-full flex flex-col items-center justify-center mt-2 mb-4">
+      <div className="w-full flex flex-col items-center justify-center mt-1 mb-2">
         {/* Hub Conectado - novo componente entre o cabeçalho e a caixa de mensagens */}
         <div className="w-full">
           <TurboHubConnected />
         </div>
-
+        
         {/* Mini-section selector */}
         <div className="w-full flex-grow flex items-center justify-center">
           {/* Aqui virá o conteúdo principal (histórico de conversas, resultados, etc.) */}
         </div>
-
+        
         {/* Caixa de mensagens na parte inferior */}
-        <div className="w-full bottom-0 left-0 right-0 z-30 mt-1">
+        <div className="w-full bottom-0 left-0 right-0 z-30 mt-0">
           <TurboMessageBox />
         </div>
       </div>
