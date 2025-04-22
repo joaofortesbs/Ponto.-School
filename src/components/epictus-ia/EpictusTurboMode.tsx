@@ -19,6 +19,28 @@ const EpictusTurboMode: React.FC = () => {
   const [profileName, setProfileName] = useState("Personalidades");
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
   
+  // Adicionar estilos globais para garantir que o modal de personalidades fique por cima
+  useEffect(() => {
+    // Adicionar estilos CSS para os modais de personalidades
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .personalidades-dropdown {
+        z-index: 9999 !important; 
+      }
+      [data-radix-popper-content-wrapper],
+      [role="dialog"],
+      .radix-dropdown-content,
+      .radix-dropdown-menu {
+        z-index: 9999 !important;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+  
   useEffect(() => {
     // Trigger initial animation
     const timer = setTimeout(() => {

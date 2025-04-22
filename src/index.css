@@ -47,12 +47,29 @@
 .radix-dialog-content,
 [data-radix-popper-content-wrapper],
 [role="dialog"] {
-  z-index: 50 !important; /* High z-index to ensure visibility */
+  z-index: 9999 !important; /* Extremely high z-index to ensure visibility above all */
 }
 
 /* Additional styling for any custom modals */
-.personalidades-modal {
-  z-index: 50 !important;
+.personalidades-modal,
+.personalidades-dropdown,
+.radix-dropdown-content,
+.radix-dropdown-menu,
+div[data-radix-popper-content-wrapper] {
+  z-index: 9999 !important;
+  position: relative;
+}
+
+/* Estilos específicos para o dropdown de personalidades */
+button[aria-haspopup="dialog"],
+button[aria-haspopup="menu"] {
+  position: relative;
+  z-index: 100;
+}
+
+/* Garante que os menus dropdown apareçam por cima */
+[data-state="open"] {
+  z-index: 9999 !important;
 }
 
   background-size: 20px 20px;
