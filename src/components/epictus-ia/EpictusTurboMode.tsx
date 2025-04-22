@@ -32,7 +32,7 @@ const EpictusTurboMode: React.FC = () => {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className={`w-full ${isDark ? 'bg-gradient-to-r from-[#050e1d] to-[#0d1a30]' : 'bg-gradient-to-r from-[#0c2341] to-[#0f3562]'} backdrop-blur-lg z-10 py-4 px-5 flex items-center justify-between rounded-xl relative overflow-hidden`}
+          className={`w-full ${isDark ? 'bg-gradient-to-r from-[#050e1d] to-[#0d1a30]' : 'bg-gradient-to-r from-[#0c2341] to-[#0f3562]'} backdrop-blur-lg py-4 px-5 flex items-center justify-between rounded-xl relative`}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
@@ -127,7 +127,7 @@ const EpictusTurboMode: React.FC = () => {
           {/* New header icons */}
           <div className="flex items-center justify-center z-10 relative gap-3">
             {/* Personalidades dropdown */}
-            <div className="relative icon-container mr-5 group">
+            <div className="relative icon-container mr-5 group z-50">
               <motion.div
                 className="relative w-auto h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow px-3 group"
                 whileHover={{ scale: 1.02 }}
@@ -147,8 +147,8 @@ const EpictusTurboMode: React.FC = () => {
                 </div>
               </motion.div>
               
-              {/* Dropdown content - moved completely out of the button for proper z-index rendering */}
-              <div className="fixed group-hover:opacity-100 group-hover:visible opacity-0 invisible transition-all duration-300 left-[inherit] z-[9999] top-[inherit] mt-[58px] ml-[-170px]">
+              {/* Dropdown content - absolute positioning relative to its container */}
+              <div className="absolute group-hover:opacity-100 group-hover:visible opacity-0 invisible transition-all duration-300 z-[9999] left-0 top-full mt-2">
                 <div className="w-52 bg-gradient-to-r from-[#0c2341] to-[#0f3562] rounded-lg shadow-xl overflow-hidden border border-white/10">
                   <div className="py-1 border-b border-white/10">
                     <div className="px-3 py-2 text-white/70 text-xs font-medium">Escolha uma personalidade</div>
