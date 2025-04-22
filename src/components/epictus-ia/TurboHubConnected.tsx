@@ -246,18 +246,16 @@ const TurboHubConnected: React.FC = () => {
             focusedNodule ? 'opacity-50 blur-sm' : 'opacity-100'
           } transition-all duration-500`}
           animate={{
-            scale: [1, 1.05, 1],
-            rotate: [0, 180],
             boxShadow: ['0 0 15px rgba(13, 35, 160, 0.5)', '0 0 25px rgba(91, 33, 189, 0.7)', '0 0 15px rgba(13, 35, 160, 0.5)']
           }}
           transition={{
-            duration: 15,
+            duration: 3,
             repeat: Infinity,
             repeatType: "reverse",
             ease: "linear"
           }}
         >
-          <div className="relative w-24 h-24 rounded-[20px] bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center shadow-2xl">
+          <div className="relative w-24 h-24 rounded-[20px] bg-gradient-to-br from-[#2B27A9] to-[#3C2BD6] flex items-center justify-center shadow-2xl">
             <div className="absolute inset-0 rounded-[20px] bg-gradient-to-br from-[#0D23A0]/30 to-[#5B21BD]/30 blur-lg animate-pulse"></div>
             <span className="text-white font-bold text-xl relative z-10">
               <div className="flex items-center justify-center flex-col">
