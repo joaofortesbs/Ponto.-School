@@ -127,7 +127,7 @@ const EpictusTurboMode: React.FC = () => {
           {/* New header icons */}
           <div className="flex items-center justify-center z-10 relative gap-3">
             {/* Personalidades dropdown */}
-            <div className="relative icon-container mr-5">
+            <div className="relative icon-container mr-5 group">
               <motion.div
                 className="relative w-auto h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow px-3 group"
                 whileHover={{ scale: 1.02 }}
@@ -145,9 +145,11 @@ const EpictusTurboMode: React.FC = () => {
                     <polyline points="6 9 12 15 18 9"></polyline>
                   </svg>
                 </div>
-                
-                {/* Dropdown content - hidden by default, shown on hover */}
-                <div className="absolute top-full left-0 mt-2 w-52 bg-gradient-to-r from-[#0c2341] to-[#0f3562] rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 overflow-hidden">
+              </motion.div>
+              
+              {/* Dropdown content - moved completely out of the button for proper z-index rendering */}
+              <div className="fixed group-hover:opacity-100 group-hover:visible opacity-0 invisible transition-all duration-300 left-[inherit] z-[9999] top-[inherit] mt-[58px] ml-[-170px]">
+                <div className="w-52 bg-gradient-to-r from-[#0c2341] to-[#0f3562] rounded-lg shadow-xl overflow-hidden border border-white/10">
                   <div className="py-1 border-b border-white/10">
                     <div className="px-3 py-2 text-white/70 text-xs font-medium">Escolha uma personalidade</div>
                   </div>
@@ -176,7 +178,7 @@ const EpictusTurboMode: React.FC = () => {
                     ))}
                   </div>
                 </div>
-              </motion.div>
+              </div>
             </div>
 
             {/* History icon */}
