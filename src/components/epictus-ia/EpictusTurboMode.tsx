@@ -127,14 +127,13 @@ const EpictusTurboMode: React.FC = () => {
           {/* New header icons */}
           <div className="flex items-center justify-center z-10 relative gap-3">
             {/* Personalidades dropdown */}
-            <div className="relative icon-container mr-5" style={{ position: 'static' }}>
+            <div className="relative icon-container mr-5">
               <motion.div
                 className="relative w-auto h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow px-3 group"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 initial={false}
                 transition={{ duration: 0.3 }}
-                style={{ position: 'relative' }}
               >
                 <div className="flex items-center gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -146,38 +145,38 @@ const EpictusTurboMode: React.FC = () => {
                     <polyline points="6 9 12 15 18 9"></polyline>
                   </svg>
                 </div>
-              </motion.div>
-              
-              {/* Dropdown content - separated from the button to fix positioning */}
-              <div className="absolute top-full left-0 mt-2 w-52 bg-gradient-to-r from-[#0c2341] to-[#0f3562] rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[100] overflow-hidden">
-                <div className="py-1 border-b border-white/10">
-                  <div className="px-3 py-2 text-white/70 text-xs font-medium">Escolha uma personalidade</div>
-                </div>
-                <div className="max-h-60 overflow-y-auto">
-                  {[
-                    { icon: "📰", color: "#4A85C4", name: "Notícias mais recentes" },
-                    { icon: "❤️", color: "#E5508F", name: "Companhia" },
-                    { icon: "😄", color: "#F8AE1C", name: "Comediante sem limites" },
-                    { icon: "👫", color: "#E47D57", name: "Amigo leal" },
-                    { icon: "📚", color: "#57B481", name: "Professor particular" },
-                    { icon: "🔬", color: "#9A73EF", name: "Não é um médico" },
-                    { icon: "🧠", color: "#4FC4CA", name: "Não é um terapeuta" }
-                  ].map((item, index) => (
-                    <div 
-                      key={index} 
-                      className="flex items-center gap-2 px-3 py-2 hover:bg-white/5 cursor-pointer transition-colors duration-150"
-                    >
+                
+                {/* Dropdown content - hidden by default, shown on hover */}
+                <div className="absolute top-full left-0 mt-2 w-52 bg-gradient-to-r from-[#0c2341] to-[#0f3562] rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 overflow-hidden">
+                  <div className="py-1 border-b border-white/10">
+                    <div className="px-3 py-2 text-white/70 text-xs font-medium">Escolha uma personalidade</div>
+                  </div>
+                  <div className="max-h-60 overflow-y-auto">
+                    {[
+                      { icon: "📰", color: "#4A85C4", name: "Notícias mais recentes" },
+                      { icon: "❤️", color: "#E5508F", name: "Companhia" },
+                      { icon: "😄", color: "#F8AE1C", name: "Comediante sem limites" },
+                      { icon: "👫", color: "#E47D57", name: "Amigo leal" },
+                      { icon: "📚", color: "#57B481", name: "Professor particular" },
+                      { icon: "🔬", color: "#9A73EF", name: "Não é um médico" },
+                      { icon: "🧠", color: "#4FC4CA", name: "Não é um terapeuta" }
+                    ].map((item, index) => (
                       <div 
-                        className="w-5 h-5 rounded-md flex items-center justify-center text-xs"
-                        style={{ backgroundColor: `${item.color}20` }}
+                        key={index} 
+                        className="flex items-center gap-2 px-3 py-2 hover:bg-white/5 cursor-pointer transition-colors duration-150"
                       >
-                        {item.icon}
+                        <div 
+                          className="w-5 h-5 rounded-md flex items-center justify-center text-xs"
+                          style={{ backgroundColor: `${item.color}20` }}
+                        >
+                          {item.icon}
+                        </div>
+                        <span className="text-white text-sm">{item.name}</span>
                       </div>
-                      <span className="text-white text-sm">{item.name}</span>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
 
             {/* History icon */}
