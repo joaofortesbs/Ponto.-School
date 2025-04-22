@@ -146,8 +146,6 @@ const EpictusTurboMode: React.FC = () => {
                     <polyline points="6 9 12 15 18 9"></polyline>
                   </svg>
                 </div>
-                
-                {/* Dropdown content - moved outside the button to prevent containment issues */}
               </motion.div>
               
               {/* Dropdown content - separated from the button to fix positioning */}
@@ -180,7 +178,6 @@ const EpictusTurboMode: React.FC = () => {
                   ))}
                 </div>
               </div>
-              </motion.div>
             </div>
 
             {/* History icon */}
