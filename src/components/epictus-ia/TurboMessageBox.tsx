@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Plus, Mic, Send, Brain, BookOpen, FileText, RotateCw, AlignJustify, Zap, X } from "lucide-react";
@@ -81,13 +80,13 @@ const TurboMessageBox: React.FC = () => {
           recorder.onstop = () => {
             // Criar um blob com todos os chunks de áudio
             const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-            
+
             // Aqui você pode implementar o envio do áudio para processamento
             console.log("Áudio gravado:", audioBlob);
-            
+
             // Parar todos os tracks da stream
             stream.getTracks().forEach(track => track.stop());
-            
+
             // Resetar estado de gravação
             setIsRecording(false);
           };
@@ -122,22 +121,22 @@ const TurboMessageBox: React.FC = () => {
         <div className="absolute inset-0 opacity-30 pointer-events-none">
           <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
         </div>
-        
+
         {/* Container principal */}
         <div className="relative z-10 p-4">
           {/* Área de input */}
           <div className="flex items-center gap-2">
             <motion.button
-              className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+              className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
                          flex items-center justify-center shadow-lg text-white"
               whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsExpanded(!isExpanded)}
             >
-              <Plus size={20} />
+              <Plus size={22} />
             </motion.button>
-            
-            <div className={`relative flex-grow flex items-center overflow-hidden 
+
+            <div className={`relative flex-grow overflow-hidden 
                             bg-gradient-to-r from-[#0c2341]/30 to-[#0f3562]/30 
                             rounded-xl border ${isInputFocused ? 'border-[#1230CC]/70' : 'border-white/10'} 
                             transition-all duration-300`}>
@@ -149,38 +148,37 @@ const TurboMessageBox: React.FC = () => {
                 onFocus={() => setIsInputFocused(true)}
                 onBlur={() => setIsInputFocused(false)}
                 placeholder="Digite um comando ou pergunta para o Epictus Turbo..."
-                className="w-full bg-transparent text-white py-3 px-4 outline-none placeholder:text-gray-400"
+                className="w-full bg-transparent text-white py-4 px-4 outline-none placeholder:text-gray-400"
               />
-              
-              {/* Botão duplo: microfone (quando não há texto) ou enviar (quando há texto) */}
-              {!inputHasContent ? (
-                <motion.button 
-                  className="flex-shrink-0 mr-1 p-2 rounded-full text-white/80 hover:text-white/100 
-                            transition-colors duration-200"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={startRecording}
-                >
-                  <Mic size={20} />
-                </motion.button>
-              ) : null}
-              
-              {/* Botão de enviar - Visível apenas quando há conteúdo no input */}
-              <motion.button
-                className={`flex-shrink-0 p-2 mr-1 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
-                            text-white flex items-center justify-center transition-all duration-300
-                            ${inputHasContent ? 'opacity-100' : 'opacity-0 pointer-events-none absolute'}`}
+            </div>
+
+            {/* Botão de microfone (quando não há texto) */}
+            {!inputHasContent ? (
+              <motion.button 
+                className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+                         flex items-center justify-center shadow-lg text-white"
                 whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
                 whileTap={{ scale: 0.95 }}
-                animate={inputHasContent ? { 
+                onClick={startRecording}
+              >
+                <Mic size={20} />
+              </motion.button>
+            ) : (
+              /* Botão de enviar - Visível apenas quando há conteúdo no input */
+              <motion.button
+                className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+                         flex items-center justify-center shadow-lg text-white"
+                whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+                whileTap={{ scale: 0.95 }}
+                animate={{ 
                   boxShadow: ["0 0 0px rgba(13, 35, 160, 0)", "0 0 15px rgba(13, 35, 160, 0.5)", "0 0 0px rgba(13, 35, 160, 0)"],
-                } : {}}
-                transition={{ duration: 2, repeat: inputHasContent ? Infinity : 0 }}
+                }}
+                transition={{ duration: 2, repeat: Infinity }}
                 onClick={handleSendMessage}
               >
-                <Send size={18} />
+                <Send size={20} />
               </motion.button>
-            </div>
+            )}
           </div>
 
           {/* Interface de gravação de áudio */}
@@ -218,7 +216,7 @@ const TurboMessageBox: React.FC = () => {
               </motion.div>
             )}
           </AnimatePresence>
-          
+
           {/* Ações rápidas */}
           <AnimatePresence>
             <motion.div 
@@ -238,7 +236,7 @@ const TurboMessageBox: React.FC = () => {
               ))}
             </motion.div>
           </AnimatePresence>
-          
+
           {/* Painel expandido (opcional) */}
           <AnimatePresence>
             {isExpanded && (
