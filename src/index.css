@@ -42,6 +42,19 @@
   background-image: 
     linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+
+/* Ensure modals and dialogs are always on top */
+.radix-dialog-content,
+[data-radix-popper-content-wrapper],
+[role="dialog"] {
+  z-index: 50 !important; /* High z-index to ensure visibility */
+}
+
+/* Additional styling for any custom modals */
+.personalidades-modal {
+  z-index: 50 !important;
+}
+
   background-size: 20px 20px;
 }
 
