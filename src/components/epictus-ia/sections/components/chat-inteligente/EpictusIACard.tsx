@@ -1,22 +1,22 @@
+
 import React from "react";
 import { Brain } from "lucide-react";
 import { ChatCard } from "./ChatCard";
 import { useNavigate } from "react-router-dom";
 
-interface EpictusIACardProps {
-  onActivateEpictus?: () => void;
-}
-
-export const EpictusIACard: React.FC<EpictusIACardProps> = (props) => {
+export const EpictusIACard: React.FC = () => {
   const navigate = useNavigate();
-
+  
   const handleActivation = () => {
-    if (props.onActivateEpictus) {
-      props.onActivateEpictus();
-    } else {
-      const event = new CustomEvent('activateEpictusMode');
-      window.dispatchEvent(event);
-    }
+    // Dispatch um evento personalizado para ativar o modo Epictus IA
+    // similar ao que é feito com o Turbo mode
+    window.history.pushState({}, "", "/epictus-ia?mode=epictus");
+    
+    // Dispatch um evento customizado que o componente pai pode ouvir
+    const event = new CustomEvent("activateEpictusMode", {
+      detail: { mode: "epictus" }
+    });
+    window.dispatchEvent(event);
   };
 
   const assistantData = {

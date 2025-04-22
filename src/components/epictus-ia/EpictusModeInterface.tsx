@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/ThemeProvider";
@@ -142,7 +143,10 @@ const EpictusModeInterface: React.FC<EpictusModeInterfaceProps> = ({ onExit }) =
           <div className="flex items-center justify-center z-10 relative gap-3">
             {/* Search component */}
             <div className="relative search-icon-container">
-              <div className="relative">
+              <motion.div
+                className="relative"
+                initial={false}
+              >
                 {/* Search icon/button */}
                 <motion.div
                   className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
@@ -159,7 +163,7 @@ const EpictusModeInterface: React.FC<EpictusModeInterfaceProps> = ({ onExit }) =
                 >
                   <Search className="h-5 w-5 text-white" />
                 </motion.div>
-
+                
                 {/* Expanding search input */}
                 <AnimatePresence mode="wait">
                   {searchOpen && (
@@ -190,7 +194,7 @@ const EpictusModeInterface: React.FC<EpictusModeInterfaceProps> = ({ onExit }) =
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
+              </motion.div>
             </div>
 
             {/* Settings component */}
@@ -224,7 +228,7 @@ const EpictusModeInterface: React.FC<EpictusModeInterfaceProps> = ({ onExit }) =
                       <Settings className="h-5 w-5" />
                       <span>Configurações</span>
                     </div>
-
+                    
                     <Tabs defaultValue="perfil" className="w-full" orientation="vertical">
                       <TabsList className="flex flex-col items-stretch h-auto bg-transparent gap-2">
                         <TabsTrigger 
@@ -242,7 +246,7 @@ const EpictusModeInterface: React.FC<EpictusModeInterfaceProps> = ({ onExit }) =
                       </TabsList>
                     </Tabs>
                   </div>
-
+                  
                   {/* Conteúdo principal - simplificado para este exemplo */}
                   <div className="flex-1 bg-white dark:bg-slate-950 p-6 rounded-r-lg overflow-y-auto">
                     <h2 className="text-2xl font-bold mb-4">Configurações do Epictus IA</h2>
@@ -268,7 +272,7 @@ const EpictusModeInterface: React.FC<EpictusModeInterfaceProps> = ({ onExit }) =
             Aqui você poderá experimentar como é receber uma aula de conteúdos personalizados especialmente para você.
             Comece a interagir com o assistente digitando sua pergunta ou selecionando um dos tópicos sugeridos abaixo.
           </p>
-
+          
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 bg-orange-50 dark:bg-slate-800 rounded-lg border border-orange-200 dark:border-slate-700">
               <h3 className="font-semibold text-lg mb-2">Tópicos Sugeridos</h3>
@@ -278,7 +282,7 @@ const EpictusModeInterface: React.FC<EpictusModeInterfaceProps> = ({ onExit }) =
                 <li className="cursor-pointer hover:text-orange-500 transition-colors">• Explique a Primeira Lei da Termodinâmica</li>
               </ul>
             </div>
-
+            
             <div className="p-4 bg-blue-50 dark:bg-slate-800 rounded-lg border border-blue-200 dark:border-slate-700">
               <h3 className="font-semibold text-lg mb-2">Recursos Disponíveis</h3>
               <ul className="space-y-2">
@@ -288,7 +292,7 @@ const EpictusModeInterface: React.FC<EpictusModeInterfaceProps> = ({ onExit }) =
               </ul>
             </div>
           </div>
-
+          
           {/* Campo de entrada de mensagem */}
           <div className="mt-8 flex items-center">
             <Input

@@ -1,3 +1,4 @@
+
 /* Notebook simulation styles */
 .notebook-simulation {
   background-color: #fffdf0;
@@ -18,12 +19,4 @@
   bottom: 0;
   width: 1px;
   background-color: #ff9e9e;
-}
-
-/* Notebook Lines Styling */
-.notebook-lines {
-  padding: 0;
-}
-.notebook-lines {
-  position: relative;
 }
