@@ -146,12 +146,12 @@ const EpictusTurboMode: React.FC = () => {
   return (
     <div className="w-full flex flex-col items-center">
       {/* Header copied from EpictusIAHeader but with title changed to "Epictus Turbo" */}
-      <div className="w-full p-4">
+      <div className="w-full p-4 max-w-[1200px] mx-auto"> {/* Added max-w-[1200px] and mx-auto */}
         <motion.header 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className={`w-full ${isDark ? 'bg-gradient-to-r from-[#050e1d] to-[#0d1a30]' : 'bg-gradient-to-r from-[#0c2341] to-[#0f3562]'} backdrop-blur-lg py-4 px-5 flex items-center justify-between rounded-xl relative`}
+          className={`w-full max-w-[1200px] mx-auto ${isDark ? 'bg-gradient-to-r from-[#050e1d] to-[#0d1a30]' : 'bg-gradient-to-r from-[#0c2341] to-[#0f3562]'} backdrop-blur-lg py-4 px-5 flex items-center justify-between rounded-xl relative`} {/* Added max-w-[1200px] and mx-auto */}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
@@ -387,17 +387,17 @@ const EpictusTurboMode: React.FC = () => {
       {/* Content area now below the header */}
       <div className="w-full flex flex-col items-center justify-center mt-0 mb-2">
         {/* Hub Conectado - novo componente entre o cabeçalho e a caixa de mensagens */}
-        <div className="w-full">
+        <div className="w-full max-w-[1200px] mx-auto"> {/* Added max-w-[1200px] and mx-auto */}
           <TurboHubConnected />
         </div>
 
         {/* Mini-section selector */}
-        <div className="w-full flex-grow flex items-center justify-center">
+        <div className="w-full flex-grow flex items-center justify-center max-w-[1200px] mx-auto"> {/* Added max-w-[1200px] and mx-auto */}
           {/* Aqui virá o conteúdo principal (histórico de conversas, resultados, etc.) */}
         </div>
 
         {/* Caixa de mensagens na parte inferior */}
-        <div className="w-full bottom-0 left-0 right-0 z-30 mt-1">
+        <div className="w-full bottom-0 left-0 right-0 z-30 mt-1 max-w-[1200px] mx-auto"> {/* Added max-w-[1200px] and mx-auto */}
           <TurboMessageBox />
         </div>
       </div>
