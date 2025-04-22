@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,16 +26,16 @@ export default function ChatInteligente() {
     if (urlParams.get('mode') === 'epictus') {
       setEpictusMode(true);
     }
-    
+
     // Ouvir o evento de ativação do modo Epictus
     const handleEpictusActivation = (event: any) => {
       if (event.detail && event.detail.activated) {
         setEpictusMode(true);
       }
     };
-    
+
     window.addEventListener('activateEpictusMode', handleEpictusActivation);
-    
+
     return () => {
       window.removeEventListener('activateEpictusMode', handleEpictusActivation);
     };
@@ -61,33 +60,7 @@ export default function ChatInteligente() {
               Voltar para Cards
             </Button>
           </div>
-          
-          {/* Interface do modo Epictus IA sem cabeçalho fixo */}
-          <div className="flex-grow overflow-hidden">
-            <div className="h-full">
-              <EpictusIAMode />
-            </div>
-          </div>
-        </div>
-</old_str>
-<new_str>
-        <div className="w-full h-full flex flex-col">
-          {/* Barra de navegação para voltar */}
-          <div className="w-full p-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-              onClick={() => {
-                setEpictusMode(false);
-                window.history.pushState({}, "", "/epictus-ia");
-              }}
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Voltar para Cards
-            </Button>
-          </div>
-          
+
           {/* Interface do modo Epictus IA sem cabeçalho fixo */}
           <div className="flex-grow overflow-hidden">
             <div className="h-full">
