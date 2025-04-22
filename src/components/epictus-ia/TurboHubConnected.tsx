@@ -314,7 +314,7 @@ const TurboHubConnected: React.FC = () => {
         <AnimatePresence>
           {focusedNodeData && (
             <motion.div 
-              className="absolute right-8 top-20 z-40 bg-gradient-to-r from-[#0c2341]/80 to-[#0f3562]/80 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl max-w-xs"
+              className="absolute right-8 top-10 z-40 bg-gradient-to-r from-[#0c2341]/80 to-[#0f3562]/80 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl max-w-xs"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
