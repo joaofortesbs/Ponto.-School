@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTheme } from "@/components/ThemeProvider";
-import { X, ArrowLeft, Sparkles, Brain } from "lucide-react";
+import { X, ArrowLeft, Sparkles, Brain, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface EpictusModeInterfaceProps {
@@ -19,6 +19,7 @@ const EpictusModeInterface: React.FC<EpictusModeInterfaceProps> = ({ onExit }) =
       content: "Olá! Sou o Epictus IA, seu assistente de estudos avançado. Como posso ajudá-lo hoje?"
     }
   ]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSendMessage = () => {
     if (input.trim() === "") return;
@@ -29,19 +30,31 @@ const EpictusModeInterface: React.FC<EpictusModeInterfaceProps> = ({ onExit }) =
       content: input
     }]);
 
+    // Indica que está carregando
+    setIsLoading(true);
+
     // Simula uma resposta do Epictus (em um app real, seria uma chamada API)
     setTimeout(() => {
       setMessages(prev => [...prev, {
         role: "system",
         content: "Estou processando sua solicitação. Como assistente de estudos, posso ajudar com explicações, resumos, e estratégias de aprendizado personalizado."
       }]);
+      setIsLoading(false);
     }, 1000);
 
     setInput("");
   };
 
+  // Força scroll para baixo quando novas mensagens são adicionadas
+  useEffect(() => {
+    const chatContainer = document.getElementById('epictus-chat-messages');
+    if (chatContainer) {
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+  }, [messages]);
+
   return (
-    <div className="w-full flex flex-col items-center">
+    <div className="w-full flex flex-col h-full">
       {/* Header - reproduzindo o mesmo estilo do EpictusIAHeader */}
       <div className="w-full p-4">
         <motion.header 
@@ -55,7 +68,6 @@ const EpictusModeInterface: React.FC<EpictusModeInterfaceProps> = ({ onExit }) =
           {/* Animated gradient background */}
           <div className="absolute inset-0 opacity-20">
             <div className={`absolute inset-0 bg-gradient-to-r from-[#FF6B00] via-[#FF8C40] to-[#FF9D5C] ${isHovered ? 'opacity-60' : 'opacity-30'} transition-opacity duration-700`}></div>
-            <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
           </div>
 
           {/* Glowing orbs */}
@@ -109,8 +121,8 @@ const EpictusModeInterface: React.FC<EpictusModeInterfaceProps> = ({ onExit }) =
       </div>
 
       {/* Chat Interface */}
-      <div className={`w-full max-w-4xl flex-1 p-4 rounded-lg ${isDark ? 'bg-gray-800/30' : 'bg-white/70'} backdrop-blur-md shadow-lg mt-2 mb-4 flex flex-col`}>
-        <div className="flex-1 overflow-y-auto p-4 mb-4 space-y-4">
+      <div className={`w-full max-w-4xl mx-auto flex-1 p-4 rounded-lg ${isDark ? 'bg-gray-800/30' : 'bg-white/70'} backdrop-blur-md shadow-lg mt-2 mb-4 flex flex-col h-[calc(100vh-200px)]`}>
+        <div id="epictus-chat-messages" className="flex-1 overflow-y-auto p-4 mb-4 space-y-4 min-h-[200px]">
           {messages.map((message, index) => (
             <div 
               key={index} 
@@ -123,9 +135,18 @@ const EpictusModeInterface: React.FC<EpictusModeInterfaceProps> = ({ onExit }) =
               {message.content}
             </div>
           ))}
+          {isLoading && (
+            <div className={`p-3 rounded-lg max-w-[80%] ${isDark ? "bg-gray-700" : "bg-gray-100"} ${isDark ? "text-white" : "text-gray-800"}`}>
+              <div className="flex space-x-2">
+                <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"></div>
+                <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "0.4s" }}></div>
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center gap-2 p-2 rounded-lg border border-gray-300 dark:border-gray-600">
+        <div className="flex items-center gap-2 p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white/10 dark:bg-gray-800/50">
           <input
             type="text"
             placeholder="Digite sua mensagem..."
@@ -137,8 +158,18 @@ const EpictusModeInterface: React.FC<EpictusModeInterfaceProps> = ({ onExit }) =
           <Button 
             onClick={handleSendMessage}
             className="bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] hover:from-[#FF9B50] hover:to-[#FF6B00] text-white"
+            disabled={isLoading}
           >
-            Enviar
+            {isLoading ? (
+              <div className="flex items-center gap-1">
+                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                <span>Enviando</span>
+              </div>
+            ) : (
+              <>
+                Enviar <Send className="ml-2 h-4 w-4" />
+              </>
+            )}
           </Button>
         </div>
       </div>

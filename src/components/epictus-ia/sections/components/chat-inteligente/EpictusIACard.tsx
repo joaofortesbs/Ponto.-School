@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Brain } from "lucide-react";
 import { ChatCard } from "./ChatCard";
@@ -10,23 +9,21 @@ interface EpictusIACardProps {
 
 export const EpictusIACard: React.FC<EpictusIACardProps> = ({ onActivateEpictus }) => {
   const navigate = useNavigate();
-  
+
   const handleActivation = () => {
-    // Dispatch um evento personalizado para ativar o modo Epictus IA
+    console.log("EpictusIACard: Ativando modo Epictus");
+
+    // Atualizar a URL
     window.history.pushState({}, "", "/epictus-ia?mode=epictus");
-    
-    console.log("Ativando modo Epictus IA via card");
-    
+
     // Aciona callback se fornecido
     if (onActivateEpictus) {
       onActivateEpictus();
+    } else {
+      // Se não houver callback, dispare um evento personalizado
+      const event = new CustomEvent("activateEpictusMode");
+      window.dispatchEvent(event);
     }
-    
-    // Dispatch um evento customizado que o componente pai pode ouvir
-    const event = new CustomEvent("activateEpictusMode", {
-      detail: { mode: "epictus" }
-    });
-    window.dispatchEvent(event);
   };
 
   const assistantData = {
