@@ -13,7 +13,7 @@ import {
   TutorInteligenteCard,
   EpictusIACard,
 } from "./components/chat-inteligente";
-import EpictusModeInterface from "../../EpictusModeInterface"; // Assuming this component exists
+import EpictusModeInterface from "@/components/epictus-ia/EpictusModeInterface"; // Importação correta
 
 export const ChatInteligente: React.FC = () => {
   const { theme } = useTheme();
