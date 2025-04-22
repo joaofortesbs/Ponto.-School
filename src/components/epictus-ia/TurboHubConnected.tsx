@@ -287,11 +287,12 @@ const TurboHubConnected: React.FC = () => {
               <motion.div
                 className={`relative ${isBlurred ? 'opacity-30 blur-sm scale-75' : ''} transition-all duration-500`}
                 animate={isFocused ? {
-                  scale: [1, 1.2],
-                  zIndex: 30,
+                  scale: [1, 1.2]
                 } : {
-                  scale: 1,
-                  zIndex: 10
+                  scale: 1
+                }}
+                style={{ 
+                  zIndex: isFocused ? 30 : 10 
                 }}
                 transition={{ duration: 0.3 }}
                 onClick={() => handleNoduleClick(nodule.id)}

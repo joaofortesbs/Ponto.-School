@@ -1,3 +1,4 @@
+
 @keyframes pulse-subtle {
   0%, 100% {
     opacity: 1;
@@ -587,7 +588,7 @@
   text-decoration: none;
   cursor: pointer;
 }
-//Further modifications needed here to fulfill the complete user request.
+
 @keyframes float {
   0%, 100% {
     transform: translateY(0);
@@ -738,4 +739,15 @@
   cursor: grabbing;
   cursor: -webkit-grabbing;
   z-index: 30;
+}
+
+/* Estilos auxiliares para o Hub Conectado */
+@keyframes pulse-glow {
+  0% { filter: drop-shadow(0 0 5px rgba(13, 35, 160, 0.3)); }
+  50% { filter: drop-shadow(0 0 10px rgba(91, 33, 189, 0.6)); }
+  100% { filter: drop-shadow(0 0 5px rgba(13, 35, 160, 0.3)); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s infinite ease-in-out;
 }

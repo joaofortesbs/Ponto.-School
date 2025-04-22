@@ -26,8 +26,6 @@
   animation: pulse 2s infinite;
 }
 
-
-
 /* Hide scrollbar for Chrome, Safari and Opera */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
@@ -63,7 +61,7 @@
   animation: pulse-glow 3s infinite ease-in-out;
 }
 
-:root {
+::root {
   --primary: #FF6B00;
   --primary-lighter: #FF9B50;
   --dark-bg: #0A2540;
@@ -502,7 +500,6 @@ body.modal-open {
   background-color: rgba(255, 107, 0, 0.4);
 }
 
-
 /* Regras para otimizar a renderização e carregamento inicial */
 * {
   will-change: auto;
@@ -632,7 +629,7 @@ body.modal-open {
 }
 
 /* Custom cursor styles */
-:root:not(.dark) body {
+::root:not(.dark) body {
   cursor:
     url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="%23FF6B00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" fill="rgba(255, 107, 0, 0.15)" stroke="%23FF6B00"/><path d="M2 2l7 4" stroke="%23FF6B00"/><path d="M8.5 9.5L5 6" stroke="%23FF6B00"/><path d="M18 13l-2.5-2.5" stroke="%23FF6B00"/><path d="M13 18l-2.5-2.5" stroke="%23FF6B00"/><circle cx="16.5" cy="11.5" r="0.5" fill="%23FF6B00" stroke="none"/></svg>')
       1 1,
