@@ -398,7 +398,7 @@ const TurboHubConnected: React.FC = () => {
         <AnimatePresence>
           {focusedNodeData && (
             <motion.div 
-              className="absolute right-8 top-10 z-50 bg-gradient-to-r from-[#0c2341]/80 to-[#0f3562]/80 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl max-w-xs max-h-[580px] overflow-y-auto" // Aumentada a altura para 580px
+              className="absolute right-8 top-4 z-50 bg-gradient-to-r from-[#0c2341]/80 to-[#0f3562]/80 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl max-w-xs max-h-[580px] overflow-y-auto" // Posicionado mais para cima (top-4)
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
