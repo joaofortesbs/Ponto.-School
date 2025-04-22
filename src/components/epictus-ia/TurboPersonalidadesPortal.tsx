@@ -22,16 +22,27 @@ const TurboPersonalidadesPortal: React.FC<TurboPersonalidadesPortalProps> = ({
     if (!host) {
       host = document.createElement('div');
       host.className = 'portal-host';
+      host.style.position = 'fixed';
+      host.style.zIndex = '999999';
+      host.style.top = '0';
+      host.style.left = '0';
+      host.style.width = '100%';
+      host.style.height = '100%';
+      host.style.pointerEvents = 'none';
       document.body.appendChild(host);
     }
     
     const node = document.createElement('div');
     node.className = 'personalidades-portal';
+    node.style.position = 'fixed';
+    node.style.zIndex = '999999';
+    node.style.pointerEvents = 'auto';
+    
     if (targetRect) {
-      node.style.position = 'fixed';
       node.style.top = `${targetRect.bottom + 10}px`;
       node.style.left = `${targetRect.left}px`;
     }
+    
     host.appendChild(node);
     setPortalNode(node);
     
@@ -52,6 +63,14 @@ const TurboPersonalidadesPortal: React.FC<TurboPersonalidadesPortalProps> = ({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -5 }}
       transition={{ duration: 0.2 }}
+      style={{
+        zIndex: 999999,
+        position: 'relative',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+        backgroundColor: '#1a1f3a',
+        borderRadius: '12px',
+        border: '1px solid rgba(255, 255, 255, 0.1)'
+      }}
     >
       {children}
     </motion.div>,
