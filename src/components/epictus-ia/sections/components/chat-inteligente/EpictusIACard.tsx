@@ -8,8 +8,15 @@ export const EpictusIACard: React.FC = () => {
   const navigate = useNavigate();
   
   const handleActivation = () => {
-    // Navegar para a página do Epictus IA
-    navigate("/epictus-ia");
+    // Disparar um evento personalizado para ativar o modo Epictus IA
+    // que o componente pai (ChatInteligente) está ouvindo
+    const event = new CustomEvent("activateEpictusMode", {
+      detail: { activated: true }
+    });
+    window.dispatchEvent(event);
+    
+    // Modificar a URL sem navegar (opcional)
+    window.history.pushState({}, "", "/epictus-ia?mode=epictus");
   };
 
   const assistantData = {

@@ -1,11 +1,12 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
 import { 
   MessageSquare,
   Brain,
-  Sparkles
+  Sparkles,
+  ArrowLeft
 } from "lucide-react";
 import { 
   TutorInteligenteCard, 
@@ -13,12 +14,66 @@ import {
   TutorInteligente2Card,
   EpictusIACard
 } from "./components/chat-inteligente";
+import EpictusChatHeader from "@/components/epictus-ia/EpictusChatHeader";
 
 export default function ChatInteligente() {
   const { theme } = useTheme();
+  const [epictusMode, setEpictusMode] = useState(false);
+  
+  // Manipular o evento personalizado do EpictusIACard
+  useEffect(() => {
+    const handleActivateEpictus = () => {
+      setEpictusMode(true);
+    };
+    
+    window.addEventListener('activateEpictusMode', handleActivateEpictus);
+    
+    return () => {
+      window.removeEventListener('activateEpictusMode', handleActivateEpictus);
+    };
+  }, []);
 
   return (
     <div className="h-full flex flex-col">
+      {epictusMode ? (
+        <div className="w-full h-full flex flex-col">
+          {/* Barra de navegação para voltar */}
+          <div className="flex items-center mb-4">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="flex items-center gap-1 text-sm" 
+              onClick={() => setEpictusMode(false)}
+            >
+              <ArrowLeft className="h-4 w-4" /> Voltar para Chat Inteligente
+            </Button>
+          </div>
+          
+          {/* Cabeçalho do Epictus IA */}
+          <div className="mb-4">
+            <EpictusChatHeader />
+          </div>
+          
+          {/* Área de conteúdo */}
+          <div className="flex-1 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-transparent to-orange-50/10 dark:to-orange-950/10 rounded-lg border border-orange-100/20 dark:border-orange-900/20">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center mb-4">
+              <span className="text-white font-bold text-2xl">IA</span>
+            </div>
+            <h2 className="text-2xl font-bold mb-2 text-center">Epictus IA ativado</h2>
+            <p className="text-center text-gray-500 dark:text-gray-400 mb-6 max-w-md">
+              Experimente como é receber uma aula de conteúdos que nem as instituições mais renomadas do Brasil conseguiriam te entregar, personalizado para você!
+            </p>
+            <div className="flex space-x-4">
+              <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FFA366] text-white">
+                Iniciar conversa
+              </Button>
+              <Button variant="outline" className="border-orange-300 dark:border-orange-800 hover:bg-orange-50 dark:hover:bg-orange-950/50">
+                Ver tutoriais
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : (
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
@@ -70,6 +125,7 @@ export default function ChatInteligente() {
           </div>
         </Card>
       </div>
+      )}
     </div>
   );
 }
