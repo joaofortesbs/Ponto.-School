@@ -44,6 +44,27 @@
     linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
 
 /* Ensure modals and dialogs are always on top */
+
+/* Garantir que o dropdown de Personalidades fique por cima de tudo */
+.personalidades-dropdown,
+.group:hover .personalidades-dropdown,
+[role="menu"].personalidades-dropdown {
+  z-index: 99999 !important;
+  position: relative !important;
+}
+
+/* Corrigir posicionamento dos elementos dropdown */
+.icon-container.group {
+  position: relative !important;
+  isolation: isolate !important;
+}
+
+/* Regra específica para o portal de personalidades */
+div[data-radix-popper-content-wrapper] {
+  z-index: 99999 !important;
+}
+
+
 .radix-dialog-content,
 [data-radix-popper-content-wrapper],
 [role="dialog"] {

@@ -247,7 +247,7 @@ const EpictusTurboMode: React.FC = () => {
           {/* New header icons */}
           <div className="flex items-center justify-center z-10 relative gap-3">
             {/* Personalidades dropdown */}
-            <div className="relative icon-container mr-5 group z-50">
+            <div className="relative icon-container mr-5 group" style={{ zIndex: 99999, position: "relative" }}>
               <motion.div
                 className="relative w-auto h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow px-3 group"
                 whileHover={{ scale: 1.02 }}
@@ -265,8 +265,8 @@ const EpictusTurboMode: React.FC = () => {
               </motion.div>
               
               {/* Dropdown content - absolute positioning relative to its container */}
-              <div className="absolute group-hover:opacity-100 group-hover:visible opacity-0 invisible transition-all duration-300 z-[9999] left-0 top-full mt-2">
-                <div className="w-52 bg-gradient-to-r from-[#0c2341] to-[#0f3562] rounded-lg shadow-xl overflow-hidden border border-white/10 backdrop-blur-md">
+              <div className="fixed group-hover:opacity-100 group-hover:visible opacity-0 invisible transition-all duration-300 z-[99999] left-auto mt-2 personalidades-dropdown" style={{ top: "calc(100% + 10px)" }}>
+                <div className="w-52 bg-gradient-to-r from-[#0c2341] to-[#0f3562] rounded-lg shadow-xl overflow-hidden border border-white/10 backdrop-blur-md" style={{ position: "relative", zIndex: 99999 }}>
                   <div className="max-h-60 overflow-y-auto py-2">
                     {profileOptions.map((item, index) => (
                       <motion.div 
