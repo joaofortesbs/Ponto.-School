@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, Brain, PenLine, BookOpen, Calendar, PieChart, CheckSquare, Sparkles } from "lucide-react";
@@ -105,10 +104,10 @@ const TurboHubConnected: React.FC = () => {
   // Efeito para criar partículas flutuantes simulando poeira estelar
   useEffect(() => {
     if (!containerRef.current) return;
-    
+
     const containerWidth = containerRef.current.offsetWidth;
     const containerHeight = containerRef.current.offsetHeight;
-    
+
     // Criar array de partículas
     const particles = Array.from({ length: 80 }, () => ({
       x: Math.random() * containerWidth,
@@ -117,9 +116,9 @@ const TurboHubConnected: React.FC = () => {
       speed: Math.random() * 0.5 + 0.1,
       opacity: Math.random() * 0.5 + 0.2
     }));
-    
+
     setParticlesArray(particles);
-    
+
     // Animação das partículas
     const animateParticles = () => {
       setParticlesArray(prev => 
@@ -135,9 +134,9 @@ const TurboHubConnected: React.FC = () => {
         }))
       );
     };
-    
+
     const animationFrame = setInterval(animateParticles, 50);
-    
+
     return () => clearInterval(animationFrame);
   }, []);
 
@@ -201,12 +200,12 @@ const TurboHubConnected: React.FC = () => {
               <feComposite in="SourceGraphic" in2="blur" operator="over" />
             </filter>
           </defs>
-          
+
           {/* Linhas conectando nódulos ao centro */}
           {nodules.map((nodule, index) => {
             const angle = (index * (2 * Math.PI / nodules.length));
             const isActive = focusedNodule === null || focusedNodule === nodule.id;
-            
+
             return (
               <g key={nodule.id} 
                  filter={isActive ? "url(#glow)" : ""} 
@@ -273,11 +272,11 @@ const TurboHubConnected: React.FC = () => {
         {nodules.map((nodule, index) => {
           const isFocused = focusedNodule === nodule.id;
           const isBlurred = focusedNodule !== null && focusedNodule !== nodule.id;
-          
+
           // Posicionar os nódulos em círculo
           const angle = (index * (2 * Math.PI / nodules.length));
           const radius = 35; // % do container
-          
+
           const positionStyle = {
             left: `calc(50% + ${radius * Math.cos(angle)}%)`,
             top: `calc(50% + ${radius * Math.sin(angle)}%)`,
@@ -329,11 +328,11 @@ const TurboHubConnected: React.FC = () => {
                   </div>
                   <h3 className="text-white text-lg font-bold">{focusedNodeData.name}</h3>
                 </div>
-                
+
                 <p className="text-white/80 text-sm mb-4">
                   {focusedNodeData.description}
                 </p>
-                
+
                 <div className="mb-4">
                   <h4 className="text-white font-medium text-sm mb-2">Principais funções:</h4>
                   <ul className="space-y-1">
@@ -347,21 +346,21 @@ const TurboHubConnected: React.FC = () => {
                     ))}
                   </ul>
                 </div>
-                
+
                 <div className="mb-4">
                   <h4 className="text-white font-medium text-sm mb-2">Exemplo real:</h4>
                   <p className="text-white/70 text-xs italic bg-white/5 p-2 rounded-lg">
                     "{focusedNodeData.example}"
                   </p>
                 </div>
-                
+
                 <button 
                   className="w-full py-2 px-4 bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
                 >
                   Explorar {focusedNodeData.name}
                 </button>
               </div>
-              
+
               {/* Botão de fechar */}
               <button 
                 className="absolute top-2 right-2 text-white/70 hover:text-white"
