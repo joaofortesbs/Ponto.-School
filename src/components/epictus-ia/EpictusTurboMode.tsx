@@ -383,7 +383,7 @@ const EpictusTurboMode: React.FC = () => {
       </div>
 
       {/* Content area now below the header */}
-      <div className="w-full flex flex-col items-center justify-center mt-2 mb-4">
+      <div className="w-full flex flex-col items-center justify-center mt-0 mb-2">
         {/* Hub Conectado - novo componente entre o cabeçalho e a caixa de mensagens */}
         <div className="w-full">
           <TurboHubConnected />
