@@ -365,7 +365,7 @@ const EpictusTurboMode: React.FC = () => {
       </div>
       
       {/* Content area now below the header */}
-      <div className="w-full flex flex-col items-center justify-center mt-4 mb-8">
+      <div className="w-full flex flex-col items-center justify-between" style={{ minHeight: "calc(100vh - 140px)" }}>
         {/* Mini-section selector */}
         <div className="w-full flex-grow flex items-center justify-center">
           {/* Aqui virá o conteúdo principal (histórico de conversas, resultados, etc.) */}
