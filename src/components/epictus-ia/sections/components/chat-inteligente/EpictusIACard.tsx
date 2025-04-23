@@ -25,6 +25,13 @@ export default function EpictusIACard({ active = false }: CardProps) {
 
     // Atualizar a URL para indicar o modo
     window.history.pushState({}, "", "/epictus-ia?mode=epictus");
+    
+    // Garantir que a página seja atualizada caso o evento não esteja sendo ouvido
+    setTimeout(() => {
+      if (window.location.search.indexOf('mode=epictus') === -1) {
+        window.location.href = "/epictus-ia?mode=epictus";
+      }
+    }, 300);
   };
 
   return (

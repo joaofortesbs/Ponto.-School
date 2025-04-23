@@ -406,6 +406,8 @@ const EpictusIAMode: React.FC = () => {
   );
 };
 
+// Importação explícita dos componentes necessários
 import IAMessageBox from "./IAMessageBox";
 import IAHubConnected from "./IAHubConnected";
+
 export default EpictusIAMode;
