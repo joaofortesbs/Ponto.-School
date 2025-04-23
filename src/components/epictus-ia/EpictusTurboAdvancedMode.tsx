@@ -391,7 +391,7 @@ const EpictusTurboAdvancedMode: React.FC = () => {
         </div>
 
         {/* Espaços de aprendizado */}
-        <div className="w-full flex justify-end px-4 mb-2">
+        <div className="w-full flex justify-end px-4 mb-8 mt-4">
           <div className="relative group">
             <motion.div
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#0c2341] to-[#0f3562] cursor-pointer shadow-md hover:shadow-lg transition-all"
@@ -443,7 +443,7 @@ const EpictusTurboAdvancedMode: React.FC = () => {
         </div>
 
         {/* Caixa de mensagens na parte inferior */}
-        <div className="w-full bottom-0 left-0 right-0 z-30 mt-2">
+        <div className="w-full bottom-0 left-0 right-0 z-30 mt-8">
           <TurboMessageBox />
         </div>
       </div>
