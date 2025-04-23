@@ -100,7 +100,7 @@ export default function AgendaNav() {
               >
                 <Clock className="h-4 w-4 text-[#FF6B00]" />
                 <span>Rotina</span>
-              </Button>n>
+              </Button>
 
               <Button
                 variant="ghost"
