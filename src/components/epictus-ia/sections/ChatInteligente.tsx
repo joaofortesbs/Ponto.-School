@@ -29,7 +29,7 @@ export default function ChatInteligente() {
     }
 
     // Ouvir o evento de ativação do modo Epictus
-    const handleEpictusActivation = (event: any) => {
+    const handleEpictusActivation = (event) => {
       if (event.detail && event.detail.activated) {
         setEpictusMode(true);
       }

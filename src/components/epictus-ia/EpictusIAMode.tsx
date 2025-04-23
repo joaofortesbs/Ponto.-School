@@ -143,8 +143,20 @@ const EpictusIAMode: React.FC = () => {
 
   // New color scheme is now directly applied in the class names
 
+  // Atualizar o título da página quando o componente for montado
+  useEffect(() => {
+    document.title = "Epictus IA | Modo Avançado";
+    
+    // Adicionar classe ao body para garantir renderização
+    document.body.classList.add('epictus-ia-mode-active');
+    
+    return () => {
+      document.body.classList.remove('epictus-ia-mode-active');
+    };
+  }, []);
+
   return (
-    <div className="w-full flex flex-col items-center overflow-hidden">
+    <div className="w-full flex flex-col items-center overflow-hidden" id="epictus-ia-mode-container">
       {/* Header copied from EpictusIAHeader but with title changed to "Epictus IA" */}
       <div className="w-full p-4">
         <motion.header 

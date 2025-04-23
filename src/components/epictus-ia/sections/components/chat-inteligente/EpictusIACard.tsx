@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
 import { AnimatePresence, motion } from "framer-motion";
+import { triggerEpictusModeRendering } from "@/lib/force-render";
 import {
   Sparkles,
   Zap,
@@ -26,10 +27,25 @@ export default function EpictusIACard({ active = false }: CardProps) {
     // Atualizar a URL para indicar o modo
     window.history.pushState({}, "", "/epictus-ia?mode=epictus");
 
-    // Forçar atualização da interface
+    // Forçar atualização da interface com timeout mais longo para garantir o processamento
     setTimeout(() => {
       window.dispatchEvent(new Event('resize'));
-    }, 100);
+      
+      // Forçar refresh da DOM para garantir renderização
+      document.body.classList.add('epictus-mode-active');
+      
+      // Usar utilitário dedicado para garantir renderização
+      triggerEpictusModeRendering();
+      
+      setTimeout(() => {
+        document.body.classList.remove('epictus-mode-active');
+        // Forçar um segundo disparo do evento após um tempo maior
+        const refreshEvent = new CustomEvent('activateEpictusMode', { 
+          detail: { activated: true, forced: true } 
+        });
+        window.dispatchEvent(refreshEvent);
+      }, 150);
+    }, 200);
   };
 
   return (
