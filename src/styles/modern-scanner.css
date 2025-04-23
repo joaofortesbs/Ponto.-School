@@ -76,3 +76,23 @@
   background-color: rgba(245, 247, 250, 0.8);
   box-shadow: 0 0 20px rgba(0, 150, 255, 0.15);
 }
+
+.welcome-text {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+  color: #FFFFFF;
+  font-size: 32px;
+  line-height: 1.4;
+}
+
+:root:not(.dark) .welcome-text {
+  color: #333333;
+}
+
+@keyframes scanner-animation {
+
+}
