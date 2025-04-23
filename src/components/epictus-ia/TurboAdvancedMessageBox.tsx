@@ -109,10 +109,10 @@ const TurboAdvancedMessageBox: React.FC = () => {
   };
 
   return (
-    <div className="w-full mx-auto mb-2 p-1 max-w-3xl"> {/* Reduced size with max-width */}
+    <div className="w-full mx-auto mb-2 p-1 max-w-3xl"> {/* Container with max-width */}
       <motion.div 
         className="relative bg-gradient-to-r from-[#050e1d]/90 to-[#0d1a30]/90 rounded-2xl shadow-xl 
-                   border border-white/5 backdrop-blur-sm overflow-hidden scale-90" /* Added scale-90 to reduce size */
+                   border border-white/5 backdrop-blur-sm overflow-hidden scale-95" /* Increased scale from 90% to 95% */
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
