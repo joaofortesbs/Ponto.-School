@@ -40,6 +40,7 @@ import {
 import EpictusIAHeader from "./EpictusIAHeader"; // Added import for the new header component
 import EpictusTurboMode from "./EpictusTurboMode"; // Added import for EpictusTurboMode
 import EpictusTurboAdvancedMode from "./EpictusTurboAdvancedMode"; // Added import for the new advanced turbo mode component
+import EpictusIAMainContainer from "./EpictusIAMainContainer"; // Import do novo container principal
 
 
 // Definição das abas/seções
@@ -226,6 +227,12 @@ export default function EpictusIAComplete() {
           <div className="p-4"> {/* This is where the new header is inserted */}
             <EpictusIAHeader />
           </div>
+          
+          {/* Container principal com a interface de interação com a IA */}
+          <div className="px-4">
+            <EpictusIAMainContainer />
+          </div>
+          
           {/* Carrossel 3D de seleção de seções */}
           <div className="relative py-10 w-full">
             <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
