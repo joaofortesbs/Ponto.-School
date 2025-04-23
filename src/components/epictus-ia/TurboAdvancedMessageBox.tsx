@@ -125,47 +125,68 @@ const TurboAdvancedMessageBox: React.FC = () => {
         {/* Container principal */}
         <div className="relative z-10 p-3">
           {/* Botões de ação na parte superior */}
-          <div className="flex items-center gap-2 mb-3 pl-1">
-            <motion.button
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#0c2341]/60 to-[#0f3562]/60 
-                       text-white rounded-lg whitespace-nowrap border border-white/10 backdrop-blur-md"
-              whileHover={{ y: -2, scale: 1.05, boxShadow: "0 10px 25px -5px rgba(13, 35, 160, 0.4)" }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-              <span className="text-sm font-medium">Buscar</span>
-            </motion.button>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2 pl-1">
+              <motion.button
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#0c2341]/60 to-[#0f3562]/60 
+                         text-white rounded-lg whitespace-nowrap border border-white/10 backdrop-blur-md"
+                whileHover={{ y: -2, scale: 1.05, boxShadow: "0 10px 25px -5px rgba(13, 35, 160, 0.4)" }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <span className="text-sm font-medium">Buscar</span>
+              </motion.button>
+              
+              <motion.button
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#0c2341]/60 to-[#0f3562]/60 
+                         text-white rounded-lg whitespace-nowrap border border-white/10 backdrop-blur-md"
+                whileHover={{ y: -2, scale: 1.05, boxShadow: "0 10px 25px -5px rgba(13, 35, 160, 0.4)" }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16z"></path>
+                  <path d="M12 16v.01"></path>
+                  <path d="M12 12a2.5 2.5 0 0 0 2.5-2.5c0-1.5-2.5-2.5-2.5-4"></path>
+                </svg>
+                <span className="text-sm font-medium">Pensar</span>
+              </motion.button>
+              
+              <motion.button
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#0c2341]/60 to-[#0f3562]/60 
+                         text-white rounded-lg whitespace-nowrap border border-white/10 backdrop-blur-md"
+                whileHover={{ y: -2, scale: 1.05, boxShadow: "0 10px 25px -5px rgba(13, 35, 160, 0.4)" }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                  <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                <span className="text-sm font-medium">Gerar Imagem</span>
+              </motion.button>
+            </div>
             
-            <motion.button
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#0c2341]/60 to-[#0f3562]/60 
-                       text-white rounded-lg whitespace-nowrap border border-white/10 backdrop-blur-md"
-              whileHover={{ y: -2, scale: 1.05, boxShadow: "0 10px 25px -5px rgba(13, 35, 160, 0.4)" }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16z"></path>
-                <path d="M12 16v.01"></path>
-                <path d="M12 12a2.5 2.5 0 0 0 2.5-2.5c0-1.5-2.5-2.5-2.5-4"></path>
-              </svg>
-              <span className="text-sm font-medium">Pensar</span>
-            </motion.button>
-            
-            <motion.button
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#0c2341]/60 to-[#0f3562]/60 
-                       text-white rounded-lg whitespace-nowrap border border-white/10 backdrop-blur-md"
-              whileHover={{ y: -2, scale: 1.05, boxShadow: "0 10px 25px -5px rgba(13, 35, 160, 0.4)" }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                <polyline points="21 15 16 10 5 21"></polyline>
-              </svg>
-              <span className="text-sm font-medium">Gerar Imagem</span>
-            </motion.button>
+            {/* Componente Espaços de Aprendizagem no canto direito */}
+            <div className="pr-1">
+              <motion.button
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#0c2341]/60 to-[#0f3562]/60 
+                         text-white rounded-lg whitespace-nowrap border border-white/10 backdrop-blur-md"
+                whileHover={{ y: -2, scale: 1.05, boxShadow: "0 10px 25px -5px rgba(13, 35, 160, 0.4)" }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path>
+                  <circle cx="10" cy="10" r="1"></circle>
+                  <path d="M13 10h4"></path>
+                  <circle cx="10" cy="14" r="1"></circle>
+                  <path d="M13 14h4"></path>
+                </svg>
+                <span className="text-sm font-medium">Espaços de Aprendizagem</span>
+              </motion.button>
+            </div>
           </div>
           
           {/* Área de input */}
