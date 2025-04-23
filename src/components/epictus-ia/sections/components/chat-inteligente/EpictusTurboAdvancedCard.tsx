@@ -17,11 +17,11 @@ export const EpictusTurboAdvancedCard: React.FC = () => {
 
   const assistantData = {
     id: "epictus-turbo-advanced",
-    title: "Epictus Turbo Advanced",
-    description: "O único Agente IA que você precisa para ter o boletim e desempenhos dos sonhos, com apenas um comando, a revolução da educação começa aqui!",
+    title: "Epictus IA",
+    description: "Experimente como é receber uma aula de conteúdos que nem as instituições mais renomadas do Brasil conseguiriam te entregar, personalizado para você!",
     icon: <Zap className="h-6 w-6 text-white" />,
     badge: null,
-    buttonText: "Usar Turbo Advanced",
+    buttonText: "Usar Epictus",
     onButtonClick: handleTurboAdvancedActivation
   };
 
