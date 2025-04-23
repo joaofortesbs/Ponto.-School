@@ -109,15 +109,16 @@ const TurboAdvancedMessageBox: React.FC = () => {
   };
 
   return (
-    {/* Texto personalizado acima da caixa de mensagens */}
-    <div className="text-center mb-4 w-full max-w-7xl mx-auto">
-      <h2 className="text-xl font-semibold text-white">
-        Boa tarde, João Marcelo.<br />
-        Como posso ajudá-lo hoje?
-      </h2>
-    </div>
-    
-    <div className="w-full mx-auto mb-2 p-1 max-w-7xl"> {/* Increased max-width from 6xl to 7xl */}
+    <>
+      {/* Texto personalizado acima da caixa de mensagens */}
+      <div className="text-center mb-4 w-full max-w-7xl mx-auto">
+        <h2 className="text-xl font-semibold text-white">
+          Boa tarde, João Marcelo.<br />
+          Como posso ajudá-lo hoje?
+        </h2>
+      </div>
+      
+      <div className="w-full mx-auto mb-2 p-1 max-w-7xl"> {/* Increased max-width from 6xl to 7xl */}
       <motion.div 
         className="relative bg-gradient-to-r from-[#050e1d]/90 to-[#0d1a30]/90 rounded-2xl shadow-xl 
                    border border-white/5 backdrop-blur-sm overflow-hidden scale-150" /* Increased scale from 125% to 150% */
@@ -354,6 +355,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
         </div>
       </motion.div>
     </div>
+    </>
   );
 };
 
