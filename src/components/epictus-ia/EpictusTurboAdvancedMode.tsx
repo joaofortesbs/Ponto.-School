@@ -383,8 +383,20 @@ const EpictusTurboAdvancedMode: React.FC = () => {
         </motion.header>
       </div>
 
+      {/* Frosted glass container below header */}
+      <div className="w-full p-4 -mt-2">
+        <div className="w-full hub-connected-width backdrop-blur-md bg-white/10 dark:bg-black/10 border border-[#0071f0] rounded-xl p-6 shadow-lg">
+          <div className="flex flex-col space-y-4">
+            <h2 className="text-xl font-semibold text-white/90">Painel de Controle</h2>
+            <p className="text-white/70">
+              Utilize o poder do Epictus IA para potencializar seus estudos e projetos.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Content area now below the header */}
-      <div className="w-full flex flex-col items-center justify-center mt-0 mb-2">
+      <div className="w-full flex flex-col items-center justify-center mt-2 mb-2">
         {/* Mini-section selector */}
         <div className="w-full flex-grow flex items-center justify-center">
           {/* Aqui virá o conteúdo principal (histórico de conversas, resultados, etc.) */}
