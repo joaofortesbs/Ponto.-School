@@ -254,61 +254,6 @@ export default function EpictusIAInterface() {
               </TabsContent>
             </ScrollArea>
           </Tabs>
-
-          {/* Chat Input (apenas mostrado quando não estamos na tela de conversação) */}
-          {!showChat && (
-            <div
-              className={`p-4 border-t ${theme === "dark" ? "border-gray-800 bg-[#0A2540]" : "border-gray-200 bg-white"}`}
-            >
-              <div className="flex items-center gap-2">
-                <Input
-                  placeholder="Digite suas mensagens..."
-                  className={`flex-1 ${theme === "dark" ? "bg-[#29335C]/20 border-gray-700 text-white" : "bg-white border-gray-200 text-[#29335C]"}`}
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                />
-                <Button 
-                  className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
-                  onClick={() => {
-                    setShowChat(true);
-                    setActiveTab("conversation");
-                  }}
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="flex justify-center mt-2">
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={`text-xs ${theme === "dark" ? "text-white/60 border-gray-700 hover:bg-[#29335C]/20" : "text-[#64748B] border-gray-200 hover:bg-gray-100"}`}
-                    onClick={() => {
-                      setInputMessage("Crie um plano de estudos para o ENEM");
-                      setShowChat(true);
-                      setActiveTab("conversation");
-                    }}
-                  >
-                    <Zap className="h-3 w-3 mr-1" /> Crie um plano de estudos para
-                    o ENEM
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={`text-xs ${theme === "dark" ? "text-white/60 border-gray-700 hover:bg-[#29335C]/20" : "text-[#64748B] border-gray-200 hover:bg-gray-100"}`}
-                    onClick={() => {
-                      setInputMessage("Resumo o capítulo sobre Revolução Industrial");
-                      setShowChat(true);
-                      setActiveTab("conversation");
-                    }}
-                  >
-                    <Star className="h-3 w-3 mr-1" /> Resumo o capítulo sobre
-                    Revolução Industrial
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
