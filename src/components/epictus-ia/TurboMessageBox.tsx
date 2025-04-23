@@ -111,66 +111,7 @@ const TurboMessageBox: React.FC = () => {
   return (
     <div className="w-full mx-auto mb-2 p-1"> {/* Reduced spacing further */}
       {/* Duas linhas separadas para os componentes */}
-      <div className="w-full flex justify-between px-4 mb-2">
-        {/* Lado esquerdo - Botões de funcionalidade */}
-        <div className="flex items-center gap-2">
-          {/* Botão Buscar */}
-          <motion.div
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0c2341] cursor-pointer hover:bg-[#0f3562] transition-colors"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <span className="text-white text-sm font-medium">Buscar</span>
-          </motion.div>
-          
-          {/* Botão Pensar */}
-          <motion.div
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0c2341] cursor-pointer hover:bg-[#0f3562] transition-colors"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-              <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-              <line x1="12" y1="22.08" x2="12" y2="12"></line>
-            </svg>
-            <span className="text-white text-sm font-medium">Pensar</span>
-          </motion.div>
-          
-          {/* Botão Gerar Imagem */}
-          <motion.div
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0c2341] cursor-pointer hover:bg-[#0f3562] transition-colors"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-              <circle cx="8.5" cy="8.5" r="1.5"></circle>
-              <polyline points="21 15 16 10 5 21"></polyline>
-            </svg>
-            <span className="text-white text-sm font-medium">Gerar Imagem</span>
-          </motion.div>
-        </div>
-
-        {/* Lado direito - Espaços de aprendizado */}
-        <div className="flex items-center">
-          <motion.div 
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0c2341] cursor-pointer hover:bg-[#0f3562] transition-colors"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path>
-            </svg>
-            <span className="text-white text-sm font-medium">Espaços de aprendizado</span>
-            <span className="ml-1 px-1.5 py-0.5 text-xs font-medium bg-orange-500 text-white rounded">Novo</span>
-          </motion.div>
-        </div>
-      </div>
+      {/* Remove the duplicated top section */}
 
       <motion.div 
         className="relative bg-gradient-to-r from-[#050e1d]/90 to-[#0d1a30]/90 rounded-2xl shadow-xl 
