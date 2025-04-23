@@ -837,12 +837,7 @@ export default function AgendaPage() {
             >
               <CheckSquare className="h-5 w-5 mr-1" /> Tarefas
             </TabsTrigger>
-            <TabsTrigger
-              value="lembretes"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B00] data-[state=active]:to-[#FF8C40] data-[state=active]:text-white px-4 py-2 text-base font-medium transition-all duration-300 rounded-lg"
-            >
-              <Bell className="h-5 w-5 mr-1" /> Lembretes
-            </TabsTrigger>
+            
             <TabsTrigger
               value="desafios"
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B00] data-[state=active]:to-[#FF8C40] data-[state=active]:text-white px-4 py-2 text-base font-medium transition-all duration-300 rounded-lg"
@@ -1688,17 +1683,7 @@ export default function AgendaPage() {
           />
         </TabsContent>
 
-        {/* Lembretes Tab */}
-        <TabsContent value="lembretes" className="mt-0">
-          <div className="text-center p-8">
-            <h3 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-2">
-              Seção de Lembretes
-            </h3>
-            <p className="text-gray-500 dark:text-gray-400">
-              Esta seção está em desenvolvimento.
-            </p>
-          </div>
-        </TabsContent>
+        
 
         {/* Desafios Tab */}
         <TabsContent value="desafios" className="mt-0">
