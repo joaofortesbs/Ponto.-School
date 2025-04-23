@@ -8,6 +8,7 @@ import {
   Target,
   Plus,
   BookOpenCheck,
+  Clock,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
