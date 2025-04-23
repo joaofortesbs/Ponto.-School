@@ -15,15 +15,43 @@ import {
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "@/styles/rotina-calendar.css";
 
-// Import moment and configure it
-import moment from 'moment';
-import 'moment/locale/pt-br';
-
-// Configure moment locale
-moment.locale('pt-br');
-
-// Create a proper localizer using moment
-const localizer = momentLocalizer(moment);
+// Create a localizer for the calendar
+const localizer = {
+  format: (date: Date, format: string) => {
+    return format;
+  },
+  parse: (value: string) => new Date(value),
+  startOfWeek: (date: Date) => {
+    return startOfWeek(date);
+  },
+  getDay: (date: Date) => date.getDay(),
+  localize: {
+    month: (month: number) => {
+      const months = [
+        "Janeiro",
+        "Fevereiro",
+        "Março",
+        "Abril",
+        "Maio",
+        "Junho",
+        "Julho",
+        "Agosto",
+        "Setembro",
+        "Outubro",
+        "Novembro",
+        "Dezembro",
+      ];
+      return months[month];
+    },
+    day: (day: number) => {
+      const days = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+      return days[day];
+    },
+    dayFormat: (date: Date) => {
+      return format(date, "EEE", { locale: ptBR });
+    },
+  },
+};
 
 // Custom messages for the calendar
 const messages = {
@@ -51,7 +79,6 @@ const components = {
 };
 
 const RotinaInteligente: React.FC = () => {
-  console.log("Renderizando Rotina Inteligente...");
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [view, setView] = useState(Views.WEEK);
 
@@ -74,7 +101,6 @@ const RotinaInteligente: React.FC = () => {
     { locale: ptBR }
   )}`;
 
-  console.log("Antes do return...");
   return (
     <div className="container mx-auto p-6 max-w-[1400px]">
       <h2 className="text-2xl font-bold text-[#001427] dark:text-white mb-6 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent">
@@ -122,7 +148,7 @@ const RotinaInteligente: React.FC = () => {
         {/* Calendar Container */}
         <div className="p-4" style={{ height: "calc(100vh - 280px)", minHeight: "600px" }}>
           <Calendar
-            localizer={localizer}
+            localizer={localizer as any}
             events={[]}
             startAccessor="start"
             endAccessor="end"
