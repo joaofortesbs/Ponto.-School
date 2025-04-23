@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, Send, Paperclip } from "lucide-react";
+import { Sparkles, Send, Paperclip, Mic, Brain, BookOpen, AlignJustify, RotateCw, FileText, Zap } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 const TurboAdvancedMessageBox: React.FC = () => {
@@ -16,7 +16,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
   const handleSendMessage = () => {
     if (message.trim() !== "") {
       console.log("Sending message:", message);
-      // Implement message sending logic here
+      // Implementar lógica de envio de mensagem aqui
       setMessage("");
       setIsTyping(false);
     }
@@ -28,6 +28,15 @@ const TurboAdvancedMessageBox: React.FC = () => {
       handleSendMessage();
     }
   };
+
+  const quickActions = [
+    { icon: <Brain size={16} className="text-blue-300" />, label: "Simulador de Provas" },
+    { icon: <BookOpen size={16} className="text-emerald-300" />, label: "Gerar Caderno" },
+    { icon: <AlignJustify size={16} className="text-purple-300" />, label: "Criar Fluxograma" },
+    { icon: <RotateCw size={16} className="text-indigo-300" />, label: "Reescrever Explicação" },
+    { icon: <FileText size={16} className="text-amber-300" />, label: "Análise de Redação" },
+    { icon: <Zap size={16} className="text-rose-300" />, label: "Resumir Conteúdo" }
+  ];
 
   return (
     <motion.div 
