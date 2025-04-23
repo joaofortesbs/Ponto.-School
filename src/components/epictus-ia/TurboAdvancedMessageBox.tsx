@@ -124,6 +124,14 @@ const TurboAdvancedMessageBox: React.FC = () => {
 
         {/* Container principal */}
         <div className="relative z-10 p-3">
+          {/* Texto personalizado acima da caixa de mensagens */}
+          <div className="text-center mb-4">
+            <h2 className="text-xl font-semibold text-white">
+              Como a IA mais Inteligente do mundo<br />
+              pode te ajudar hoje {localStorage.getItem('username') || 'João Marcelo'}?
+            </h2>
+          </div>
+          
           {/* Botões de ação na parte superior */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2 pl-1">
