@@ -150,22 +150,22 @@ const EpictusTurboAdvancedMode: React.FC = () => {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className={`w-full hub-connected-width ${isDark ? 'bg-gradient-to-r from-[#041e42] to-[#0a4c92]' : 'bg-gradient-to-r from-[#083c7b] to-[#1a6ed8]'} backdrop-blur-lg py-4 px-5 flex items-center justify-between rounded-xl relative`}
+          className={`w-full hub-connected-width ${isDark ? 'bg-gradient-to-r from-[#020e33] to-[#0047b3]' : 'bg-gradient-to-r from-[#0553c0] to-[#0478ff]'} backdrop-blur-lg py-4 px-5 flex items-center justify-between rounded-xl relative`}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
           {/* Animated gradient background */}
-          <div className="absolute inset-0 opacity-20">
-            <div className={`absolute inset-0 bg-gradient-to-r from-[#0D23A0] via-[#1230CC] to-[#4A0D9F] ${isHovered ? 'opacity-60' : 'opacity-30'} transition-opacity duration-700`}></div>
-            <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
+          <div className="absolute inset-0 opacity-30">
+            <div className={`absolute inset-0 bg-gradient-to-r from-[#0055ff] via-[#0080ff] to-[#007bff] ${isHovered ? 'opacity-70' : 'opacity-40'} transition-opacity duration-700`}></div>
+            <div className="absolute inset-0 bg-grid-pattern opacity-15"></div>
           </div>
 
           {/* Glowing orbs */}
           <motion.div 
-            className="absolute top-1/2 left-1/4 w-32 h-32 rounded-full bg-[#0D23A0]/10 blur-3xl"
+            className="absolute top-1/2 left-1/4 w-32 h-32 rounded-full bg-[#0066ff]/20 blur-3xl"
             animate={{
               scale: [1, 1.2, 1],
-              opacity: [0.2, 0.3, 0.2],
+              opacity: [0.2, 0.4, 0.2],
             }}
             transition={{
               duration: 5,
@@ -175,10 +175,10 @@ const EpictusTurboAdvancedMode: React.FC = () => {
           />
 
           <motion.div 
-            className="absolute bottom-0 right-1/4 w-40 h-40 rounded-full bg-[#4A0D9F]/10 blur-3xl"
+            className="absolute bottom-0 right-1/4 w-40 h-40 rounded-full bg-[#0099ff]/20 blur-3xl"
             animate={{
               scale: [1, 1.3, 1],
-              opacity: [0.15, 0.25, 0.15],
+              opacity: [0.15, 0.35, 0.15],
             }}
             transition={{
               duration: 6,
@@ -191,9 +191,9 @@ const EpictusTurboAdvancedMode: React.FC = () => {
           {/* Logo and title section */}
           <div className="flex items-center gap-4 z-10 flex-1">
             <div className="relative group mr-3">
-              <div className={`absolute inset-0 bg-gradient-to-br from-[#0D23A0] via-[#1230CC] to-[#4A0D9F] rounded-full ${isHovered ? 'blur-[6px]' : 'blur-[3px]'} opacity-80 group-hover:opacity-100 transition-all duration-300 scale-110`}></div>
+              <div className={`absolute inset-0 bg-gradient-to-br from-[#0047e1] via-[#0064ff] to-[#00a9ff] rounded-full ${isHovered ? 'blur-[6px]' : 'blur-[3px]'} opacity-90 group-hover:opacity-100 transition-all duration-300 scale-110`}></div>
               <motion.div 
-                className="w-12 h-12 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#4A0D9F] flex items-center justify-center relative z-10 border-2 border-white/10 shadow-xl"
+                className="w-12 h-12 rounded-full bg-gradient-to-br from-[#0047e1] to-[#00a9ff] flex items-center justify-center relative z-10 border-2 border-[#39c2ff]/30 shadow-xl"
                 whileHover={{ scale: 1.05 }}
                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
               >
@@ -227,7 +227,7 @@ const EpictusTurboAdvancedMode: React.FC = () => {
                   Epictus IA
                 </h1>
                 <motion.div
-                  className="flex items-center px-1.5 py-0.5 rounded-md bg-gradient-to-r from-[#0D23A0] to-[#4A0D9F] text-xs font-medium text-white shadow-lg dropdown-isolate personalidades-root"
+                  className="flex items-center px-1.5 py-0.5 rounded-md bg-gradient-to-r from-[#0047e1] to-[#0080ff] text-xs font-medium text-white shadow-lg shadow-[#0080ff]/20 dropdown-isolate personalidades-root"
                   whileHover={{ scale: 1.05 }}
                   transition={{ type: "spring", stiffness: 400, damping: 10 }}
                 >
@@ -235,7 +235,7 @@ const EpictusTurboAdvancedMode: React.FC = () => {
                   Avançado
                 </motion.div>
               </div>
-              <p className="text-white/70 text-sm mt-0.5 font-medium tracking-wide">
+              <p className="text-white/80 text-sm mt-0.5 font-medium tracking-wide">
                 IA para geração de conversas impecáveis para o público estudantil
               </p>
             </div>
@@ -246,7 +246,7 @@ const EpictusTurboAdvancedMode: React.FC = () => {
             {/* Personalidades dropdown */}
             <div className="relative icon-container mr-5 group" style={{ zIndex: 99999, position: "relative" }}>
               <motion.div
-                className="relative w-auto h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow px-3 group"
+                className="relative w-auto h-10 rounded-full bg-gradient-to-br from-[#0047e1] to-[#0099ff] flex items-center justify-center cursor-pointer shadow-lg shadow-[#0066ff]/20 hover:shadow-xl transition-shadow px-3 group"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 initial={false}
@@ -263,15 +263,15 @@ const EpictusTurboAdvancedMode: React.FC = () => {
 
               {/* Dropdown content - absolute positioning relative to its container */}
               <div className="fixed group-hover:opacity-100 group-hover:visible opacity-0 invisible transition-all duration-300 z-[99999] left-auto mt-2 personalidades-dropdown" style={{ top: "calc(100% + 10px)" }}>
-                <div className="w-52 bg-gradient-to-r from-[#0c2341] to-[#0f3562] rounded-lg shadow-xl overflow-hidden border border-white/10 backdrop-blur-md" style={{ position: "relative", zIndex: 99999 }}>
+                <div className="w-52 bg-gradient-to-r from-[#001a4d] to-[#003399] rounded-lg shadow-xl shadow-[#0066ff]/20 overflow-hidden border border-[#39c2ff]/20 backdrop-blur-md" style={{ position: "relative", zIndex: 99999 }}>
                   <div className="max-h-60 overflow-y-auto py-2">
                     {profileOptions.map((item, index) => (
                       <motion.div 
                         key={index} 
-                        className="flex items-center gap-2 px-3 py-2 cursor-pointer mb-1 mx-2 rounded-lg hover:bg-white/10 transition-all"
+                        className="flex items-center gap-2 px-3 py-2 cursor-pointer mb-1 mx-2 rounded-lg hover:bg-[#0066ff]/20 transition-all"
                         whileHover={{ 
                           y: -2, 
-                          boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+                          boxShadow: "0 10px 25px -5px rgba(0, 102, 255, 0.3), 0 8px 10px -6px rgba(0, 102, 255, 0.2)",
                           scale: 1.02
                         }}
                         onClick={item.onClick}
@@ -296,7 +296,7 @@ const EpictusTurboAdvancedMode: React.FC = () => {
             {/* History icon */}
             <div className="relative icon-container">
               <motion.div
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0047e1] to-[#0099ff] flex items-center justify-center cursor-pointer shadow-lg shadow-[#0066ff]/20 hover:shadow-xl transition-shadow"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 initial={false}
@@ -312,7 +312,7 @@ const EpictusTurboAdvancedMode: React.FC = () => {
             {/* Favorites icon */}
             <div className="relative icon-container">
               <motion.div
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0047e1] to-[#0099ff] flex items-center justify-center cursor-pointer shadow-lg shadow-[#0066ff]/20 hover:shadow-xl transition-shadow"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 initial={false}
@@ -327,7 +327,7 @@ const EpictusTurboAdvancedMode: React.FC = () => {
             {/* Calendar icon */}
             <div className="relative icon-container">
               <motion.div
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0047e1] to-[#0099ff] flex items-center justify-center cursor-pointer shadow-lg shadow-[#0066ff]/20 hover:shadow-xl transition-shadow"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 initial={false}
@@ -345,7 +345,7 @@ const EpictusTurboAdvancedMode: React.FC = () => {
             {/* Notifications icon */}
             <div className="relative icon-container">
               <motion.div
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0047e1] to-[#0099ff] flex items-center justify-center cursor-pointer shadow-lg shadow-[#0066ff]/20 hover:shadow-xl transition-shadow"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 initial={false}
@@ -361,14 +361,14 @@ const EpictusTurboAdvancedMode: React.FC = () => {
             {/* Profile picture - a bit more spaced */}
             <div className="relative profile-icon-container ml-4">
               <motion.div
-                className="w-11 h-11 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] p-[2px] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow overflow-hidden"
+                className="w-11 h-11 rounded-full bg-gradient-to-br from-[#0047e1] to-[#0099ff] p-[2px] flex items-center justify-center cursor-pointer shadow-lg shadow-[#0066ff]/20 hover:shadow-xl transition-shadow overflow-hidden"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 initial={false}
                 transition={{ duration: 0.3 }}
               >
-                <div className="w-full h-full rounded-full bg-[#0f2a4e] flex items-center justify-center overflow-hidden">
-                  <div className="w-full h-full rounded-full bg-gradient-to-r from-[#0c2341]/80 to-[#0f3562]/80 flex items-center justify-center text-white text-lg font-bold">
+                <div className="w-full h-full rounded-full bg-[#001a4d] flex items-center justify-center overflow-hidden">
+                  <div className="w-full h-full rounded-full bg-gradient-to-r from-[#001e59]/90 to-[#003399]/90 flex items-center justify-center text-white text-lg font-bold">
                     JF
                   </div>
                 </div>
@@ -378,7 +378,7 @@ const EpictusTurboAdvancedMode: React.FC = () => {
 
           {/* Hidden until expansion - will appear when user interaction happens */}
           <div className="absolute bottom-0 left-0 w-full h-1">
-            <div className="h-full bg-gradient-to-r from-transparent via-[#1230CC] to-transparent opacity-30"></div>
+            <div className="h-full bg-gradient-to-r from-transparent via-[#39c2ff] to-transparent opacity-40"></div>
           </div>
         </motion.header>
       </div>
