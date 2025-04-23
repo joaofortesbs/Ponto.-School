@@ -384,18 +384,13 @@ const EpictusTurboAdvancedMode: React.FC = () => {
 
       {/* Content area now below the header */}
       <div className="w-full flex flex-col items-center justify-center mt-0 mb-2">
-        {/* Container principal de IA */}
-        <div className="w-full">
-          <EpictusIAMainContainer />
-        </div>
-
         {/* Mini-section selector */}
         <div className="w-full flex-grow flex items-center justify-center">
-          {/* Conteúdo adicional (histórico de conversas, resultados, etc.) pode ser adicionado aqui */}
+          {/* Aqui virá o conteúdo principal (histórico de conversas, resultados, etc.) */}
         </div>
 
         {/* Caixa de mensagens na parte inferior */}
-        <div className="w-full bottom-0 left-0 right-0 z-30 mt-4">
+        <div className="w-full bottom-0 left-0 right-0 z-30 mt-8">
           <TurboMessageBox />
         </div>
       </div>
@@ -404,5 +399,4 @@ const EpictusTurboAdvancedMode: React.FC = () => {
 };
 
 import TurboMessageBox from "./TurboMessageBox";
-import EpictusIAMainContainer from "./EpictusIAMainContainer";
 export default EpictusTurboAdvancedMode;

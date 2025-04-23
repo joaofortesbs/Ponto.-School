@@ -1,3 +1,4 @@
+
 @keyframes pulse-subtle {
   0%, 100% {
     opacity: 1;
@@ -112,34 +113,6 @@
 
 .espacos-aprendizado-button {
   animation: gentle-pulse 2s infinite;
-  position: relative;
-  overflow: hidden;
-}
-
-.espacos-aprendizado-button::after {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(
-    to bottom right,
-    rgba(99, 102, 241, 0) 0%,
-    rgba(99, 102, 241, 0.1) 50%,
-    rgba(99, 102, 241, 0) 100%
-  );
-  transform: rotate(45deg);
-  animation: shine 3s infinite;
-}
-
-@keyframes shine {
-  0% {
-    transform: translateX(-100%) rotate(45deg);
-  }
-  100% {
-    transform: translateX(100%) rotate(45deg);
-  }
 }
 
 
@@ -795,27 +768,4 @@
 
 .animate-pulse-glow {
   animation: pulse-glow 3s infinite ease-in-out;
-}
-
-/* Garantir que o dropdown de Personalidades fique por cima de tudo */
-.personalidades-dropdown,
-.group:hover .personalidades-dropdown,
-[role="menu"].personalidades-dropdown {
-  z-index: 50;
-}
-
-/* Animação de destaque para o container principal da IA */
-@keyframes container-pulse {
-  0%, 100% {
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
-    transform: translateY(0);
-  }
-  50% {
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-    transform: translateY(-2px);
-  }
-}
-
-.main-container-highlight {
-  animation: container-pulse 4s infinite ease-in-out;
 }
