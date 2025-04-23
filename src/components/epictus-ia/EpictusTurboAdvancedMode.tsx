@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion, AnimatePresence } from "framer-motion";
@@ -388,58 +387,6 @@ const EpictusTurboAdvancedMode: React.FC = () => {
         {/* Mini-section selector */}
         <div className="w-full flex-grow flex items-center justify-center">
           {/* Aqui virá o conteúdo principal (histórico de conversas, resultados, etc.) */}
-        </div>
-
-        {/* Espaços de aprendizado */}
-        <div className="w-full flex justify-end px-4 mb-8 mt-4">
-          <div className="relative group">
-            <motion.div
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#0c2341] to-[#0f3562] cursor-pointer shadow-md hover:shadow-lg transition-all"
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                <path d="M16 2v5h5" />
-                <path d="M3 10v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5" />
-                <path d="M12 14v7" />
-                <path d="m9 17 3-3 3 3" />
-                <path d="M21 7V3a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v5" />
-              </svg>
-              <span className="text-white text-sm font-medium">Espaços de aprendizado</span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
-            </motion.div>
-            
-            {/* Dropdown para espaços de aprendizado */}
-            <div className="absolute right-0 mt-2 w-64 bg-gradient-to-r from-[#001a4d] to-[#003399] rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 border border-[#39c2ff]/20 backdrop-blur-md">
-              <div className="p-3">
-                <div className="text-white text-sm font-semibold mb-2">Seus espaços</div>
-                <div className="space-y-2">
-                  {["Matemática Avançada", "Física Quântica", "Literatura Brasileira", "Programação Web"].map((space, index) => (
-                    <div key={index} className="flex items-center gap-2 p-2 hover:bg-[#0066ff]/20 rounded-md cursor-pointer transition-colors">
-                      <div className="w-8 h-8 rounded-md flex items-center justify-center" style={{ 
-                        background: `linear-gradient(135deg, ${['#0D23A0', '#1230CC', '#4A0D9F', '#5B21BD'][index % 4]}30, ${['#0D23A0', '#1230CC', '#4A0D9F', '#5B21BD'][index % 4]}50)`,
-                      }}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
-                        </svg>
-                      </div>
-                      <span className="text-white text-sm">{space}</span>
-                    </div>
-                  ))}
-                  <div className="flex items-center gap-2 p-2 mt-1 hover:bg-[#0066ff]/20 rounded-md cursor-pointer transition-colors text-[#39c2ff]">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#39c2ff]">
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="12" y1="8" x2="12" y2="16" />
-                      <line x1="8" y1="12" x2="16" y2="12" />
-                    </svg>
-                    <span className="text-sm font-medium">Criar novo espaço</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Caixa de mensagens na parte inferior */}
