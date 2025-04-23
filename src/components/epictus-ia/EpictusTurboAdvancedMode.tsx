@@ -385,7 +385,7 @@ const EpictusTurboAdvancedMode: React.FC = () => {
 
       {/* Frosted glass container below header */}
       <div className="w-full p-4 -mt-2">
-        <div className="w-full hub-connected-width backdrop-blur-md bg-white/10 dark:bg-black/10 border border-[#0071f0] rounded-xl p-6 shadow-lg">
+        <div className="w-full hub-connected-width backdrop-blur-md bg-white/10 dark:bg-black/10 border border-[#0071f0] rounded-xl p-8 shadow-lg">
           {/* Caixa de mensagens do Epictus Turbo dentro do container */}
           <TurboAdvancedMessageBox />
         </div>
