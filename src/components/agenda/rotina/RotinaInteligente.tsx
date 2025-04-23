@@ -15,43 +15,19 @@ import {
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "@/styles/rotina-calendar.css";
 
-// Create a localizer for the calendar
-const localizer = {
-  format: (date: Date, format: string) => {
-    return format;
-  },
-  parse: (value: string) => new Date(value),
-  startOfWeek: (date: Date) => {
-    return startOfWeek(date);
-  },
-  getDay: (date: Date) => date.getDay(),
-  localize: {
-    month: (month: number) => {
-      const months = [
-        "Janeiro",
-        "Fevereiro",
-        "Março",
-        "Abril",
-        "Maio",
-        "Junho",
-        "Julho",
-        "Agosto",
-        "Setembro",
-        "Outubro",
-        "Novembro",
-        "Dezembro",
-      ];
-      return months[month];
-    },
-    day: (day: number) => {
-      const days = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-      return days[day];
-    },
-    dayFormat: (date: Date) => {
-      return format(date, "EEE", { locale: ptBR });
-    },
-  },
-};
+// Create a localizer for the calendar using momentLocalizer
+import moment from 'moment';
+import 'moment/locale/pt-br';
+
+// Configurar o moment para usar o locale português brasileiro
+moment.locale('pt-br');
+
+// Criar um localizer usando momentLocalizer
+const localizer = momentLocalizer({
+  moment,
+  culture: 'pt-br',
+  firstDayOfWeek: 0 // Domingo como primeiro dia da semana
+});
 
 // Custom messages for the calendar
 const messages = {
