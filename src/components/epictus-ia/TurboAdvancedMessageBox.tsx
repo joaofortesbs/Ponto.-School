@@ -109,10 +109,10 @@ const TurboAdvancedMessageBox: React.FC = () => {
   };
 
   return (
-    <div className="w-full mx-auto mb-2 p-1"> {/* Reduced spacing further */}
+    <div className="w-full mx-auto mb-2 p-1 max-w-3xl"> {/* Reduced size with max-width */}
       <motion.div 
         className="relative bg-gradient-to-r from-[#050e1d]/90 to-[#0d1a30]/90 rounded-2xl shadow-xl 
-                   border border-white/5 backdrop-blur-sm overflow-hidden"
+                   border border-white/5 backdrop-blur-sm overflow-hidden scale-90" /* Added scale-90 to reduce size */
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -123,17 +123,17 @@ const TurboAdvancedMessageBox: React.FC = () => {
         </div>
 
         {/* Container principal */}
-        <div className="relative z-10 p-4">
+        <div className="relative z-10 p-3">
           {/* Área de input */}
           <div className="flex items-center gap-2">
             <motion.button
-              className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+              className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
                          flex items-center justify-center shadow-lg text-white"
               whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsExpanded(!isExpanded)}
             >
-              <Plus size={22} />
+              <Plus size={18} />
             </motion.button>
 
             <div className={`relative flex-grow overflow-hidden 
@@ -148,25 +148,25 @@ const TurboAdvancedMessageBox: React.FC = () => {
                 onFocus={() => setIsInputFocused(true)}
                 onBlur={() => setIsInputFocused(false)}
                 placeholder="Digite um comando ou pergunta para o Epictus Turbo..."
-                className="w-full bg-transparent text-white py-4 px-4 outline-none placeholder:text-gray-400"
+                className="w-full bg-transparent text-white py-3 px-3 outline-none placeholder:text-gray-400 text-sm"
               />
             </div>
 
             {/* Botão de microfone (quando não há texto) */}
             {!inputHasContent ? (
               <motion.button 
-                className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+                className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
                          flex items-center justify-center shadow-lg text-white"
                 whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
                 whileTap={{ scale: 0.95 }}
                 onClick={startRecording}
               >
-                <Mic size={20} />
+                <Mic size={16} />
               </motion.button>
             ) : (
               /* Botão de enviar - Visível apenas quando há conteúdo no input */
               <motion.button
-                className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+                className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
                          flex items-center justify-center shadow-lg text-white"
                 whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
                 whileTap={{ scale: 0.95 }}
@@ -176,7 +176,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                 transition={{ duration: 2, repeat: Infinity }}
                 onClick={handleSendMessage}
               >
-                <Send size={20} />
+                <Send size={16} />
               </motion.button>
             )}
           </div>
