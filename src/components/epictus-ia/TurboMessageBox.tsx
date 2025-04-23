@@ -110,8 +110,9 @@ const TurboMessageBox: React.FC = () => {
 
   return (
     <div className="w-full mx-auto mb-2 p-1"> {/* Reduced spacing further */}
-      {/* Componentes de funcionalidades no canto esquerdo e acima da caixa de mensagens */}
-      <div className="w-full flex justify-start px-4 mb-2">
+      {/* Duas linhas separadas para os componentes */}
+      <div className="w-full flex justify-between px-4 mb-2">
+        {/* Lado esquerdo - Botões de funcionalidade */}
         <div className="flex items-center gap-2">
           {/* Botão Buscar */}
           <motion.div
@@ -152,6 +153,21 @@ const TurboMessageBox: React.FC = () => {
               <polyline points="21 15 16 10 5 21"></polyline>
             </svg>
             <span className="text-white text-sm font-medium">Gerar Imagem</span>
+          </motion.div>
+        </div>
+
+        {/* Lado direito - Espaços de aprendizado */}
+        <div className="flex items-center">
+          <motion.div 
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0c2341] cursor-pointer hover:bg-[#0f3562] transition-colors"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path>
+            </svg>
+            <span className="text-white text-sm font-medium">Espaços de aprendizado</span>
+            <span className="ml-1 px-1.5 py-0.5 text-xs font-medium bg-orange-500 text-white rounded">Novo</span>
           </motion.div>
         </div>
       </div>
