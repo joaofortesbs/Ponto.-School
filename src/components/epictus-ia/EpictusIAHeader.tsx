@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Zap, Sparkles, Clock, Star, Calendar, Bell, User, Sliders } from "lucide-react";
+import { Zap, Sparkles, Clock, Star, Calendar, Bell, User, Sliders, Settings } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/ThemeProvider";
 import { Input } from "@/components/ui/input";
