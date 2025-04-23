@@ -35,6 +35,7 @@ import {
   Zap,
   BrainCircuit,
   GraduationCap,
+  ImageIcon, // Added import for ImageIcon
 } from "lucide-react";
 import EpictusIAHeader from "./EpictusIAHeader"; // Added import for the new header component
 import EpictusTurboMode from "./EpictusTurboMode"; // Added import for EpictusTurboMode
