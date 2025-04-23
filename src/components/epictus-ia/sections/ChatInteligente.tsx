@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,6 +38,7 @@ export default function ChatInteligente() {
         <EpictusTurboAdvancedCard />
         <TutorInteligenteCard />
         <BrainstormCard />
+        {/* EspacosAprendizadoCard removed */}
       </div>
 
       <div className="mt-6 flex-1">
