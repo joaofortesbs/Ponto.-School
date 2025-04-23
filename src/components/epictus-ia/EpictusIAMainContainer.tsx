@@ -14,7 +14,7 @@ import {
   GitBranch, 
   FileEdit, 
   FileCheck, 
-  FileText2, 
+  FileType, 
   GraduationCap
 } from "lucide-react";
 
@@ -125,7 +125,7 @@ const EpictusIAMainContainer = () => {
             { icon: <GitBranch className="h-4 w-4" />, label: "Criar Fluxograma", color: "purple" },
             { icon: <FileEdit className="h-4 w-4" />, label: "Reescrever Explicação", color: "amber" },
             { icon: <FileCheck className="h-4 w-4" />, label: "Análise de Redação", color: "rose" },
-            { icon: <FileText2 className="h-4 w-4" />, label: "Resumir Conteúdo", color: "cyan" },
+            { icon: <FileType className="h-4 w-4" />, label: "Resumir Conteúdo", color: "cyan" },
           ].map((btn, index) => (
             <Button
               key={index}

@@ -1,4 +1,3 @@
-
 @keyframes pulse-subtle {
   0%, 100% {
     opacity: 1;
@@ -796,4 +795,11 @@
 
 .animate-pulse-glow {
   animation: pulse-glow 3s infinite ease-in-out;
+}
+
+/* Garantir que o dropdown de Personalidades fique por cima de tudo */
+.personalidades-dropdown,
+.group:hover .personalidades-dropdown,
+[role="menu"].personalidades-dropdown {
+  z-index: 50;
 }
