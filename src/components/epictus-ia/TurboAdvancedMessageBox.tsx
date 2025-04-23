@@ -109,6 +109,14 @@ const TurboAdvancedMessageBox: React.FC = () => {
   };
 
   return (
+    {/* Texto personalizado acima da caixa de mensagens */}
+    <div className="text-center mb-4 w-full max-w-7xl mx-auto">
+      <h2 className="text-xl font-semibold text-white">
+        Boa tarde, João Marcelo.<br />
+        Como posso ajudá-lo hoje?
+      </h2>
+    </div>
+    
     <div className="w-full mx-auto mb-2 p-1 max-w-7xl"> {/* Increased max-width from 6xl to 7xl */}
       <motion.div 
         className="relative bg-gradient-to-r from-[#050e1d]/90 to-[#0d1a30]/90 rounded-2xl shadow-xl 
@@ -124,13 +132,6 @@ const TurboAdvancedMessageBox: React.FC = () => {
 
         {/* Container principal */}
         <div className="relative z-10 p-3">
-          {/* Texto personalizado acima da caixa de mensagens */}
-          <div className="text-center mb-4">
-            <h2 className="text-xl font-semibold text-white">
-              Como a IA mais Inteligente do mundo<br />
-              pode te ajudar hoje {localStorage.getItem('username') || 'João Marcelo'}?
-            </h2>
-          </div>
           
           {/* Botões de ação na parte superior */}
           <div className="flex items-center justify-between mb-3">
