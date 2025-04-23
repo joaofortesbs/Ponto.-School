@@ -1,0 +1,291 @@
+[plugin:vite:react-swc] × the name `useState` is defined multiple times
+    ╭─[/home/runner/workspace/src/components/epictus-ia/TurboAdvancedMessageBox.tsx:1:1]
+  1 │ 
+  2 │ import React, { useState } from "react";
+    ·                 ────┬───
+    ·                     ╰── previous definition of `useState` here
+  3 │ import { motion } from "framer-motion";
+  4 │ import { Sparkles, Send, Paperclip } from "lucide-react";
+  5 │ import { Input } from "@/components/ui/input";
+  6 │ 
+  7 │ const TurboAdvancedMessageBox: React.FC = () => {
+  8 │   const [message, setMessage] = useState("");
+  9 │   const [isTyping, setIsTyping] = useState(false);
+ 10 │ 
+ 11 │   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+ 12 │     setMessage(e.target.value);
+ 13 │     setIsTyping(e.target.value.length > 0);
+ 14 │   };
+ 15 │ 
+ 16 │   const handleSendMessage = () => {
+ 17 │     if (message.trim() !== "") {
+ 18 │       console.log("Sending message:", message);
+ 19 │       // Implement message sending logic here
+ 20 │       setMessage("");
+ 21 │       setIsTyping(false);
+ 22 │     }
+ 23 │   };
+ 24 │ 
+ 25 │   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+ 26 │     if (e.key === "Enter" && !e.shiftKey) {
+ 27 │       e.preventDefault();
+ 28 │       handleSendMessage();
+ 29 │     }
+ 30 │   };
+ 31 │ 
+ 32 │   return (
+ 33 │     <motion.div 
+ 34 │       initial={{ opacity: 0, y: 20 }}
+ 35 │       animate={{ opacity: 1, y: 0 }}
+ 36 │       transition={{ duration: 0.5 }}
+ 37 │       className="w-full hub-connected-width px-4 pb-6"
+ 38 │     >
+ 39 │       <div className="relative w-full">
+ 40 │         <div className="relative rounded-xl bg-gradient-to-r from-[#0c2341] to-[#0f3562] p-[1px] shadow-lg">
+ 41 │           {/* Background glow effect */}
+ 42 │           <div className="absolute -inset-1 bg-gradient-to-r from-[#0D23A0]/20 via-[#1230CC]/20 to-[#4A0D9F]/20 rounded-xl blur-lg opacity-70"></div>
+ 43 │           
+ 44 │           <div className="relative flex items-center bg-gradient-to-r from-[#0c2341] to-[#0f3562] rounded-xl px-4 py-2">
+ 45 │             {/* Left icon */}
+ 46 │             <div className="flex-shrink-0 mr-3">
+ 47 │               <motion.div 
+ 48 │                 className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0]/80 to-[#4A0D9F]/80 flex items-center justify-center"
+ 49 │                 whileHover={{ scale: 1.05 }}
+ 50 │                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
+ 51 │               >
+ 52 │                 <Sparkles className="h-5 w-5 text-white" />
+ 53 │               </motion.div>
+ 54 │             </div>
+ 55 │             
+ 56 │             {/* Input field */}
+ 57 │             <div className="flex-grow relative">
+ 58 │               <Input
+ 59 │                 type="text"
+ 60 │                 placeholder="Digite sua mensagem para o Epictus Turbo..."
+ 61 │                 className="w-full border-none bg-transparent text-white placeholder:text-white/50 focus-visible:ring-0 focus-visible:ring-offset-0 text-base py-6"
+ 62 │                 value={message}
+ 63 │                 onChange={handleInputChange}
+ 64 │                 onKeyDown={handleKeyDown}
+ 65 │               />
+ 66 │             </div>
+ 67 │             
+ 68 │             {/* Right actions */}
+ 69 │             <div className="flex-shrink-0 flex items-center space-x-2 ml-3">
+ 70 │               <motion.button
+ 71 │                 whileHover={{ scale: 1.05 }}
+ 72 │                 whileTap={{ scale: 0.95 }}
+ 73 │                 className="p-2 rounded-full bg-transparent hover:bg-white/10 transition-colors"
+ 74 │               >
+ 75 │                 <Paperclip className="h-5 w-5 text-white/70" />
+ 76 │               </motion.button>
+ 77 │               
+ 78 │               <motion.button
+ 79 │                 whileHover={{ scale: 1.05 }}
+ 80 │                 whileTap={{ scale: 0.95 }}
+ 81 │                 className={`p-2 rounded-full transition-colors ${isTyping ? 'bg-gradient-to-r from-[#0D23A0] to-[#4A0D9F]' : 'bg-white/10'}`}
+ 82 │                 onClick={handleSendMessage}
+ 83 │               >
+ 84 │                 <Send className={`h-5 w-5 ${isTyping ? 'text-white' : 'text-white/70'}`} />
+ 85 │               </motion.button>
+ 86 │             </div>
+ 87 │           </div>
+ 88 │         </div>
+ 89 │       </div>
+ 90 │     </motion.div>
+ 91 │   );
+ 92 │ };
+ 93 │ 
+ 94 │ export default TurboAdvancedMessageBox;
+ 95 │ import React, { useState } from "react";
+    ·                 ────┬───
+    ·                     ╰── `useState` redefined here
+ 96 │ import { Mic } from "lucide-react";
+ 97 │ 
+ 98 │ const TurboAdvancedMessageBox: React.FC = () => {
+    ╰────
+
+  × the name `TurboAdvancedMessageBox` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/epictus-ia/TurboAdvancedMessageBox.tsx:4:1]
+   4 │ import { Sparkles, Send, Paperclip } from "lucide-react";
+   5 │ import { Input } from "@/components/ui/input";
+   6 │ 
+   7 │ const TurboAdvancedMessageBox: React.FC = () => {
+     ·       ───────────┬───────────
+     ·                  ╰── previous definition of `TurboAdvancedMessageBox` here
+   8 │   const [message, setMessage] = useState("");
+   9 │   const [isTyping, setIsTyping] = useState(false);
+  10 │ 
+  11 │   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  12 │     setMessage(e.target.value);
+  13 │     setIsTyping(e.target.value.length > 0);
+  14 │   };
+  15 │ 
+  16 │   const handleSendMessage = () => {
+  17 │     if (message.trim() !== "") {
+  18 │       console.log("Sending message:", message);
+  19 │       // Implement message sending logic here
+  20 │       setMessage("");
+  21 │       setIsTyping(false);
+  22 │     }
+  23 │   };
+  24 │ 
+  25 │   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  26 │     if (e.key === "Enter" && !e.shiftKey) {
+  27 │       e.preventDefault();
+  28 │       handleSendMessage();
+  29 │     }
+  30 │   };
+  31 │ 
+  32 │   return (
+  33 │     <motion.div 
+  34 │       initial={{ opacity: 0, y: 20 }}
+  35 │       animate={{ opacity: 1, y: 0 }}
+  36 │       transition={{ duration: 0.5 }}
+  37 │       className="w-full hub-connected-width px-4 pb-6"
+  38 │     >
+  39 │       <div className="relative w-full">
+  40 │         <div className="relative rounded-xl bg-gradient-to-r from-[#0c2341] to-[#0f3562] p-[1px] shadow-lg">
+  41 │           {/* Background glow effect */}
+  42 │           <div className="absolute -inset-1 bg-gradient-to-r from-[#0D23A0]/20 via-[#1230CC]/20 to-[#4A0D9F]/20 rounded-xl blur-lg opacity-70"></div>
+  43 │           
+  44 │           <div className="relative flex items-center bg-gradient-to-r from-[#0c2341] to-[#0f3562] rounded-xl px-4 py-2">
+  45 │             {/* Left icon */}
+  46 │             <div className="flex-shrink-0 mr-3">
+  47 │               <motion.div 
+  48 │                 className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0]/80 to-[#4A0D9F]/80 flex items-center justify-center"
+  49 │                 whileHover={{ scale: 1.05 }}
+  50 │                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
+  51 │               >
+  52 │                 <Sparkles className="h-5 w-5 text-white" />
+  53 │               </motion.div>
+  54 │             </div>
+  55 │             
+  56 │             {/* Input field */}
+  57 │             <div className="flex-grow relative">
+  58 │               <Input
+  59 │                 type="text"
+  60 │                 placeholder="Digite sua mensagem para o Epictus Turbo..."
+  61 │                 className="w-full border-none bg-transparent text-white placeholder:text-white/50 focus-visible:ring-0 focus-visible:ring-offset-0 text-base py-6"
+  62 │                 value={message}
+  63 │                 onChange={handleInputChange}
+  64 │                 onKeyDown={handleKeyDown}
+  65 │               />
+  66 │             </div>
+  67 │             
+  68 │             {/* Right actions */}
+  69 │             <div className="flex-shrink-0 flex items-center space-x-2 ml-3">
+  70 │               <motion.button
+  71 │                 whileHover={{ scale: 1.05 }}
+  72 │                 whileTap={{ scale: 0.95 }}
+  73 │                 className="p-2 rounded-full bg-transparent hover:bg-white/10 transition-colors"
+  74 │               >
+  75 │                 <Paperclip className="h-5 w-5 text-white/70" />
+  76 │               </motion.button>
+  77 │               
+  78 │               <motion.button
+  79 │                 whileHover={{ scale: 1.05 }}
+  80 │                 whileTap={{ scale: 0.95 }}
+  81 │                 className={`p-2 rounded-full transition-colors ${isTyping ? 'bg-gradient-to-r from-[#0D23A0] to-[#4A0D9F]' : 'bg-white/10'}`}
+  82 │                 onClick={handleSendMessage}
+  83 │               >
+  84 │                 <Send className={`h-5 w-5 ${isTyping ? 'text-white' : 'text-white/70'}`} />
+  85 │               </motion.button>
+  86 │             </div>
+  87 │           </div>
+  88 │         </div>
+  89 │       </div>
+  90 │     </motion.div>
+  91 │   );
+  92 │ };
+  93 │ 
+  94 │ export default TurboAdvancedMessageBox;
+  95 │ import React, { useState } from "react";
+  96 │ import { Mic } from "lucide-react";
+  97 │ 
+  98 │ const TurboAdvancedMessageBox: React.FC = () => {
+     ·       ───────────┬───────────
+     ·                  ╰── `TurboAdvancedMessageBox` redefined here
+  99 │   const [message, setMessage] = useState<string>("");
+ 100 │ 
+ 101 │   const tools = [
+     ╰────
+
+  × the name `default` is exported multiple times
+     ╭─[/home/runner/workspace/src/components/epictus-ia/TurboAdvancedMessageBox.tsx:91:1]
+  91 │   );
+  92 │ };
+  93 │ 
+  94 │ export default TurboAdvancedMessageBox;
+     · ───────────────────┬───────────────────
+     ·                    ╰── previous exported here
+  95 │ import React, { useState } from "react";
+  96 │ import { Mic } from "lucide-react";
+  97 │ 
+  98 │ const TurboAdvancedMessageBox: React.FC = () => {
+  99 │   const [message, setMessage] = useState<string>("");
+ 100 │ 
+ 101 │   const tools = [
+ 102 │     { id: "simulador", icon: "⌖", label: "Simulador de Provas" },
+ 103 │     { id: "caderno", icon: "📓", label: "Gerar Caderno" },
+ 104 │     { id: "fluxograma", icon: "⚏", label: "Criar Fluxograma" },
+ 105 │     { id: "explicacao", icon: "📝", label: "Reescrever Explicação" },
+ 106 │     { id: "redacao", icon: "📑", label: "Análise de Redação" },
+ 107 │     { id: "resumir", icon: "📋", label: "Resumir Conteúdo" },
+ 108 │   ];
+ 109 │ 
+ 110 │   return (
+ 111 │     <div className="w-full p-4">
+ 112 │       <div className="relative w-full">
+ 113 │         {/* Tools section */}
+ 114 │         <div className="flex items-center justify-start space-x-2 mb-3 overflow-x-auto pb-2">
+ 115 │           {tools.map((tool) => (
+ 116 │             <button
+ 117 │               key={tool.id}
+ 118 │               className="flex items-center gap-2 bg-gradient-to-r from-[#051c33]/90 to-[#0a2d4e]/90 text-white py-2 px-3 rounded-full text-sm whitespace-nowrap border border-[#0071f0]/30 hover:bg-[#0071f0]/20 transition-all"
+ 119 │             >
+ 120 │               <span>{tool.icon}</span>
+ 121 │               <span>{tool.label}</span>
+ 122 │             </button>
+ 123 │           ))}
+ 124 │         </div>
+ 125 │ 
+ 126 │         {/* Message input */}
+ 127 │         <div className="relative w-full">
+ 128 │           <input
+ 129 │             type="text"
+ 130 │             placeholder="Digite um comando ou pergunta para o Épictus Turbo..."
+ 131 │             className="w-full py-3 px-5 pl-10 pr-12 rounded-full bg-[#051c33]/90 border border-[#0071f0]/50 text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0071f0]"
+ 132 │             value={message}
+ 133 │             onChange={(e) => setMessage(e.target.value)}
+ 134 │           />
+ 135 │           
+ 136 │           {/* Left button (add) */}
+ 137 │           <button className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400 hover:text-blue-300">
+ 138 │             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+ 139 │               <path d="M12 5v14M5 12h14"></path>
+ 140 │             </svg>
+ 141 │           </button>
+ 142 │ 
+ 143 │           {/* Right button (mic) */}
+ 144 │           <button className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-400 hover:text-blue-300">
+ 145 │             <Mic size={20} />
+ 146 │           </button>
+ 147 │         </div>
+ 148 │       </div>
+ 149 │     </div>
+ 150 │   );
+ 151 │ };
+ 152 │ 
+ 153 │ export default TurboAdvancedMessageBox;
+     · ───────────────────┬───────────────────
+     ·                    ╰── exported more than once
+     ╰────
+
+Error: 
+  ☞ Exported identifiers must be unique
+/home/runner/workspace/src/components/epictus-ia/TurboAdvancedMessageBox.tsx:1:1
+1  |  
+2  |  import React, { useState } from "react";
+   |  ^
+3  |  import { motion } from "framer-motion";
+4  |  import { Sparkles, Send, Paperclip } from "lucide-react
