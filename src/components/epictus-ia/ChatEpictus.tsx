@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
@@ -47,7 +46,7 @@ export default function ChatEpictus() {
 
     // Salvar a mensagem atual para enviar para API
     const currentMessage = inputMessage;
-    
+
     setMessages((prev) => [...prev, userMessage]);
     setInputMessage("");
     setIsTyping(true);
@@ -67,7 +66,7 @@ export default function ChatEpictus() {
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
       console.error("Erro ao obter resposta da IA:", error);
-      
+
       // Mensagem de erro caso falhe
       const errorMessage: IAMessage = {
         id: uuidv4(),
@@ -139,7 +138,7 @@ export default function ChatEpictus() {
       </div>
 
       {/* Área de mensagens */}
-      <ScrollArea className="flex-1 p-4">
+      <ScrollArea className="flex-1 px-4 py-4">
         <div className="space-y-4">
           {messages.map((message) => (
             <div
@@ -149,68 +148,59 @@ export default function ChatEpictus() {
               }`}
             >
               <div
-                className={`flex gap-3 max-w-[80%] group ${
-                  message.role === "user" ? "flex-row-reverse" : ""
-                }`}
+                className={`flex max-w-[80%] ${
+                  message.role === "user" ? "flex-row-reverse" : "flex-row"
+                } items-start gap-2`}
               >
-                {/* Avatar */}
-                <Avatar
-                  className={`w-8 h-8 rounded-full flex-shrink-0 ${
-                    message.role === "assistant"
-                      ? "bg-[#FF6B00]"
-                      : theme === "dark"
-                      ? "bg-[#29335C]"
-                      : "bg-gray-200"
+                {message.role === "assistant" ? (
+                  <Avatar className="mt-0.5 h-8 w-8 rounded-full bg-[#FF6B00] flex items-center justify-center text-white">
+                    <Brain className="h-4 w-4" />
+                  </Avatar>
+                ) : (
+                  <Avatar className="mt-0.5 h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white">
+                    <Sparkles className="h-4 w-4" />
+                  </Avatar>
+                )}
+
+                <div
+                  className={`rounded-lg p-3 text-sm ${
+                    message.role === "user"
+                      ? `${
+                          theme === "dark"
+                            ? "bg-blue-600 text-white"
+                            : "bg-blue-100 text-[#29335C]"
+                        }`
+                      : `${
+                          theme === "dark"
+                            ? "bg-[#29335C]/60 text-white"
+                            : "bg-gray-100 text-[#29335C]"
+                        }`
                   }`}
                 >
-                  {message.role === "assistant" ? (
-                    <Brain className="h-4 w-4 text-white" />
-                  ) : (
-                    <User className="h-4 w-4 text-white" />
-                  )}
-                </Avatar>
+                  {message.content}
 
-                {/* Conteúdo da mensagem */}
-                <div>
-                  <div
-                    className={`relative p-3 rounded-lg ${
-                      message.role === "assistant"
-                        ? theme === "dark"
-                          ? "bg-[#29335C]/50 text-white"
-                          : "bg-white text-[#29335C] border border-gray-200"
-                        : theme === "dark"
-                        ? "bg-[#FF6B00]/90 text-white"
-                        : "bg-[#FF6B00] text-white"
-                    }`}
-                  >
-                    <p className="whitespace-pre-wrap">{message.content}</p>
-                    <div
-                      className={`flex justify-between items-center mt-2 text-xs ${
-                        message.role === "assistant"
-                          ? "text-gray-400"
-                          : "text-white/70"
-                      }`}
-                    >
-                      <span>{formatMessageTime(message.createdAt)}</span>
-                    </div>
-                  </div>
-
-                  {/* Ações da mensagem (aparece apenas em hover) */}
                   {message.role === "assistant" && (
-                    <div className="flex gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="mt-2 flex items-center justify-end gap-1.5">
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6"
-                        onClick={() => copyMessageToClipboard(message.content)}
+                        className="h-6 w-6 rounded-full"
                       >
-                        <Copy className="h-3 w-3" />
+                        <ThumbsUp className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6">
-                        <ThumbsUp className="h-3 w-3" />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 rounded-full"
+                      >
+                        <ThumbsDown className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6">
-                        <ThumbsDown className="h-3 w-3" />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 rounded-full"
+                      >
+                        <Copy className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   )}
@@ -219,92 +209,11 @@ export default function ChatEpictus() {
             </div>
           ))}
 
-          {/* Indicador de digitação */}
-          {isTyping && (
-            <div className="flex justify-start">
-              <div className="flex gap-3 max-w-[80%]">
-                <Avatar className="w-8 h-8 rounded-full flex-shrink-0 bg-[#FF6B00]">
-                  <Brain className="h-4 w-4 text-white" />
-                </Avatar>
-                <div
-                  className={`p-3 rounded-lg ${
-                    theme === "dark"
-                      ? "bg-[#29335C]/50 text-white"
-                      : "bg-white text-[#29335C] border border-gray-200"
-                  }`}
-                >
-                  <div className="flex gap-1 items-center">
-                    <div className="w-2 h-2 bg-[#FF6B00] rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                    <div className="w-2 h-2 bg-[#FF6B00] rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                    <div className="w-2 h-2 bg-[#FF6B00] rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Elemento para scroll automático */}
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
 
-      {/* Área de input */}
-      <div
-        className={`p-4 border-t ${
-          theme === "dark"
-            ? "border-gray-800 bg-[#0A2540]"
-            : "border-gray-200 bg-white"
-        }`}
-      >
-        <div className="flex items-center gap-2">
-          <Input
-            ref={inputRef}
-            placeholder="Digite sua pergunta..."
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className={`flex-1 ${
-              theme === "dark"
-                ? "bg-[#29335C]/20 border-gray-700 text-white"
-                : "bg-white border-gray-200 text-[#29335C]"
-            }`}
-          />
-          <Button
-            onClick={handleSendMessage}
-            className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
-            disabled={!inputMessage.trim() || isTyping}
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {/* Sugestões rápidas */}
-        <div className="flex flex-wrap gap-2 mt-3">
-          {[
-            "Quem foi Albert Einstein?",
-            "Explique a teoria da relatividade",
-            "Como a IA funciona?",
-            "Dicas para estudar melhor",
-          ].map((suggestion, index) => (
-            <Button
-              key={index}
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setInputMessage(suggestion);
-                inputRef.current?.focus();
-              }}
-              className={`text-xs ${
-                theme === "dark"
-                  ? "text-white/60 border-gray-700 hover:bg-[#29335C]/20"
-                  : "text-[#64748B] border-gray-200 hover:bg-gray-100"
-              }`}
-            >
-              {suggestion}
-            </Button>
-          ))}
-        </div>
-      </div>
+      {/* A caixa de entrada de mensagens foi removida */}
     </div>
   );
 }
