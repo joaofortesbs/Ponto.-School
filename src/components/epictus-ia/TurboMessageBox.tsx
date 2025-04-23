@@ -126,7 +126,7 @@ const TurboMessageBox: React.FC = () => {
             </svg>
             <span className="text-white text-sm font-medium">Buscar</span>
           </motion.div>
-          
+
           {/* Botão Pensar */}
           <motion.div
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0c2341] cursor-pointer hover:bg-[#0f3562] transition-colors"
@@ -140,7 +140,7 @@ const TurboMessageBox: React.FC = () => {
             </svg>
             <span className="text-white text-sm font-medium">Pensar</span>
           </motion.div>
-          
+
           {/* Botão Gerar Imagem */}
           <motion.div
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0c2341] cursor-pointer hover:bg-[#0f3562] transition-colors"
@@ -156,7 +156,7 @@ const TurboMessageBox: React.FC = () => {
           </motion.div>
         </div>
 
-        
+
       </div>
 
       <motion.div 
@@ -189,8 +189,8 @@ const TurboMessageBox: React.FC = () => {
                             bg-gradient-to-r from-[#0c2341]/30 to-[#0f3562]/30 
                             rounded-xl border ${isInputFocused ? 'border-[#1230CC]/70' : 'border-white/10'} 
                             transition-all duration-300`}>
-              
-              
+
+
               <input
                 type="text"
                 value={message}
