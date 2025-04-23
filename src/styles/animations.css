@@ -803,3 +803,19 @@
 [role="menu"].personalidades-dropdown {
   z-index: 50;
 }
+
+/* Animação de destaque para o container principal da IA */
+@keyframes container-pulse {
+  0%, 100% {
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    transform: translateY(0);
+  }
+  50% {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    transform: translateY(-2px);
+  }
+}
+
+.main-container-highlight {
+  animation: container-pulse 4s infinite ease-in-out;
+}

@@ -44,7 +44,7 @@ const EpictusIAMainContainer = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
       style={{ scale, boxShadow: shadow }}
-      className={`w-full px-6 py-6 mt-4 mb-8 rounded-[20px] transition-all duration-300 overflow-hidden
+      className={`w-full px-6 py-6 mx-4 mt-2 mb-8 rounded-[20px] transition-all duration-300 overflow-hidden main-container-highlight
                 ${isDark 
                   ? 'bg-gradient-to-br from-[#0a0f1c] to-[#131b2d] border border-gray-800/20' 
                   : 'bg-gradient-to-br from-white to-gray-100 border border-gray-200/50'}`}

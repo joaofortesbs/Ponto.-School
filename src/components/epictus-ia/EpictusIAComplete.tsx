@@ -229,9 +229,7 @@ export default function EpictusIAComplete() {
           </div>
           
           {/* Container principal com a interface de interação com a IA */}
-          <div className="px-4">
-            <EpictusIAMainContainer />
-          </div>
+          <EpictusIAMainContainer />
           
           {/* Carrossel 3D de seleção de seções */}
           <div className="relative py-10 w-full">
