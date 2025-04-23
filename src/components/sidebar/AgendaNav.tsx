@@ -115,16 +115,6 @@ export default function AgendaNav() {
               <Button
                 variant="ghost"
                 size="sm"
-                className={`flex items-center gap-2 rounded-lg px-3 py-2 text-start w-full ${currentView === "rotina" ? "bg-[#29335C]/10 text-[#29335C] dark:bg-[#29335C]/20 dark:text-white font-medium" : "text-[#001427] hover:bg-[#001427]/5 dark:text-white dark:hover:bg-[#001427]/10"} hover:translate-x-1 transition-transform`}
-                onClick={() => navigate("/agenda?view=rotina")}
-              >
-                <Clock className="h-4 w-4 text-[#FF6B00]" />
-                <span>Rotina</span>
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="sm"
                 className={`flex items-center gap-2 rounded-lg px-3 py-2 text-start w-full ${currentView === "desafios" ? "bg-[#29335C]/10 text-[#29335C] dark:bg-[#29335C]/20 dark:text-white font-medium" : "text-[#001427] hover:bg-[#001427]/5 dark:text-white dark:hover:bg-[#001427]/10"} hover:translate-x-1 transition-transform`}
                 onClick={() => navigate("/agenda?view=desafios")}
               >
