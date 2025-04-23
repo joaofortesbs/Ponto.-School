@@ -1,5 +1,6 @@
+
 // ... other imports ...
-import { Search, BrainCircuit, ImageIcon, GraduationCap } from './icons'; // Assuming these icons are defined elsewhere.  Adjust path as needed.
+import { Search, BrainCircuit, ImageIcon, GraduationCap } from './icons'; // Ensuring all icons are imported
 import Button from './Button'; // Assuming this is your custom button component. Adjust path as needed.
 
 // ... other code ...
