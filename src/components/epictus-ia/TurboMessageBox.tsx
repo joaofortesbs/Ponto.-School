@@ -25,11 +25,7 @@ const QuickAction: React.FC<QuickActionProps> = ({ icon, label, onClick }) => {
   );
 };
 
-interface TurboMessageBoxProps {
-  children?: React.ReactNode;
-}
-
-const TurboMessageBox: React.FC<TurboMessageBoxProps> = ({ children }) => {
+const TurboMessageBox: React.FC = () => {
   const [message, setMessage] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
