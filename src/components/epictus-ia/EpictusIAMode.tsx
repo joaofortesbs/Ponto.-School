@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion, AnimatePresence } from "framer-motion";
@@ -145,7 +144,7 @@ const EpictusIAMode: React.FC = () => {
   // New color scheme is now directly applied in the class names
 
   return (
-    <div className="w-full flex flex-col items-center">
+    <div className="w-full flex flex-col items-center overflow-hidden">
       {/* Header copied from EpictusIAHeader but with title changed to "Epictus IA" */}
       <div className="w-full p-4">
         <motion.header 
