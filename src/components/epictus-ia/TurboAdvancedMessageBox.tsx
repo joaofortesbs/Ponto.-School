@@ -109,10 +109,10 @@ const TurboAdvancedMessageBox: React.FC = () => {
   };
 
   return (
-    <div className="w-full mx-auto mb-2 p-1 max-w-4xl"> {/* Increased max-width from 3xl to 4xl */}
+    <div className="w-full mx-auto mb-2 p-1 max-w-5xl"> {/* Increased max-width from 4xl to 5xl */}
       <motion.div 
         className="relative bg-gradient-to-r from-[#050e1d]/90 to-[#0d1a30]/90 rounded-2xl shadow-xl 
-                   border border-white/5 backdrop-blur-sm overflow-hidden scale-100" /* Increased scale to 100% (full size) */
+                   border border-white/5 backdrop-blur-sm overflow-hidden scale-110" /* Increased scale from 100% to 110% */
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
