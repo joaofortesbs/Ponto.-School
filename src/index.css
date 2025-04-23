@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
-
 @import "./styles/animations.css";
 @import "./styles/hide-scrollbar.css";
 @import "./styles/typewriter-loader.css";
@@ -848,7 +846,8 @@ textarea:hover,
 
 .interactive-light:hover {
   color: #ff6b00;
-  transform: translateY(-2px);  text-shadow: 0 2px 10px rgba(255, 107, 0, 0.3);
+  transform: translateY(-2px);
+  text-shadow: 0 2px 10px rgba(255, 107, 0, 0.3);
 }
 
 .interactive-light::before {
@@ -1222,41 +1221,4 @@ textarea:hover,
 
 .animate-fadeOut {
   animation: fadeOut 0.2s ease-in-out forwards;
-}
-
-/* Scanner effect styles */
-.scanner-container {
-  background-color: #0A1C2B;
-  padding: 20px;
-  text-align: center;
-}
-
-.scanner-text {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 2em;
-  color: #FFFFFF;
-  position: relative; /* Needed for absolute positioning of the scanner */
-}
-
-.scanner-light {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 0%; /* Start with zero width */
-  background: linear-gradient(to right, #00D4FF, #E0F7FF);
-  filter: blur(5px);
-  animation: scan 3s linear infinite; /* Animate the scanner */
-}
-
-@keyframes scan {
-  0% {
-    width: 0%;
-  }
-  50% {
-    width: 100%;
-  }
-  100% {
-    width: 0%;
-  }
 }
