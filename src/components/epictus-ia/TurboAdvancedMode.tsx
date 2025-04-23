@@ -21,7 +21,7 @@ function TurboAdvancedMode() {
           <ImageIcon className="h-3.5 w-3.5" /> Gerar Imagem
         </Button>
         <Button variant="outline" size="sm" className="text-xs flex items-center gap-1">
-          <GraduationCap className="h-3.5 w-3.5" /> Espaços de aprendizado
+          <GraduationCap className="h-3.5 w-3.5" /> Espaços de Aprendizado
         </Button>
       </div>
     </div>
