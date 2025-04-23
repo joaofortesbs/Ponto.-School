@@ -122,8 +122,10 @@ const TurboAdvancedMessageBox: React.FC = () => {
           <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
         </div>
 
-        {/* Container principal */}
-        <div className="relative z-10 p-3">
+        {/* Container principal com grid para dividir conteúdo principal e espaços de aprendizagem */}
+        <div className="relative z-10 p-3 grid grid-cols-4 gap-3">
+          {/* Coluna principal - ocupa 3/4 do espaço */}
+          <div className="col-span-3">
           {/* Botões de ação na parte superior */}
           <div className="flex items-center gap-2 mb-3 pl-1">
             <motion.button
@@ -320,6 +322,111 @@ const TurboAdvancedMessageBox: React.FC = () => {
           </AnimatePresence>
           <div className="w-full max-w-full px-2"> {/* Changed px-4 to px-2 */}
             {/* Conteúdo da caixa de mensagens */}
+          </div>
+          </div>
+
+          {/* Coluna de Espaços de Aprendizagem - ocupa 1/4 do espaço */}
+          <div className="col-span-1 border-l border-white/10 pl-3">
+            <div className="flex items-center gap-2 mb-3">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+              </svg>
+              <h3 className="text-sm font-semibold text-white">Espaços de Aprendizagem</h3>
+            </div>
+            
+            {/* Lista de espaços de aprendizagem */}
+            <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+              {/* Espaço 1 */}
+              <motion.div 
+                className="p-2 rounded-lg bg-gradient-to-r from-[#0c2341]/40 to-[#0f3562]/40 cursor-pointer border border-white/5"
+                whileHover={{ y: -2, boxShadow: "0 10px 25px -5px rgba(13, 35, 160, 0.3)" }}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="bg-blue-600/20 p-1.5 rounded-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                      <polyline points="16 17 21 12 16 7"></polyline>
+                      <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                  </div>
+                  <div className="text-xs">
+                    <div className="font-medium text-white">Matemática Avançada</div>
+                    <div className="text-white/60 text-[10px]">12 tópicos</div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Espaço 2 */}
+              <motion.div 
+                className="p-2 rounded-lg bg-gradient-to-r from-[#0c2341]/40 to-[#0f3562]/40 cursor-pointer border border-white/5"
+                whileHover={{ y: -2, boxShadow: "0 10px 25px -5px rgba(13, 35, 160, 0.3)" }}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="bg-purple-600/20 p-1.5 rounded-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path>
+                    </svg>
+                  </div>
+                  <div className="text-xs">
+                    <div className="font-medium text-white">Literatura Brasileira</div>
+                    <div className="text-white/60 text-[10px]">8 tópicos</div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Espaço 3 */}
+              <motion.div 
+                className="p-2 rounded-lg bg-gradient-to-r from-[#0c2341]/40 to-[#0f3562]/40 cursor-pointer border border-white/5"
+                whileHover={{ y: -2, boxShadow: "0 10px 25px -5px rgba(13, 35, 160, 0.3)" }}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="bg-green-600/20 p-1.5 rounded-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="2" y1="12" x2="22" y2="12"></line>
+                      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                    </svg>
+                  </div>
+                  <div className="text-xs">
+                    <div className="font-medium text-white">Geografia Física</div>
+                    <div className="text-white/60 text-[10px]">15 tópicos</div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Espaço 4 */}
+              <motion.div 
+                className="p-2 rounded-lg bg-gradient-to-r from-[#0c2341]/40 to-[#0f3562]/40 cursor-pointer border border-white/5"
+                whileHover={{ y: -2, boxShadow: "0 10px 25px -5px rgba(13, 35, 160, 0.3)" }}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="bg-amber-600/20 p-1.5 rounded-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                    </svg>
+                  </div>
+                  <div className="text-xs">
+                    <div className="font-medium text-white">Física Quântica</div>
+                    <div className="text-white/60 text-[10px]">6 tópicos</div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Botão para criar novo espaço */}
+              <motion.button
+                className="w-full p-2 rounded-lg bg-gradient-to-r from-[#0D23A0]/30 to-[#5B21BD]/30 cursor-pointer border border-[#0D23A0]/30 mt-3 flex items-center justify-center gap-2"
+                whileHover={{ y: -2, boxShadow: "0 10px 25px -5px rgba(13, 35, 160, 0.3)" }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-blue-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="16"></line>
+                  <line x1="8" y1="12" x2="16" y2="12"></line>
+                </svg>
+                <span className="text-xs font-medium text-blue-300">Criar novo espaço</span>
+              </motion.button>
+            </div>
           </div>
         </div>
       </motion.div>
