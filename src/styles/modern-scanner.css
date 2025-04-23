@@ -1,0 +1,41 @@
+.scanner-text {
+  position: relative;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 48px;
+  font-weight: 600;
+  color: #FFFFFF;
+  text-shadow: 0 0 10px rgba(224, 247, 255, 0.3);
+  letter-spacing: 2px;
+  z-index: 2;
+  display: inline-block;
+}
+
+.scanner-text::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 0;
+  height: 3px;
+  background: linear-gradient(to right, #00D4FF, #E0F7FF, #00D4FF);
+  border-radius: 2px;
+  opacity: 0.8;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.6);
+  animation: underline-animation 2.5s ease-in-out infinite;
+}
+
+@keyframes underline-animation {
+  0% {
+    width: 0;
+    left: 0;
+  }
+  50% {
+    width: 100%;
+    left: 0;
+  }
+  100% {
+    width: 0;
+    left: 100%;
+  }
+}
