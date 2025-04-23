@@ -1,6 +1,5 @@
-
 // ... other imports ...
-import { Search, BrainCircuit, ImageIcon, GraduationCap } from './icons'; // Ensuring all icons are imported
+import { Search, BrainCircuit, ImageIcon, GraduationCap } from './icons'; // Assuming these icons are defined elsewhere.  Adjust path as needed.
 import Button from './Button'; // Assuming this is your custom button component. Adjust path as needed.
 
 // ... other code ...
@@ -20,9 +19,6 @@ function TurboAdvancedMode() {
         </Button>
         <Button variant="outline" size="sm" className="text-xs flex items-center gap-1">
           <ImageIcon className="h-3.5 w-3.5" /> Gerar Imagem
-        </Button>
-        <Button variant="outline" size="sm" className="text-xs flex items-center gap-1">
-          <GraduationCap className="h-3.5 w-3.5" /> Espaços de Aprendizado
         </Button>
       </div>
     </div>
