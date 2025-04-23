@@ -395,15 +395,10 @@ const EpictusTurboAdvancedMode: React.FC = () => {
           {/* Aqui virá o conteúdo principal (histórico de conversas, resultados, etc.) */}
         </div>
 
-        {/* Caixa de mensagens na parte inferior */}
-        <div className="w-full bottom-0 left-0 right-0 z-30 mt-1">
-          <TurboAdvancedMessageBox />
-        </div>
+        {/* Interface sem caixa de mensagens, apenas com o hub conectado */}
       </div>
     </div>
   );
 };
-
-import TurboAdvancedMessageBox from "./TurboAdvancedMessageBox";
 import TurboAdvancedHubConnected from "./TurboAdvancedHubConnected";
 export default EpictusTurboAdvancedMode;
