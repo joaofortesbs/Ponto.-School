@@ -112,25 +112,39 @@ const TurboAdvancedMessageBox: React.FC = () => {
     <>
       {/* Texto personalizado acima da caixa de mensagens */}
       <div className="text-center mb-4 w-full max-w-7xl mx-auto">
-        <h2 className="text-2xl text-white">
+        <h2 className="text-3xl text-white">
           <span className="font-bold">Como a IA mais 
             <span className="relative">
               <span className="relative z-10">Inteligente do mundo</span>
               <motion.span 
-                className="absolute inset-0 bg-blue-500/20 rounded-sm z-0"
+                className="absolute inset-0 bg-gradient-to-r from-blue-600/10 via-blue-400/40 to-blue-600/10 rounded-sm z-0 backdrop-blur-[1px]"
                 animate={{ 
-                  left: ['-10%', '110%'], 
-                  opacity: [0.2, 0.7, 0.2]
+                  left: ['-20%', '120%'], 
+                  opacity: [0.1, 0.8, 0.1],
+                  scale: [0.98, 1.02, 0.98],
+                  boxShadow: ['0 0 5px 0 rgba(59, 130, 246, 0.3)', '0 0 20px 5px rgba(59, 130, 246, 0.6)', '0 0 5px 0 rgba(59, 130, 246, 0.3)']
                 }}
                 transition={{ 
                   repeat: Infinity, 
-                  duration: 2.5,
+                  duration: 2.2,
                   ease: "easeInOut"
+                }}
+              />
+              <motion.span 
+                className="absolute inset-0 border-t border-b border-blue-400/30 z-0"
+                animate={{ 
+                  opacity: [0, 0.8, 0]
+                }}
+                transition={{ 
+                  repeat: Infinity, 
+                  duration: 2.2,
+                  ease: "easeInOut",
+                  delay: 0.1
                 }}
               />
             </span>
           </span><br />
-          <span className="font-light text-xl">pode te ajudar hoje {localStorage.getItem('username') || 'João Marcelo'}?</span>
+          <span className="font-light text-2xl">pode te ajudar hoje {localStorage.getItem('username') || 'João Marcelo'}?</span>
         </h2>
       </div>
       
