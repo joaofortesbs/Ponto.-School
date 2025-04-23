@@ -849,6 +849,12 @@ export default function AgendaPage() {
             >
               <Target className="h-5 w-5 mr-1" /> Desafios
             </TabsTrigger>
+            <TabsTrigger
+              value="rotina"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B00] data-[state=active]:to-[#FF8C40] data-[state=active]:text-white px-4 py-2 text-base font-medium transition-all duration-300 rounded-lg"
+            >
+              <Clock className="h-5 w-5 mr-1" /> Rotina
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -1697,6 +1703,17 @@ export default function AgendaPage() {
         {/* Desafios Tab */}
         <TabsContent value="desafios" className="mt-0">
           <ChallengesView />
+        </TabsContent>
+        {/* Rotina Tab -  Added here based on user request */}
+        <TabsContent value="rotina" className="mt-0">
+          <div className="text-center p-8">
+            <h3 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-2">
+              Seção de Rotina
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400">
+              Esta seção está em desenvolvimento.
+            </p>
+          </div>
         </TabsContent>
       </Tabs>
 
