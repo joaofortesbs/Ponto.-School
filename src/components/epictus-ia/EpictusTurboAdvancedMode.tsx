@@ -150,7 +150,7 @@ const EpictusTurboAdvancedMode: React.FC = () => {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className={`w-full hub-connected-width ${isDark ? 'bg-gradient-to-r from-[#050e1d] to-[#0d1a30]' : 'bg-gradient-to-r from-[#0c2341] to-[#0f3562]'} backdrop-blur-lg py-4 px-5 flex items-center justify-between rounded-xl relative`}
+          className={`w-full hub-connected-width ${isDark ? 'bg-gradient-to-r from-[#041e42] to-[#0a4c92]' : 'bg-gradient-to-r from-[#083c7b] to-[#1a6ed8]'} backdrop-blur-lg py-4 px-5 flex items-center justify-between rounded-xl relative`}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
@@ -224,7 +224,7 @@ const EpictusTurboAdvancedMode: React.FC = () => {
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-bold text-white tracking-tight">
-                  Epictus Turbo
+                  Epictus IA
                 </h1>
                 <motion.div
                   className="flex items-center px-1.5 py-0.5 rounded-md bg-gradient-to-r from-[#0D23A0] to-[#4A0D9F] text-xs font-medium text-white shadow-lg dropdown-isolate personalidades-root"
@@ -232,11 +232,11 @@ const EpictusTurboAdvancedMode: React.FC = () => {
                   transition={{ type: "spring", stiffness: 400, damping: 10 }}
                 >
                   <Zap className="h-3 w-3 mr-1" />
-                  Premium
+                  Avançado
                 </motion.div>
               </div>
               <p className="text-white/70 text-sm mt-0.5 font-medium tracking-wide">
-                IA avançada com processamento ultra-rápido para suas necessidades
+                IA para geração de conversas impecáveis para o público estudantil
               </p>
             </div>
           </div>
