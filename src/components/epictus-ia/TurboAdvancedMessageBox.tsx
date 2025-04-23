@@ -113,7 +113,11 @@ const TurboAdvancedMessageBox: React.FC = () => {
       {/* Texto personalizado acima da caixa de mensagens */}
       <div className="text-center mb-4 w-full max-w-7xl mx-auto">
         <h2 className="text-4xl text-white">
-          <span className="font-bold">Como a IA mais <span className="text-blue-400">Inteligente do mundo</span>
+          <span className="font-bold">Como a IA mais 
+            <span className="scanner-text-container">
+              <span className="scanner-text">Inteligente do mundo</span>
+              <span className="scanner-line"></span>
+            </span>
           </span><br />
           <span className="font-light text-3xl">pode te ajudar hoje {localStorage.getItem('username') || 'João Marcelo'}?</span>
         </h2>
