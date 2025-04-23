@@ -15,19 +15,15 @@ import {
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "@/styles/rotina-calendar.css";
 
-// Create a localizer for the calendar using momentLocalizer
+// Import moment and configure it
 import moment from 'moment';
 import 'moment/locale/pt-br';
 
-// Configurar o moment para usar o locale português brasileiro
+// Configure moment locale
 moment.locale('pt-br');
 
-// Criar um localizer usando momentLocalizer
-const localizer = momentLocalizer({
-  moment,
-  culture: 'pt-br',
-  firstDayOfWeek: 0 // Domingo como primeiro dia da semana
-});
+// Create a proper localizer using moment
+const localizer = momentLocalizer(moment);
 
 // Custom messages for the calendar
 const messages = {
@@ -55,6 +51,7 @@ const components = {
 };
 
 const RotinaInteligente: React.FC = () => {
+  console.log("Renderizando Rotina Inteligente...");
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [view, setView] = useState(Views.WEEK);
 
@@ -77,6 +74,7 @@ const RotinaInteligente: React.FC = () => {
     { locale: ptBR }
   )}`;
 
+  console.log("Antes do return...");
   return (
     <div className="container mx-auto p-6 max-w-[1400px]">
       <h2 className="text-2xl font-bold text-[#001427] dark:text-white mb-6 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent">
@@ -124,7 +122,7 @@ const RotinaInteligente: React.FC = () => {
         {/* Calendar Container */}
         <div className="p-4" style={{ height: "calc(100vh - 280px)", minHeight: "600px" }}>
           <Calendar
-            localizer={localizer as any}
+            localizer={localizer}
             events={[]}
             startAccessor="start"
             endAccessor="end"
