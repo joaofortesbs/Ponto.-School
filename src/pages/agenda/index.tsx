@@ -24,7 +24,6 @@ import AddTaskModal from "@/components/agenda/modals/add-task-modal";
 import EventDetailsModal from "@/components/agenda/modals/event-details-modal";
 import TasksView from "@/components/agenda/tasks/TasksView";
 import ChallengesView from "@/components/agenda/challenges/ChallengesView";
-import RotinaView from "@/components/agenda/rotina/RotinaView";
 
 // Icons
 import {
@@ -1690,9 +1689,16 @@ export default function AgendaPage() {
         <TabsContent value="desafios" className="mt-0">
           <ChallengesView />
         </TabsContent>
-        {/* Rotina Tab */}
+        {/* Rotina Tab -  Added here based on user request */}
         <TabsContent value="rotina" className="mt-0">
-          <RotinaView />
+          <div className="text-center p-8">
+            <h3 className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-2">
+              Seção de Rotina
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400">
+              Esta seção está em desenvolvimento.
+            </p>
+          </div>
         </TabsContent>
       </Tabs>
 
