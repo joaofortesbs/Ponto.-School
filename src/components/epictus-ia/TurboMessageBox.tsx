@@ -159,21 +159,6 @@ const TurboMessageBox: React.FC = () => {
         
       </div>
 
-      {/* Espaços de aprendizado */}
-      <div className="flex items-center mb-2">
-          <motion.div 
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0c2341] cursor-pointer hover:bg-[#0f3562] transition-colors"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path>
-            </svg>
-            <span className="text-white text-sm font-medium">Espaços de aprendizado</span>
-            <span className="ml-1 px-1.5 py-0.5 text-xs font-medium bg-orange-500 text-white rounded">Novo</span>
-          </motion.div>
-        </div>
-        
       <motion.div 
         className="relative bg-gradient-to-r from-[#050e1d]/90 to-[#0d1a30]/90 rounded-2xl shadow-xl 
                    border border-white/5 backdrop-blur-sm overflow-hidden"
