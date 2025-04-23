@@ -385,20 +385,15 @@ const EpictusTurboAdvancedMode: React.FC = () => {
 
       {/* Content area now below the header */}
       <div className="w-full flex flex-col items-center justify-center mt-0 mb-2">
-        {/* Hub Conectado - novo componente entre o cabeçalho e a caixa de mensagens */}
-        <div className="w-full">
-          <TurboAdvancedHubConnected />
-        </div>
-
         {/* Mini-section selector */}
         <div className="w-full flex-grow flex items-center justify-center">
           {/* Aqui virá o conteúdo principal (histórico de conversas, resultados, etc.) */}
         </div>
 
-        {/* Interface sem caixa de mensagens, apenas com o hub conectado */}
+        {/* Interface sem caixa de mensagens e sem hub conectado */}
       </div>
     </div>
   );
 };
-import TurboAdvancedHubConnected from "./TurboAdvancedHubConnected";
+
 export default EpictusTurboAdvancedMode;
