@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import EpictusIAHeader from "./EpictusIAHeader"; // Added import for the new header component
 import EpictusTurboMode from "./EpictusTurboMode"; // Added import for EpictusTurboMode
+import EpictusTurboAdvancedMode from "./EpictusTurboAdvancedMode"; // Added import for the new advanced turbo mode component
 
 
 // Definição das abas/seções
@@ -112,6 +113,8 @@ export default function EpictusIAComplete() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredSections, setFilteredSections] = useState(sections);
   const [turboModeActive, setTurboModeActive] = useState(false);
+  const [turboAdvancedModeActive, setTurboAdvancedModeActive] = useState(false); // Added state for advanced turbo mode
+
 
   const carouselRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -179,398 +182,223 @@ export default function EpictusIAComplete() {
     };
   }, []);
 
-  // Check URL params for turbo mode on component mount
+  // Verificar se o parâmetro de URL mode=turbo ou mode=turbo-advanced está presente
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('mode') === 'turbo') {
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get("mode");
+    if (mode === "turbo") {
       setTurboModeActive(true);
+    } else if (mode === "turbo-advanced") {
+      setTurboAdvancedModeActive(true);
     }
 
-    // Listen for custom turbo mode activation event
+    // Adicionando listener para ativar o modo turbo
     const handleTurboActivation = () => {
       setTurboModeActive(true);
+      setTurboAdvancedModeActive(false);
+    };
+
+    // Adicionando listener para ativar o modo turbo advanced
+    const handleTurboAdvancedActivation = () => {
+      setTurboAdvancedModeActive(true);
+      setTurboModeActive(false);
     };
 
     window.addEventListener('activateTurboMode', handleTurboActivation);
+    window.addEventListener('activateTurboAdvancedMode', handleTurboAdvancedActivation);
 
     return () => {
       window.removeEventListener('activateTurboMode', handleTurboActivation);
+      window.removeEventListener('activateTurboAdvancedMode', handleTurboAdvancedActivation);
     };
   }, []);
 
   return (
     <div className={`w-full flex flex-col ${theme === "dark" ? "bg-[#001427]" : "bg-gray-50"} transition-colors duration-300 overflow-y-auto min-h-screen`}>
-      {!turboModeActive && (
-        <div className="p-4"> {/* This is where the new header is inserted */}
-          <EpictusIAHeader />
-        </div>
-      )}
-
-      {/* Painel de busca (aparece quando showSearch é true) */}
-      <AnimatePresence>
-        {showSearch && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className={`border-b ${theme === "dark" ? "border-gray-800 bg-gray-900/50" : "border-gray-200 bg-white"} backdrop-blur-lg`}
-          >
-            <div className="p-4 flex items-center gap-3">
-              <Search className={`h-5 w-5 ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`} />
-              <input
-                ref={searchInputRef}
-                className={`flex-1 bg-transparent border-none outline-none text-lg ${theme === "dark" ? "text-white placeholder:text-gray-500" : "text-gray-900 placeholder:text-gray-400"}`}
-                placeholder="Buscar ferramentas..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+      {turboModeActive ? (
+        <EpictusTurboMode />
+      ) : turboAdvancedModeActive ? (
+        <EpictusTurboAdvancedMode />
+      ) : (
+        <>
+          <div className="p-4"> {/* This is where the new header is inserted */}
+            <EpictusIAHeader />
+          </div>
+          {/* Carrossel 3D de seleção de seções */}
+          <div className="relative py-10 w-full">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
               <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
-                className="rounded-full"
-                onClick={() => {
-                  setShowSearch(false);
-                  setSearchQuery('');
-                }}
+                className={`rounded-full ${theme === "dark" ? "bg-gray-800 border-gray-700 hover:bg-gray-700" : "bg-white border-gray-200 hover:bg-gray-50"}`}
+                onClick={prevSection}
               >
-                <X className={`h-5 w-5 ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`} />
+                <ChevronLeft className={`h-5 w-5 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`} />
               </Button>
             </div>
 
-            {searchQuery && (
-              <div className="px-4 pb-4">
-                <div className={`p-2 rounded-lg ${theme === "dark" ? "bg-gray-800/50" : "bg-gray-100"}`}>
-                  <h3 className={`text-sm font-medium mb-2 px-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
-                    Resultados ({filteredSections.length})
-                  </h3>
-                  <div className="space-y-1">
-                    {filteredSections.map((section, index) => (
-                      <div
-                        key={section.id}
-                        className={`flex items-center gap-3 p-2 rounded-md cursor-pointer ${theme === "dark" ? "hover:bg-gray-700/50" : "hover:bg-gray-200/70"} transition-colors`}
-                        onClick={() => {
-                          setActiveSection(section.id);
-                          setShowSearch(false);
-                          setSearchQuery('');
-                        }}
-                      >
-                        <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${section.color} flex items-center justify-center`}>
-                          {section.icon}
-                        </div>
-                        <div>
-                          <p className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-gray-900"}`}>{section.name}</p>
-                          <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>{section.description}</p>
-                        </div>
-                      </div>
-                    ))}
-
-                    {filteredSections.length === 0 && (
-                      <div className={`p-3 text-center ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-                        Nenhuma ferramenta encontrada com "{searchQuery}"
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Painel de configurações (aparece quando showSettings é true) */}
-      <AnimatePresence>
-        {showSettings && (
-          <motion.div
-            initial={{ x: "100%", opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: "100%", opacity: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className={`fixed top-0 right-0 h-full w-80 z-50 border-l ${theme === "dark" ? "border-gray-800 bg-gray-900" : "border-gray-200 bg-white"} shadow-2xl`}
-          >
-            <div className="p-5 flex flex-col h-full">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className={`text-xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>Configurações</h2>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="rounded-full"
-                  onClick={() => setShowSettings(false)}
-                >
-                  <X className={`h-5 w-5 ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`} />
-                </Button>
-              </div>
-
-              <div className="space-y-6 flex-1">
-                <div className="space-y-2">
-                  <h3 className={`text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Aparência</h3>
-                  <div className={`p-3 rounded-lg ${theme === "dark" ? "bg-gray-800" : "bg-gray-100"}`}>
-                    <div className="flex items-center justify-between">
-                      <span className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Tema</span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className={`gap-2 ${theme === "dark" ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-gray-700"}`}
-                        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                      >
-                        {theme === "dark" ? (
-                          <>
-                            <Moon className="h-4 w-4" />
-                            <span>Escuro</span>
-                          </>
-                        ) : (
-                          <>
-                            <Sun className="h-4 w-4" />
-                            <span>Claro</span>
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h3 className={`text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Idioma</h3>
-                  <div className={`p-3 rounded-lg ${theme === "dark" ? "bg-gray-800" : "bg-gray-100"}`}>
-                    <div className="flex items-center justify-between">
-                      <span className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Idioma da interface</span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className={`gap-2 ${theme === "dark" ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-gray-700"}`}
-                      >
-                        <Languages className="h-4 w-4" />
-                        <span>Português</span>
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h3 className={`text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Acessibilidade</h3>
-                  <div className={`p-3 rounded-lg ${theme === "dark" ? "bg-gray-800" : "bg-gray-100"}`}>
-                    <div className="flex flex-col space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Reduzir animações</span>
-                        <div className="flex h-6 w-11 cursor-pointer items-center rounded-full bg-gray-600 px-1">
-                          <div className="h-4 w-4 rounded-full bg-white transition-all"></div>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Alto contraste</span>
-                        <div className="flex h-6 w-11 cursor-pointer items-center rounded-full bg-gray-600 px-1">
-                          <div className="h-4 w-4 rounded-full bg-white transition-all"></div>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Texto maior</span>
-                        <div className="flex h-6 w-11 cursor-pointer items-center rounded-full bg-gray-600 px-1">
-                          <div className="h-4 w-4 rounded-full bg-white transition-all"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t mt-auto">
-                <Button
-                  variant="default"
-                  className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF9B50] hover:from-[#FF9B50] hover:to-[#FF6B00]"
-                  onClick={() => setShowSettings(false)}
-                >
-                  Salvar alterações
-                </Button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className="flex-1 flex flex-col">
-        {turboModeActive ? (
-          // Import and use the EpictusTurboMode component when in turbo mode
-          <React.Suspense fallback={<div className="w-full h-40 flex items-center justify-center"><p className={theme === "dark" ? "text-white" : "text-gray-800"}>Carregando...</p></div>}>
-            <EpictusTurboMode />
-          </React.Suspense>
-        ) : (
-          <>
-            {/* Carrossel 3D de seleção de seções */}
-            <div className="relative py-10 w-full">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className={`rounded-full ${theme === "dark" ? "bg-gray-800 border-gray-700 hover:bg-gray-700" : "bg-white border-gray-200 hover:bg-gray-50"}`}
-                  onClick={prevSection}
-                >
-                  <ChevronLeft className={`h-5 w-5 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`} />
-                </Button>
-              </div>
-
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className={`rounded-full ${theme === "dark" ? "bg-gray-800 border-gray-700 hover:bg-gray-700" : "bg-white border-gray-200 hover:bg-gray-50"}`}
-                  onClick={nextSection}
-                >
-                  <ChevronRight className={`h-5 w-5 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`} />
-                </Button>
-              </div>
-
-              <motion.div
-                ref={carouselRef}
-                className="flex items-center justify-center h-[240px]"
-                drag="x"
-                dragConstraints={{ left: 0, right: 0 }}
-                dragElastic={0.2}
-                onDragEnd={(e, { offset, velocity }) => {
-                  if (offset.x < -50 || velocity.x < -500) {
-                    nextSection();
-                  } else if (offset.x > 50 || velocity.x > 500) {
-                    prevSection();
-                  }
-                }}
-                animate={{ x: 0 }}
-                transition={{ type: "spring", stiffness: 400, damping: 40 }}
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10">
+              <Button
+                variant="outline"
+                size="icon"
+                className={`rounded-full ${theme === "dark" ? "bg-gray-800 border-gray-700 hover:bg-gray-700" : "bg-white border-gray-200 hover:bg-gray-50"}`}
+                onClick={nextSection}
               >
-                <div className="flex items-center justify-center relative">
-                  {sections.map((section, index) => {
-                    // Calcular a posição relativa ao item ativo com lógica de rolagem infinita
-                    let position = index - carouselIndex;
+                <ChevronRight className={`h-5 w-5 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`} />
+              </Button>
+            </div>
 
-                    // Ajustar posição para criar efeito de rolagem infinita
-                    if (Math.abs(position) > sections.length / 2) {
-                      position = position - Math.sign(position) * sections.length;
-                    }
+            <motion.div
+              ref={carouselRef}
+              className="flex items-center justify-center h-[240px]"
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(e, { offset, velocity }) => {
+                if (offset.x < -50 || velocity.x < -500) {
+                  nextSection();
+                } else if (offset.x > 50 || velocity.x > 500) {
+                  prevSection();
+                }
+              }}
+              animate={{ x: 0 }}
+              transition={{ type: "spring", stiffness: 400, damping: 40 }}
+            >
+              <div className="flex items-center justify-center relative">
+                {sections.map((section, index) => {
+                  // Calcular a posição relativa ao item ativo com lógica de rolagem infinita
+                  let position = index - carouselIndex;
 
-                    return (
-                      <motion.div
-                        key={section.id}
-                        className={`absolute select-none cursor-pointer`}
-                        animate={{
-                          scale: position === 0 ? 1 : 0.85 - Math.min(Math.abs(position) * 0.1, 0.3),
-                          x: position * 200,
-                          opacity: Math.abs(position) > 2 ? 0 : 1 - Math.abs(position) * 0.3,
-                          zIndex: 10 - Math.abs(position),
-                          rotateY: position * 10,
+                  // Ajustar posição para criar efeito de rolagem infinita
+                  if (Math.abs(position) > sections.length / 2) {
+                    position = position - Math.sign(position) * sections.length;
+                  }
+
+                  return (
+                    <motion.div
+                      key={section.id}
+                      className={`absolute select-none cursor-pointer`}
+                      animate={{
+                        scale: position === 0 ? 1 : 0.85 - Math.min(Math.abs(position) * 0.1, 0.3),
+                        x: position * 200,
+                        opacity: Math.abs(position) > 2 ? 0 : 1 - Math.abs(position) * 0.3,
+                        zIndex: 10 - Math.abs(position),
+                        rotateY: position * 10,
+                      }}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      onClick={() => selectSection(index)}
+                    >
+                      <div
+                        className={cn(
+                          `w-64 rounded-xl overflow-hidden border-2 transform transition-all group`,
+                          position === 0 ? `shadow-lg ${section.borderColor}` : 'border-transparent',
+                          theme === "dark" ? "bg-gray-800/80" : "bg-white/80"
+                        )}
+                        style={{
+                          backdropFilter: "blur(8px)",
+                          perspective: "1000px",
+                          height: position === 0 ? "200px" : "180px",
+                          minHeight: position === 0 ? "200px" : "180px"
                         }}
-                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                        onClick={() => selectSection(index)}
                       >
-                        <div
-                          className={cn(
-                            `w-64 rounded-xl overflow-hidden border-2 transform transition-all group`,
-                            position === 0 ? `shadow-lg ${section.borderColor}` : 'border-transparent',
-                            theme === "dark" ? "bg-gray-800/80" : "bg-white/80"
+                        <div className={`h-full p-5 flex flex-col justify-between relative overflow-hidden`}>
+                          {/* Efeito de brilho quando é o item ativo */}
+                          {position === 0 && (
+                            <div className="absolute inset-0 overflow-hidden">
+                              <div className="absolute -inset-[50px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 rotate-45 translate-x-[-120%] group-hover:translate-x-[120%] duration-1500 transition-all ease-in-out"></div>
+                            </div>
                           )}
-                          style={{
-                            backdropFilter: "blur(8px)",
-                            perspective: "1000px",
-                            height: position === 0 ? "200px" : "180px",
-                            minHeight: position === 0 ? "200px" : "180px"
-                          }}
-                        >
-                          <div className={`h-full p-5 flex flex-col justify-between relative overflow-hidden`}>
-                            {/* Efeito de brilho quando é o item ativo */}
-                            {position === 0 && (
-                              <div className="absolute inset-0 overflow-hidden">
-                                <div className="absolute -inset-[50px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 rotate-45 translate-x-[-120%] group-hover:translate-x-[120%] duration-1500 transition-all ease-in-out"></div>
-                              </div>
-                            )}
 
-                            <div className="flex justify-between items-start">
-                              <div
-                                className={`w-12 h-12 rounded-full bg-gradient-to-br ${section.color} flex items-center justify-center`}
+                          <div className="flex justify-between items-start">
+                            <div
+                              className={`w-12 h-12 rounded-full bg-gradient-to-br ${section.color} flex items-center justify-center`}
+                            >
+                              {section.icon}
+                            </div>
+
+                            {section.badge && (
+                              <Badge
+                                className={`bg-white/90 text-xs font-medium animate-pulse ${
+                                  section.badge === "Novo"
+                                    ? "text-emerald-600"
+                                    : section.badge === "Beta"
+                                    ? "text-purple-600"
+                                    : section.badge === "Popular"
+                                    ? "text-blue-600"
+                                    : "text-amber-600"
+                                }`}
                               >
-                                {section.icon}
-                              </div>
+                                {section.badge}
+                              </Badge>
+                            )}
+                          </div>
 
-                              {section.badge && (
-                                <Badge
-                                  className={`bg-white/90 text-xs font-medium animate-pulse ${
-                                    section.badge === "Novo"
-                                      ? "text-emerald-600"
-                                      : section.badge === "Beta"
-                                      ? "text-purple-600"
-                                      : section.badge === "Popular"
-                                      ? "text-blue-600"
-                                      : "text-amber-600"
-                                  }`}
-                                >
-                                  {section.badge}
-                                </Badge>
-                              )}
-                            </div>
-
-                            <div>
-                              <h3 className={`text-base font-semibold mb-2 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-                                {section.name}
-                              </h3>
-                              <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"} line-clamp-3`}>
-                                {section.description}
-                              </p>
-                            </div>
+                          <div>
+                            <h3 className={`text-base font-semibold mb-2 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                              {section.name}
+                            </h3>
+                            <p className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"} line-clamp-3`}>
+                              {section.description}
+                            </p>
                           </div>
                         </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              </motion.div>
-
-              {/* Indicadores (bolinhas) para o carrossel */}
-              <div className="flex justify-center mt-6 gap-2">
-                {sections.map((section, index) => (
-                  <button
-                    key={section.id}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      index === carouselIndex
-                        ? "w-6 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50]"
-                        : theme === "dark" ? "bg-gray-700" : "bg-gray-300"
-                    }`}
-                    onClick={() => selectSection(index)}
-                  />
-                ))}
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
-            </div>
+            </motion.div>
 
-            {/* Conteúdo da seção ativa */}
-            <div className="flex-1 px-6 pb-12 overflow-y-visible">
-              <motion.div
-                key={activeSection}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-                className="w-full"
-              >
-                <Tabs value={activeSection} onValueChange={setActiveSection} className="h-full">
-                  <TabsContent value="chat-inteligente" className="mt-0 h-full">
-                    <ChatInteligente />
-                  </TabsContent>
-                  <TabsContent value="criar-conteudo" className="mt-0 h-full">
-                    <CriarConteudo />
-                  </TabsContent>
-                  <TabsContent value="aprender-mais-rapido" className="mt-0 h-full">
-                    <AprenderMaisRapido />
-                  </TabsContent>
-                  <TabsContent value="analisar-corrigir" className="mt-0 h-full">
-                    <AnalisarCorrigir />
-                  </TabsContent>
-                  <TabsContent value="organizar-otimizar" className="mt-0 h-full">
-                    <OrganizarOtimizar />
-                  </TabsContent>
-                  <TabsContent value="ferramentas-extras" className="mt-0 h-full">
-                    <FerramentasExtras />
-                  </TabsContent>
-                </Tabs>
-              </motion.div>
+            {/* Indicadores (bolinhas) para o carrossel */}
+            <div className="flex justify-center mt-6 gap-2">
+              {sections.map((section, index) => (
+                <button
+                  key={section.id}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    index === carouselIndex
+                      ? "w-6 bg-gradient-to-r from-[#FF6B00] to-[#FF9B50]"
+                      : theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+                  }`}
+                  onClick={() => selectSection(index)}
+                />
+              ))}
             </div>
-          </>
-        )}
-      </div>
+          </div>
+
+          {/* Conteúdo da seção ativa */}
+          <div className="flex-1 px-6 pb-12 overflow-y-visible">
+            <motion.div
+              key={activeSection}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="w-full"
+            >
+              <Tabs value={activeSection} onValueChange={setActiveSection} className="h-full">
+                <TabsContent value="chat-inteligente" className="mt-0 h-full">
+                  <ChatInteligente />
+                </TabsContent>
+                <TabsContent value="criar-conteudo" className="mt-0 h-full">
+                  <CriarConteudo />
+                </TabsContent>
+                <TabsContent value="aprender-mais-rapido" className="mt-0 h-full">
+                  <AprenderMaisRapido />
+                </TabsContent>
+                <TabsContent value="analisar-corrigir" className="mt-0 h-full">
+                  <AnalisarCorrigir />
+                </TabsContent>
+                <TabsContent value="organizar-otimizar" className="mt-0 h-full">
+                  <OrganizarOtimizar />
+                </TabsContent>
+                <TabsContent value="ferramentas-extras" className="mt-0 h-full">
+                  <FerramentasExtras />
+                </TabsContent>
+              </Tabs>
+            </motion.div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

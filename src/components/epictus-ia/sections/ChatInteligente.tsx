@@ -11,7 +11,8 @@ import {
   TutorInteligenteCard, 
   BrainstormCard,
   TutorInteligente2Card,
-  EpictusIACard
+  EpictusIACard,
+  EpictusTurboAdvancedCard // Added import for the new card
 } from "./components/chat-inteligente";
 
 export default function ChatInteligente() {
@@ -37,6 +38,7 @@ export default function ChatInteligente() {
         <TutorInteligente2Card />
         <EpictusIACard />
         <TutorInteligenteCard />
+        <EpictusTurboAdvancedCard /> {/* Added the new card component */}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
         <BrainstormCard />
