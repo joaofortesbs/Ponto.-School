@@ -17,13 +17,15 @@ export const EpictusTurboAdvancedCard: React.FC = () => {
 
   const assistantData = {
     id: "epictus-turbo-advanced",
-    title: "Epictus Turbo",
+    title: "Epictus Turbo Advanced",
     description: "O único Agente IA que você precisa para ter o boletim e desempenhos dos sonhos, com apenas um comando, a revolução da educação começa aqui!",
     icon: <Zap className="h-6 w-6 text-white" />,
     badge: null,
-    buttonText: "Usar Turbo",
+    buttonText: "Usar Turbo Advanced",
     onButtonClick: handleTurboAdvancedActivation
   };
 
   return <ChatCard assistant={assistantData} />;
 };
+
+export default EpictusTurboAdvancedCard;

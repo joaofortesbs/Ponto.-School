@@ -12,7 +12,7 @@ import {
   BrainstormCard,
   TutorInteligente2Card,
   EpictusIACard,
-  EpictusTurboAdvancedCard // Added import for the new card
+  EpictusTurboAdvancedCard
 } from "./components/chat-inteligente";
 
 export default function ChatInteligente() {
