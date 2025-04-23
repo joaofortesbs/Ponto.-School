@@ -2,15 +2,15 @@ import React from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
-import {
+import { 
   MessageSquare,
   Brain,
   Sparkles
 } from "lucide-react";
-import {
-  TutorInteligenteCard,
-  TutorInteligente2Card,
+import { 
+  TutorInteligenteCard, 
   BrainstormCard,
+  TutorInteligente2Card,
   EpictusTurboAdvancedCard
 } from "./components/chat-inteligente";
 
@@ -33,12 +33,13 @@ export default function ChatInteligente() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <TutorInteligente2Card />
         <EpictusTurboAdvancedCard />
         <TutorInteligenteCard />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
         <BrainstormCard />
-        {/* EspacosAprendizadoCard removed */}
       </div>
 
       <div className="mt-6 flex-1">

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion, AnimatePresence } from "framer-motion";
@@ -389,14 +390,10 @@ const EpictusTurboAdvancedMode: React.FC = () => {
           {/* Aqui virá o conteúdo principal (histórico de conversas, resultados, etc.) */}
         </div>
 
-        {/* Caixa de mensagens na parte inferior */}
-        <div className="w-full bottom-0 left-0 right-0 z-30 mt-8">
-          <TurboMessageBox />
-        </div>
+        {/* Interface sem caixa de mensagens e sem hub conectado */}
       </div>
     </div>
   );
 };
 
-import TurboMessageBox from "./TurboMessageBox";
 export default EpictusTurboAdvancedMode;
