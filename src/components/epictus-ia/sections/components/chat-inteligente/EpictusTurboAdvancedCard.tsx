@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Zap } from "lucide-react";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +5,7 @@ import { useTheme } from "@/components/ThemeProvider";
 
 export const EpictusTurboAdvancedCard: React.FC = () => {
   const { theme } = useTheme();
-  
+
   return (
     <Card className={`overflow-hidden border ${theme === "dark" ? "bg-gray-800/70 border-gray-700" : "bg-white border-gray-200"}`}>
       <CardHeader className="flex flex-row items-center justify-between p-5 border-b border-gray-100 dark:border-[#29335C]/30">
