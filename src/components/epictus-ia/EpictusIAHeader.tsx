@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Zap, Sparkles, Clock, Star, Calendar, Bell, User, Sliders, Settings } from "lucide-react";
+import { Zap, Sparkles, Search, Settings, User, Sliders } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/ThemeProvider";
 import { Input } from "@/components/ui/input";
@@ -152,81 +152,85 @@ export default function EpictusIAHeader() {
         </div>
       </div>
 
-      {/* Icones para funções do cabeçalho */}
+      {/* Search and Settings components */}
       <div className="flex items-center justify-center z-10 relative gap-3">
-        {/* Histórico */}
-        <div className="relative icon-container">
+        {/* Search component */}
+        <div className="relative search-icon-container">
           <motion.div
-            className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0055ff] to-[#0080ff] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              // Ação para Histórico
-              console.log("Histórico clicado");
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            className="relative"
             initial={false}
-            transition={{ duration: 0.3 }}
           >
-            <Clock className="h-5 w-5 text-white" />
+            {/* Search icon/button */}
+            <motion.div
+              className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
+              onClick={(e) => {
+                // Prevenir qualquer propagação que possa causar recálculos
+                e.stopPropagation();
+                e.preventDefault();
+                
+                // Toggle search open/closed state
+                setSearchOpen(prevState => !prevState);
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              initial={false}
+              animate={searchOpen ? { rotate: [0, -10, 0] } : { rotate: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Search className="h-5 w-5 text-white" />
+            </motion.div>
+            
+            {/* Expanding search input */}
+            <AnimatePresence mode="wait">
+              {searchOpen && (
+                <motion.div
+                  className="absolute right-0 top-0 z-50 flex items-center"
+                  initial={{ width: 0, opacity: 0, scale: 0.9 }}
+                  animate={{ width: "240px", opacity: 1, scale: 1 }}
+                  exit={{ width: 0, opacity: 0, scale: 0.9 }}
+                  transition={{ 
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 30,
+                    opacity: { duration: 0.2 }
+                  }}
+                  key="search-input"
+                >
+                  <Input
+                    ref={searchInputRef}
+                    type="text"
+                    placeholder="Pesquisar..."
+                    className="h-10 pl-4 pr-10 rounded-full border-2 border-orange-500/50 focus:border-orange-500 bg-gradient-to-r from-[#0c2341]/90 to-[#0f3562]/90 backdrop-blur-md text-white placeholder:text-white/70 shadow-lg"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{
+                      boxShadow: '0 4px 12px rgba(255, 107, 0, 0.15)'
+                    }}
+                  />
+                  <Search className="h-5 w-5 text-white absolute right-3 pointer-events-none" />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </div>
 
-        {/* Espaços de Aprendizado */}
-        <div className="relative icon-container">
+        {/* Settings component */}
+        <div className="relative settings-icon-container">
           <motion.div
-            className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0055ff] to-[#0080ff] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
+            className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
             onClick={(e) => {
               e.stopPropagation();
               e.preventDefault();
-              // Ação para Espaços de Aprendizado
-              console.log("Espaços de Aprendizado clicado");
+              
+              // Abrir o modal de configurações
+              setSettingsOpen(true);
             }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             initial={false}
             transition={{ duration: 0.3 }}
           >
-            <Star className="h-5 w-5 text-white" />
-          </motion.div>
-        </div>
-
-        {/* Modo Fantasma */}
-        <div className="relative icon-container">
-          <motion.div
-            className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0055ff] to-[#0080ff] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              // Ação para Modo Fantasma
-              console.log("Modo Fantasma clicado");
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            initial={false}
-            transition={{ duration: 0.3 }}
-          >
-            <Calendar className="h-5 w-5 text-white" />
-          </motion.div>
-        </div>
-
-        {/* Galeria */}
-        <div className="relative icon-container">
-          <motion.div
-            className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0055ff] to-[#0080ff] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              // Ação para Galeria
-              console.log("Galeria clicado");
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            initial={false}
-            transition={{ duration: 0.3 }}
-          >
-            <Bell className="h-5 w-5 text-white" />
+            <Settings className="h-5 w-5 text-white" />
           </motion.div>
         </div>
 
