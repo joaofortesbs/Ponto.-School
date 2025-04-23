@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { format, addDays, subDays, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -8,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import AddBlockModal from "./AddBlockModal";
 
 const RotinaView: React.FC = () => {
+  console.log("Renderizando...");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showAddBlockModal, setShowAddBlockModal] = useState(false);
   const [selectedTime, setSelectedTime] = useState<number | undefined>(undefined);
@@ -34,7 +34,7 @@ const RotinaView: React.FC = () => {
   // Obter o início e fim da semana atual
   const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 0 });
   const endOfCurrentWeek = endOfWeek(currentDate, { weekStartsOn: 0 });
-  
+
   // Gerar array com todos os dias da semana
   const daysOfWeek = eachDayOfInterval({
     start: startOfCurrentWeek,
@@ -73,6 +73,7 @@ const RotinaView: React.FC = () => {
 
   return (
     <div className="container mx-auto p-0 md:p-4">
+      console.log("Renderizando...");
       <div className="bg-[#001427] rounded-xl overflow-hidden shadow-lg border border-[#29335C]/30">
         {/* Header da Seção */}
         <div className="p-4 border-b border-[#29335C]/30 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]">
@@ -172,13 +173,13 @@ const RotinaView: React.FC = () => {
                       b.startTime <= hour && 
                       b.endTime > hour
                   );
-                  
+
                   // Verificar se é o início de um bloco
                   const isBlockStart = block && block.startTime === hour;
-                  
+
                   // Altura do bloco em função da duração
                   const blockDuration = block ? block.endTime - block.startTime : 0;
-                  
+
                   return (
                     <div 
                       key={dayIndex} 

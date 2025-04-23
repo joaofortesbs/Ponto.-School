@@ -1,28 +1,14 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
-} from "@/components/ui/dialog";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar as CalendarIcon, Clock } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Calendar as CalendarIcon } from "lucide-react";
 
 interface AddBlockModalProps {
   open: boolean;
@@ -32,207 +18,186 @@ interface AddBlockModalProps {
   selectedTime?: number;
 }
 
-const AddBlockModal: React.FC<AddBlockModalProps> = ({
-  open,
-  onOpenChange,
-  onAddBlock,
-  selectedDate = new Date(),
-  selectedTime
-}) => {
-  const [title, setTitle] = useState("");
-  const [date, setDate] = useState<Date | undefined>(selectedDate);
-  const [startTime, setStartTime] = useState<string>(
-    selectedTime ? `${selectedTime}:00` : "08:00"
-  );
-  const [endTime, setEndTime] = useState<string>(
-    selectedTime ? `${selectedTime + 1}:00` : "09:00"
-  );
-  const [color, setColor] = useState("#FF6B00");
-  const [repetition, setRepetition] = useState("never");
+const AddBlockModal = ({ open, onOpenChange, onAddBlock, selectedDate, selectedTime }: AddBlockModalProps) => {
+  const [blockTitle, setBlockTitle] = useState("");
+  const [blockDay, setBlockDay] = useState(selectedDate || new Date());
+  const [startTime, setStartTime] = useState(selectedTime || 8);
+  const [endTime, setEndTime] = useState((selectedTime ? selectedTime + 1 : 9));
+  const [blockColor, setBlockColor] = useState("#FF6B00");
+  const [colorPickerOpen, setColorPickerOpen] = useState(false);
 
-  const timeOptions = Array.from({ length: 24 }, (_, i) => {
-    const hour = i.toString().padStart(2, "0");
-    return `${hour}:00`;
-  });
+  useEffect(() => {
+    if (selectedDate) {
+      setBlockDay(selectedDate);
+    }
+    if (selectedTime !== undefined) {
+      setStartTime(selectedTime);
+      setEndTime(selectedTime + 1);
+    }
+  }, [selectedDate, selectedTime]);
 
   const handleSubmit = () => {
-    // Validar entradas
-    if (!title || !date || !startTime || !endTime) {
-      // Mostrar erro...
-      return;
+    if (!blockTitle.trim()) {
+      return; // Don't submit if title is empty
     }
 
-    const startHour = parseInt(startTime.split(":")[0]);
-    const endHour = parseInt(endTime.split(":")[0]);
-
-    if (startHour >= endHour) {
-      // Mostrar erro...
-      return;
-    }
-
-    // Criar objeto de bloco de rotina
-    const block = {
+    const newBlock = {
       id: `block-${Date.now()}`,
-      title,
-      day: date,
-      startTime: startHour,
-      endTime: endHour,
-      color,
-      repetition
+      title: blockTitle,
+      day: blockDay,
+      startTime: startTime,
+      endTime: endTime,
+      color: blockColor
     };
 
-    // Enviar para o componente pai
-    onAddBlock(block);
-    
-    // Resetar o formulário e fechar modal
-    resetForm();
+    onAddBlock(newBlock);
     onOpenChange(false);
+    resetForm();
   };
 
   const resetForm = () => {
-    setTitle("");
-    setDate(selectedDate);
-    setStartTime(selectedTime ? `${selectedTime}:00` : "08:00");
-    setEndTime(selectedTime ? `${selectedTime + 1}:00` : "09:00");
-    setColor("#FF6B00");
-    setRepetition("never");
+    setBlockTitle("");
+    setBlockDay(new Date());
+    setStartTime(8);
+    setEndTime(9);
+    setBlockColor("#FF6B00");
   };
+
+  // Generate time options for select (8:00 - 21:00)
+  const timeOptions = Array.from({ length: 14 }, (_, i) => i + 8);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] bg-[#001427] border-[#29335C]/30 text-white">
+      <DialogContent className="bg-[#001427] text-white border border-[#29335C]/30 sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-[#FF6B00]">
-            Adicionar Bloco de Rotina
-          </DialogTitle>
-          <DialogDescription className="text-gray-400">
-            Preencha os detalhes do seu novo bloco de rotina de estudos.
-          </DialogDescription>
+          <DialogTitle className="text-lg font-bold">Adicionar Bloco de Rotina</DialogTitle>
         </DialogHeader>
-
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="title" className="text-white">Título</Label>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="block-title" className="text-right">
+              Título
+            </Label>
             <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              id="block-title"
+              value={blockTitle}
+              onChange={(e) => setBlockTitle(e.target.value)}
+              className="col-span-3 bg-[#29335C]/20 border-[#29335C]/30 text-white placeholder:text-gray-400"
               placeholder="Ex: Estudo de Matemática"
-              className="border-[#FF6B00]/30 bg-[#29335C]/10 text-white"
             />
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-white">Data</Label>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="block-day" className="text-right">
+              Data
+            </Label>
+            <div className="col-span-3 flex">
+              <Input
+                id="block-day"
+                value={format(blockDay, "dd/MM/yyyy", { locale: ptBR })}
+                readOnly
+                className="bg-[#29335C]/20 border-[#29335C]/30 text-white"
+              />
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full border-[#FF6B00]/30 bg-[#29335C]/10 text-white justify-start"
+                  <Button 
+                    variant="outline" 
+                    className="ml-2 border-[#29335C]/30 bg-[#29335C]/20 hover:bg-[#29335C]/30 text-[#FF6B00]"
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4 text-[#FF6B00]" />
-                    {date ? format(date, "dd 'de' MMMM, yyyy", { locale: ptBR }) : "Selecione uma data"}
+                    <CalendarIcon className="h-4 w-4" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 bg-[#29335C]" align="start">
+                <PopoverContent className="w-auto p-0 bg-[#001427] border border-[#29335C]/30">
                   <Calendar
                     mode="single"
-                    selected={date}
-                    onSelect={setDate}
-                    locale={ptBR}
-                    className="rounded-md border border-[#FF6B00]/30"
-                    classNames={{
-                      day_selected: "bg-[#FF6B00] text-white",
-                      day_today: "bg-[#FF6B00]/20 text-white",
-                      day: "text-white hover:bg-[#FF6B00]/20"
-                    }}
+                    selected={blockDay}
+                    onSelect={(date) => date && setBlockDay(date)}
+                    className="border-[#29335C]/30"
                   />
                 </PopoverContent>
               </Popover>
             </div>
-
-            <div className="space-y-2">
-              <Label className="text-white">Repetir</Label>
-              <Select value={repetition} onValueChange={setRepetition}>
-                <SelectTrigger className="border-[#FF6B00]/30 bg-[#29335C]/10 text-white">
-                  <SelectValue placeholder="Frequência" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#29335C] text-white border-[#FF6B00]/30">
-                  <SelectItem value="never">Nunca (evento único)</SelectItem>
-                  <SelectItem value="daily">Diariamente</SelectItem>
-                  <SelectItem value="weekly">Semanalmente</SelectItem>
-                  <SelectItem value="weekdays">Dias úteis</SelectItem>
-                  <SelectItem value="weekends">Fins de semana</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-white">Hora de início</Label>
-              <Select value={startTime} onValueChange={setStartTime}>
-                <SelectTrigger className="border-[#FF6B00]/30 bg-[#29335C]/10 text-white">
-                  <SelectValue placeholder="Horário inicial" />
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="start-time" className="text-right">
+              Horário
+            </Label>
+            <div className="col-span-3 flex items-center gap-2">
+              <Select value={String(startTime)} onValueChange={(value) => setStartTime(Number(value))}>
+                <SelectTrigger className="w-[110px] bg-[#29335C]/20 border-[#29335C]/30 text-white">
+                  <SelectValue placeholder="Início" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#29335C] text-white border-[#FF6B00]/30 h-[200px]">
+                <SelectContent className="bg-[#001427] text-white border border-[#29335C]/30">
                   {timeOptions.map((time) => (
-                    <SelectItem key={time} value={time}>
-                      {time}
+                    <SelectItem key={`start-${time}`} value={String(time)}>
+                      {time}:00
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-white">Hora de término</Label>
-              <Select value={endTime} onValueChange={setEndTime}>
-                <SelectTrigger className="border-[#FF6B00]/30 bg-[#29335C]/10 text-white">
-                  <SelectValue placeholder="Horário final" />
+              <span>até</span>
+              <Select value={String(endTime)} onValueChange={(value) => setEndTime(Number(value))}>
+                <SelectTrigger className="w-[110px] bg-[#29335C]/20 border-[#29335C]/30 text-white">
+                  <SelectValue placeholder="Fim" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#29335C] text-white border-[#FF6B00]/30 h-[200px]">
+                <SelectContent className="bg-[#001427] text-white border border-[#29335C]/30">
                   {timeOptions.map((time) => (
-                    <SelectItem key={time} value={time}>
-                      {time}
+                    <SelectItem 
+                      key={`end-${time}`} 
+                      value={String(time)}
+                      disabled={time <= startTime}
+                    >
+                      {time}:00
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
-
-          <div className="space-y-2">
-            <Label className="text-white">Cor</Label>
-            <div className="flex gap-3">
-              {["#FF6B00", "#3B82F6", "#10B981", "#8B5CF6", "#EF4444", "#F59E0B"].map((c) => (
-                <div
-                  key={c}
-                  className={`w-8 h-8 rounded-full cursor-pointer transition-all ${
-                    color === c ? "ring-2 ring-white scale-110" : ""
-                  }`}
-                  style={{ backgroundColor: c }}
-                  onClick={() => setColor(c)}
-                ></div>
-              ))}
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="block-color" className="text-right">
+              Cor
+            </Label>
+            <div className="col-span-3">
+              <Popover open={colorPickerOpen} onOpenChange={setColorPickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button 
+                    id="block-color"
+                    variant="outline" 
+                    className="w-full flex justify-between items-center bg-[#29335C]/20 border-[#29335C]/30 text-white hover:bg-[#29335C]/30"
+                  >
+                    <span>Selecionar cor</span>
+                    <div 
+                      className="w-5 h-5 rounded-full border border-white/20" 
+                      style={{ backgroundColor: blockColor }}
+                    />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-3 bg-[#001427] border border-[#29335C]/30">
+                  <div className="flex justify-between items-center mt-3">
+                    <div className="text-xs text-gray-400">
+                      Cor: <span className="font-mono">{blockColor}</span>
+                    </div>
+                    <Button size="sm" onClick={() => setColorPickerOpen(false)}>
+                      Ok
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </div>
-
-        <DialogFooter className="flex justify-end gap-2">
-          <Button
-            variant="outline"
+        <DialogFooter>
+          <Button 
+            variant="outline" 
             onClick={() => onOpenChange(false)}
-            className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10"
+            className="border-[#29335C]/30 text-[#FF6B00] hover:bg-[#29335C]/20"
           >
             Cancelar
           </Button>
-          <Button
+          <Button 
             onClick={handleSubmit}
-            className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white"
+            className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
           >
-            Adicionar Bloco
+            Adicionar
           </Button>
         </DialogFooter>
       </DialogContent>
