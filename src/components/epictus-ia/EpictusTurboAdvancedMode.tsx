@@ -390,30 +390,9 @@ const EpictusTurboAdvancedMode: React.FC = () => {
           {/* Aqui virá o conteúdo principal (histórico de conversas, resultados, etc.) */}
         </div>
 
-        {/* Caixa de mensagens na parte inferior com a identidade visual do cabeçalho */}
+        {/* Caixa de mensagens na parte inferior */}
         <div className="w-full bottom-0 left-0 right-0 z-30 mt-1">
-          <div className="max-w-4xl mx-auto p-4">
-            <div className="relative bg-gradient-to-r from-[#0c2341] to-[#0f3562] rounded-xl shadow-lg p-4">
-              <div className="absolute inset-0 opacity-20">
-                <div className="absolute inset-0 bg-gradient-to-r from-[#0D23A0] via-[#1230CC] to-[#4A0D9F] opacity-40 transition-opacity duration-700"></div>
-                <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
-              </div>
-              
-              <div className="flex items-center relative z-10">
-                <input
-                  type="text"
-                  placeholder="Digite sua mensagem..."
-                  className="flex-1 bg-[#050e1d]/70 text-white rounded-lg px-4 py-3 border border-[#0D23A0]/30 focus:outline-none focus:border-[#1230CC] shadow-inner"
-                />
-                <button className="ml-2 bg-gradient-to-br from-[#0D23A0] to-[#4A0D9F] hover:from-[#1230CC] hover:to-[#5B21BD] text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
+          <TurboMessageBox />
         </div>
       </div>
     </div>
