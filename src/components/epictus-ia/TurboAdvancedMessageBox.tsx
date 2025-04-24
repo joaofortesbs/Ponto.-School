@@ -264,7 +264,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
               />
             </div>
 
-            {/* Botão de sugestão de prompts inteligentes */}
+            {/* Botão de sugestão de prompts inteligentes (movido para depois do botão de áudio/enviar) */}
             <motion.button 
               className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
                        flex items-center justify-center shadow-lg text-white dark:text-white mr-2"
