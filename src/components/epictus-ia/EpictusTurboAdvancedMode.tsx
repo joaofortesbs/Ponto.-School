@@ -401,8 +401,8 @@ const EpictusTurboAdvancedMode: React.FC = () => {
       <div className="w-full h-6"></div>
 
       {/* Área de mensagens do chat */}
-      <div className="w-full mx-auto mb-4 p-1 hub-connected-width">
-        <div className="w-full max-w-full px-2 py-4 space-y-4 overflow-y-auto max-h-[500px]" style={{ scrollbarWidth: 'thin' }}>
+      <div className="w-full mx-auto mb-0 p-0 hub-connected-width">
+        <div className="w-full max-w-full px-2 py-2 space-y-4 overflow-y-auto max-h-[500px]" style={{ scrollbarWidth: 'thin' }}>
           {/* Mensagens renderizadas a partir do TurboAdvancedMessageBox */}
           {Array.isArray(window.chatMessages) && window.chatMessages.map((msg: any) => (
             <div 
@@ -439,7 +439,7 @@ const EpictusTurboAdvancedMode: React.FC = () => {
       </div>
 
       {/* Caixa de mensagens do Epictus Turbo */}
-      <div className="w-full p-4">
+      <div className="w-full px-4 pt-0 pb-4">
         <TurboAdvancedMessageBox />
       </div>
     </div>
