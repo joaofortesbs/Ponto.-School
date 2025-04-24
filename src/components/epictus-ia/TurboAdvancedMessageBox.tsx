@@ -1,34 +1,17 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Sparkles, Plus, Mic, Send, Brain, BookOpen, FileText, 
-  RotateCw, AlignJustify, Zap, X, Lightbulb, Square, 
-  Clock, Download, Copy, Loader2
-} from "lucide-react";
+import { Sparkles, Plus, Mic, Send, Brain, BookOpen, FileText, RotateCw, AlignJustify, Zap, X, Lightbulb, Square } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { generateAIResponse } from "@/services/epictusIAService";
-import ReactMarkdown from 'react-markdown';
-import { v4 as uuidv4 } from 'uuid';
 
-// Interfaces
 interface QuickActionProps {
   icon: React.ReactNode;
   label: string;
   onClick?: () => void;
 }
 
-interface ChatMessage {
-  id: string;
-  content: string;
-  sender: 'user' | 'ai';
-  timestamp: Date;
-  type: 'text' | 'audio';
-  audioUrl?: string;
-}
-
-// Componente para ações rápidas
 const QuickAction: React.FC<QuickActionProps> = ({ icon, label, onClick }) => {
   return (
     <motion.button
@@ -45,59 +28,7 @@ const QuickAction: React.FC<QuickActionProps> = ({ icon, label, onClick }) => {
   );
 };
 
-// Componente para bolhas de mensagem
-const MessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
-  const isAI = message.sender === 'ai';
-  const formattedTime = new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-  return (
-    <div className={`flex ${isAI ? 'justify-start' : 'justify-end'} mb-4`}>
-      <div className={`max-w-[80%] rounded-2xl p-3 ${
-        isAI 
-          ? 'bg-gradient-to-r from-[#0c2341]/90 to-[#0f3562]/90 text-white' 
-          : 'bg-gradient-to-r from-[#0D23A0]/70 to-[#5B21BD]/70 text-white'
-      }`}>
-        {message.type === 'audio' && message.audioUrl && (
-          <audio controls className="w-full mb-2">
-            <source src={message.audioUrl} type="audio/webm" />
-            Seu navegador não suporta áudio.
-          </audio>
-        )}
-
-        <div className="text-sm">
-          {isAI ? (
-            <ReactMarkdown className="prose prose-sm prose-invert max-w-none">
-              {message.content}
-            </ReactMarkdown>
-          ) : (
-            <p>{message.content}</p>
-          )}
-        </div>
-
-        <div className="mt-1 text-xs text-gray-300 flex justify-end">
-          <span>{formattedTime}</span>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Componente do indicador de "digitando"
-const TypingIndicator: React.FC = () => (
-  <div className="flex justify-start mb-4">
-    <div className="bg-gradient-to-r from-[#0c2341]/90 to-[#0f3562]/90 text-white rounded-2xl p-3 max-w-[80%]">
-      <div className="flex space-x-2">
-        <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0ms' }}></div>
-        <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '150ms' }}></div>
-        <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '300ms' }}></div>
-      </div>
-    </div>
-  </div>
-);
-
-// Componente principal da caixa de mensagens
 const TurboAdvancedMessageBox: React.FC = () => {
-  // Estado para gerenciar a interface
   const { toast } = useToast();
   const [message, setMessage] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
@@ -105,27 +36,10 @@ const TurboAdvancedMessageBox: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const [audioRecorder, setAudioRecorder] = useState<MediaRecorder | null>(null);
-  const [showWelcomeMessage, setShowWelcomeMessage] = useState(true);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [isAiTyping, setIsAiTyping] = useState(false);
 
-  // Refs para elementos do DOM
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
+  // Efeito visual quando o input recebe texto
+  const inputHasContent = message.trim().length > 0;
 
-  // Efeito para scroll automático
-  useEffect(() => {
-    scrollToBottom();
-  }, [chatMessages, isAiTyping]);
-
-  // Função para rolar para o final da conversa
-  const scrollToBottom = () => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  // Configuração das ações rápidas
   const quickActions = [
     { icon: <Brain size={16} className="text-blue-300 dark:text-blue-300" />, label: "Simulador de Provas" },
     { icon: <BookOpen size={16} className="text-emerald-300 dark:text-emerald-300" />, label: "Gerar Caderno" },
@@ -135,179 +49,43 @@ const TurboAdvancedMessageBox: React.FC = () => {
     { icon: <Zap size={16} className="text-rose-300 dark:text-rose-300" />, label: "Resumir Conteúdo" }
   ];
 
-  // Efeito visual quando o input recebe texto
-  const inputHasContent = message.trim().length > 0;
-
-  // Função para enviar mensagem de texto
-  const handleSendMessage = async () => {
+  const handleSendMessage = () => {
     if (!message.trim()) return;
-
-    // Ocultar a mensagem de boas-vindas
-    setShowWelcomeMessage(false);
-
-    // Criar e adicionar mensagem do usuário
-    const userMessage: ChatMessage = {
-      id: uuidv4(),
-      content: message,
-      sender: 'user',
-      timestamp: new Date(),
-      type: 'text'
-    };
-
-    // Adicionar à lista de mensagens
-    setChatMessages(prevMessages => [...prevMessages, userMessage]);
-
-    // Limpar campo de input
+    console.log("Mensagem enviada:", message);
+    // Aqui você implementaria a lógica de envio para o backend
     setMessage("");
+  };
 
-    // Indicar que a IA está digitando
-    setIsAiTyping(true);
-
-    try {
-      // Preparar contexto para enviar à API
-      const contextMessages = chatMessages.map(msg => ({
-        role: msg.sender === 'user' ? 'user' : 'assistant',
-        content: msg.content
-      }));
-
-      // Adicionar a nova mensagem do usuário ao contexto
-      contextMessages.push({
-        role: 'user',
-        content: userMessage.content
-      });
-
-      // Gerar resposta da IA
-      let aiResponse: string;
-
-      try {
-        // Tentar usar a API do Gemini
-        const { generateAIResponse: geminiGenerateResponse } = await import('@/services/aiChatService');
-        const sessionId = `epictus-chat-${Date.now()}`;
-
-        aiResponse = await geminiGenerateResponse(
-          userMessage.content,
-          sessionId,
-          {
-            intelligenceLevel: 'advanced',
-            languageStyle: 'formal',
-            detailedResponse: true,
-            context: contextMessages
-          }
-        );
-      } catch (error) {
-        console.error("Erro ao acessar API Gemini, usando fallback local:", error);
-
-        // Fallback para o serviço local
-        aiResponse = await generateAIResponse(
-          userMessage.content, 
-          localStorage.getItem('gemini_api_key') || undefined
-        );
+  // Iniciando ou parando a gravação de áudio
+  const toggleRecording = async () => {
+    if (isRecording) {
+      // Parar gravação
+      if (audioRecorder) {
+        audioRecorder.stop();
       }
-
-      // Pequeno delay para simular a digitação
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Adicionar resposta da IA
-      const aiMessageObject: ChatMessage = {
-        id: uuidv4(),
-        content: aiResponse,
-        sender: 'ai',
-        timestamp: new Date(),
-        type: 'text'
-      };
-
-      setChatMessages(prevMessages => [...prevMessages, aiMessageObject]);
-    } catch (error) {
-      console.error("Erro ao processar mensagem:", error);
-      toast({
-        title: "Erro de comunicação",
-        description: "Não foi possível processar sua mensagem. Tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsAiTyping(false);
-    }
-  };
-
-  // Keydown handler para submeter com Enter
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
-  // Função para iniciar a gravação de áudio
-  const startRecording = useCallback(async () => {
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      setIsRecording(false);
+    } else {
       try {
+        // Iniciar gravação
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         const recorder = new MediaRecorder(stream);
         setAudioRecorder(recorder);
 
         const chunks: Blob[] = [];
-
         recorder.ondataavailable = (e) => {
-          if (e.data.size > 0) {
-            chunks.push(e.data);
-          }
+          chunks.push(e.data);
         };
 
-        recorder.onstop = async () => {
-          // Ocultar a mensagem de boas-vindas
-          setShowWelcomeMessage(false);
-
-          // Criar um blob com o áudio gravado
-          const audioBlob = new Blob(chunks, { type: 'audio/webm' });
-          const audioUrl = URL.createObjectURL(audioBlob);
-
-          // Criar uma mensagem de áudio
-          const audioMessage: ChatMessage = {
-            id: uuidv4(),
-            content: "🎤 Mensagem de áudio",
-            sender: 'user',
-            timestamp: new Date(),
-            type: 'audio',
-            audioUrl
-          };
-
-          // Adicionar à lista de mensagens
-          setChatMessages(prevMessages => [...prevMessages, audioMessage]);
-
-          // Limpar dados de áudio
+        recorder.onstop = () => {
+          const audioBlob = new Blob(chunks, { type: 'audio/wav' });
+          // Aqui você pode processar o áudio (enviar para backend, etc)
+          console.log("Áudio gravado:", audioBlob);
           setAudioChunks([]);
-
-          // Parar tracks do stream
-          stream.getTracks().forEach(track => track.stop());
-
-          // Indicar que a IA está "pensando"
-          setIsAiTyping(true);
-
-          // Simular processamento do áudio
-          setTimeout(() => {
-            // Resposta simulada da IA para áudio
-            const aiResponse: ChatMessage = {
-              id: uuidv4(),
-              content: "Recebi seu áudio. No momento, estou limitado ao processamento básico de áudio. Posso ajudar com algo específico baseado nessa gravação?",
-              sender: 'ai',
-              timestamp: new Date(),
-              type: 'text'
-            };
-
-            setChatMessages(prevMessages => [...prevMessages, aiResponse]);
-            setIsAiTyping(false);
-          }, 2000);
         };
 
-        // Iniciar gravação
         recorder.start();
+        setAudioChunks([]);
         setIsRecording(true);
-
-        toast({
-          title: "Gravação iniciada",
-          description: "Fale sua mensagem e clique no botão para enviar.",
-          duration: 3000,
-        });
       } catch (error) {
         console.error("Erro ao acessar microfone:", error);
         toast({
@@ -316,59 +94,81 @@ const TurboAdvancedMessageBox: React.FC = () => {
           variant: "destructive",
         });
       }
-    } else {
-      toast({
-        title: "Gravação não suportada",
-        description: "Seu navegador não suporta gravação de áudio.",
-        variant: "destructive",
-      });
     }
-  }, [toast]);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  // Função para iniciar a gravação de áudio
+  const startRecording = () => {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+          // Criar uma instância do MediaRecorder com o stream de áudio
+          const recorder = new MediaRecorder(stream);
+          setAudioRecorder(recorder);
+          setAudioChunks([]);
+
+          // Coletar chunks de dados do áudio gravado
+          recorder.ondataavailable = (e) => {
+            if (e.data && e.data.size > 0) {
+              setAudioChunks(prev => [...prev, e.data]);
+            }
+          };
+
+          // Quando a gravação parar
+          recorder.onstop = () => {
+            // Criar um blob com todos os chunks de áudio
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+
+            // Aqui você pode implementar o envio do áudio para processamento
+            console.log("Áudio gravado:", audioBlob);
+
+            // Parar todos os tracks da stream
+            stream.getTracks().forEach(track => track.stop());
+
+            // Resetar estado de gravação
+            setIsRecording(false);
+          };
+
+          // Iniciar gravação
+          recorder.start();
+          setIsRecording(true);
+        })
+        .catch(err => {
+          console.error("Erro ao acessar microfone:", err);
+        });
+    }
+  };
 
   // Função para parar a gravação
-  const stopRecording = useCallback(() => {
+  const stopRecording = () => {
     if (audioRecorder && audioRecorder.state !== 'inactive') {
       audioRecorder.stop();
-      setIsRecording(false);
     }
-  }, [audioRecorder]);
-
-  // Componente de caixa de mensagens do chat
-  const ChatContainer = () => (
-    <div 
-      className="bg-[#0c2341]/50 rounded-xl border border-white/10 p-3 h-[300px] mb-4 overflow-y-auto flex flex-col"
-      ref={chatContainerRef}
-    >
-      {chatMessages.map(msg => (
-        <MessageBubble key={msg.id} message={msg} />
-      ))}
-
-      {isAiTyping && <TypingIndicator />}
-
-      <div ref={messagesEndRef} />
-    </div>
-  );
+  };
 
   return (
     <>
-      {showWelcomeMessage ? (
-        <>
-          {/* Espaço calculado para posicionar a frase perfeitamente centralizada */}
-          <div className="w-full h-32"></div>
+      {/* Espaço calculado para posicionar a frase perfeitamente centralizada */}
+      <div className="w-full h-32"></div>
 
-          {/* Frase de boas-vindas exatamente centralizada entre o cabeçalho e a caixa de mensagens */}
-          <div className="text-center my-auto w-full hub-connected-width mx-auto flex flex-col justify-center" style={{ height: "25vh" }}>
-            <h2 className="text-4xl text-white dark:text-white">
-              <span className="font-bold">Como a IA mais <span className="text-[#0049e2] bg-gradient-to-r from-[#0049e2] to-[#0049e2]/80 bg-clip-text text-transparent relative after:content-[''] after:absolute after:h-[3px] after:bg-[#0049e2] after:w-0 after:left-0 after:bottom-[-5px] after:transition-all after:duration-300 group-hover:after:w-full hover:after:w-full dark:text-[#0049e2]">Inteligente do mundo</span>
-              </span><br />
-              <span className="font-light text-3xl text-gray-800 dark:text-gray-300">pode te ajudar hoje {localStorage.getItem('username') || 'João Marcelo'}?</span>
-            </h2>
-          </div>
+      {/* Frase de boas-vindas exatamente centralizada entre o cabeçalho e a caixa de mensagens */}
+      <div className="text-center my-auto w-full hub-connected-width mx-auto flex flex-col justify-center" style={{ height: "25vh" }}>
+        <h2 className="text-4xl text-white dark:text-white">
+          <span className="font-bold">Como a IA mais <span className="text-[#0049e2] bg-gradient-to-r from-[#0049e2] to-[#0049e2]/80 bg-clip-text text-transparent relative after:content-[''] after:absolute after:h-[3px] after:bg-[#0049e2] after:w-0 after:left-0 after:bottom-[-5px] after:transition-all after:duration-300 group-hover:after:w-full hover:after:w-full dark:text-[#0049e2]">Inteligente do mundo</span>
+          </span><br />
+          <span className="font-light text-3xl text-gray-800 dark:text-gray-300">pode te ajudar hoje {localStorage.getItem('username') || 'João Marcelo'}?</span>
+        </h2>
+      </div>
 
-          {/* Pequeno espaço adicional antes da caixa de mensagens */}
-          <div className="w-full h-6"></div>
-        </>
-      ) : null}
+      {/* Pequeno espaço adicional antes da caixa de mensagens */}
+      <div className="w-full h-6"></div>
 
       <div className="w-full mx-auto mb-2 p-1 hub-connected-width"> {/* Usando a mesma classe de largura do cabeçalho */}
       <motion.div 
@@ -451,9 +251,6 @@ const TurboAdvancedMessageBox: React.FC = () => {
             </div>
           </div>
 
-          {/* Área de chat - Aparece quando a welcome message é removida */}
-          {!showWelcomeMessage && <ChatContainer />}
-
           {/* Área de input */}
           <div className="flex items-center gap-2">
             <motion.button
@@ -503,20 +300,20 @@ const TurboAdvancedMessageBox: React.FC = () => {
                       // Aqui adicionamos a chamada real para a API de IA para melhorar o prompt
                       // Utilizamos a função do serviço aiChatService para acessar a API Gemini
                       let improvedPromptText = "";
-
+                      
                       if (message.trim().length > 0) {
                         // Criar um ID de sessão único para esta interação
                         const sessionId = `prompt-improvement-${Date.now()}`;
-
+                        
                         try {
                           // Importamos a função do serviço aiChatService
                           const { generateAIResponse: generateGeminiResponse } = await import('@/services/aiChatService');
-
+                          
                           // Chamar a API Gemini para melhorar o prompt
                           improvedPromptText = await generateGeminiResponse(
                             `Você é um assistente especializado em melhorar prompts educacionais. 
                             Analise o seguinte prompt e melhore-o para obter uma resposta mais detalhada, completa e educacional.
-
+                            
                             Melhore o seguinte prompt para obter uma resposta mais detalhada, completa e educacional. 
                             NÃO responda a pergunta, apenas melhore o prompt adicionando:
                             1. Mais contexto e especificidade
@@ -526,7 +323,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                             5. Adicione pedidos para que sejam mencionadas curiosidades ou fatos históricos relevantes
 
                             Original: "${message}"
-
+                            
                             Retorne APENAS o prompt melhorado, sem comentários adicionais.`,
                             sessionId,
                             {
@@ -548,7 +345,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                             5. Adicione pedidos para que sejam mencionadas curiosidades ou fatos históricos relevantes
 
                             Original: "${message}"
-
+                            
                             Retorne APENAS o prompt melhorado, sem comentários adicionais.`
                           );
                         }
@@ -596,7 +393,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                                   ${message}
                                 </div>
                               </div>
-
+                              
                               <div>
                                 <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Versão aprimorada pela Epictus IA:</p>
                                 <div class="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-800 rounded-lg text-sm text-gray-800 dark:text-gray-200 max-h-[150px] overflow-y-auto scrollbar-hide">
@@ -665,7 +462,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                           useImprovedButton.addEventListener('click', () => {
                             // Atualizar o input com o prompt melhorado
                             setMessage(improvedPromptText);
-
+                            
                             // Fechar o modal
                             closeModal();
 
@@ -704,7 +501,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                   </svg>
                 </motion.button>
               )}
-
+              
               {/* Botão de sugestão de prompts inteligentes */}
               <motion.button 
                 className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
@@ -909,7 +706,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                   whileTap={{ scale: 0.95 }}
                   onClick={startRecording}
                 >
-                  {isRecording ? <Square size={16} /> : <Mic size={16} />}
+                  <Mic size={16} />
                 </motion.button>
               ) : (
                 /* Botão de enviar - Visível apenas quando há conteúdo no input */
@@ -1026,54 +823,9 @@ const TurboAdvancedMessageBox: React.FC = () => {
               </motion.div>
             )}
           </AnimatePresence>
-
-          {/* Botões de ação para a conversa - aparecem somente quando há mensagens */}
-          {chatMessages.length > 0 && (
-            <div className="flex justify-end gap-2 mt-2">
-              <motion.button
-                className="flex items-center gap-1 px-2 py-1 text-xs bg-gradient-to-r from-[#0c2341]/60 to-[#0f3562]/60
-                          text-white rounded-md border border-white/10"
-                whileHover={{ scale: 1.05 }}
-                onClick={() => {
-                  // Copiar conversa para área de transferência
-                  const conversationText = chatMessages
-                    .map(msg => `${msg.sender === 'user' ? 'Você' : 'Epictus IA'}: ${msg.content}`)
-                    .join('\n\n');
-
-                  navigator.clipboard.writeText(conversationText);
-
-                  toast({
-                    title: "Conversa copiada",
-                    description: "O conteúdo da conversa foi copiado para a área de transferência",
-                    duration: 2000,
-                  });
-                }}
-              >
-                <Copy size={14} />
-                <span>Copiar conversa</span>
-              </motion.button>
-
-              <motion.button
-                className="flex items-center gap-1 px-2 py-1 text-xs bg-gradient-to-r from-[#0c2341]/60 to-[#0f3562]/60
-                          text-white rounded-md border border-white/10"
-                whileHover={{ scale: 1.05 }}
-                onClick={() => {
-                  // Limpar conversa
-                  setChatMessages([]);
-                  setShowWelcomeMessage(true);
-
-                  toast({
-                    title: "Conversa limpa",
-                    description: "O histórico da conversa foi apagado",
-                    duration: 2000,
-                  });
-                }}
-              >
-                <X size={14} />
-                <span>Limpar conversa</span>
-              </motion.button>
-            </div>
-          )}
+          <div className="w-full max-w-full px-2"> {/* Changed px-4 to px-2 */}
+            {/* Conteúdo da caixa de mensagens */}
+          </div>
         </div>
       </motion.div>
       </div>
