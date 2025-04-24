@@ -385,8 +385,8 @@ const EpictusTurboAdvancedMode: React.FC = () => {
         </motion.header>
       </div>
 
-      {/* Mensagem de boas vindas */}
-      <div className="w-full -mt-6 mb-1">
+      {/* Mensagem de boas vindas (movida mais para cima) */}
+      <div className="w-full -mt-10 mb-1">
         <WelcomeMessage />
       </div>
 
