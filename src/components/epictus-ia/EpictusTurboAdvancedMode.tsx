@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion, AnimatePresence } from "framer-motion";
@@ -63,16 +62,16 @@ const EpictusTurboAdvancedMode: React.FC = () => {
       window.removeEventListener('profileSelected', handleProfileSelection);
     };
   }, []);
-  
+
   // Ouvir atualizações de mensagens do chat
   useEffect(() => {
     const handleChatUpdates = () => {
       // Forçar uma atualização do componente
       setActiveTab(prev => prev);
     };
-    
+
     window.addEventListener('chatMessagesUpdated', handleChatUpdates);
-    
+
     return () => {
       window.removeEventListener('chatMessagesUpdated', handleChatUpdates);
     };
@@ -397,10 +396,10 @@ const EpictusTurboAdvancedMode: React.FC = () => {
           </div>
         </motion.header>
       </div>
-      
-      {/* Espaço adicional para mover a caixa de mensagens (reduzido) */}
-      <div className="w-full h-20"></div>
-      
+
+      {/* Pequeno espaço adicional antes da caixa de mensagens */}
+      <div className="w-full h-6"></div>
+
       {/* Área de mensagens do chat */}
       <div className="w-full mx-auto mb-4 p-1 hub-connected-width">
         <div className="w-full max-w-full px-2 py-4 space-y-4 overflow-y-auto max-h-[300px]" style={{ scrollbarWidth: 'thin' }}>
@@ -438,7 +437,7 @@ const EpictusTurboAdvancedMode: React.FC = () => {
           <div id="messagesEndRef" />
         </div>
       </div>
-      
+
       {/* Caixa de mensagens do Epictus Turbo */}
       <div className="w-full p-4">
         <TurboAdvancedMessageBox />
