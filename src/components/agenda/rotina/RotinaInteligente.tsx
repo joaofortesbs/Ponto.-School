@@ -23,10 +23,7 @@ import {
   X,
   AlertCircle,
   Flag,
-  ArrowRight,
-  Sparkles,
-  ThumbsUp,
-  ThumbsDown
+  ArrowRight
 } from "lucide-react";
 import DescrevaSuaRotinaModal from "./DescrevaSuaRotinaModal";
 import {
@@ -38,7 +35,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useToast } from "@/components/ui/use-toast";
 
 // Import the required styles for the calendar
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -79,11 +75,8 @@ interface CalendarEvent {
   tipo?: string;
   recurringId?: string;
   color?: string;
-  source?: 'rotina' | 'agenda' | 'tarefa' | 'ia';
+  source?: 'rotina' | 'agenda' | 'tarefa';
   description?: string;
-  isAISuggested?: boolean;
-  taskId?: string;
-  goalId?: string;
 }
 
 // Interfaces para dados externos
@@ -128,14 +121,6 @@ const getEventColor = (tipo?: string) => {
       return "#64748B"; // Cinza azulado
     case "tarefa":
       return "#EF4444"; // Vermelho
-    case "estudo_ia":
-      return "#14B8A6"; // Verde turquesa (para blocos de estudo da IA)
-    case "pausa_ia":
-      return "#8B5CF6"; // Roxo (para pausas sugeridas pela IA)
-    case "tarefa_ia":
-      return "#F97316"; // Laranja (para tarefas sugeridas pela IA)
-    case "pessoal_ia":
-      return "#8B5CF6"; // Roxo (para atividades pessoais sugeridas pela IA)
     default:
       return "#6B7280"; // Cinza
   }
@@ -158,12 +143,11 @@ const getPrioridadeColor = (prioridade: string) => {
 // Custom components for the calendar
 const EventComponent = ({ event }: { event: CalendarEvent }) => (
   <div 
-    className={`p-1 rounded text-xs truncate text-white flex items-center ${event.isAISuggested ? 'border border-dashed border-white/70' : ''}`}
+    className="p-1 rounded text-xs truncate text-white flex items-center" 
     style={{ backgroundColor: event.color || getEventColor(event.tipo) }}
   >
     {event.source === 'agenda' && <CalendarCheck className="h-3 w-3 mr-1 flex-shrink-0" />}
     {event.source === 'tarefa' && <ClipboardList className="h-3 w-3 mr-1 flex-shrink-0" />}
-    {event.source === 'ia' && <Sparkles className="h-3 w-3 mr-1 flex-shrink-0" />}
     <span className="truncate">{event.title}</span>
   </div>
 );
@@ -247,242 +231,8 @@ const RotinaInteligente: React.FC = () => {
   const [showMetas, setShowMetas] = useState(true);
   const [draggedTarefa, setDraggedTarefa] = useState<Tarefa | null>(null);
   
-  // Estados para otimização por IA
-  const [isOptimizing, setIsOptimizing] = useState(false);
-  const [hasOptimizedSchedule, setHasOptimizedSchedule] = useState(false);
-  const [manualEvents, setManualEvents] = useState<CalendarEvent[]>([]);
-
-  // Acesso ao toast para feedback
-  const { toast } = useToast();
-  
   // Ref para o calendário para criar eventos por arrastar e soltar
   const calendarRef = useRef<HTMLDivElement>(null);
-
-  // Função para otimizar a rotina com IA
-  const optimizeWithAI = async () => {
-    setIsOptimizing(true);
-    
-    try {
-      // Coletar todos os dados necessários
-      const rotinaString = localStorage.getItem("pontoUserRoutine");
-      let blocosFixos: any[] = [];
-      let atividadesRecorrentes: any[] = [];
-      let preferenciasEstudo: any = { melhoresHorarios: [], duracaoSessao: 60, duracaoPausa: 10 };
-      
-      if (rotinaString) {
-        try {
-          const rotina = JSON.parse(rotinaString);
-          blocosFixos = rotina.blocosFixos || [];
-          atividadesRecorrentes = rotina.atividadesRecorrentes || [];
-          preferenciasEstudo = rotina.preferenciasEstudo || {};
-        } catch (error) {
-          console.error("Erro ao parsear rotina do localStorage:", error);
-        }
-      }
-      
-      // Salvar uma cópia dos eventos manuais para poder removê-los depois
-      const currentManualEvents = events.filter(event => 
-        !event.recurringId && event.source !== 'agenda' && event.source !== 'ia'
-      );
-      setManualEvents(currentManualEvents);
-      
-      // Preparar payload para a API
-      const payload = {
-        blocosFixos,
-        atividadesRecorrentes,
-        preferenciasEstudo,
-        tarefasPendentes: tarefas,
-        metasAprendizado: metas,
-        eventosAgenda: agendaEvents,
-        semanaAtual: formatISO(startOfWeek(currentDate), { representation: 'date' })
-      };
-      
-      // Simular chamada à API (em um ambiente real, isto seria uma chamada HTTP)
-      console.log("Enviando payload para API de IA:", payload);
-      
-      // Simular resposta da API após 2 segundos
-      setTimeout(() => {
-        try {
-          // Gerar dados mockados como resposta da IA
-          const response = generateMockAIResponse(currentDate, tarefas, metas);
-          processAIResponse(response);
-        } catch (error) {
-          console.error("Erro ao processar resposta da IA:", error);
-          toast({
-            title: "Erro ao otimizar rotina",
-            description: "Não foi possível processar a resposta da IA. Tente novamente mais tarde.",
-            variant: "destructive"
-          });
-          setIsOptimizing(false);
-        }
-      }, 2000);
-      
-    } catch (error) {
-      console.error("Erro na otimização por IA:", error);
-      toast({
-        title: "Erro na otimização",
-        description: "Ocorreu um erro ao tentar otimizar sua rotina. Tente novamente mais tarde.",
-        variant: "destructive"
-      });
-      setIsOptimizing(false);
-    }
-  };
-  
-  // Gerar resposta mockada da IA
-  const generateMockAIResponse = (baseDate: Date, tarefas: Tarefa[], metas: Meta[]) => {
-    const weekStart = startOfWeek(baseDate);
-    const suggestedBlocks = [];
-    
-    // Gerar blocos de estudo com base nas metas
-    for (let i = 0; i < metas.length; i++) {
-      const meta = metas[i];
-      // Para cada meta, criar 2-3 blocos de estudo durante a semana
-      const numBlocks = 2 + Math.floor(Math.random() * 2);
-      
-      for (let j = 0; j < numBlocks; j++) {
-        const dayOffset = 1 + Math.floor(Math.random() * 5); // Dia da semana (1-5, seg-sex)
-        const hourOffset = 9 + Math.floor(Math.random() * 8); // Hora (9-17)
-        
-        const startTime = new Date(weekStart);
-        startTime.setDate(startTime.getDate() + dayOffset);
-        startTime.setHours(hourOffset, 0, 0, 0);
-        
-        const endTime = new Date(startTime);
-        endTime.setMinutes(endTime.getMinutes() + 60); // 1 hora de estudo
-        
-        suggestedBlocks.push({
-          id: `ai-study-${meta.id}-${j}`,
-          title: `Estudo Focado: ${meta.nome}`,
-          start: startTime.toISOString(),
-          end: endTime.toISOString(),
-          type: 'estudo_ia',
-          goalId: meta.id
-        });
-        
-        // Adicionar uma pausa após o estudo
-        const pauseStart = new Date(endTime);
-        const pauseEnd = new Date(pauseStart);
-        pauseEnd.setMinutes(pauseEnd.getMinutes() + 15); // 15 minutos de pausa
-        
-        suggestedBlocks.push({
-          id: `ai-pause-${meta.id}-${j}`,
-          title: "Pausa Ativa",
-          start: pauseStart.toISOString(),
-          end: pauseEnd.toISOString(),
-          type: 'pausa_ia'
-        });
-      }
-    }
-    
-    // Adicionar blocos para tarefas pendentes
-    for (let i = 0; i < tarefas.length; i++) {
-      const tarefa = tarefas[i];
-      
-      // Distribuir tarefas ao longo da semana, priorizando as de alta prioridade
-      const prioridadeValue = tarefa.prioridade === 'alta' ? 1 : (tarefa.prioridade === 'media' ? 3 : 5);
-      const dayOffset = prioridadeValue + Math.floor(Math.random() * (7 - prioridadeValue));
-      
-      // Para tarefas com prazo, tentar agendar antes do prazo
-      let targetDay = dayOffset;
-      if (tarefa.prazo) {
-        const prazoDate = new Date(tarefa.prazo);
-        const diffDays = Math.floor((prazoDate.getTime() - weekStart.getTime()) / (1000 * 60 * 60 * 24));
-        if (diffDays > 0 && diffDays < 7) {
-          targetDay = Math.min(diffDays - 1, 6); // Um dia antes do prazo, no máximo
-        }
-      }
-      
-      const hourOffset = 12 + Math.floor(Math.random() * 6); // Hora (12-18)
-      
-      const startTime = new Date(weekStart);
-      startTime.setDate(startTime.getDate() + targetDay);
-      startTime.setHours(hourOffset, 0, 0, 0);
-      
-      const endTime = new Date(startTime);
-      endTime.setMinutes(endTime.getMinutes() + 75); // 1h15min para cada tarefa
-      
-      suggestedBlocks.push({
-        id: `ai-task-${tarefa.id}`,
-        title: `Trabalhar em: ${tarefa.nome}`,
-        start: startTime.toISOString(),
-        end: endTime.toISOString(),
-        type: 'tarefa_ia',
-        taskId: tarefa.id
-      });
-    }
-    
-    return {
-      success: true,
-      message: "Rotina otimizada com sucesso",
-      suggestedBlocks
-    };
-  };
-  
-  // Processar resposta da IA
-  const processAIResponse = (response: any) => {
-    if (response.success && response.suggestedBlocks) {
-      // Remover eventos manuais do calendário (exceto os blocos fixos)
-      const fixedAndAgendaEvents = events.filter(event => 
-        event.recurringId || event.source === 'agenda'
-      );
-      
-      // Converter blocos sugeridos pela IA para o formato de eventos do calendário
-      const aiEvents = response.suggestedBlocks.map((block: any) => ({
-        id: block.id,
-        title: block.title,
-        start: new Date(block.start),
-        end: new Date(block.end),
-        tipo: block.type,
-        source: 'ia',
-        color: getEventColor(block.type),
-        isAISuggested: true,
-        taskId: block.taskId,
-        goalId: block.goalId
-      }));
-      
-      // Combinar eventos fixos com os sugeridos pela IA
-      setEvents([...fixedAndAgendaEvents, ...aiEvents]);
-      setHasOptimizedSchedule(true);
-      
-      toast({
-        title: "Rotina otimizada com sucesso!",
-        description: `Foram gerados ${aiEvents.length} blocos sugeridos baseados em suas metas e tarefas.`,
-        duration: 5000,
-      });
-    } else {
-      toast({
-        title: "Erro na otimização",
-        description: response.message || "Não foi possível otimizar sua rotina. Tente novamente mais tarde.",
-        variant: "destructive"
-      });
-    }
-    
-    setIsOptimizing(false);
-  };
-  
-  // Funções de feedback da rotina otimizada
-  const handleLikeOptimization = () => {
-    console.log("Usuário gostou da otimização");
-    toast({
-      title: "Feedback registrado",
-      description: "Obrigado pelo seu feedback positivo!",
-      duration: 3000,
-    });
-  };
-  
-  const handleDislikeOptimization = () => {
-    console.log("Usuário não gostou da otimização");
-    // Reverter para eventos manuais se necessário
-    const currentEvents = events.filter(event => !event.isAISuggested);
-    setEvents([...currentEvents, ...manualEvents]);
-    setHasOptimizedSchedule(false);
-    
-    toast({
-      title: "Rotina restaurada",
-      description: "Seus eventos manuais foram restaurados.",
-      duration: 3000,
-    });
-  };
 
   // Carregar dados da agenda
   const loadAgendaEvents = async () => {
@@ -965,27 +715,6 @@ const RotinaInteligente: React.FC = () => {
           </Button>
           
           <Button
-            variant={isOptimizing ? "outline" : "default"}
-            className={isOptimizing 
-              ? "border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-colors" 
-              : "bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white"}
-            onClick={optimizeWithAI}
-            disabled={isOptimizing}
-          >
-            {isOptimizing ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Otimizando...
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-4 w-4 mr-2" />
-                Otimizar com IA ✨
-              </>
-            )}
-          </Button>
-          
-          <Button
             variant="outline"
             className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 transition-colors"
             onClick={() => setShowConfigModal(true)}
@@ -995,31 +724,6 @@ const RotinaInteligente: React.FC = () => {
           </Button>
         </div>
       </div>
-      
-      {/* Feedback buttons for AI optimization */}
-      {hasOptimizedSchedule && (
-        <div className="flex items-center justify-center gap-2 mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
-          <div className="bg-green-50 dark:bg-green-900/20 p-2 rounded-xl border border-green-200 dark:border-green-800 text-sm text-green-800 dark:text-green-300">
-            <span className="font-medium">✨ Rotina otimizada por IA</span> - Como você avalia as sugestões?
-          </div>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className="h-8 gap-1 hover:bg-green-100 dark:hover:bg-green-900/20 text-green-700 dark:text-green-400"
-            onClick={handleLikeOptimization}
-          >
-            <ThumbsUp className="h-4 w-4" /> Gostei
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className="h-8 gap-1 hover:bg-red-100 dark:hover:bg-red-900/20 text-red-700 dark:text-red-400"
-            onClick={handleDislikeOptimization}
-          >
-            <ThumbsDown className="h-4 w-4" /> Prefiro Ajustar
-          </Button>
-        </div>
-      )}
 
       <div className="flex gap-6">
         <div className="flex-grow bg-white dark:bg-[#1E293B] rounded-xl overflow-hidden shadow-lg border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
@@ -1049,10 +753,6 @@ const RotinaInteligente: React.FC = () => {
                 eventPropGetter={(event: any) => ({
                   style: {
                     backgroundColor: event.color || getEventColor(event.tipo),
-                    borderStyle: event.isAISuggested ? 'dashed' : 'solid',
-                    borderWidth: event.isAISuggested ? '1px' : '0px',
-                    borderColor: 'rgba(255, 255, 255, 0.7)',
-                    opacity: event.isAISuggested ? 0.9 : 1
                   }
                 })}
               />
@@ -1282,15 +982,8 @@ const RotinaInteligente: React.FC = () => {
                   <span className="capitalize text-gray-600 dark:text-gray-300">
                     {selectedEvent.source === 'agenda' ? 'Agenda' : 
                       selectedEvent.source === 'tarefa' ? 'Tarefa' : 
-                      selectedEvent.source === 'ia' ? 'Sugerido por IA' : 
                       selectedEvent.tipo || "Evento"}
                   </span>
-                  {selectedEvent.isAISuggested && (
-                    <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                      <Sparkles className="h-2.5 w-2.5 mr-0.5" />
-                      IA
-                    </span>
-                  )}
                 </div>
               </div>
             </TooltipContent>
