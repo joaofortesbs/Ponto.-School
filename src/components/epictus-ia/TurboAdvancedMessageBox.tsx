@@ -118,6 +118,9 @@ const TurboAdvancedMessageBox: React.FC = () => {
         </h2>
       </div>
 
+      {/* Adicionando espaço vertical antes da caixa de mensagens */}
+      <div className="w-full h-20"></div>
+
       <div className="w-full mx-auto mb-2 p-1 hub-connected-width"> {/* Usando a mesma classe de largura do cabeçalho */}
       <motion.div 
         className="relative bg-gradient-to-r from-[#050e1d]/90 to-[#0d1a30]/90 rounded-2xl shadow-xl 
