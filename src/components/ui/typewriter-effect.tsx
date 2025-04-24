@@ -132,9 +132,21 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
       {containsMarkdown ? (
         <React.Suspense fallback={<div style={{ whiteSpace: 'pre-wrap' }}>{displayText}</div>}>
           <ErrorBoundary fallback={<div style={{ whiteSpace: 'pre-wrap' }}>{displayText}</div>}>
-            <ReactMarkdown>
-              {displayText}
-            </ReactMarkdown>
+            <div className='prose prose-neutral max-w-none'>
+              <ReactMarkdown
+                components={{
+                  p: ({ node, ...props }) => <p className="text-base leading-relaxed mb-2" {...props} />,
+                  strong: ({ node, ...props }) => <strong className="font-semibold" {...props} />,
+                  em: ({ node, ...props }) => <em className="italic" {...props} />,
+                  ul: ({ node, ...props }) => <ul className="list-disc list-inside ml-4 mb-2" {...props} />,
+                  ol: ({ node, ...props }) => <ol className="list-decimal list-inside ml-4 mb-2" {...props} />,
+                  li: ({ node, ...props }) => <li className="mb-1" {...props} />,
+                  code: ({ node, ...props }) => <code className="bg-gray-100 px-1 py-0.5 rounded" {...props} />,
+                }}
+              >
+                {displayText}
+              </ReactMarkdown>
+            </div>
           </ErrorBoundary>
         </React.Suspense>
       ) : (
