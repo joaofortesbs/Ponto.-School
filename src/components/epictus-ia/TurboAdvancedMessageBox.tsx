@@ -210,33 +210,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
 
           {/* Área de input */}
           <div className="flex items-center gap-2">
-            {/* Botão de microfone (quando não há texto) */}
-            {!inputHasContent ? (
-              <motion.button 
-                className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
-                         flex items-center justify-center shadow-lg text-white dark:text-white"
-                whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
-                whileTap={{ scale: 0.95 }}
-                onClick={startRecording}
-              >
-                <Mic size={16} />
-              </motion.button>
-            ) : (
-              /* Botão de enviar - Visível apenas quando há conteúdo no input */
-              <motion.button
-                className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
-                         flex items-center justify-center shadow-lg text-white dark:text-white"
-                whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
-                whileTap={{ scale: 0.95 }}
-                animate={{ 
-                  boxShadow: ["0 0 0px rgba(13, 35, 160, 0)", "0 0 15px rgba(13, 35, 160, 0.5)", "0 0 0px rgba(13, 35, 160, 0)"],
-                }}
-                transition={{ duration: 2, repeat: Infinity }}
-                onClick={handleSendMessage}
-              >
-                <Send size={16} />
-              </motion.button>
-            )}
+            {/* Espaço para outros elementos da interface, botões de áudio/enviar movidos para depois do botão de sugestões */}
 
             <motion.button
               className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
@@ -264,10 +238,10 @@ const TurboAdvancedMessageBox: React.FC = () => {
               />
             </div>
 
-            {/* Botão de sugestão de prompts inteligentes (movido para depois do botão de áudio/enviar) */}
+            {/* Botão de sugestão de prompts inteligentes */}
             <motion.button 
               className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
-                       flex items-center justify-center shadow-lg text-white dark:text-white mr-2"
+                       flex items-center justify-center shadow-lg text-white dark:text-white"
               whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
               whileTap={{ scale: 0.95 }}
               onClick={() => {
@@ -458,6 +432,34 @@ const TurboAdvancedMessageBox: React.FC = () => {
             >
               <Lightbulb size={16} />
             </motion.button>
+            
+            {/* Botão de áudio/enviar (movido para o lado direito do botão de sugestões) */}
+            {!inputHasContent ? (
+              <motion.button 
+                className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+                         flex items-center justify-center shadow-lg text-white dark:text-white ml-2"
+                whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+                whileTap={{ scale: 0.95 }}
+                onClick={startRecording}
+              >
+                <Mic size={16} />
+              </motion.button>
+            ) : (
+              /* Botão de enviar - Visível apenas quando há conteúdo no input */
+              <motion.button
+                className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+                         flex items-center justify-center shadow-lg text-white dark:text-white ml-2"
+                whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+                whileTap={{ scale: 0.95 }}
+                animate={{ 
+                  boxShadow: ["0 0 0px rgba(13, 35, 160, 0)", "0 0 15px rgba(13, 35, 160, 0.5)", "0 0 0px rgba(13, 35, 160, 0)"],
+                }}
+                transition={{ duration: 2, repeat: Infinity }}
+                onClick={handleSendMessage}
+              >
+                <Send size={16} />
+              </motion.button>
+            )}
           </div>
 
           {/* Interface de gravação de áudio */}
