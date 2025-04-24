@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, Sparkles } from "lucide-react";
+import { Zap, Sparkles, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 const EpictusTurboAdvancedMode: React.FC = () => {
@@ -61,6 +61,20 @@ const EpictusTurboAdvancedMode: React.FC = () => {
 
     return () => {
       window.removeEventListener('profileSelected', handleProfileSelection);
+    };
+  }, []);
+  
+  // Ouvir atualizações de mensagens do chat
+  useEffect(() => {
+    const handleChatUpdates = () => {
+      // Forçar uma atualização do componente
+      setActiveTab(prev => prev);
+    };
+    
+    window.addEventListener('chatMessagesUpdated', handleChatUpdates);
+    
+    return () => {
+      window.removeEventListener('chatMessagesUpdated', handleChatUpdates);
     };
   }, []);
 
@@ -385,7 +399,45 @@ const EpictusTurboAdvancedMode: React.FC = () => {
       </div>
       
       {/* Espaço adicional para mover a caixa de mensagens (reduzido) */}
-      <div className="w-full h-52"></div>
+      <div className="w-full h-20"></div>
+      
+      {/* Área de mensagens do chat */}
+      <div className="w-full mx-auto mb-4 p-1 hub-connected-width">
+        <div className="w-full max-w-full px-2 py-4 space-y-4 overflow-y-auto max-h-[300px]" style={{ scrollbarWidth: 'thin' }}>
+          {/* Mensagens renderizadas a partir do TurboAdvancedMessageBox */}
+          {Array.isArray(window.chatMessages) && window.chatMessages.map((msg: any) => (
+            <div 
+              key={msg.id} 
+              className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              <div 
+                className={`max-w-[80%] rounded-lg p-3 ${
+                  msg.sender === 'user' 
+                    ? 'bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] text-white' 
+                    : 'bg-gradient-to-r from-[#0c2341]/70 to-[#0f3562]/70 text-white border border-white/10'
+                }`}
+              >
+                <div className="flex items-start gap-2">
+                  {msg.sender === 'ai' && (
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#1230CC] flex items-center justify-center mt-0.5">
+                      <span className="text-xs text-white font-semibold">IA</span>
+                    </div>
+                  )}
+                  <div className={`${msg.sender === 'user' ? 'text-white' : 'text-white'} text-sm`}>
+                    {msg.content}
+                  </div>
+                  {msg.sender === 'user' && (
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#0D23A0]/80 flex items-center justify-center mt-0.5">
+                      <User size={14} className="text-white" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+          <div id="messagesEndRef" />
+        </div>
+      </div>
       
       {/* Caixa de mensagens do Epictus Turbo */}
       <div className="w-full p-4">
