@@ -112,6 +112,7 @@ export default function EpictusIAComplete() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredSections, setFilteredSections] = useState(sections);
   const [turboModeActive, setTurboModeActive] = useState(false);
+  const [turboAdvancedModeActive, setTurboAdvancedModeActive] = useState(false);
 
 
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -187,7 +188,7 @@ export default function EpictusIAComplete() {
     if (mode === "turbo") {
       setTurboModeActive(true);
     } else if (mode === "turbo-advanced") {
-      setTurboAdvancedModeActive(true);
+      setTurboAdvancedModeActive(true);dvancedModeActive(true);
     }
 
     // Adicionando listener para ativar o modo turbo
@@ -203,7 +204,7 @@ export default function EpictusIAComplete() {
     };
 
     window.addEventListener('activateTurboMode', handleTurboActivation);
-    window.addEventListener('activateTurboAdvancedMode', handleTurboAdvancedActivation);
+    window.addEventListener('activateTurboAdvancedMode', handleTurboAdvancedActivation);dActivation);
 
     return () => {
       window.removeEventListener('activateTurboMode', handleTurboActivation);
