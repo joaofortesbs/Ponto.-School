@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/ThemeProvider";
 import { generateAIResponse } from "@/services/aiChatService";
 import { v4 as uuidv4 } from "uuid";
-import ReactMarkdown from "react-markdown";
 import { Send, Paperclip, Mic, ArrowUp, Loader2, User, Bot } from "lucide-react";
+import MarkdownMessage from "./components/MarkdownMessage";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
@@ -124,24 +124,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
         >
           {message.sender === "ai" ? (
             <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-1 prose-headings:my-2">
-              <ReactMarkdown
-                components={{
-                  p: ({node, ...props}) => <p className="my-1" {...props} />,
-                  h1: ({node, ...props}) => <h1 className="my-2 text-lg font-bold" {...props} />,
-                  h2: ({node, ...props}) => <h2 className="my-2 text-md font-bold" {...props} />,
-                  h3: ({node, ...props}) => <h3 className="my-2 text-sm font-bold" {...props} />,
-                  ul: ({node, ...props}) => <ul className="my-1 ml-4 list-disc" {...props} />,
-                  ol: ({node, ...props}) => <ol className="my-1 ml-4 list-decimal" {...props} />,
-                  li: ({node, ...props}) => <li className="my-0.5" {...props} />,
-                  code: ({node, inline, ...props}) => 
-                    inline 
-                      ? <code className="bg-gray-700/50 px-1 py-0.5 rounded text-sm" {...props} />
-                      : <code className="block bg-gray-800/50 p-2 rounded text-sm my-2 overflow-x-auto" {...props} />,
-                  blockquote: ({node, ...props}) => <blockquote className="border-l-4 pl-4 italic text-gray-600 dark:text-gray-400" {...props} />
-                }}
-              >
-                {message.content}
-              </ReactMarkdown>
+              <MarkdownMessage content={message.content} />
             </div>
           ) : (
             <p className="my-1">{message.content}</p>
