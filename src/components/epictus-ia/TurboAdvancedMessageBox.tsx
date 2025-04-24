@@ -73,6 +73,9 @@ const TurboAdvancedMessageBox: React.FC = () => {
   const handleSendMessage = async () => {
     if (!message.trim()) return;
     
+    // Prevent default behavior that might cause UI issues
+    event?.preventDefault?.();
+    
     // Adiciona a mensagem do usuário
     const userMessageId = Date.now().toString();
     const userMessage = {
@@ -82,22 +85,25 @@ const TurboAdvancedMessageBox: React.FC = () => {
       timestamp: new Date()
     };
     
+    // Store message before clearing input
+    const currentMessage = message.trim();
+    
+    // Update UI immediately
     setMessages(prev => [...prev, userMessage]);
     setMessage("");
     setIsAiTyping(true);
     
     try {
-      // Simula o envio da mensagem para a API
-      // Em uma implementação real, você usaria generateAIResponse do seu serviço
+      // Gera resposta da IA com tratamento adequado de erros
       setTimeout(async () => {
         let response;
         try {
           // Tenta usar o serviço real de IA
-          response = await generateAIResponse(message);
+          response = await generateAIResponse(currentMessage);
         } catch (error) {
           console.error("Erro ao gerar resposta da IA:", error);
           // Fallback para uma resposta genérica se o serviço falhar
-          response = `Obrigado por sua mensagem! Estou processando sua solicitação sobre "${message}". Como posso ajudar mais?`;
+          response = `Obrigado por sua mensagem! Estou processando sua solicitação sobre "${currentMessage}". Como posso ajudar mais?`;
         }
         
         // Adiciona a resposta da IA
@@ -111,6 +117,11 @@ const TurboAdvancedMessageBox: React.FC = () => {
         
         setMessages(prev => [...prev, aiMessage]);
         setIsAiTyping(false);
+        
+        // Scroll para o fim da conversa após a resposta
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }, 100);
       }, 1500);
     } catch (error) {
       console.error("Erro ao enviar mensagem:", error);
@@ -167,6 +178,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
+      e.stopPropagation();
       handleSendMessage();
     }
   };
@@ -223,6 +235,15 @@ const TurboAdvancedMessageBox: React.FC = () => {
   return (
     <>
       <style jsx>{`
+        /* Prevent bottom bar from showing */
+        .messages-container {
+          overflow-anchor: none;
+        }
+        
+        /* Improve scrolling behavior */
+        html, body {
+          overscroll-behavior-y: none;
+        }
         .custom-scrollbar::-webkit-scrollbar {
           width: 4px;
         }
@@ -864,7 +885,11 @@ const TurboAdvancedMessageBox: React.FC = () => {
                     boxShadow: ["0 0 0px rgba(13, 35, 160, 0)", "0 0 15px rgba(13, 35, 160, 0.5)", "0 0 0px rgba(13, 35, 160, 0)"],
                   }}
                   transition={{ duration: 2, repeat: Infinity }}
-                  onClick={handleSendMessage}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSendMessage();
+                  }}
                 >
                   <Send size={16} />
                 </motion.button>
