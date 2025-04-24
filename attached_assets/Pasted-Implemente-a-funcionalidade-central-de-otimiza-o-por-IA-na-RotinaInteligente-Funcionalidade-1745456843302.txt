@@ -1,0 +1,30 @@
+Implemente a funcionalidade central de otimização por IA na 'RotinaInteligente'.
+
+**Funcionalidade:**
+1.  **Botão "Otimizar com IA ✨":** Adicione um botão bem visível (ex: no topo, próximo à navegação da semana) com este texto e um ícone.
+2.  **Coleta de Dados (onClick):** Ao clicar no botão:
+    *   Reúna *todos* os dados disponíveis no estado do componente e `localStorage`:
+        *   Blocos Fixos (nome, dias, horários, tipo).
+        *   Atividades Recorrentes (nome, frequência, duração).
+        *   Preferências de Estudo (horários, duração sessão/pausa).
+        *   Tarefas Pendentes (nome, prazo, prioridade - vindas da API).
+        *   Metas de Aprendizado CMA (vindas da API).
+        *   Eventos da Agenda Principal (para evitar conflitos).
+    *   Estruture esses dados em um objeto JSON claro e bem definido.
+3.  **Chamada à API da IA (Assíncrona):**
+    *   Mostre um indicador de carregamento (spinner/loading state) na interface.
+    *   Faça uma requisição POST assíncrona para o endpoint da sua API de IA (`[ENDPOINT DA SUA API DE IA AQUI]`), enviando o JSON com os dados coletados.
+    *   Implemente tratamento de erros (ex: exibir mensagem se a API falhar).
+4.  **Recebimento e Processamento da Resposta:**
+    *   Aguarde a resposta da API. A resposta esperada é um JSON contendo uma lista de *blocos de tempo sugeridos* para a semana, cada um com: `id`, `title` (ex: "Estudo Focado: Cálculo I", "Pausa Ativa", "Trabalhar em: Relatório X"), `start` (data/hora), `end` (data/hora), `type` (ex: 'estudo_ia', 'pausa_ia', 'tarefa_ia', 'pessoal_ia'), `taskId` (opcional, se linkado a uma tarefa), `goalId` (opcional, se linkado a uma meta CMA).
+5.  **Renderização da Rotina Otimizada:**
+    *   Ao receber a resposta com sucesso, *remova* do calendário os blocos de estudo/tarefas que foram agendados *manualmente* pelo usuário anteriormente (mantenha os Blocos Fixos originais).
+    *   Renderize os novos *blocos sugeridos pela IA* no calendário.
+    *   **Diferenciação Visual:** Use uma cor ou estilo *diferente* (ex: um pouco mais transparente, borda pontilhada, ou um pequeno ícone de IA ✨) para indicar que esses blocos foram *sugeridos* pela IA.
+    *   Oculte o indicador de carregamento.
+6.  **Feedback Inicial (Simples):** Adicione dois botões pequenos abaixo do botão de otimizar (ou em um local discreto): "👍 Gostei da Sugestão" e "👎 Prefiro Ajustar". *Por enquanto, clicar neles apenas registra um log ou evento simples, sem ação complexa.*
+
+**Design:**
+*   O indicador de carregamento deve ser claro.
+*   A diferenciação visual entre blocos manuais/fixos e blocos sugeridos pela IA deve ser sutil, mas perceptível.
+*   Os botões de feedback devem ser discretos.
