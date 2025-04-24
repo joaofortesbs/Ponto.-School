@@ -188,7 +188,7 @@ export default function EpictusIAComplete() {
     if (mode === "turbo") {
       setTurboModeActive(true);
     } else if (mode === "turbo-advanced") {
-      setTurboAdvancedModeActive(true);dvancedModeActive(true);
+      setTurboAdvancedModeActive(true);
     }
 
     // Adicionando listener para ativar o modo turbo
@@ -204,7 +204,7 @@ export default function EpictusIAComplete() {
     };
 
     window.addEventListener('activateTurboMode', handleTurboActivation);
-    window.addEventListener('activateTurboAdvancedMode', handleTurboAdvancedActivation);dActivation);
+    window.addEventListener('activateTurboAdvancedMode', handleTurboAdvancedActivation);
 
     return () => {
       window.removeEventListener('activateTurboMode', handleTurboActivation);
