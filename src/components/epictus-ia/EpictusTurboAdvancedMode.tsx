@@ -395,4 +395,4 @@ const EpictusTurboAdvancedMode: React.FC = () => {
 import EpictusTurboAdvancedMessageBox from "./EpictusTurboAdvancedMessageBox";
 
 // Exportação otimizada do componente
-export default EpictusTurboAdvancedMode;lt memo(EpictusTurboAdvancedMode);
+export default memo(EpictusTurboAdvancedMode);
