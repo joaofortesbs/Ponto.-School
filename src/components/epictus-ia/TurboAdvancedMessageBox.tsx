@@ -298,24 +298,57 @@ const TurboAdvancedMessageBox: React.FC = () => {
 
                     try {
                       // Aqui adicionamos a chamada real para a API de IA para melhorar o prompt
-                      // Utilizamos a função já existente do serviço epictusIAService
+                      // Utilizamos a função do serviço aiChatService para acessar a API Gemini
                       let improvedPromptText = "";
                       
                       if (message.trim().length > 0) {
-                        // Chamar a API para melhorar o prompt
-                        improvedPromptText = await generateAIResponse(
-                          `Melhore o seguinte prompt para obter uma resposta mais detalhada, completa e educacional. 
-                          NÃO responda a pergunta, apenas melhore o prompt adicionando:
-                          1. Mais contexto e especificidade
-                          2. Solicite exemplos, comparações e aplicações práticas
-                          3. Peça explicações claras de conceitos fundamentais
-                          4. Solicite visualizações ou analogias quando aplicável
-                          5. Adicione pedidos para que sejam mencionadas curiosidades ou fatos históricos relevantes
-
-                          Original: "${message}"
+                        // Criar um ID de sessão único para esta interação
+                        const sessionId = `prompt-improvement-${Date.now()}`;
+                        
+                        try {
+                          // Importamos a função do serviço aiChatService
+                          const { generateAIResponse: generateGeminiResponse } = await import('@/services/aiChatService');
                           
-                          Retorne APENAS o prompt melhorado, sem comentários adicionais.`
-                        );
+                          // Chamar a API Gemini para melhorar o prompt
+                          improvedPromptText = await generateGeminiResponse(
+                            `Você é um assistente especializado em melhorar prompts educacionais. 
+                            Analise o seguinte prompt e melhore-o para obter uma resposta mais detalhada, completa e educacional.
+                            
+                            Melhore o seguinte prompt para obter uma resposta mais detalhada, completa e educacional. 
+                            NÃO responda a pergunta, apenas melhore o prompt adicionando:
+                            1. Mais contexto e especificidade
+                            2. Solicite exemplos, comparações e aplicações práticas
+                            3. Peça explicações claras de conceitos fundamentais
+                            4. Solicite visualizações ou analogias quando aplicável
+                            5. Adicione pedidos para que sejam mencionadas curiosidades ou fatos históricos relevantes
+
+                            Original: "${message}"
+                            
+                            Retorne APENAS o prompt melhorado, sem comentários adicionais.`,
+                            sessionId,
+                            {
+                              intelligenceLevel: 'advanced',
+                              languageStyle: 'formal',
+                              detailedResponse: true
+                            }
+                          );
+                        } catch (error) {
+                          console.error("Erro ao chamar API Gemini:", error);
+                          // Fallback para o serviço local caso a API Gemini falhe
+                          improvedPromptText = await generateAIResponse(
+                            `Melhore o seguinte prompt para obter uma resposta mais detalhada, completa e educacional. 
+                            NÃO responda a pergunta, apenas melhore o prompt adicionando:
+                            1. Mais contexto e especificidade
+                            2. Solicite exemplos, comparações e aplicações práticas
+                            3. Peça explicações claras de conceitos fundamentais
+                            4. Solicite visualizações ou analogias quando aplicável
+                            5. Adicione pedidos para que sejam mencionadas curiosidades ou fatos históricos relevantes
+
+                            Original: "${message}"
+                            
+                            Retorne APENAS o prompt melhorado, sem comentários adicionais.`
+                          );
+                        }
                       } else {
                         improvedPromptText = "Por favor, forneça uma explicação detalhada, incluindo exemplos práticos e conceitos fundamentais. Considere mencionar as principais teorias relacionadas e aplicações no mundo real.";
                       }
