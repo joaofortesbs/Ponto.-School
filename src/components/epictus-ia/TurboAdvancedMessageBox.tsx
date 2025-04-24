@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Plus, Mic, Send, Brain, BookOpen, FileText, RotateCw, AlignJustify, Zap, X } from "lucide-react";
+import { Sparkles, Plus, Mic, Send, Brain, BookOpen, FileText, RotateCw, AlignJustify, Zap, X, Lightbulb } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface QuickActionProps {
   icon: React.ReactNode;
@@ -25,6 +26,7 @@ const QuickAction: React.FC<QuickActionProps> = ({ icon, label, onClick }) => {
 };
 
 const TurboAdvancedMessageBox: React.FC = () => {
+  const { toast } = useToast();
   const [message, setMessage] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
@@ -232,6 +234,201 @@ const TurboAdvancedMessageBox: React.FC = () => {
                 className="w-full bg-transparent text-white py-3 px-3 outline-none placeholder:text-gray-400 text-sm dark:text-white dark:placeholder-gray-400"
               />
             </div>
+
+            {/* Botão de sugestão de prompts inteligentes */}
+            <motion.button 
+              className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+                       flex items-center justify-center shadow-lg text-white dark:text-white mr-2"
+              whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                // Exibir modal ou dropdown com sugestões de prompts
+                toast({
+                  title: "Sugestões de Prompts",
+                  description: "Carregando sugestões inteligentes personalizadas...",
+                  duration: 2000,
+                });
+                
+                // Criar um elemento para o modal de sugestão de prompts
+                const modalHTML = `
+                  <div id="prompt-suggestions-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+                    <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-blue-200 dark:border-blue-700 p-5 shadow-xl w-[90%] max-w-md animate-fadeIn">
+                      <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold flex items-center gap-2 text-gray-800 dark:text-gray-200">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500">
+                            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                          </svg>
+                          Sugestões de Prompts
+                        </h3>
+                        <button 
+                          id="close-prompt-suggestions-modal"
+                          class="h-7 w-7 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 6 6 18"></path>
+                            <path d="m6 6 12 12"></path>
+                          </svg>
+                        </button>
+                      </div>
+                      
+                      <div class="mb-4">
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                          Selecione uma sugestão ou insira um contexto para obter ideias personalizadas:
+                        </p>
+                        <div class="relative">
+                          <input
+                            type="text"
+                            id="context-input"
+                            placeholder="Digite um tema ou contexto..."
+                            class="w-full p-2.5 pr-10 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                          />
+                          <button
+                            id="generate-suggestions-button"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600 dark:text-blue-400">
+                              <path d="m22 2-7 20-4-9-9-4Z"></path>
+                              <path d="M22 2 11 13"></path>
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div id="suggestions-container" class="space-y-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+                        <button class="w-full text-left p-3 bg-gradient-to-r from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 group">
+                          <p class="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Como posso melhorar meu desempenho no ENEM?</p>
+                        </button>
+                        <button class="w-full text-left p-3 bg-gradient-to-r from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 group">
+                          <p class="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Crie um resumo detalhado sobre termodinâmica</p>
+                        </button>
+                        <button class="w-full text-left p-3 bg-gradient-to-r from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 group">
+                          <p class="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Explique o teorema de Pitágoras com exemplos práticos</p>
+                        </button>
+                        <button class="w-full text-left p-3 bg-gradient-to-r from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 group">
+                          <p class="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Quais são os eventos mais importantes do Modernismo Brasileiro?</p>
+                        </button>
+                        <button class="w-full text-left p-3 bg-gradient-to-r from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 group">
+                          <p class="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Crie um plano de estudos semanal para vestibular</p>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                `;
+
+                // Remover qualquer modal existente
+                const existingModal = document.getElementById('prompt-suggestions-modal');
+                if (existingModal) {
+                  existingModal.remove();
+                }
+                
+                // Adicionar o novo modal ao DOM
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+                
+                // Adicionar event listeners
+                setTimeout(() => {
+                  const modal = document.getElementById('prompt-suggestions-modal');
+                  const closeButton = document.getElementById('close-prompt-suggestions-modal');
+                  const generateButton = document.getElementById('generate-suggestions-button');
+                  const contextInput = document.getElementById('context-input');
+                  const suggestionsContainer = document.getElementById('suggestions-container');
+                  
+                  // Função para fechar o modal
+                  const closeModal = () => {
+                    if (modal) {
+                      modal.classList.add('animate-fadeOut');
+                      setTimeout(() => modal.remove(), 200);
+                    }
+                  };
+                  
+                  // Event listener para fechar o modal
+                  if (closeButton) {
+                    closeButton.addEventListener('click', closeModal);
+                  }
+                  
+                  // Event listener para clicar fora e fechar
+                  if (modal) {
+                    modal.addEventListener('click', (e) => {
+                      if (e.target === modal) {
+                        closeModal();
+                      }
+                    });
+                  }
+
+                  // Event listener para os botões de sugestão
+                  if (suggestionsContainer) {
+                    const suggestionButtons = suggestionsContainer.querySelectorAll('button');
+                    suggestionButtons.forEach(button => {
+                      button.addEventListener('click', () => {
+                        // Pegar o texto da sugestão
+                        const promptText = button.querySelector('p')?.textContent || '';
+                        
+                        // Definir o texto no input da mensagem
+                        setInputMessage(promptText);
+                        
+                        // Fechar o modal
+                        closeModal();
+                      });
+                    });
+                  }
+                  
+                  // Event listener para o botão de gerar sugestões
+                  if (generateButton && contextInput && suggestionsContainer) {
+                    generateButton.addEventListener('click', () => {
+                      const context = (contextInput as HTMLInputElement).value.trim();
+                      if (!context) return;
+                      
+                      // Mostrar indicador de carregamento
+                      const loadingHTML = `
+                        <div class="flex items-center justify-center p-4">
+                          <div class="h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mr-2"></div>
+                          <p class="text-sm text-gray-600 dark:text-gray-400">Gerando sugestões personalizadas...</p>
+                        </div>
+                      `;
+                      suggestionsContainer.innerHTML = loadingHTML;
+                      
+                      // Simular geração de sugestões personalizadas
+                      setTimeout(() => {
+                        // Lista de sugestões baseadas no contexto
+                        const customSuggestions = [
+                          `Me explique de forma detalhada o que é ${context}?`,
+                          `Quais são os principais conceitos relacionados a ${context}?`,
+                          `Crie um resumo didático sobre ${context} para estudantes do ensino médio`,
+                          `Quais são as aplicações práticas de ${context} no mundo real?`,
+                          `Como o assunto ${context} costuma ser abordado em provas do ENEM?`
+                        ];
+                        
+                        // Criar HTML para as sugestões personalizadas
+                        const suggestionsHTML = customSuggestions.map(suggestion => `
+                          <button class="w-full text-left p-3 bg-gradient-to-r from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 group">
+                            <p class="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">${suggestion}</p>
+                          </button>
+                        `).join('');
+                        
+                        // Atualizar container com as novas sugestões
+                        suggestionsContainer.innerHTML = suggestionsHTML;
+                        
+                        // Adicionar event listeners às novas sugestões
+                        const newSuggestionButtons = suggestionsContainer.querySelectorAll('button');
+                        newSuggestionButtons.forEach(button => {
+                          button.addEventListener('click', () => {
+                            // Pegar o texto da sugestão
+                            const promptText = button.querySelector('p')?.textContent || '';
+                            
+                            // Definir o texto no input da mensagem
+                            setInputMessage(promptText);
+                            
+                            // Fechar o modal
+                            closeModal();
+                          });
+                        });
+                      }, 1500);
+                    });
+                  }
+                }, 50);
+              }}
+            >
+              <Lightbulb size={16} />
+            </motion.button>
 
             {/* Botão de microfone (quando não há texto) */}
             {!inputHasContent ? (
