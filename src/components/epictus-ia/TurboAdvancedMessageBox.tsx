@@ -158,14 +158,6 @@ const TurboAdvancedMessageBox: React.FC = () => {
       {/* Espaço calculado para posicionar a frase perfeitamente centralizada */}
       <div className="w-full h-32"></div>
 
-      {/* Frase de boas-vindas exatamente centralizada entre o cabeçalho e a caixa de mensagens */}
-      <div className="text-center my-auto w-full hub-connected-width mx-auto flex flex-col justify-center" style={{ height: "25vh" }}>
-        <h2 className="text-4xl text-white dark:text-white">
-          <span className="font-bold">Como a IA mais <span className="text-[#0049e2] bg-gradient-to-r from-[#0049e2] to-[#0049e2]/80 bg-clip-text text-transparent relative after:content-[''] after:absolute after:h-[3px] after:bg-[#0049e2] after:w-0 after:left-0 after:bottom-[-5px] after:transition-all after:duration-300 group-hover:after:w-full hover:after:w-full dark:text-[#0049e2]">Inteligente do mundo</span>
-          </span><br />
-          <span className="font-light text-3xl text-gray-800 dark:text-gray-300">pode te ajudar hoje {localStorage.getItem('username') || 'João Marcelo'}?</span>
-        </h2>
-      </div>
 
       {/* Pequeno espaço adicional antes da caixa de mensagens */}
       <div className="w-full h-6"></div>
@@ -300,20 +292,20 @@ const TurboAdvancedMessageBox: React.FC = () => {
                       // Aqui adicionamos a chamada real para a API de IA para melhorar o prompt
                       // Utilizamos a função do serviço aiChatService para acessar a API Gemini
                       let improvedPromptText = "";
-                      
+
                       if (message.trim().length > 0) {
                         // Criar um ID de sessão único para esta interação
                         const sessionId = `prompt-improvement-${Date.now()}`;
-                        
+
                         try {
                           // Importamos a função do serviço aiChatService
                           const { generateAIResponse: generateGeminiResponse } = await import('@/services/aiChatService');
-                          
+
                           // Chamar a API Gemini para melhorar o prompt
                           improvedPromptText = await generateGeminiResponse(
                             `Você é um assistente especializado em melhorar prompts educacionais. 
                             Analise o seguinte prompt e melhore-o para obter uma resposta mais detalhada, completa e educacional.
-                            
+
                             Melhore o seguinte prompt para obter uma resposta mais detalhada, completa e educacional. 
                             NÃO responda a pergunta, apenas melhore o prompt adicionando:
                             1. Mais contexto e especificidade
@@ -323,7 +315,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                             5. Adicione pedidos para que sejam mencionadas curiosidades ou fatos históricos relevantes
 
                             Original: "${message}"
-                            
+
                             Retorne APENAS o prompt melhorado, sem comentários adicionais.`,
                             sessionId,
                             {
@@ -345,7 +337,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                             5. Adicione pedidos para que sejam mencionadas curiosidades ou fatos históricos relevantes
 
                             Original: "${message}"
-                            
+
                             Retorne APENAS o prompt melhorado, sem comentários adicionais.`
                           );
                         }
@@ -393,7 +385,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                                   ${message}
                                 </div>
                               </div>
-                              
+
                               <div>
                                 <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Versão aprimorada pela Epictus IA:</p>
                                 <div class="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-800 rounded-lg text-sm text-gray-800 dark:text-gray-200 max-h-[150px] overflow-y-auto scrollbar-hide">
@@ -462,7 +454,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                           useImprovedButton.addEventListener('click', () => {
                             // Atualizar o input com o prompt melhorado
                             setMessage(improvedPromptText);
-                            
+
                             // Fechar o modal
                             closeModal();
 
@@ -501,7 +493,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                   </svg>
                 </motion.button>
               )}
-              
+
               {/* Botão de sugestão de prompts inteligentes */}
               <motion.button 
                 className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
