@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Plus, Mic, Send, Brain, BookOpen, FileText, RotateCw, AlignJustify, Zap, X, Lightbulb, Square } from "lucide-react";
@@ -560,7 +561,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
 
                                   <div>
                                     <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Versão aprimorada pela Epictus IA:</p>
-                                    <div class="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-800 rounded-lg text-sm text-gray-800 dark:text-gray-200 max-h-[150px] overflow-y-auto scrollbar-hide```">
+                                    <div class="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-800 rounded-lg text-sm text-gray-800 dark:text-gray-200 max-h-[150px] overflow-y-auto scrollbar-hide">
                                       ${improvedPromptText}
                                     </div>
                                   </div>
@@ -995,7 +996,8 @@ const TurboAdvancedMessageBox: React.FC = () => {
               {/* Conteúdo da caixa de mensagens */}
             </div>
           </div>
-        </motion.div>
+        </div>
+      </motion.div>
       </div>
     </>
   );
