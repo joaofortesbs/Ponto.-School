@@ -383,18 +383,13 @@ const EpictusTurboAdvancedMode: React.FC = () => {
           </div>
         </motion.header>
       </div>
-
-      {/* Caixa de mensagens do Epictus Turbo diretamente abaixo do header */}
-      <div className="w-full p-4 -mt-2">
+      
+      {/* Espaço adicional para mover a caixa de mensagens mais para baixo */}
+      <div className="w-full h-64"></div>
+      
+      {/* Caixa de mensagens do Epictus Turbo */}
+      <div className="w-full p-4">
         <TurboAdvancedMessageBox />
-      </div>
-
-      {/* Content area now below the header */}
-      <div className="w-full flex flex-col items-center justify-center mt-2 mb-2">
-        {/* Mini-section selector */}
-        <div className="w-full flex-grow flex items-center justify-center">
-          {/* Aqui virá o conteúdo principal (histórico de conversas, resultados, etc.) */}
-        </div>
       </div>
     </div>
   );
