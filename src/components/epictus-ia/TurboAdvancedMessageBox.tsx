@@ -26,6 +26,12 @@ const QuickAction: React.FC<QuickActionProps> = ({ icon, label, onClick }) => {
   );
 };
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
+import { Brain, BookOpen, AlignJustify, RotateCw, FileText, Zap, Mic, Send, Square } from "lucide-react";
+import React, { useState } from "react";
+
 const TurboAdvancedMessageBox: React.FC = () => {
   const { toast } = useToast();
   const [message, setMessage] = useState("");
@@ -52,6 +58,130 @@ const TurboAdvancedMessageBox: React.FC = () => {
     console.log("Mensagem enviada:", message);
     // Aqui você implementaria a lógica de envio para o backend
     setMessage("");
+  };
+  
+  // Iniciando ou parando a gravação de áudio
+  const toggleRecording = async () => {
+    if (isRecording) {
+      // Parar gravação
+      if (audioRecorder) {
+        audioRecorder.stop();
+      }
+      setIsRecording(false);
+    } else {
+      try {
+        // Iniciar gravação
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const recorder = new MediaRecorder(stream);
+        setAudioRecorder(recorder);
+        
+        const chunks: Blob[] = [];
+        recorder.ondataavailable = (e) => {
+          chunks.push(e.data);
+        };
+        
+        recorder.onstop = () => {
+          const audioBlob = new Blob(chunks, { type: 'audio/wav' });
+          // Aqui você pode processar o áudio (enviar para backend, etc)
+          console.log("Áudio gravado:", audioBlob);
+          setAudioChunks([]);
+        };
+        
+        recorder.start();
+        setAudioChunks([]);
+        setIsRecording(true);
+      } catch (error) {
+        console.error("Erro ao acessar microfone:", error);
+        toast({
+          title: "Acesso ao microfone negado",
+          description: "Verifique as permissões do seu navegador.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  return (
+    <div className="w-full bg-white dark:bg-[#001233] rounded-xl shadow-md overflow-hidden border border-blue-100 dark:border-[#001a4d] transition-all duration-300"
+      style={{ maxHeight: isExpanded ? "400px" : "auto" }}>
+      
+      {/* Área da mensagem - caixa de texto expandível */}
+      <div className="p-3 relative">
+        <div 
+          className={`relative flex items-center transition-all duration-300 rounded-xl px-2 py-1 border ${
+            isInputFocused 
+              ? "border-blue-400 bg-white/80 dark:bg-[#001a4d]/80 dark:border-[#0047b3]" 
+              : inputHasContent 
+                ? "border-blue-300 bg-white/70 dark:bg-[#001a4d]/70 dark:border-[#0047b3]/70" 
+                : "border-gray-200 bg-white/50 dark:bg-[#001a4d]/50 dark:border-[#002266]/50"
+          }`}
+        >
+          {/* Campo de entrada de texto */}
+          <Input
+            placeholder="Pergunte algo ao Epictus IA..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onFocus={() => setIsInputFocused(true)}
+            onBlur={() => setIsInputFocused(false)}
+            onKeyDown={handleKeyDown}
+            className="grow border-0 bg-transparent focus:ring-0 text-gray-800 dark:text-gray-200 placeholder:text-gray-500 dark:placeholder:text-gray-400 py-2 px-1"
+          />
+          
+          {/* Área dos botões - reposicionada para alinhar horizontalmente */}
+          <div className="flex items-center gap-2">
+            {/* Botão de sugestão de prompts */}
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="h-8 px-2 text-xs text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded flex items-center gap-1"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Sugestão de Prompts Inteligentes</span>
+            </Button>
+            
+            {/* Botão de enviar ou gravar áudio */}
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={inputHasContent ? handleSendMessage : toggleRecording}
+              className={`h-8 w-8 p-0 rounded-full flex items-center justify-center transition-all ${
+                isRecording 
+                  ? "bg-red-500 text-white hover:bg-red-600" 
+                  : inputHasContent 
+                    ? "bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700" 
+                    : "text-blue-500 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
+              }`}
+            >
+              {isRecording ? (
+                <Square className="h-3.5 w-3.5" />
+              ) : inputHasContent ? (
+                <Send className="h-3.5 w-3.5" />
+              ) : (
+                <Mic className="h-3.5 w-3.5" />
+              )}
+            </Button>
+          </div>
+        </div>
+        
+        {/* Ações rápidas */}
+        <div className="mt-2 flex flex-wrap gap-2">
+          {quickActions.map((action, index) => (
+            <Button
+              key={index}
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs bg-blue-50/50 hover:bg-blue-100/70 text-blue-700 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 dark:text-blue-300 rounded flex items-center gap-1.5 border border-blue-100/50 dark:border-blue-800/30 px-2"
+            >
+              {action.icon}
+              <span>{action.label}</span>
+            </Button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
