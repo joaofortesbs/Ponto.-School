@@ -4,6 +4,7 @@ import { Sparkles, Plus, Mic, Send, Brain, BookOpen, FileText, RotateCw, AlignJu
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { generateAIResponse } from "@/services/epictusIAService";
 
 interface QuickActionProps {
   icon: React.ReactNode;
@@ -287,16 +288,44 @@ const TurboAdvancedMessageBox: React.FC = () => {
                            flex items-center justify-center shadow-lg text-white dark:text-white"
                   whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    // Exibir modal ou dropdown com opções de melhoria de prompt
+                  onClick={async () => {
+                    // Mostrar toast de análise
                     toast({
                       title: "Melhorando seu prompt",
                       description: "Analisando e aprimorando sua mensagem...",
-                      duration: 2000,
+                      duration: 3000,
                     });
 
-                    // Simular a melhoria do prompt após um pequeno delay
-                    setTimeout(() => {
+                    try {
+                      // Aqui adicionamos a chamada real para a API de IA para melhorar o prompt
+                      // Utilizamos a função já existente do serviço epictusIAService
+                      let improvedPromptText = "";
+                      
+                      if (message.trim().length > 0) {
+                        // Chamar a API para melhorar o prompt
+                        improvedPromptText = await generateAIResponse(
+                          `Melhore o seguinte prompt para obter uma resposta mais detalhada, completa e educacional. 
+                          NÃO responda a pergunta, apenas melhore o prompt adicionando:
+                          1. Mais contexto e especificidade
+                          2. Solicite exemplos, comparações e aplicações práticas
+                          3. Peça explicações claras de conceitos fundamentais
+                          4. Solicite visualizações ou analogias quando aplicável
+                          5. Adicione pedidos para que sejam mencionadas curiosidades ou fatos históricos relevantes
+
+                          Original: "${message}"
+                          
+                          Retorne APENAS o prompt melhorado, sem comentários adicionais.`
+                        );
+                      } else {
+                        improvedPromptText = "Por favor, forneça uma explicação detalhada, incluindo exemplos práticos e conceitos fundamentais. Considere mencionar as principais teorias relacionadas e aplicações no mundo real.";
+                      }
+
+                      // Limpar formatação extra que possa ter vindo na resposta
+                      improvedPromptText = improvedPromptText
+                        .replace(/^(Prompt melhorado:|Aqui está uma versão melhorada:|Versão melhorada:|Melhorado:)/i, '')
+                        .replace(/^["']|["']$/g, '')
+                        .trim();
+
                       // Criar um elemento para o modal de melhoria de prompt
                       const modalHTML = `
                         <div id="improve-prompt-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
@@ -304,9 +333,12 @@ const TurboAdvancedMessageBox: React.FC = () => {
                             <div class="flex justify-between items-center mb-4">
                               <h3 class="text-lg font-semibold flex items-center gap-2 text-gray-800 dark:text-gray-200">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500">
-                                  <path d="M5.8 11.3A4 4 0 0 0 5 13a4 4 0 0 0 8 0 4 4 0 0 0-5.2-3.8"/>
-                                  <path d="m13 3-1.9 2.5H9.5L11.5 8"/>
-                                  <path d="M9 17.5h6s.5-1.7 0-3c-.3-.8-1-1.5-2.5-2"/>
+                                  <circle cx="12" cy="12" r="10"/>
+                                  <path d="m4.9 4.9 14.2 14.2"/>
+                                  <path d="M9 9a3 3 0 0 1 5.12-2.136"/>
+                                  <path d="M14 9.3a3 3 0 0 0-5.12 2.136"/>
+                                  <path d="M16 14a2 2 0 0 1-2 2"/>
+                                  <path d="M12 16a2 2 0 0 1-2-2"/>
                                 </svg>
                                 Aprimoramento de Prompt
                               </h3>
@@ -330,16 +362,9 @@ const TurboAdvancedMessageBox: React.FC = () => {
                               </div>
                               
                               <div>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Versão aprimorada (com mais detalhes e estrutura):</p>
-                                <div class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg text-sm text-gray-800 dark:text-gray-200">
-                                  ${message.length > 0 
-                                    ? message + (
-                                      message.endsWith('?') 
-                                        ? '' 
-                                        : '?'
-                                      ) + ' Por favor, forneça uma explicação detalhada, incluindo exemplos práticos e conceitos fundamentais. Se possível, mencione as principais teorias relacionadas e aplicações no mundo real.'
-                                    : 'Por favor, aprimorar minha mensagem para obter uma resposta mais completa e detalhada.'
-                                  }
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Versão aprimorada pela Epictus IA:</p>
+                                <div class="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-800 rounded-lg text-sm text-gray-800 dark:text-gray-200">
+                                  ${improvedPromptText}
                                 </div>
                               </div>
                             </div>
@@ -353,7 +378,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                               </button>
                               <button 
                                 id="use-improved-prompt"
-                                class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-1"
+                                class="px-4 py-2 text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg transition-colors flex items-center gap-1"
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                   <path d="m5 12 5 5 9-9"></path>
@@ -402,18 +427,18 @@ const TurboAdvancedMessageBox: React.FC = () => {
                         // Event listener para usar o prompt melhorado
                         if (useImprovedButton) {
                           useImprovedButton.addEventListener('click', () => {
-                            // Melhorar o prompt atual com a versão aprimorada
-                            const improvedPrompt = message + (
-                              message.endsWith('?') 
-                                ? '' 
-                                : '?'
-                              ) + ' Por favor, forneça uma explicação detalhada, incluindo exemplos práticos e conceitos fundamentais. Se possível, mencione as principais teorias relacionadas e aplicações no mundo real.';
-                            
                             // Atualizar o input com o prompt melhorado
-                            setMessage(improvedPrompt);
+                            setMessage(improvedPromptText);
                             
                             // Fechar o modal
                             closeModal();
+
+                            // Mostrar toast de confirmação
+                            toast({
+                              title: "Prompt aprimorado",
+                              description: "Seu prompt foi aprimorado com sucesso!",
+                              duration: 2000,
+                            });
                           });
                         }
 
@@ -426,13 +451,24 @@ const TurboAdvancedMessageBox: React.FC = () => {
                           });
                         }
                       }, 50);
-                    }, 500);
+                    } catch (error) {
+                      console.error("Erro ao melhorar prompt:", error);
+                      toast({
+                        title: "Erro",
+                        description: "Não foi possível melhorar seu prompt. Tente novamente.",
+                        variant: "destructive",
+                        duration: 3000,
+                      });
+                    }
                   }}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M5.8 11.3A4 4 0 0 0 5 13a4 4 0 0 0 8 0 4 4 0 0 0-5.2-3.8"/>
-                    <path d="m13 3-1.9 2.5H9.5L11.5 8"/>
-                    <path d="M9 17.5h6s.5-1.7 0-3c-.3-.8-1-1.5-2.5-2"/>
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="m4.9 4.9 14.2 14.2"/>
+                    <path d="M9 9a3 3 0 0 1 5.12-2.136"/>
+                    <path d="M14 9.3a3 3 0 0 0-5.12 2.136"/>
+                    <path d="M16 14a2 2 0 0 1-2 2"/>
+                    <path d="M12 16a2 2 0 0 1-2-2"/>
                   </svg>
                 </motion.button>
               )}
