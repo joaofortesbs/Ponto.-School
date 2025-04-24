@@ -199,8 +199,7 @@ const EpictusTurboAdvancedMode: React.FC = () => {
   ));
 
   return (
-    <div className="w-full flex flex-col items-center overflow-y-auto h-screen mode-epictus-turbo-advanced">
-      <div className="w-full h-16"></div> {/* Espaço para compensar o header fixo da aplicação */}
+    <div className="w-full flex flex-col items-center pt-4 overflow-y-auto max-h-screen mode-epictus-turbo-advanced">
       {/* Header otimizado do Epictus IA */}
       <div className="w-full px-4">
         <motion.header 
@@ -385,7 +384,7 @@ const EpictusTurboAdvancedMode: React.FC = () => {
       </div>
 
       {/* Área para o chat com a IA */}
-      <div className="w-full px-4 py-3 flex-grow flex flex-col h-[calc(100vh-240px)]">
+      <div className="w-full px-4 py-3 flex-grow flex flex-col h-[calc(100vh-180px)]">
         <EpictusTurboAdvancedMessageBox />
       </div>
     </div>
