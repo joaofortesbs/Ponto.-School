@@ -280,6 +280,163 @@ const TurboAdvancedMessageBox: React.FC = () => {
 
             {/* Área dos botões de ação (lâmpada e áudio/enviar) */}
             <div className="flex items-center gap-2">
+              {/* Botão de melhoria de prompts - visível apenas quando digitando */}
+              {message.trim().length > 0 && (
+                <motion.button
+                  className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+                           flex items-center justify-center shadow-lg text-white dark:text-white"
+                  whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    // Exibir modal ou dropdown com opções de melhoria de prompt
+                    toast({
+                      title: "Melhorando seu prompt",
+                      description: "Analisando e aprimorando sua mensagem...",
+                      duration: 2000,
+                    });
+
+                    // Simular a melhoria do prompt após um pequeno delay
+                    setTimeout(() => {
+                      // Criar um elemento para o modal de melhoria de prompt
+                      const modalHTML = `
+                        <div id="improve-prompt-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+                          <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-blue-200 dark:border-blue-700 p-5 shadow-xl w-[90%] max-w-md animate-fadeIn">
+                            <div class="flex justify-between items-center mb-4">
+                              <h3 class="text-lg font-semibold flex items-center gap-2 text-gray-800 dark:text-gray-200">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500">
+                                  <path d="M5.8 11.3A4 4 0 0 0 5 13a4 4 0 0 0 8 0 4 4 0 0 0-5.2-3.8"/>
+                                  <path d="m13 3-1.9 2.5H9.5L11.5 8"/>
+                                  <path d="M9 17.5h6s.5-1.7 0-3c-.3-.8-1-1.5-2.5-2"/>
+                                </svg>
+                                Aprimoramento de Prompt
+                              </h3>
+                              <button 
+                                id="close-improve-prompt-modal"
+                                class="h-7 w-7 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                  <path d="M18 6 6 18"></path>
+                                  <path d="m6 6 12 12"></path>
+                                </svg>
+                              </button>
+                            </div>
+
+                            <div class="mb-4">
+                              <div class="mb-3">
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Sua mensagem original:</p>
+                                <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-300">
+                                  ${message}
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Versão aprimorada (com mais detalhes e estrutura):</p>
+                                <div class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg text-sm text-gray-800 dark:text-gray-200">
+                                  ${message.length > 0 
+                                    ? message + (
+                                      message.endsWith('?') 
+                                        ? '' 
+                                        : '?'
+                                      ) + ' Por favor, forneça uma explicação detalhada, incluindo exemplos práticos e conceitos fundamentais. Se possível, mencione as principais teorias relacionadas e aplicações no mundo real.'
+                                    : 'Por favor, aprimorar minha mensagem para obter uma resposta mais completa e detalhada.'
+                                  }
+                                </div>
+                              </div>
+                            </div>
+
+                            <div class="flex justify-end gap-3">
+                              <button 
+                                id="cancel-improved-prompt"
+                                class="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg transition-colors"
+                              >
+                                Cancelar
+                              </button>
+                              <button 
+                                id="use-improved-prompt"
+                                class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-1"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                  <path d="m5 12 5 5 9-9"></path>
+                                </svg>
+                                Usar versão melhorada
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      `;
+
+                      // Remover qualquer modal existente
+                      const existingModal = document.getElementById('improve-prompt-modal');
+                      if (existingModal) {
+                        existingModal.remove();
+                      }
+
+                      // Adicionar o novo modal ao DOM
+                      document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+                      // Adicionar event listeners
+                      setTimeout(() => {
+                        const modal = document.getElementById('improve-prompt-modal');
+                        const closeButton = document.getElementById('close-improve-prompt-modal');
+                        const cancelButton = document.getElementById('cancel-improved-prompt');
+                        const useImprovedButton = document.getElementById('use-improved-prompt');
+
+                        // Função para fechar o modal
+                        const closeModal = () => {
+                          if (modal) {
+                            modal.classList.add('animate-fadeOut');
+                            setTimeout(() => modal.remove(), 200);
+                          }
+                        };
+
+                        // Event listener para fechar o modal
+                        if (closeButton) {
+                          closeButton.addEventListener('click', closeModal);
+                        }
+
+                        // Event listener para cancelar
+                        if (cancelButton) {
+                          cancelButton.addEventListener('click', closeModal);
+                        }
+
+                        // Event listener para usar o prompt melhorado
+                        if (useImprovedButton) {
+                          useImprovedButton.addEventListener('click', () => {
+                            // Melhorar o prompt atual com a versão aprimorada
+                            const improvedPrompt = message + (
+                              message.endsWith('?') 
+                                ? '' 
+                                : '?'
+                              ) + ' Por favor, forneça uma explicação detalhada, incluindo exemplos práticos e conceitos fundamentais. Se possível, mencione as principais teorias relacionadas e aplicações no mundo real.';
+                            
+                            // Atualizar o input com o prompt melhorado
+                            setMessage(improvedPrompt);
+                            
+                            // Fechar o modal
+                            closeModal();
+                          });
+                        }
+
+                        // Event listener para clicar fora e fechar
+                        if (modal) {
+                          modal.addEventListener('click', (e) => {
+                            if (e.target === modal) {
+                              closeModal();
+                            }
+                          });
+                        }
+                      }, 50);
+                    }, 500);
+                  }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5.8 11.3A4 4 0 0 0 5 13a4 4 0 0 0 8 0 4 4 0 0 0-5.2-3.8"/>
+                    <path d="m13 3-1.9 2.5H9.5L11.5 8"/>
+                    <path d="M9 17.5h6s.5-1.7 0-3c-.3-.8-1-1.5-2.5-2"/>
+                  </svg>
+                </motion.button>
+              )}
+              
               {/* Botão de sugestão de prompts inteligentes */}
               <motion.button 
                 className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
