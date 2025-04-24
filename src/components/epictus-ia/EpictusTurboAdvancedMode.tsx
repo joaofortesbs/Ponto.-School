@@ -384,8 +384,8 @@ const EpictusTurboAdvancedMode: React.FC = () => {
         </motion.header>
       </div>
       
-      {/* Espaço adicional para mover a caixa de mensagens mais para baixo */}
-      <div className="w-full h-64"></div>
+      {/* Espaço adicional para mover a caixa de mensagens (reduzido) */}
+      <div className="w-full h-52"></div>
       
       {/* Caixa de mensagens do Epictus Turbo */}
       <div className="w-full p-4">
