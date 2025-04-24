@@ -385,7 +385,7 @@ const EpictusTurboAdvancedMode: React.FC = () => {
       </div>
       
       {/* Caixa de mensagens do Epictus Turbo */}
-      <div className="w-full p-4 mt-4">
+      <div className="w-full p-4 mt-2">
         <TurboAdvancedMessageBox />
       </div>
     </div>
