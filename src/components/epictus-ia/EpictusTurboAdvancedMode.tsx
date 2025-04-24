@@ -384,10 +384,15 @@ const EpictusTurboAdvancedMode: React.FC = () => {
         </motion.header>
       </div>
       
-      {/* Área reservada para conteúdo futuro */}
+      {/* Área para o chat com a IA */}
+      <div className="w-full px-4 py-3">
+        <EpictusTurboAdvancedMessageBox />
+      </div>
     </div>
   );
 };
+
+import EpictusTurboAdvancedMessageBox from "./EpictusTurboAdvancedMessageBox";
 
 // Exportação otimizada do componente
 export default memo(EpictusTurboAdvancedMode);
