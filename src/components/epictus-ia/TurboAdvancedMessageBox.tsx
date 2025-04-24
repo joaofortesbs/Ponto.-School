@@ -67,7 +67,22 @@ const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
           >
             {message.type === 'text' ? (
               <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-1 prose-headings:my-2">
-                <ReactMarkdown>
+                <ReactMarkdown components={{
+                  p: ({node, ...props}) => <p className="my-1" {...props} />,
+                  h1: ({node, ...props}) => <h1 className="my-2" {...props} />,
+                  h2: ({node, ...props}) => <h2 className="my-2" {...props} />,
+                  h3: ({node, ...props}) => <h3 className="my-2" {...props} />,
+                  h4: ({node, ...props}) => <h4 className="my-2" {...props} />,
+                  h5: ({node, ...props}) => <h5 className="my-2" {...props} />,
+                  h6: ({node, ...props}) => <h6 className="my-2" {...props} />,
+                  ul: ({node, ...props}) => <ul className="my-1 ml-4 list-disc" {...props} />,
+                  ol: ({node, ...props}) => <ol className="my-1 ml-4 list-decimal" {...props} />,
+                  li: ({node, ...props}) => <li className="my-0.5" {...props} />,
+                  code: ({node, inline, ...props}) => 
+                    inline 
+                      ? <code className="bg-gray-700/50 px-1 py-0.5 rounded text-sm" {...props} />
+                      : <code className="block bg-gray-800/50 p-2 rounded text-sm my-2 overflow-x-auto" {...props} />
+                }}>
                   {message.content}
                 </ReactMarkdown>
               </div>
