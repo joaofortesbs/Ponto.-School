@@ -1,6 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 
+// Componentes personalizados para o ReactMarkdown
+const markdownComponents = {
+  p: ({node, ...props}) => <p className="my-1" {...props} />,
+  h1: ({node, ...props}) => <h1 className="my-2" {...props} />,
+  h2: ({node, ...props}) => <h2 className="my-2" {...props} />,
+  h3: ({node, ...props}) => <h3 className="my-2" {...props} />,
+  h4: ({node, ...props}) => <h4 className="my-2" {...props} />,
+  h5: ({node, ...props}) => <h5 className="my-2" {...props} />,
+  h6: ({node, ...props}) => <h6 className="my-2" {...props} />,
+  ul: ({node, ...props}) => <ul className="my-1 ml-4 list-disc" {...props} />,
+  ol: ({node, ...props}) => <ol className="my-1 ml-4 list-decimal" {...props} />,
+  li: ({node, ...props}) => <li className="my-0.5" {...props} />,
+  code: ({node, inline, ...props}) => 
+    inline 
+      ? <code className="bg-gray-700/50 px-1 py-0.5 rounded text-sm" {...props} />
+      : <code className="block bg-gray-800/50 p-2 rounded text-sm my-2 overflow-x-auto" {...props} />
+};
+
 // Simple error boundary component for markdown rendering failures
 class ErrorBoundary extends React.Component {
   constructor(props) {
