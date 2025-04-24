@@ -1,45 +1,17 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Plus, Mic, Send, Brain, BookOpen, FileText, RotateCw, AlignJustify, Zap, X, Lightbulb, Square, User, Bot } from "lucide-react";
+import { Sparkles, Plus, Mic, Send, Brain, BookOpen, FileText, RotateCw, AlignJustify, Zap, X, Lightbulb, Square } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { generateAIResponse } from "@/services/epictusIAService";
-import ReactMarkdown from "react-markdown";
-import { v4 as uuidv4 } from 'uuid';
 
-// Componentes personalizados para o ReactMarkdown
-const markdownComponents = {
-  p: ({node, ...props}) => <p className="text-base leading-relaxed mb-2" {...props} />,
-  strong: ({node, ...props}) => <strong className="font-semibold" {...props} />,
-  em: ({node, ...props}) => <em className="italic" {...props} />,
-  ul: ({node, ...props}) => <ul className="list-disc list-inside ml-4 mb-2" {...props} />,
-  ol: ({node, ...props}) => <ol className="list-decimal list-inside ml-4 mb-2" {...props} />,
-  li: ({node, ...props}) => <li className="mb-1" {...props} />,
-  code: ({node, inline, ...props}) => 
-    inline 
-      ? <code className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono" {...props} />
-      : <code className="block bg-gray-800/50 p-2 rounded text-sm my-2 overflow-x-auto font-mono" {...props} />,
-  blockquote: ({node, ...props}) => <blockquote className="border-l-4 pl-4 italic text-gray-600" {...props} />,
-};
-
-// Definição das interfaces
 interface QuickActionProps {
   icon: React.ReactNode;
   label: string;
   onClick?: () => void;
 }
 
-interface Message {
-  id: string;
-  content: string;
-  sender: 'user' | 'assistant';
-  type: 'text' | 'audio';
-  timestamp: Date;
-  audioUrl?: string;
-}
-
-// Componente de ação rápida
 const QuickAction: React.FC<QuickActionProps> = ({ icon, label, onClick }) => {
   return (
     <motion.button
@@ -56,52 +28,6 @@ const QuickAction: React.FC<QuickActionProps> = ({ icon, label, onClick }) => {
   );
 };
 
-// Componente de bolha de mensagem
-const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
-  const isUser = message.sender === 'user';
-
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  return (
-    <div className={`flex w-full mb-4 ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <div className={`flex items-start gap-2 max-w-[80%] ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
-          ${isUser ? 'bg-gradient-to-br from-[#0D23A0] to-[#5B21BD]' : 'bg-gradient-to-br from-[#1a365d] to-[#2d3748]'}`}>
-          {isUser ? <User size={16} className="text-white" /> : <Bot size={16} className="text-white" />}
-        </div>
-
-        <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
-          <div
-            className={`px-4 py-3 rounded-2xl ${
-              isUser 
-                ? 'bg-gradient-to-r from-[#0D23A0]/90 to-[#5B21BD]/90 text-white' 
-                : 'bg-gradient-to-r from-[#1a365d]/80 to-[#2d3748]/80 text-white'
-            }`}
-          >
-            {message.type === 'text' ? (
-              <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-1 prose-headings:my-2">
-                <ReactMarkdown components={markdownComponents}>
-                  {message.content}
-                </ReactMarkdown>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <audio src={message.audioUrl} controls className="max-w-full" />
-              </div>
-            )}
-          </div>
-          <span className="text-xs text-gray-400 mt-1 px-2">
-            {formatTime(message.timestamp)}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Componente principal da caixa de mensagens
 const TurboAdvancedMessageBox: React.FC = () => {
   const { toast } = useToast();
   const [message, setMessage] = useState("");
@@ -110,17 +36,10 @@ const TurboAdvancedMessageBox: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const [audioRecorder, setAudioRecorder] = useState<MediaRecorder | null>(null);
-  const [chatStarted, setChatStarted] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
-
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   // Efeito visual quando o input recebe texto
   const inputHasContent = message.trim().length > 0;
 
-  // Opções de ações rápidas
   const quickActions = [
     { icon: <Brain size={16} className="text-blue-300 dark:text-blue-300" />, label: "Simulador de Provas" },
     { icon: <BookOpen size={16} className="text-emerald-300 dark:text-emerald-300" />, label: "Gerar Caderno" },
@@ -130,126 +49,58 @@ const TurboAdvancedMessageBox: React.FC = () => {
     { icon: <Zap size={16} className="text-rose-300 dark:text-rose-300" />, label: "Resumir Conteúdo" }
   ];
 
-  // Scroll para o final da lista de mensagens
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  // Função para enviar mensagem
-  const handleSendMessage = async () => {
+  const handleSendMessage = () => {
     if (!message.trim()) return;
-
-    // Cria uma nova mensagem do usuário
-    const newUserMessage: Message = {
-      id: uuidv4(),
-      content: message,
-      sender: 'user',
-      type: 'text',
-      timestamp: new Date()
-    };
-
-    // Se é a primeira mensagem, iniciar o chat
-    if (!chatStarted) {
-      setChatStarted(true);
-    }
-
-    // Adiciona a mensagem do usuário ao histórico
-    setMessages(prev => [...prev, newUserMessage]);
-
-    // Limpa o campo de entrada
+    console.log("Mensagem enviada:", message);
+    // Aqui você implementaria a lógica de envio para o backend
     setMessage("");
-
-    // Mostra indicador de que a IA está "digitando"
-    setIsWaitingForResponse(true);
-
-    try {
-      // Preparar o contexto da conversa para enviar à API
-      const conversationContext = messages.map(msg => `${msg.sender === 'user' ? 'Usuário' : 'Assistente'}: ${msg.content}`).join('\n');
-
-      // Adicionar a mensagem atual ao contexto
-      const fullContext = `${conversationContext}\nUsuário: ${newUserMessage.content}`;
-
-      // Chamar a API do Gemini (ou outra IA)
-      let aiResponse = "";
-
-      try {
-        // Tentar usar a API aiChatService (Gemini)
-        const { generateAIResponse: geminiGenerate } = await import('@/services/aiChatService');
-        const sessionId = `epictus-chat-${Date.now()}`;
-
-        aiResponse = await geminiGenerate(
-          newUserMessage.content,
-          sessionId,
-          { 
-            intelligenceLevel: 'advanced',
-            languageStyle: 'formal',
-            detailedResponse: true,
-            conversationHistory: fullContext
-          }
-        );
-      } catch (error) {
-        console.error("Erro ao usar API Gemini:", error);
-        // Fallback para o serviço local
-        aiResponse = await generateAIResponse(
-          `${fullContext}\n\nAssistente: `
-        );
-      }
-
-      // Cria uma nova mensagem da IA
-      const newAIMessage: Message = {
-        id: uuidv4(),
-        content: aiResponse,
-        sender: 'assistant',
-        type: 'text',
-        timestamp: new Date()
-      };
-
-      // Adiciona a resposta da IA ao histórico após um pequeno delay para simular digitação
-      setTimeout(() => {
-        setMessages(prev => [...prev, newAIMessage]);
-        setIsWaitingForResponse(false);
-      }, 700);
-
-    } catch (error) {
-      console.error("Erro ao obter resposta da IA:", error);
-      // Mensagem de erro
-      const errorMessage: Message = {
-        id: uuidv4(),
-        content: "Desculpe, tive um problema ao processar sua mensagem. Poderia tentar novamente?",
-        sender: 'assistant',
-        type: 'text',
-        timestamp: new Date()
-      };
-
-      setMessages(prev => [...prev, errorMessage]);
-      setIsWaitingForResponse(false);
-
-      toast({
-        title: "Erro",
-        description: "Não foi possível obter resposta da IA. Tente novamente.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Função para lidar com teclas pressionadas (principalmente o Enter)
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
   };
 
   // Iniciando ou parando a gravação de áudio
   const toggleRecording = async () => {
     if (isRecording) {
-      stopRecording();
+      // Parar gravação
+      if (audioRecorder) {
+        audioRecorder.stop();
+      }
+      setIsRecording(false);
     } else {
-      startRecording();
+      try {
+        // Iniciar gravação
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const recorder = new MediaRecorder(stream);
+        setAudioRecorder(recorder);
+
+        const chunks: Blob[] = [];
+        recorder.ondataavailable = (e) => {
+          chunks.push(e.data);
+        };
+
+        recorder.onstop = () => {
+          const audioBlob = new Blob(chunks, { type: 'audio/wav' });
+          // Aqui você pode processar o áudio (enviar para backend, etc)
+          console.log("Áudio gravado:", audioBlob);
+          setAudioChunks([]);
+        };
+
+        recorder.start();
+        setAudioChunks([]);
+        setIsRecording(true);
+      } catch (error) {
+        console.error("Erro ao acessar microfone:", error);
+        toast({
+          title: "Acesso ao microfone negado",
+          description: "Verifique as permissões do seu navegador.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
     }
   };
 
@@ -274,43 +125,9 @@ const TurboAdvancedMessageBox: React.FC = () => {
           recorder.onstop = () => {
             // Criar um blob com todos os chunks de áudio
             const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-            const audioUrl = URL.createObjectURL(audioBlob);
 
-            // Se é a primeira mensagem, iniciar o chat
-            if (!chatStarted) {
-              setChatStarted(true);
-            }
-
-            // Adicionar a mensagem de áudio ao histórico
-            const audioMessage: Message = {
-              id: uuidv4(),
-              content: "Mensagem de áudio",
-              sender: 'user',
-              type: 'audio',
-              timestamp: new Date(),
-              audioUrl: audioUrl
-            };
-
-            setMessages(prev => [...prev, audioMessage]);
-
-            // TODO: Processar o áudio para texto e enviar para a IA
-            // Por enquanto, vamos criar uma resposta genérica da IA
-
-            setIsWaitingForResponse(true);
-
-            // Simular uma resposta da IA após 1.5 segundos
-            setTimeout(() => {
-              const aiResponseToAudio: Message = {
-                id: uuidv4(),
-                content: "Recebi seu áudio. Como posso ajudar com essa solicitação?",
-                sender: 'assistant',
-                type: 'text',
-                timestamp: new Date()
-              };
-
-              setMessages(prev => [...prev, aiResponseToAudio]);
-              setIsWaitingForResponse(false);
-            }, 1500);
+            // Aqui você pode implementar o envio do áudio para processamento
+            console.log("Áudio gravado:", audioBlob);
 
             // Parar todos os tracks da stream
             stream.getTracks().forEach(track => track.stop());
@@ -325,11 +142,6 @@ const TurboAdvancedMessageBox: React.FC = () => {
         })
         .catch(err => {
           console.error("Erro ao acessar microfone:", err);
-          toast({
-            title: "Acesso ao microfone negado",
-            description: "Verifique as permissões do seu navegador.",
-            variant: "destructive",
-          });
         });
     }
   };
@@ -341,68 +153,22 @@ const TurboAdvancedMessageBox: React.FC = () => {
     }
   };
 
-  // Renderização condicional da tela de boas-vindas ou do chat
-  const renderContent = () => {
-    if (!chatStarted) {
-      // Tela de boas-vindas
-      return (
-        <>
-          {/* Espaço calculado para posicionar a frase perfeitamente centralizada */}
-          <div className="w-full h-32"></div>
-
-          {/* Frase de boas-vindas exatamente centralizada entre o cabeçalho e a caixa de mensagens */}
-          <div className="text-center my-auto w-full hub-connected-width mx-auto flex flex-col justify-center" style={{ height: "25vh" }}>
-            <h2 className="text-4xl text-white dark:text-white">
-              <span className="font-bold">Como a IA mais <span className="text-[#0049e2] bg-gradient-to-r from-[#0049e2] to-[#0049e2]/80 bg-clip-text text-transparent relative after:content-[''] after:absolute after:h-[3px] after:bg-[#0049e2] after:w-0 after:left-0 after:bottom-[-5px] after:transition-all after:duration-300 group-hover:after:w-full hover:after:w-full dark:text-[#0049e2]">Inteligente do mundo</span>
-              </span><br />
-              <span className="font-light text-3xl text-gray-800 dark:text-gray-300">pode te ajudar hoje {localStorage.getItem('username') || 'João Marcelo'}?</span>
-            </h2>
-          </div>
-
-          {/* Pequeno espaço adicional antes da caixa de mensagens */}
-          <div className="w-full h-6"></div>
-        </>
-      );
-    } else {
-      // Interface de chat com mensagens
-      return (
-        <div 
-          ref={chatContainerRef}
-          className="w-full h-[calc(100vh-380px)] min-h-[300px] overflow-y-auto p-4 mb-4 scrollbar-hide"
-        >
-          <div className="space-y-2 w-full">
-            {messages.map((msg) => (
-              <MessageBubble key={msg.id} message={msg} />
-            ))}
-
-            {/* Indicador de digitação */}
-            {isWaitingForResponse && (
-              <div className="flex items-start gap-2 max-w-[80%]">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1a365d] to-[#2d3748] flex items-center justify-center flex-shrink-0">
-                  <Bot size={16} className="text-white" />
-                </div>
-                <div className="px-4 py-3 rounded-2xl bg-gradient-to-r from-[#1a365d]/80 to-[#2d3748]/80 text-white">
-                  <div className="flex space-x-1.5">
-                    <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                    <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                    <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Elemento invisível para scroll automático */}
-            <div ref={messagesEndRef} />
-          </div>
-        </div>
-      );
-    }
-  };
-
   return (
     <>
-      {/* Conteúdo condicional (boas-vindas ou chat) */}
-      {renderContent()}
+      {/* Espaço calculado para posicionar a frase perfeitamente centralizada */}
+      <div className="w-full h-32"></div>
+
+      {/* Frase de boas-vindas exatamente centralizada entre o cabeçalho e a caixa de mensagens */}
+      <div className="text-center my-auto w-full hub-connected-width mx-auto flex flex-col justify-center" style={{ height: "25vh" }}>
+        <h2 className="text-4xl text-white dark:text-white">
+          <span className="font-bold">Como a IA mais <span className="text-[#0049e2] bg-gradient-to-r from-[#0049e2] to-[#0049e2]/80 bg-clip-text text-transparent relative after:content-[''] after:absolute after:h-[3px] after:bg-[#0049e2] after:w-0 after:left-0 after:bottom-[-5px] after:transition-all after:duration-300 group-hover:after:w-full hover:after:w-full dark:text-[#0049e2]">Inteligente do mundo</span>
+          </span><br />
+          <span className="font-light text-3xl text-gray-800 dark:text-gray-300">pode te ajudar hoje {localStorage.getItem('username') || 'João Marcelo'}?</span>
+        </h2>
+      </div>
+
+      {/* Pequeno espaço adicional antes da caixa de mensagens */}
+      <div className="w-full h-6"></div>
 
       <div className="w-full mx-auto mb-2 p-1 hub-connected-width"> {/* Usando a mesma classe de largura do cabeçalho */}
       <motion.div 
@@ -534,20 +300,20 @@ const TurboAdvancedMessageBox: React.FC = () => {
                       // Aqui adicionamos a chamada real para a API de IA para melhorar o prompt
                       // Utilizamos a função do serviço aiChatService para acessar a API Gemini
                       let improvedPromptText = "";
-
+                      
                       if (message.trim().length > 0) {
                         // Criar um ID de sessão único para esta interação
                         const sessionId = `prompt-improvement-${Date.now()}`;
-
+                        
                         try {
                           // Importamos a função do serviço aiChatService
                           const { generateAIResponse: generateGeminiResponse } = await import('@/services/aiChatService');
-
+                          
                           // Chamar a API Gemini para melhorar o prompt
                           improvedPromptText = await generateGeminiResponse(
                             `Você é um assistente especializado em melhorar prompts educacionais. 
                             Analise o seguinte prompt e melhore-o para obter uma resposta mais detalhada, completa e educacional.
-
+                            
                             Melhore o seguinte prompt para obter uma resposta mais detalhada, completa e educacional. 
                             NÃO responda a pergunta, apenas melhore o prompt adicionando:
                             1. Mais contexto e especificidade
@@ -557,7 +323,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                             5. Adicione pedidos para que sejam mencionadas curiosidades ou fatos históricos relevantes
 
                             Original: "${message}"
-
+                            
                             Retorne APENAS o prompt melhorado, sem comentários adicionais.`,
                             sessionId,
                             {
@@ -579,7 +345,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                             5. Adicione pedidos para que sejam mencionadas curiosidades ou fatos históricos relevantes
 
                             Original: "${message}"
-
+                            
                             Retorne APENAS o prompt melhorado, sem comentários adicionais.`
                           );
                         }
@@ -627,7 +393,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                                   ${message}
                                 </div>
                               </div>
-
+                              
                               <div>
                                 <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Versão aprimorada pela Epictus IA:</p>
                                 <div class="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-800 rounded-lg text-sm text-gray-800 dark:text-gray-200 max-h-[150px] overflow-y-auto scrollbar-hide">
@@ -696,7 +462,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                           useImprovedButton.addEventListener('click', () => {
                             // Atualizar o input com o prompt melhorado
                             setMessage(improvedPromptText);
-
+                            
                             // Fechar o modal
                             closeModal();
 
@@ -735,7 +501,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                   </svg>
                 </motion.button>
               )}
-
+              
               {/* Botão de sugestão de prompts inteligentes */}
               <motion.button 
                 className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
@@ -938,7 +704,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                            flex items-center justify-center shadow-lg text-white dark:text-white"
                   whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={toggleRecording}
+                  onClick={startRecording}
                 >
                   <Mic size={16} />
                 </motion.button>
@@ -1057,6 +823,9 @@ const TurboAdvancedMessageBox: React.FC = () => {
               </motion.div>
             )}
           </AnimatePresence>
+          <div className="w-full max-w-full px-2"> {/* Changed px-4 to px-2 */}
+            {/* Conteúdo da caixa de mensagens */}
+          </div>
         </div>
       </motion.div>
       </div>
