@@ -234,7 +234,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
 
   return (
     <>
-      <style jsx>{`
+      <style>{`
         /* Prevent bottom bar from showing */
         .messages-container {
           overflow-anchor: none;
