@@ -110,7 +110,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
   return (
     <>
       {/* Adicionando um espaço maior no topo */}
-      <div className="w-full h-40"></div>
+      <div className="w-full h-52"></div>
 
       {/* Frase de boas-vindas posicionada acima da caixa de mensagens */}
       <div className="text-center mb-8 w-full hub-connected-width mx-auto">
