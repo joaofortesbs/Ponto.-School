@@ -37,7 +37,6 @@ import {
 } from "lucide-react";
 import EpictusIAHeader from "./EpictusIAHeader"; // Added import for the new header component
 import EpictusTurboMode from "./EpictusTurboMode"; // Added import for EpictusTurboMode
-import EpictusTurboAdvancedMode from "./EpictusTurboAdvancedMode"; // Added import for the new advanced turbo mode component
 
 
 // Definição das abas/seções
@@ -113,7 +112,6 @@ export default function EpictusIAComplete() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredSections, setFilteredSections] = useState(sections);
   const [turboModeActive, setTurboModeActive] = useState(false);
-  const [turboAdvancedModeActive, setTurboAdvancedModeActive] = useState(false); // Added state for advanced turbo mode
 
 
   const carouselRef = useRef<HTMLDivElement>(null);
