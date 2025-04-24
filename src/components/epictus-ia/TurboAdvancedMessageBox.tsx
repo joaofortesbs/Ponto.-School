@@ -122,8 +122,8 @@ const TurboAdvancedMessageBox: React.FC = () => {
               : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-tl-none"
           }`}
         >
-          <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-1 prose-headings:my-2">
-            {message.sender === "ai" ? (
+          {message.sender === "ai" ? (
+            <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-1 prose-headings:my-2">
               <ReactMarkdown
                 components={{
                   p: ({node, ...props}) => <p className="my-1" {...props} />,
@@ -142,10 +142,10 @@ const TurboAdvancedMessageBox: React.FC = () => {
               >
                 {message.content}
               </ReactMarkdown>
-            ) : (
-              <p className="my-1">{message.content}</p>
-            )}
-          </div>
+            </div>
+          ) : (
+            <p className="my-1">{message.content}</p>
+          )}
           <div className="text-xs opacity-70 mt-1 text-right">
             {message.timestamp.toLocaleTimeString([], {
               hour: "2-digit",
