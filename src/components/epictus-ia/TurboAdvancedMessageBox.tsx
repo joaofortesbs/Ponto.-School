@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Plus, Mic, Send, Brain, BookOpen, FileText, RotateCw, AlignJustify, Zap, X, Lightbulb, Square } from "lucide-react";
+import { Sparkles, Plus, Mic, Send, Brain, BookOpen, FileText, RotateCw, AlignJustify, Zap, X, Lightbulb, Square, User } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,13 @@ const QuickAction: React.FC<QuickActionProps> = ({ icon, label, onClick }) => {
   );
 };
 
+interface Message {
+  id: string;
+  content: string;
+  sender: 'user' | 'ai';
+  timestamp: Date;
+}
+
 const TurboAdvancedMessageBox: React.FC = () => {
   const { toast } = useToast();
   const [message, setMessage] = useState("");
@@ -36,9 +43,19 @@ const TurboAdvancedMessageBox: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const [audioRecorder, setAudioRecorder] = useState<MediaRecorder | null>(null);
+  const [chatMessages, setChatMessages] = useState<Message[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Efeito visual quando o input recebe texto
   const inputHasContent = message.trim().length > 0;
+  
+  // Rolar para a última mensagem quando houver nova mensagem
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatMessages]);
 
   const quickActions = [
     { icon: <Brain size={16} className="text-blue-300 dark:text-blue-300" />, label: "Simulador de Provas" },
@@ -49,11 +66,44 @@ const TurboAdvancedMessageBox: React.FC = () => {
     { icon: <Zap size={16} className="text-rose-300 dark:text-rose-300" />, label: "Resumir Conteúdo" }
   ];
 
-  const handleSendMessage = () => {
-    if (!message.trim()) return;
-    console.log("Mensagem enviada:", message);
-    // Aqui você implementaria a lógica de envio para o backend
+  const handleSendMessage = async () => {
+    if (!message.trim() || isProcessing) return;
+    
+    // Adicionar mensagem do usuário
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content: message,
+      sender: 'user',
+      timestamp: new Date()
+    };
+    
+    setChatMessages(prev => [...prev, userMessage]);
     setMessage("");
+    setIsProcessing(true);
+    
+    try {
+      // Simular processamento da resposta da IA
+      const aiResponseContent = await generateAIResponse(message);
+      
+      // Adicionar resposta da IA
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: aiResponseContent || "Desculpe, não consegui processar sua solicitação. Por favor, tente novamente.",
+        sender: 'ai',
+        timestamp: new Date()
+      };
+      
+      setChatMessages(prev => [...prev, aiMessage]);
+    } catch (error) {
+      console.error("Erro ao processar mensagem:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível processar sua mensagem. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   // Iniciando ou parando a gravação de áudio
@@ -815,8 +865,39 @@ const TurboAdvancedMessageBox: React.FC = () => {
               </motion.div>
             )}
           </AnimatePresence>
-          <div className="w-full max-w-full px-2"> {/* Changed px-4 to px-2 */}
-            {/* Conteúdo da caixa de mensagens */}
+          {/* Área de mensagens do chat */}
+          <div className="w-full max-w-full px-2 py-1 space-y-4 overflow-y-auto max-h-[300px]" style={{ scrollbarWidth: 'thin' }}>
+            {chatMessages.map((msg) => (
+              <div 
+                key={msg.id} 
+                className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div 
+                  className={`max-w-[80%] rounded-lg p-3 ${
+                    msg.sender === 'user' 
+                      ? 'bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] text-white' 
+                      : 'bg-gradient-to-r from-[#0c2341]/70 to-[#0f3562]/70 text-white border border-white/10'
+                  }`}
+                >
+                  <div className="flex items-start gap-2">
+                    {msg.sender === 'ai' && (
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#1230CC] flex items-center justify-center mt-0.5">
+                        <span className="text-xs text-white font-semibold">IA</span>
+                      </div>
+                    )}
+                    <div className={`${msg.sender === 'user' ? 'text-white' : 'text-white'} text-sm`}>
+                      {msg.content}
+                    </div>
+                    {msg.sender === 'user' && (
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#0D23A0]/80 flex items-center justify-center mt-0.5">
+                        <User size={14} className="text-white" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
           </div>
         </div>
       </motion.div>
