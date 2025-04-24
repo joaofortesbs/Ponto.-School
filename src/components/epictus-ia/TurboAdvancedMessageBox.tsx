@@ -8,6 +8,21 @@ import { generateAIResponse } from "@/services/epictusIAService";
 import ReactMarkdown from "react-markdown";
 import { v4 as uuidv4 } from 'uuid';
 
+// Componentes personalizados para o ReactMarkdown
+const markdownComponents = {
+  p: ({node, ...props}) => <p className="text-base leading-relaxed mb-2" {...props} />,
+  strong: ({node, ...props}) => <strong className="font-semibold" {...props} />,
+  em: ({node, ...props}) => <em className="italic" {...props} />,
+  ul: ({node, ...props}) => <ul className="list-disc list-inside ml-4 mb-2" {...props} />,
+  ol: ({node, ...props}) => <ol className="list-decimal list-inside ml-4 mb-2" {...props} />,
+  li: ({node, ...props}) => <li className="mb-1" {...props} />,
+  code: ({node, inline, ...props}) => 
+    inline 
+      ? <code className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono" {...props} />
+      : <code className="block bg-gray-800/50 p-2 rounded text-sm my-2 overflow-x-auto font-mono" {...props} />,
+  blockquote: ({node, ...props}) => <blockquote className="border-l-4 pl-4 italic text-gray-600" {...props} />,
+};
+
 // Definição das interfaces
 interface QuickActionProps {
   icon: React.ReactNode;
@@ -44,11 +59,11 @@ const QuickAction: React.FC<QuickActionProps> = ({ icon, label, onClick }) => {
 // Componente de bolha de mensagem
 const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
   const isUser = message.sender === 'user';
-  
+
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
-  
+
   return (
     <div className={`flex w-full mb-4 ${isUser ? 'justify-end' : 'justify-start'}`}>
       <div className={`flex items-start gap-2 max-w-[80%] ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
@@ -56,7 +71,7 @@ const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
           ${isUser ? 'bg-gradient-to-br from-[#0D23A0] to-[#5B21BD]' : 'bg-gradient-to-br from-[#1a365d] to-[#2d3748]'}`}>
           {isUser ? <User size={16} className="text-white" /> : <Bot size={16} className="text-white" />}
         </div>
-        
+
         <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
           <div
             className={`px-4 py-3 rounded-2xl ${
@@ -67,22 +82,7 @@ const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
           >
             {message.type === 'text' ? (
               <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-1 prose-headings:my-2">
-                <ReactMarkdown components={{
-                  p: ({node, ...props}) => <p className="my-1" {...props} />,
-                  h1: ({node, ...props}) => <h1 className="my-2" {...props} />,
-                  h2: ({node, ...props}) => <h2 className="my-2" {...props} />,
-                  h3: ({node, ...props}) => <h3 className="my-2" {...props} />,
-                  h4: ({node, ...props}) => <h4 className="my-2" {...props} />,
-                  h5: ({node, ...props}) => <h5 className="my-2" {...props} />,
-                  h6: ({node, ...props}) => <h6 className="my-2" {...props} />,
-                  ul: ({node, ...props}) => <ul className="my-1 ml-4 list-disc" {...props} />,
-                  ol: ({node, ...props}) => <ol className="my-1 ml-4 list-decimal" {...props} />,
-                  li: ({node, ...props}) => <li className="my-0.5" {...props} />,
-                  code: ({node, inline, ...props}) => 
-                    inline 
-                      ? <code className="bg-gray-700/50 px-1 py-0.5 rounded text-sm" {...props} />
-                      : <code className="block bg-gray-800/50 p-2 rounded text-sm my-2 overflow-x-auto" {...props} />
-                }}>
+                <ReactMarkdown components={markdownComponents}>
                   {message.content}
                 </ReactMarkdown>
               </div>
@@ -113,7 +113,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
   const [chatStarted, setChatStarted] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -142,7 +142,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
   // Função para enviar mensagem
   const handleSendMessage = async () => {
     if (!message.trim()) return;
-    
+
     // Cria uma nova mensagem do usuário
     const newUserMessage: Message = {
       id: uuidv4(),
@@ -151,36 +151,36 @@ const TurboAdvancedMessageBox: React.FC = () => {
       type: 'text',
       timestamp: new Date()
     };
-    
+
     // Se é a primeira mensagem, iniciar o chat
     if (!chatStarted) {
       setChatStarted(true);
     }
-    
+
     // Adiciona a mensagem do usuário ao histórico
     setMessages(prev => [...prev, newUserMessage]);
-    
+
     // Limpa o campo de entrada
     setMessage("");
-    
+
     // Mostra indicador de que a IA está "digitando"
     setIsWaitingForResponse(true);
-    
+
     try {
       // Preparar o contexto da conversa para enviar à API
       const conversationContext = messages.map(msg => `${msg.sender === 'user' ? 'Usuário' : 'Assistente'}: ${msg.content}`).join('\n');
-      
+
       // Adicionar a mensagem atual ao contexto
       const fullContext = `${conversationContext}\nUsuário: ${newUserMessage.content}`;
-      
+
       // Chamar a API do Gemini (ou outra IA)
       let aiResponse = "";
-      
+
       try {
         // Tentar usar a API aiChatService (Gemini)
         const { generateAIResponse: geminiGenerate } = await import('@/services/aiChatService');
         const sessionId = `epictus-chat-${Date.now()}`;
-        
+
         aiResponse = await geminiGenerate(
           newUserMessage.content,
           sessionId,
@@ -198,7 +198,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
           `${fullContext}\n\nAssistente: `
         );
       }
-      
+
       // Cria uma nova mensagem da IA
       const newAIMessage: Message = {
         id: uuidv4(),
@@ -207,13 +207,13 @@ const TurboAdvancedMessageBox: React.FC = () => {
         type: 'text',
         timestamp: new Date()
       };
-      
+
       // Adiciona a resposta da IA ao histórico após um pequeno delay para simular digitação
       setTimeout(() => {
         setMessages(prev => [...prev, newAIMessage]);
         setIsWaitingForResponse(false);
       }, 700);
-      
+
     } catch (error) {
       console.error("Erro ao obter resposta da IA:", error);
       // Mensagem de erro
@@ -224,10 +224,10 @@ const TurboAdvancedMessageBox: React.FC = () => {
         type: 'text',
         timestamp: new Date()
       };
-      
+
       setMessages(prev => [...prev, errorMessage]);
       setIsWaitingForResponse(false);
-      
+
       toast({
         title: "Erro",
         description: "Não foi possível obter resposta da IA. Tente novamente.",
@@ -290,14 +290,14 @@ const TurboAdvancedMessageBox: React.FC = () => {
               timestamp: new Date(),
               audioUrl: audioUrl
             };
-            
+
             setMessages(prev => [...prev, audioMessage]);
 
             // TODO: Processar o áudio para texto e enviar para a IA
             // Por enquanto, vamos criar uma resposta genérica da IA
-            
+
             setIsWaitingForResponse(true);
-            
+
             // Simular uma resposta da IA após 1.5 segundos
             setTimeout(() => {
               const aiResponseToAudio: Message = {
@@ -307,7 +307,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                 type: 'text',
                 timestamp: new Date()
               };
-              
+
               setMessages(prev => [...prev, aiResponseToAudio]);
               setIsWaitingForResponse(false);
             }, 1500);
@@ -374,7 +374,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
             {messages.map((msg) => (
               <MessageBubble key={msg.id} message={msg} />
             ))}
-            
+
             {/* Indicador de digitação */}
             {isWaitingForResponse && (
               <div className="flex items-start gap-2 max-w-[80%]">
@@ -390,7 +390,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                 </div>
               </div>
             )}
-            
+
             {/* Elemento invisível para scroll automático */}
             <div ref={messagesEndRef} />
           </div>
@@ -534,20 +534,20 @@ const TurboAdvancedMessageBox: React.FC = () => {
                       // Aqui adicionamos a chamada real para a API de IA para melhorar o prompt
                       // Utilizamos a função do serviço aiChatService para acessar a API Gemini
                       let improvedPromptText = "";
-                      
+
                       if (message.trim().length > 0) {
                         // Criar um ID de sessão único para esta interação
                         const sessionId = `prompt-improvement-${Date.now()}`;
-                        
+
                         try {
                           // Importamos a função do serviço aiChatService
                           const { generateAIResponse: generateGeminiResponse } = await import('@/services/aiChatService');
-                          
+
                           // Chamar a API Gemini para melhorar o prompt
                           improvedPromptText = await generateGeminiResponse(
                             `Você é um assistente especializado em melhorar prompts educacionais. 
                             Analise o seguinte prompt e melhore-o para obter uma resposta mais detalhada, completa e educacional.
-                            
+
                             Melhore o seguinte prompt para obter uma resposta mais detalhada, completa e educacional. 
                             NÃO responda a pergunta, apenas melhore o prompt adicionando:
                             1. Mais contexto e especificidade
@@ -557,7 +557,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                             5. Adicione pedidos para que sejam mencionadas curiosidades ou fatos históricos relevantes
 
                             Original: "${message}"
-                            
+
                             Retorne APENAS o prompt melhorado, sem comentários adicionais.`,
                             sessionId,
                             {
@@ -579,7 +579,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                             5. Adicione pedidos para que sejam mencionadas curiosidades ou fatos históricos relevantes
 
                             Original: "${message}"
-                            
+
                             Retorne APENAS o prompt melhorado, sem comentários adicionais.`
                           );
                         }
@@ -627,7 +627,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                                   ${message}
                                 </div>
                               </div>
-                              
+
                               <div>
                                 <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Versão aprimorada pela Epictus IA:</p>
                                 <div class="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-800 rounded-lg text-sm text-gray-800 dark:text-gray-200 max-h-[150px] overflow-y-auto scrollbar-hide">
@@ -696,7 +696,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                           useImprovedButton.addEventListener('click', () => {
                             // Atualizar o input com o prompt melhorado
                             setMessage(improvedPromptText);
-                            
+
                             // Fechar o modal
                             closeModal();
 
@@ -735,7 +735,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                   </svg>
                 </motion.button>
               )}
-              
+
               {/* Botão de sugestão de prompts inteligentes */}
               <motion.button 
                 className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 

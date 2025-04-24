@@ -38,7 +38,7 @@ const NotebookSimulation: React.FC<NotebookSimulationProps> = ({ content }) => {
         /(?:^|\n)(?:recebi seu pedido|preparei um resumo|dá uma olhada|aqui está|segue abaixo|conforme solicitado|bora nessa|tipo|umas anotações de caderno|né|sem problemas)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
 
         // Farewell patterns
-        /(?:^|\n)(?:e aí, curtiu|se precisar|só chamar|até mais|até a próxima|até logo|até breve|tchau|adeus)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
+        /(?:^|\n)(?:e aí, curtiu\?|se precisar|só chamar|até mais|até a próxima|até logo|até breve|tchau|adeus)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
 
         // Casual expressions
         /(?:super|hiper|mega|ultra|clean|maneiro|legal|bacana|show|top|incrível)/gi

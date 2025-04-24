@@ -3,6 +3,7 @@ import { useTheme } from "@/components/ThemeProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import { Zap, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import ReactMarkdown from 'react-markdown';
 
 const EpictusTurboMode: React.FC = () => {
   const { theme } = useTheme();
