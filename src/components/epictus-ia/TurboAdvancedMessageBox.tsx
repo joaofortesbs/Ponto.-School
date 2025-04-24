@@ -1,10 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
+
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Plus, Mic, Send, Brain, BookOpen, FileText, RotateCw, AlignJustify, Zap, X, Lightbulb, Square, User } from "lucide-react";
+import { Sparkles, Plus, Mic, Send, Brain, BookOpen, FileText, RotateCw, AlignJustify, Zap, X, Lightbulb } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { generateAIResponse } from "@/services/epictusIAService";
 
 interface QuickActionProps {
   icon: React.ReactNode;
@@ -28,20 +26,11 @@ const QuickAction: React.FC<QuickActionProps> = ({ icon, label, onClick }) => {
   );
 };
 
-interface Message {
-  id: string;
-  content: string;
-  sender: 'user' | 'ai';
-  timestamp: Date;
-}
-
-// Declarar uma propriedade global para as mensagens do chat
-declare global {
-  interface Window {
-    chatMessages: Message[];
-    updateMessages: (messages: Message[]) => void;
-  }
-}
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
+import { Brain, BookOpen, AlignJustify, RotateCw, FileText, Zap, Mic, Send, Square } from "lucide-react";
+import React, { useState } from "react";
 
 const TurboAdvancedMessageBox: React.FC = () => {
   const { toast } = useToast();
@@ -51,44 +40,9 @@ const TurboAdvancedMessageBox: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const [audioRecorder, setAudioRecorder] = useState<MediaRecorder | null>(null);
-  const [chatMessages, setChatMessages] = useState<Message[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  
-  // Inicializar as mensagens globais
-  useEffect(() => {
-    window.chatMessages = [];
-    window.updateMessages = (messages: Message[]) => {
-      window.chatMessages = messages;
-      // Forçar uma atualização da interface
-      const event = new CustomEvent('chatMessagesUpdated', { detail: messages });
-      window.dispatchEvent(event);
-      
-      // Scroll para a última mensagem após atualização
-      setTimeout(() => {
-        const messagesEnd = document.getElementById('messagesEndRef');
-        if (messagesEnd) {
-          messagesEnd.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 100);
-    };
-  }, []);
-  
-  // Atualizar as mensagens globais quando as mensagens locais mudarem
-  useEffect(() => {
-    window.chatMessages = chatMessages;
-    window.updateMessages(chatMessages);
-  }, [chatMessages]);
 
   // Efeito visual quando o input recebe texto
   const inputHasContent = message.trim().length > 0;
-  
-  // Rolar para a última mensagem quando houver nova mensagem
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [chatMessages]);
 
   const quickActions = [
     { icon: <Brain size={16} className="text-blue-300 dark:text-blue-300" />, label: "Simulador de Provas" },
@@ -99,46 +53,13 @@ const TurboAdvancedMessageBox: React.FC = () => {
     { icon: <Zap size={16} className="text-rose-300 dark:text-rose-300" />, label: "Resumir Conteúdo" }
   ];
 
-  const handleSendMessage = async () => {
-    if (!message.trim() || isProcessing) return;
-    
-    // Adicionar mensagem do usuário
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: message,
-      sender: 'user',
-      timestamp: new Date()
-    };
-    
-    setChatMessages(prev => [...prev, userMessage]);
+  const handleSendMessage = () => {
+    if (!message.trim()) return;
+    console.log("Mensagem enviada:", message);
+    // Aqui você implementaria a lógica de envio para o backend
     setMessage("");
-    setIsProcessing(true);
-    
-    try {
-      // Simular processamento da resposta da IA
-      const aiResponseContent = await generateAIResponse(message);
-      
-      // Adicionar resposta da IA
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: aiResponseContent || "Desculpe, não consegui processar sua solicitação. Por favor, tente novamente.",
-        sender: 'ai',
-        timestamp: new Date()
-      };
-      
-      setChatMessages(prev => [...prev, aiMessage]);
-    } catch (error) {
-      console.error("Erro ao processar mensagem:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível processar sua mensagem. Tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
-    }
   };
-
+  
   // Iniciando ou parando a gravação de áudio
   const toggleRecording = async () => {
     if (isRecording) {
@@ -153,19 +74,19 @@ const TurboAdvancedMessageBox: React.FC = () => {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         const recorder = new MediaRecorder(stream);
         setAudioRecorder(recorder);
-
+        
         const chunks: Blob[] = [];
         recorder.ondataavailable = (e) => {
           chunks.push(e.data);
         };
-
+        
         recorder.onstop = () => {
           const audioBlob = new Blob(chunks, { type: 'audio/wav' });
           // Aqui você pode processar o áudio (enviar para backend, etc)
           console.log("Áudio gravado:", audioBlob);
           setAudioChunks([]);
         };
-
+        
         recorder.start();
         setAudioChunks([]);
         setIsRecording(true);
@@ -178,6 +99,89 @@ const TurboAdvancedMessageBox: React.FC = () => {
         });
       }
     }
+  };
+
+  return (
+    <div className="w-full bg-white dark:bg-[#001233] rounded-xl shadow-md overflow-hidden border border-blue-100 dark:border-[#001a4d] transition-all duration-300"
+      style={{ maxHeight: isExpanded ? "400px" : "auto" }}>
+      
+      {/* Área da mensagem - caixa de texto expandível */}
+      <div className="p-3 relative">
+        <div 
+          className={`relative flex items-center transition-all duration-300 rounded-xl px-2 py-1 border ${
+            isInputFocused 
+              ? "border-blue-400 bg-white/80 dark:bg-[#001a4d]/80 dark:border-[#0047b3]" 
+              : inputHasContent 
+                ? "border-blue-300 bg-white/70 dark:bg-[#001a4d]/70 dark:border-[#0047b3]/70" 
+                : "border-gray-200 bg-white/50 dark:bg-[#001a4d]/50 dark:border-[#002266]/50"
+          }`}
+        >
+          {/* Campo de entrada de texto */}
+          <Input
+            placeholder="Pergunte algo ao Epictus IA..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onFocus={() => setIsInputFocused(true)}
+            onBlur={() => setIsInputFocused(false)}
+            onKeyDown={handleKeyDown}
+            className="grow border-0 bg-transparent focus:ring-0 text-gray-800 dark:text-gray-200 placeholder:text-gray-500 dark:placeholder:text-gray-400 py-2 px-1"
+          />
+          
+          {/* Área dos botões - reposicionada para alinhar horizontalmente */}
+          <div className="flex items-center gap-2">
+            {/* Botão de sugestão de prompts */}
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="h-8 px-2 text-xs text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded flex items-center gap-1"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Sugestão de Prompts Inteligentes</span>
+            </Button>
+            
+            {/* Botão de enviar ou gravar áudio */}
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={inputHasContent ? handleSendMessage : toggleRecording}
+              className={`h-8 w-8 p-0 rounded-full flex items-center justify-center transition-all ${
+                isRecording 
+                  ? "bg-red-500 text-white hover:bg-red-600" 
+                  : inputHasContent 
+                    ? "bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700" 
+                    : "text-blue-500 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
+              }`}
+            >
+              {isRecording ? (
+                <Square className="h-3.5 w-3.5" />
+              ) : inputHasContent ? (
+                <Send className="h-3.5 w-3.5" />
+              ) : (
+                <Mic className="h-3.5 w-3.5" />
+              )}
+            </Button>
+          </div>
+        </div>
+        
+        {/* Ações rápidas */}
+        <div className="mt-2 flex flex-wrap gap-2">
+          {quickActions.map((action, index) => (
+            <Button
+              key={index}
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs bg-blue-50/50 hover:bg-blue-100/70 text-blue-700 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 dark:text-blue-300 rounded flex items-center gap-1.5 border border-blue-100/50 dark:border-blue-800/30 px-2"
+            >
+              {action.icon}
+              <span>{action.label}</span>
+            </Button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -241,6 +245,14 @@ const TurboAdvancedMessageBox: React.FC = () => {
       {/* Espaço calculado para posicionar a frase perfeitamente centralizada */}
       <div className="w-full h-32"></div>
 
+      {/* Frase de boas-vindas exatamente centralizada entre o cabeçalho e a caixa de mensagens */}
+      <div className="text-center my-auto w-full hub-connected-width mx-auto flex flex-col justify-center" style={{ height: "25vh" }}>
+        <h2 className="text-4xl text-white dark:text-white">
+          <span className="font-bold">Como a IA mais <span className="text-[#0049e2] bg-gradient-to-r from-[#0049e2] to-[#0049e2]/80 bg-clip-text text-transparent relative after:content-[''] after:absolute after:h-[3px] after:bg-[#0049e2] after:w-0 after:left-0 after:bottom-[-5px] after:transition-all after:duration-300 group-hover:after:w-full hover:after:w-full dark:text-[#0049e2]">Inteligente do mundo</span>
+          </span><br />
+          <span className="font-light text-3xl text-gray-800 dark:text-gray-300">pode te ajudar hoje {localStorage.getItem('username') || 'João Marcelo'}?</span>
+        </h2>
+      </div>
 
       {/* Pequeno espaço adicional antes da caixa de mensagens */}
       <div className="w-full h-6"></div>
@@ -356,227 +368,6 @@ const TurboAdvancedMessageBox: React.FC = () => {
 
             {/* Área dos botões de ação (lâmpada e áudio/enviar) */}
             <div className="flex items-center gap-2">
-              {/* Botão de melhoria de prompts - visível apenas quando digitando */}
-              {message.trim().length > 0 && (
-                <motion.button
-                  className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
-                           flex items-center justify-center shadow-lg text-white dark:text-white"
-                  whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={async () => {
-                    // Mostrar toast de análise
-                    toast({
-                      title: "Melhorando seu prompt",
-                      description: "Analisando e aprimorando sua mensagem...",
-                      duration: 3000,
-                    });
-
-                    try {
-                      // Aqui adicionamos a chamada real para a API de IA para melhorar o prompt
-                      // Utilizamos a função do serviço aiChatService para acessar a API Gemini
-                      let improvedPromptText = "";
-
-                      if (message.trim().length > 0) {
-                        // Criar um ID de sessão único para esta interação
-                        const sessionId = `prompt-improvement-${Date.now()}`;
-
-                        try {
-                          // Importamos a função do serviço aiChatService
-                          const { generateAIResponse: generateGeminiResponse } = await import('@/services/aiChatService');
-
-                          // Chamar a API Gemini para melhorar o prompt
-                          improvedPromptText = await generateGeminiResponse(
-                            `Você é um assistente especializado em melhorar prompts educacionais. 
-                            Analise o seguinte prompt e melhore-o para obter uma resposta mais detalhada, completa e educacional.
-
-                            Melhore o seguinte prompt para obter uma resposta mais detalhada, completa e educacional. 
-                            NÃO responda a pergunta, apenas melhore o prompt adicionando:
-                            1. Mais contexto e especificidade
-                            2. Solicite exemplos, comparações e aplicações práticas
-                            3. Peça explicações claras de conceitos fundamentais
-                            4. Solicite visualizações ou analogias quando aplicável
-                            5. Adicione pedidos para que sejam mencionadas curiosidades ou fatos históricos relevantes
-
-                            Original: "${message}"
-
-                            Retorne APENAS o prompt melhorado, sem comentários adicionais.`,
-                            sessionId,
-                            {
-                              intelligenceLevel: 'advanced',
-                              languageStyle: 'formal',
-                              detailedResponse: true
-                            }
-                          );
-                        } catch (error) {
-                          console.error("Erro ao chamar API Gemini:", error);
-                          // Fallback para o serviço local caso a API Gemini falhe
-                          improvedPromptText = await generateAIResponse(
-                            `Melhore o seguinte prompt para obter uma resposta mais detalhada, completa e educacional. 
-                            NÃO responda a pergunta, apenas melhore o prompt adicionando:
-                            1. Mais contexto e especificidade
-                            2. Solicite exemplos, comparações e aplicações práticas
-                            3. Peça explicações claras de conceitos fundamentais
-                            4. Solicite visualizações ou analogias quando aplicável
-                            5. Adicione pedidos para que sejam mencionadas curiosidades ou fatos históricos relevantes
-
-                            Original: "${message}"
-
-                            Retorne APENAS o prompt melhorado, sem comentários adicionais.`
-                          );
-                        }
-                      } else {
-                        improvedPromptText = "Por favor, forneça uma explicação detalhada, incluindo exemplos práticos e conceitos fundamentais. Considere mencionar as principais teorias relacionadas e aplicações no mundo real.";
-                      }
-
-                      // Limpar formatação extra que possa ter vindo na resposta
-                      improvedPromptText = improvedPromptText
-                        .replace(/^(Prompt melhorado:|Aqui está uma versão melhorada:|Versão melhorada:|Melhorado:)/i, '')
-                        .replace(/^["']|["']$/g, '')
-                        .trim();
-
-                      // Criar um elemento para o modal de melhoria de prompt
-                      const modalHTML = `
-                        <div id="improve-prompt-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
-                          <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-blue-200 dark:border-blue-700 p-5 shadow-xl w-[90%] max-w-md animate-fadeIn">
-                            <div class="flex justify-between items-center mb-4">
-                              <h3 class="text-lg font-semibold flex items-center gap-2 text-gray-800 dark:text-gray-200">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500">
-                                  <circle cx="12" cy="12" r="10"/>
-                                  <path d="m4.9 4.9 14.2 14.2"/>
-                                  <path d="M9 9a3 3 0 0 1 5.12-2.136"/>
-                                  <path d="M14 9.3a3 3 0 0 0-5.12 2.136"/>
-                                  <path d="M16 14a2 2 0 0 1-2 2"/>
-                                  <path d="M12 16a2 2 0 0 1-2-2"/>
-                                </svg>
-                                Aprimoramento de Prompt
-                              </h3>
-                              <button 
-                                id="close-improve-prompt-modal"
-                                class="h-7 w-7 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                  <path d="M18 6 6 18"></path>
-                                  <path d="m6 6 12 12"></path>
-                                </svg>
-                              </button>
-                            </div>
-
-                            <div class="mb-4">
-                              <div class="mb-3">
-                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Sua mensagem original:</p>
-                                <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-300">
-                                  ${message}
-                                </div>
-                              </div>
-
-                              <div>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Versão aprimorada pela Epictus IA:</p>
-                                <div class="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-800 rounded-lg text-sm text-gray-800 dark:text-gray-200 max-h-[150px] overflow-y-auto scrollbar-hide">
-                                  ${improvedPromptText}
-                                </div>
-                              </div>
-                            </div>
-
-                            <div class="flex justify-end gap-3">
-                              <button 
-                                id="cancel-improved-prompt"
-                                class="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg transition-colors"
-                              >
-                                Cancelar
-                              </button>
-                              <button 
-                                id="use-improved-prompt"
-                                class="px-4 py-2 text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg transition-colors flex items-center gap-1"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                  <path d="m5 12 5 5 9-9"></path>
-                                </svg>
-                                Usar versão melhorada
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      `;
-
-                      // Remover qualquer modal existente
-                      const existingModal = document.getElementById('improve-prompt-modal');
-                      if (existingModal) {
-                        existingModal.remove();
-                      }
-
-                      // Adicionar o novo modal ao DOM
-                      document.body.insertAdjacentHTML('beforeend', modalHTML);
-
-                      // Adicionar event listeners
-                      setTimeout(() => {
-                        const modal = document.getElementById('improve-prompt-modal');
-                        const closeButton = document.getElementById('close-improve-prompt-modal');
-                        const cancelButton = document.getElementById('cancel-improved-prompt');
-                        const useImprovedButton = document.getElementById('use-improved-prompt');
-
-                        // Função para fechar o modal
-                        const closeModal = () => {
-                          if (modal) {
-                            modal.classList.add('animate-fadeOut');
-                            setTimeout(() => modal.remove(), 200);
-                          }
-                        };
-
-                        // Event listener para fechar o modal
-                        if (closeButton) {
-                          closeButton.addEventListener('click', closeModal);
-                        }
-
-                        // Event listener para cancelar
-                        if (cancelButton) {
-                          cancelButton.addEventListener('click', closeModal);
-                        }
-
-                        // Event listener para usar o prompt melhorado
-                        if (useImprovedButton) {
-                          useImprovedButton.addEventListener('click', () => {
-                            // Atualizar o input com o prompt melhorado
-                            setMessage(improvedPromptText);
-
-                            // Fechar o modal
-                            closeModal();
-
-                            // Mostrar toast de confirmação
-                            toast({
-                              title: "Prompt aprimorado",
-                              description: "Seu prompt foi aprimorado com sucesso!",
-                              duration: 2000,
-                            });
-                          });
-                        }
-
-                        // Event listener para clicar fora e fechar
-                        if (modal) {
-                          modal.addEventListener('click', (e) => {
-                            if (e.target === modal) {
-                              closeModal();
-                            }
-                          });
-                        }
-                      }, 50);
-                    } catch (error) {
-                      console.error("Erro ao melhorar prompt:", error);
-                      toast({
-                        title: "Erro",
-                        description: "Não foi possível melhorar seu prompt. Tente novamente.",
-                        variant: "destructive",
-                        duration: 3000,
-                      });
-                    }
-                  }}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 20h9"/>
-                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                  </svg>
-                </motion.button>
-              )}
-
               {/* Botão de sugestão de prompts inteligentes */}
               <motion.button 
                 className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
@@ -771,7 +562,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
               >
                 <Lightbulb size={16} />
               </motion.button>
-
+              
               {/* Botão de áudio/enviar ao lado direito do botão de sugestões */}
               {!inputHasContent ? (
                 <motion.button 
@@ -898,9 +689,12 @@ const TurboAdvancedMessageBox: React.FC = () => {
               </motion.div>
             )}
           </AnimatePresence>
+          <div className="w-full max-w-full px-2"> {/* Changed px-4 to px-2 */}
+            {/* Conteúdo da caixa de mensagens */}
+          </div>
         </div>
       </motion.div>
-      </div>
+    </div>
     </>
   );
 };
