@@ -118,10 +118,10 @@ const TurboAdvancedMessageBox: React.FC = () => {
         </h2>
       </div>
 
-      <div className="w-full mx-auto mb-2 p-1 max-w-7xl"> {/* Increased max-width from 6xl to 7xl */}
+      <div className="w-full mx-auto mb-2 p-1 hub-connected-width"> {/* Usando a mesma classe de largura do cabeçalho */}
       <motion.div 
         className="relative bg-gradient-to-r from-[#050e1d]/90 to-[#0d1a30]/90 rounded-2xl shadow-xl 
-                   border border-white/5 backdrop-blur-sm overflow-hidden scale-150 dark:bg-gradient-to-r dark:from-[#050e1d]/90 dark:to-[#0d1a30]/90 dark:border-white/5" /* Increased scale from 125% to 150% */
+                   border border-white/5 backdrop-blur-sm overflow-hidden dark:bg-gradient-to-r dark:from-[#050e1d]/90 dark:to-[#0d1a30]/90 dark:border-white/5"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
