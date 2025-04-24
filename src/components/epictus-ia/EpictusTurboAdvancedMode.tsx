@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion, AnimatePresence } from "framer-motion";
@@ -383,13 +382,15 @@ const EpictusTurboAdvancedMode: React.FC = () => {
           </div>
         </motion.header>
       </div>
-      
+
       {/* Espaço adicional para mover a caixa de mensagens mais para baixo */}
       <div className="w-full h-32"></div>
-      
+
       {/* Caixa de mensagens do Epictus Turbo */}
-      <div className="w-full p-4">
-        <TurboAdvancedMessageBox />
+      <div className="w-full absolute" style={{ top: '80px' }}>
+        <div className="w-full p-4">
+          <TurboAdvancedMessageBox />
+        </div>
       </div>
     </div>
   );
