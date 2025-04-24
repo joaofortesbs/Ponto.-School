@@ -1,0 +1,37 @@
+Crie um componente React Modal chamado 'DescrevaSuaRotinaModal'. Ele deve ser acionado futuramente (no Prompt 3) pelo FAB (+) ou por um botão de 'Configurar Rotina'.
+
+**Design e Layout do Modal:**
+1.  **Título:** "Configure Sua Rotina Base"
+2.  **Seção 1: Blocos Fixos (Aulas, Trabalho, etc.)**
+    *   Título da Seção: "Meus Compromissos Fixos ⏰"
+    *   Campos para adicionar um bloco:
+        *   Input de Texto: "Nome da Atividade" (ex: Aula de Cálculo I)
+        *   Checkboxes/Multiselect: "Dia(s) da Semana" (Seg, Ter, Qua...)
+        *   Input de Tempo (TimePicker): "Horário de Início"
+        *   Input de Tempo (TimePicker): "Horário de Fim"
+        *   Select/Dropdown (Opcional): "Tipo" (Aula, Trabalho, Pessoal, etc. - para colorir no calendário depois).
+        *   Botão "+ Adicionar Bloco Fixo": Adiciona o bloco preenchido a uma lista visível dentro do modal e limpa os campos.
+    *   Lista Visível: Área que mostra os blocos fixos já adicionados (com opção de editar/remover cada um).
+3.  **Seção 2: Atividades Recorrentes (Flexíveis)**
+    *   Título da Seção: "Minhas Atividades Regulares 🔁"
+    *   Campos:
+        *   Input de Texto: "Nome da Atividade" (ex: Almoço, Academia)
+        *   Checkboxes/Multiselect: "Frequência" (Diariamente, Dias úteis, Fim de semana, Dias específicos).
+        *   Input Numérico/Select: "Duração Estimada" (em minutos/horas).
+        *   Botão "+ Adicionar Atividade Recorrente".
+    *   Lista Visível: Similar à de Blocos Fixos.
+4.  **Seção 3: Preferências de Estudo (Guia para IA Futura)**
+    *   Título da Seção: "Meu Estilo de Estudo 🤓"
+    *   Checkboxes: "Melhores Horários para Focar" (Manhã, Tarde, Noite).
+    *   Select/Slider: "Duração Ideal da Sessão de Estudo" (30min, 45min, 60min, 90min, 120min).
+    *   Select/Slider: "Duração Ideal da Pausa" (5min, 10min, 15min).
+5.  **Botões do Modal:** "Salvar Rotina" e "Cancelar".
+
+**Interação e Funcionalidade:**
+*   O usuário preenche os campos para blocos fixos e atividades recorrentes.
+*   Clicar em "+ Adicionar..." adiciona o item a uma lista interna do estado do componente e limpa os campos.
+*   Usuário pode remover itens das listas.
+*   Validação básica nos campos (ex: horário de fim > início).
+*   Clicar em "Salvar Rotina": Coleta todos os dados das seções em um objeto JSON e (por enquanto) salva no `localStorage` do navegador com uma chave específica (ex: 'pontoUserRoutine'). Fecha o modal.
+*   Clicar em "Cancelar": Fecha o modal sem salvar.
+*   Use componentes modernos (Material UI, Ant Design) para inputs, botões, etc., seguindo o tema dark.
