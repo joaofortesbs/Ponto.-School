@@ -1,0 +1,20 @@
+Modifique o componente 'RotinaInteligente' para buscar e exibir dados relevantes de outras partes da plataforma Ponto. School.
+
+**Funcionalidade:**
+1.  **Integração com Agenda Principal:**
+    *   Faça uma chamada à API interna (`[API_ENDPOINT_AGENDA]/eventos?semana=YYYY-MM-DD`) para buscar eventos (provas, entregas, reuniões agendadas) da semana atual visível no calendário da Rotina.
+    *   Renderize esses eventos no calendário da Rotina, usando uma cor ou ícone distinto (ex: 📅 ou cor cinza) para diferenciá-los dos blocos de rotina do usuário. Ao clicar, mostre um tooltip com detalhes do evento (nome, data/hora, descrição se houver).
+2.  **Integração com Tarefas:**
+    *   Crie uma nova área/painel lateral (pode ser expansível/recolhível) dentro do componente 'RotinaInteligente' chamada "Tarefas Pendentes".
+    *   Faça uma chamada à API interna (`[API_ENDPOINT_TAREFAS]/pendentes`) para buscar as tarefas do usuário marcadas como "A Fazer" ou "Em Andamento".
+    *   Liste as tarefas neste painel, mostrando: Nome da Tarefa, Prazo (se houver), Prioridade (ícone/cor).
+    *   **Interação Inicial:** Permita que o usuário arraste uma tarefa da lista lateral e solte-a em um horário livre no calendário. Isso deve (por enquanto) criar um bloco de tempo *manual* no calendário com o nome da tarefa (ex: "Trabalhar em: [Nome da Tarefa]"). Salve este bloco manualmente criado no `localStorage` junto com os outros.
+3.  **Integração com Metas CMA (Visualização):**
+    *   Crie uma pequena seção (talvez acima ou abaixo da lista de tarefas) chamada "Metas de Aprendizado Atuais".
+    *   Faça uma chamada à API interna (`[API_ENDPOINT_CMA]/metasAtuais`) para buscar as metas de estudo ativas do usuário na Trilha do Conhecimento (ex: "Completar Módulo X de Física", "Revisar Conceitos de Química Orgânica").
+    *   Exiba essas metas como uma lista simples. Nenhuma ação necessária ainda, apenas visualização.
+
+**Design:**
+*   Garanta que a nova área de "Tarefas Pendentes" seja visualmente integrada e não sobrecarregue a interface. Considere um design recolhível.
+*   Use tooltips claros para os eventos da Agenda Principal.
+*   Mantenha a responsividade.
