@@ -110,7 +110,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
   return (
     <>
       {/* Texto personalizado acima da caixa de mensagens */}
-      <div className="text-center mb-8 w-full max-w-7xl mx-auto">
+      <div className="text-center mb-16 w-full max-w-7xl mx-auto">
         <h2 className="text-4xl text-white dark:text-white">
           <span className="font-bold">Como a IA mais <span className="text-[#0049e2] bg-gradient-to-r from-[#0049e2] to-[#0049e2]/80 bg-clip-text text-transparent relative after:content-[''] after:absolute after:h-[3px] after:bg-[#0049e2] after:w-0 after:left-0 after:bottom-[-5px] after:transition-all after:duration-300 group-hover:after:w-full hover:after:w-full dark:text-[#0049e2]">Inteligente do mundo</span>
           </span><br />
@@ -121,7 +121,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
       <div className="w-full mx-auto mb-2 p-1 max-w-7xl"> {/* Increased max-width from 6xl to 7xl */}
       <motion.div 
         className="relative bg-gradient-to-r from-[#050e1d]/90 to-[#0d1a30]/90 rounded-2xl shadow-xl 
-                   border border-white/5 backdrop-blur-sm overflow-hidden dark:bg-gradient-to-r dark:from-[#050e1d]/90 dark:to-[#0d1a30]/90 dark:border-white/5"
+                   border border-white/5 backdrop-blur-sm overflow-hidden scale-150 dark:bg-gradient-to-r dark:from-[#050e1d]/90 dark:to-[#0d1a30]/90 dark:border-white/5" /* Increased scale from 125% to 150% */
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
