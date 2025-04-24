@@ -1,0 +1,494 @@
+ugin:vite:react-swc] × Unterminated string constant
+     ╭─[/home/runner/workspace/src/components/epictus-ia/TurboAdvancedMessageBox.tsx:181:1]
+ 181 │         </div>
+ 182 │       </div>
+ 183 │     </div>
+ 184 │   );");
+     ·     ───
+ 185 │   };
+ 186 │ 
+ 187 │   const handleKeyDown = (e: React.KeyboardEvent) => {
+     ╰────
+
+  × Return statement is not allowed here
+     ╭─[/home/runner/workspace/src/components/epictus-ia/TurboAdvancedMessageBox.tsx:240:1]
+ 240 │         }
+ 241 │       };
+ 242 │     
+ 243 │ ╭─▶   return (
+ 244 │ │       <>
+ 245 │ │         {/* Espaço calculado para posicionar a frase perfeitamente centralizada */}
+ 246 │ │         <div className="w-full h-32"></div>
+ 247 │ │   
+ 248 │ │         {/* Frase de boas-vindas exatamente centralizada entre o cabeçalho e a caixa de mensagens */}
+ 249 │ │         <div className="text-center my-auto w-full hub-connected-width mx-auto flex flex-col justify-center" style={{ height: "25vh" }}>
+ 250 │ │           <h2 className="text-4xl text-white dark:text-white">
+ 251 │ │             <span className="font-bold">Como a IA mais <span className="text-[#0049e2] bg-gradient-to-r from-[#0049e2] to-[#0049e2]/80 bg-clip-text text-transparent relative after:content-[''] after:absolute after:h-[3px] after:bg-[#0049e2] after:w-0 after:left-0 after:bottom-[-5px] after:transition-all after:duration-300 group-hover:after:w-full hover:after:w-full dark:text-[#0049e2]">Inteligente do mundo</span>
+ 252 │ │             </span><br />
+ 253 │ │             <span className="font-light text-3xl text-gray-800 dark:text-gray-300">pode te ajudar hoje {localStorage.getItem('username') || 'João Marcelo'}?</span>
+ 254 │ │           </h2>
+ 255 │ │         </div>
+ 256 │ │   
+ 257 │ │         {/* Pequeno espaço adicional antes da caixa de mensagens */}
+ 258 │ │         <div className="w-full h-6"></div>
+ 259 │ │   
+ 260 │ │         <div className="w-full mx-auto mb-2 p-1 hub-connected-width"> {/* Usando a mesma classe de largura do cabeçalho */}
+ 261 │ │         <motion.div 
+ 262 │ │           className="relative bg-gradient-to-r from-[#050e1d]/90 to-[#0d1a30]/90 rounded-2xl shadow-xl 
+ 263 │ │                      border border-white/5 backdrop-blur-sm overflow-hidden dark:bg-gradient-to-r dark:from-[#050e1d]/90 dark:to-[#0d1a30]/90 dark:border-white/5"
+ 264 │ │           initial={{ opacity: 0, y: 20 }}
+ 265 │ │           animate={{ opacity: 1, y: 0 }}
+ 266 │ │           transition={{ duration: 0.5 }}
+ 267 │ │         >
+ 268 │ │           {/* Partículas de fundo */}
+ 269 │ │           <div className="absolute inset-0 opacity-30 pointer-events-none">
+ 270 │ │             <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
+ 271 │ │           </div>
+ 272 │ │   
+ 273 │ │           {/* Container principal */}
+ 274 │ │           <div className="relative z-10 p-3">
+ 275 │ │   
+ 276 │ │             {/* Botões de ação na parte superior */}
+ 277 │ │             <div className="flex items-center justify-between mb-3">
+ 278 │ │               <div className="flex items-center gap-2 pl-1">
+ 279 │ │                 <motion.button
+ 280 │ │                   className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r dark:from-[#0c2341]/60 dark:to-[#0f3562]/60 from-[#f1f5f9]/70 to-[#e9f0fa]/70
+ 281 │ │                            dark:text-white text-gray-800 rounded-lg whitespace-nowrap dark:border-white/10 border-gray-300/50 backdrop-blur-md"
+ 282 │ │                   whileHover={{ y: -2, scale: 1.05, boxShadow: "0 10px 25px -5px rgba(13, 35, 160, 0.4)" }}
+ 283 │ │                   whileTap={{ scale: 0.98 }}
+ 284 │ │                 >
+ 285 │ │                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-300 dark:text-blue-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+ 286 │ │                     <circle cx="11" cy="11" r="8"></circle>
+ 287 │ │                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+ 288 │ │                   </svg>
+ 289 │ │                   <span className="text-sm font-medium">Buscar</span>
+ 290 │ │                 </motion.button>
+ 291 │ │   
+ 292 │ │                 <motion.button
+ 293 │ │                   className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r dark:from-[#0c2341]/60 dark:to-[#0f3562]/60 from-[#f1f5f9]/70 to-[#e9f0fa]/70
+ 294 │ │                            dark:text-white text-gray-800 rounded-lg whitespace-nowrap dark:border-white/10 border-gray-300/50 backdrop-blur-md"
+ 295 │ │                   whileHover={{ y: -2, scale: 1.05, boxShadow: "0 10px 25px -5px rgba(13, 35, 160, 0.4)" }}
+ 296 │ │                   whileTap={{ scale: 0.98 }}
+ 297 │ │                 >
+ 298 │ │                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-300 dark:text-purple-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+ 299 │ │                     <path d="M12 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16z"></path>
+ 300 │ │                     <path d="M12 16v.01"></path>
+ 301 │ │                     <path d="M12 12a2.5 2.5 0 0 0 2.5-2.5c0-1.5-2.5-2.5-2.5-4"></path>
+ 302 │ │                   </svg>
+ 303 │ │                   <span className="text-sm font-medium">Pensar</span>
+ 304 │ │                 </motion.button>
+ 305 │ │   
+ 306 │ │                 <motion.button
+ 307 │ │                   className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r dark:from-[#0c2341]/60 dark:to-[#0f3562]/60 from-[#f1f5f9]/70 to-[#e9f0fa]/70
+ 308 │ │                            dark:text-white text-gray-800 rounded-lg whitespace-nowrap dark:border-white/10 border-gray-300/50 backdrop-blur-md"
+ 309 │ │                   whileHover={{ y: -2, scale: 1.05, boxShadow: "0 10px 25px -5px rgba(13, 35, 160, 0.4)" }}
+ 310 │ │                   whileTap={{ scale: 0.98 }}
+ 311 │ │                 >
+ 312 │ │                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-300 dark:text-green-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+ 313 │ │                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+ 314 │ │                     <circle cx="8.5" cy="8.5" r="1.5"></circle>
+ 315 │ │                     <polyline points="21 15 16 10 5 21"></polyline>
+ 316 │ │                   </svg>
+ 317 │ │                   <span className="text-sm font-medium">Gerar Imagem</span>
+ 318 │ │                 </motion.button>
+ 319 │ │               </div>
+ 320 │ │   
+ 321 │ │               {/* Componente Espaços de Aprendizagem no canto direito */}
+ 322 │ │               <div className="pr-1">
+ 323 │ │                 <motion.button
+ 324 │ │                   className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r dark:from-[#0c2341]/60 dark:to-[#0f3562]/60 from-[#f1f5f9]/70 to-[#e9f0fa]/70
+ 325 │ │                            dark:text-white text-gray-800 rounded-lg whitespace-nowrap dark:border-white/10 border-gray-300/50 backdrop-blur-md"
+ 326 │ │                   whileHover={{ y: -2, scale: 1.05, boxShadow: "0 10px 25px -5px rgba(13, 35, 160, 0.4)" }}
+ 327 │ │                   whileTap={{ scale: 0.98 }}
+ 328 │ │                 >
+ 329 │ │                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-amber-300 dark:text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+ 330 │ │                     <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path>
+ 331 │ │                     <circle cx="10" cy="10" r="1"></circle>
+ 332 │ │                     <path d="M13 10h4"></path>
+ 333 │ │                     <circle cx="10" cy="14" r="1"></circle>
+ 334 │ │                     <path d="M13 14h4"></path>
+ 335 │ │                   </svg>
+ 336 │ │                   <span className="text-sm font-medium">Espaços de Aprendizagem</span>
+ 337 │ │                 </motion.button>
+ 338 │ │               </div>
+ 339 │ │             </div>
+ 340 │ │   
+ 341 │ │             {/* Área de input */}
+ 342 │ │             <div className="flex items-center gap-2">
+ 343 │ │               <motion.button
+ 344 │ │                 className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+ 345 │ │                            flex items-center justify-center shadow-lg text-white dark:text-white"
+ 346 │ │                 whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+ 347 │ │                 whileTap={{ scale: 0.95 }}
+ 348 │ │                 onClick={() => setIsExpanded(!isExpanded)}
+ 349 │ │               >
+ 350 │ │                 <Plus size={18} />
+ 351 │ │               </motion.button>
+ 352 │ │   
+ 353 │ │               <div className={`relative flex-grow overflow-hidden 
+ 354 │ │                               bg-gradient-to-r from-[#0c2341]/30 to-[#0f3562]/30 
+ 355 │ │                               rounded-xl border ${isInputFocused ? 'border-[#1230CC]/70' : 'border-white/10'} 
+ 356 │ │                               transition-all duration-300 dark:bg-gradient-to-r dark:from-[#0c2341]/30 dark:to-[#0f3562]/30 dark:border-[#1230CC]/70`}>
+ 357 │ │                 <input
+ 358 │ │                   type="text"
+ 359 │ │                   value={message}
+ 360 │ │                   onChange={(e) => setMessage(e.target.value)}
+ 361 │ │                   onKeyDown={handleKeyDown}
+ 362 │ │                   onFocus={() => setIsInputFocused(true)}
+ 363 │ │                   onBlur={() => setIsInputFocused(false)}
+ 364 │ │                   placeholder="Digite um comando ou pergunta para o Epictus Turbo..."
+ 365 │ │                   className="w-full bg-transparent text-white py-3 px-3 outline-none placeholder:text-gray-400 text-sm dark:text-white dark:placeholder-gray-400"
+ 366 │ │                 />
+ 367 │ │               </div>
+ 368 │ │   
+ 369 │ │               {/* Área dos botões de ação (lâmpada e áudio/enviar) */}
+ 370 │ │               <div className="flex items-center gap-2">
+ 371 │ │                 {/* Botão de sugestão de prompts inteligentes */}
+ 372 │ │                 <motion.button 
+ 373 │ │                   className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+ 374 │ │                            flex items-center justify-center shadow-lg text-white dark:text-white"
+ 375 │ │                   whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+ 376 │ │                   whileTap={{ scale: 0.95 }}
+ 377 │ │                   onClick={() => {
+ 378 │ │                     // Exibir modal ou dropdown com sugestões de prompts
+ 379 │ │                     toast({
+ 380 │ │                       title: "Sugestões de Prompts",
+ 381 │ │                       description: "Carregando sugestões inteligentes personalizadas...",
+ 382 │ │                       duration: 2000,
+ 383 │ │                     });
+ 384 │ │   
+ 385 │ │                     // Criar um elemento para o modal de sugestão de prompts
+ 386 │ │                     const modalHTML = `
+ 387 │ │                       <div id="prompt-suggestions-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+ 388 │ │                         <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-blue-200 dark:border-blue-700 p-5 shadow-xl w-[90%] max-w-md animate-fadeIn">
+ 389 │ │                           <div class="flex justify-between items-center mb-4">
+ 390 │ │                             <h3 class="text-lg font-semibold flex items-center gap-2 text-gray-800 dark:text-gray-200">
+ 391 │ │                               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500">
+ 392 │ │                                 <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+ 393 │ │                               </svg>
+ 394 │ │                               Sugestões de Prompts
+ 395 │ │                             </h3>
+ 396 │ │                             <button 
+ 397 │ │                               id="close-prompt-suggestions-modal"
+ 398 │ │                               class="h-7 w-7 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+ 399 │ │                             >
+ 400 │ │                               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+ 401 │ │                                 <path d="M18 6 6 18"></path>
+ 402 │ │                                 <path d="m6 6 12 12"></path>
+ 403 │ │                               </svg>
+ 404 │ │                             </button>
+ 405 │ │                           </div>
+ 406 │ │   
+ 407 │ │                           <div class="mb-4">
+ 408 │ │                             <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+ 409 │ │                               Selecione uma sugestão ou insira um contexto para obter ideias personalizadas:
+ 410 │ │                             </p>
+ 411 │ │                             <div class="relative">
+ 412 │ │                               <input
+ 413 │ │                                 type="text"
+ 414 │ │                                 id="context-input"
+ 415 │ │                                 placeholder="Digite um tema ou contexto..."
+ 416 │ │                                 class="w-full p-2.5 pr-10 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+ 417 │ │                               />
+ 418 │ │                               <button
+ 419 │ │                                 id="generate-suggestions-button"
+ 420 │ │                                 class="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors"
+ 421 │ │                               >
+ 422 │ │                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600 dark:text-blue-400">
+ 423 │ │                                   <path d="m22 2-7 20-4-9-9-4Z"></path>
+ 424 │ │                                   <path d="M22 2 11 13"></path>
+ 425 │ │                                 </svg>
+ 426 │ │                               </button>
+ 427 │ │                             </div>
+ 428 │ │                           </div>
+ 429 │ │   
+ 430 │ │                           <div id="suggestions-container" class="space-y-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+ 431 │ │                             <button class="w-full text-left p-3 bg-gradient-to-r from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 group">
+ 432 │ │                               <p class="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Como posso melhorar meu desempenho no ENEM?</p>
+ 433 │ │                             </button>
+ 434 │ │                             <button class="w-full text-left p-3 bg-gradient-to-r from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 group">
+ 435 │ │                               <p class="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Crie um resumo detalhado sobre termodinâmica</p>
+ 436 │ │                             </button>
+ 437 │ │                             <button class="w-full text-left p-3 bg-gradient-to-r from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 group">
+ 438 │ │                               <p class="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Explique o teorema de Pitágoras com exemplos práticos</p>
+ 439 │ │                             </button>
+ 440 │ │                             <button class="w-full text-left p-3 bg-gradient-to-r from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 group">
+ 441 │ │                               <p class="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Quais são os eventos mais importantes do Modernismo Brasileiro?</p>
+ 442 │ │                             </button>
+ 443 │ │                             <button class="w-full text-left p-3 bg-gradient-to-r from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 group">
+ 444 │ │                               <p class="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Crie um plano de estudos semanal para vestibular</p>
+ 445 │ │                             </button>
+ 446 │ │                           </div>
+ 447 │ │                         </div>
+ 448 │ │                       </div>
+ 449 │ │                     `;
+ 450 │ │   
+ 451 │ │                     // Remover qualquer modal existente
+ 452 │ │                     const existingModal = document.getElementById('prompt-suggestions-modal');
+ 453 │ │                     if (existingModal) {
+ 454 │ │                       existingModal.remove();
+ 455 │ │                     }
+ 456 │ │   
+ 457 │ │                     // Adicionar o novo modal ao DOM
+ 458 │ │                     document.body.insertAdjacentHTML('beforeend', modalHTML);
+ 459 │ │   
+ 460 │ │                     // Adicionar event listeners
+ 461 │ │                     setTimeout(() => {
+ 462 │ │                       const modal = document.getElementById('prompt-suggestions-modal');
+ 463 │ │                       const closeButton = document.getElementById('close-prompt-suggestions-modal');
+ 464 │ │                       const generateButton = document.getElementById('generate-suggestions-button');
+ 465 │ │                       const contextInput = document.getElementById('context-input');
+ 466 │ │                       const suggestionsContainer = document.getElementById('suggestions-container');
+ 467 │ │   
+ 468 │ │                       // Função para fechar o modal
+ 469 │ │                       const closeModal = () => {
+ 470 │ │                         if (modal) {
+ 471 │ │                           modal.classList.add('animate-fadeOut');
+ 472 │ │                           setTimeout(() => modal.remove(), 200);
+ 473 │ │                         }
+ 474 │ │                       };
+ 475 │ │   
+ 476 │ │                       // Event listener para fechar o modal
+ 477 │ │                       if (closeButton) {
+ 478 │ │                         closeButton.addEventListener('click', closeModal);
+ 479 │ │                       }
+ 480 │ │   
+ 481 │ │                       // Event listener para clicar fora e fechar
+ 482 │ │                       if (modal) {
+ 483 │ │                         modal.addEventListener('click', (e) => {
+ 484 │ │                           if (e.target === modal) {
+ 485 │ │                             closeModal();
+ 486 │ │                           }
+ 487 │ │                         });
+ 488 │ │                       }
+ 489 │ │   
+ 490 │ │                       // Event listener para os botões de sugestão
+ 491 │ │                       if (suggestionsContainer) {
+ 492 │ │                         const suggestionButtons = suggestionsContainer.querySelectorAll('button');
+ 493 │ │                         suggestionButtons.forEach(button => {
+ 494 │ │                           button.addEventListener('click', () => {
+ 495 │ │                             // Pegar o texto da sugestão
+ 496 │ │                             const promptText = button.querySelector('p')?.textContent || '';
+ 497 │ │   
+ 498 │ │                             // Definir o texto no input da mensagem
+ 499 │ │                             setMessage(promptText);
+ 500 │ │   
+ 501 │ │                             // Fechar o modal
+ 502 │ │                             closeModal();
+ 503 │ │                           });
+ 504 │ │                         });
+ 505 │ │                       }
+ 506 │ │   
+ 507 │ │                       // Event listener para o botão de gerar sugestões
+ 508 │ │                       if (generateButton && contextInput && suggestionsContainer) {
+ 509 │ │                         generateButton.addEventListener('click', () => {
+ 510 │ │                           const context = (contextInput as HTMLInputElement).value.trim();
+ 511 │ │                           if (!context) return;
+ 512 │ │   
+ 513 │ │                           // Mostrar indicador de carregamento
+ 514 │ │                           const loadingHTML = `
+ 515 │ │                             <div class="flex items-center justify-center p-4">
+ 516 │ │                               <div class="h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mr-2"></div>
+ 517 │ │                               <p class="text-sm text-gray-600 dark:text-gray-400">Gerando sugestões personalizadas...</p>
+ 518 │ │                             </div>
+ 519 │ │                           `;
+ 520 │ │                           suggestionsContainer.innerHTML = loadingHTML;
+ 521 │ │   
+ 522 │ │                           // Simular geração de sugestões personalizadas
+ 523 │ │                           setTimeout(() => {
+ 524 │ │                             // Lista de sugestões baseadas no contexto
+ 525 │ │                             const customSuggestions = [
+ 526 │ │                               `Me explique de forma detalhada o que é ${context}?`,
+ 527 │ │                               `Quais são os principais conceitos relacionados a ${context}?`,
+ 528 │ │                               `Crie um resumo didático sobre ${context} para estudantes do ensino médio`,
+ 529 │ │                               `Quais são as aplicações práticas de ${context} no mundo real?`,
+ 530 │ │                               `Como o assunto ${context} costuma ser abordado em provas do ENEM?`
+ 531 │ │                             ];
+ 532 │ │   
+ 533 │ │                             // Criar HTML para as sugestões personalizadas
+ 534 │ │                             const suggestionsHTML = customSuggestions.map(suggestion => `
+ 535 │ │                               <button class="w-full text-left p-3 bg-gradient-to-r from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 group">
+ 536 │ │                                 <p class="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">${suggestion}</p>
+ 537 │ │                               </button>
+ 538 │ │                             `).join('');
+ 539 │ │   
+ 540 │ │                             // Atualizar container com as novas sugestões
+ 541 │ │                             suggestionsContainer.innerHTML = suggestionsHTML;
+ 542 │ │   
+ 543 │ │                             // Adicionar event listeners às novas sugestões
+ 544 │ │                             const newSuggestionButtons = suggestionsContainer.querySelectorAll('button');
+ 545 │ │                             newSuggestionButtons.forEach(button => {
+ 546 │ │                               button.addEventListener('click', () => {
+ 547 │ │                                 // Pegar o texto da sugestão
+ 548 │ │                                 const promptText = button.querySelector('p')?.textContent || '';
+ 549 │ │   
+ 550 │ │                                 // Definir o texto no input da mensagem
+ 551 │ │                                 setMessage(promptText);
+ 552 │ │   
+ 553 │ │                                 // Fechar o modal
+ 554 │ │                                 closeModal();
+ 555 │ │                               });
+ 556 │ │                             });
+ 557 │ │                           }, 1500);
+ 558 │ │                         });
+ 559 │ │                       }
+ 560 │ │                     }, 50);
+ 561 │ │                   }}
+ 562 │ │                 >
+ 563 │ │                   <Lightbulb size={16} />
+ 564 │ │                 </motion.button>
+ 565 │ │                 
+ 566 │ │                 {/* Botão de áudio/enviar ao lado direito do botão de sugestões */}
+ 567 │ │                 {!inputHasContent ? (
+ 568 │ │                   <motion.button 
+ 569 │ │                     className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+ 570 │ │                              flex items-center justify-center shadow-lg text-white dark:text-white"
+ 571 │ │                     whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+ 572 │ │                     whileTap={{ scale: 0.95 }}
+ 573 │ │                     onClick={startRecording}
+ 574 │ │                   >
+ 575 │ │                     <Mic size={16} />
+ 576 │ │                   </motion.button>
+ 577 │ │                 ) : (
+ 578 │ │                   /* Botão de enviar - Visível apenas quando há conteúdo no input */
+ 579 │ │                   <motion.button
+ 580 │ │                     className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+ 581 │ │                              flex items-center justify-center shadow-lg text-white dark:text-white"
+ 582 │ │                     whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+ 583 │ │                     whileTap={{ scale: 0.95 }}
+ 584 │ │                     animate={{ 
+ 585 │ │                       boxShadow: ["0 0 0px rgba(13, 35, 160, 0)", "0 0 15px rgba(13, 35, 160, 0.5)", "0 0 0px rgba(13, 35, 160, 0)"],
+ 586 │ │                     }}
+ 587 │ │                     transition={{ duration: 2, repeat: Infinity }}
+ 588 │ │                     onClick={handleSendMessage}
+ 589 │ │                   >
+ 590 │ │                     <Send size={16} />
+ 591 │ │                   </motion.button>
+ 592 │ │                 )}
+ 593 │ │               </div>
+ 594 │ │             </div>
+ 595 │ │   
+ 596 │ │             {/* Interface de gravação de áudio */}
+ 597 │ │             <AnimatePresence>
+ 598 │ │               {isRecording && (
+ 599 │ │                 <motion.div 
+ 600 │ │                   className="recording-interface mt-2 p-2 bg-[#0c2341]/40 rounded-xl border border-red-500/30 flex items-center justify-between dark:bg-[#0c2341]/40 dark:border-red-500/30"
+ 601 │ │                   initial={{ opacity: 0, height: 0 }}
+ 602 │ │                   animate={{ opacity: 1, height: "auto" }}
+ 603 │ │                   exit={{ opacity: 0, height: 0 }}
+ 604 │ │                   transition={{ duration: 0.3 }}
+ 605 │ │                 >
+ 606 │ │                   <div className="flex items-center gap-2">
+ 607 │ │                     <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse"></div>
+ 608 │ │                     <span className="text-sm text-white/80 dark:text-white/80">Gravando áudio...</span>
+ 609 │ │                   </div>
+ 610 │ │                   <div className="flex gap-2">
+ 611 │ │                     <motion.button
+ 612 │ │                       className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white dark:text-white"
+ 613 │ │                       whileHover={{ scale: 1.05 }}
+ 614 │ │                       whileTap={{ scale: 0.95 }}
+ 615 │ │                       onClick={() => setIsRecording(false)}
+ 616 │ │                     >
+ 617 │ │                       <X size={16} />
+ 618 │ │                     </motion.button>
+ 619 │ │                     <motion.button
+ 620 │ │                       className="p-1.5 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD]"
+ 621 │ │                       whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+ 622 │ │                       whileTap={{ scale: 0.95 }}
+ 623 │ │                       onClick={stopRecording}
+ 624 │ │                     >
+ 625 │ │                       <Send size={16} className="text-white dark:text-white" />
+ 626 │ │                     </motion.button>
+ 627 │ │                   </div>
+ 628 │ │                 </motion.div>
+ 629 │ │               )}
+ 630 │ │             </AnimatePresence>
+ 631 │ │   
+ 632 │ │             {/* Ações rápidas */}
+ 633 │ │             <AnimatePresence>
+ 634 │ │               <motion.div 
+ 635 │ │                 className="quick-actions mt-3 pb-1 flex gap-2 overflow-x-auto scrollbar-hide"
+ 636 │ │                 initial={{ opacity: 0, height: 0 }}
+ 637 │ │                 animate={{ opacity: 1, height: "auto" }}
+ 638 │ │                 exit={{ opacity: 0, height: 0 }}
+ 639 │ │                 transition={{ duration: 0.3 }}
+ 640 │ │               >
+ 641 │ │                 {quickActions.map((action, index) => (
+ 642 │ │                   <QuickAction 
+ 643 │ │                     key={index} 
+ 644 │ │                     icon={action.icon} 
+ 645 │ │                     label={action.label} 
+ 646 │ │                     onClick={() => {
+ 647 │ │                       setMessage(action.label);
+ 648 │ │                       console.log(`Ação rápida: ${action.label}`);
+ 649 │ │                     }}
+ 650 │ │                   />
+ 651 │ │                 ))}
+ 652 │ │               </motion.div>
+ 653 │ │             </AnimatePresence>
+ 654 │ │   
+ 655 │ │             {/* Painel expandido (opcional) */}
+ 656 │ │             <AnimatePresence>
+ 657 │ │               {isExpanded && (
+ 658 │ │                 <motion.div 
+ 659 │ │                   className="expanded-panel mt-3 p-3 bg-[#0c2341]/40 rounded-xl border border-white/10 dark:bg-[#0c2341]/40 dark:border-white/10"
+ 660 │ │                   initial={{ opacity: 0, height: 0 }}
+ 661 │ │                   animate={{ opacity: 1, height: "auto" }}
+ 662 │ │                   exit={{ opacity: 0, height: 0 }}
+ 663 │ │                   transition={{ duration: 0.3 }}
+ 664 │ │                 >
+ 665 │ │                   <div className="flex flex-wrap gap-2">
+ 666 │ │                     <div className="text-xs text-white/70 mb-1 w-full dark:text-white/70">Opções avançadas:</div>
+ 667 │ │                     <motion.button 
+ 668 │ │                       className="px-3 py-1.5 text-sm bg-gradient-to-r from-[#0c2341]/70 to-[#0f3562]/70 
+ 669 │ │                                  text-white rounded-lg border border-white/10 dark:text-white"
+ 670 │ │                       whileHover={{ scale: 1.02, boxShadow: "0 0 10px rgba(13, 35, 160, 0.3)" }}
+ 671 │ │                     >
+ 672 │ │                       Escolher competência
+ 673 │ │                     </motion.button>
+ 674 │ │                     <motion.button 
+ 675 │ │                       className="px-3 py-1.5 text-sm bg-gradient-to-r from-[#0c2341]/70 to-[#0f3562]/70 
+ 676 │ │                                  text-white rounded-lg border border-white/10 dark:text-white"
+ 677 │ │                       whileHover={{ scale: 1.02, boxShadow: "0 0 10px rgba(13, 35, 160, 0.3)" }}
+ 678 │ │                     >
+ 679 │ │                       Modo resposta rápida
+ 680 │ │                     </motion.button>
+ 681 │ │                     <motion.button 
+ 682 │ │                       className="px-3 py-1.5 text-sm bg-gradient-to-r from-[#0c2341]/70 to-[#0f3562]/70 
+ 683 │ │                                  text-white rounded-lg border border-white/10 dark:text-white"
+ 684 │ │                       whileHover={{ scale: 1.02, boxShadow: "0 0 10px rgba(13, 35, 160, 0.3)" }}
+ 685 │ │                     >
+ 686 │ │                       Adicionar mídia
+ 687 │ │                     </motion.button>
+ 688 │ │                   </div>
+ 689 │ │                 </motion.div>
+ 690 │ │               )}
+ 691 │ │             </AnimatePresence>
+ 692 │ │             <div className="w-full max-w-full px-2"> {/* Changed px-4 to px-2 */}
+ 693 │ │               {/* Conteúdo da caixa de mensagens */}
+ 694 │ │             </div>
+ 695 │ │           </div>
+ 696 │ │         </motion.div>
+ 697 │ │       </div>
+ 698 │ │       </>
+ 699 │ ╰─▶   );
+ 700 │     };
+ 701 │     
+ 702 │     export default TurboAdvancedMessageBox;
+     ╰────
+
+  × Expression expected
+     ╭─[/home/runner/workspace/src/components/epictus-ia/TurboAdvancedMessageBox.tsx:697:1]
+ 697 │     </div>
+ 698 │     </>
+ 699 │   );
+ 700 │ };
+     · ─
+ 701 │ 
+ 702 │ export default TurboAdvancedMessageBox;
+     ╰────
+
+
+Caused by:
+    Syntax Error
+/home/runner/workspace/src/components/epictus-ia/TurboAdvancedMessageBox.tsx:181:1
