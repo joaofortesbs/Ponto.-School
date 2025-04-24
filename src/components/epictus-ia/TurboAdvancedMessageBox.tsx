@@ -55,7 +55,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
 
   // Efeito visual quando o input recebe texto
   const inputHasContent = message.trim().length > 0;
-  
+
   // Scroll para a última mensagem
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -72,10 +72,10 @@ const TurboAdvancedMessageBox: React.FC = () => {
 
   const handleSendMessage = async () => {
     if (!message.trim()) return;
-    
+
     // Prevent default behavior that might cause UI issues
     event?.preventDefault?.();
-    
+
     // Adiciona a mensagem do usuário
     const userMessageId = Date.now().toString();
     const userMessage = {
@@ -84,15 +84,15 @@ const TurboAdvancedMessageBox: React.FC = () => {
       sender: "user" as const,
       timestamp: new Date()
     };
-    
+
     // Store message before clearing input
     const currentMessage = message.trim();
-    
+
     // Update UI immediately
     setMessages(prev => [...prev, userMessage]);
     setMessage("");
     setIsAiTyping(true);
-    
+
     try {
       // Gera resposta da IA com tratamento adequado de erros
       setTimeout(async () => {
@@ -105,7 +105,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
           // Fallback para uma resposta genérica se o serviço falhar
           response = `Obrigado por sua mensagem! Estou processando sua solicitação sobre "${currentMessage}". Como posso ajudar mais?`;
         }
-        
+
         // Adiciona a resposta da IA
         const aiMessageId = (Date.now() + 1).toString();
         const aiMessage = {
@@ -114,10 +114,10 @@ const TurboAdvancedMessageBox: React.FC = () => {
           sender: "ai" as const,
           timestamp: new Date()
         };
-        
+
         setMessages(prev => [...prev, aiMessage]);
         setIsAiTyping(false);
-        
+
         // Scroll para o fim da conversa após a resposta
         setTimeout(() => {
           messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -239,7 +239,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
         .messages-container {
           overflow-anchor: none;
         }
-        
+
         /* Improve scrolling behavior */
         html, body {
           overscroll-behavior-y: none;
@@ -247,16 +247,16 @@ const TurboAdvancedMessageBox: React.FC = () => {
         .custom-scrollbar::-webkit-scrollbar {
           width: 4px;
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-track {
           background: transparent;
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-thumb {
           background-color: rgba(13, 35, 160, 0.5);
           border-radius: 9999px;
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background-color: rgba(13, 35, 160, 0.8);
         }
@@ -290,7 +290,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                   <Sparkles className="h-5 w-5 text-white" />
                 </div>
               )}
-              
+
               <div 
                 className={`max-w-[75%] rounded-xl px-4 py-3 ${
                   msg.sender === 'user' 
@@ -303,7 +303,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                   {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
-              
+
               {msg.sender === 'user' && (
                 <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#0c2341]/70 to-[#0f3562]/90 flex items-center justify-center ml-2 flex-shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -314,7 +314,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
               )}
             </div>
           ))}
-          
+
           {/* Indicador de digitação da IA */}
           {isAiTyping && (
             <div className="flex justify-start mb-4">
@@ -330,7 +330,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
               </div>
             </div>
           )}
-          
+
           {/* Referência para rolagem automática */}
           <div ref={messagesEndRef} />
         </div>
@@ -433,116 +433,266 @@ const TurboAdvancedMessageBox: React.FC = () => {
                             bg-gradient-to-r from-[#0c2341]/30 to-[#0f3562]/30 
                             rounded-xl border ${isInputFocused ? 'border-[#1230CC]/70' : 'border-white/10'} 
                             transition-all duration-300 dark:bg-gradient-to-r dark:from-[#0c2341]/30 dark:to-[#0f3562]/30 dark:border-[#1230CC]/70`}>
-              <input
-                type="text"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyDown={handleKeyDown}
-                onFocus={() => setIsInputFocused(true)}
-                onBlur={() => setIsInputFocused(false)}
-                placeholder="Digite um comando ou pergunta para o Epictus Turbo..."
-                className="w-full bg-transparent text-white py-3 px-3 outline-none placeholder:text-gray-400 text-sm dark:text-white dark:placeholder-gray-400"
-              />
-            </div>
+              <form onSubmit={handleSendMessage}>
+                <input
+                  type="text"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  onFocus={() => setIsInputFocused(true)}
+                  onBlur={() => setIsInputFocused(false)}
+                  placeholder="Digite um comando ou pergunta para o Epictus Turbo..."
+                  className="w-full bg-transparent text-white py-3 px-3 outline-none placeholder:text-gray-400 text-sm dark:text-white dark:placeholder-gray-400"
+                />
+                <div className="flex items-center gap-2">
+                  {/* Botão de melhoria de prompts - visível apenas quando digitando */}
+                  {message.trim().length > 0 && (
+                    <motion.button
+                      className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+                               flex items-center justify-center shadow-lg text-white dark:text-white"
+                      whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={async () => {
+                        // Mostrar toast de análise
+                        toast({
+                          title: "Melhorando seu prompt",
+                          description: "Analisando e aprimorando sua mensagem...",
+                          duration: 3000,
+                        });
 
-            {/* Área dos botões de ação (lâmpada e áudio/enviar) */}
-            <div className="flex items-center gap-2">
-              {/* Botão de melhoria de prompts - visível apenas quando digitando */}
-              {message.trim().length > 0 && (
-                <motion.button
-                  className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
-                           flex items-center justify-center shadow-lg text-white dark:text-white"
-                  whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={async () => {
-                    // Mostrar toast de análise
-                    toast({
-                      title: "Melhorando seu prompt",
-                      description: "Analisando e aprimorando sua mensagem...",
-                      duration: 3000,
-                    });
-
-                    try {
-                      // Aqui adicionamos a chamada real para a API de IA para melhorar o prompt
-                      // Utilizamos a função do serviço aiChatService para acessar a API Gemini
-                      let improvedPromptText = "";
-                      
-                      if (message.trim().length > 0) {
-                        // Criar um ID de sessão único para esta interação
-                        const sessionId = `prompt-improvement-${Date.now()}`;
-                        
                         try {
-                          // Importamos a função do serviço aiChatService
-                          const { generateAIResponse: generateGeminiResponse } = await import('@/services/aiChatService');
-                          
-                          // Chamar a API Gemini para melhorar o prompt
-                          improvedPromptText = await generateGeminiResponse(
-                            `Você é um assistente especializado em melhorar prompts educacionais. 
-                            Analise o seguinte prompt e melhore-o para obter uma resposta mais detalhada, completa e educacional.
-                            
-                            Melhore o seguinte prompt para obter uma resposta mais detalhada, completa e educacional. 
-                            NÃO responda a pergunta, apenas melhore o prompt adicionando:
-                            1. Mais contexto e especificidade
-                            2. Solicite exemplos, comparações e aplicações práticas
-                            3. Peça explicações claras de conceitos fundamentais
-                            4. Solicite visualizações ou analogias quando aplicável
-                            5. Adicione pedidos para que sejam mencionadas curiosidades ou fatos históricos relevantes
+                          // Aqui adicionamos a chamada real para a API de IA para melhorar o prompt
+                          // Utilizamos a função do serviço aiChatService para acessar a API Gemini
+                          let improvedPromptText = "";
 
-                            Original: "${message}"
-                            
-                            Retorne APENAS o prompt melhorado, sem comentários adicionais.`,
-                            sessionId,
-                            {
-                              intelligenceLevel: 'advanced',
-                              languageStyle: 'formal',
-                              detailedResponse: true
+                          if (message.trim().length > 0) {
+                            // Criar um ID de sessão único para esta interação
+                            const sessionId = `prompt-improvement-${Date.now()}`;
+
+                            try {
+                              // Importamos a função do serviço aiChatService
+                              const { generateAIResponse: generateGeminiResponse } = await import('@/services/aiChatService');
+
+                              // Chamar a API Gemini para melhorar o prompt
+                              improvedPromptText = await generateGeminiResponse(
+                                `Você é um assistente especializado em melhorar prompts educacionais. 
+                                Analise o seguinte prompt e melhore-o para obter uma resposta mais detalhada, completa e educacional.
+
+                                Melhore o seguinte prompt para obter uma resposta mais detalhada, completa e educacional. 
+                                NÃO responda a pergunta, apenas melhore o prompt adicionando:
+                                1. Mais contexto e especificidade
+                                2. Solicite exemplos, comparações e aplicações práticas
+                                3. Peça explicações claras de conceitos fundamentais
+                                4. Solicite visualizações ou analogias quando aplicável
+                                5. Adicione pedidos para que sejam mencionadas curiosidades ou fatos históricos relevantes
+
+                                Original: "${message}"
+
+                                Retorne APENAS o prompt melhorado, sem comentários adicionais.`,
+                                sessionId,
+                                {
+                                  intelligenceLevel: 'advanced',
+                                  languageStyle: 'formal',
+                                  detailedResponse: true
+                                }
+                              );
+                            } catch (error) {
+                              console.error("Erro ao chamar API Gemini:", error);
+                              // Fallback para o serviço local caso a API Gemini falhe
+                              improvedPromptText = await generateAIResponse(
+                                `Melhore o seguinte prompt para obter uma resposta mais detalhada, completa e educacional. 
+                                NÃO responda a pergunta, apenas melhore o prompt adicionando:
+                                1. Mais contexto e especificidade
+                                2. Solicite exemplos, comparações e aplicações práticas
+                                3. Peça explicações claras de conceitos fundamentais
+                                4. Solicite visualizações ou analogias quando aplicável
+                                5. Adicione pedidos para que sejam mencionadas curiosidades ou fatos históricos relevantes
+
+                                Original: "${message}"
+
+                                Retorne APENAS o prompt melhorado, sem comentários adicionais.`
+                              );
                             }
-                          );
+                          } else {
+                            improvedPromptText = "Por favor, forneça uma explicação detalhada, incluindo exemplos práticos e conceitos fundamentais. Considere mencionar as principais teorias relacionadas e aplicações no mundo real.";
+                          }
+
+                          // Limpar formatação extra que possa ter vindo na resposta
+                          improvedPromptText = improvedPromptText
+                            .replace(/^(Prompt melhorado:|Aqui está uma versão melhorada:|Versão melhorada:|Melhorado:)/i, '')
+                            .replace(/^["']|["']$/g, '')
+                            .trim();
+
+                          // Criar um elemento para o modal de melhoria de prompt
+                          const modalHTML = `
+                            <div id="improve-prompt-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+                              <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-blue-200 dark:border-blue-700 p-5 shadow-xl w-[90%] max-w-md animate-fadeIn">
+                                <div class="flex justify-between items-center mb-4">
+                                  <h3 class="text-lg font-semibold flex items-center gap-2 text-gray-800 dark:text-gray-200">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500">
+                                      <circle cx="12" cy="12" r="10"/>
+                                      <path d="m4.9 4.9 14.2 14.2"/>
+                                      <path d="M9 9a3 3 0 0 1 5.12-2.136"/>
+                                      <path d="M14 9.3a3 3 0 0 0-5.12 2.136"/>
+                                      <path d="M16 14a2 2 0 0 1-2 2"/>
+                                      <path d="M12 16a2 2 0 0 1-2-2"/>
+                                    </svg>
+                                    Aprimoramento de Prompt
+                                  </h3>
+                                  <button 
+                                    id="close-improve-prompt-modal"
+                                    class="h-7 w-7 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                      <path d="M18 6 6 18"></path>
+                                      <path d="m6 6 12 12"></path>
+                                    </svg>
+                                  </button>
+                                </div>
+
+                                <div class="mb-4">
+                                  <div class="mb-3">
+                                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Sua mensagem original:</p>
+                                    <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-300">
+                                      ${message}
+                                    </div>
+                                  </div>
+
+                                  <div>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Versão aprimorada pela Epictus IA:</p>
+                                    <div class="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-800 rounded-lg text-sm text-gray-800 dark:text-gray-200 max-h-[150px] overflow-y-auto scrollbar-hide```">
+                                      ${improvedPromptText}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div class="flex justify-end gap-3">
+                                  <button 
+                                    id="cancel-improved-prompt"
+                                    class="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg transition-colors"
+                                  >
+                                    Cancelar
+                                  </button>
+                                  <button 
+                                    id="use-improved-prompt"
+                                    class="px-4 py-2 text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg transition-colors flex items-center gap-1"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                      <path d="m5 12 5 5 9-9"></path>
+                                    </svg>
+                                    Usar versão melhorada
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          `;
+
+                          // Remover qualquer modal existente
+                          const existingModal = document.getElementById('improve-prompt-modal');
+                          if (existingModal) {
+                            existingModal.remove();
+                          }
+
+                          // Adicionar o novo modal ao DOM
+                          document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+                          // Adicionar event listeners
+                          setTimeout(() => {
+                            const modal = document.getElementById('improve-prompt-modal');
+                            const closeButton = document.getElementById('close-improve-prompt-modal');
+                            const cancelButton = document.getElementById('cancel-improved-prompt');
+                            const useImprovedButton = document.getElementById('use-improved-prompt');
+
+                            // Função para fechar o modal
+                            const closeModal = () => {
+                              if (modal) {
+                                modal.classList.add('animate-fadeOut');
+                                setTimeout(() => modal.remove(), 200);
+                              }
+                            };
+
+                            // Event listener para fechar o modal
+                            if (closeButton) {
+                              closeButton.addEventListener('click', closeModal);
+                            }
+
+                            // Event listener para cancelar
+                            if (cancelButton) {
+                              cancelButton.addEventListener('click', closeModal);
+                            }
+
+                            // Event listener para usar o prompt melhorado
+                            if (useImprovedButton) {
+                              useImprovedButton.addEventListener('click', () => {
+                                // Atualizar o input com o prompt melhorado
+                                setMessage(improvedPromptText);
+
+                                // Fechar o modal
+                                closeModal();
+
+                                // Mostrar toast de confirmação
+                                toast({
+                                  title: "Prompt aprimorado",
+                                  description: "Seu prompt foi aprimorado com sucesso!",
+                                  duration: 2000,
+                                });
+                              });
+                            }
+
+                            // Event listener para clicar fora e fechar
+                            if (modal) {
+                              modal.addEventListener('click', (e) => {
+                                if (e.target === modal) {
+                                  closeModal();
+                                }
+                              });
+                            }
+                          }, 50);
                         } catch (error) {
-                          console.error("Erro ao chamar API Gemini:", error);
-                          // Fallback para o serviço local caso a API Gemini falhe
-                          improvedPromptText = await generateAIResponse(
-                            `Melhore o seguinte prompt para obter uma resposta mais detalhada, completa e educacional. 
-                            NÃO responda a pergunta, apenas melhore o prompt adicionando:
-                            1. Mais contexto e especificidade
-                            2. Solicite exemplos, comparações e aplicações práticas
-                            3. Peça explicações claras de conceitos fundamentais
-                            4. Solicite visualizações ou analogias quando aplicável
-                            5. Adicione pedidos para que sejam mencionadas curiosidades ou fatos históricos relevantes
-
-                            Original: "${message}"
-                            
-                            Retorne APENAS o prompt melhorado, sem comentários adicionais.`
-                          );
+                          console.error("Erro ao melhorar prompt:", error);
+                          toast({
+                            title: "Erro",
+                            description: "Não foi possível melhorar seu prompt. Tente novamente.",
+                            variant: "destructive",
+                            duration: 3000,
+                          });
                         }
-                      } else {
-                        improvedPromptText = "Por favor, forneça uma explicação detalhada, incluindo exemplos práticos e conceitos fundamentais. Considere mencionar as principais teorias relacionadas e aplicações no mundo real.";
-                      }
+                      }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 20h9"/>
+                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                      </svg>
+                    </motion.button>
+                  )}
 
-                      // Limpar formatação extra que possa ter vindo na resposta
-                      improvedPromptText = improvedPromptText
-                        .replace(/^(Prompt melhorado:|Aqui está uma versão melhorada:|Versão melhorada:|Melhorado:)/i, '')
-                        .replace(/^["']|["']$/g, '')
-                        .trim();
+                  {/* Botão de sugestão de prompts inteligentes */}
+                  <motion.button 
+                    className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+                             flex items-center justify-center shadow-lg text-white dark:text-white"
+                    whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      // Exibir modal ou dropdown com sugestões de prompts
+                      toast({
+                        title: "Sugestões de Prompts",
+                        description: "Carregando sugestões inteligentes personalizadas...",
+                        duration: 2000,
+                      });
 
-                      // Criar um elemento para o modal de melhoria de prompt
+                      // Criar um elemento para o modal de sugestão de prompts
                       const modalHTML = `
-                        <div id="improve-prompt-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+                        <div id="prompt-suggestions-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
                           <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-blue-200 dark:border-blue-700 p-5 shadow-xl w-[90%] max-w-md animate-fadeIn">
                             <div class="flex justify-between items-center mb-4">
                               <h3 class="text-lg font-semibold flex items-center gap-2 text-gray-800 dark:text-gray-200">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500">
-                                  <circle cx="12" cy="12" r="10"/>
-                                  <path d="m4.9 4.9 14.2 14.2"/>
-                                  <path d="M9 9a3 3 0 0 1 5.12-2.136"/>
-                                  <path d="M14 9.3a3 3 0 0 0-5.12 2.136"/>
-                                  <path d="M16 14a2 2 0 0 1-2 2"/>
-                                  <path d="M12 16a2 2 0 0 1-2-2"/>
+                                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
                                 </svg>
-                                Aprimoramento de Prompt
+                                Sugestões de Prompts
                               </h3>
                               <button 
-                                id="close-improve-prompt-modal"
+                                id="close-prompt-suggestions-modal"
                                 class="h-7 w-7 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -553,36 +703,43 @@ const TurboAdvancedMessageBox: React.FC = () => {
                             </div>
 
                             <div class="mb-4">
-                              <div class="mb-3">
-                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Sua mensagem original:</p>
-                                <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-300">
-                                  ${message}
-                                </div>
-                              </div>
-                              
-                              <div>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Versão aprimorada pela Epictus IA:</p>
-                                <div class="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-800 rounded-lg text-sm text-gray-800 dark:text-gray-200 max-h-[150px] overflow-y-auto scrollbar-hide">
-                                  ${improvedPromptText}
-                                </div>
+                              <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                Selecione uma sugestão ou insira um contexto para obter ideias personalizadas:
+                              </p>
+                              <div class="relative">
+                                <input
+                                  type="text"
+                                  id="context-input"
+                                  placeholder="Digite um tema ou contexto..."
+                                  class="w-full p-2.5 pr-10 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                />
+                                <button
+                                  id="generate-suggestions-button"
+                                  class="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600 dark:text-blue-400">
+                                    <path d="m22 2-7 20-4-9-9-4Z"></path>
+                                    <path d="M22 2 11 13"></path>
+                                  </svg>
+                                </button>
                               </div>
                             </div>
 
-                            <div class="flex justify-end gap-3">
-                              <button 
-                                id="cancel-improved-prompt"
-                                class="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg transition-colors"
-                              >
-                                Cancelar
+                            <div id="suggestions-container" class="space-y-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+                              <button class="w-full text-left p-3 bg-gradient-to-r from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 group">
+                                <p class="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Como posso melhorar meu desempenho no ENEM?</p>
                               </button>
-                              <button 
-                                id="use-improved-prompt"
-                                class="px-4 py-2 text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg transition-colors flex items-center gap-1"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                  <path d="m5 12 5 5 9-9"></path>
-                                </svg>
-                                Usar versão melhorada
+                              <button class="w-full text-left p-3 bg-gradient-to-r from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 group">
+                                <p class="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Crie um resumo detalhado sobre termodinâmica</p>
+                              </button>
+                              <button class="w-full text-left p-3 bg-gradient-to-r from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 group">
+                                <p class="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Explique o teorema de Pitágoras com exemplos práticos</p>
+                              </button>
+                              <button class="w-full text-left p-3 bg-gradient-to-r from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 group">
+                                <p class="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Quais são os eventos mais importantes do Modernismo Brasileiro?</p>
+                              </button>
+                              <button class="w-full text-left p-3 bg-gradient-to-r from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 group">
+                                <p class="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Crie um plano de estudos semanal para vestibular</p>
                               </button>
                             </div>
                           </div>
@@ -590,7 +747,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
                       `;
 
                       // Remover qualquer modal existente
-                      const existingModal = document.getElementById('improve-prompt-modal');
+                      const existingModal = document.getElementById('prompt-suggestions-modal');
                       if (existingModal) {
                         existingModal.remove();
                       }
@@ -600,10 +757,11 @@ const TurboAdvancedMessageBox: React.FC = () => {
 
                       // Adicionar event listeners
                       setTimeout(() => {
-                        const modal = document.getElementById('improve-prompt-modal');
-                        const closeButton = document.getElementById('close-improve-prompt-modal');
-                        const cancelButton = document.getElementById('cancel-improved-prompt');
-                        const useImprovedButton = document.getElementById('use-improved-prompt');
+                        const modal = document.getElementById('prompt-suggestions-modal');
+                        const closeButton = document.getElementById('close-prompt-suggestions-modal');
+                        const generateButton = document.getElementById('generate-suggestions-button');
+                        const contextInput = document.getElementById('context-input');
+                        const suggestionsContainer = document.getElementById('suggestions-container');
 
                         // Função para fechar o modal
                         const closeModal = () => {
@@ -618,29 +776,6 @@ const TurboAdvancedMessageBox: React.FC = () => {
                           closeButton.addEventListener('click', closeModal);
                         }
 
-                        // Event listener para cancelar
-                        if (cancelButton) {
-                          cancelButton.addEventListener('click', closeModal);
-                        }
-
-                        // Event listener para usar o prompt melhorado
-                        if (useImprovedButton) {
-                          useImprovedButton.addEventListener('click', () => {
-                            // Atualizar o input com o prompt melhorado
-                            setMessage(improvedPromptText);
-                            
-                            // Fechar o modal
-                            closeModal();
-
-                            // Mostrar toast de confirmação
-                            toast({
-                              title: "Prompt aprimorado",
-                              description: "Seu prompt foi aprimorado com sucesso!",
-                              duration: 2000,
-                            });
-                          });
-                        }
-
                         // Event listener para clicar fora e fechar
                         if (modal) {
                           modal.addEventListener('click', (e) => {
@@ -649,200 +784,11 @@ const TurboAdvancedMessageBox: React.FC = () => {
                             }
                           });
                         }
-                      }, 50);
-                    } catch (error) {
-                      console.error("Erro ao melhorar prompt:", error);
-                      toast({
-                        title: "Erro",
-                        description: "Não foi possível melhorar seu prompt. Tente novamente.",
-                        variant: "destructive",
-                        duration: 3000,
-                      });
-                    }
-                  }}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 20h9"/>
-                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                  </svg>
-                </motion.button>
-              )}
-              
-              {/* Botão de sugestão de prompts inteligentes */}
-              <motion.button 
-                className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
-                         flex items-center justify-center shadow-lg text-white dark:text-white"
-                whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  // Exibir modal ou dropdown com sugestões de prompts
-                  toast({
-                    title: "Sugestões de Prompts",
-                    description: "Carregando sugestões inteligentes personalizadas...",
-                    duration: 2000,
-                  });
 
-                  // Criar um elemento para o modal de sugestão de prompts
-                  const modalHTML = `
-                    <div id="prompt-suggestions-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
-                      <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-blue-200 dark:border-blue-700 p-5 shadow-xl w-[90%] max-w-md animate-fadeIn">
-                        <div class="flex justify-between items-center mb-4">
-                          <h3 class="text-lg font-semibold flex items-center gap-2 text-gray-800 dark:text-gray-200">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500">
-                              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-                            </svg>
-                            Sugestões de Prompts
-                          </h3>
-                          <button 
-                            id="close-prompt-suggestions-modal"
-                            class="h-7 w-7 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                              <path d="M18 6 6 18"></path>
-                              <path d="m6 6 12 12"></path>
-                            </svg>
-                          </button>
-                        </div>
-
-                        <div class="mb-4">
-                          <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                            Selecione uma sugestão ou insira um contexto para obter ideias personalizadas:
-                          </p>
-                          <div class="relative">
-                            <input
-                              type="text"
-                              id="context-input"
-                              placeholder="Digite um tema ou contexto..."
-                              class="w-full p-2.5 pr-10 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                            />
-                            <button
-                              id="generate-suggestions-button"
-                              class="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600 dark:text-blue-400">
-                                <path d="m22 2-7 20-4-9-9-4Z"></path>
-                                <path d="M22 2 11 13"></path>
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-
-                        <div id="suggestions-container" class="space-y-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
-                          <button class="w-full text-left p-3 bg-gradient-to-r from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 group">
-                            <p class="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Como posso melhorar meu desempenho no ENEM?</p>
-                          </button>
-                          <button class="w-full text-left p-3 bg-gradient-to-r from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 group">
-                            <p class="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Crie um resumo detalhado sobre termodinâmica</p>
-                          </button>
-                          <button class="w-full text-left p-3 bg-gradient-to-r from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 group">
-                            <p class="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Explique o teorema de Pitágoras com exemplos práticos</p>
-                          </button>
-                          <button class="w-full text-left p-3 bg-gradient-to-r from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 group">
-                            <p class="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Quais são os eventos mais importantes do Modernismo Brasileiro?</p>
-                          </button>
-                          <button class="w-full text-left p-3 bg-gradient-to-r from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 group">
-                            <p class="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Crie um plano de estudos semanal para vestibular</p>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  `;
-
-                  // Remover qualquer modal existente
-                  const existingModal = document.getElementById('prompt-suggestions-modal');
-                  if (existingModal) {
-                    existingModal.remove();
-                  }
-
-                  // Adicionar o novo modal ao DOM
-                  document.body.insertAdjacentHTML('beforeend', modalHTML);
-
-                  // Adicionar event listeners
-                  setTimeout(() => {
-                    const modal = document.getElementById('prompt-suggestions-modal');
-                    const closeButton = document.getElementById('close-prompt-suggestions-modal');
-                    const generateButton = document.getElementById('generate-suggestions-button');
-                    const contextInput = document.getElementById('context-input');
-                    const suggestionsContainer = document.getElementById('suggestions-container');
-
-                    // Função para fechar o modal
-                    const closeModal = () => {
-                      if (modal) {
-                        modal.classList.add('animate-fadeOut');
-                        setTimeout(() => modal.remove(), 200);
-                      }
-                    };
-
-                    // Event listener para fechar o modal
-                    if (closeButton) {
-                      closeButton.addEventListener('click', closeModal);
-                    }
-
-                    // Event listener para clicar fora e fechar
-                    if (modal) {
-                      modal.addEventListener('click', (e) => {
-                        if (e.target === modal) {
-                          closeModal();
-                        }
-                      });
-                    }
-
-                    // Event listener para os botões de sugestão
-                    if (suggestionsContainer) {
-                      const suggestionButtons = suggestionsContainer.querySelectorAll('button');
-                      suggestionButtons.forEach(button => {
-                        button.addEventListener('click', () => {
-                          // Pegar o texto da sugestão
-                          const promptText = button.querySelector('p')?.textContent || '';
-
-                          // Definir o texto no input da mensagem
-                          setMessage(promptText);
-
-                          // Fechar o modal
-                          closeModal();
-                        });
-                      });
-                    }
-
-                    // Event listener para o botão de gerar sugestões
-                    if (generateButton && contextInput && suggestionsContainer) {
-                      generateButton.addEventListener('click', () => {
-                        const context = (contextInput as HTMLInputElement).value.trim();
-                        if (!context) return;
-
-                        // Mostrar indicador de carregamento
-                        const loadingHTML = `
-                          <div class="flex items-center justify-center p-4">
-                            <div class="h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mr-2"></div>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">Gerando sugestões personalizadas...</p>
-                          </div>
-                        `;
-                        suggestionsContainer.innerHTML = loadingHTML;
-
-                        // Simular geração de sugestões personalizadas
-                        setTimeout(() => {
-                          // Lista de sugestões baseadas no contexto
-                          const customSuggestions = [
-                            `Me explique de forma detalhada o que é ${context}?`,
-                            `Quais são os principais conceitos relacionados a ${context}?`,
-                            `Crie um resumo didático sobre ${context} para estudantes do ensino médio`,
-                            `Quais são as aplicações práticas de ${context} no mundo real?`,
-                            `Como o assunto ${context} costuma ser abordado em provas do ENEM?`
-                          ];
-
-                          // Criar HTML para as sugestões personalizadas
-                          const suggestionsHTML = customSuggestions.map(suggestion => `
-                            <button class="w-full text-left p-3 bg-gradient-to-r from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 group">
-                              <p class="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">${suggestion}</p>
-                            </button>
-                          `).join('');
-
-                          // Atualizar container com as novas sugestões
-                          suggestionsContainer.innerHTML = suggestionsHTML;
-
-                          // Adicionar event listeners às novas sugestões
-                          const newSuggestionButtons = suggestionsContainer.querySelectorAll('button');
-                          newSuggestionButtons.forEach(button => {
+                        // Event listener para os botões de sugestão
+                        if (suggestionsContainer) {
+                          const suggestionButtons = suggestionsContainer.querySelectorAll('button');
+                          suggestionButtons.forEach(button => {
                             button.addEventListener('click', () => {
                               // Pegar o texto da sugestão
                               const promptText = button.querySelector('p')?.textContent || '';
@@ -854,150 +800,202 @@ const TurboAdvancedMessageBox: React.FC = () => {
                               closeModal();
                             });
                           });
-                        }, 1500);
-                      });
-                    }
-                  }, 50);
-                }}
-              >
-                <Lightbulb size={16} />
-              </motion.button>
+                        }
 
-              {/* Botão de áudio/enviar ao lado direito do botão de sugestões */}
-              {!inputHasContent ? (
-                <motion.button 
-                  className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
-                           flex items-center justify-center shadow-lg text-white dark:text-white"
-                  whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={startRecording}
+                        // Event listener para o botão de gerar sugestões
+                        if (generateButton && contextInput && suggestionsContainer) {
+                          generateButton.addEventListener('click', () => {
+                            const context = (contextInput as HTMLInputElement).value.trim();
+                            if (!context) return;
+
+                            // Mostrar indicador de carregamento
+                            const loadingHTML = `
+                              <div class="flex items-center justify-center p-4">
+                                <div class="h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mr-2"></div>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Gerando sugestões personalizadas...</p>
+                              </div>
+                            `;
+                            suggestionsContainer.innerHTML = loadingHTML;
+
+                            // Simular geração de sugestões personalizadas
+                            setTimeout(() => {
+                              // Lista de sugestões baseadas no contexto
+                              const customSuggestions = [
+                                `Me explique de forma detalhada o que é ${context}?`,
+                                `Quais são os principais conceitos relacionados a ${context}?`,
+                                `Crie um resumo didático sobre ${context} para estudantes do ensino médio`,
+                                `Quais são as aplicações práticas de ${context} no mundo real?`,
+                                `Como o assunto ${context} costuma ser abordado em provas do ENEM?`
+                              ];
+
+                              // Criar HTML para as sugestões personalizadas
+                              const suggestionsHTML = customSuggestions.map(suggestion => `
+                                <button class="w-full text-left p-3 bg-gradient-to-r from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-900/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 group">
+                                  <p class="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">${suggestion}</p>
+                                </button>
+                              `).join('');
+
+                              // Atualizar container com as novas sugestões
+                              suggestionsContainer.innerHTML = suggestionsHTML;
+
+                              // Adicionar event listeners às novas sugestões
+                              const newSuggestionButtons = suggestionsContainer.querySelectorAll('button');
+                              newSuggestionButtons.forEach(button => {
+                                button.addEventListener('click', () => {
+                                  // Pegar o texto da sugestão
+                                  const promptText = button.querySelector('p')?.textContent || '';
+
+                                  // Definir o texto no input da mensagem
+                                  setMessage(promptText);
+
+                                  // Fechar o modal
+                                  closeModal();
+                                });
+                              });
+                            }, 1500);
+                          });
+                        }
+                      }, 50);
+                    }}
+                  >
+                    <Lightbulb size={16} />
+                  </motion.button>
+
+                  {/* Botão de áudio/enviar ao lado direito do botão de sugestões */}
+                  {!inputHasContent ? (
+                    <motion.button 
+                      type="button"
+                      className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+                               flex items-center justify-center shadow-lg text-white dark:text-white"
+                      whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={startRecording}
+                    >
+                      <Mic size={16} />
+                    </motion.button>
+                  ) : (
+                    /* Botão de enviar - Visível apenas quando há conteúdo no input */
+                    <motion.button
+                      type="submit"
+                      className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+                               flex items-center justify-center shadow-lg text-white dark:text-white"
+                      whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+                      whileTap={{ scale: 0.95 }}
+                      animate={{ 
+                        boxShadow: ["0 0 0px rgba(13, 35, 160, 0)", "0 0 15px rgba(13, 35, 160, 0.5)", "0 0 0px rgba(13, 35, 160, 0)"],
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <Send size={16} />
+                    </motion.button>
+                  )}
+                </div>
+              </form>
+            </div>
+
+            {/* Área dos botões de ação (lâmpada e áudio/enviar) */}
+
+            {/* Interface de gravação de áudio */}
+            <AnimatePresence>
+              {isRecording && (
+                <motion.div 
+                  className="recording-interface mt-2 p-2 bg-[#0c2341]/40 rounded-xl border border-red-500/30 flex items-center justify-between dark:bg-[#0c2341]/40 dark:border-red-500/30"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
                 >
-                  <Mic size={16} />
-                </motion.button>
-              ) : (
-                /* Botão de enviar - Visível apenas quando há conteúdo no input */
-                <motion.button
-                  className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
-                           flex items-center justify-center shadow-lg text-white dark:text-white"
-                  whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
-                  whileTap={{ scale: 0.95 }}
-                  animate={{ 
-                    boxShadow: ["0 0 0px rgba(13, 35, 160, 0)", "0 0 15px rgba(13, 35, 160, 0.5)", "0 0 0px rgba(13, 35, 160, 0)"],
-                  }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleSendMessage();
-                  }}
-                >
-                  <Send size={16} />
-                </motion.button>
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse"></div>
+                    <span className="text-sm text-white/80 dark:text-white/80">Gravando áudio...</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <motion.button
+                      className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white dark:text-white"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setIsRecording(false)}
+                    >
+                      <X size={16} />
+                    </motion.button>
+                    <motion.button
+                      className="p-1.5 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD]"
+                      whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={stopRecording}
+                    >
+                      <Send size={16} className="text-white dark:text-white" />
+                    </motion.button>
+                  </div>
+                </motion.div>
               )}
+            </AnimatePresence>
+
+            {/* Ações rápidas */}
+            <AnimatePresence>
+              <motion.div 
+                className="quick-actions mt-3 pb-1 flex gap-2 overflow-x-auto scrollbar-hide"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                {quickActions.map((action, index) => (
+                  <QuickAction 
+                    key={index} 
+                    icon={action.icon} 
+                    label={action.label} 
+                    onClick={() => {
+                      setMessage(action.label);
+                      console.log(`Ação rápida: ${action.label}`);
+                    }}
+                  />
+                ))}
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Painel expandido (opcional) */}
+            <AnimatePresence>
+              {isExpanded && (
+                <motion.div 
+                  className="expanded-panel mt-3 p-3 bg-[#0c2341]/40 rounded-xl border border-white/10 dark:bg-[#0c2341]/40 dark:border-white/10"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="flex flex-wrap gap-2">
+                    <div className="text-xs text-white/70 mb-1 w-full dark:text-white/70">Opções avançadas:</div>
+                    <motion.button 
+                      className="px-3 py-1.5 text-sm bg-gradient-to-r from-[#0c2341]/70 to-[#0f3562]/70 
+                                 text-white rounded-lg border border-white/10 dark:text-white"
+                      whileHover={{ scale: 1.02, boxShadow: "0 0 10px rgba(13, 35, 160, 0.3)" }}
+                    >
+                      Escolher competência
+                    </motion.button>
+                    <motion.button 
+                      className="px-3 py-1.5 text-sm bg-gradient-to-r from-[#0c2341]/70 to-[#0f3562]/70 
+                                 text-white rounded-lg border border-white/10 dark:text-white"
+                      whileHover={{ scale: 1.02, boxShadow: "0 0 10px rgba(13, 35, 160, 0.3)" }}
+                    >
+                      Modo resposta rápida
+                    </motion.button>
+                    <motion.button 
+                      className="px-3 py-1.5 text-sm bg-gradient-to-r from-[#0c2341]/70 to-[#0f3562]/70 
+                                 text-white rounded-lg border border-white/10 dark:text-white"
+                      whileHover={{ scale: 1.02, boxShadow: "0 0 10px rgba(13, 35, 160, 0.3)" }}
+                    >
+                      Adicionar mídia
+                    </motion.button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <div className="w-full max-w-full px-2"> {/* Changed px-4 to px-2 */}
+              {/* Conteúdo da caixa de mensagens */}
             </div>
           </div>
-
-          {/* Interface de gravação de áudio */}
-          <AnimatePresence>
-            {isRecording && (
-              <motion.div 
-                className="recording-interface mt-2 p-2 bg-[#0c2341]/40 rounded-xl border border-red-500/30 flex items-center justify-between dark:bg-[#0c2341]/40 dark:border-red-500/30"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse"></div>
-                  <span className="text-sm text-white/80 dark:text-white/80">Gravando áudio...</span>
-                </div>
-                <div className="flex gap-2">
-                  <motion.button
-                    className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white dark:text-white"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setIsRecording(false)}
-                  >
-                    <X size={16} />
-                  </motion.button>
-                  <motion.button
-                    className="p-1.5 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD]"
-                    whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={stopRecording}
-                  >
-                    <Send size={16} className="text-white dark:text-white" />
-                  </motion.button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Ações rápidas */}
-          <AnimatePresence>
-            <motion.div 
-              className="quick-actions mt-3 pb-1 flex gap-2 overflow-x-auto scrollbar-hide"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              {quickActions.map((action, index) => (
-                <QuickAction 
-                  key={index} 
-                  icon={action.icon} 
-                  label={action.label} 
-                  onClick={() => {
-                    setMessage(action.label);
-                    console.log(`Ação rápida: ${action.label}`);
-                  }}
-                />
-              ))}
-            </motion.div>
-          </AnimatePresence>
-
-          {/* Painel expandido (opcional) */}
-          <AnimatePresence>
-            {isExpanded && (
-              <motion.div 
-                className="expanded-panel mt-3 p-3 bg-[#0c2341]/40 rounded-xl border border-white/10 dark:bg-[#0c2341]/40 dark:border-white/10"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="flex flex-wrap gap-2">
-                  <div className="text-xs text-white/70 mb-1 w-full dark:text-white/70">Opções avançadas:</div>
-                  <motion.button 
-                    className="px-3 py-1.5 text-sm bg-gradient-to-r from-[#0c2341]/70 to-[#0f3562]/70 
-                               text-white rounded-lg border border-white/10 dark:text-white"
-                    whileHover={{ scale: 1.02, boxShadow: "0 0 10px rgba(13, 35, 160, 0.3)" }}
-                  >
-                    Escolher competência
-                  </motion.button>
-                  <motion.button 
-                    className="px-3 py-1.5 text-sm bg-gradient-to-r from-[#0c2341]/70 to-[#0f3562]/70 
-                               text-white rounded-lg border border-white/10 dark:text-white"
-                    whileHover={{ scale: 1.02, boxShadow: "0 0 10px rgba(13, 35, 160, 0.3)" }}
-                  >
-                    Modo resposta rápida
-                  </motion.button>
-                  <motion.button 
-                    className="px-3 py-1.5 text-sm bg-gradient-to-r from-[#0c2341]/70 to-[#0f3562]/70 
-                               text-white rounded-lg border border-white/10 dark:text-white"
-                    whileHover={{ scale: 1.02, boxShadow: "0 0 10px rgba(13, 35, 160, 0.3)" }}
-                  >
-                    Adicionar mídia
-                  </motion.button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-          <div className="w-full max-w-full px-2"> {/* Changed px-4 to px-2 */}
-            {/* Conteúdo da caixa de mensagens */}
-          </div>
-        </div>
-      </motion.div>
+        </motion.div>
       </div>
     </>
   );
