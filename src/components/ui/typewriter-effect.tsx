@@ -142,6 +142,7 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
                   ol: ({ node, ...props }) => <ol className="list-decimal list-inside ml-4 mb-2" {...props} />,
                   li: ({ node, ...props }) => <li className="mb-1" {...props} />,
                   code: ({ node, ...props }) => <code className="bg-gray-100 px-1 py-0.5 rounded" {...props} />,
+                  blockquote: ({ node, ...props }) => <blockquote className="border-l-4 pl-4 italic text-gray-600" {...props} />,
                 }}
               >
                 {displayText}
