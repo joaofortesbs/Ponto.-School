@@ -109,11 +109,11 @@ const TurboAdvancedMessageBox: React.FC = () => {
 
   return (
     <>
-      {/* Adicionando um espaço maior no topo */}
-      <div className="w-full h-52"></div>
+      {/* Espaço calculado para centralizar a frase de boas-vindas entre o cabeçalho e a caixa de mensagens */}
+      <div className="w-full h-40"></div>
 
-      {/* Frase de boas-vindas posicionada acima da caixa de mensagens */}
-      <div className="text-center mb-8 w-full hub-connected-width mx-auto">
+      {/* Frase de boas-vindas centralizada */}
+      <div className="text-center my-16 w-full hub-connected-width mx-auto">
         <h2 className="text-4xl text-white dark:text-white">
           <span className="font-bold">Como a IA mais <span className="text-[#0049e2] bg-gradient-to-r from-[#0049e2] to-[#0049e2]/80 bg-clip-text text-transparent relative after:content-[''] after:absolute after:h-[3px] after:bg-[#0049e2] after:w-0 after:left-0 after:bottom-[-5px] after:transition-all after:duration-300 group-hover:after:w-full hover:after:w-full dark:text-[#0049e2]">Inteligente do mundo</span>
           </span><br />
