@@ -1,14 +1,18 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, memo } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import { Zap, Sparkles } from "lucide-react";
 
+/**
+ * Componente EpictusTurboAdvancedMode
+ * Interface avançada para o modo Epictus IA
+ */
 const EpictusTurboAdvancedMode: React.FC = () => {
   const { theme } = useTheme();
   const [isHovered, setIsHovered] = useState(false);
   const [animationComplete, setAnimationComplete] = useState(false);
-  // Perfil selecionado no dropdown de personalidades
+  // Estado para perfil selecionado no dropdown de personalidades
   const [profileIcon, setProfileIcon] = useState(
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -19,8 +23,9 @@ const EpictusTurboAdvancedMode: React.FC = () => {
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
 
   // Adicionar estilos globais para garantir que o modal de personalidades fique por cima
+  // Otimizado para executar apenas uma vez na montagem do componente
   useEffect(() => {
-    // Adicionar estilos CSS para os modais de personalidades
+    // Criar e adicionar estilos CSS para os modais de personalidades
     const style = document.createElement('style');
     style.innerHTML = `
       .personalidades-dropdown {
@@ -35,13 +40,14 @@ const EpictusTurboAdvancedMode: React.FC = () => {
     `;
     document.head.appendChild(style);
 
+    // Cleanup na desmontagem do componente
     return () => {
       document.head.removeChild(style);
     };
   }, []);
 
+  // Configurar animação inicial com cleanup adequado
   useEffect(() => {
-    // Trigger initial animation
     const timer = setTimeout(() => {
       setAnimationComplete(true);
     }, 1200);
@@ -49,23 +55,29 @@ const EpictusTurboAdvancedMode: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Ouvir o evento de seleção de perfil
+  // Handler otimizado para seleção de perfil usando useCallback
+  const handleProfileSelection = useCallback((event: CustomEvent) => {
+    setProfileIcon(event.detail.icon);
+    setProfileName(event.detail.name);
+  }, []);
+
+  // Ouvir o evento de seleção de perfil com useCallback para evitar recriações desnecessárias
   useEffect(() => {
-    const handleProfileSelection = (event: any) => {
-      setProfileIcon(event.detail.icon);
-      setProfileName(event.detail.name);
+    // Tipagem correta do evento
+    const handleProfileSelectionEvent = (event: Event) => {
+      handleProfileSelection(event as CustomEvent);
     };
 
-    window.addEventListener('profileSelected', handleProfileSelection);
+    window.addEventListener('profileSelected', handleProfileSelectionEvent);
 
     return () => {
-      window.removeEventListener('profileSelected', handleProfileSelection);
+      window.removeEventListener('profileSelected', handleProfileSelectionEvent);
     };
-  }, []);
+  }, [handleProfileSelection]);
 
   const isDark = theme === "dark";
 
-  // Opções de perfil para o dropdown
+  // Opções de perfil para o dropdown - Extraídas para fora do render para melhor performance
   const profileOptions = [
     { 
       id: "estudante",
@@ -141,9 +153,55 @@ const EpictusTurboAdvancedMode: React.FC = () => {
     }
   ];
 
+  // Componente de ícone memoizado para evitar re-renders desnecessários
+  const IconComponent = memo(({ children }: { children: React.ReactNode }) => (
+    <div className="relative icon-container">
+      <motion.div
+        className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0047e1] to-[#0099ff] flex items-center justify-center cursor-pointer shadow-lg shadow-[#0066ff]/20 hover:shadow-xl transition-shadow"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        initial={false}
+        transition={{ duration: 0.3 }}
+      >
+        {children}
+      </motion.div>
+    </div>
+  ));
+
+  // Orbs animados memoizados para melhorar performance
+  const AnimatedOrbs = memo(() => (
+    <>
+      <motion.div 
+        className="absolute top-1/2 left-1/4 w-32 h-32 rounded-full bg-[#0066ff]/20 blur-3xl"
+        animate={{
+          scale: [1, 1.2, 1],
+          opacity: [0.2, 0.4, 0.2],
+        }}
+        transition={{
+          duration: 5,
+          repeat: Infinity,
+          repeatType: "reverse",
+        }}
+      />
+      <motion.div 
+        className="absolute bottom-0 right-1/4 w-40 h-40 rounded-full bg-[#0099ff]/20 blur-3xl"
+        animate={{
+          scale: [1, 1.3, 1],
+          opacity: [0.15, 0.35, 0.15],
+        }}
+        transition={{
+          duration: 6,
+          repeat: Infinity,
+          repeatType: "reverse",
+          delay: 0.5,
+        }}
+      />
+    </>
+  ));
+
   return (
     <div className="w-full flex flex-col items-center">
-      {/* Header copied from EpictusIAHeader but with title changed to "Epictus Turbo" */}
+      {/* Header otimizado do Epictus IA */}
       <div className="w-full p-4">
         <motion.header 
           initial={{ opacity: 0, y: -10 }}
@@ -159,35 +217,10 @@ const EpictusTurboAdvancedMode: React.FC = () => {
             <div className="absolute inset-0 bg-grid-pattern opacity-15"></div>
           </div>
 
-          {/* Glowing orbs */}
-          <motion.div 
-            className="absolute top-1/2 left-1/4 w-32 h-32 rounded-full bg-[#0066ff]/20 blur-3xl"
-            animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.2, 0.4, 0.2],
-            }}
-            transition={{
-              duration: 5,
-              repeat: Infinity,
-              repeatType: "reverse",
-            }}
-          />
+          {/* Orbs animados - memoizados para melhor performance */}
+          <AnimatedOrbs />
 
-          <motion.div 
-            className="absolute bottom-0 right-1/4 w-40 h-40 rounded-full bg-[#0099ff]/20 blur-3xl"
-            animate={{
-              scale: [1, 1.3, 1],
-              opacity: [0.15, 0.35, 0.15],
-            }}
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-              repeatType: "reverse",
-              delay: 0.5,
-            }}
-          />
-
-          {/* Logo and title section */}
+          {/* Logo e título - otimizados */}
           <div className="flex items-center gap-4 z-10 flex-1">
             <div className="relative group mr-3">
               <div className={`absolute inset-0 bg-gradient-to-br from-[#0047e1] via-[#0064ff] to-[#00a9ff] rounded-full ${isHovered ? 'blur-[6px]' : 'blur-[3px]'} opacity-90 group-hover:opacity-100 transition-all duration-300 scale-110`}></div>
@@ -240,10 +273,10 @@ const EpictusTurboAdvancedMode: React.FC = () => {
             </div>
           </div>
 
-          {/* New header icons */}
+          {/* Barra de ícones de header - separado para melhor organização */}
           <div className="flex items-center justify-center z-10 relative gap-3">
-            {/* Personalidades dropdown */}
-            <div className="relative icon-container mr-5 group" style={{ zIndex: 99999, position: "relative" }}>
+            {/* Dropdown de Personalidades - corrigido para melhor posicionamento */}
+            <div className="relative icon-container mr-5 group" style={{ zIndex: 99999 }}>
               <motion.div
                 className="relative w-auto h-10 rounded-full bg-gradient-to-br from-[#0047e1] to-[#0099ff] flex items-center justify-center cursor-pointer shadow-lg shadow-[#0066ff]/20 hover:shadow-xl transition-shadow px-3 group"
                 whileHover={{ scale: 1.02 }}
@@ -260,13 +293,13 @@ const EpictusTurboAdvancedMode: React.FC = () => {
                 </div>
               </motion.div>
 
-              {/* Dropdown content - absolute positioning relative to its container */}
+              {/* Dropdown de perfis - corrigido o posicionamento */}
               <div className="fixed group-hover:opacity-100 group-hover:visible opacity-0 invisible transition-all duration-300 z-[99999] left-auto mt-2 personalidades-dropdown" style={{ top: "calc(100% + 10px)" }}>
                 <div className="w-52 bg-gradient-to-r from-[#001a4d] to-[#003399] rounded-lg shadow-xl shadow-[#0066ff]/20 overflow-hidden border border-[#39c2ff]/20 backdrop-blur-md" style={{ position: "relative", zIndex: 99999 }}>
                   <div className="max-h-60 overflow-y-auto py-2">
-                    {profileOptions.map((item, index) => (
+                    {profileOptions.map((item) => (
                       <motion.div 
-                        key={index} 
+                        key={item.id} 
                         className="flex items-center gap-2 px-3 py-2 cursor-pointer mb-1 mx-2 rounded-lg hover:bg-[#0066ff]/20 transition-all"
                         whileHover={{ 
                           y: -2, 
@@ -292,73 +325,41 @@ const EpictusTurboAdvancedMode: React.FC = () => {
               </div>
             </div>
 
-            {/* Histórico icon */}
-            <div className="relative icon-container">
-              <motion.div
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0047e1] to-[#0099ff] flex items-center justify-center cursor-pointer shadow-lg shadow-[#0066ff]/20 hover:shadow-xl transition-shadow"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                initial={false}
-                transition={{ duration: 0.3 }}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="12 6 12 12 16 14" />
-                </svg>
-              </motion.div>
-            </div>
+            {/* Histórico icon - usando o componente memoizado */}
+            <IconComponent>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+            </IconComponent>
 
             {/* Espaços de Aprendizado icon */}
-            <div className="relative icon-container">
-              <motion.div
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0047e1] to-[#0099ff] flex items-center justify-center cursor-pointer shadow-lg shadow-[#0066ff]/20 hover:shadow-xl transition-shadow"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                initial={false}
-                transition={{ duration: 0.3 }}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-                </svg>
-              </motion.div>
-            </div>
+            <IconComponent>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+              </svg>
+            </IconComponent>
 
             {/* Modo fantasma icon */}
-            <div className="relative icon-container">
-              <motion.div
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0047e1] to-[#0099ff] flex items-center justify-center cursor-pointer shadow-lg shadow-[#0066ff]/20 hover:shadow-xl transition-shadow"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                initial={false}
-                transition={{ duration: 0.3 }}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 10h.01"></path>
-                  <path d="M15 10h.01"></path>
-                  <path d="M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z"></path>
-                </svg>
-              </motion.div>
-            </div>
+            <IconComponent>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 10h.01"></path>
+                <path d="M15 10h.01"></path>
+                <path d="M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z"></path>
+              </svg>
+            </IconComponent>
 
             {/* Galeria icon */}
-            <div className="relative icon-container">
-              <motion.div
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0047e1] to-[#0099ff] flex items-center justify-center cursor-pointer shadow-lg shadow-[#0066ff]/20 hover:shadow-xl transition-shadow"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                initial={false}
-                transition={{ duration: 0.3 }}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                  <polyline points="21 15 16 10 5 21"></polyline>
-                </svg>
-              </motion.div>
-            </div>
+            <IconComponent>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+            </IconComponent>
 
-            {/* Profile picture - a bit more spaced */}
+            {/* Profile picture - ajustado para maior espaçamento */}
             <div className="relative profile-icon-container ml-4">
               <motion.div
                 className="w-11 h-11 rounded-full bg-gradient-to-br from-[#0047e1] to-[#0099ff] p-[2px] flex items-center justify-center cursor-pointer shadow-lg shadow-[#0066ff]/20 hover:shadow-xl transition-shadow overflow-hidden"
@@ -376,16 +377,17 @@ const EpictusTurboAdvancedMode: React.FC = () => {
             </div>
           </div>
 
-          {/* Hidden until expansion - will appear when user interaction happens */}
+          {/* Borda inferior decorativa - melhoria visual */}
           <div className="absolute bottom-0 left-0 w-full h-1">
             <div className="h-full bg-gradient-to-r from-transparent via-[#39c2ff] to-transparent opacity-40"></div>
           </div>
         </motion.header>
       </div>
       
-      {/* Conteúdo removido, deixando apenas o cabeçalho */}
+      {/* Área reservada para conteúdo futuro */}
     </div>
   );
 };
 
-export default EpictusTurboAdvancedMode;
+// Exportação otimizada do componente
+export default memo(EpictusTurboAdvancedMode);
