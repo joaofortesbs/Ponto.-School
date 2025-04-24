@@ -234,7 +234,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         /* Prevent bottom bar from showing */
         .messages-container {
           overflow-anchor: none;
@@ -260,7 +260,7 @@ const TurboAdvancedMessageBox: React.FC = () => {
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background-color: rgba(13, 35, 160, 0.8);
         }
-      `}</style>
+      ` }} />
       {messages.length <= 1 ? (
         <>
           {/* Espaço calculado para posicionar a frase perfeitamente centralizada */}
