@@ -274,7 +274,7 @@ const EpictusTurboAdvancedMessageBox: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto flex flex-col h-[calc(100vh-200px)]">
+    <div className="w-full max-w-6xl mx-auto flex flex-col h-[calc(100vh-220px)]">
       {/* Messages container */}
       <div className="flex-grow overflow-y-auto mb-4 px-2 py-3">
         <div className="space-y-1">
