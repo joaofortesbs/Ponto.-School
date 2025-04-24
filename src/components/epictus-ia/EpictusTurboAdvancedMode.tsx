@@ -1,9 +1,10 @@
-
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import { Zap, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import WelcomeMessage from "./WelcomeMessage"; // Placeholder import
+import TurboMessageBox from "./TurboMessageBox"; // Placeholder import
 
 const EpictusTurboAdvancedMode: React.FC = () => {
   const { theme } = useTheme();
@@ -384,9 +385,17 @@ const EpictusTurboAdvancedMode: React.FC = () => {
         </motion.header>
       </div>
 
-      {/* Caixa de mensagens do Epictus Turbo diretamente abaixo do header */}
-      <div className="w-full p-4 -mt-2">
-        <TurboAdvancedMessageBox />
+      {/* Mensagem de boas vindas */}
+      <div className="w-full -mt-6 mb-1">
+        <WelcomeMessage />
+      </div>
+
+      {/* Espaço adicional antes da caixa de mensagens */}
+      <div className="w-full py-4"></div>
+
+      {/* Caixa de mensagens do Epictus Turbo movida para baixo */}
+      <div className="w-full p-4 mt-4">
+        <TurboMessageBox />
       </div>
 
       {/* Content area now below the header */}
@@ -400,5 +409,5 @@ const EpictusTurboAdvancedMode: React.FC = () => {
   );
 };
 
-import TurboAdvancedMessageBox from "./TurboAdvancedMessageBox";
+
 export default EpictusTurboAdvancedMode;
