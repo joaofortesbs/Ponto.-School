@@ -78,7 +78,6 @@
     "react-router": "^6.23.1",
     "react-router-dom": "^6.23.1",
     "reactflow": "^11.11.4",
-    "remark-gfm": "^4.0.1",
     "starter": "file:",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
