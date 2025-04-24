@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Plus, Mic, Send, Brain, BookOpen, FileText, RotateCw, AlignJustify, Zap, X, Lightbulb, Square } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
@@ -36,30 +36,9 @@ const TurboAdvancedMessageBox: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const [audioRecorder, setAudioRecorder] = useState<MediaRecorder | null>(null);
-  const [messages, setMessages] = useState<Array<{
-    id: string;
-    content: string;
-    sender: "user" | "ai";
-    timestamp: Date;
-    isTyping?: boolean;
-  }>>([
-    {
-      id: "welcome-message",
-      content: "Olá! Sou a Epictus IA. Como posso ajudar você hoje?",
-      sender: "ai",
-      timestamp: new Date(),
-    }
-  ]);
-  const [isAiTyping, setIsAiTyping] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Efeito visual quando o input recebe texto
   const inputHasContent = message.trim().length > 0;
-  
-  // Scroll para a última mensagem
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
   const quickActions = [
     { icon: <Brain size={16} className="text-blue-300 dark:text-blue-300" />, label: "Simulador de Provas" },
@@ -70,57 +49,11 @@ const TurboAdvancedMessageBox: React.FC = () => {
     { icon: <Zap size={16} className="text-rose-300 dark:text-rose-300" />, label: "Resumir Conteúdo" }
   ];
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = () => {
     if (!message.trim()) return;
-    
-    // Adiciona a mensagem do usuário
-    const userMessageId = Date.now().toString();
-    const userMessage = {
-      id: userMessageId,
-      content: message,
-      sender: "user" as const,
-      timestamp: new Date()
-    };
-    
-    setMessages(prev => [...prev, userMessage]);
+    console.log("Mensagem enviada:", message);
+    // Aqui você implementaria a lógica de envio para o backend
     setMessage("");
-    setIsAiTyping(true);
-    
-    try {
-      // Simula o envio da mensagem para a API
-      // Em uma implementação real, você usaria generateAIResponse do seu serviço
-      setTimeout(async () => {
-        let response;
-        try {
-          // Tenta usar o serviço real de IA
-          response = await generateAIResponse(message);
-        } catch (error) {
-          console.error("Erro ao gerar resposta da IA:", error);
-          // Fallback para uma resposta genérica se o serviço falhar
-          response = `Obrigado por sua mensagem! Estou processando sua solicitação sobre "${message}". Como posso ajudar mais?`;
-        }
-        
-        // Adiciona a resposta da IA
-        const aiMessageId = (Date.now() + 1).toString();
-        const aiMessage = {
-          id: aiMessageId,
-          content: response,
-          sender: "ai" as const,
-          timestamp: new Date()
-        };
-        
-        setMessages(prev => [...prev, aiMessage]);
-        setIsAiTyping(false);
-      }, 1500);
-    } catch (error) {
-      console.error("Erro ao enviar mensagem:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível enviar sua mensagem. Tente novamente.",
-        variant: "destructive"
-      });
-      setIsAiTyping(false);
-    }
   };
 
   // Iniciando ou parando a gravação de áudio
@@ -222,98 +155,20 @@ const TurboAdvancedMessageBox: React.FC = () => {
 
   return (
     <>
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background-color: rgba(13, 35, 160, 0.5);
-          border-radius: 9999px;
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background-color: rgba(13, 35, 160, 0.8);
-        }
-      `}</style>
-      {messages.length <= 1 ? (
-        <>
-          {/* Espaço calculado para posicionar a frase perfeitamente centralizada */}
-          <div className="w-full h-32"></div>
+      {/* Espaço calculado para posicionar a frase perfeitamente centralizada */}
+      <div className="w-full h-32"></div>
 
-          {/* Frase de boas-vindas exatamente centralizada entre o cabeçalho e a caixa de mensagens */}
-          <div className="text-center my-auto w-full hub-connected-width mx-auto flex flex-col justify-center" style={{ height: "25vh" }}>
-            <h2 className="text-4xl text-white dark:text-white">
-              <span className="font-bold">Como a IA mais <span className="text-[#0049e2] bg-gradient-to-r from-[#0049e2] to-[#0049e2]/80 bg-clip-text text-transparent relative after:content-[''] after:absolute after:h-[3px] after:bg-[#0049e2] after:w-0 after:left-0 after:bottom-[-5px] after:transition-all after:duration-300 group-hover:after:w-full hover:after:w-full dark:text-[#0049e2]">Inteligente do mundo</span>
-              </span><br />
-              <span className="font-light text-3xl text-gray-800 dark:text-gray-300">pode te ajudar hoje {localStorage.getItem('username') || 'João Marcelo'}?</span>
-            </h2>
-          </div>
+      {/* Frase de boas-vindas exatamente centralizada entre o cabeçalho e a caixa de mensagens */}
+      <div className="text-center my-auto w-full hub-connected-width mx-auto flex flex-col justify-center" style={{ height: "25vh" }}>
+        <h2 className="text-4xl text-white dark:text-white">
+          <span className="font-bold">Como a IA mais <span className="text-[#0049e2] bg-gradient-to-r from-[#0049e2] to-[#0049e2]/80 bg-clip-text text-transparent relative after:content-[''] after:absolute after:h-[3px] after:bg-[#0049e2] after:w-0 after:left-0 after:bottom-[-5px] after:transition-all after:duration-300 group-hover:after:w-full hover:after:w-full dark:text-[#0049e2]">Inteligente do mundo</span>
+          </span><br />
+          <span className="font-light text-3xl text-gray-800 dark:text-gray-300">pode te ajudar hoje {localStorage.getItem('username') || 'João Marcelo'}?</span>
+        </h2>
+      </div>
 
-          {/* Pequeno espaço adicional antes da caixa de mensagens */}
-          <div className="w-full h-6"></div>
-        </>
-      ) : (
-        <div className="w-full overflow-y-auto max-h-[60vh] p-4 messages-container custom-scrollbar">
-          {messages.map((msg) => (
-            <div 
-              key={msg.id} 
-              className={`flex mb-4 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              {msg.sender === 'ai' && (
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center mr-2 flex-shrink-0">
-                  <Sparkles className="h-5 w-5 text-white" />
-                </div>
-              )}
-              
-              <div 
-                className={`max-w-[75%] rounded-xl px-4 py-3 ${
-                  msg.sender === 'user' 
-                    ? 'bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] text-white rounded-tr-none ml-auto' 
-                    : 'bg-[#0c2341]/60 text-white rounded-tl-none'
-                }`}
-              >
-                <p className="text-sm break-words whitespace-pre-wrap">{msg.content}</p>
-                <div className="text-xs opacity-70 mt-1 text-right">
-                  {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </div>
-              </div>
-              
-              {msg.sender === 'user' && (
-                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#0c2341]/70 to-[#0f3562]/90 flex items-center justify-center ml-2 flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                  </svg>
-                </div>
-              )}
-            </div>
-          ))}
-          
-          {/* Indicador de digitação da IA */}
-          {isAiTyping && (
-            <div className="flex justify-start mb-4">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center mr-2 flex-shrink-0">
-                <Sparkles className="h-5 w-5 text-white" />
-              </div>
-              <div className="bg-[#0c2341]/60 text-white rounded-xl rounded-tl-none px-4 py-3">
-                <div className="flex space-x-2">
-                  <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
-                  <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse delay-150"></div>
-                  <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse delay-300"></div>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {/* Referência para rolagem automática */}
-          <div ref={messagesEndRef} />
-        </div>
-      )}
+      {/* Pequeno espaço adicional antes da caixa de mensagens */}
+      <div className="w-full h-6"></div>
 
       <div className="w-full mx-auto mb-2 p-1 hub-connected-width"> {/* Usando a mesma classe de largura do cabeçalho */}
       <motion.div 
