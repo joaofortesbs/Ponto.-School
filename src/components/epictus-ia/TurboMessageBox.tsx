@@ -1,100 +1,285 @@
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { Sparkles, Send } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Sparkles, Plus, Mic, Send, Brain, BookOpen, FileText, RotateCw, AlignJustify, Zap, X } from "lucide-react";
+import ParticlesBackground from "./components/ParticlesBackground";
+
+interface QuickActionProps {
+  icon: React.ReactNode;
+  label: string;
+  onClick?: () => void;
+}
+
+const QuickAction: React.FC<QuickActionProps> = ({ icon, label, onClick }) => {
+  return (
+    <motion.button
+      className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#0c2341]/50 to-[#0f3562]/50 
+                 text-white rounded-full whitespace-nowrap border border-white/10 backdrop-blur-md"
+      whileHover={{ y: -2, scale: 1.05, boxShadow: "0 10px 25px -5px rgba(13, 35, 160, 0.4)" }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 400, damping: 10 }}
+      onClick={onClick}
+    >
+      {icon}
+      <span className="text-sm font-medium">{label}</span>
+    </motion.button>
+  );
+};
 
 const TurboMessageBox: React.FC = () => {
   const [message, setMessage] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
+  const [audioRecorder, setAudioRecorder] = useState<MediaRecorder | null>(null);
 
-  const handleMessageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setMessage(e.target.value);
-    setIsTyping(e.target.value.length > 0);
-  };
+  // Efeito visual quando o input recebe texto
+  const inputHasContent = message.trim().length > 0;
+
+  const quickActions = [
+    { icon: <Brain size={16} className="text-blue-300" />, label: "Simulador de Provas" },
+    { icon: <BookOpen size={16} className="text-emerald-300" />, label: "Gerar Caderno" },
+    { icon: <AlignJustify size={16} className="text-purple-300" />, label: "Criar Fluxograma" },
+    { icon: <RotateCw size={16} className="text-indigo-300" />, label: "Reescrever Explicação" },
+    { icon: <FileText size={16} className="text-amber-300" />, label: "Análise de Redação" },
+    { icon: <Zap size={16} className="text-rose-300" />, label: "Resumir Conteúdo" }
+  ];
 
   const handleSendMessage = () => {
-    // Implementação futura: enviar a mensagem
+    if (!message.trim()) return;
     console.log("Mensagem enviada:", message);
+    // Aqui você implementaria a lógica de envio para o backend
     setMessage("");
-    setIsTyping(false);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && message.trim() !== "") {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
       handleSendMessage();
     }
   };
 
+  // Função para iniciar a gravação de áudio
+  const startRecording = () => {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+          // Criar uma instância do MediaRecorder com o stream de áudio
+          const recorder = new MediaRecorder(stream);
+          setAudioRecorder(recorder);
+          setAudioChunks([]);
+
+          // Coletar chunks de dados do áudio gravado
+          recorder.ondataavailable = (e) => {
+            if (e.data && e.data.size > 0) {
+              setAudioChunks(prev => [...prev, e.data]);
+            }
+          };
+
+          // Quando a gravação parar
+          recorder.onstop = () => {
+            // Criar um blob com todos os chunks de áudio
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+
+            // Aqui você pode implementar o envio do áudio para processamento
+            console.log("Áudio gravado:", audioBlob);
+
+            // Parar todos os tracks da stream
+            stream.getTracks().forEach(track => track.stop());
+
+            // Resetar estado de gravação
+            setIsRecording(false);
+          };
+
+          // Iniciar gravação
+          recorder.start();
+          setIsRecording(true);
+        })
+        .catch(err => {
+          console.error("Erro ao acessar microfone:", err);
+        });
+    }
+  };
+
+  // Função para parar a gravação
+  const stopRecording = () => {
+    if (audioRecorder && audioRecorder.state !== 'inactive') {
+      audioRecorder.stop();
+    }
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="w-full bg-gradient-to-r from-[#001a4d] to-[#003399] rounded-xl p-4 border border-[#39c2ff]/20 shadow-lg relative overflow-hidden"
-    >
-      {/* Background gradients */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0055ff]/20 via-[#0080ff]/20 to-[#007bff]/20 opacity-60"></div>
-        <div className="absolute inset-0 bg-grid-pattern opacity-15"></div>
-      </div>
-
-      {/* Glowing orb */}
+    <div className="w-full mx-auto mb-2 p-1"> {/* Reduced spacing further */}
       <motion.div 
-        className="absolute top-1/3 left-1/4 w-32 h-32 rounded-full bg-[#0066ff]/10 blur-3xl"
-        animate={{
-          scale: [1, 1.2, 1],
-          opacity: [0.1, 0.2, 0.1],
-        }}
-        transition={{
-          duration: 5,
-          repeat: Infinity,
-          repeatType: "reverse",
-        }}
-      />
-
-      {/* Message input container */}
-      <div className="relative z-10 flex items-center gap-3">
-        <div className="flex-grow relative">
-          <Input
-            type="text"
-            placeholder="Digite uma mensagem para o Epictus IA..."
-            className="w-full bg-white/10 border-[#39c2ff]/30 text-white placeholder-white/50 focus:border-[#39c2ff] focus:ring-1 focus:ring-[#39c2ff] h-12 px-4 pr-12 rounded-lg"
-            value={message}
-            onChange={handleMessageChange}
-            onKeyPress={handleKeyPress}
-          />
-          <motion.div 
-            className="absolute right-3 top-1/2 transform -translate-y-1/2"
-            animate={{ 
-              opacity: isTyping ? 1 : 0.7,
-              scale: isTyping ? 1.1 : 1
-            }}
-            transition={{ duration: 0.2 }}
-          >
-            {isTyping ? (
-              <Send 
-                className="h-5 w-5 text-white cursor-pointer hover:text-[#39c2ff] transition-colors" 
-                onClick={handleSendMessage}
-              />
-            ) : (
-              <Sparkles className="h-5 w-5 text-white/70" />
-            )}
-          </motion.div>
+        className="relative bg-gradient-to-r from-[#050e1d]/90 to-[#0d1a30]/90 rounded-2xl shadow-xl 
+                   border border-white/5 backdrop-blur-sm overflow-hidden"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        {/* Partículas de fundo */}
+        <div className="absolute inset-0 opacity-30 pointer-events-none">
+          <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
         </div>
 
-        {/* Profile selection (simplified) */}
-        <motion.div 
-          className="w-12 h-12 rounded-full bg-gradient-to-br from-[#0047e1] to-[#0099ff] flex items-center justify-center cursor-pointer shadow-lg border border-[#39c2ff]/30"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
-        </motion.div>
-      </div>
-    </motion.div>
+        {/* Container principal */}
+        <div className="relative z-10 p-4">
+          {/* Área de input */}
+          <div className="flex items-center gap-2">
+            <motion.button
+              className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+                         flex items-center justify-center shadow-lg text-white"
+              whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsExpanded(!isExpanded)}
+            >
+              <Plus size={22} />
+            </motion.button>
+
+            <div className={`relative flex-grow overflow-hidden 
+                            bg-gradient-to-r from-[#0c2341]/30 to-[#0f3562]/30 
+                            rounded-xl border ${isInputFocused ? 'border-[#1230CC]/70' : 'border-white/10'} 
+                            transition-all duration-300`}>
+              <input
+                type="text"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onFocus={() => setIsInputFocused(true)}
+                onBlur={() => setIsInputFocused(false)}
+                placeholder="Digite um comando ou pergunta para o Epictus Turbo..."
+                className="w-full bg-transparent text-white py-4 px-4 outline-none placeholder:text-gray-400"
+              />
+            </div>
+
+            {/* Botão de microfone (quando não há texto) */}
+            {!inputHasContent ? (
+              <motion.button 
+                className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+                         flex items-center justify-center shadow-lg text-white"
+                whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+                whileTap={{ scale: 0.95 }}
+                onClick={startRecording}
+              >
+                <Mic size={20} />
+              </motion.button>
+            ) : (
+              /* Botão de enviar - Visível apenas quando há conteúdo no input */
+              <motion.button
+                className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+                         flex items-center justify-center shadow-lg text-white"
+                whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+                whileTap={{ scale: 0.95 }}
+                animate={{ 
+                  boxShadow: ["0 0 0px rgba(13, 35, 160, 0)", "0 0 15px rgba(13, 35, 160, 0.5)", "0 0 0px rgba(13, 35, 160, 0)"],
+                }}
+                transition={{ duration: 2, repeat: Infinity }}
+                onClick={handleSendMessage}
+              >
+                <Send size={20} />
+              </motion.button>
+            )}
+          </div>
+
+          {/* Interface de gravação de áudio */}
+          <AnimatePresence>
+            {isRecording && (
+              <motion.div 
+                className="recording-interface mt-2 p-2 bg-[#0c2341]/40 rounded-xl border border-red-500/30 flex items-center justify-between"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse"></div>
+                  <span className="text-sm text-white/80">Gravando áudio...</span>
+                </div>
+                <div className="flex gap-2">
+                  <motion.button
+                    className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setIsRecording(false)}
+                  >
+                    <X size={16} />
+                  </motion.button>
+                  <motion.button
+                    className="p-1.5 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD]"
+                    whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={stopRecording}
+                  >
+                    <Send size={16} className="text-white" />
+                  </motion.button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Ações rápidas */}
+          <AnimatePresence>
+            <motion.div 
+              className="quick-actions mt-3 pb-1 flex gap-2 overflow-x-auto scrollbar-hide"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {quickActions.map((action, index) => (
+                <QuickAction 
+                  key={index} 
+                  icon={action.icon} 
+                  label={action.label} 
+                  onClick={() => console.log(`Ação rápida: ${action.label}`)}
+                />
+              ))}
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Painel expandido (opcional) */}
+          <AnimatePresence>
+            {isExpanded && (
+              <motion.div 
+                className="expanded-panel mt-3 p-3 bg-[#0c2341]/40 rounded-xl border border-white/10"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="flex flex-wrap gap-2">
+                  <div className="text-xs text-white/70 mb-1 w-full">Opções avançadas:</div>
+                  <motion.button 
+                    className="px-3 py-1.5 text-sm bg-gradient-to-r from-[#0c2341]/70 to-[#0f3562]/70 
+                               text-white rounded-lg border border-white/10"
+                    whileHover={{ scale: 1.02, boxShadow: "0 0 10px rgba(13, 35, 160, 0.3)" }}
+                  >
+                    Escolher competência
+                  </motion.button>
+                  <motion.button 
+                    className="px-3 py-1.5 text-sm bg-gradient-to-r from-[#0c2341]/70 to-[#0f3562]/70 
+                               text-white rounded-lg border border-white/10"
+                    whileHover={{ scale: 1.02, boxShadow: "0 0 10px rgba(13, 35, 160, 0.3)" }}
+                  >
+                    Modo resposta rápida
+                  </motion.button>
+                  <motion.button 
+                    className="px-3 py-1.5 text-sm bg-gradient-to-r from-[#0c2341]/70 to-[#0f3562]/70 
+                               text-white rounded-lg border border-white/10"
+                    whileHover={{ scale: 1.02, boxShadow: "0 0 10px rgba(13, 35, 160, 0.3)" }}
+                  >
+                    Adicionar mídia
+                  </motion.button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        <div className="w-full max-w-full px-2"> {/* Changed px-4 to px-2 */}
+            {/* Conteúdo da caixa de mensagens */}
+          </div>
+        </div>
+      </motion.div>
+    </div>
   );
 };
 

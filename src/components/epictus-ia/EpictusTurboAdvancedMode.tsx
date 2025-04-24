@@ -1,10 +1,9 @@
+
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import { Zap, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import WelcomeMessage from "./WelcomeMessage"; // Placeholder import
-import TurboMessageBox from "./TurboMessageBox"; // Placeholder import
 
 const EpictusTurboAdvancedMode: React.FC = () => {
   const { theme } = useTheme();
@@ -385,29 +384,24 @@ const EpictusTurboAdvancedMode: React.FC = () => {
         </motion.header>
       </div>
 
-      {/* Mensagem de boas vindas */}
-      <div className="w-full -mt-6 mb-1">
-        <WelcomeMessage />
-      </div>
-
-      {/* Espaço adicional antes da caixa de mensagens */}
-      <div className="w-full py-4"></div>
-
-      {/* Caixa de mensagens do Epictus Turbo movida para baixo */}
-      <div className="w-full p-4 mt-4">
-        <TurboMessageBox />
-      </div>
-
-      {/* Content area now below the header */}
-      <div className="w-full flex flex-col items-center justify-center mt-2 mb-2">
+      {/* Content area now below the header, moved up more */}
+      <div className="w-full flex flex-col items-center justify-center -mt-6 mb-1">
         {/* Mini-section selector */}
         <div className="w-full flex-grow flex items-center justify-center">
           {/* Aqui virá o conteúdo principal (histórico de conversas, resultados, etc.) */}
         </div>
       </div>
+      
+      {/* Espaço adicional antes da caixa de mensagens */}
+      <div className="w-full py-4"></div>
+      
+      {/* Caixa de mensagens do Epictus Turbo movida para baixo */}
+      <div className="w-full p-4 mt-4">
+        <TurboAdvancedMessageBox />
+      </div>
     </div>
   );
 };
 
-
+import TurboAdvancedMessageBox from "./TurboAdvancedMessageBox";
 export default EpictusTurboAdvancedMode;
