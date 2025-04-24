@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, memo } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion, AnimatePresence } from "framer-motion";
@@ -383,7 +382,7 @@ const EpictusTurboAdvancedMode: React.FC = () => {
           </div>
         </motion.header>
       </div>
-      
+
       {/* Área para o chat com a IA */}
       <div className="w-full px-4 py-3 flex-grow flex flex-col h-[calc(100vh-180px)]">
         <EpictusTurboAdvancedMessageBox />
