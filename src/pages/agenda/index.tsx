@@ -24,6 +24,7 @@ import AddTaskModal from "@/components/agenda/modals/add-task-modal";
 import EventDetailsModal from "@/components/agenda/modals/event-details-modal";
 import TasksView from "@/components/agenda/tasks/TasksView";
 import ChallengesView from "@/components/agenda/challenges/ChallengesView";
+import RotinaInteligente from "@/components/agenda/rotina/RotinaInteligente";
 
 // Icons
 import {
