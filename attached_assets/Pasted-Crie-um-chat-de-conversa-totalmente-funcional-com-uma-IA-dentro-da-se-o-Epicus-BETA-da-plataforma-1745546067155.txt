@@ -1,0 +1,22 @@
+Crie um chat de conversa totalmente funcional com uma IA dentro da seção "Epicus BETA" da plataforma Ponto.School, usando Vibe Code. Abaixo estão as especificações para o design, posicionamento, fluxo de interação e considerações para evitar erros e bugs. Siga rigorosamente todas as instruções para garantir um resultado funcional, esteticamente consistente e livre de erros.
+
+1. Contexto da Interface Atual
+A seção "Epicus BETA" está localizada na área principal da interface, abaixo do banner "Epicus BETA #Beta IA" e da descrição "Versão beta avançada com recursos experimentais".
+A área principal está atualmente vazia, exceto pelo banner e um menu suspenso "Personalidades".
+Há uma barra inferior com botões existentes: "Buscar", "Pensar", "Gerar Imagem", "Simulador de Provas", "Gerar Caderno", "Criar Fluxograma", "Reescrever Explicação", "Análise de Redação", "Resumir Conteúdo" e "Espaços de Aprendizagem".
+2. Estrutura e Design do Chat
+Área de Conversas (Histórico de Mensagens)
+Posicionamento :
+Centralize a área de conversas horizontalmente e verticalmente na área principal.
+Dimensões: 80% da largura da área principal (aproximadamente 900px) e 60% da altura da área principal (aproximadamente 400px).
+Deixe margens laterais de 10% em cada lado.
+Estilo :
+Fundo: #1A2634 (azul escuro, consistente com o tema da plataforma).
+Borda: Arredondada com raio de 8px.
+Texto: Branco ( #FFFFFF ).
+Barra de rolagem vertical: Aparece automaticamente quando o conteúdo ultrapassa a altura da caixa. Estilize o "thumb" da barra com a cor #4A90E2 , mantendo o fundo da barra em #2F3B4C .
+Mensagens :
+Mensagens do usuário: Alinhadas à direita, fundo #4A90E2 , texto branco, bordas arredondadas (4px), preenchimento de 8px.
+Mensagens da IA: Alinhadas à esquerda, fundo #2F3B4C , texto branco, bordas arredondadas (4px), preenchimento de 8px.
+Timestamp: Abaixo de cada mensagem, fonte de 12px, cor #A0A0A0 , formato "HH:MM" (ex.: "10:45").
+Rolagem: A área de conversas deve rolar automaticamente para o final ao adicionar novas mensagens (comportamento suave).

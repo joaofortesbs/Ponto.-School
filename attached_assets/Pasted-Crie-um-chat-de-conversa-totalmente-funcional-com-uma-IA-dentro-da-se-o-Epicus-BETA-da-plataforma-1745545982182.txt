@@ -1,0 +1,137 @@
+Crie um chat de conversa totalmente funcional com uma IA dentro da seção "Epicus BETA" da plataforma Ponto.School, usando Vibe Code. Abaixo estão as especificações para o design, posicionamento, fluxo de interação e considerações para evitar erros e bugs. Siga rigorosamente todas as instruções para garantir um resultado funcional, esteticamente consistente e livre de erros.
+
+1. Contexto da Interface Atual
+A seção "Epicus BETA" está localizada na área principal da interface, abaixo do banner "Epicus BETA #Beta IA" e da descrição "Versão beta avançada com recursos experimentais".
+A área principal está atualmente vazia, exceto pelo banner e um menu suspenso "Personalidades".
+Há uma barra inferior com botões existentes: "Buscar", "Pensar", "Gerar Imagem", "Simulador de Provas", "Gerar Caderno", "Criar Fluxograma", "Reescrever Explicação", "Análise de Redação", "Resumir Conteúdo" e "Espaços de Aprendizagem".
+2. Estrutura e Design do Chat
+Área de Conversas (Histórico de Mensagens)
+Posicionamento :
+Centralize a área de conversas horizontalmente e verticalmente na área principal.
+Dimensões: 80% da largura da área principal (aproximadamente 900px) e 60% da altura da área principal (aproximadamente 400px).
+Deixe margens laterais de 10% em cada lado.
+Estilo :
+Fundo: #1A2634 (azul escuro, consistente com o tema da plataforma).
+Borda: Arredondada com raio de 8px.
+Texto: Branco ( #FFFFFF ).
+Barra de rolagem vertical: Aparece automaticamente quando o conteúdo ultrapassa a altura da caixa. Estilize o "thumb" da barra com a cor #4A90E2 , mantendo o fundo da barra em #2F3B4C .
+Mensagens :
+Mensagens do usuário: Alinhadas à direita, fundo #4A90E2 , texto branco, bordas arredondadas (4px), preenchimento de 8px.
+Mensagens da IA: Alinhadas à esquerda, fundo #2F3B4C , texto branco, bordas arredondadas (4px), preenchimento de 8px.
+Timestamp: Abaixo de cada mensagem, fonte de 12px, cor #A0A0A0 , formato "HH:MM" (ex.: "10:45").
+Rolagem: A área de conversas deve rolar automaticamente para o final ao adicionar novas mensagens (comportamento suave).
+Caixa de Envio de Mensagens
+Posicionamento :
+Posicione a caixa de envio de mensagens logo abaixo da área de conversas.
+Dimensões: Mesma largura da área de conversas (80% da largura da área principal, ou 900px), altura fixa de 50px.
+Estilo :
+Fundo: #2F3B4C (azul escuro mais claro).
+Borda: Arredondada com raio de 8px.
+Campo de Texto :
+Ocupa 80% da largura interna da caixa (aproximadamente 720px).
+Placeholder: "Digite sua mensagem para a IA..." (fonte: 14px, cor: #A0A0A0 ).
+Texto digitalizado: Cor branca ( #FFFFFF ), fonte de 14px.
+Fundo interno: #1A2634 , bordas arredondadas (4px), sem borda externa.
+Botão de Envio :
+À direita do campo de texto, um botão circular com ícone de "avião de papel".
+Tamanho: 40px de diâmetro.
+Fundo: #4A90E2 , ícone em branco.
+Hover: Fundo muda para #5AAEFF .
+Clique: Animação de escala (reduz para 90% e volta ao normal).
+Botões Adicionais :
+Mova os botões existentes ("Simulador de Provas", "Gerar Caderno", etc.) para uma linha acima da caixa de envio, alinhados à direita.
+Reduza o tamanho dos botões: Fonte de 12px, altura de 40px.
+Outros Elementos
+Indicador de Digitação :
+Quando a IA estiver respondendo, mostre um indicador de digitação (três pontos animados) na parte inferior esquerda da área de conversas.
+Estilo: Pontos em #4A90E2 , animação de "pulsar" (1 segundo por ciclo).
+Botão para Limpar Chat :
+No canto superior direito da área de conversas, adicione um ícone de "lixeira".
+Tamanho: 24px, cor: #A0A0A0 , hover: #FF4D4D .
+Ao clicar, mostre um modal de confirmação: "Deseja limpar o chat? Isso não pode ser feito.", com os botões "Cancelar" e "Confirmar".
+3. Fluxo de Interação
+Início da Conversa :
+Ao carregar a seção "Epicus BETA", exiba uma mensagem inicial da IA:
+"Olá, João! Eu sou o Epicus IA, seu assistente para aprendizado e programação. Como posso te ajudar hoje?"
+Alinhada à esquerda, fundo #2F3B4C , com timestamp.
+O campo de texto deve ser focado automaticamente (autofoco).
+Envio de Mensagem pelo Usuário :
+O usuário digita uma mensagem (ex.: "Quero aprender a programar em Vibe Code").
+Envio: Pressione “Enter” ou clique no botão de envio.
+Após o envio:
+Uma mensagem aparece na área de conversas, alinhada à direita, com fundo #4A90E2 e timestamp.
+O campo de texto é limpo.
+A área de conversas rola para o final (comportamento suave).
+Resposta da IA :
+Após o envio, mostre o indicador de digitação por 1-2 segundos.
+A IA responde (ex.: "Ótimo! O Vibe Code é uma linguagem poderosa. Vamos começar com os conceitos básicos. Primeiro, você sabe o que é uma variável?").
+A resposta aparece na área de conversas, alinhada à esquerda, com fundo #2F3B4C e timestamp.
+A área de conversas rola para o final.
+Interações Contínuas :
+O usuário pode enviar mais mensagens, e a IA responder contextualmente.
+Se a IA precisar de mais informações, ela faz perguntas.
+Limpar Chat :
+Ao clicar no botão "lixeira", exiba o modal de confirmação.
+Se o usuário confirmar, remova todas as mensagens e exiba novamente a mensagem inicial da IA.
+Integração com Botões Existentes :
+"Simulador de Provas": Gera uma prova simulada com base na conversa.
+"Gerar Caderno": Crie um documento com o conteúdo da conversa.
+"Criar Fluxograma": Gera um fluxograma visual.
+"Reescrever Explicação": Reescreva a última resposta da IA.
+"Análise de Redação": Análise de uma redação enviada pelo usuário.
+"Resumir Conteúdo": Retomar uma conversa ou um trecho.
+4. Considerações para Evitar Erros e Bugs
+Projeto
+Consiste :
+Utilizar como núcleos #1A2634 (fundo), #2F3B4C (elementos secundários), #4A90E2 (destaques), texto branco ( #FFFFFF ).
+Fonte: Sans-serif (ex.: "Roboto"), tamanhos: 14px (texto principal), 12px (timestamps).
+Bordas arredondadas: 8px (caixas), 4px (mensagens).
+Responsabilidade :
+Nas telas menores, ajuste a largura da área de conversas para 90% da tela e a altura para max-height: 50vh .
+Garanta que o campo de texto não seja cortado (use min-width: 300px ).
+Acessibilidade :
+Adicione aria-label nos botões (ex.: aria-label="Enviar mensagem" no botão de envio).
+Suporte ao teclado: Foco automático no campo de texto, navegação por Tab .
+Funcionamento
+Validação :
+Limite de mensagens a 1000 caracteres. Mostre um contador (ex.: "500/1000").
+Remova espaços em branco no início/fim ( trim ).
+Se a mensagem for vazia, exiba: "Por favor, digite uma mensagem." (vermelho, desaparece em 3 segundos).
+Gestão de Estado :
+Armazene o histórico de mensagens em um array: { sender: "user" | "ia", mensagem: string, carimbo de data/hora: Data } .
+Persista no localStorage ou backend, mas limpe ao clicar em "Limpar Chat".
+Tratamento de Erros :
+Se a IA falhar (ex.: erro de API), mostre: "Desculpe, algo deu errado. Tente novamente!" (fundo #FF4D4D , texto branco).
+Adicione um botão "Tentar Novamente".
+Desempenho :
+Use virtualização para o histórico de mensagens se houver muitas mensagens (ex.: limite a 50 mensagens visíveis, com botão "Carregar Mais").
+Potenciais Insetos
+Rolagem : Use scrollTo com behavior: "smooth" para evitar "pulos".
+Duplicação : Desative o botão de envio enquanto a IA responde.
+Conexão : Timeout de 10 segundos para respostas da IA, com mensagem de erro se exceder.
+5. Exemplo de Fluxo
+Início :
+texto
+
+Copiar
+[IA]: Olá, João! Eu sou o Epicus IA, sua assistente para aprendizado e programação. Como posso te ajudar hoje?  [10:45]
+Após envio :
+texto
+
+Copiar
+[IA]: Olá, João! Eu sou o Epicus IA, sua assistente para aprendizado e programação. Como posso te ajudar hoje?  [10:45]
+[Usuário]: Quero aprender a programar em Vibe Code.  [10:46]
+[Indicador: ...]
+Após a resposta :
+texto
+
+Copiar
+[IA]: Olá, João! Eu sou o Epicus IA, sua assistente para aprendizado e programação. Como posso te ajudar hoje?  [10:45]
+[Usuário]: Quero aprender a programar em Vibe Code.  [10:46]
+[IA]: Ótimo! O Vibe Code é uma linguagem poderosa. Vamos começar com os conceitos básicos. Primeiro, você sabe o que é uma variável?  [10:46]
+6. Considerações Finais
+Teste em diferentes tamanhos de tela (desktop, tablet, celular).
+Simule falhas de rede para verificar o comportamento de erro.
+Adicione um botão de "Feedback" (ícone de estrela) para o usuário avaliar a IA.
+Planeje espaço para futuras funcionalidades (ex.: envio de arquivos).
+Implemente o chat no Vibe Code seguindo essas especificações e garanta que ele seja integrado ao design da plataforma Ponto.School.
