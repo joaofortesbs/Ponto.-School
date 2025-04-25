@@ -24,6 +24,7 @@ import AddTaskModal from "@/components/agenda/modals/add-task-modal";
 import EventDetailsModal from "@/components/agenda/modals/event-details-modal";
 import TasksView from "@/components/agenda/tasks/TasksView";
 import ChallengesView from "@/components/agenda/challenges/ChallengesView";
+import RotinaInteligente from "@/components/agenda/rotina/RotinaInteligente";
 
 // Icons
 import {
@@ -837,7 +838,7 @@ export default function AgendaPage() {
             >
               <CheckSquare className="h-5 w-5 mr-1" /> Tarefas
             </TabsTrigger>
-
+            
             <TabsTrigger
               value="desafios"
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B00] data-[state=active]:to-[#FF8C40] data-[state=active]:text-white px-4 py-2 text-base font-medium transition-all duration-300 rounded-lg"
@@ -1683,7 +1684,7 @@ export default function AgendaPage() {
           />
         </TabsContent>
 
-
+        
 
         {/* Desafios Tab */}
         <TabsContent value="desafios" className="mt-0">
@@ -1691,7 +1692,7 @@ export default function AgendaPage() {
         </TabsContent>
         {/* Rotina Tab */}
         <TabsContent value="rotina" className="mt-0">
-          <div>Essa interface está em desenvolvimento</div>
+          <RotinaInteligente />
         </TabsContent>
       </Tabs>
 
