@@ -7,11 +7,12 @@ import {
   Star,
   Search,
   FileText,
-  PenLine
+  PenLine,
+  Share // Added import for Share icon
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import EpictusMessageBox from "./message-box/EpictusMessageBox";
-import PromptSuggestionsModal from "./message-box/PromptSuggestionsModal"; // Added import
+import PromptSuggestionsModal from "./message-box/PromptSuggestionsModal";
 import TurboHeader from "./turbo-header/TurboHeader";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -56,7 +57,6 @@ const EpictusBetaMode: React.FC = () => {
       console.error("Erro ao carregar histórico do chat:", error);
     }
 
-    // Mensagem inicial padrão
     return [{
       id: uuidv4(),
       sender: "ia",
@@ -70,7 +70,7 @@ const EpictusBetaMode: React.FC = () => {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [charCount, setCharCount] = useState(0);
-  const [isPromptModalOpen, setIsPromptModalOpen] = useState(false); // Added state
+  const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const MAX_CHARS = 1000;
   const [sessionId] = useState(() => localStorage.getItem('epictus_beta_session_id') || uuidv4());
@@ -78,7 +78,6 @@ const EpictusBetaMode: React.FC = () => {
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Definir opções para o dropdown de personalidades
   const profileOptions = [
     { 
       id: "estudante",
@@ -126,7 +125,6 @@ const EpictusBetaMode: React.FC = () => {
     }
   ];
 
-  // Configurar efeito de animação ao carregar
   useEffect(() => {
     const timer = setTimeout(() => {
       setAnimationComplete(true);
@@ -135,14 +133,12 @@ const EpictusBetaMode: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Autofoco no campo de texto ao carregar
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.focus();
     }
   }, []);
 
-  // Persistir mensagens no localStorage
   useEffect(() => {
     if (messages.length > 0) {
       localStorage.setItem('epictus_beta_chat', JSON.stringify(messages));
@@ -150,7 +146,6 @@ const EpictusBetaMode: React.FC = () => {
     }
   }, [messages, sessionId]);
 
-  // Rolar para o final quando novas mensagens são adicionadas
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -181,7 +176,7 @@ const EpictusBetaMode: React.FC = () => {
       return;
     }
 
-    if (isTyping) return; // Prevenir duplicação
+    if (isTyping) return;
 
     const userMessage: Message = {
       id: uuidv4(),
@@ -196,19 +191,15 @@ const EpictusBetaMode: React.FC = () => {
     setIsTyping(true);
 
     try {
-      // Indicador de digitação antes de receber a resposta da API
       const typingTimeout = setTimeout(() => {
-        // Se a API demorar muito, mostrar indicador de digitação
         setIsTyping(true);
       }, 300);
 
       try {
-        // Chamada para a API Gemini através do nosso serviço
         console.log("Enviando mensagem para Gemini:", trimmedMessage);
         const response = await generateAIResponse(trimmedMessage, sessionId);
         console.log("Resposta recebida de Gemini");
 
-        // Criar mensagem com a resposta da IA
         const aiMessage: Message = {
           id: uuidv4(),
           sender: "ia",
@@ -216,12 +207,10 @@ const EpictusBetaMode: React.FC = () => {
           timestamp: new Date()
         };
 
-        // Adicionar a resposta ao estado
         setMessages(prev => [...prev, aiMessage]);
       } catch (err) {
         console.error("Erro ao gerar resposta com Gemini:", err);
 
-        // Mensagem de erro para o usuário
         const errorMessage: Message = {
           id: uuidv4(),
           sender: "ia",
@@ -265,7 +254,6 @@ const EpictusBetaMode: React.FC = () => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Função para iniciar edição de mensagem
   const startEditingMessage = (messageId: string) => {
     const message = messages.find(msg => msg.id === messageId);
     if (message && message.sender === "ia") {
@@ -273,25 +261,22 @@ const EpictusBetaMode: React.FC = () => {
     }
   };
 
-  // Função para salvar a edição da mensagem
   const saveEditedMessage = (messageId: string, newContent: string) => {
     if (!newContent.trim()) {
       return;
     }
-    
+
     const updatedMessages = messages.map(msg => 
       msg.id === messageId 
         ? { ...msg, content: newContent, isEdited: true } 
         : msg
     );
-    
+
     setMessages(updatedMessages);
     setEditingMessageId(null);
-    
-    // Salvar no localStorage
+
     localStorage.setItem('epictus_beta_chat', JSON.stringify(updatedMessages));
-    
-    // Exibir confirmação
+
     toast({
       title: "Mensagem editada",
       description: "A mensagem da IA foi atualizada com sucesso.",
@@ -299,20 +284,16 @@ const EpictusBetaMode: React.FC = () => {
     });
   };
 
-  // Função para cancelar edição
   const cancelEditing = () => {
     setEditingMessageId(null);
   };
 
-  // Simulação de funcionalidades dos botões existentes
   const handleButtonClick = (action: string) => {
-    // Verificar se é a ação de sugestão de prompts
     if (action === 'SugestaoPrompts') {
       setIsPromptModalOpen(true);
       return;
     }
 
-    // Verificar se é a ação de prompt aprimorado
     if (action === 'PromptAprimorado') {
       if (!inputMessage.trim()) {
         return;
@@ -320,16 +301,13 @@ const EpictusBetaMode: React.FC = () => {
 
       const originalMessage = inputMessage;
 
-      // Mostrar mensagem de processamento
       toast({
         title: "Aprimorando seu prompt...",
         description: "Estamos melhorando sua mensagem com IA",
         duration: 3000,
       });
 
-    // Função para gerar modal interativo
     const showImprovedPromptModal = (improvedPromptText: string) => {
-      // Criar e adicionar o modal diretamente ao DOM
       const modalHTML = `
         <div id="improved-prompt-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
           <div class="bg-[#1a1d2d] text-white rounded-lg w-[90%] max-w-md shadow-xl overflow-hidden border border-gray-700 animate-fadeIn">
@@ -385,23 +363,19 @@ const EpictusBetaMode: React.FC = () => {
         </div>
       `;
 
-      // Remover qualquer modal existente
       const existingModal = document.getElementById('improved-prompt-modal');
       if (existingModal) {
         existingModal.remove();
       }
 
-      // Adicionar o novo modal ao DOM
       document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-      // Adicionar event listeners ao modal
       setTimeout(() => {
         const modal = document.getElementById('improved-prompt-modal');
         const closeButton = document.getElementById('close-improved-prompt-modal');
         const cancelButton = document.getElementById('cancel-improved-prompt');
         const acceptButton = document.getElementById('accept-improved-prompt');
 
-        // Função para fechar o modal
         const closeModal = () => {
           if (modal) {
             modal.classList.add('animate-fadeOut');
@@ -409,17 +383,14 @@ const EpictusBetaMode: React.FC = () => {
           }
         };
 
-        // Event listener para fechar o modal
         if (closeButton) {
           closeButton.addEventListener('click', closeModal);
         }
 
-        // Event listener para cancelar
         if (cancelButton) {
           cancelButton.addEventListener('click', closeModal);
         }
 
-        // Event listener para aceitar o prompt aprimorado
         if (acceptButton) {
           acceptButton.addEventListener('click', () => {
             setInputMessage(improvedPromptText);
@@ -432,7 +403,6 @@ const EpictusBetaMode: React.FC = () => {
           });
         }
 
-        // Event listener para clicar fora do modal e fechar
         if (modal) {
           modal.addEventListener('click', (e) => {
             if (e.target === modal) {
@@ -443,13 +413,10 @@ const EpictusBetaMode: React.FC = () => {
       }, 50);
     };
 
-    // Função para aprimorar o prompt
     const aprimorarPrompt = async () => {
       try {
-        // Gerar um ID de sessão único para esta interação
         const promptSessionId = `prompt-improvement-${Date.now()}`;
 
-        // Mostrar o modal de carregamento
         const loadingModalHTML = `
           <div id="loading-prompt-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
             <div class="bg-[#1a1d2d] text-white rounded-lg w-[90%] max-w-md shadow-xl overflow-hidden border border-gray-700 animate-fadeIn">
@@ -472,20 +439,16 @@ const EpictusBetaMode: React.FC = () => {
           </div>
         `;
 
-        // Remover qualquer modal existente
         const existingLoadingModal = document.getElementById('loading-prompt-modal');
         if (existingLoadingModal) {
           existingLoadingModal.remove();
         }
 
-        // Adicionar o modal de carregamento ao DOM
         document.body.insertAdjacentHTML('beforeend', loadingModalHTML);
 
-        // Chamar a API para obter uma versão aprimorada do prompt
         let improvedPromptText = "";
 
         try {
-          // Chamar a API Gemini para melhorar o prompt
           improvedPromptText = await generateAIResponse(
             `Você é um assistente especializado em melhorar prompts educacionais. 
             Analise o seguinte prompt e melhore-o para obter uma resposta mais detalhada, completa e educacional.
@@ -511,13 +474,11 @@ const EpictusBetaMode: React.FC = () => {
         } catch (error) {
           console.error("Erro ao chamar API para aprimorar prompt:", error);
 
-          // Remover o modal de carregamento se existe
           const loadingModal = document.getElementById('loading-prompt-modal');
           if (loadingModal) {
             loadingModal.remove();
           }
 
-          // Fallback para melhorias locais se a API falhar
           const enhancementMap: Record<string, string> = {
             "explique": "Explique detalhadamente, com exemplos e analogias simples, ",
             "como": "Poderia detalhar de forma estruturada e passo a passo ",
@@ -534,7 +495,6 @@ const EpictusBetaMode: React.FC = () => {
           let enhancedPrompt = originalMessage;
           let wasEnhanced = false;
 
-          // Verificar palavras-chave e aprimorar se encontradas
           Object.entries(enhancementMap).forEach(([keyword, enhancement]) => {
             if (originalMessage.toLowerCase().includes(keyword) && !wasEnhanced) {
               const regex = new RegExp(`\\b${keyword}\\b`, 'i');
@@ -543,12 +503,10 @@ const EpictusBetaMode: React.FC = () => {
             }
           });
 
-          // Se nenhuma palavra-chave foi encontrada, adicione uma introdução geral
           if (!wasEnhanced) {
             enhancedPrompt = `Explique detalhadamente, com exemplos claros: ${originalMessage}`;
           }
 
-          // Adicionar estrutura ao final do prompt se não tiver
           if (!enhancedPrompt.includes("estruturado") && !enhancedPrompt.includes("passo a passo")) {
             enhancedPrompt += ". Por favor, estruture sua resposta em tópicos e forneça exemplos práticos.";
           }
@@ -556,30 +514,26 @@ const EpictusBetaMode: React.FC = () => {
           improvedPromptText = enhancedPrompt;
         }
 
-        // Limpar formatação extra que possa ter vindo na resposta
         improvedPromptText = improvedPromptText
           .replace(/^(Prompt melhorado:|Aqui está uma versão melhorada:|Versão melhorada:)/i, '')
           .replace(/^["']|["']$/g, '')
           .trim();
 
-        // Remover o modal de carregamento se existe
         const loadingModal = document.getElementById('loading-prompt-modal');
         if (loadingModal) {
           loadingModal.remove();
         }
 
-        // Mostrar o modal com o prompt aprimorado
         showImprovedPromptModal(improvedPromptText);
 
       } catch (error) {
         console.error("Erro ao aprimorar prompt:", error);
-        
-        // Remover o modal de carregamento se existe
+
         const loadingModal = document.getElementById('loading-prompt-modal');
         if (loadingModal) {
           loadingModal.remove();
         }
-        
+
         toast({
           title: "Erro ao aprimorar prompt",
           description: "Não foi possível melhorar o prompt. Por favor, tente novamente.",
@@ -588,45 +542,48 @@ const EpictusBetaMode: React.FC = () => {
       }
     };
 
-    // Iniciar o processo de aprimoramento
     aprimorarPrompt();
 
     return;
   }
 
-    const actionMap: Record<string, string> = {
-      "Buscar": "Iniciando busca com base na conversa atual...",
-      "Pensar": "Analisando a conversa para gerar insights...",
-      "Gerar Imagem": "Gerando imagem baseada no contexto da conversa...",
-      "Simulador de Provas": "Preparando simulado com base no conteúdo discutido...",
-      "Gerar Caderno": "Criando caderno com o conteúdo da nossa conversa...",
-      "Criar Fluxograma": "Gerando fluxograma visual do conteúdo...",
-      "Reescrever Explicação": "Reescrevendo a última explicação em formato diferente...",
-      "Análise de Redação": "Pronto para analisar sua redação. Por favor, envie o texto...",
-      "Resumir Conteúdo": "Resumindo o conteúdo da nossa conversa...",
-      "Espaços de Aprendizagem": "Abrindo espaços de aprendizagem relacionados..."
-    };
+  const actionMap: Record<string, string> = {
+    "Buscar": "Iniciando busca com base na conversa atual...",
+    "Pensar": "Analisando a conversa para gerar insights...",
+    "Gerar Imagem": "Gerando imagem baseada no contexto da conversa...",
+    "Simulador de Provas": "Preparando simulado com base no conteúdo discutido...",
+    "Gerar Caderno": "Criando caderno com o conteúdo da nossa conversa...",
+    "Criar Fluxograma": "Gerando fluxograma visual do conteúdo...",
+    "Reescrever Explicação": "Reescrevendo a última explicação em formato diferente...",
+    "Análise de Redação": "Pronto para analisar sua redação. Por favor, envie o texto...",
+    "Resumir Conteúdo": "Resumindo o conteúdo da nossa conversa...",
+    "Espaços de Aprendizagem": "Abrindo espaços de aprendizagem relacionados..."
+  };
 
-    const responseMessage = actionMap[action] || "Executando ação...";
+  const responseMessage = actionMap[action] || "Executando ação...";
 
-    const botMessage: Message = {
-      id: uuidv4(),
-      sender: "ia",
-      content: responseMessage,
-      timestamp: new Date()
-    };
+  const botMessage: Message = {
+    id: uuidv4(),
+    sender: "ia",
+    content: responseMessage,
+    timestamp: new Date()
+  };
 
-    setMessages(prev => [...prev, botMessage]);
+  setMessages(prev => [...prev, botMessage]);
+};
+
+
+  const handleExportMessage = (message: Message) => {
+    // Placeholder for export/share functionality. Replace with actual implementation.
+    console.log("Exporting/Sharing message:", message);
+    toast({ title: "Exportar/Compartilhar", description: "Funcionalidade em desenvolvimento." });
   };
 
   return (
     <div className="flex flex-col h-full">
-      {/* Cabeçalho do Modo Epictus Turbo */}
       <TurboHeader profileOptions={profileOptions} initialProfileIcon={profileIcon} initialProfileName={profileName} />
 
-      {/* Interface de Chat */}
       <div className="flex-1 flex flex-col items-center justify-between p-4 overflow-hidden bg-transparent">
-        {/* Área de conversas */}
         <div className="w-[80%] h-[85%] relative mb-4 flex-grow overflow-hidden">
           <div className="absolute top-0 right-0 z-10 p-2">
             <Button
@@ -707,13 +664,22 @@ const EpictusBetaMode: React.FC = () => {
                               Epictus IA
                             </Badge>
                             {!editingMessageId && (
-                              <button 
-                                onClick={() => startEditingMessage(message.id)}
-                                className="text-gray-400 hover:text-blue-400 transition-colors"
-                                title="Editar mensagem"
-                              >
-                                <PenLine size={12} />
-                              </button>
+                              <div className="flex items-center space-x-2">
+                                <button 
+                                  onClick={() => startEditingMessage(message.id)}
+                                  className="text-gray-400 hover:text-blue-400 transition-colors"
+                                  title="Editar mensagem"
+                                >
+                                  <PenLine size={12} />
+                                </button>
+                                <button 
+                                  onClick={() => handleExportMessage(message)}
+                                  className="text-gray-400 hover:text-blue-400 transition-colors"
+                                  title="Exportar/Compartilhar mensagem"
+                                >
+                                  <Share size={12} />
+                                </button>
+                              </div>
                             )}
                             {message.isEdited && (
                               <span className="text-[9px] text-gray-500 italic">(editado)</span>
@@ -753,7 +719,6 @@ const EpictusBetaMode: React.FC = () => {
           </ScrollArea>
         </div>
 
-        {/* Caixa de envio de mensagens com posição fixa */}
         <div className="w-full h-auto mt-2 flex-shrink-0">
           <EpictusMessageBox 
             inputMessage={inputMessage} 
@@ -766,13 +731,11 @@ const EpictusBetaMode: React.FC = () => {
             handleButtonClick={handleButtonClick}
           />
 
-          {/* Modal de Sugestão de Prompts */}
           <PromptSuggestionsModal 
             isOpen={isPromptModalOpen}
             onClose={() => setIsPromptModalOpen(false)}
             onSelectPrompt={(prompt) => {
               setInputMessage(prompt);
-              // Focar no input após selecionar o prompt
               setTimeout(() => {
                 const textarea = document.querySelector('textarea');
                 if (textarea) {
@@ -785,7 +748,6 @@ const EpictusBetaMode: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal de confirmação */}
       <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
         <DialogContent className="bg-[#1A2634] text-white border-gray-700">
           <DialogHeader>
