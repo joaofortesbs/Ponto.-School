@@ -25,7 +25,7 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
 }) => {
   return (
     <motion.div 
-      className="relative w-full hub-connected-width bg-gradient-to-r from-[#050e1d]/90 to-[#0d1a30]/90 rounded-2xl shadow-xl 
+      className="relative w-[60%] mx-auto bg-gradient-to-r from-[#050e1d]/90 to-[#0d1a30]/90 rounded-2xl shadow-xl 
                 border border-white/5 backdrop-blur-sm overflow-hidden"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -41,13 +41,13 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
         {/* Área de input */}
         <div className="flex items-center gap-2">
           <motion.button
-            className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+            className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
                      flex items-center justify-center shadow-lg text-white"
             whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
             whileTap={{ scale: 0.95 }}
             onClick={() => {}}
           >
-            <Plus size={22} />
+            <Plus size={18} />
           </motion.button>
 
           <div className={`relative flex-grow overflow-hidden 
@@ -60,7 +60,7 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Digite um comando ou pergunta para o Epictus Turbo..."
-              className="w-full bg-transparent text-white py-4 px-4 outline-none placeholder:text-gray-400"
+              className="w-full bg-transparent text-white py-3 px-3 text-sm outline-none placeholder:text-gray-400"
               disabled={isTyping}
             />
             
@@ -72,17 +72,17 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
           {/* Botão de microfone (quando não há texto) */}
           {!inputMessage.trim() ? (
             <motion.button 
-              className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+              className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
                        flex items-center justify-center shadow-lg text-white"
               whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
               whileTap={{ scale: 0.95 }}
             >
-              <Mic size={20} />
+              <Mic size={16} />
             </motion.button>
           ) : (
             /* Botão de enviar - Visível apenas quando há conteúdo no input */
             <motion.button
-              className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+              className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
                        flex items-center justify-center shadow-lg text-white"
               whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
               whileTap={{ scale: 0.95 }}
@@ -94,9 +94,9 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
               disabled={isTyping}
             >
               {isTyping ? (
-                <Loader2 className="h-5 w-5 animate-spin text-white" />
+                <Loader2 className="h-4 w-4 animate-spin text-white" />
               ) : (
-                <Send size={20} />
+                <Send size={16} />
               )}
             </motion.button>
           )}
@@ -104,7 +104,7 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
 
         {/* Ações rápidas */}
         <motion.div 
-          className="quick-actions mt-3 pb-1 flex gap-2 overflow-x-auto scrollbar-hide"
+          className="quick-actions mt-2 pb-1 flex gap-1.5 overflow-x-auto scrollbar-hide"
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           transition={{ duration: 0.3 }}
