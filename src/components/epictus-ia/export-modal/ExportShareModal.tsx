@@ -46,42 +46,45 @@ const ExportShareModal: React.FC<ExportShareModalProps> = ({ open, onClose, mess
     // Criar um elemento temporário para renderizar o conteúdo
     const element = document.createElement("div");
     element.innerHTML = `
-      <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;">
+      <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; color: #000000;">
         <!-- Cabeçalho com título principal -->
         <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="font-size: 22px; font-weight: bold; margin: 0; color: #000; text-transform: uppercase;">PONTO.SCHOOL - MATERIAL DE ESTUDO</h1>
+          <h1 style="font-size: 22px; font-weight: bold; margin: 0; color: #000000; text-transform: uppercase;">PONTO.SCHOOL - MATERIAL DE ESTUDO</h1>
         </div>
         
         <!-- Informações do documento -->
         <div style="margin-bottom: 20px;">
-          <p style="margin: 5px 0; font-size: 14px;"><strong>Data:</strong> ${formattedDate}</p>
-          <p style="margin: 5px 0; font-size: 14px;"><strong>Aluno:</strong> ${username}</p>
+          <p style="margin: 5px 0; font-size: 14px; color: #000000;"><strong>Data:</strong> ${formattedDate}</p>
+          <p style="margin: 5px 0; font-size: 14px; color: #000000;"><strong>Aluno:</strong> ${username}</p>
         </div>
         
         <!-- Linha separadora -->
-        <div style="border-top: 1px solid #000; margin: 15px 0 25px 0;"></div>
+        <div style="border-top: 1px solid #000000; margin: 15px 0 25px 0;"></div>
         
         <!-- Título da seção -->
-        <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #000;">CONTEÚDO:</h2>
+        <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #000000;">CONTEÚDO:</h2>
         
         <!-- Conteúdo principal -->
-        <div style="font-size: 14px; line-height: 1.6; margin-bottom: 30px;">
+        <div style="font-size: 14px; line-height: 1.6; margin-bottom: 30px; color: #000000;">
           ${message.content.replace(/\n/g, "<br/>")}
         </div>
         
         <!-- Linha separadora -->
-        <div style="border-top: 1px dashed #ccc; margin: 30px 0 20px 0;"></div>
+        <div style="border-top: 1px dashed #cccccc; margin: 30px 0 20px 0;"></div>
+        
+        <!-- Espaçador para empurrar o rodapé para a base -->
+        <div style="min-height: 80px;"></div>
         
         <!-- Rodapé com informações -->
-        <div style="text-align: center; color: #666; font-size: 12px; margin-top: 30px;">
-          <p style="margin: 5px 0;">Documento gerado automaticamente pela Ponto.School</p>
-          <p style="margin: 5px 0; font-style: italic;">"Não é sobre conectar você com a tecnologia, é sobre conectar você com o futuro!"</p>
+        <div style="text-align: center; font-size: 12px; margin-top: 30px; position: fixed; bottom: 20px; left: 0; right: 0;">
+          <p style="margin: 5px 0; color: #000000; font-weight: bold;">Documento gerado automaticamente pela Ponto.School</p>
+          <p style="margin: 5px 0; font-style: italic; color: #444444;">"Não é sobre conectar você com a tecnologia, é sobre conectar você com o futuro!"</p>
         </div>
       </div>
     `;
 
     const opt = {
-      margin:       [15, 15, 15, 15],
+      margin:       [15, 15, 25, 15], // Aumentei a margem inferior para acomodar o rodapé
       filename:     `ponto-school-material-${formattedDate.replace(/\//g, '-')}.pdf`,
       image:        { type: 'jpeg', quality: 0.98 },
       html2canvas:  { scale: 2, useCORS: true },
