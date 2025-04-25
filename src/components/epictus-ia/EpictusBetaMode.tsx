@@ -362,51 +362,59 @@ const EpictusBetaMode: React.FC = () => {
 
         {/* Área para botões removida */}
 
-        {/* Caixa de envio de mensagens */}
-        <div className="w-[80%] h-[50px] bg-[#2F3B4C] rounded-lg flex items-center p-2 relative">
+        {/* Caixa de envio de mensagens estilo Turbo */}
+        <div className="w-[80%] relative">
           {error && (
             <Alert className="absolute -top-12 left-0 right-0 bg-red-500 text-white border-none">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
 
-          <div className="flex-1 h-full flex items-center relative">
-            <Textarea
-              ref={textareaRef}
-              value={inputMessage}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              placeholder="Digite sua mensagem para a IA..."
-              className="resize-none h-full bg-[#1A2634] border-none rounded-md text-white text-[14px] placeholder:text-[#A0A0A0] focus:ring-1 focus:ring-[#4A90E2] flex-1 py-2 pl-3 pr-16"
-              maxLength={MAX_CHARS}
-              disabled={isTyping}
-              aria-label="Campo de mensagem"
-            />
-            <div className="absolute right-3 bottom-1 text-xs text-[#A0A0A0]">
-              {charCount}/{MAX_CHARS}
+          <div className="flex items-center space-x-2 relative">
+            <div className={`relative flex-grow overflow-hidden 
+                            bg-gradient-to-r from-[#0c2341]/30 to-[#0f3562]/30 
+                            rounded-xl border ${isTyping ? 'border-[#1230CC]/70' : 'border-white/10'} 
+                            transition-all duration-300`}>
+              <Textarea
+                ref={textareaRef}
+                value={inputMessage}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                placeholder="Digite sua mensagem para a IA..."
+                className="w-full bg-transparent text-white py-3 px-4 outline-none placeholder:text-gray-400 resize-none min-h-[50px] max-h-[120px] border-none focus:ring-0"
+                maxLength={MAX_CHARS}
+                disabled={isTyping}
+                aria-label="Campo de mensagem"
+              />
+              
+              <div className="absolute right-3 bottom-1.5 text-xs text-gray-400 bg-[#0c2341]/50 px-1.5 py-0.5 rounded-md">
+                {charCount}/{MAX_CHARS}
+              </div>
             </div>
 
-            <Button
-              className="absolute right-0 top-0 bottom-0 w-[40px] h-[40px] rounded-full bg-[#4A90E2] hover:bg-[#5AAEFF] text-white mr-1 flex items-center justify-center transition-transform active:scale-90"
-              onClick={handleSendMessage}
-              disabled={isTyping || !inputMessage.trim()}
-              aria-label="Enviar mensagem"
-            >
-              {isTyping ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                <Send className="h-5 w-5" />
-              )}
-            </Button>
-          </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                className="w-[46px] h-[46px] rounded-full bg-gradient-to-r from-[#1230CC] to-[#4a90e2] hover:from-[#1230CC]/90 hover:to-[#5AAEFF] flex items-center justify-center shadow-md shadow-blue-900/20 transition-transform active:scale-95"
+                onClick={handleSendMessage}
+                disabled={isTyping || !inputMessage.trim()}
+                aria-label="Enviar mensagem"
+              >
+                {isTyping ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-white" />
+                ) : (
+                  <Send className="h-5 w-5 text-white" />
+                )}
+              </Button>
 
-          <Button
-            className="ml-2 h-[40px] w-[40px] rounded-full bg-[#1A2634] hover:bg-[#2F3B4C] text-[#A0A0A0] flex items-center justify-center"
-            variant="ghost"
-            aria-label="Dar feedback"
-          >
-            <Star className="h-5 w-5" />
-          </Button>
+              <Button
+                className="w-[46px] h-[46px] rounded-full bg-[#0c2341]/80 hover:bg-[#0c2341] border border-white/10 flex items-center justify-center transition-transform active:scale-95"
+                variant="ghost"
+                aria-label="Dar feedback"
+              >
+                <Star className="h-5 w-5 text-gray-300" />
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
