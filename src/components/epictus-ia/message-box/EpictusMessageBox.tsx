@@ -77,7 +77,7 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
               <span>Gerar Imagem</span>
             </button>
           </div>
-
+          
           {/* Espaços de Aprendizagem no canto direito */}
           <button 
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gradient-to-r from-[#001427] to-[#002447] text-gray-200 
@@ -95,7 +95,7 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
             <span>Espaços de Aprendizagem</span>
           </button>
         </div>
-
+        
         {/* Área de input */}
         <div className="flex items-center gap-2">
           <motion.button
@@ -108,24 +108,17 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
             <Plus size={18} />
           </motion.button>
 
-          <div className={`relative flex-grow overflow-hidden h-9
+          <div className={`relative flex-grow overflow-hidden 
                           bg-gradient-to-r from-[#0c2341]/30 to-[#0f3562]/30 
                           rounded-xl border ${isTyping ? 'border-[#1230CC]/70' : 'border-white/10'} 
-                          transition-all duration-300 flex items-center`}>
+                          transition-all duration-300`}>
             <Textarea
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Digite um comando ou pergunta para o Epictus Turbo…"
-              className="w-full bg-transparent text-white px-3 text-sm outline-none placeholder:text-gray-400 resize-none h-full"
+              placeholder="Digite um comando ou pergunta para o Epictus Turbo..."
+              className="w-full bg-transparent text-white py-3 px-3 text-sm outline-none placeholder:text-gray-400"
               disabled={isTyping}
-              style={{ 
-                paddingTop: '0', 
-                paddingBottom: '0',
-                display: 'flex',
-                alignItems: 'center',
-                lineHeight: 'normal'
-              }}
             />
           </div>
 
