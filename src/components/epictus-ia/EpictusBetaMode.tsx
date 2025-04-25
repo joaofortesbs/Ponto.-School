@@ -8,8 +8,8 @@ import {
   Search,
   FileText,
   PenLine,
-  Share, 
-  Copy 
+  Share, // Added import for Share icon
+  Copy // Added import for Copy icon
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import EpictusMessageBox from "./message-box/EpictusMessageBox";
@@ -33,7 +33,7 @@ interface Message {
   timestamp: Date;
   isEdited?: boolean;
   feedback?: 'positive' | 'negative';
-  needsImprovement?: boolean; 
+  needsImprovement?: boolean; // Added for conditional rendering
 }
 
 const EpictusBetaMode: React.FC = () => {
@@ -80,7 +80,7 @@ const EpictusBetaMode: React.FC = () => {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const MAX_CHARS = 1000;
   const [sessionId] = useState(() => localStorage.getItem('epictus_beta_session_id') || uuidv4());
-  const [isReformulating, setIsReformulating] = useState(false); 
+  const [isReformulating, setIsReformulating] = useState(false); // Added state for reformulation
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -314,9 +314,118 @@ const EpictusBetaMode: React.FC = () => {
         duration: 3000,
       });
 
-      const showImprovedPromptModal = (improvedPromptText: string) => {
-        const modalHTML = `
-          <div id="improved-prompt-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+    const showImprovedPromptModal = (improvedPromptText: string) => {
+      const modalHTML = `
+        <div id="improved-prompt-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+          <div class="bg-[#1a1d2d] text-white rounded-lg w-[90%] max-w-md shadow-xl overflow-hidden border border-gray-700 animate-fadeIn">
+            <div class="bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] p-4 flex justify-between items-center">
+              <h3 class="text-lg font-semibold flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+                Prompt Aprimorado com IA
+              </h3>
+              <button id="close-improved-prompt-modal" class="text-white hover:text-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 6 6 18"></path>
+                  <path d="m6 6 12 12"></path>
+                </svg>
+              </button>
+            </div>
+
+            <div class="p-5">
+              <div class="mb-4">
+                <div class="mb-3">
+                  <p class="text-sm text-gray-400 mb-2">Sua mensagem original:</p>
+                  <div class="p-3 bg-gray-800 rounded-lg text-sm text-gray-300">
+                    ${originalMessage}
+                  </div>
+                </div>
+
+                <div>
+                  <p class="text-sm text-gray-400 mb-2">Versão aprimorada pela Epictus IA:</p>
+                  <div class="p-3 bg-gradient-to-r from-blue-900/30 to-indigo-900/30 border border-blue-800 rounded-lg text-sm text-gray-200 max-h-[150px] overflow-y-auto scrollbar-hide">
+                    ${improvedPromptText}
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex justify-end gap-3 mt-6">
+                <button 
+                  id="cancel-improved-prompt" 
+                  class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-md transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  id="accept-improved-prompt" 
+                  class="px-4 py-2 bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] hover:from-[#0D23A0]/90 hover:to-[#5B21BD]/90 text-white rounded-md transition-colors"
+                >
+                  Usar Prompt Aprimorado
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const existingModal = document.getElementById('improved-prompt-modal');
+      if (existingModal) {
+        existingModal.remove();
+      }
+
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+      setTimeout(() => {
+        const modal = document.getElementById('improved-prompt-modal');
+        const closeButton = document.getElementById('close-improved-prompt-modal');
+        const cancelButton = document.getElementById('cancel-improved-prompt');
+        const acceptButton = document.getElementById('accept-improved-prompt');
+
+        const closeModal = () => {
+          if (modal) {
+            modal.classList.add('animate-fadeOut');
+            setTimeout(() => modal?.remove(), 200);
+          }
+        };
+
+        if (closeButton) {
+          closeButton.addEventListener('click', closeModal);
+        }
+
+        if (cancelButton) {
+          cancelButton.addEventListener('click', closeModal);
+        }
+
+        if (acceptButton) {
+          acceptButton.addEventListener('click', () => {
+            setInputMessage(improvedPromptText);
+            toast({
+              title: "Prompt aplicado!",
+              description: "O prompt aprimorado foi aplicado com sucesso.",
+              duration: 3000
+            });
+            closeModal();
+          });
+        }
+
+        if (modal) {
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              closeModal();
+            }
+          });
+        }
+      }, 50);
+    };
+
+    const aprimorarPrompt = async () => {
+      try {
+        const promptSessionId = `prompt-improvement-${Date.now()}`;
+
+        const loadingModalHTML = `
+          <div id="loading-prompt-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
             <div class="bg-[#1a1d2d] text-white rounded-lg w-[90%] max-w-md shadow-xl overflow-hidden border border-gray-700 animate-fadeIn">
               <div class="bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] p-4 flex justify-between items-center">
                 <h3 class="text-lg font-semibold flex items-center gap-2">
@@ -326,258 +435,149 @@ const EpictusBetaMode: React.FC = () => {
                   </svg>
                   Prompt Aprimorado com IA
                 </h3>
-                <button id="close-improved-prompt-modal" class="text-white hover:text-gray-200">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M18 6 6 18"></path>
-                    <path d="m6 6 12 12"></path>
-                  </svg>
-                </button>
               </div>
-
-              <div class="p-5">
-                <div class="mb-4">
-                  <div class="mb-3">
-                    <p class="text-sm text-gray-400 mb-2">Sua mensagem original:</p>
-                    <div class="p-3 bg-gray-800 rounded-lg text-sm text-gray-300">
-                      ${originalMessage}
-                    </div>
-                  </div>
-
-                  <div>
-                    <p class="text-sm text-gray-400 mb-2">Versão aprimorada pela Epictus IA:</p>
-                    <div class="p-3 bg-gradient-to-r from-blue-900/30 to-indigo-900/30 border border-blue-800 rounded-lg text-sm text-gray-200 max-h-[150px] overflow-y-auto scrollbar-hide">
-                      ${improvedPromptText}
-                    </div>
-                  </div>
+              <div class="p-5 flex flex-col items-center justify-center">
+                <div class="flex items-center justify-center mb-4">
+                  <div class="w-6 h-6 border-t-2 border-b-2 border-blue-500 rounded-full animate-spin"></div>
                 </div>
-
-                <div class="flex justify-end gap-3 mt-6">
-                  <button 
-                    id="cancel-improved-prompt" 
-                    class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-md transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button 
-                    id="accept-improved-prompt" 
-                    class="px-4 py-2 bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] hover:from-[#0D23A0]/90 hover:to-[#5B21BD]/90 text-white rounded-md transition-colors"
-                  >
-                    Usar Prompt Aprimorado
-                  </button>
-                </div>
+                <p class="text-center text-gray-300">Aprimorando sua pergunta com IA...</p>
               </div>
             </div>
           </div>
         `;
 
-        const existingModal = document.getElementById('improved-prompt-modal');
-        if (existingModal) {
-          existingModal.remove();
+        const existingLoadingModal = document.getElementById('loading-prompt-modal');
+        if (existingLoadingModal) {
+          existingLoadingModal.remove();
         }
 
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        document.body.insertAdjacentHTML('beforeend', loadingModalHTML);
 
-        setTimeout(() => {
-          const modal = document.getElementById('improved-prompt-modal');
-          const closeButton = document.getElementById('close-improved-prompt-modal');
-          const cancelButton = document.getElementById('cancel-improved-prompt');
-          const acceptButton = document.getElementById('accept-improved-prompt');
+        let improvedPromptText = "";
 
-          const closeModal = () => {
-            if (modal) {
-              modal.classList.add('animate-fadeOut');
-              setTimeout(() => modal?.remove(), 200);
+        try {
+          improvedPromptText = await generateAIResponse(
+            `Você é um assistente especializado em melhorar prompts educacionais. 
+            Analise o seguinte prompt e melhore-o para obter uma resposta mais detalhada, completa e educacional.
+
+            Melhore o seguinte prompt para obter uma resposta mais detalhada, completa e educacional. 
+            NÃO responda a pergunta, apenas melhore o prompt adicionando:
+            1. Mais contexto e especificidade
+            2. Solicite exemplos, comparações e aplicações práticas
+            3. Peça explicações claras de conceitos fundamentais
+            4. Solicite visualizações ou analogias quando aplicável
+            5. Adicione pedidos para que sejam mencionados fatos históricos relevantes
+
+            Original: "${originalMessage}"
+
+            Retorne APENAS o prompt melhorado, sem comentários adicionais.`,
+            promptSessionId,
+            {
+              intelligenceLevel: 'advanced',
+              languageStyle: 'formal',
+              detailedResponse: true
             }
+          );
+        } catch (error) {
+          console.error("Erro ao chamar API para aprimorar prompt:", error);
+
+          const loadingModal = document.getElementById('loading-prompt-modal');
+          if (loadingModal) {
+            loadingModal.remove();
+          }
+
+          const enhancementMap: Record<string, string> = {
+            "explique": "Explique detalhadamente, com exemplos e analogias simples, ",
+            "como": "Poderia detalhar de forma estruturada e passo a passo ",
+            "resumo": "Elabore um resumo conciso dos principais pontos sobre ",
+            "diferença": "Compare e contraste, destacando as principais diferenças e semelhanças entre ",
+            "exemplo": "Forneça exemplos práticos e aplicáveis de ",
+            "o que é": "Defina e explique de maneira abrangente o conceito de ",
+            "significado": "Esclareça o significado e a importância de ",
+            "calcular": "Apresente o método passo a passo para calcular ",
+            "resolver": "Demonstre de forma detalhada como resolver ",
+            "analisar": "Faça uma análise crítica e aprofundada sobre ",
           };
 
-          if (closeButton) {
-            closeButton.addEventListener('click', closeModal);
-          }
+          let enhancedPrompt = originalMessage;
+          let wasEnhanced = false;
 
-          if (cancelButton) {
-            cancelButton.addEventListener('click', closeModal);
-          }
-
-          if (acceptButton) {
-            acceptButton.addEventListener('click', () => {
-              setInputMessage(improvedPromptText);
-              toast({
-                title: "Prompt aplicado!",
-                description: "O prompt aprimorado foi aplicado com sucesso.",
-                duration: 3000
-              });
-              closeModal();
-            });
-          }
-
-          if (modal) {
-            modal.addEventListener('click', (e) => {
-              if (e.target === modal) {
-                closeModal();
-              }
-            });
-          }
-        }, 50);
-      };
-
-      const aprimorarPrompt = async () => {
-        try {
-          const promptSessionId = `prompt-improvement-${Date.now()}`;
-
-          const loadingModalHTML = `
-            <div id="loading-prompt-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
-              <div class="bg-[#1a1d2d] text-white rounded-lg w-[90%] max-w-md shadow-xl overflow-hidden border border-gray-700 animate-fadeIn">
-                <div class="bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] p-4 flex justify-between items-center">
-                  <h3 class="text-lg font-semibold flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M12 20h9"></path>
-                      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                    </svg>
-                    Prompt Aprimorado com IA
-                  </h3>
-                </div>
-                <div class="p-5 flex flex-col items-center justify-center">
-                  <div class="flex items-center justify-center mb-4">
-                    <div class="w-6 h-6 border-t-2 border-b-2 border-blue-500 rounded-full animate-spin"></div>
-                  </div>
-                  <p class="text-center text-gray-300">Aprimorando sua pergunta com IA...</p>
-                </div>
-              </div>
-            </div>
-          `;
-
-          const existingLoadingModal = document.getElementById('loading-prompt-modal');
-          if (existingLoadingModal) {
-            existingLoadingModal.remove();
-          }
-
-          document.body.insertAdjacentHTML('beforeend', loadingModalHTML);
-
-          let improvedPromptText = "";
-
-          try {
-            improvedPromptText = await generateAIResponse(
-              `Você é um assistente especializado em melhorar prompts educacionais. 
-              Analise o seguinte prompt e melhore-o para obter uma resposta mais detalhada, completa e educacional.
-
-              Melhore o seguinte prompt para obter uma resposta mais detalhada, completa e educacional. 
-              NÃO responda a pergunta, apenas melhore o prompt adicionando:
-              1. Mais contexto e especificidade
-              2. Solicite exemplos, comparações e aplicações práticas
-              3. Peça explicações claras de conceitos fundamentais
-              4. Solicite visualizações ou analogias quando aplicável
-              5. Adicione pedidos para que sejam mencionados fatos históricos relevantes
-
-              Original: "${originalMessage}"
-
-              Retorne APENAS o prompt melhorado, sem comentários adicionais.`,
-              promptSessionId,
-              {
-                intelligenceLevel: 'advanced',
-                languageStyle: 'formal',
-                detailedResponse: true
-              }
-            );
-          } catch (error) {
-            console.error("Erro ao chamar API para aprimorar prompt:", error);
-
-            const loadingModal = document.getElementById('loading-prompt-modal');
-            if (loadingModal) {
-              loadingModal.remove();
+          Object.entries(enhancementMap).forEach(([keyword, enhancement]) => {
+            if (originalMessage.toLowerCase().includes(keyword) && !wasEnhanced) {
+              const regex = new RegExp(`\\b${keyword}\\b`, 'i');
+              enhancedPrompt = originalMessage.replace(regex, enhancement);
+              wasEnhanced = true;
             }
-
-            const enhancementMap: Record<string, string> = {
-              "explique": "Explique detalhadamente, com exemplos e analogias simples, ",
-              "como": "Poderia detalhar de forma estruturada e passo a passo ",
-              "resumo": "Elabore um resumo conciso dos principais pontos sobre ",
-              "diferença": "Compare e contraste, destacando as principais diferenças e semelhanças entre ",
-              "exemplo": "Forneça exemplos práticos e aplicáveis de ",
-              "o que é": "Defina e explique de maneira abrangente o conceito de ",
-              "significado": "Esclareça o significado e a importância de ",
-              "calcular": "Apresente o método passo a passo para calcular ",
-              "resolver": "Demonstre de forma detalhada como resolver ",
-              "analisar": "Faça uma análise crítica e aprofundada sobre ",
-            };
-
-            let enhancedPrompt = originalMessage;
-            let wasEnhanced = false;
-
-            Object.entries(enhancementMap).forEach(([keyword, enhancement]) => {
-              if (originalMessage.toLowerCase().includes(keyword) && !wasEnhanced) {
-                const regex = new RegExp(`\\b${keyword}\\b`, 'i');
-                enhancedPrompt = originalMessage.replace(regex, enhancement);
-                wasEnhanced = true;
-              }
-            });
-
-            if (!wasEnhanced) {
-              enhancedPrompt = `Explique detalhadamente, com exemplos claros: ${originalMessage}`;
-            }
-
-            if (!enhancedPrompt.includes("estruturado") && !enhancedPrompt.includes("passo a passo")) {
-              enhancedPrompt += ". Por favor, estruture sua resposta em tópicos e forneça exemplos práticos.";
-            }
-
-            improvedPromptText = enhancedPrompt;
-          }
-
-          improvedPromptText = improvedPromptText
-            .replace(/^(Prompt melhorado:|Aqui está uma versão melhorada:|Versão melhorada:)/i, '')
-            .replace(/^["']|["']$/g, '')
-            .trim();
-
-          const loadingModal = document.getElementById('loading-prompt-modal');
-          if (loadingModal) {
-            loadingModal.remove();
-          }
-
-          showImprovedPromptModal(improvedPromptText);
-
-        } catch (error) {
-          console.error("Erro ao aprimorar prompt:", error);
-
-          const loadingModal = document.getElementById('loading-prompt-modal');
-          if (loadingModal) {
-            loadingModal.remove();
-          }
-
-          toast({
-            title: "Erro ao aprimorar prompt",
-            description: "Não foi possível melhorar o prompt. Por favor, tente novamente.",
-            duration: 3000,
           });
+
+          if (!wasEnhanced) {
+            enhancedPrompt = `Explique detalhadamente, com exemplos claros: ${originalMessage}`;
+          }
+
+          if (!enhancedPrompt.includes("estruturado") && !enhancedPrompt.includes("passo a passo")) {
+            enhancedPrompt += ". Por favor, estruture sua resposta em tópicos e forneça exemplos práticos.";
+          }
+
+          improvedPromptText = enhancedPrompt;
         }
-      };
 
-      aprimorarPrompt();
+        improvedPromptText = improvedPromptText
+          .replace(/^(Prompt melhorado:|Aqui está uma versão melhorada:|Versão melhorada:)/i, '')
+          .replace(/^["']|["']$/g, '')
+          .trim();
 
-      return;
-    }
+        const loadingModal = document.getElementById('loading-prompt-modal');
+        if (loadingModal) {
+          loadingModal.remove();
+        }
 
-    const actionMap: Record<string, string> = {
-      "Buscar": "Iniciando busca com base na conversa atual...",
-      "Pensar": "Analisando a conversa para gerar insights...",
-      "Gerar Imagem": "Gerando imagem baseada no contexto da conversa...",
-      "Simulador de Provas": "Preparando simulado com base no conteúdo discutido...",
-      "Gerar Caderno": "Criando caderno com o conteúdo da nossa conversa...",
-      "Criar Fluxograma": "Gerando fluxograma visual do conteúdo...",
-      "Reescrever Explicação": "Reescrevendo a última explicação em formato diferente...",
-      "Análise de Redação": "Pronto para analisar sua redação. Por favor, envie o texto...",
-      "Resumir Conteúdo": "Resumindo o conteúdo da nossa conversa...",
-      "Espaços de Aprendizagem": "Abrindo espaços de aprendizagem relacionados..."
+        showImprovedPromptModal(improvedPromptText);
+
+      } catch (error) {
+        console.error("Erro ao aprimorar prompt:", error);
+
+        const loadingModal = document.getElementById('loading-prompt-modal');
+        if (loadingModal) {
+          loadingModal.remove();
+        }
+
+        toast({
+          title: "Erro ao aprimorar prompt",
+          description: "Não foi possível melhorar o prompt. Por favor, tente novamente.",
+          duration: 3000,
+        });
+      }
     };
 
-    const responseMessage = actionMap[action] || "Executando ação...";
+    aprimorarPrompt();
 
-    const botMessage: Message = {
-      id: uuidv4(),
-      sender: "ia",
-      content: responseMessage,
-      timestamp: new Date()
-    };
+    return;
+  }
 
-    setMessages(prev => [...prev, botMessage]);
+  const actionMap: Record<string, string> = {
+    "Buscar": "Iniciando busca com base na conversa atual...",
+    "Pensar": "Analisando a conversa para gerar insights...",
+    "Gerar Imagem": "Gerando imagem baseada no contexto da conversa...",
+    "Simulador de Provas": "Preparando simulado com base no conteúdo discutido...",
+    "Gerar Caderno": "Criando caderno com o conteúdo da nossa conversa...",
+    "Criar Fluxograma": "Gerando fluxograma visual do conteúdo...",
+    "Reescrever Explicação": "Reescrevendo a última explicação em formato diferente...",
+    "Análise de Redação": "Pronto para analisar sua redação. Por favor, envie o texto...",
+    "Resumir Conteúdo": "Resumindo o conteúdo da nossa conversa...",
+    "Espaços de Aprendizagem": "Abrindo espaços de aprendizagem relacionados..."
   };
+
+  const responseMessage = actionMap[action] || "Executando ação...";
+
+  const botMessage: Message = {
+    id: uuidv4(),
+    sender: "ia",
+    content: responseMessage,
+    timestamp: new Date()
+  };
+
+  setMessages(prev => [...prev, botMessage]);
+};
 
 
   const handleExportMessage = (message: Message) => {
@@ -588,15 +588,20 @@ const EpictusBetaMode: React.FC = () => {
   const handleFeedback = (messageId: string, feedbackType: 'positive' | 'negative') => {
     setMessages(prev => prev.map(msg => {
       if (msg.id === messageId) {
+        // Toggle feedback if already set to the same type
         const newFeedback = msg.feedback === feedbackType ? undefined : feedbackType;
+
+        // If we have a valid feedback, log it or send to analytics
         if (newFeedback) {
           console.log(`Feedback ${newFeedback} registrado para mensagem ${messageId}`);
+          // Here you could add analytics or API call to store feedback
           toast({
             title: newFeedback === 'positive' ? "Feedback positivo enviado" : "Feedback negativo enviado",
             description: "Obrigado por nos ajudar a melhorar a Epictus IA!",
             duration: 3000,
           });
         }
+
         return { ...msg, feedback: newFeedback };
       }
       return msg;
@@ -608,7 +613,8 @@ const EpictusBetaMode: React.FC = () => {
     try {
       const messageToReformulate = messages.find(msg => msg.id === messageId);
       if (messageToReformulate) {
-        const reformulatedResponse = await generateAIResponse(`Reformule a seguinte resposta de forma mais detalhada: ${messageToReformulate.content}`, sessionId);
+        // Placeholder for Gemini API call - replace with actual API call
+const reformulatedResponse = await generateAIResponse(`Reformule a seguinte resposta de forma mais detalhada: ${messageToReformulate.content}`, sessionId);
         const updatedMessages = messages.map(msg =>
           msg.id === messageId
             ? { ...msg, content: reformulatedResponse, isEdited: true, needsImprovement: false }
@@ -633,6 +639,7 @@ const EpictusBetaMode: React.FC = () => {
     try {
       const messageToSummarize = messages.find(msg => msg.id === messageId);
       if (messageToSummarize) {
+        // Placeholder for Gemini API call - replace with actual API call
         const summarizedResponse = await generateAIResponse(`Resuma a seguinte resposta de forma mais concisa: ${messageToSummarize.content}`, sessionId);
         const updatedMessages = messages.map(msg =>
           msg.id === messageId
@@ -824,38 +831,81 @@ const EpictusBetaMode: React.FC = () => {
                             </button>
                           </div>
                         )}
-                        <div className="flex items-center gap-2">
-                          <p className="text-right text-[11px] text-[#D0D0D0]/70 font-mono">
-                            {formatTimestamp(new Date(message.timestamp))}
-                          </p>
-                          {message.sender === "user" && (
-                            <div className="flex items-center gap-1">
-                              <button
-                                onClick={() => {
-                                  navigator.clipboard.writeText(message.content);
-                                  toast({
-                                    title: "Mensagem copiada",
-                                    description: "O conteúdo foi copiado para a área de transferência",
-                                    duration: 3000,
-                                  });
-                                }}
-                                className="text-gray-400 hover:text-blue-400 transition-colors"
-                                title="Copiar mensagem"
-                              >
-                                <Copy size={12} />
-                              </button>
-                              <button
-                                onClick={() => handleExportMessage(message)}
-                                className="text-gray-400 hover:text-blue-400 transition-colors"
-                                title="Exportar/Compartilhar mensagem"
-                              >
-                                <Share size={12} />
-                              </button>
-                            </div>
-                          )}
+                        <p className="text-right text-[11px] text-[#D0D0D0]/70 font-mono">
+                          {formatTimestamp(new Date(message.timestamp))}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Opções de feedback para mensagens negativas */}
+                    {message.sender === "ia" && message.feedback === 'negative' && (
+                      <div className="mt-2 flex flex-col gap-2 w-full animate-fadeIn">
+                        <div className="text-xs text-gray-400 mb-1">Como podemos melhorar esta resposta?</div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => reformulateMessage(message.id)}
+                            disabled={isReformulating}
+                            className="bg-[#1A202C] text-xs py-1 px-2 rounded-md border border-[#3A4B5C]/30 hover:bg-[#2D3748] transition-colors flex items-center gap-1"
+                          >
+                            {isReformulating ? (
+                              <>
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                <span>Reformulando...</span>
+                              </>
+                            ) : (
+                              <>
+                                <svg 
+                                  xmlns="http://www.w3.org/2000/svg" 
+                                  width="12" 
+                                  height="12" 
+                                  viewBox="0 0 24 24" 
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  strokeWidth="2" 
+                                  strokeLinecap="round" 
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                                  <path d="M3 3v5h5"></path>
+                                </svg>
+                                <span>Reformular (mais detalhado)</span>
+                              </>
+                            )}
+                          </button>
+                          <button
+                            onClick={() => summarizeMessage(message.id)}
+                            disabled={isReformulating}
+                            className="bg-[#1A202C] text-xs py-1 px-2 rounded-md border border-[#3A4B5C]/30 hover:bg-[#2D3748] transition-colors flex items-center gap-1"
+                          >
+                            {isReformulating ? (
+                              <>
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                <span>Resumindo...</span>
+                              </>
+                            ) : (
+                              <>
+                                <svg 
+                                  xmlns="http://www.w3.org/2000/svg" 
+                                  width="12" 
+                                  height="12" 
+                                  viewBox="0 0 24 24" 
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  strokeWidth="2" 
+                                  strokeLinecap="round" 
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M8 3H5a2 2 0 0 0-2 2v3"></path>
+                                  <path d="M21 8V5a2 2 0 0 0-2-2h-3"></path>
+                                  <path d="M3 16v3a2 2 0 0 0 2 2h3"></path>
+                                  <path d="M16 21h3a2 2 0 0 0 2-2v-3"></path>
+                                </svg>
+                                <span>Resumir (mais direto)</span>
+                              </>
+                            )}
+                          </button>
                         </div>
                       </div>
-
                     )}
                   </div>
 
