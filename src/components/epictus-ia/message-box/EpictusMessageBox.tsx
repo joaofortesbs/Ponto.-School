@@ -123,18 +123,6 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
             />
           </div>
 
-          {/* Botão de sugestão de prompts inteligentes - sempre visível */}
-          <motion.button
-            className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
-                     flex items-center justify-center shadow-lg text-white"
-            whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => handleButtonClick('SugestaoPrompts')}
-            title="Sugestão de Prompts Inteligentes"
-          >
-            <Lightbulb size={16} />
-          </motion.button>
-          
           {/* Botão de Prompt Aprimorado - visível apenas quando o usuário começar a digitar */}
           {inputMessage.trim().length > 0 && (
             <motion.button
@@ -151,6 +139,18 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
               <PenLine size={16} />
             </motion.button>
           )}
+          
+          {/* Botão de sugestão de prompts inteligentes - sempre visível */}
+          <motion.button
+            className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+                     flex items-center justify-center shadow-lg text-white"
+            whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => handleButtonClick('SugestaoPrompts')}
+            title="Sugestão de Prompts Inteligentes"
+          >
+            <Lightbulb size={16} />
+          </motion.button>
           
           {/* Botão de microfone (quando não há texto) */}
           {!inputMessage.trim() ? (

@@ -278,7 +278,7 @@ const EpictusBetaMode: React.FC = () => {
       const originalMessage = inputMessage;
       
       // Mostrar mensagem de processamento
-      const messageToast = toast({
+      toast({
         title: "Aprimorando seu prompt...",
         description: "Estamos melhorando sua mensagem com IA",
         duration: 3000,
@@ -293,6 +293,11 @@ const EpictusBetaMode: React.FC = () => {
           "resumo": "Elabore um resumo conciso dos principais pontos sobre ",
           "diferença": "Compare e contraste, destacando as principais diferenças e semelhanças entre ",
           "exemplo": "Forneça exemplos práticos e aplicáveis de ",
+          "o que é": "Defina e explique de maneira abrangente o conceito de ",
+          "significado": "Esclareça o significado e a importância de ",
+          "calcular": "Apresente o método passo a passo para calcular ",
+          "resolver": "Demonstre de forma detalhada como resolver ",
+          "analisar": "Faça uma análise crítica e aprofundada sobre ",
         };
         
         // Lógica simples para aprimorar o prompt
