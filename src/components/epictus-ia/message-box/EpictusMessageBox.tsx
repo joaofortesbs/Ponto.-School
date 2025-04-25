@@ -120,10 +120,6 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
               className="w-full bg-transparent text-white py-3 px-3 text-sm outline-none placeholder:text-gray-400"
               disabled={isTyping}
             />
-
-            <div className="absolute right-3 bottom-1.5 text-xs text-gray-400 bg-[#0c2341]/50 px-1.5 py-0.5 rounded-md">
-              {charCount}/{MAX_CHARS}
-            </div>
           </div>
 
           {/* Botão de microfone (quando não há texto) */}
