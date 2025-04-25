@@ -15,7 +15,8 @@ import {
   CheckCircle2,
   CalendarRange,
   ListTodo,
-  RefreshCw
+  RefreshCw,
+  ChevronRight
 } from "lucide-react";
 
 const RotinaContent: React.FC = () => {
