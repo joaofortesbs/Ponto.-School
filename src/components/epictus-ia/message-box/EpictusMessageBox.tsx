@@ -29,7 +29,7 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
 }) => {
   return (
     <motion.div 
-      className="relative w-[60%] h-auto mx-auto bg-gradient-to-r from-[#001427]/90 to-[#00294a]/90 rounded-2xl shadow-xl 
+      className="relative w-[60%] h-auto mx-auto bg-transparent rounded-2xl shadow-xl 
                 border border-white/5 backdrop-blur-sm overflow-hidden flex-shrink-0"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
