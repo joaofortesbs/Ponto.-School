@@ -365,16 +365,18 @@ const EpictusBetaMode: React.FC = () => {
         {/* Área para botões removida */}
 
         {/* Caixa de envio de mensagens idêntica ao TurboMessageBox */}
-        <EpictusMessageBox 
-          inputMessage={inputMessage} 
-          setInputMessage={setInputMessage} 
-          handleSendMessage={handleSendMessage} 
-          handleKeyDown={handleKeyDown} 
-          charCount={charCount} 
-          MAX_CHARS={MAX_CHARS} 
-          isTyping={isTyping} 
-          handleButtonClick={handleButtonClick}
-        />
+        <div className="w-full flex justify-center">
+          <EpictusMessageBox 
+            inputMessage={inputMessage} 
+            setInputMessage={setInputMessage} 
+            handleSendMessage={handleSendMessage} 
+            handleKeyDown={handleKeyDown} 
+            charCount={charCount} 
+            MAX_CHARS={MAX_CHARS} 
+            isTyping={isTyping} 
+            handleButtonClick={handleButtonClick}
+          />
+        </div>
       </div>
 
       {/* Modal de confirmação */}
