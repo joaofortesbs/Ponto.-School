@@ -8,7 +8,8 @@ import {
   Search,
   FileText,
   PenLine,
-  Share // Added import for Share icon
+  Share,
+  Download // Added import for Download icon
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import EpictusMessageBox from "./message-box/EpictusMessageBox";
@@ -609,7 +610,7 @@ const EpictusBetaMode: React.FC = () => {
                   key={message.id}
                   className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"} animate-fadeIn`}
                 >
-                  {message.sender === "ia" && (
+                  {message.sender ===="ia" && (
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1E293B] to-[#2F3B4C] flex items-center justify-center mr-3 shadow-md border border-[#3A4B5C]/30">
                       <Bot size={18} className="text-[#4A90E2]" />
                     </div>
