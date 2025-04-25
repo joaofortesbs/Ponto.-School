@@ -26,7 +26,6 @@
 @import "./styles/header-animations.css";
 @import "./styles/modern-scanner.css";
 @import "./styles/typewriter-loader.css";
-@import "./styles/rotina-calendar.css";
 
 /* Pulse animation for the scroll to bottom button */
 @keyframes pulse {
