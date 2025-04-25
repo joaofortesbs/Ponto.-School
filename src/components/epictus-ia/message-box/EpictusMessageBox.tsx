@@ -189,26 +189,7 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
           animate={{ opacity: 1, height: "auto" }}
           transition={{ duration: 0.3 }}
         >
-          <QuickActionButton 
-            icon={<Brain size={16} className="text-blue-300" />}
-            text="Simulador de Provas"
-            onClick={() => handleButtonClick('Simulador de Provas')}
-          />
-          <QuickActionButton 
-            icon={<BookOpen size={16} className="text-emerald-300" />}
-            text="Gerar Caderno"
-            onClick={() => handleButtonClick('Gerar Caderno')}
-          />
-          <QuickActionButton 
-            icon={<AlignJustify size={16} className="text-purple-300" />}
-            text="Criar Fluxograma"
-            onClick={() => handleButtonClick('Criar Fluxograma')}
-          />
-          <QuickActionButton 
-            icon={<RotateCw size={16} className="text-indigo-300" />}
-            text="Reescrever Explicação"
-            onClick={() => handleButtonClick('Reescrever Explicação')}
-          />
+          {/* Área de quick actions foi removida conforme solicitado */}
         </motion.div>
       </div>
     </motion.div>
