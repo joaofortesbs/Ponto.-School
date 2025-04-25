@@ -294,7 +294,7 @@ const EpictusBetaMode: React.FC = () => {
       {/* Interface de Chat */}
       <div className="flex-1 flex flex-col items-center justify-center p-4 overflow-hidden bg-[#0A1625]">
         {/* Área de conversas */}
-        <div className="w-[80%] h-[60%] relative mb-4">
+        <div className="w-[80%] h-[75%] relative mb-4">
           <div className="absolute top-0 right-0 z-10 p-2">
             <Button
               variant="ghost"
