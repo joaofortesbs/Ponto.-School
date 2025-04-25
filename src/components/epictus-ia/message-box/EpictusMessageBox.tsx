@@ -44,37 +44,70 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
       {/* Container principal */}
       <div className="relative z-10 p-4">
         {/* Opções superiores */}
-        <div className="flex items-center gap-1.5 mb-3 overflow-x-auto scrollbar-hide">
-          <button 
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gradient-to-r from-[#0a1625]/70 to-[#182c4d]/70 text-gray-200 
-                     rounded-lg border border-white/10 backdrop-blur-sm hover:bg-gradient-to-r 
-                     hover:from-[#0D23A0]/40 hover:to-[#5B21BD]/40 hover:border-blue-500/30
-                     hover:text-white transition-all duration-300 flex-shrink-0 shadow-sm"
-            onClick={() => handleButtonClick('Buscar')}
-          >
-            <Search size={14} className="text-blue-300" />
-            <span>Buscar</span>
-          </button>
-          <button 
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gradient-to-r from-[#0a1625]/70 to-[#182c4d]/70 text-gray-200 
-                     rounded-lg border border-white/10 backdrop-blur-sm hover:bg-gradient-to-r 
-                     hover:from-[#0D23A0]/40 hover:to-[#5B21BD]/40 hover:border-purple-500/30
-                     hover:text-white transition-all duration-300 flex-shrink-0 shadow-sm"
-            onClick={() => handleButtonClick('Pensar')}
-          >
-            <Brain size={14} className="text-purple-300" />
-            <span>Pensar</span>
-          </button>
-          <button 
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gradient-to-r from-[#0a1625]/70 to-[#182c4d]/70 text-gray-200 
-                     rounded-lg border border-white/10 backdrop-blur-sm hover:bg-gradient-to-r 
-                     hover:from-[#0D23A0]/40 hover:to-[#5B21BD]/40 hover:border-emerald-500/30
-                     hover:text-white transition-all duration-300 flex-shrink-0 shadow-sm"
-            onClick={() => handleButtonClick('Gerar Imagem')}
-          >
-            <Image size={14} className="text-emerald-300" />
-            <span>Gerar Imagem</span>
-          </button>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
+            <button 
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gradient-to-r from-[#0a1625]/70 to-[#182c4d]/70 text-gray-200 
+                       rounded-lg border border-white/10 backdrop-blur-sm hover:bg-gradient-to-r 
+                       hover:from-[#0D23A0]/40 hover:to-[#5B21BD]/40 hover:border-blue-500/30
+                       hover:text-white transition-all duration-300 flex-shrink-0 shadow-sm"
+              onClick={() => handleButtonClick('Buscar')}
+            >
+              <Search size={14} className="text-blue-300" />
+              <span>Buscar</span>
+            </button>
+            <button 
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gradient-to-r from-[#0a1625]/70 to-[#182c4d]/70 text-gray-200 
+                       rounded-lg border border-white/10 backdrop-blur-sm hover:bg-gradient-to-r 
+                       hover:from-[#0D23A0]/40 hover:to-[#5B21BD]/40 hover:border-purple-500/30
+                       hover:text-white transition-all duration-300 flex-shrink-0 shadow-sm"
+              onClick={() => handleButtonClick('Pensar')}
+            >
+              <Brain size={14} className="text-purple-300" />
+              <span>Pensar</span>
+            </button>
+            <button 
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gradient-to-r from-[#0a1625]/70 to-[#182c4d]/70 text-gray-200 
+                       rounded-lg border border-white/10 backdrop-blur-sm hover:bg-gradient-to-r 
+                       hover:from-[#0D23A0]/40 hover:to-[#5B21BD]/40 hover:border-emerald-500/30
+                       hover:text-white transition-all duration-300 flex-shrink-0 shadow-sm"
+              onClick={() => handleButtonClick('Gerar Imagem')}
+            >
+              <Image size={14} className="text-emerald-300" />
+              <span>Gerar Imagem</span>
+            </button>
+          </div>
+          
+          {/* Botões circulares no canto direito (conforme imagem) */}
+          <div className="flex items-center gap-2">
+            <button 
+              className="w-8 h-8 rounded-full bg-[#5B21BD] flex items-center justify-center shadow-lg hover:bg-[#6D32C9] transition-all"
+              onClick={() => handleButtonClick('Gravação de Voz')}
+            >
+              <Mic size={16} className="text-white" />
+            </button>
+            <button 
+              className="w-8 h-8 rounded-full bg-[#5B21BD] flex items-center justify-center shadow-lg hover:bg-[#6D32C9] transition-all"
+              onClick={() => handleButtonClick('Sugestões')}
+            >
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width="16" 
+                height="16" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className="text-white"
+              >
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+            </button>
+          </div>
         </div>
         
         {/* Área de input */}
