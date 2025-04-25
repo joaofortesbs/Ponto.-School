@@ -11,7 +11,9 @@ import {
   Brain,
   BookOpen,
   AlignJustify,
-  RotateCw
+  RotateCw,
+  Search,
+  FileText
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import TurboHeader from "./turbo-header/TurboHeader";
