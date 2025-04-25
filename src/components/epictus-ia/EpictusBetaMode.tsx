@@ -8,7 +8,8 @@ import {
   Search,
   FileText,
   PenLine,
-  Share // Added import for Share icon
+  Share, // Added import for Share icon
+  Copy // Added import for Copy icon
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import EpictusMessageBox from "./message-box/EpictusMessageBox";
@@ -760,6 +761,20 @@ const reformulatedResponse = await generateAIResponse(`Reformule a seguinte resp
                                   title="Exportar/Compartilhar mensagem"
                                 >
                                   <Share size={12} />
+                                </button>
+                                <button 
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(message.content);
+                                    toast({
+                                      title: "Mensagem copiada",
+                                      description: "O conteúdo foi copiado para a área de transferência",
+                                      duration: 3000,
+                                    });
+                                  }}
+                                  className="text-gray-400 hover:text-blue-400 transition-colors"
+                                  title="Copiar mensagem"
+                                >
+                                  <Copy size={12} />
                                 </button>
                               </div>
                             )}
