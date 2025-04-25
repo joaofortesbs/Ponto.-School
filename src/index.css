@@ -49,7 +49,7 @@
     linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
   background-size: 20px 20px;
-  background-position: center center;
+  background-position: 0 0;
 }
 
 }
@@ -1238,4 +1238,22 @@ textarea:hover,
 
 .animate-fadeOut {
   animation: fadeOut 0.2s ease-in-out forwards;
+}
+
+/* Estilos para eventos de rotina */
+.rotina-event {
+  transition: all 0.3s ease;
+}
+
+.rotina-event:hover {
+  box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.3);
+}
+
+.rotina-event-delete {
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+}
+
+.rotina-event:hover .rotina-event-delete {
+  transform: translateX(0);
 }
