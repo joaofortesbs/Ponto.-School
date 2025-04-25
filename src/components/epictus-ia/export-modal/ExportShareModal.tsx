@@ -36,32 +36,53 @@ const ExportShareModal: React.FC<ExportShareModalProps> = ({ open, onClose, mess
   };
 
   const handleExportToPDF = () => {
+    // Obter o nome do usuário atual (ou usar um valor padrão)
+    const username = localStorage.getItem('epictusNickname') || "Usuário";
+    
+    // Formatar a data atual no formato brasileiro
+    const currentDate = new Date();
+    const formattedDate = `${currentDate.getDate().toString().padStart(2, '0')}/${(currentDate.getMonth() + 1).toString().padStart(2, '0')}/${currentDate.getFullYear()}`;
+    
     // Criar um elemento temporário para renderizar o conteúdo
     const element = document.createElement("div");
     element.innerHTML = `
-      <div style="font-family: Arial, sans-serif; padding: 20px;">
-        <div style="display: flex; align-items: center; margin-bottom: 20px;">
-          <div style="background: linear-gradient(to right, #0D23A0, #5B21BD); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
-            <span style="color: white; font-weight: bold;">E</span>
-          </div>
-          <h2 style="margin: 0; color: #333;">Epictus IA</h2>
+      <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;">
+        <!-- Cabeçalho com título principal -->
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="font-size: 22px; font-weight: bold; margin: 0; color: #000; text-transform: uppercase;">PONTO.SCHOOL - MATERIAL DE ESTUDO</h1>
         </div>
-        <div style="border-top: 1px solid #eee; margin-bottom: 20px;"></div>
+        
+        <!-- Informações do documento -->
         <div style="margin-bottom: 20px;">
-          <div style="color: #888; font-size: 14px;">Mensagem exportada em ${new Date().toLocaleString()}</div>
+          <p style="margin: 5px 0; font-size: 14px;"><strong>Data:</strong> ${formattedDate}</p>
+          <p style="margin: 5px 0; font-size: 14px;"><strong>Aluno:</strong> ${username}</p>
         </div>
-        <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; border-left: 4px solid #0D23A0;">
-          <p style="margin: 0; line-height: 1.6;">${message.content.replace(/\n/g, "<br/>")}</p>
+        
+        <!-- Linha separadora -->
+        <div style="border-top: 1px solid #000; margin: 15px 0 25px 0;"></div>
+        
+        <!-- Título da seção -->
+        <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #000;">CONTEÚDO:</h2>
+        
+        <!-- Conteúdo principal -->
+        <div style="font-size: 14px; line-height: 1.6; margin-bottom: 30px;">
+          ${message.content.replace(/\n/g, "<br/>")}
         </div>
-        <div style="margin-top: 20px; color: #888; font-size: 12px; text-align: center;">
-          Exportado da plataforma Epictus
+        
+        <!-- Linha separadora -->
+        <div style="border-top: 1px dashed #ccc; margin: 30px 0 20px 0;"></div>
+        
+        <!-- Rodapé com informações -->
+        <div style="text-align: center; color: #666; font-size: 12px; margin-top: 30px;">
+          <p style="margin: 5px 0;">Documento gerado automaticamente pela Ponto.School</p>
+          <p style="margin: 5px 0; font-style: italic;">"Não é sobre conectar você com a tecnologia, é sobre conectar você com o futuro!"</p>
         </div>
       </div>
     `;
 
     const opt = {
-      margin:       [10, 10, 10, 10],
-      filename:     `epictus-ia-export-${new Date().toISOString().slice(0, 10)}.pdf`,
+      margin:       [15, 15, 15, 15],
+      filename:     `ponto-school-material-${formattedDate.replace(/\//g, '-')}.pdf`,
       image:        { type: 'jpeg', quality: 0.98 },
       html2canvas:  { scale: 2, useCORS: true },
       jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
