@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -17,6 +17,7 @@ import {
   RefreshCw,
   ChevronRight,
   X,
+  Send,
 } from "lucide-react";
 
 const RotinaContent: React.FC = () => {
