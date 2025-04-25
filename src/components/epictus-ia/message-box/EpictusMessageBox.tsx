@@ -1,9 +1,9 @@
 import React from "react";
 import { Send, Plus, Mic, Loader2, Brain, BookOpen, AlignJustify, RotateCw } from "lucide-react";
 import { motion } from "framer-motion";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import QuickActionButton from "./QuickActionButton";
-import Textarea from "./Textarea"; // Assuming this component exists
-import Button from "./Button"; // Assuming this component exists
 
 
 interface EpictusMessageBoxProps {
