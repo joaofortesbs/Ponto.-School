@@ -25,6 +25,22 @@ const RotinaContent: React.FC = () => {
   const [goalsDescription, setGoalsDescription] = useState("");
   const [obrigatoriaEvents, setObrigatoriaEvents] = useState([]);
   const [variavelEvents, setVariavelEvents] = useState([]);
+  const [consideracoesMessages, setConsideracoesMessages] = useState([
+    { id: 1, content: "Olá! Compartilhe suas considerações para a sua rotina ideal, e eu ajudarei a otimizá-la.", sender: "ai" }
+  ]);
+  const [consideracoesInput, setConsideracoesInput] = useState("");
+  const consideracoesEndRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Função para rolar para o final do chat
+  const scrollToBottom = () => {
+    consideracoesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // Rolar para o final quando novas mensagens forem adicionadas
+  useEffect(() => {
+    scrollToBottom();
+  }, [consideracoesMessages]);
 
   const addObrigatoriaEvent = (event: string) => {
     setObrigatoriaEvents([...obrigatoriaEvents, { id: Date.now(), event }]);
@@ -40,6 +56,31 @@ const RotinaContent: React.FC = () => {
 
   const removeVariavelEvent = (id: number) => {
     setVariavelEvents(variavelEvents.filter((event) => event.id !== id));
+  };
+
+  const handleSendConsideracoes = async () => {
+    if (consideracoesInput.trim() === "" || isLoading) return;
+
+    // Adicionar mensagem do usuário
+    const userMessage = {
+      id: Date.now(),
+      content: consideracoesInput,
+      sender: "user"
+    };
+    setConsideracoesMessages(prev => [...prev, userMessage]);
+    setConsideracoesInput("");
+    setIsLoading(true);
+
+    // Simular resposta da IA após delay (você pode integrar com seu serviço de IA real depois)
+    setTimeout(() => {
+      const aiMessage = {
+        id: Date.now(),
+        content: `Entendi sua consideração sobre "${consideracoesInput.substring(0, 30)}...". Vou levar isso em conta ao otimizar sua rotina.`,
+        sender: "ai"
+      };
+      setConsideracoesMessages(prev => [...prev, aiMessage]);
+      setIsLoading(false);
+    }, 1000);
   };
 
 
@@ -210,78 +251,146 @@ const RotinaContent: React.FC = () => {
 
             <div className="mt-6">
               <h4 className="text-lg font-bold mb-2">Eventos de Rotina</h4>
-              <div className="flex flex-col gap-4">
-                <div className="bg-[#29335C]/30 p-4 rounded-lg">
-                  <h5 className="text-white font-medium mb-2">Rotina Obrigatória</h5>
-                  {obrigatoriaEvents.map((evento) => (
-                    <div key={evento.id} className="relative group flex items-center gap-2 p-2 bg-[#29335C]/40 rounded-lg mb-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-4">
+                  <div className="bg-[#29335C]/30 p-4 rounded-lg">
+                    <h5 className="text-white font-medium mb-2">Rotina Obrigatória</h5>
+                    {obrigatoriaEvents.map((evento) => (
+                      <div key={evento.id} className="relative group flex items-center gap-2 p-2 bg-[#29335C]/40 rounded-lg mb-2">
+                        <textarea
+                          className="w-full p-1 bg-transparent text-white rounded-lg resize-none"
+                          value={evento.event}
+                          onChange={(e) => {
+                            const updatedEvents = obrigatoriaEvents.map((ev) =>
+                              ev.id === evento.id ? { ...ev, event: e.target.value } : ev
+                            );
+                            setObrigatoriaEvents(updatedEvents);
+                          }}
+                        />
+                        {/* Botão de exclusão que aparece ao arrastar */}
+                        <div
+                          className="absolute right-0 top-0 h-full transform translate-x-full group-hover:translate-x-0 transition-transform duration-200 flex items-center bg-red-500/80 text-white px-3 cursor-pointer"
+                          onClick={() => removeObrigatoriaEvent(evento.id)}
+                        >
+                          <X className="h-4 w-4" />
+                        </div>
+                      </div>
+                    ))}
+                    <div className="flex items-center gap-2">
                       <textarea
                         className="w-full p-1 bg-transparent text-white rounded-lg resize-none"
-                        value={evento.event}
-                        onChange={(e) => {
-                          const updatedEvents = obrigatoriaEvents.map((ev) =>
-                            ev.id === evento.id ? { ...ev, event: e.target.value } : ev
-                          );
-                          setObrigatoriaEvents(updatedEvents);
+                        placeholder="Adicione evento obrigatório"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            addObrigatoriaEvent(e.target.value);
+                            e.target.value = '';
+                          }
                         }}
                       />
-                      {/* Botão de exclusão que aparece ao arrastar */}
-                      <div
-                        className="absolute right-0 top-0 h-full transform translate-x-full group-hover:translate-x-0 transition-transform duration-200 flex items-center bg-red-500/80 text-white px-3 cursor-pointer"
-                        onClick={() => removeObrigatoriaEvent(evento.id)}
-                      >
-                        <X className="h-4 w-4" />
-                      </div>
                     </div>
-                  ))}
-                  <div className="flex items-center gap-2">
-                    <textarea
-                      className="w-full p-1 bg-transparent text-white rounded-lg resize-none"
-                      placeholder="Adicione evento obrigatório"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          addObrigatoriaEvent(e.target.value);
-                          e.target.value = '';
-                        }
-                      }}
-                    />
+                  </div>
+
+                  <div className="bg-[#29335C]/30 p-4 rounded-lg">
+                    <h5 className="text-white font-medium mb-2">Rotina Variável</h5>
+                    {variavelEvents.map((evento) => (
+                      <div key={evento.id} className="relative group flex items-center gap-2 p-2 bg-[#29335C]/40 rounded-lg mb-2">
+                        <textarea
+                          className="w-full p-1 bg-transparent text-white rounded-lg resize-none"
+                          value={evento.event}
+                          onChange={(e) => {
+                            const updatedEvents = variavelEvents.map((ev) =>
+                              ev.id === evento.id ? { ...ev, event: e.target.value } : ev
+                            );
+                            setVariavelEvents(updatedEvents);
+                          }}
+                        />
+                        {/* Botão de exclusão que aparece ao arrastar */}
+                        <div
+                          className="absolute right-0 top-0 h-full transform translate-x-full group-hover:translate-x-0 transition-transform duration-200 flex items-center bg-red-500/80 text-white px-3 cursor-pointer"
+                          onClick={() => removeVariavelEvent(evento.id)}
+                        >
+                          <X className="h-4 w-4" />
+                        </div>
+                      </div>
+                    ))}
+                    <div className="flex items-center gap-2">
+                      <textarea
+                        className="w-full p-1 bg-transparent text-white rounded-lg resize-none"
+                        placeholder="Adicione evento variável"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            addVariavelEvent(e.target.value);
+                            e.target.value = '';
+                          }
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
-
-                <div className="bg-[#29335C]/30 p-4 rounded-lg">
-                  <h5 className="text-white font-medium mb-2">Rotina Variável</h5>
-                  {variavelEvents.map((evento) => (
-                    <div key={evento.id} className="relative group flex items-center gap-2 p-2 bg-[#29335C]/40 rounded-lg mb-2">
-                      <textarea
-                        className="w-full p-1 bg-transparent text-white rounded-lg resize-none"
-                        value={evento.event}
-                        onChange={(e) => {
-                          const updatedEvents = variavelEvents.map((ev) =>
-                            ev.id === evento.id ? { ...ev, event: e.target.value } : ev
-                          );
-                          setVariavelEvents(updatedEvents);
-                        }}
-                      />
-                      {/* Botão de exclusão que aparece ao arrastar */}
-                      <div
-                        className="absolute right-0 top-0 h-full transform translate-x-full group-hover:translate-x-0 transition-transform duration-200 flex items-center bg-red-500/80 text-white px-3 cursor-pointer"
-                        onClick={() => removeVariavelEvent(evento.id)}
-                      >
-                        <X className="h-4 w-4" />
-                      </div>
+                
+                {/* Novo componente de Considerações */}
+                <div className="bg-[#29335C]/30 p-4 rounded-lg flex flex-col h-[500px]">
+                  <h5 className="text-white font-medium mb-2 flex items-center">
+                    <Sparkles className="h-4 w-4 text-[#FF6B00] mr-2" />
+                    Considerações da IA
+                  </h5>
+                  
+                  {/* Área de chat com scroll */}
+                  <div className="flex-1 overflow-y-auto mb-4 bg-[#29335C]/40 rounded-lg p-3">
+                    <div className="space-y-3">
+                      {consideracoesMessages.map((message) => (
+                        <div 
+                          key={message.id} 
+                          className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
+                          <div 
+                            className={`max-w-[85%] p-3 rounded-lg ${
+                              message.sender === 'user' 
+                                ? 'bg-[#FF6B00] text-white' 
+                                : 'bg-[#29335C]/70 text-white/90'
+                            }`}
+                          >
+                            {message.content}
+                          </div>
+                        </div>
+                      ))}
+                      {isLoading && (
+                        <div className="flex justify-start">
+                          <div className="bg-[#29335C]/70 text-white/90 p-3 rounded-lg max-w-[85%] flex items-center space-x-2">
+                            <div className="flex space-x-1">
+                              <div className="w-2 h-2 bg-[#FF6B00] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                              <div className="w-2 h-2 bg-[#FF6B00] rounded-full animate-bounce" style={{ animationDelay: '200ms' }}></div>
+                              <div className="w-2 h-2 bg-[#FF6B00] rounded-full animate-bounce" style={{ animationDelay: '400ms' }}></div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      <div ref={consideracoesEndRef} />
                     </div>
-                  ))}
-                   <div className="flex items-center gap-2">
-                    <textarea
-                      className="w-full p-1 bg-transparent text-white rounded-lg resize-none"
-                      placeholder="Adicione evento variável"
+                  </div>
+                  
+                  {/* Área de input */}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={consideracoesInput}
+                      onChange={(e) => setConsideracoesInput(e.target.value)}
+                      placeholder="Digite suas considerações para sua rotina..."
+                      className="flex-1 p-2 bg-[#29335C]/60 text-white rounded-lg border border-[#29335C]/80 focus:outline-none focus:border-[#FF6B00]/50"
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          addVariavelEvent(e.target.value);
-                          e.target.value = '';
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendConsideracoes();
                         }
                       }}
                     />
+                    <Button
+                      onClick={handleSendConsideracoes}
+                      disabled={consideracoesInput.trim() === "" || isLoading}
+                      className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 p-2 rounded-lg flex items-center justify-center"
+                    >
+                      <Send className="h-5 w-5" />
+                    </Button>
                   </div>
                 </div>
               </div>

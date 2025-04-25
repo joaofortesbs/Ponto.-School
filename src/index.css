@@ -11,6 +11,25 @@
 @import "./styles/modern-scanner.css";
 @import "./styles/typewriter-loader.css";
 
+/* Estilos para o chat de considerações na rotina */
+.consideracoes-chat::-webkit-scrollbar {
+  width: 8px;
+}
+
+.consideracoes-chat::-webkit-scrollbar-track {
+  background: rgba(41, 51, 92, 0.2);
+  border-radius: 10px;
+}
+
+.consideracoes-chat::-webkit-scrollbar-thumb {
+  background: rgba(255, 107, 0, 0.4);
+  border-radius: 10px;
+}
+
+.consideracoes-chat::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 107, 0, 0.6);
+}
+
 /* Pulse animation for the scroll to bottom button */
 @keyframes pulse {
   0% {
