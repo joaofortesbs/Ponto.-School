@@ -108,16 +108,16 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
             <Plus size={18} />
           </motion.button>
 
-          <div className={`relative flex-grow overflow-hidden 
+          <div className={`relative flex-grow overflow-hidden h-9
                           bg-gradient-to-r from-[#0c2341]/30 to-[#0f3562]/30 
                           rounded-xl border ${isTyping ? 'border-[#1230CC]/70' : 'border-white/10'} 
-                          transition-all duration-300`}>
+                          transition-all duration-300 flex items-center`}>
             <Textarea
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Digite um comando ou pergunta para o Epictus Turbo..."
-              className="w-full bg-transparent text-white py-3 px-3 text-sm outline-none placeholder:text-gray-400"
+              className="w-full bg-transparent text-white py-1 px-3 text-sm outline-none placeholder:text-gray-400 h-7 resize-none"
               disabled={isTyping}
             />
           </div>
