@@ -1440,15 +1440,15 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                   className="relative"
                 >
                   <Button
-                    onClick={() => navigate("/dashboard")}
+                    onClick={() => navigate("/epictus-ia")}
                     className="flex items-center justify-start w-full bg-transparent hover:bg-white/5 text-white p-4 rounded-lg border border-white/10 relative overflow-hidden group"
                   >
                     <div className="h-10 w-10 rounded-full bg-[#FF6B00]/20 flex items-center justify-center mr-4 relative z-10">
                       <Lightbulb className="h-5 w-5 text-[#FF6B00]" />
                     </div>
                     <div className="text-left">
-                      <div className="font-medium">Acesse o Dashboard</div>
-                      <div className="text-xs text-white/60">Comece a explorar a plataforma</div>
+                      <div className="font-medium">Pergunte ao Epictus IA</div>
+                      <div className="text-xs text-white/60">Tire suas dúvidas com nosso assistente IA</div>
                     </div>
                     <motion.div 
                       className="absolute right-4 opacity-0 group-hover:opacity-100"
