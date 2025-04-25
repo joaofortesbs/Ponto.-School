@@ -308,7 +308,7 @@ const EpictusBetaMode: React.FC = () => {
           </div>
 
           <ScrollArea 
-            className="w-full h-full bg-[#1A2634] rounded-lg overflow-hidden shadow-lg"
+            className="w-full h-full bg-transparent rounded-lg overflow-hidden shadow-lg"
             ref={chatContainerRef}
           >
             <div className="p-4 space-y-6">
