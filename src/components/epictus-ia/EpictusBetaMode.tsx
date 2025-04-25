@@ -292,9 +292,9 @@ const EpictusBetaMode: React.FC = () => {
       <TurboHeader profileOptions={profileOptions} initialProfileIcon={profileIcon} initialProfileName={profileName} />
 
       {/* Interface de Chat */}
-      <div className="flex-1 flex flex-col items-center justify-center p-4 overflow-hidden bg-[#0A1625]">
+      <div className="flex-1 flex flex-col items-center justify-between p-4 overflow-hidden bg-[#0A1625]">
         {/* Área de conversas */}
-        <div className="w-[80%] h-[85%] relative mb-4">
+        <div className="w-[80%] h-[85%] relative mb-4 flex-grow overflow-hidden">
           <div className="absolute top-0 right-0 z-10 p-2">
             <Button
               variant="ghost"
@@ -373,17 +373,19 @@ const EpictusBetaMode: React.FC = () => {
 
         {/* Área para botões removida */}
 
-        {/* Caixa de envio de mensagens idêntica ao TurboMessageBox */}
-        <EpictusMessageBox 
-          inputMessage={inputMessage} 
-          setInputMessage={setInputMessage} 
-          handleSendMessage={handleSendMessage} 
-          handleKeyDown={handleKeyDown} 
-          charCount={charCount} 
-          MAX_CHARS={MAX_CHARS} 
-          isTyping={isTyping} 
-          handleButtonClick={handleButtonClick}
-        />
+        {/* Caixa de envio de mensagens com posição fixa */}
+        <div className="w-full h-auto mt-2 flex-shrink-0">
+          <EpictusMessageBox 
+            inputMessage={inputMessage} 
+            setInputMessage={setInputMessage} 
+            handleSendMessage={handleSendMessage} 
+            handleKeyDown={handleKeyDown} 
+            charCount={charCount} 
+            MAX_CHARS={MAX_CHARS} 
+            isTyping={isTyping} 
+            handleButtonClick={handleButtonClick}
+          />
+        </div>
       </div>
 
       {/* Modal de confirmação */}

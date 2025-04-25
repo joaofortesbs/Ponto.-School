@@ -1,8 +1,10 @@
-
 import React from "react";
 import { Send, Plus, Mic, Loader2, Brain, BookOpen, AlignJustify, RotateCw } from "lucide-react";
 import { motion } from "framer-motion";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import QuickActionButton from "./QuickActionButton";
+
 
 interface EpictusMessageBoxProps {
   inputMessage: string;
@@ -11,7 +13,8 @@ interface EpictusMessageBoxProps {
   isTyping: boolean;
   charCount: number;
   MAX_CHARS: number;
-  handleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  handleKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+  handleButtonClick: (action: string) => void;
 }
 
 const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
@@ -21,15 +24,17 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
   isTyping,
   charCount,
   MAX_CHARS,
-  handleKeyDown
+  handleKeyDown,
+  handleButtonClick
 }) => {
   return (
     <motion.div 
-      className="relative w-[60%] mx-auto bg-gradient-to-r from-[#050e1d]/90 to-[#0d1a30]/90 rounded-2xl shadow-xl 
-                border border-white/5 backdrop-blur-sm overflow-hidden"
+      className="relative w-[60%] h-auto mx-auto bg-gradient-to-r from-[#050e1d]/90 to-[#0d1a30]/90 rounded-2xl shadow-xl 
+                border border-white/5 backdrop-blur-sm overflow-hidden flex-shrink-0"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
+      style={{ minHeight: '120px' }}
     >
       {/* Partículas de fundo */}
       <div className="absolute inset-0 opacity-30 pointer-events-none">
@@ -54,8 +59,7 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
                           bg-gradient-to-r from-[#0c2341]/30 to-[#0f3562]/30 
                           rounded-xl border ${isTyping ? 'border-[#1230CC]/70' : 'border-white/10'} 
                           transition-all duration-300`}>
-            <input
-              type="text"
+            <Textarea
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -63,7 +67,7 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
               className="w-full bg-transparent text-white py-3 px-3 text-sm outline-none placeholder:text-gray-400"
               disabled={isTyping}
             />
-            
+
             <div className="absolute right-3 bottom-1.5 text-xs text-gray-400 bg-[#0c2341]/50 px-1.5 py-0.5 rounded-md">
               {charCount}/{MAX_CHARS}
             </div>
@@ -112,18 +116,22 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
           <QuickActionButton 
             icon={<Brain size={16} className="text-blue-300" />}
             text="Simulador de Provas"
+            onClick={() => handleButtonClick('Simulador de Provas')}
           />
           <QuickActionButton 
             icon={<BookOpen size={16} className="text-emerald-300" />}
             text="Gerar Caderno"
+            onClick={() => handleButtonClick('Gerar Caderno')}
           />
           <QuickActionButton 
             icon={<AlignJustify size={16} className="text-purple-300" />}
             text="Criar Fluxograma"
+            onClick={() => handleButtonClick('Criar Fluxograma')}
           />
           <QuickActionButton 
             icon={<RotateCw size={16} className="text-indigo-300" />}
             text="Reescrever Explicação"
+            onClick={() => handleButtonClick('Reescrever Explicação')}
           />
         </motion.div>
       </div>
