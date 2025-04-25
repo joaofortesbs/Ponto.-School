@@ -1,32 +1,66 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "lucide-react";
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Calendar, Clock, ListTodo, Target, Sparkles } from 'lucide-react';
+import RotinaInteligenteModal from '../agenda/rotina/RotinaInteligenteModal';
 
-export default function AgendaNav() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const isActive = location.pathname === "/agenda";
-
-  const handleMainClick = () => {
-    navigate("/agenda?view=visao-geral");
-  };
+const AgendaNav = () => {
+  const [showRotinaModal, setShowRotinaModal] = useState(false);
 
   return (
-    <div className="space-y-1">
-      <Button
-        variant="ghost"
-        className={`flex items-center justify-start rounded-lg px-3 py-2 text-start w-full group hover:scale-[1.02] transition-all duration-200 relative ${isActive ? "bg-[#29335C] text-white dark:bg-[#29335C] dark:text-white" : "text-[#001427] hover:bg-[#001427]/10 dark:text-white dark:hover:bg-[#001427]/20"}`}
-        onClick={handleMainClick}
-      >
-        <Calendar
-          className={`h-5 w-5 mr-3 ${isActive ? "text-white" : "text-[#001427] dark:text-white"}`}
-        />
-        <span>Agenda</span>
+    <>
+      <div className="flex flex-col space-y-0.5">
+        <Link
+          to="/agenda/visao-geral"
+          className="flex items-center gap-2 rounded-md py-2 px-3 text-sm font-medium text-white/80 hover:text-white transition-colors pl-8"
+        >
+          <Calendar className="h-4 w-4" />
+          <span>Visão Geral</span>
+        </Link>
+        <Link
+          to="/agenda/calendario"
+          className="flex items-center gap-2 rounded-md py-2 px-3 text-sm font-medium text-white/80 hover:text-white transition-colors pl-8"
+        >
+          <Calendar className="h-4 w-4" />
+          <span>Calendário</span>
+        </Link>
+        <Link
+          to="/agenda/flow"
+          className="flex items-center gap-2 rounded-md py-2 px-3 text-sm font-medium text-white/80 hover:text-white transition-colors pl-8"
+        >
+          <Clock className="h-4 w-4" />
+          <span>Flow</span>
+        </Link>
         <div
-          className={`absolute left-0 top-0 h-full w-1 rounded-r-md transition-all duration-300 ${isActive ? "bg-[#FF6B00]" : "bg-transparent group-hover:bg-[#001427]/30"}`}
-        />
-      </Button>
-    </div>
+          onClick={() => setShowRotinaModal(true)}
+          className="flex items-center gap-2 rounded-md py-2 px-3 text-sm font-medium text-white/80 hover:text-white transition-colors pl-8 cursor-pointer relative"
+        >
+          <Clock className="h-4 w-4" />
+          <span>Rotina</span>
+          <Sparkles className="h-3 w-3 text-[#FF6B00] absolute left-7 top-1.5" />
+        </div>
+        <Link
+          to="/agenda/tarefas"
+          className="flex items-center gap-2 rounded-md py-2 px-3 text-sm font-medium text-white/80 hover:text-white transition-colors pl-8"
+        >
+          <ListTodo className="h-4 w-4" />
+          <span>Tarefas</span>
+        </Link>
+        <Link
+          to="/agenda/desafios"
+          className="flex items-center gap-2 rounded-md py-2 px-3 text-sm font-medium text-white/80 hover:text-white transition-colors pl-8"
+        >
+          <Target className="h-4 w-4" />
+          <span>Desafios</span>
+        </Link>
+      </div>
+
+      {/* Rotina Inteligente Modal */}
+      <RotinaInteligenteModal 
+        isOpen={showRotinaModal} 
+        onClose={() => setShowRotinaModal(false)} 
+      />
+    </>
   );
-}
+};
+
+export default AgendaNav;
