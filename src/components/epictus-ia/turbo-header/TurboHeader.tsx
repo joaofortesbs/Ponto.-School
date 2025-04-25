@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { Zap, Brain } from "lucide-react";
 import GlowingBackground from "./GlowingBackground";
 import LogoSection from "./LogoSection";
 import PersonalitiesDropdown from "./PersonalitiesDropdown";
@@ -54,7 +55,31 @@ const TurboHeader: React.FC<TurboHeaderProps> = ({
       >
         <GlowingBackground isHovered={isHovered} />
         
-        <LogoSection isHovered={isHovered} animationComplete={animationComplete} />
+        <div className="flex items-center gap-3 z-10 relative">
+          <div className="flex items-center">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-2 rounded-lg mr-3 shadow-lg">
+              <Brain className="h-6 w-6 text-white" />
+            </div>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-white tracking-tight">
+                  Epictus IA
+                </h1>
+                <motion.div
+                  className="flex items-center px-1.5 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-orange-600 text-xs font-medium text-white shadow-lg"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                >
+                  <Zap className="h-3 w-3 mr-1" />
+                  BETA
+                </motion.div>
+              </div>
+              <p className="text-white/70 text-sm mt-0.5 font-medium tracking-wide">
+                Ferramenta com inteligência artificial para potencializar seus estudos
+              </p>
+            </div>
+          </div>
+        </div>
         
         <div className="flex items-center justify-center z-10 relative gap-3">
           <PersonalitiesDropdown 
