@@ -268,74 +268,237 @@ const EpictusBetaMode: React.FC = () => {
       setIsPromptModalOpen(true);
       return;
     }
-    
+
     // Verificar se é a ação de prompt aprimorado
     if (action === 'PromptAprimorado') {
       if (!inputMessage.trim()) {
         return;
       }
-      
+
       const originalMessage = inputMessage;
-      
+
       // Mostrar mensagem de processamento
       toast({
         title: "Aprimorando seu prompt...",
         description: "Estamos melhorando sua mensagem com IA",
         duration: 3000,
       });
-      
-      // Simular processamento de IA para aprimorar o prompt
+
+    // Função para gerar modal interativo
+    const showImprovedPromptModal = (improvedPromptText: string) => {
+      // Criar e adicionar o modal diretamente ao DOM
+      const modalHTML = `
+        <div id="improved-prompt-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+          <div class="bg-[#1a1d2d] text-white rounded-lg w-[90%] max-w-md shadow-xl overflow-hidden border border-gray-700 animate-fadeIn">
+            <div class="bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] p-4 flex justify-between items-center">
+              <h3 class="text-lg font-semibold flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+                Prompt Aprimorado com IA
+              </h3>
+              <button id="close-improved-prompt-modal" class="text-white hover:text-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 6 6 18"></path>
+                  <path d="m6 6 12 12"></path>
+                </svg>
+              </button>
+            </div>
+
+            <div class="p-5">
+              <div class="mb-4">
+                <div class="mb-3">
+                  <p class="text-sm text-gray-400 mb-2">Sua mensagem original:</p>
+                  <div class="p-3 bg-gray-800 rounded-lg text-sm text-gray-300">
+                    ${originalMessage}
+                  </div>
+                </div>
+
+                <div>
+                  <p class="text-sm text-gray-400 mb-2">Versão aprimorada pela Epictus IA:</p>
+                  <div class="p-3 bg-gradient-to-r from-blue-900/30 to-indigo-900/30 border border-blue-800 rounded-lg text-sm text-gray-200 max-h-[150px] overflow-y-auto scrollbar-hide">
+                    ${improvedPromptText}
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex justify-end gap-3 mt-6">
+                <button 
+                  id="cancel-improved-prompt" 
+                  class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-md transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  id="accept-improved-prompt" 
+                  class="px-4 py-2 bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] hover:from-[#0D23A0]/90 hover:to-[#5B21BD]/90 text-white rounded-md transition-colors"
+                >
+                  Usar Prompt Aprimorado
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Remover qualquer modal existente
+      const existingModal = document.getElementById('improved-prompt-modal');
+      if (existingModal) {
+        existingModal.remove();
+      }
+
+      // Adicionar o novo modal ao DOM
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+      // Adicionar event listeners ao modal
       setTimeout(() => {
-        // Exemplos de aprimoramento que poderiam ser feitos pela IA
-        const enhancementMap: Record<string, string> = {
-          "explique": "Explique detalhadamente, com exemplos e analogias simples, ",
-          "como": "Poderia detalhar de forma estruturada e passo a passo ",
-          "resumo": "Elabore um resumo conciso dos principais pontos sobre ",
-          "diferença": "Compare e contraste, destacando as principais diferenças e semelhanças entre ",
-          "exemplo": "Forneça exemplos práticos e aplicáveis de ",
-          "o que é": "Defina e explique de maneira abrangente o conceito de ",
-          "significado": "Esclareça o significado e a importância de ",
-          "calcular": "Apresente o método passo a passo para calcular ",
-          "resolver": "Demonstre de forma detalhada como resolver ",
-          "analisar": "Faça uma análise crítica e aprofundada sobre ",
-        };
-        
-        // Lógica simples para aprimorar o prompt
-        let enhancedPrompt = originalMessage;
-        let wasEnhanced = false;
-        
-        // Verificar palavras-chave e aprimorar se encontradas
-        Object.entries(enhancementMap).forEach(([keyword, enhancement]) => {
-          if (originalMessage.toLowerCase().includes(keyword) && !wasEnhanced) {
-            const regex = new RegExp(`\\b${keyword}\\b`, 'i');
-            enhancedPrompt = originalMessage.replace(regex, enhancement);
-            wasEnhanced = true;
+        const modal = document.getElementById('improved-prompt-modal');
+        const closeButton = document.getElementById('close-improved-prompt-modal');
+        const cancelButton = document.getElementById('cancel-improved-prompt');
+        const acceptButton = document.getElementById('accept-improved-prompt');
+
+        // Função para fechar o modal
+        const closeModal = () => {
+          if (modal) {
+            modal.classList.add('animate-fadeOut');
+            setTimeout(() => modal?.remove(), 200);
           }
-        });
-        
-        // Se nenhuma palavra-chave foi encontrada, adicione uma introdução geral
-        if (!wasEnhanced) {
-          enhancedPrompt = `Explique detalhadamente, com exemplos claros: ${originalMessage}`;
+        };
+
+        // Event listener para fechar o modal
+        if (closeButton) {
+          closeButton.addEventListener('click', closeModal);
         }
-        
-        // Adicionar estrutura ao final do prompt se não tiver
-        if (!enhancedPrompt.includes("estruturado") && !enhancedPrompt.includes("passo a passo")) {
-          enhancedPrompt += ". Por favor, estruture sua resposta em tópicos e forneça exemplos práticos.";
+
+        // Event listener para cancelar
+        if (cancelButton) {
+          cancelButton.addEventListener('click', closeModal);
         }
-        
-        // Atualizar o input com o prompt aprimorado
-        setInputMessage(enhancedPrompt);
-        
-        // Notificar que o prompt foi aprimorado
+
+        // Event listener para aceitar o prompt aprimorado
+        if (acceptButton) {
+          acceptButton.addEventListener('click', () => {
+            setInputMessage(improvedPromptText);
+            toast({
+              title: "Prompt aplicado!",
+              description: "O prompt aprimorado foi aplicado com sucesso.",
+              duration: 3000
+            });
+            closeModal();
+          });
+        }
+
+        // Event listener para clicar fora do modal e fechar
+        if (modal) {
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              closeModal();
+            }
+          });
+        }
+      }, 50);
+    };
+
+    // Função para aprimorar o prompt
+    const aprimorarPrompt = async () => {
+      try {
+        // Gerar um ID de sessão único para esta interação
+        const promptSessionId = `prompt-improvement-${Date.now()}`;
+
+        // Chamar a API para obter uma versão aprimorada do prompt
+        let improvedPromptText = "";
+
+        try {
+          // Chamar a API Gemini para melhorar o prompt
+          improvedPromptText = await generateAIResponse(
+            `Você é um assistente especializado em melhorar prompts educacionais. 
+            Analise o seguinte prompt e melhore-o para obter uma resposta mais detalhada, completa e educacional.
+
+            Melhore o seguinte prompt para obter uma resposta mais detalhada, completa e educacional. 
+            NÃO responda a pergunta, apenas melhore o prompt adicionando:
+            1. Mais contexto e especificidade
+            2. Solicite exemplos, comparações e aplicações práticas
+            3. Peça explicações claras de conceitos fundamentais
+            4. Solicite visualizações ou analogias quando aplicável
+            5. Adicione pedidos para que sejam mencionados fatos históricos relevantes
+
+            Original: "${originalMessage}"
+
+            Retorne APENAS o prompt melhorado, sem comentários adicionais.`,
+            promptSessionId,
+            {
+              intelligenceLevel: 'advanced',
+              languageStyle: 'formal',
+              detailedResponse: true
+            }
+          );
+        } catch (error) {
+          console.error("Erro ao chamar API para aprimorar prompt:", error);
+
+          // Fallback para melhorias locais se a API falhar
+          const enhancementMap: Record<string, string> = {
+            "explique": "Explique detalhadamente, com exemplos e analogias simples, ",
+            "como": "Poderia detalhar de forma estruturada e passo a passo ",
+            "resumo": "Elabore um resumo conciso dos principais pontos sobre ",
+            "diferença": "Compare e contraste, destacando as principais diferenças e semelhanças entre ",
+            "exemplo": "Forneça exemplos práticos e aplicáveis de ",
+            "o que é": "Defina e explique de maneira abrangente o conceito de ",
+            "significado": "Esclareça o significado e a importância de ",
+            "calcular": "Apresente o método passo a passo para calcular ",
+            "resolver": "Demonstre de forma detalhada como resolver ",
+            "analisar": "Faça uma análise crítica e aprofundada sobre ",
+          };
+
+          let enhancedPrompt = originalMessage;
+          let wasEnhanced = false;
+
+          // Verificar palavras-chave e aprimorar se encontradas
+          Object.entries(enhancementMap).forEach(([keyword, enhancement]) => {
+            if (originalMessage.toLowerCase().includes(keyword) && !wasEnhanced) {
+              const regex = new RegExp(`\\b${keyword}\\b`, 'i');
+              enhancedPrompt = originalMessage.replace(regex, enhancement);
+              wasEnhanced = true;
+            }
+          });
+
+          // Se nenhuma palavra-chave foi encontrada, adicione uma introdução geral
+          if (!wasEnhanced) {
+            enhancedPrompt = `Explique detalhadamente, com exemplos claros: ${originalMessage}`;
+          }
+
+          // Adicionar estrutura ao final do prompt se não tiver
+          if (!enhancedPrompt.includes("estruturado") && !enhancedPrompt.includes("passo a passo")) {
+            enhancedPrompt += ". Por favor, estruture sua resposta em tópicos e forneça exemplos práticos.";
+          }
+
+          improvedPromptText = enhancedPrompt;
+        }
+
+        // Limpar formatação extra que possa ter vindo na resposta
+        improvedPromptText = improvedPromptText
+          .replace(/^(Prompt melhorado:|Aqui está uma versão melhorada:|Versão melhorada:)/i, '')
+          .replace(/^["']|["']$/g, '')
+          .trim();
+
+        // Mostrar o modal com o prompt aprimorado
+        showImprovedPromptModal(improvedPromptText);
+
+      } catch (error) {
+        console.error("Erro ao aprimorar prompt:", error);
         toast({
-          title: "Prompt aprimorado com sucesso!",
-          description: "Sua mensagem foi melhorada para obter respostas mais detalhadas e úteis.",
+          title: "Erro ao aprimorar prompt",
+          description: "Não foi possível melhorar o prompt. Por favor, tente novamente.",
           duration: 3000,
         });
-      }, 1500);
-      
-      return;
-    }
+      }
+    };
+
+    // Iniciar o processo de aprimoramento
+    aprimorarPrompt();
+
+    return;
+  }
 
     const actionMap: Record<string, string> = {
       "Buscar": "Iniciando busca com base na conversa atual...",
