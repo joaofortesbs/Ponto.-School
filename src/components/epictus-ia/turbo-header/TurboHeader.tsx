@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import GlowingBackground from "./GlowingBackground";
@@ -38,7 +37,7 @@ const TurboHeader: React.FC<TurboHeaderProps> = ({
     const timer = setTimeout(() => {
       setAnimationComplete(true);
     }, 1200);
-    
+
     return () => clearTimeout(timer);
   }, []);
 
@@ -53,16 +52,16 @@ const TurboHeader: React.FC<TurboHeaderProps> = ({
         onMouseLeave={() => setIsHovered(false)}
       >
         <GlowingBackground isHovered={isHovered} />
-        
-        <LogoSection isHovered={isHovered} animationComplete={animationComplete} />
-        
+
+        <LogoSection isHovered={isHovered} animationComplete={animationComplete}  description="IA para geração de conversas impecáveis para o público estudantil!"/>
+
         <div className="flex items-center justify-center z-10 relative gap-3">
           <PersonalitiesDropdown 
             profileIcon={profileIcon}
             profileName={profileName}
             profileOptions={profileOptions}
           />
-          
+
           <HeaderIcons />
         </div>
       </motion.header>
