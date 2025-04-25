@@ -18,6 +18,7 @@ import {
   ChevronRight,
   X,
   Send,
+  Target,
 } from "lucide-react";
 
 const RotinaContent: React.FC = () => {
@@ -26,6 +27,13 @@ const RotinaContent: React.FC = () => {
   const [goalsDescription, setGoalsDescription] = useState("");
   const [obrigatoriaEvents, setObrigatoriaEvents] = useState([]);
   const [variavelEvents, setVariavelEvents] = useState([]);
+  const [horasProdutivas, setHorasProdutivas] = useState("");
+  const [horasDescanso, setHorasDescanso] = useState("");
+  const [materiasDificeis, setMateriasDificeis] = useState("");
+  const [materiasFaceis, setMateriasFaceis] = useState("");
+  const [horasProdutivasMeta, setHorasProdutivasMeta] = useState("");
+  const [horasDescansoMeta, setHorasDescansoMeta] = useState("");
+  const [materiasParaMelhorar, setMateriasParaMelhorar] = useState("");
   const [consideracoesMessages, setConsideracoesMessages] = useState([
     { id: 1, content: "Olá! Compartilhe suas considerações para a sua rotina ideal, e eu ajudarei a otimizá-la.", sender: "ai" }
   ]);
@@ -82,6 +90,32 @@ const RotinaContent: React.FC = () => {
       setConsideracoesMessages(prev => [...prev, aiMessage]);
       setIsLoading(false);
     }, 1000);
+  };
+
+  const handleGerarRotina = () => {
+    setIsLoading(true);
+    
+    // Adicionar mensagem do sistema no chat de considerações
+    const systemMessage = {
+      id: Date.now(),
+      content: "Gerando sua rotina inteligente com base nas suas preferências e metas...",
+      sender: "ai"
+    };
+    setConsideracoesMessages(prev => [...prev, systemMessage]);
+    
+    // Simular tempo de processamento da IA
+    setTimeout(() => {
+      const rotinaCriadaMessage = {
+        id: Date.now(),
+        content: `Rotina gerada com sucesso! Com base na sua situação atual (${horasProdutivas} horas produtivas, ${horasDescanso} horas de descanso) e suas metas desejadas (${horasProdutivasMeta} horas produtivas, ${horasDescansoMeta} horas de descanso), criei uma rotina personalizada que equilibra suas necessidades de estudos e descanso, com foco especial nas matérias que você deseja melhorar.`,
+        sender: "ai"
+      };
+      setConsideracoesMessages(prev => [...prev, rotinaCriadaMessage]);
+      setIsLoading(false);
+      
+      // Opcionalmente, mudar para a tab de otimização para mostrar a rotina gerada
+      setActiveTab("optimize");
+    }, 2000);
   };
 
 
@@ -328,9 +362,120 @@ const RotinaContent: React.FC = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Componentes de Metas de Rotina */}
+                <div className="flex flex-col gap-4 mt-4">
+                  {/* Situação Atual e Metas Desejadas (lado a lado) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Situação Atual */}
+                    <div className="bg-[#29335C]/30 p-4 rounded-lg">
+                      <h5 className="text-white font-medium mb-3 flex items-center">
+                        <BarChart3 className="h-4 w-4 text-[#FF6B00] mr-2" />
+                        Situação Atual da Rotina
+                      </h5>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-sm text-gray-300 block mb-1">Horas Produtivas Atuais</label>
+                          <input 
+                            type="number" 
+                            min="0" 
+                            max="24" 
+                            className="w-full p-2 bg-[#29335C]/60 text-white rounded-lg border border-[#29335C]/80 focus:outline-none focus:border-[#FF6B00]/50"
+                            placeholder="Ex: 5"
+                            value={horasProdutivas}
+                            onChange={(e) => setHorasProdutivas(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm text-gray-300 block mb-1">Horas de Descanso Atuais</label>
+                          <input 
+                            type="number" 
+                            min="0" 
+                            max="24" 
+                            className="w-full p-2 bg-[#29335C]/60 text-white rounded-lg border border-[#29335C]/80 focus:outline-none focus:border-[#FF6B00]/50"
+                            placeholder="Ex: 8"
+                            value={horasDescanso}
+                            onChange={(e) => setHorasDescanso(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm text-gray-300 block mb-1">Matérias com Dificuldade</label>
+                          <textarea 
+                            className="w-full p-2 bg-[#29335C]/60 text-white rounded-lg border border-[#29335C]/80 focus:outline-none focus:border-[#FF6B00]/50 resize-none h-20"
+                            placeholder="Ex: Matemática, Física, Química..."
+                            value={materiasDificeis}
+                            onChange={(e) => setMateriasDificeis(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm text-gray-300 block mb-1">Matérias sem Dificuldade</label>
+                          <textarea 
+                            className="w-full p-2 bg-[#29335C]/60 text-white rounded-lg border border-[#29335C]/80 focus:outline-none focus:border-[#FF6B00]/50 resize-none h-20"
+                            placeholder="Ex: História, Geografia, Biologia..."
+                            value={materiasFaceis}
+                            onChange={(e) => setMateriasFaceis(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Metas Desejadas */}
+                    <div className="bg-[#29335C]/30 p-4 rounded-lg">
+                      <h5 className="text-white font-medium mb-3 flex items-center">
+                        <Target className="h-4 w-4 text-[#FF6B00] mr-2" />
+                        Metas Desejadas para sua Rotina
+                      </h5>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-sm text-gray-300 block mb-1">Horas Produtivas Desejadas</label>
+                          <input 
+                            type="number" 
+                            min="0" 
+                            max="24" 
+                            className="w-full p-2 bg-[#29335C]/60 text-white rounded-lg border border-[#29335C]/80 focus:outline-none focus:border-[#FF6B00]/50"
+                            placeholder="Ex: 8"
+                            value={horasProdutivasMeta}
+                            onChange={(e) => setHorasProdutivasMeta(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm text-gray-300 block mb-1">Horas de Descanso Desejadas</label>
+                          <input 
+                            type="number" 
+                            min="0" 
+                            max="24" 
+                            className="w-full p-2 bg-[#29335C]/60 text-white rounded-lg border border-[#29335C]/80 focus:outline-none focus:border-[#FF6B00]/50"
+                            placeholder="Ex: 8"
+                            value={horasDescansoMeta}
+                            onChange={(e) => setHorasDescansoMeta(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm text-gray-300 block mb-1">Matérias que Deseja Melhorar</label>
+                          <textarea 
+                            className="w-full p-2 bg-[#29335C]/60 text-white rounded-lg border border-[#29335C]/80 focus:outline-none focus:border-[#FF6B00]/50 resize-none h-20"
+                            placeholder="Ex: Matemática, Física..."
+                            value={materiasParaMelhorar}
+                            onChange={(e) => setMateriasParaMelhorar(e.target.value)}
+                          />
+                        </div>
+                        <div className="flex justify-end mt-5">
+                          <Button
+                            className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white rounded-lg px-4 py-2 hover:opacity-90 transition-opacity flex items-center gap-2"
+                            onClick={handleGerarRotina}
+                            disabled={isLoading}
+                          >
+                            <Sparkles className="h-4 w-4" />
+                            Gerar Rotina Inteligente
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 
-                {/* Novo componente de Considerações */}
-                <div className="bg-[#29335C]/30 p-4 rounded-lg flex flex-col h-[500px]">
+                {/* Componente de Considerações */}
+                <div className="bg-[#29335C]/30 p-4 rounded-lg flex flex-col h-[500px] mt-4">
                   <h5 className="text-white font-medium mb-2 flex items-center">
                     <Sparkles className="h-4 w-4 text-[#FF6B00] mr-2" />
                     Considerações da IA
