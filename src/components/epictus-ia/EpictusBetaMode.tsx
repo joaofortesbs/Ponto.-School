@@ -13,6 +13,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import EpictusMessageBox from "./message-box/EpictusMessageBox";
 import PromptSuggestionsModal from "./message-box/PromptSuggestionsModal";
+import ExportShareModal from "./export-modal/ExportShareModal";
 import TurboHeader from "./turbo-header/TurboHeader";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -72,6 +73,8 @@ const EpictusBetaMode: React.FC = () => {
   const [charCount, setCharCount] = useState(0);
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [exportMessageData, setExportMessageData] = useState<Message | null>(null);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const MAX_CHARS = 1000;
   const [sessionId] = useState(() => localStorage.getItem('epictus_beta_session_id') || uuidv4());
 
@@ -574,9 +577,8 @@ const EpictusBetaMode: React.FC = () => {
 
 
   const handleExportMessage = (message: Message) => {
-    // Placeholder for export/share functionality. Replace with actual implementation.
-    console.log("Exporting/Sharing message:", message);
-    toast({ title: "Exportar/Compartilhar", description: "Funcionalidade em desenvolvimento." });
+    setExportMessageData(message);
+    setIsExportModalOpen(true);
   };
 
   return (
@@ -773,6 +775,18 @@ const EpictusBetaMode: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {exportMessageData && (
+        <ExportShareModal
+          open={isExportModalOpen}
+          onClose={() => setIsExportModalOpen(false)}
+          message={{
+            content: exportMessageData.content,
+            sender: exportMessageData.sender,
+            timestamp: exportMessageData.timestamp
+          }}
+        />
+      )}
     </div>
   );
 };
