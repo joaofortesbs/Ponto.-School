@@ -745,14 +745,14 @@ const EpictusBetaMode: React.FC = () => {
                               <div className="flex items-center space-x-2">
                                 <button 
                                   onClick={() => startEditingMessage(message.id)}
-                                  className="text-[#001427] hover:text-blue-400 transition-colors"
+                                  className="text-gray-400 hover:text-blue-400 transition-colors"
                                   title="Editar mensagem"
                                 >
                                   <PenLine size={12} />
                                 </button>
                                 <button 
                                   onClick={() => handleExportMessage(message)}
-                                  className="text-[#001427] hover:text-blue-400 transition-colors"
+                                  className="text-gray-400 hover:text-blue-400 transition-colors"
                                   title="Exportar/Compartilhar mensagem"
                                 >
                                   <Share size={12} />
@@ -766,7 +766,7 @@ const EpictusBetaMode: React.FC = () => {
                                       duration: 3000,
                                     });
                                   }}
-                                  className="text-[#001427] hover:text-blue-400 transition-colors"
+                                  className="text-gray-400 hover:text-blue-400 transition-colors"
                                   title="Copiar mensagem"
                                 >
                                   <Copy size={12} />
@@ -837,7 +837,7 @@ const EpictusBetaMode: React.FC = () => {
                                   duration: 3000,
                                 });
                               }}
-                              className="text-[#001427] hover:text-blue-400 transition-colors"
+                              className="text-gray-400 hover:text-blue-400 transition-colors"
                               title="Editar mensagem"
                             >
                               <PenLine size={12} />
@@ -851,14 +851,14 @@ const EpictusBetaMode: React.FC = () => {
                                   duration: 3000,
                                 });
                               }}
-                              className="text-[#001427] hover:text-blue-400 transition-colors"
+                              className="text-gray-400 hover:text-blue-400 transition-colors"
                               title="Copiar mensagem"
                             >
                               <Copy size={12} />
                             </button>
                           </div>
                         )}
-                        <p className="text-right text-[11px] text-[#001427] font-mono">
+                        <p className="text-right text-[11px] text-[#D0D0D0]/70 font-mono">
                           {formatTimestamp(message.timestamp)}
                         </p>
                       </div>
