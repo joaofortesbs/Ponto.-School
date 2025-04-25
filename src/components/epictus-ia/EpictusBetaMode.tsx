@@ -826,6 +826,38 @@ const EpictusBetaMode: React.FC = () => {
                             </button>
                           </div>
                         )}
+                        {message.sender === "user" && (
+                          <div className="flex items-center gap-1 mr-2">
+                            <button 
+                              onClick={() => {
+                                // Implementar edição de mensagem do usuário futuramente
+                                toast({
+                                  title: "Editar mensagem",
+                                  description: "Esta funcionalidade será implementada em breve",
+                                  duration: 3000,
+                                });
+                              }}
+                              className="text-gray-400 hover:text-blue-400 transition-colors"
+                              title="Editar mensagem"
+                            >
+                              <PenLine size={12} />
+                            </button>
+                            <button 
+                              onClick={() => {
+                                navigator.clipboard.writeText(message.content);
+                                toast({
+                                  title: "Mensagem copiada",
+                                  description: "O conteúdo foi copiado para a área de transferência",
+                                  duration: 3000,
+                                });
+                              }}
+                              className="text-gray-400 hover:text-blue-400 transition-colors"
+                              title="Copiar mensagem"
+                            >
+                              <Copy size={12} />
+                            </button>
+                          </div>
+                        )}
                         <p className="text-right text-[11px] text-[#D0D0D0]/70 font-mono">
                           {formatTimestamp(message.timestamp)}
                         </p>
