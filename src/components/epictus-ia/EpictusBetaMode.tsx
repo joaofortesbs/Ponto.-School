@@ -5,6 +5,7 @@ import { Sparkles, Zap, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import EpictusBetaChat from "./EpictusBetaChat";
 
 const EpictusBetaMode: React.FC = () => {
   const { theme } = useTheme();
@@ -374,9 +375,9 @@ const EpictusBetaMode: React.FC = () => {
         </motion.header>
       </div>
 
-      {/* Empty content area - as requested, removing all other content */}
+      {/* Content area with Epictus Beta Chat */}
       <div className="w-full flex-grow flex items-center justify-center">
-        {/* Content area intentionally left empty */}
+        <EpictusBetaChat />
       </div>
     </div>
   );

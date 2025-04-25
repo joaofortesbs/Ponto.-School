@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 
 // Interface para mensagens no chat
@@ -49,7 +50,7 @@ export const generateAIResponse = async (
       setTimeout(() => {
         const randomIndex = Math.floor(Math.random() * responses.length);
         resolve(responses[randomIndex]);
-      }, 500);
+      }, 1500);
     });
   }
 };
@@ -57,6 +58,12 @@ export const generateAIResponse = async (
 // Adicionar uma mensagem ao histórico
 export const addMessageToHistory = (message: ChatMessage): void => {
   chatHistory = [...chatHistory, message];
+  // Opcional: Salvar em localStorage para persistência entre sessões
+  try {
+    localStorage.setItem('epictus_beta_chat_history', JSON.stringify(chatHistory));
+  } catch (e) {
+    console.error("Erro ao salvar histórico no localStorage:", e);
+  }
 };
 
 // Criar uma nova mensagem
@@ -71,10 +78,31 @@ export const createMessage = (content: string, sender: 'user' | 'ai'): ChatMessa
 
 // Obter o histórico de mensagens
 export const getChatHistory = (): ChatMessage[] => {
+  // Tentar recuperar histórico do localStorage primeiro
+  try {
+    const savedHistory = localStorage.getItem('epictus_beta_chat_history');
+    if (savedHistory) {
+      const parsed = JSON.parse(savedHistory) as ChatMessage[];
+      // Converter strings de timestamp de volta para objetos Date
+      chatHistory = parsed.map(msg => ({
+        ...msg,
+        timestamp: new Date(msg.timestamp)
+      }));
+    }
+  } catch (e) {
+    console.error("Erro ao recuperar histórico do localStorage:", e);
+  }
+  
   return [...chatHistory];
 };
 
 // Limpar o histórico de mensagens
 export const clearChatHistory = (): void => {
   chatHistory = [];
+  // Limpar também do localStorage
+  try {
+    localStorage.removeItem('epictus_beta_chat_history');
+  } catch (e) {
+    console.error("Erro ao limpar histórico do localStorage:", e);
+  }
 };
