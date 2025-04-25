@@ -308,48 +308,57 @@ const EpictusBetaMode: React.FC = () => {
           </div>
 
           <ScrollArea 
-            className="w-full h-full bg-[#1A2634] rounded-lg overflow-hidden"
+            className="w-full h-full bg-[#1A2634] rounded-lg overflow-hidden shadow-lg"
             ref={chatContainerRef}
           >
-            <div className="p-4 space-y-4">
+            <div className="p-4 space-y-6">
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
+                  className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"} animate-fadeIn`}
                 >
                   {message.sender === "ia" && (
-                    <div className="w-8 h-8 rounded-full bg-[#2F3B4C] flex items-center justify-center mr-2">
-                      <Bot size={16} className="text-white" />
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1E293B] to-[#2F3B4C] flex items-center justify-center mr-3 shadow-md border border-[#3A4B5C]/30">
+                      <Bot size={18} className="text-[#4A90E2]" />
                     </div>
                   )}
 
                   <div
-                    className={`max-w-[80%] rounded-md p-3 ${
+                    className={`max-w-[80%] rounded-xl p-4 shadow-md backdrop-blur-sm transition-all duration-300 ${
                       message.sender === "user"
-                        ? "bg-[#4A90E2] text-white"
-                        : "bg-[#2F3B4C] text-white"
+                        ? "bg-gradient-to-r from-[#3A7BD5] to-[#4A90E2] text-white border border-[#5AA0F2]/20"
+                        : "bg-gradient-to-r from-[#1E293B] to-[#2F3B4C] text-white border border-[#3A4B5C]/30"
                     }`}
                   >
-                    <p className="whitespace-pre-wrap break-words">{message.content}</p>
-                    <p className="text-right text-[12px] text-[#A0A0A0] mt-1">
-                      {formatTimestamp(new Date(message.timestamp))}
-                    </p>
+                    <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed font-light">{message.content}</p>
+                    <div className="flex justify-between items-center mt-2 pt-1 border-t border-white/10">
+                      <div className="flex items-center space-x-1">
+                        {message.sender === "ia" && (
+                          <Badge variant="outline" className="text-[10px] bg-[#2A3645]/50 text-[#A0A0A0] border-[#3A4B5C]/30 px-1.5 py-0">
+                            Epictus IA
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-right text-[11px] text-[#D0D0D0]/70 font-mono">
+                        {formatTimestamp(new Date(message.timestamp))}
+                      </p>
+                    </div>
                   </div>
 
                   {message.sender === "user" && (
-                    <div className="w-8 h-8 rounded-full bg-[#4A90E2] flex items-center justify-center ml-2">
-                      <User size={16} className="text-white" />
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#3A7BD5] to-[#4A90E2] flex items-center justify-center ml-3 shadow-md border border-[#5AA0F2]/20">
+                      <User size={18} className="text-white" />
                     </div>
                   )}
                 </div>
               ))}
 
               {isTyping && (
-                <div className="flex justify-start">
-                  <div className="w-8 h-8 rounded-full bg-[#2F3B4C] flex items-center justify-center mr-2">
-                    <Bot size={16} className="text-white" />
+                <div className="flex justify-start animate-fadeIn">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1E293B] to-[#2F3B4C] flex items-center justify-center mr-3 shadow-md border border-[#3A4B5C]/30">
+                    <Bot size={18} className="text-[#4A90E2]" />
                   </div>
-                  <div className="bg-[#2F3B4C] p-3 rounded-md flex items-center">
+                  <div className="bg-gradient-to-r from-[#1E293B] to-[#2F3B4C] p-4 rounded-xl flex items-center shadow-md border border-[#3A4B5C]/30">
                     <div className="flex space-x-2">
                       <div className="w-2 h-2 rounded-full bg-[#4A90E2] animate-pulse" style={{ animationDelay: "0ms" }}></div>
                       <div className="w-2 h-2 rounded-full bg-[#4A90E2] animate-pulse" style={{ animationDelay: "300ms" }}></div>
