@@ -2,17 +2,26 @@
 import React from "react";
 import { Sparkles } from "lucide-react";
 import { ChatCard } from "./ChatCard";
+import { useNavigate } from "react-router-dom";
 
 export const EpictusIABetaCard: React.FC = () => {
+  const navigate = useNavigate();
+
   const handleBetaActivation = () => {
-    // Set a URL parameter to indicate Beta mode is active
-    window.history.pushState({}, "", "/epictus-ia?mode=beta");
+    // Navigate to the Epictus IA page with beta mode parameter
+    navigate("/epictus-ia?mode=beta");
     
-    // Dispatch a custom event that the parent component can listen for
+    // Dispatch a custom event that other components can listen for
     const event = new CustomEvent("activateBetaMode", {
       detail: { mode: "beta" }
     });
     window.dispatchEvent(event);
+
+    // Add a small delay before redirecting to ensure the event is processed
+    setTimeout(() => {
+      // This forces a reload of the page with the new parameter
+      window.location.href = "/epictus-ia?mode=beta";
+    }, 100);
   };
 
   const assistantData = {
@@ -25,5 +34,5 @@ export const EpictusIABetaCard: React.FC = () => {
     onButtonClick: handleBetaActivation
   };
 
-  return <ChatCard assistant={assistantData} />
+  return <ChatCard assistant={assistantData} />;
 };
