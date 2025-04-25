@@ -205,8 +205,8 @@ const TurboMessageBox: React.FC = () => {
                     <X size={16} />
                   </motion.button>
                   <motion.button
-                    className="p-1.5 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD]"
-                    whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+                    className="p-1.5 rounded-full bg-gradient-to-br from-[#0037CD] to-[#2A7DE1]"
+                    whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(20, 110, 240, 0.7)" }}
                     whileTap={{ scale: 0.95 }}
                     onClick={stopRecording}
                   >
