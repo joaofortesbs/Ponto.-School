@@ -147,7 +147,7 @@ export default function EpictusIAHeader() {
             </motion.div>
           </div>
           <p className="text-white/70 text-sm mt-0.5 font-medium tracking-wide">
-            Ferramenta com inteligência artificial para potencializar seus estudos
+            IA para geração de conversas impecáveis para o público estudantil!
           </p>
         </div>
       </div>

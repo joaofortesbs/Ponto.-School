@@ -5,9 +5,10 @@ import { Zap, Sparkles } from "lucide-react";
 interface LogoSectionProps {
   isHovered: boolean;
   animationComplete: boolean;
+  description?: string;
 }
 
-const LogoSection: React.FC<LogoSectionProps> = ({ isHovered, animationComplete }) => {
+const LogoSection: React.FC<LogoSectionProps> = ({ isHovered, animationComplete, description = "IA para geração de conversas impecáveis para o público estudantil!" }) => {
   return (
     <div className="flex items-center gap-4 z-10 flex-1">
       <div className="relative group mr-3">
@@ -56,7 +57,7 @@ const LogoSection: React.FC<LogoSectionProps> = ({ isHovered, animationComplete 
           </motion.div>
         </div>
         <p className="text-white/70 text-sm mt-0.5 font-medium tracking-wide">
-          Versão beta avançada com recursos experimentais
+          {description}
         </p>
       </div>
     </div>

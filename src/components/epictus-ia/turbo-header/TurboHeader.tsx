@@ -53,7 +53,7 @@ const TurboHeader: React.FC<TurboHeaderProps> = ({
       >
         <GlowingBackground isHovered={isHovered} />
 
-        <LogoSection isHovered={isHovered} animationComplete={animationComplete}  description="IA para geração de conversas impecáveis para o público estudantil!"/>
+        <LogoSection isHovered={isHovered} animationComplete={animationComplete} description="IA para geração de conversas impecáveis para o público estudantil!" />
 
         <div className="flex items-center justify-center z-10 relative gap-3">
           <PersonalitiesDropdown 
