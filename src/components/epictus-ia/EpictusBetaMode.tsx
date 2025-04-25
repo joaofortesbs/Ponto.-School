@@ -858,7 +858,7 @@ const EpictusBetaMode: React.FC = () => {
                             </button>
                           </div>
                         )}
-                        <p className="text-right text-[11px] text-[#001427] font-mono">
+                        <p className="text-right text-[11px] text-[#8f97a4] font-mono">
                           {formatTimestamp(message.timestamp)}
                         </p>
                       </div>
