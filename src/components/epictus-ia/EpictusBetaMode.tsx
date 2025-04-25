@@ -6,7 +6,8 @@ import {
   Loader2,
   Star,
   Search,
-  FileText
+  FileText,
+  Sparkles
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import EpictusMessageBox from "./message-box/EpictusMessageBox";
