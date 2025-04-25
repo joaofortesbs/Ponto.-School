@@ -206,7 +206,48 @@ const EpictusBetaMode: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Cabeçalho igual ao do Modo Epictus Turbo */}
+      {/* Cabeçalho do Modo Epictus Turbo */}
+      <div className="w-full p-4">
+        <div className="w-full backdrop-blur-lg py-4 px-5 flex items-center justify-between rounded-xl relative bg-gradient-to-r from-[#050e1d] to-[#0d1a30]">
+          {/* Animated gradient background */}
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0D23A0] via-[#1230CC] to-[#4A0D9F] opacity-30 transition-opacity duration-700"></div>
+            <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
+          </div>
+
+          {/* Glowing orbs */}
+          <div className="absolute top-1/2 left-1/4 w-32 h-32 rounded-full bg-[#0D23A0]/10 blur-3xl"></div>
+          <div className="absolute top-1/2 right-1/4 w-24 h-24 rounded-full bg-[#4A0D9F]/10 blur-3xl"></div>
+
+          {/* Content */}
+          <div className="flex items-center gap-3 z-10">
+            <div className="h-10 w-10 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] flex items-center justify-center">
+              <Bot className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold flex items-center gap-2 text-white">
+                Epictus BETA
+                <Badge className="bg-[#FF6B00] text-white text-xs">#Beta IA</Badge>
+              </h2>
+              <p className="text-sm text-white/60">Versão beta avançada com recursos experimentais</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2 z-10">
+            <select 
+              className="bg-[#1A2634] text-white text-sm rounded-md p-2 border border-gray-700"
+              aria-label="Selecionar personalidade"
+            >
+              <option value="default">Personalidades</option>
+              <option value="teacher">Professor</option>
+              <option value="programmer">Programador</option>
+              <option value="scientist">Cientista</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      
+      {/* Cabeçalho original mantido */}
       <div className="border-b bg-[#0A1625] p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
