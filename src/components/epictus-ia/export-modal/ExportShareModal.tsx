@@ -75,16 +75,19 @@ const ExportShareModal: React.FC<ExportShareModalProps> = ({ open, onClose, mess
         <!-- Espaçador para empurrar o rodapé para a base -->
         <div style="min-height: 80px;"></div>
         
-        <!-- Rodapé com informações -->
-        <div style="text-align: center; font-size: 12px; margin-top: 30px; position: fixed; bottom: 20px; left: 0; right: 0;">
+        <!-- Espaçador para garantir que o conteúdo não se sobreponha ao rodapé -->
+        <div style="height: 80px;"></div>
+        
+        <!-- Rodapé com informações alinhadas com a imagem de referência -->
+        <div style="text-align: center; font-size: 12px; position: fixed; bottom: 30px; left: 0; right: 0;">
           <p style="margin: 5px 0; color: #000000; font-weight: bold;">Documento gerado automaticamente pela Ponto.School</p>
-          <p style="margin: 5px 0; font-style: italic; color: #444444;">"Não é sobre conectar você com a tecnologia, é sobre conectar você com o futuro!"</p>
+          <p style="margin: 3px 0; font-style: italic; color: #666666;">"Não é sobre conectar você com a tecnologia, é sobre conectar você com o futuro!"</p>
         </div>
       </div>
     `;
 
     const opt = {
-      margin:       [15, 15, 25, 15], // Aumentei a margem inferior para acomodar o rodapé
+      margin:       [15, 15, 40, 15], // Margem inferior aumentada para garantir espaço adequado para o rodapé
       filename:     `ponto-school-material-${formattedDate.replace(/\//g, '-')}.pdf`,
       image:        { type: 'jpeg', quality: 0.98 },
       html2canvas:  { scale: 2, useCORS: true },
