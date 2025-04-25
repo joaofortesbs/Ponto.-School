@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 
@@ -41,7 +40,7 @@ const PersonalitiesDropdown: React.FC<PersonalitiesDropdownProps> = ({
 
       {/* Dropdown content - absolute positioning relative to its container */}
       <div className="fixed group-hover:opacity-100 group-hover:visible opacity-0 invisible transition-all duration-300 z-[99999] left-auto mt-2 personalidades-dropdown" style={{ top: "calc(100% + 10px)" }}>
-        <div className="w-52 bg-gradient-to-r from-[#0c2341] to-[#0f3562] rounded-lg shadow-xl overflow-hidden border border-white/10 backdrop-blur-md" style={{ position: "relative", zIndex: 99999 }}>
+        <div className="w-52 bg-gradient-to-r from-[#19407E] to-[#2A61B6] rounded-lg shadow-xl overflow-hidden border border-white/10 backdrop-blur-md" style={{ position: "relative", zIndex: 99999 }}>
           <div className="max-h-60 overflow-y-auto py-2">
             {profileOptions.map((item, index) => (
               <motion.div 

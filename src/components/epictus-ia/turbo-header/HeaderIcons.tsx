@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 
@@ -11,7 +10,7 @@ export const HeaderIcon: React.FC<HeaderIconProps> = ({ icon, onClick }) => {
   return (
     <div className="relative icon-container">
       <motion.div
-        className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
+        className="w-10 h-10 rounded-full bg-gradient-to-br from-[#194FBF] to-[#2B6CB0] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         initial={false}
@@ -71,7 +70,7 @@ export const HeaderIcons: React.FC = () => {
       {/* Profile picture - a bit more spaced */}
       <div className="relative profile-icon-container ml-4">
         <motion.div
-          className="w-11 h-11 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] p-[2px] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow overflow-hidden"
+          className="w-11 h-11 rounded-full bg-gradient-to-br from-[#194FBF] to-[#2B6CB0] p-[2px] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow overflow-hidden"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           initial={false}

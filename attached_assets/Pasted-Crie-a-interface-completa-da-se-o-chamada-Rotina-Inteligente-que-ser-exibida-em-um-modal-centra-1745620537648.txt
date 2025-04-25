@@ -1,0 +1,144 @@
+Crie a interface completa da seção chamada "Rotina Inteligente", que será exibida em um modal centralizado dentro da seção principal de "Agenda". Esse modal deve ser altamente moderno, sofisticado e tecnológico, com design baseado em glassmorphism, animações suaves, layout em grid responsivo e comportamento interativo fluido. Todos os componentes devem estar organizados em arquivos separados para facilitar manutenção e reaproveitamento.
+
+📐 Estrutura Geral
+O modal ocupa 80% da tela em dispositivos grandes, 95% em tablets, e 100% em dispositivos móveis.
+
+Estilo visual com fundo translúcido, efeito vidro (glassmorphism com blur e transparência).
+
+Layout dividido em duas colunas principais:
+
+Coluna Esquerda (65%): textos, eventos e dados do usuário.
+
+Coluna Direita (35%): chat com IA, metas e botão final.
+
+Modal com bordas arredondadas (2xl), sombra suave, animação de entrada com fade-in + scale.
+
+🧱 1. TOPO DO MODAL
+Título centralizado: "Rotina Inteligente"
+
+Fonte moderna (ex: Montserrat ou Poppins), peso bold, tamanho 2xl
+
+Animação de entrada suave (fade-top)
+
+Ícone de circuito cerebral ou inteligência ao lado, com efeito de rotação lenta ou pulso leve
+
+✍️ 2. CAMPOS DE TEXTO
+Dois cards empilhados, com espaçamento entre eles:
+
+“Descreva como você enxerga a sua rotina hoje:”
+
+“Descreva suas principais metas em uma rotina:”
+
+Estilo das caixas:
+
+Fundo semi-transparente, bordas arredondadas e sombra interna
+
+Animação ao focar no campo (aumenta levemente + brilho sutil)
+
+Contador de caracteres abaixo de cada input
+
+📆 3. EVENTOS DE ROTINA
+Container: "Eventos de Rotina"
+Posicionado abaixo dos campos de texto, na coluna esquerda
+
+Dividido em dois blocos:
+
+A. Rotina Obrigatória
+Bloco superior com título alinhado à esquerda e botão "+" flutuante para adicionar evento
+
+Cada evento:
+
+Card retangular com borda neon sutil
+
+Campo editável para nome do evento
+
+Campo ao lado direito para inserir tempo estimado (em minutos ou slider)
+
+Ícone de arrastar à esquerda
+
+Sistema de swipe para excluir: ao arrastar para esquerda, aparece botão “🗑 Excluir”
+
+Placeholder animado com mensagem: "Sem eventos ainda! Adicione o primeiro."
+
+B. Rotina Variável
+Mesmo estilo e layout da Rotina Obrigatória, mas fundo com cor diferenciada (azul-cinza ou gradiente leve)
+
+Dados são separados logicamente da obrigatória para uso da IA
+
+🤖 4. CHAT DE CONSIDERAÇÕES COM A IA
+Localizado na coluna direita, ao lado dos eventos
+
+Componente em estilo de chat:
+
+Caixa de input fixa na parte inferior
+
+Respostas da IA aparecem em bolhas com fundo escuro e letras claras
+
+Mensagens do usuário em bolhas à direita
+
+Animação de “digitando...” com bolinhas pulsantes
+
+Botão “Nova conversa” no canto superior direito do chat
+
+Comandos especiais como /sugestão, /prioridade, /foco podem ser usados pelo usuário
+
+📊 5. COMPARATIVO: SITUAÇÃO ATUAL X METAS
+Localizado abaixo dos eventos e do chat
+
+Dois cards lado a lado:
+
+Situação Atual
+Título: "Sua Rotina Atual"
+
+Inputs:
+
+Horas produtivas por dia (input ou slider)
+
+Horas de descanso (input ou slider)
+
+Matérias com dificuldade (tags vermelhas com botão de remover)
+
+Matérias fáceis (tags verdes)
+
+Situação Ideal (Metas)
+Título: "Sua Meta com a Rotina Inteligente"
+
+Mesmos campos acima, agora com valores desejados
+
+Ao lado dos dois blocos: gráfico comparativo entre "Atual x Meta" com barras ou donuts animadas
+
+🚀 6. BOTÃO FINAL – “Programar Rotina com IA”
+Localização: canto inferior direito do modal
+
+Estilo: botão largo com cor vibrante, ícone de foguete
+
+Efeito hover: brilho neon + leve movimento
+
+Ao clicar:
+
+Animação de carregamento com spinner
+
+A IA coleta todos os dados informados
+
+Exibe no chat a rotina personalizada sugerida
+
+⚙️ Funcionalidades Complementares
+Todos os dados digitados pelo usuário devem ser salvos dinamicamente (autosave ou bind).
+
+A interface deve ser 100% responsiva.
+
+Suporte nativo a tema escuro/claro.
+
+Animações suaves e intuitivas entre ações (entrada de dados, adição de evento, envio de mensagem, etc.).
+
+A lógica da IA considera:
+
+Tempo disponível
+
+Tipos de rotina
+
+Metas desejadas
+
+Eventos obrigatórios/variáveis
+
+Dificuldades e prioridades

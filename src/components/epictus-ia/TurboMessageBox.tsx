@@ -12,9 +12,9 @@ interface QuickActionProps {
 const QuickAction: React.FC<QuickActionProps> = ({ icon, label, onClick }) => {
   return (
     <motion.button
-      className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#0c2341]/50 to-[#0f3562]/50 
+      className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#001340]/50 to-[#0055B8]/30 
                  text-white rounded-full whitespace-nowrap border border-white/10 backdrop-blur-md"
-      whileHover={{ y: -2, scale: 1.05, boxShadow: "0 10px 25px -5px rgba(13, 35, 160, 0.4)" }}
+      whileHover={{ y: -2, scale: 1.05, boxShadow: "0 10px 25px -5px rgba(0, 85, 184, 0.5)" }}
       whileTap={{ scale: 0.98 }}
       transition={{ type: "spring", stiffness: 400, damping: 10 }}
       onClick={onClick}
@@ -111,7 +111,7 @@ const TurboMessageBox: React.FC = () => {
   return (
     <div className="w-full mx-auto mb-2 p-1"> {/* Reduced spacing further */}
       <motion.div 
-        className="relative bg-gradient-to-r from-[#050e1d]/90 to-[#0d1a30]/90 rounded-2xl shadow-xl 
+        className="relative bg-gradient-to-r from-[#001340]/90 to-[#0d1a30]/90 rounded-2xl shadow-xl 
                    border border-white/5 backdrop-blur-sm overflow-hidden"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -127,9 +127,9 @@ const TurboMessageBox: React.FC = () => {
           {/* Área de input */}
           <div className="flex items-center gap-2">
             <motion.button
-              className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+              className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#001340] to-[#0055B8] 
                          flex items-center justify-center shadow-lg text-white"
-              whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+              whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(0, 85, 184, 0.7)" }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsExpanded(!isExpanded)}
             >
@@ -137,8 +137,8 @@ const TurboMessageBox: React.FC = () => {
             </motion.button>
 
             <div className={`relative flex-grow overflow-hidden 
-                            bg-gradient-to-r from-[#0c2341]/30 to-[#0f3562]/30 
-                            rounded-xl border ${isInputFocused ? 'border-[#1230CC]/70' : 'border-white/10'} 
+                            bg-gradient-to-r from-[#001340]/40 to-[#0055B8]/20 
+                            rounded-xl border ${isInputFocused ? 'border-[#0055B8]/70' : 'border-white/10'} 
                             transition-all duration-300`}>
               <input
                 type="text"
@@ -155,9 +155,9 @@ const TurboMessageBox: React.FC = () => {
             {/* Botão de microfone (quando não há texto) */}
             {!inputHasContent ? (
               <motion.button 
-                className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+                className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#001340] to-[#0055B8] 
                          flex items-center justify-center shadow-lg text-white"
-                whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+                whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(0, 85, 184, 0.7)" }}
                 whileTap={{ scale: 0.95 }}
                 onClick={startRecording}
               >
@@ -166,12 +166,12 @@ const TurboMessageBox: React.FC = () => {
             ) : (
               /* Botão de enviar - Visível apenas quando há conteúdo no input */
               <motion.button
-                className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+                className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#001340] to-[#0055B8] 
                          flex items-center justify-center shadow-lg text-white"
-                whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+                whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(0, 85, 184, 0.7)" }}
                 whileTap={{ scale: 0.95 }}
                 animate={{ 
-                  boxShadow: ["0 0 0px rgba(13, 35, 160, 0)", "0 0 15px rgba(13, 35, 160, 0.5)", "0 0 0px rgba(13, 35, 160, 0)"],
+                  boxShadow: ["0 0 0px rgba(0, 85, 184, 0)", "0 0 20px rgba(0, 85, 184, 0.7)", "0 0 0px rgba(0, 85, 184, 0)"],
                 }}
                 transition={{ duration: 2, repeat: Infinity }}
                 onClick={handleSendMessage}
@@ -185,7 +185,7 @@ const TurboMessageBox: React.FC = () => {
           <AnimatePresence>
             {isRecording && (
               <motion.div 
-                className="recording-interface mt-2 p-2 bg-[#0c2341]/40 rounded-xl border border-red-500/30 flex items-center justify-between"
+                className="recording-interface mt-2 p-2 bg-[#001340]/40 rounded-xl border border-red-500/30 flex items-center justify-between"
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
@@ -205,8 +205,8 @@ const TurboMessageBox: React.FC = () => {
                     <X size={16} />
                   </motion.button>
                   <motion.button
-                    className="p-1.5 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD]"
-                    whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+                    className="p-1.5 rounded-full bg-gradient-to-br from-[#0037CD] to-[#2A7DE1]"
+                    whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(20, 110, 240, 0.7)" }}
                     whileTap={{ scale: 0.95 }}
                     onClick={stopRecording}
                   >
@@ -241,7 +241,7 @@ const TurboMessageBox: React.FC = () => {
           <AnimatePresence>
             {isExpanded && (
               <motion.div 
-                className="expanded-panel mt-3 p-3 bg-[#0c2341]/40 rounded-xl border border-white/10"
+                className="expanded-panel mt-3 p-3 bg-[#001340]/40 rounded-xl border border-white/10"
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
@@ -250,23 +250,23 @@ const TurboMessageBox: React.FC = () => {
                 <div className="flex flex-wrap gap-2">
                   <div className="text-xs text-white/70 mb-1 w-full">Opções avançadas:</div>
                   <motion.button 
-                    className="px-3 py-1.5 text-sm bg-gradient-to-r from-[#0c2341]/70 to-[#0f3562]/70 
+                    className="px-3 py-1.5 text-sm bg-gradient-to-r from-[#001340]/70 to-[#0055B8]/40 
                                text-white rounded-lg border border-white/10"
-                    whileHover={{ scale: 1.02, boxShadow: "0 0 10px rgba(13, 35, 160, 0.3)" }}
+                    whileHover={{ scale: 1.02, boxShadow: "0 0 10px rgba(0, 85, 184, 0.5)" }}
                   >
                     Escolher competência
                   </motion.button>
                   <motion.button 
-                    className="px-3 py-1.5 text-sm bg-gradient-to-r from-[#0c2341]/70 to-[#0f3562]/70 
+                    className="px-3 py-1.5 text-sm bg-gradient-to-r from-[#001340]/70 to-[#0055B8]/40 
                                text-white rounded-lg border border-white/10"
-                    whileHover={{ scale: 1.02, boxShadow: "0 0 10px rgba(13, 35, 160, 0.3)" }}
+                    whileHover={{ scale: 1.02, boxShadow: "0 0 10px rgba(0, 85, 184, 0.5)" }}
                   >
                     Modo resposta rápida
                   </motion.button>
                   <motion.button 
-                    className="px-3 py-1.5 text-sm bg-gradient-to-r from-[#0c2341]/70 to-[#0f3562]/70 
+                    className="px-3 py-1.5 text-sm bg-gradient-to-r from-[#001340]/70 to-[#0055B8]/40 
                                text-white rounded-lg border border-white/10"
-                    whileHover={{ scale: 1.02, boxShadow: "0 0 10px rgba(13, 35, 160, 0.3)" }}
+                    whileHover={{ scale: 1.02, boxShadow: "0 0 10px rgba(0, 85, 184, 0.5)" }}
                   >
                     Adicionar mídia
                   </motion.button>
