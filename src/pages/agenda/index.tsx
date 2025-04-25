@@ -24,7 +24,6 @@ import AddTaskModal from "@/components/agenda/modals/add-task-modal";
 import EventDetailsModal from "@/components/agenda/modals/event-details-modal";
 import TasksView from "@/components/agenda/tasks/TasksView";
 import ChallengesView from "@/components/agenda/challenges/ChallengesView";
-import RotinaInteligenteModal from "@/components/agenda/rotina/RotinaInteligenteModal";
 
 // Icons
 import {
@@ -1692,7 +1691,12 @@ export default function AgendaPage() {
         </TabsContent>
         {/* Rotina Tab */}
         <TabsContent value="rotina" className="mt-0">
-          <RotinaInteligenteModal open={true} onOpenChange={() => {}} />
+          <div className="flex items-center justify-center h-[500px] bg-white dark:bg-[#1E293B] rounded-xl shadow-lg border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
+            <div className="text-center">
+              <h3 className="text-2xl font-bold text-[#FF6B00] mb-2">Interface em desenvolvimento</h3>
+              <p className="text-gray-500 dark:text-gray-400">Estamos trabalhando em uma nova experiência para a seção de Rotina.</p>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
 

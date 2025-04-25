@@ -11,25 +11,6 @@
 @import "./styles/modern-scanner.css";
 @import "./styles/typewriter-loader.css";
 
-/* Estilos para o chat de considerações na rotina */
-.consideracoes-chat::-webkit-scrollbar {
-  width: 8px;
-}
-
-.consideracoes-chat::-webkit-scrollbar-track {
-  background: rgba(41, 51, 92, 0.2);
-  border-radius: 10px;
-}
-
-.consideracoes-chat::-webkit-scrollbar-thumb {
-  background: rgba(255, 107, 0, 0.4);
-  border-radius: 10px;
-}
-
-.consideracoes-chat::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 107, 0, 0.6);
-}
-
 /* Pulse animation for the scroll to bottom button */
 @keyframes pulse {
   0% {
@@ -61,16 +42,6 @@
 .scrollbar-hide {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
-
-/* Padrão de grade para o card Epictus Turbo */
-.bg-grid-pattern {
-  background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
-  background-size: 20px 20px;
-  background-position: 0 0;
-}
-
 }
 
 /* Padrão de grade para o card Epictus Turbo */
@@ -1257,22 +1228,4 @@ textarea:hover,
 
 .animate-fadeOut {
   animation: fadeOut 0.2s ease-in-out forwards;
-}
-
-/* Estilos para eventos de rotina */
-.rotina-event {
-  transition: all 0.3s ease;
-}
-
-.rotina-event:hover {
-  box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.3);
-}
-
-.rotina-event-delete {
-  transform: translateX(100%);
-  transition: transform 0.3s ease;
-}
-
-.rotina-event:hover .rotina-event-delete {
-  transform: translateX(0);
 }
