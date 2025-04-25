@@ -36,52 +36,32 @@ const ExportShareModal: React.FC<ExportShareModalProps> = ({ open, onClose, mess
   };
 
   const handleExportToPDF = () => {
-    // Obter nome do usuário do sistema ou usar um valor padrão
-    const userName = localStorage.getItem('userName') || 'Usuário';
-    
-    // Formatação da data atual
-    const today = new Date();
-    const formattedDate = today.toLocaleDateString('pt-BR');
-    
     // Criar um elemento temporário para renderizar o conteúdo
     const element = document.createElement("div");
     element.innerHTML = `
-      <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-        <!-- Cabeçalho principal -->
-        <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="margin: 0; font-size: 24px; color: #111; font-weight: bold; text-transform: uppercase;">PONTO.SCHOOL - MATERIAL DE ESTUDO</h1>
+      <div style="font-family: Arial, sans-serif; padding: 20px;">
+        <div style="display: flex; align-items: center; margin-bottom: 20px;">
+          <div style="background: linear-gradient(to right, #0D23A0, #5B21BD); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+            <span style="color: white; font-weight: bold;">E</span>
+          </div>
+          <h2 style="margin: 0; color: #333;">Epictus IA</h2>
         </div>
-        
-        <!-- Informações do aluno e data -->
-        <div style="margin-bottom: 20px; font-size: 14px;">
-          <p style="margin: 5px 0;">Data: ${formattedDate}</p>
-          <p style="margin: 5px 0;">Aluno: ${userName}</p>
+        <div style="border-top: 1px solid #eee; margin-bottom: 20px;"></div>
+        <div style="margin-bottom: 20px;">
+          <div style="color: #888; font-size: 14px;">Mensagem exportada em ${new Date().toLocaleString()}</div>
         </div>
-        
-        <!-- Separador -->
-        <div style="border-top: 1px solid #333; margin: 20px 0;"></div>
-        
-        <!-- Título da seção de conteúdo -->
-        <div style="margin-bottom: 15px;">
-          <h2 style="margin: 0; font-size: 18px; font-weight: bold;">CONTEÚDO:</h2>
+        <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; border-left: 4px solid #0D23A0;">
+          <p style="margin: 0; line-height: 1.6;">${message.content.replace(/\n/g, "<br/>")}</p>
         </div>
-        
-        <!-- Conteúdo da mensagem -->
-        <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid #0D23A0;">
-          <div style="line-height: 1.6; font-size: 14px;">${message.content.replace(/\n/g, "<br/>")}</div>
-        </div>
-        
-        <!-- Rodapé com informações de geração e citação -->
-        <div style="margin-top: 40px; text-align: center;">
-          <p style="font-size: 12px; color: #666; font-style: italic;">Documento gerado automaticamente pela Ponto.School</p>
-          <p style="font-size: 12px; color: #666; font-style: italic; margin-top: 5px;">"Não é sobre conectar você com a tecnologia, é sobre conectar você com o futuro!"</p>
+        <div style="margin-top: 20px; color: #888; font-size: 12px; text-align: center;">
+          Exportado da plataforma Epictus
         </div>
       </div>
     `;
 
     const opt = {
-      margin:       [15, 15, 15, 15],
-      filename:     `ponto-school-material-${new Date().toISOString().slice(0, 10)}.pdf`,
+      margin:       [10, 10, 10, 10],
+      filename:     `epictus-ia-export-${new Date().toISOString().slice(0, 10)}.pdf`,
       image:        { type: 'jpeg', quality: 0.98 },
       html2canvas:  { scale: 2, useCORS: true },
       jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -91,7 +71,7 @@ const ExportShareModal: React.FC<ExportShareModalProps> = ({ open, onClose, mess
     
     toast({
       title: "Exportado com sucesso!",
-      description: "Seu material de estudo foi baixado em PDF.",
+      description: "Seu arquivo PDF foi baixado.",
       duration: 3000,
     });
   };
