@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { 
   Send, 
@@ -50,7 +49,7 @@ const EpictusBetaMode: React.FC = () => {
     } catch (error) {
       console.error("Erro ao carregar histórico do chat:", error);
     }
-    
+
     // Mensagem inicial padrão
     return [{
       id: uuidv4(),
@@ -59,7 +58,7 @@ const EpictusBetaMode: React.FC = () => {
       timestamp: new Date()
     }];
   });
-  
+
   const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -67,7 +66,7 @@ const EpictusBetaMode: React.FC = () => {
   const [charCount, setCharCount] = useState(0);
   const MAX_CHARS = 1000;
   const [sessionId] = useState(() => localStorage.getItem('epictus_beta_session_id') || uuidv4());
-  
+
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -118,13 +117,13 @@ const EpictusBetaMode: React.FC = () => {
       }
     }
   ];
-  
+
   // Configurar efeito de animação ao carregar
   useEffect(() => {
     const timer = setTimeout(() => {
       setAnimationComplete(true);
     }, 1200);
-    
+
     return () => clearTimeout(timer);
   }, []);
 
@@ -167,40 +166,40 @@ const EpictusBetaMode: React.FC = () => {
 
   const handleSendMessage = async () => {
     const trimmedMessage = inputMessage.trim();
-    
+
     if (!trimmedMessage) {
       setError("Por favor, digite uma mensagem.");
       setTimeout(() => setError(null), 3000);
       return;
     }
-    
+
     if (isTyping) return; // Prevenir duplicação
-    
+
     const userMessage: Message = {
       id: uuidv4(),
       sender: "user",
       content: trimmedMessage,
       timestamp: new Date()
     };
-    
+
     setMessages(prev => [...prev, userMessage]);
     setInputMessage("");
     setCharCount(0);
     setIsTyping(true);
-    
+
     try {
       // Simulação de resposta (1-2 segundos)
       setTimeout(async () => {
         try {
           const response = await generateAIResponse(trimmedMessage, sessionId);
-          
+
           const aiMessage: Message = {
             id: uuidv4(),
             sender: "ia",
             content: response,
             timestamp: new Date()
           };
-          
+
           setMessages(prev => [...prev, aiMessage]);
         } catch (err) {
           console.error("Erro ao gerar resposta:", err);
@@ -237,7 +236,7 @@ const EpictusBetaMode: React.FC = () => {
       content: "Olá, João! Eu sou o Epicus IA, seu assistente para aprendizado e programação. Como posso te ajudar hoje?",
       timestamp: new Date()
     };
-    
+
     setMessages([initialMessage]);
     setIsConfirmOpen(false);
   };
@@ -262,14 +261,14 @@ const EpictusBetaMode: React.FC = () => {
     };
 
     const responseMessage = actionMap[action] || "Executando ação...";
-    
+
     const botMessage: Message = {
       id: uuidv4(),
       sender: "ia",
       content: responseMessage,
       timestamp: new Date()
     };
-    
+
     setMessages(prev => [...prev, botMessage]);
   };
 
@@ -277,38 +276,8 @@ const EpictusBetaMode: React.FC = () => {
     <div className="flex flex-col h-full">
       {/* Cabeçalho do Modo Epictus Turbo */}
       <TurboHeader profileOptions={profileOptions} initialProfileIcon={profileIcon} initialProfileName={profileName} />
-      
-      {/* Cabeçalho original mantido */}
-      <div className="border-b bg-[#0A1625] p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-10 w-10 rounded-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C00] flex items-center justify-center">
-              <Bot className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold flex items-center gap-2 text-white">
-                Epictus BETA
-                <Badge className="bg-[#FF6B00] text-white text-xs">#Beta IA</Badge>
-              </h2>
-              <p className="text-sm text-white/60">Versão beta avançada com recursos experimentais</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <select 
-              className="bg-[#1A2634] text-white text-sm rounded-md p-2 border border-gray-700"
-              aria-label="Selecionar personalidade"
-            >
-              <option value="default">Personalidades</option>
-              <option value="teacher">Professor</option>
-              <option value="programmer">Programador</option>
-              <option value="scientist">Cientista</option>
-            </select>
-          </div>
-        </div>
-      </div>
-      
-      {/* Área principal do chat */}
+
+      {/* Interface de Chat */}
       <div className="flex-1 flex flex-col items-center justify-center p-4 overflow-hidden bg-[#0A1625]">
         {/* Área de conversas */}
         <div className="w-[80%] h-[60%] relative mb-4">
@@ -323,7 +292,7 @@ const EpictusBetaMode: React.FC = () => {
               <Trash2 size={24} />
             </Button>
           </div>
-          
+
           <ScrollArea 
             className="w-full h-full bg-[#1A2634] rounded-lg overflow-hidden"
             ref={chatContainerRef}
@@ -339,7 +308,7 @@ const EpictusBetaMode: React.FC = () => {
                       <Bot size={16} className="text-white" />
                     </div>
                   )}
-                  
+
                   <div
                     className={`max-w-[80%] rounded-md p-3 ${
                       message.sender === "user"
@@ -352,7 +321,7 @@ const EpictusBetaMode: React.FC = () => {
                       {formatTimestamp(new Date(message.timestamp))}
                     </p>
                   </div>
-                  
+
                   {message.sender === "user" && (
                     <div className="w-8 h-8 rounded-full bg-[#4A90E2] flex items-center justify-center ml-2">
                       <User size={16} className="text-white" />
@@ -360,7 +329,7 @@ const EpictusBetaMode: React.FC = () => {
                   )}
                 </div>
               ))}
-              
+
               {isTyping && (
                 <div className="flex justify-start">
                   <div className="w-8 h-8 rounded-full bg-[#2F3B4C] flex items-center justify-center mr-2">
@@ -378,7 +347,7 @@ const EpictusBetaMode: React.FC = () => {
             </div>
           </ScrollArea>
         </div>
-        
+
         {/* Barra de ferramentas (botões existentes) */}
         <div className="w-[80%] flex flex-wrap justify-end gap-2 mb-2">
           <Button 
@@ -452,7 +421,7 @@ const EpictusBetaMode: React.FC = () => {
             Espaços de Aprendizagem
           </Button>
         </div>
-        
+
         {/* Caixa de envio de mensagens */}
         <div className="w-[80%] h-[50px] bg-[#2F3B4C] rounded-lg flex items-center p-2 relative">
           {error && (
@@ -460,7 +429,7 @@ const EpictusBetaMode: React.FC = () => {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          
+
           <div className="flex-1 h-full flex items-center relative">
             <Textarea
               ref={textareaRef}
@@ -476,7 +445,7 @@ const EpictusBetaMode: React.FC = () => {
             <div className="absolute right-3 bottom-1 text-xs text-[#A0A0A0]">
               {charCount}/{MAX_CHARS}
             </div>
-            
+
             <Button
               className="absolute right-0 top-0 bottom-0 w-[40px] h-[40px] rounded-full bg-[#4A90E2] hover:bg-[#5AAEFF] text-white mr-1 flex items-center justify-center transition-transform active:scale-90"
               onClick={handleSendMessage}
@@ -490,7 +459,7 @@ const EpictusBetaMode: React.FC = () => {
               )}
             </Button>
           </div>
-          
+
           <Button
             className="ml-2 h-[40px] w-[40px] rounded-full bg-[#1A2634] hover:bg-[#2F3B4C] text-[#A0A0A0] flex items-center justify-center"
             variant="ghost"
@@ -500,7 +469,7 @@ const EpictusBetaMode: React.FC = () => {
           </Button>
         </div>
       </div>
-      
+
       {/* Modal de confirmação */}
       <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
         <DialogContent className="bg-[#1A2634] text-white border-gray-700">
