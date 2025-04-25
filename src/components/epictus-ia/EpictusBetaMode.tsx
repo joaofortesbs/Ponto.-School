@@ -8,8 +8,8 @@ import {
   Search,
   FileText,
   PenLine,
-  Share, // Added import for Share icon
-  Copy // Added import for Copy icon
+  Share, 
+  Copy
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import EpictusMessageBox from "./message-box/EpictusMessageBox";
@@ -33,7 +33,7 @@ interface Message {
   timestamp: Date;
   isEdited?: boolean;
   feedback?: 'positive' | 'negative';
-  needsImprovement?: boolean; // Added for conditional rendering
+  needsImprovement?: boolean; 
 }
 
 const EpictusBetaMode: React.FC = () => {
@@ -80,7 +80,7 @@ const EpictusBetaMode: React.FC = () => {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const MAX_CHARS = 1000;
   const [sessionId] = useState(() => localStorage.getItem('epictus_beta_session_id') || uuidv4());
-  const [isReformulating, setIsReformulating] = useState(false); // Added state for reformulation
+  const [isReformulating, setIsReformulating] = useState(false); 
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -588,13 +588,10 @@ const EpictusBetaMode: React.FC = () => {
   const handleFeedback = (messageId: string, feedbackType: 'positive' | 'negative') => {
     setMessages(prev => prev.map(msg => {
       if (msg.id === messageId) {
-        // Toggle feedback if already set to the same type
         const newFeedback = msg.feedback === feedbackType ? undefined : feedbackType;
 
-        // If we have a valid feedback, log it or send to analytics
         if (newFeedback) {
           console.log(`Feedback ${newFeedback} registrado para mensagem ${messageId}`);
-          // Here you could add analytics or API call to store feedback
           toast({
             title: newFeedback === 'positive' ? "Feedback positivo enviado" : "Feedback negativo enviado",
             description: "Obrigado por nos ajudar a melhorar a Epictus IA!",
@@ -613,8 +610,7 @@ const EpictusBetaMode: React.FC = () => {
     try {
       const messageToReformulate = messages.find(msg => msg.id === messageId);
       if (messageToReformulate) {
-        // Placeholder for Gemini API call - replace with actual API call
-const reformulatedResponse = await generateAIResponse(`Reformule a seguinte resposta de forma mais detalhada: ${messageToReformulate.content}`, sessionId);
+        const reformulatedResponse = await generateAIResponse(`Reformule a seguinte resposta de forma mais detalhada: ${messageToReformulate.content}`, sessionId);
         const updatedMessages = messages.map(msg =>
           msg.id === messageId
             ? { ...msg, content: reformulatedResponse, isEdited: true, needsImprovement: false }
@@ -639,7 +635,6 @@ const reformulatedResponse = await generateAIResponse(`Reformule a seguinte resp
     try {
       const messageToSummarize = messages.find(msg => msg.id === messageId);
       if (messageToSummarize) {
-        // Placeholder for Gemini API call - replace with actual API call
         const summarizedResponse = await generateAIResponse(`Resuma a seguinte resposta de forma mais concisa: ${messageToSummarize.content}`, sessionId);
         const updatedMessages = messages.map(msg =>
           msg.id === messageId
@@ -832,12 +827,11 @@ const reformulatedResponse = await generateAIResponse(`Reformule a seguinte resp
                           </div>
                         )}
                         <p className="text-right text-[11px] text-[#D0D0D0]/70 font-mono">
-                          {formatTimestamp(new Date(message.timestamp))}
+                          {formatTimestamp(message.timestamp)}
                         </p>
                       </div>
                     </div>
 
-                    {/* Opções de feedback para mensagens negativas */}
                     {message.sender === "ia" && message.feedback === 'negative' && (
                       <div className="mt-2 flex flex-col gap-2 w-full animate-fadeIn">
                         <div className="text-xs text-gray-400 mb-1">Como podemos melhorar esta resposta?</div>
