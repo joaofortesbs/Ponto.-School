@@ -20,12 +20,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { v4 as uuidv4 } from 'uuid';
 import { generateAIResponse, addMessageToHistory, createMessage } from "@/services/epictusIAService";
+import { toast } from "@/components/ui/use-toast";
 
 interface Message {
   id: string;
   sender: "user" | "ia";
   content: string;
   timestamp: Date;
+  isEdited?: boolean;
 }
 
 const EpictusBetaMode: React.FC = () => {
@@ -68,6 +70,7 @@ const EpictusBetaMode: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [charCount, setCharCount] = useState(0);
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(false); // Added state
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const MAX_CHARS = 1000;
   const [sessionId] = useState(() => localStorage.getItem('epictus_beta_session_id') || uuidv4());
 
@@ -259,6 +262,45 @@ const EpictusBetaMode: React.FC = () => {
 
   const formatTimestamp = (date: Date) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  // Função para iniciar edição de mensagem
+  const startEditingMessage = (messageId: string) => {
+    const message = messages.find(msg => msg.id === messageId);
+    if (message && message.sender === "ia") {
+      setEditingMessageId(messageId);
+    }
+  };
+
+  // Função para salvar a edição da mensagem
+  const saveEditedMessage = (messageId: string, newContent: string) => {
+    if (!newContent.trim()) {
+      return;
+    }
+    
+    const updatedMessages = messages.map(msg => 
+      msg.id === messageId 
+        ? { ...msg, content: newContent, isEdited: true } 
+        : msg
+    );
+    
+    setMessages(updatedMessages);
+    setEditingMessageId(null);
+    
+    // Salvar no localStorage
+    localStorage.setItem('epictus_beta_chat', JSON.stringify(updatedMessages));
+    
+    // Exibir confirmação
+    toast({
+      title: "Mensagem editada",
+      description: "A mensagem da IA foi atualizada com sucesso.",
+      duration: 3000,
+    });
+  };
+
+  // Função para cancelar edição
+  const cancelEditing = () => {
+    setEditingMessageId(null);
   };
 
   // Simulação de funcionalidades dos botões existentes
@@ -620,13 +662,62 @@ const EpictusBetaMode: React.FC = () => {
                         : "bg-gradient-to-r from-[#1E293B] to-[#2F3B4C] text-white border border-[#3A4B5C]/30"
                     }`}
                   >
-                    <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed font-light">{message.content}</p>
+                    {editingMessageId === message.id ? (
+                      <div className="w-full">
+                        <textarea
+                          className="w-full bg-[#1A2634]/80 text-white p-2 rounded-md border border-blue-500/30 mb-2 resize-none min-h-[100px]"
+                          defaultValue={message.content}
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Escape') {
+                              cancelEditing();
+                            }
+                          }}
+                          id={`edit-textarea-${message.id}`}
+                        />
+                        <div className="flex justify-end space-x-2">
+                          <button 
+                            onClick={() => cancelEditing()}
+                            className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-white rounded"
+                          >
+                            Cancelar
+                          </button>
+                          <button 
+                            onClick={() => {
+                              const textarea = document.getElementById(`edit-textarea-${message.id}`) as HTMLTextAreaElement;
+                              if (textarea) {
+                                saveEditedMessage(message.id, textarea.value);
+                              }
+                            }}
+                            className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-500 text-white rounded"
+                          >
+                            Salvar
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed font-light">{message.content}</p>
+                    )}
                     <div className="flex justify-between items-center mt-2 pt-1 border-t border-white/10">
-                      <div className="flex items-center space-x-1">
+                      <div className="flex items-center space-x-2">
                         {message.sender === "ia" && (
-                          <Badge variant="outline" className="text-[10px] bg-[#2A3645]/50 text-[#A0A0A0] border-[#3A4B5C]/30 px-1.5 py-0">
-                            Epictus IA
-                          </Badge>
+                          <>
+                            <Badge variant="outline" className="text-[10px] bg-[#2A3645]/50 text-[#A0A0A0] border-[#3A4B5C]/30 px-1.5 py-0">
+                              Epictus IA
+                            </Badge>
+                            {!editingMessageId && (
+                              <button 
+                                onClick={() => startEditingMessage(message.id)}
+                                className="text-gray-400 hover:text-blue-400 transition-colors"
+                                title="Editar mensagem"
+                              >
+                                <PenLine size={12} />
+                              </button>
+                            )}
+                            {message.isEdited && (
+                              <span className="text-[9px] text-gray-500 italic">(editado)</span>
+                            )}
+                          </>
                         )}
                       </div>
                       <p className="text-right text-[11px] text-[#D0D0D0]/70 font-mono">
