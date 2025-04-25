@@ -8,8 +8,11 @@ import {
   Search,
   FileText,
   PenLine,
-  Share // Added import for Share icon
+  Share, // Added import for Share icon
+  Download,
+  File
 } from "lucide-react";
+// Note: html2pdf.js and docx are dynamically imported in the export functions
 import { motion, AnimatePresence } from "framer-motion";
 import EpictusMessageBox from "./message-box/EpictusMessageBox";
 import PromptSuggestionsModal from "./message-box/PromptSuggestionsModal";
@@ -574,9 +577,320 @@ const EpictusBetaMode: React.FC = () => {
 
 
   const handleExportMessage = (message: Message) => {
-    // Placeholder for export/share functionality. Replace with actual implementation.
-    console.log("Exporting/Sharing message:", message);
-    toast({ title: "Exportar/Compartilhar", description: "Funcionalidade em desenvolvimento." });
+    const showExportShareModal = (messageContent: string) => {
+      const modalHTML = `
+        <div id="export-share-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+          <div class="bg-[#1a1d2d] text-white rounded-lg w-[200px] max-w-md shadow-xl overflow-hidden border border-gray-700 animate-fadeIn">
+            <div class="flex flex-col">
+              <button id="export-option" class="flex items-center gap-2 p-3 hover:bg-[#252a3d] transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-400">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Exportar
+              </button>
+              <button id="share-option" class="flex items-center gap-2 p-3 hover:bg-[#252a3d] transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-400">
+                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                  <polyline points="16 6 12 2 8 6"></polyline>
+                  <line x1="12" y1="2" x2="12" y2="15"></line>
+                </svg>
+                Compartilhar
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const existingModal = document.getElementById('export-share-modal');
+      if (existingModal) {
+        existingModal.remove();
+      }
+
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+      setTimeout(() => {
+        const modal = document.getElementById('export-share-modal');
+        const exportOption = document.getElementById('export-option');
+        const shareOption = document.getElementById('share-option');
+
+        const closeModal = () => {
+          if (modal) {
+            modal.classList.add('animate-fadeOut');
+            setTimeout(() => modal?.remove(), 200);
+          }
+        };
+
+        if (exportOption) {
+          exportOption.addEventListener('click', () => {
+            closeModal();
+            showExportFormatModal(messageContent);
+          });
+        }
+
+        if (shareOption) {
+          shareOption.addEventListener('click', () => {
+            try {
+              navigator.clipboard.writeText(messageContent);
+              toast({
+                title: "Conteúdo copiado!",
+                description: "O texto foi copiado para a área de transferência.",
+                duration: 3000,
+              });
+            } catch (error) {
+              console.error("Erro ao copiar para a área de transferência:", error);
+              toast({
+                title: "Erro ao copiar",
+                description: "Não foi possível copiar o texto para a área de transferência.",
+                duration: 3000,
+              });
+            }
+            closeModal();
+          });
+        }
+
+        if (modal) {
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              closeModal();
+            }
+          });
+        }
+      }, 50);
+    };
+
+    const showExportFormatModal = (messageContent: string) => {
+      const modalHTML = `
+        <div id="export-format-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+          <div class="bg-[#1a1d2d] text-white rounded-lg w-[200px] max-w-md shadow-xl overflow-hidden border border-gray-700 animate-fadeIn">
+            <div class="flex flex-col">
+              <button id="export-txt" class="flex items-center gap-2 p-3 hover:bg-[#252a3d] transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-400">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <line x1="10" y1="9" x2="8" y2="9"></line>
+                </svg>
+                Texto (.txt)
+              </button>
+              <button id="export-pdf" class="flex items-center gap-2 p-3 hover:bg-[#252a3d] transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-400">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <line x1="10" y1="9" x2="8" y2="9"></line>
+                </svg>
+                PDF (.pdf)
+              </button>
+              <button id="export-docx" class="flex items-center gap-2 p-3 hover:bg-[#252a3d] transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <line x1="10" y1="9" x2="8" y2="9"></line>
+                </svg>
+                Word (.docx)
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const existingModal = document.getElementById('export-format-modal');
+      if (existingModal) {
+        existingModal.remove();
+      }
+
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+      setTimeout(() => {
+        const modal = document.getElementById('export-format-modal');
+        const exportTxt = document.getElementById('export-txt');
+        const exportPdf = document.getElementById('export-pdf');
+        const exportDocx = document.getElementById('export-docx');
+
+        const closeModal = () => {
+          if (modal) {
+            modal.classList.add('animate-fadeOut');
+            setTimeout(() => modal?.remove(), 200);
+          }
+        };
+
+        // Função para gerar e baixar um arquivo
+        const downloadFile = (content: string, filename: string, contentType: string) => {
+          const blob = new Blob([content], { type: contentType });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          a.click();
+          URL.revokeObjectURL(url);
+
+          toast({
+            title: "Arquivo exportado",
+            description: `O arquivo ${filename} foi baixado com sucesso.`,
+            duration: 3000,
+          });
+        };
+
+        if (exportTxt) {
+          exportTxt.addEventListener('click', () => {
+            downloadFile(messageContent, 'epictus_conversa.txt', 'text/plain');
+            closeModal();
+          });
+        }
+
+        if (exportPdf) {
+          exportPdf.addEventListener('click', () => {
+            // Para PDF, vamos usar uma biblioteca simples de HTML para PDF
+            import('html2pdf.js')
+              .then(html2pdfModule => {
+                const html2pdf = html2pdfModule.default;
+                const element = document.createElement('div');
+                element.innerHTML = `
+                  <div style="font-family: Arial, sans-serif; padding: 20px;">
+                    <h1 style="color: #3a7bd5; margin-bottom: 20px;">Conversa Epictus IA</h1>
+                    <div style="white-space: pre-wrap; line-height: 1.5;">
+                      ${messageContent}
+                    </div>
+                    <p style="margin-top: 20px; color: #888; font-size: 12px;">
+                      Exportado via Epictus IA em ${new Date().toLocaleDateString()} às ${new Date().toLocaleTimeString()}
+                    </p>
+                  </div>
+                `;
+                document.body.appendChild(element);
+                
+                const opt = {
+                  margin: 1,
+                  filename: 'epictus_conversa.pdf',
+                  image: { type: 'jpeg', quality: 0.98 },
+                  html2canvas: { scale: 2 },
+                  jsPDF: { unit: 'cm', format: 'a4', orientation: 'portrait' }
+                };
+                
+                html2pdf().set(opt).from(element).save().then(() => {
+                  document.body.removeChild(element);
+                  toast({
+                    title: "PDF gerado",
+                    description: "O arquivo PDF foi baixado com sucesso.",
+                    duration: 3000,
+                  });
+                });
+              })
+              .catch(error => {
+                console.error("Erro ao carregar a biblioteca html2pdf:", error);
+                toast({
+                  title: "Erro na exportação",
+                  description: "Não foi possível gerar o arquivo PDF. Tente novamente.",
+                  duration: 3000,
+                });
+              });
+            closeModal();
+          });
+        }
+
+        if (exportDocx) {
+          exportDocx.addEventListener('click', () => {
+            // Para DOCX, vamos usar docx.js
+            import('docx')
+              .then(docxModule => {
+                const { Document, Paragraph, Packer, TextRun } = docxModule;
+                
+                // Criar um novo documento
+                const doc = new Document({
+                  sections: [{
+                    properties: {},
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: "Conversa Epictus IA",
+                            bold: true,
+                            size: 36,
+                          }),
+                        ],
+                      }),
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: "",
+                          }),
+                        ],
+                      }),
+                      ...messageContent.split('\n').map(line => 
+                        new Paragraph({
+                          children: [
+                            new TextRun({
+                              text: line,
+                              size: 24,
+                            }),
+                          ],
+                        })
+                      ),
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: "",
+                          }),
+                        ],
+                      }),
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: `Exportado via Epictus IA em ${new Date().toLocaleDateString()} às ${new Date().toLocaleTimeString()}`,
+                            size: 20,
+                            color: "808080",
+                          }),
+                        ],
+                      }),
+                    ],
+                  }],
+                });
+
+                // Gerar o arquivo DOCX
+                Packer.toBlob(doc).then(blob => {
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'epictus_conversa.docx';
+                  a.click();
+                  URL.revokeObjectURL(url);
+
+                  toast({
+                    title: "DOCX gerado",
+                    description: "O arquivo Word foi baixado com sucesso.",
+                    duration: 3000,
+                  });
+                });
+              })
+              .catch(error => {
+                console.error("Erro ao carregar a biblioteca docx:", error);
+                toast({
+                  title: "Erro na exportação",
+                  description: "Não foi possível gerar o arquivo Word. Tente novamente.",
+                  duration: 3000,
+                });
+              });
+            closeModal();
+          });
+        }
+
+        if (modal) {
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              closeModal();
+            }
+          });
+        }
+      }, 50);
+    };
+
+    // Iniciar o processo de exportação/compartilhamento
+    showExportShareModal(message.content);
   };
 
   return (
