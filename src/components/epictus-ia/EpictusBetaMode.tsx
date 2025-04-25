@@ -268,6 +268,69 @@ const EpictusBetaMode: React.FC = () => {
       setIsPromptModalOpen(true);
       return;
     }
+    
+    // Verificar se é a ação de prompt aprimorado
+    if (action === 'PromptAprimorado') {
+      if (!inputMessage.trim()) {
+        return;
+      }
+      
+      const originalMessage = inputMessage;
+      
+      // Mostrar mensagem de processamento
+      const messageToast = toast({
+        title: "Aprimorando seu prompt...",
+        description: "Estamos melhorando sua mensagem com IA",
+        duration: 3000,
+      });
+      
+      // Simular processamento de IA para aprimorar o prompt
+      setTimeout(() => {
+        // Exemplos de aprimoramento que poderiam ser feitos pela IA
+        const enhancementMap: Record<string, string> = {
+          "explique": "Explique detalhadamente, com exemplos e analogias simples, ",
+          "como": "Poderia detalhar de forma estruturada e passo a passo ",
+          "resumo": "Elabore um resumo conciso dos principais pontos sobre ",
+          "diferença": "Compare e contraste, destacando as principais diferenças e semelhanças entre ",
+          "exemplo": "Forneça exemplos práticos e aplicáveis de ",
+        };
+        
+        // Lógica simples para aprimorar o prompt
+        let enhancedPrompt = originalMessage;
+        let wasEnhanced = false;
+        
+        // Verificar palavras-chave e aprimorar se encontradas
+        Object.entries(enhancementMap).forEach(([keyword, enhancement]) => {
+          if (originalMessage.toLowerCase().includes(keyword) && !wasEnhanced) {
+            const regex = new RegExp(`\\b${keyword}\\b`, 'i');
+            enhancedPrompt = originalMessage.replace(regex, enhancement);
+            wasEnhanced = true;
+          }
+        });
+        
+        // Se nenhuma palavra-chave foi encontrada, adicione uma introdução geral
+        if (!wasEnhanced) {
+          enhancedPrompt = `Explique detalhadamente, com exemplos claros: ${originalMessage}`;
+        }
+        
+        // Adicionar estrutura ao final do prompt se não tiver
+        if (!enhancedPrompt.includes("estruturado") && !enhancedPrompt.includes("passo a passo")) {
+          enhancedPrompt += ". Por favor, estruture sua resposta em tópicos e forneça exemplos práticos.";
+        }
+        
+        // Atualizar o input com o prompt aprimorado
+        setInputMessage(enhancedPrompt);
+        
+        // Notificar que o prompt foi aprimorado
+        toast({
+          title: "Prompt aprimorado com sucesso!",
+          description: "Sua mensagem foi melhorada para obter respostas mais detalhadas e úteis.",
+          duration: 3000,
+        });
+      }, 1500);
+      
+      return;
+    }
 
     const actionMap: Record<string, string> = {
       "Buscar": "Iniciando busca com base na conversa atual...",

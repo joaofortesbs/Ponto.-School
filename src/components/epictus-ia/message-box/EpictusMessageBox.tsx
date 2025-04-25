@@ -1,8 +1,9 @@
-import React from "react";
-import { Send, Plus, Mic, Loader2, Brain, BookOpen, AlignJustify, RotateCw, Search, Image, Lightbulb } from "lucide-react";
+import React, { useState } from "react";
+import { Send, Plus, Mic, Loader2, Brain, BookOpen, AlignJustify, RotateCw, Search, Image, Lightbulb, PenLine } from "lucide-react";
 import { motion } from "framer-motion";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/use-toast";
 import QuickActionButton from "./QuickActionButton";
 
 
@@ -133,6 +134,23 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
           >
             <Lightbulb size={16} />
           </motion.button>
+          
+          {/* Botão de Prompt Aprimorado - visível apenas quando o usuário começar a digitar */}
+          {inputMessage.trim().length > 0 && (
+            <motion.button
+              className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+                       flex items-center justify-center shadow-lg text-white"
+              whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => handleButtonClick('PromptAprimorado')}
+              title="Prompt Aprimorado com IA"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <PenLine size={16} />
+            </motion.button>
+          )}
           
           {/* Botão de microfone (quando não há texto) */}
           {!inputMessage.trim() ? (
