@@ -6,8 +6,7 @@ import {
   Loader2,
   Star,
   Search,
-  FileText,
-  Sparkles
+  FileText
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import EpictusMessageBox from "./message-box/EpictusMessageBox";
@@ -309,97 +308,56 @@ const EpictusBetaMode: React.FC = () => {
           </div>
 
           <ScrollArea 
-            className="w-full h-full bg-gradient-to-b from-[#111827]/90 to-[#0F172A]/95 rounded-xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3)] backdrop-blur-xl border border-[#1E293B]/40"
+            className="w-full h-full bg-[#1A2634] rounded-lg overflow-hidden"
             ref={chatContainerRef}
           >
-            <div className="relative">
-              {/* Decorative Elements */}
-              <div className="absolute top-0 right-0 w-80 h-80 bg-[#4A90E2]/5 rounded-full blur-3xl pointer-events-none"></div>
-              <div className="absolute bottom-0 left-0 w-60 h-60 bg-[#4338CA]/5 rounded-full blur-3xl pointer-events-none"></div>
-              
-              <div className="p-5 space-y-8 relative z-10">
-                {messages.map((message, index) => (
+            <div className="p-4 space-y-4">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
+                >
+                  {message.sender === "ia" && (
+                    <div className="w-8 h-8 rounded-full bg-[#2F3B4C] flex items-center justify-center mr-2">
+                      <Bot size={16} className="text-white" />
+                    </div>
+                  )}
+
                   <div
-                    key={message.id}
-                    className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"} animate-fadeIn`}
-                    style={{ animationDelay: `${index * 0.1}s` }}
+                    className={`max-w-[80%] rounded-md p-3 ${
+                      message.sender === "user"
+                        ? "bg-[#4A90E2] text-white"
+                        : "bg-[#2F3B4C] text-white"
+                    }`}
                   >
-                    {message.sender === "ia" && (
-                      <div className="avatar-container relative">
-                        <div className="absolute inset-0 bg-gradient-to-br from-[#4A90E2]/20 to-[#7579E7]/20 rounded-full blur-md transform scale-110 animate-pulse-soft"></div>
-                        <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#1A1F35] to-[#2A3349] flex items-center justify-center mr-3 shadow-[0_4px_15px_rgba(0,0,0,0.25)] border border-[#3D4663]/40 relative z-10">
-                          <div className="absolute inset-0.5 rounded-full bg-gradient-to-br from-[#1A1F35] to-[#2A3349] opacity-80"></div>
-                          <Bot size={19} className="text-[#4A90E2] relative z-10 drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]" />
-                        </div>
-                      </div>
-                    )}
-
-                    <div
-                      className={`group max-w-[80%] rounded-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.12)] backdrop-blur-md transition-all duration-300 hover:shadow-[0_10px_40px_rgba(0,0,0,0.2)] ${
-                        message.sender === "user"
-                          ? "bg-gradient-to-br from-[#3662A9]/90 via-[#3A78C9]/90 to-[#4A90E2]/90 text-white border border-[#5AA0F2]/30"
-                          : "bg-gradient-to-br from-[#1A1F35]/90 via-[#232942]/90 to-[#2A3349]/90 text-white border border-[#3D4663]/30"
-                      }`}
-                    >
-                      <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed font-light tracking-wide">{message.content}</p>
-                      <div className="flex justify-between items-center mt-3 pt-2 border-t border-white/10">
-                        <div className="flex items-center space-x-2">
-                          {message.sender === "ia" && (
-                            <Badge variant="outline" className="text-[10px] bg-[#2A3349]/70 text-[#A9B5D9] border-[#3D4663]/40 px-2 py-0.5 rounded-full transition-all group-hover:bg-[#3D4663]/70 group-hover:border-[#4A90E2]/40">
-                              <Sparkles size={9} className="mr-1 text-[#4A90E2]" /> Epictus IA
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-right text-[11px] text-[#D0D0D0]/80 font-mono tracking-tight">
-                          {formatTimestamp(new Date(message.timestamp))}
-                        </p>
-                      </div>
-                      
-                      {/* Interactive elements on hover */}
-                      <div className={`absolute ${message.sender === "user" ? "left-2" : "right-2"} top-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200`}>
-                        {message.sender === "user" ? (
-                          <button className="p-1 rounded-full hover:bg-white/10 text-white/60 hover:text-white/90 transition-all">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg>
-                          </button>
-                        ) : (
-                          <button className="p-1 rounded-full hover:bg-white/10 text-white/60 hover:text-white/90 transition-all">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1Z"></path></svg>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    {message.sender === "user" && (
-                      <div className="avatar-container relative">
-                        <div className="absolute inset-0 bg-gradient-to-br from-[#3662A9]/20 to-[#4A90E2]/20 rounded-full blur-md transform scale-110 animate-pulse-soft"></div>
-                        <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#3662A9] to-[#4A90E2] flex items-center justify-center ml-3 shadow-[0_4px_15px_rgba(0,0,0,0.25)] border border-[#5AA0F2]/30 relative z-10">
-                          <div className="absolute inset-0.5 rounded-full bg-gradient-to-br from-[#3662A9] to-[#4A90E2] opacity-80"></div>
-                          <User size={19} className="text-white relative z-10 drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]" />
-                        </div>
-                      </div>
-                    )}
+                    <p className="whitespace-pre-wrap break-words">{message.content}</p>
+                    <p className="text-right text-[12px] text-[#A0A0A0] mt-1">
+                      {formatTimestamp(new Date(message.timestamp))}
+                    </p>
                   </div>
-                ))}
 
-                {isTyping && (
-                  <div className="flex justify-start animate-fadeIn">
-                    <div className="avatar-container relative">
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#4A90E2]/20 to-[#7579E7]/20 rounded-full blur-md transform scale-110 animate-pulse-soft"></div>
-                      <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#1A1F35] to-[#2A3349] flex items-center justify-center mr-3 shadow-[0_4px_15px_rgba(0,0,0,0.25)] border border-[#3D4663]/40 relative z-10">
-                        <div className="absolute inset-0.5 rounded-full bg-gradient-to-br from-[#1A1F35] to-[#2A3349] opacity-80"></div>
-                        <Bot size={19} className="text-[#4A90E2] relative z-10 drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]" />
-                      </div>
+                  {message.sender === "user" && (
+                    <div className="w-8 h-8 rounded-full bg-[#4A90E2] flex items-center justify-center ml-2">
+                      <User size={16} className="text-white" />
                     </div>
-                    <div className="bg-gradient-to-br from-[#1A1F35]/90 via-[#232942]/90 to-[#2A3349]/90 p-5 rounded-2xl flex items-center shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-[#3D4663]/30">
-                      <div className="typing-indicator flex space-x-2">
-                        <div className="typing-circle w-2.5 h-2.5 rounded-full bg-[#4A90E2] animate-pulse" style={{ animationDelay: "0ms" }}></div>
-                        <div className="typing-circle w-2.5 h-2.5 rounded-full bg-[#4A90E2] animate-pulse" style={{ animationDelay: "300ms" }}></div>
-                        <div className="typing-circle w-2.5 h-2.5 rounded-full bg-[#4A90E2] animate-pulse" style={{ animationDelay: "600ms" }}></div>
-                      </div>
+                  )}
+                </div>
+              ))}
+
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="w-8 h-8 rounded-full bg-[#2F3B4C] flex items-center justify-center mr-2">
+                    <Bot size={16} className="text-white" />
+                  </div>
+                  <div className="bg-[#2F3B4C] p-3 rounded-md flex items-center">
+                    <div className="flex space-x-2">
+                      <div className="w-2 h-2 rounded-full bg-[#4A90E2] animate-pulse" style={{ animationDelay: "0ms" }}></div>
+                      <div className="w-2 h-2 rounded-full bg-[#4A90E2] animate-pulse" style={{ animationDelay: "300ms" }}></div>
+                      <div className="w-2 h-2 rounded-full bg-[#4A90E2] animate-pulse" style={{ animationDelay: "600ms" }}></div>
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </ScrollArea>
         </div>
