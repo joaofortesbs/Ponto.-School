@@ -48,7 +48,7 @@ const TurboHeader: React.FC<TurboHeaderProps> = ({
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className={`w-full hub-connected-width bg-gradient-to-r from-[#050e1d] to-[#0d1a30] backdrop-blur-lg py-4 px-5 flex items-center justify-between rounded-xl relative`}
+        className={`w-full hub-connected-width bg-gradient-to-r from-[#001340] to-[#0055B8] backdrop-blur-lg py-4 px-5 flex items-center justify-between rounded-xl relative`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
