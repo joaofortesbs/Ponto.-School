@@ -36,8 +36,11 @@ const ExportShareModal: React.FC<ExportShareModalProps> = ({ open, onClose, mess
   };
 
   const handleExportToPDF = () => {
-    // Obter o nome do usuário atual (ou usar um valor padrão)
-    const username = localStorage.getItem('epictusNickname') || "Usuário";
+    // Obter o nome completo do usuário
+    const userFullName = localStorage.getItem('epictusFullName') || 
+                         localStorage.getItem('username') || 
+                         sessionStorage.getItem('username') || 
+                         "Nome Completo";
     
     // Formatar a data atual no formato brasileiro
     const currentDate = new Date();
@@ -55,7 +58,7 @@ const ExportShareModal: React.FC<ExportShareModalProps> = ({ open, onClose, mess
         <!-- Informações do documento -->
         <div style="margin-bottom: 20px;">
           <p style="margin: 5px 0; font-size: 14px; color: #000000;"><strong>Data:</strong> ${formattedDate}</p>
-          <p style="margin: 5px 0; font-size: 14px; color: #000000;"><strong>Aluno:</strong> ${username}</p>
+          <p style="margin: 5px 0; font-size: 14px; color: #000000;"><strong>Aluno:</strong> ${userFullName}</p>
         </div>
         
         <!-- Linha separadora -->
@@ -80,7 +83,7 @@ const ExportShareModal: React.FC<ExportShareModalProps> = ({ open, onClose, mess
         
         <!-- Rodapé com informações alinhadas com a imagem de referência -->
         <div style="text-align: center; font-size: 11px; position: fixed; bottom: 20px; left: 0; right: 0;">
-          <p style="margin: 5px 0; color: #000000; font-weight: bold;">Documento gerado automaticamente pela Ponto.School</p>
+          <p style="margin: 5px 0; color: #000000; font-weight: bold;">Documento gerado automaticamente pela Ponto.School.</p>
           <p style="margin: 3px 0; color: #666666;">"Não é sobre conectar você com a tecnologia, é sobre conectar você com o futuro!"</p>
         </div>
       </div>
