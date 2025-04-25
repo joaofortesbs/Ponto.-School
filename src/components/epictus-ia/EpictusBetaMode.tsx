@@ -292,7 +292,7 @@ const EpictusBetaMode: React.FC = () => {
       <TurboHeader profileOptions={profileOptions} initialProfileIcon={profileIcon} initialProfileName={profileName} />
 
       {/* Interface de Chat */}
-      <div className="flex-1 flex flex-col items-center justify-between p-4 overflow-hidden bg-[#0A1625]">
+      <div className="flex-1 flex flex-col items-center justify-between p-4 overflow-hidden bg-[#001427]">
         {/* Área de conversas */}
         <div className="w-[80%] h-[85%] relative mb-4 flex-grow overflow-hidden">
           <div className="absolute top-0 right-0 z-10 p-2">
