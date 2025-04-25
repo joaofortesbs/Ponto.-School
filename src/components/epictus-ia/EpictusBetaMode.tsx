@@ -8,9 +8,7 @@ import {
   Search,
   FileText,
   PenLine,
-  Share,
-  ThumbsUp,
-  ThumbsDown
+  Share // Added import for Share icon
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import EpictusMessageBox from "./message-box/EpictusMessageBox";
@@ -27,17 +25,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { generateAIResponse, addMessageToHistory, createMessage } from "@/services/epictusIAService";
 import { toast } from "@/components/ui/use-toast";
 
-// Define message interface with feedback property
 interface Message {
   id: string;
+  sender: "user" | "ia";
   content: string;
-  role: 'user' | 'assistant';
-  createdAt: Date;
-  feedback?: 'positive' | 'negative';
-  needsImprovement?: boolean;
+  timestamp: Date;
+  isEdited?: boolean;
 }
-
-// Import the necessary components and services
 
 const EpictusBetaMode: React.FC = () => {
   const [isHovered, setIsHovered] = useState(false);
@@ -50,14 +44,27 @@ const EpictusBetaMode: React.FC = () => {
   );
   const [profileName, setProfileName] = useState("Personalidades");
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: uuidv4(),
-      content: "Olá! Sou o Epictus IA Beta. Como posso ajudar você hoje? Estou aqui para responder suas dúvidas, explicar conceitos e auxiliar no seu aprendizado.",
-      role: "assistant",
-      createdAt: new Date()
+  const [messages, setMessages] = useState<Message[]>(() => {
+    try {
+      const savedMessages = localStorage.getItem('epictus_beta_chat');
+      if (savedMessages) {
+        const parsedMessages = JSON.parse(savedMessages) as Message[];
+        return parsedMessages.map(msg => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        }));
+      }
+    } catch (error) {
+      console.error("Erro ao carregar histórico do chat:", error);
     }
-  ]);
+
+    return [{
+      id: uuidv4(),
+      sender: "ia",
+      content: "Olá, João! Eu sou o Epicus IA, seu assistente para aprendizado e programação. Como posso te ajudar hoje?",
+      timestamp: new Date()
+    }];
+  });
 
   const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -163,57 +170,6 @@ const EpictusBetaMode: React.FC = () => {
     }
   };
 
-  // Function to handle message feedback
-  const handleMessageFeedback = (messageId: string, feedback: 'positive' | 'negative') => {
-    setMessages(prevMessages => {
-      return prevMessages.map(msg => {
-        if (msg.id === messageId) {
-          return { ...msg, feedback };
-        }
-        return msg;
-      });
-    });
-
-    // Show improvement options if feedback is negative
-    if (feedback === 'negative') {
-      // Find the message in the array
-      const messageIndex = messages.findIndex(msg => msg.id === messageId);
-      if (messageIndex !== -1) {
-        // Add the message below the one with negative feedback
-        const improvementOptionsMessage: Message = {
-          id: uuidv4(),
-          content: "Como podemos melhorar esta resposta?",
-          role: "assistant",
-          createdAt: new Date(),
-          needsImprovement: true
-        };
-
-        // Create new array with the feedback message inserted
-        const newMessages = [...messages];
-        newMessages.splice(messageIndex + 1, 0, improvementOptionsMessage);
-        setMessages(newMessages);
-
-        // Scroll to end after adding feedback options
-        setTimeout(() => {
-          scrollToBottom();
-        }, 100);
-      }
-    }
-
-    // Log the feedback (in a real app, you might send this to an API)
-    console.log(`Feedback for message ${messageId}: ${feedback}`);
-
-    // Show toast notification
-    toast({
-      title: feedback === 'positive' ? "Feedback positivo recebido" : "Feedback negativo recebido",
-      description: feedback === 'positive' 
-        ? "Obrigado pelo seu feedback positivo!" 
-        : "Obrigado por nos ajudar a melhorar. Como podemos fazer melhor?",
-      duration: 3000,
-    });
-  };
-
-  // Function to handle sending messages
   const handleSendMessage = async () => {
     const trimmedMessage = inputMessage.trim();
 
@@ -227,9 +183,9 @@ const EpictusBetaMode: React.FC = () => {
 
     const userMessage: Message = {
       id: uuidv4(),
+      sender: "user",
       content: trimmedMessage,
-      role: "user",
-      createdAt: new Date()
+      timestamp: new Date()
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -247,22 +203,22 @@ const EpictusBetaMode: React.FC = () => {
         const response = await generateAIResponse(trimmedMessage, sessionId);
         console.log("Resposta recebida de Gemini");
 
-        const aiResponse: Message = {
+        const aiMessage: Message = {
           id: uuidv4(),
-          content: response || "Desculpe, não consegui processar sua solicitação. Por favor, tente novamente.",
-          role: "assistant",
-          createdAt: new Date()
+          sender: "ia",
+          content: response,
+          timestamp: new Date()
         };
 
-        setMessages(prev => [...prev, aiResponse]);
+        setMessages(prev => [...prev, aiMessage]);
       } catch (err) {
         console.error("Erro ao gerar resposta com Gemini:", err);
 
         const errorMessage: Message = {
           id: uuidv4(),
+          sender: "ia",
           content: "Desculpe, encontrei um problema ao processar sua solicitação. Por favor, tente novamente em alguns instantes.",
-          role: "assistant",
-          createdAt: new Date()
+          timestamp: new Date()
         };
 
         setMessages(prev => [...prev, errorMessage]);
@@ -288,9 +244,9 @@ const EpictusBetaMode: React.FC = () => {
   const clearChat = () => {
     const initialMessage: Message = {
       id: uuidv4(),
-      content: "Olá! Sou o Epictus IA Beta. Como posso ajudar você hoje? Estou aqui para responder suas dúvidas, explicar conceitos e auxiliar no seu aprendizado.",
-      role: "assistant",
-      createdAt: new Date()
+      sender: "ia",
+      content: "Olá, João! Eu sou o Epicus IA, seu assistente para aprendizado e programação. Como posso te ajudar hoje?",
+      timestamp: new Date()
     };
 
     setMessages([initialMessage]);
@@ -303,7 +259,7 @@ const EpictusBetaMode: React.FC = () => {
 
   const startEditingMessage = (messageId: string) => {
     const message = messages.find(msg => msg.id === messageId);
-    if (message && message.role === "assistant") {
+    if (message && message.sender === "ia") {
       setEditingMessageId(messageId);
     }
   };
@@ -611,9 +567,9 @@ const EpictusBetaMode: React.FC = () => {
 
   const botMessage: Message = {
     id: uuidv4(),
+    sender: "ia",
     content: responseMessage,
-    role: "assistant",
-    createdAt: new Date()
+    timestamp: new Date()
   };
 
   setMessages(prev => [...prev, botMessage]);
@@ -651,9 +607,9 @@ const EpictusBetaMode: React.FC = () => {
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex ${message.role === "user" ? "justify-end" : "justify-start"} animate-fadeIn`}
+                  className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"} animate-fadeIn`}
                 >
-                  {message.role === "assistant" && (
+                  {message.sender === "ia" && (
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1E293B] to-[#2F3B4C] flex items-center justify-center mr-3 shadow-md border border-[#3A4B5C]/30">
                       <Bot size={18} className="text-[#4A90E2]" />
                     </div>
@@ -661,7 +617,7 @@ const EpictusBetaMode: React.FC = () => {
 
                   <div
                     className={`max-w-[80%] rounded-xl p-4 shadow-md backdrop-blur-sm transition-all duration-300 ${
-                      message.role === "user"
+                      message.sender === "user"
                         ? "bg-gradient-to-r from-[#3A7BD5] to-[#4A90E2] text-white border border-[#5AA0F2]/20"
                         : "bg-gradient-to-r from-[#1E293B] to-[#2F3B4C] text-white border border-[#3A4B5C]/30"
                     }`}
@@ -700,101 +656,46 @@ const EpictusBetaMode: React.FC = () => {
                         </div>
                       </div>
                     ) : (
-                      <div className="whitespace-pre-wrap text-sm">
-                        {message.content}
-                      </div>
+                      <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed font-light">{message.content}</p>
                     )}
-                    {/* Message timestamp and feedback */}
-                    <div className="flex items-center justify-between mt-2">
-                      <div className="text-xs opacity-80 text-blue-300">
-                        {message.createdAt.toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                    <div className="flex justify-between items-center mt-2 pt-1 border-t border-white/10">
+                      <div className="flex items-center space-x-2">
+                        {message.sender === "ia" && (
+                          <>
+                            <Badge variant="outline" className="text-[10px] bg-[#2A3645]/50 text-[#A0A0A0] border-[#3A4B5C]/30 px-1.5 py-0">
+                              Epictus IA
+                            </Badge>
+                            {!editingMessageId && (
+                              <div className="flex items-center space-x-2">
+                                <button 
+                                  onClick={() => startEditingMessage(message.id)}
+                                  className="text-gray-400 hover:text-blue-400 transition-colors"
+                                  title="Editar mensagem"
+                                >
+                                  <PenLine size={12} />
+                                </button>
+                                <button 
+                                  onClick={() => handleExportMessage(message)}
+                                  className="text-gray-400 hover:text-blue-400 transition-colors"
+                                  title="Exportar/Compartilhar mensagem"
+                                >
+                                  <Share size={12} />
+                                </button>
+                              </div>
+                            )}
+                            {message.isEdited && (
+                              <span className="text-[9px] text-gray-500 italic">(editado)</span>
+                            )}
+                          </>
+                        )}
                       </div>
-
-                      {/* Feedback buttons for AI messages */}
-                      {message.role === "assistant" && !message.needsImprovement && (
-                        <div className="flex items-center gap-2 opacity-70 hover:opacity-100 transition-opacity">
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleMessageFeedback(message.id, 'positive');
-                            }}
-                            className={`p-1 rounded-full transition-colors hover:bg-blue-500/20 ${
-                              message.feedback === 'positive' 
-                                ? 'bg-green-500/20 text-green-400' 
-                                : 'text-green-500/80'
-                            }`}
-                            title="Resposta útil"
-                          >
-                            <ThumbsUp className="h-3.5 w-3.5" />
-                          </button>
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleMessageFeedback(message.id, 'negative');
-                            }}
-                            className={`p-1 rounded-full transition-colors hover:bg-blue-500/20 ${
-                              message.feedback === 'negative' 
-                                ? 'bg-red-500/20 text-red-400' 
-                                : 'text-red-500/80'
-                            }`}
-                            title="Resposta que precisa melhorar"
-                          >
-                            <ThumbsDown className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      )}
+                      <p className="text-right text-[11px] text-[#D0D0D0]/70 font-mono">
+                        {formatTimestamp(new Date(message.timestamp))}
+                      </p>
                     </div>
-
-                    {/* Improvement options when needsImprovement is true */}
-                    {message.needsImprovement && (
-                      <div className="mt-3 flex flex-col gap-2 w-full animate-fadeIn">
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-xs py-1 px-2 h-auto border-blue-500/20 hover:bg-blue-500/20 flex items-center gap-1 bg-blue-900/30 text-blue-100"
-                            onClick={() => {
-                              // Replace this with actual reformulation logic
-                              toast({
-                                title: "Reformulando resposta",
-                                description: "Gerando uma resposta mais detalhada...",
-                                duration: 3000,
-                              });
-                            }}
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M20 16.2v4.2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6c0-1.1.9-2 2-2h8.2"/>
-                              <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
-                              <path d="m22 12-4.5 4.5-2-2 4.5-4.5"/>
-                              <path d="m20 14 2-2"/>
-                            </svg>
-                            <span>Reformular (mais detalhado)</span>
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-xs py-1 px-2 h-auto border-blue-500/20 hover:bg-blue-500/20 flex items-center gap-1 bg-blue-900/30 text-blue-100"
-                            onClick={() => {
-                              // Replace this with actual summarization logic
-                              toast({
-                                title: "Resumindo resposta",
-                                description: "Gerando uma resposta mais concisa...",
-                                duration: 3000,
-                              });
-                            }}
-                          >
-                            <FileText className="h-3 w-3" />
-                            <span>Resumir (mais direto)</span>
-                          </Button>
-                        </div>
-                      </div>
-                    )}
                   </div>
 
-                  {message.role === "user" && (
+                  {message.sender === "user" && (
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#3A7BD5] to-[#4A90E2] flex items-center justify-center ml-3 shadow-md border border-[#5AA0F2]/20">
                       <User size={18} className="text-white" />
                     </div>
@@ -881,8 +782,8 @@ const EpictusBetaMode: React.FC = () => {
           onClose={() => setIsExportModalOpen(false)}
           message={{
             content: exportMessageData.content,
-            role: exportMessageData.role,
-            createdAt: exportMessageData.createdAt
+            sender: exportMessageData.sender,
+            timestamp: exportMessageData.timestamp
           }}
         />
       )}
