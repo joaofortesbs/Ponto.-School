@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import EpictusMessageBox from "./message-box/EpictusMessageBox";
+import PromptSuggestionsModal from "./message-box/PromptSuggestionsModal"; // Added import
 import TurboHeader from "./turbo-header/TurboHeader";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -66,6 +67,7 @@ const EpictusBetaMode: React.FC = () => {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [charCount, setCharCount] = useState(0);
+  const [isPromptModalOpen, setIsPromptModalOpen] = useState(false); // Added state
   const MAX_CHARS = 1000;
   const [sessionId] = useState(() => localStorage.getItem('epictus_beta_session_id') || uuidv4());
 
@@ -271,8 +273,14 @@ const EpictusBetaMode: React.FC = () => {
       "reescreverExplicacao": "Reescrevendo a última explicação em formato diferente...",
       "analiseRedacao": "Pronto para analisar sua redação. Por favor, envie o texto...",
       "resumirConteudo": "Resumindo o conteúdo da nossa conversa...",
-      "espacosAprendizagem": "Abrindo espaços de aprendizagem relacionados..."
+      "espacosAprendizagem": "Abrindo espaços de aprendizagem relacionados...",
+      "sugerirPrompt": () => setIsPromptModalOpen(true) // Added prompt suggestion handler
     };
+
+    if (typeof actionMap[action] === 'function') {
+      actionMap[action]();
+      return;
+    }
 
     const responseMessage = actionMap[action] || "Executando ação...";
 
@@ -371,8 +379,6 @@ const EpictusBetaMode: React.FC = () => {
           </ScrollArea>
         </div>
 
-        {/* Área para botões removida */}
-
         {/* Caixa de envio de mensagens com posição fixa */}
         <div className="w-full h-auto mt-2 flex-shrink-0">
           <EpictusMessageBox 
@@ -384,6 +390,23 @@ const EpictusBetaMode: React.FC = () => {
             MAX_CHARS={MAX_CHARS} 
             isTyping={isTyping} 
             handleButtonClick={handleButtonClick}
+          />
+
+          {/* Modal de Sugestão de Prompts */}
+          <PromptSuggestionsModal 
+            isOpen={isPromptModalOpen}
+            onClose={() => setIsPromptModalOpen(false)}
+            onSelectPrompt={(prompt) => {
+              setInputMessage(prompt);
+              // Focar no input após selecionar o prompt
+              setTimeout(() => {
+                const textarea = document.querySelector('textarea');
+                if (textarea) {
+                  textarea.focus();
+                }
+              }, 100);
+            }}
+            currentContext="estudos"
           />
         </div>
       </div>
