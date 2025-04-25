@@ -36,11 +36,8 @@ const ExportShareModal: React.FC<ExportShareModalProps> = ({ open, onClose, mess
   };
 
   const handleExportToPDF = () => {
-    // Obter o nome completo do usuário
-    const userFullName = localStorage.getItem('epictusFullName') || 
-                         localStorage.getItem('username') || 
-                         sessionStorage.getItem('username') || 
-                         "Nome Completo";
+    // Obter o nome do usuário atual (ou usar um valor padrão)
+    const username = localStorage.getItem('epictusNickname') || "Usuário";
     
     // Formatar a data atual no formato brasileiro
     const currentDate = new Date();
@@ -49,7 +46,7 @@ const ExportShareModal: React.FC<ExportShareModalProps> = ({ open, onClose, mess
     // Criar um elemento temporário para renderizar o conteúdo
     const element = document.createElement("div");
     element.innerHTML = `
-      <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; color: #000000; background-color: #FFFFFF;">
+      <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; color: #000000;">
         <!-- Cabeçalho com título principal -->
         <div style="text-align: center; margin-bottom: 30px;">
           <h1 style="font-size: 22px; font-weight: bold; margin: 0; color: #000000; text-transform: uppercase;">PONTO.SCHOOL - MATERIAL DE ESTUDO</h1>
@@ -58,7 +55,7 @@ const ExportShareModal: React.FC<ExportShareModalProps> = ({ open, onClose, mess
         <!-- Informações do documento -->
         <div style="margin-bottom: 20px;">
           <p style="margin: 5px 0; font-size: 14px; color: #000000;"><strong>Data:</strong> ${formattedDate}</p>
-          <p style="margin: 5px 0; font-size: 14px; color: #000000;"><strong>Aluno:</strong> ${userFullName}</p>
+          <p style="margin: 5px 0; font-size: 14px; color: #000000;"><strong>Aluno:</strong> ${username}</p>
         </div>
         
         <!-- Linha separadora -->
@@ -69,31 +66,28 @@ const ExportShareModal: React.FC<ExportShareModalProps> = ({ open, onClose, mess
         
         <!-- Conteúdo principal -->
         <div style="font-size: 14px; line-height: 1.6; margin-bottom: 30px; color: #000000;">
-          ${message.content.replace(/\n/g, "<br/>").replace(/color:\s*white|color:\s*#fff|color:\s*#ffffff/gi, "color: #000000")}
+          ${message.content.replace(/\n/g, "<br/>")}
         </div>
         
         <!-- Linha separadora -->
         <div style="border-top: 1px dashed #cccccc; margin: 30px 0 20px 0;"></div>
         
         <!-- Espaçador para empurrar o rodapé para a base -->
-        <div style="min-height: 100px;"></div>
+        <div style="min-height: 80px;"></div>
         
-        <!-- Espaçador para garantir que o conteúdo não se sobreponha ao rodapé -->
-        <div style="height: 100px;"></div>
-        
-        <!-- Rodapé com informações alinhadas com a imagem de referência -->
-        <div style="text-align: center; font-size: 11px; position: fixed; bottom: 20px; left: 0; right: 0;">
-          <p style="margin: 5px 0; color: #000000; font-weight: bold;">Documento gerado automaticamente pela Ponto.School.</p>
-          <p style="margin: 3px 0; color: #666666;">"Não é sobre conectar você com a tecnologia, é sobre conectar você com o futuro!"</p>
+        <!-- Rodapé com informações -->
+        <div style="text-align: center; font-size: 12px; margin-top: 30px; position: fixed; bottom: 20px; left: 0; right: 0;">
+          <p style="margin: 5px 0; color: #000000; font-weight: bold;">Documento gerado automaticamente pela Ponto.School</p>
+          <p style="margin: 5px 0; font-style: italic; color: #444444;">"Não é sobre conectar você com a tecnologia, é sobre conectar você com o futuro!"</p>
         </div>
       </div>
     `;
 
     const opt = {
-      margin:       [15, 15, 45, 15], // Margem inferior ainda maior para garantir espaço adequado para o rodapé
+      margin:       [15, 15, 25, 15], // Aumentei a margem inferior para acomodar o rodapé
       filename:     `ponto-school-material-${formattedDate.replace(/\//g, '-')}.pdf`,
       image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#FFFFFF' },
+      html2canvas:  { scale: 2, useCORS: true },
       jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
     
