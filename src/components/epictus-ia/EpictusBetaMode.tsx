@@ -1,19 +1,15 @@
 import React, { useState, useRef, useEffect } from "react";
 import { 
-  Send, 
   Bot, 
   User, 
   Trash2, 
   Loader2,
   Star,
-  Plus,
-  Mic,
-  Brain,
-  BookOpen,
-  AlignJustify,
-  RotateCw
+  Search,
+  FileText
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import EpictusMessageBox from "./message-box/EpictusMessageBox";
 import TurboHeader from "./turbo-header/TurboHeader";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -218,7 +214,7 @@ const EpictusBetaMode: React.FC = () => {
         setMessages(prev => [...prev, aiMessage]);
       } catch (err) {
         console.error("Erro ao gerar resposta com Gemini:", err);
-        
+
         // Mensagem de erro para o usuário
         const errorMessage: Message = {
           id: uuidv4(),
@@ -226,7 +222,7 @@ const EpictusBetaMode: React.FC = () => {
           content: "Desculpe, encontrei um problema ao processar sua solicitação. Por favor, tente novamente em alguns instantes.",
           timestamp: new Date()
         };
-        
+
         setMessages(prev => [...prev, errorMessage]);
       } finally {
         clearTimeout(typingTimeout);
@@ -369,146 +365,16 @@ const EpictusBetaMode: React.FC = () => {
         {/* Área para botões removida */}
 
         {/* Caixa de envio de mensagens idêntica ao TurboMessageBox */}
-        <div className="w-[80%] mx-auto mb-2 p-1">
-          {error && (
-            <Alert className="absolute -top-12 left-0 right-0 bg-red-500 text-white border-none">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <motion.div 
-            className="relative bg-gradient-to-r from-[#050e1d]/90 to-[#0d1a30]/90 rounded-2xl shadow-xl 
-                     border border-white/5 backdrop-blur-sm overflow-hidden"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            {/* Partículas de fundo */}
-            <div className="absolute inset-0 opacity-30 pointer-events-none">
-              <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
-            </div>
-
-            {/* Container principal */}
-            <div className="relative z-10 p-4">
-              {/* Área de input */}
-              <div className="flex items-center gap-2">
-                <motion.button
-                  className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
-                           flex items-center justify-center shadow-lg text-white"
-                  whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => {}}
-                >
-                  <Plus size={22} />
-                </motion.button>
-
-                <div className={`relative flex-grow overflow-hidden 
-                                bg-gradient-to-r from-[#0c2341]/30 to-[#0f3562]/30 
-                                rounded-xl border ${isTyping ? 'border-[#1230CC]/70' : 'border-white/10'} 
-                                transition-all duration-300`}>
-                  <input
-                    type="text"
-                    value={inputMessage}
-                    onChange={(e) => {
-                      handleInputChange({
-                        target: { value: e.target.value }
-                      } as React.ChangeEvent<HTMLTextAreaElement>);
-                    }}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Digite um comando ou pergunta para o Epictus Turbo..."
-                    className="w-full bg-transparent text-white py-4 px-4 outline-none placeholder:text-gray-400"
-                    disabled={isTyping}
-                  />
-                  
-                  <div className="absolute right-3 bottom-1.5 text-xs text-gray-400 bg-[#0c2341]/50 px-1.5 py-0.5 rounded-md">
-                    {charCount}/{MAX_CHARS}
-                  </div>
-                </div>
-
-                {/* Botão de microfone (quando não há texto) */}
-                {!inputMessage.trim() ? (
-                  <motion.button 
-                    className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
-                             flex items-center justify-center shadow-lg text-white"
-                    whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Mic size={20} />
-                  </motion.button>
-                ) : (
-                  /* Botão de enviar - Visível apenas quando há conteúdo no input */
-                  <motion.button
-                    className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
-                             flex items-center justify-center shadow-lg text-white"
-                    whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
-                    whileTap={{ scale: 0.95 }}
-                    animate={{ 
-                      boxShadow: ["0 0 0px rgba(13, 35, 160, 0)", "0 0 15px rgba(13, 35, 160, 0.5)", "0 0 0px rgba(13, 35, 160, 0)"],
-                    }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                    onClick={handleSendMessage}
-                    disabled={isTyping}
-                  >
-                    {isTyping ? (
-                      <Loader2 className="h-5 w-5 animate-spin text-white" />
-                    ) : (
-                      <Send size={20} />
-                    )}
-                  </motion.button>
-                )}
-              </div>
-
-              {/* Ações rápidas */}
-              <motion.div 
-                className="quick-actions mt-3 pb-1 flex gap-2 overflow-x-auto scrollbar-hide"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                transition={{ duration: 0.3 }}
-              >
-                <motion.button
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#0c2341]/50 to-[#0f3562]/50 
-                           text-white rounded-full whitespace-nowrap border border-white/10 backdrop-blur-md"
-                  whileHover={{ y: -2, scale: 1.05, boxShadow: "0 10px 25px -5px rgba(13, 35, 160, 0.4)" }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                >
-                  <Brain size={16} className="text-blue-300" />
-                  <span className="text-sm font-medium">Simulador de Provas</span>
-                </motion.button>
-                <motion.button
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#0c2341]/50 to-[#0f3562]/50 
-                           text-white rounded-full whitespace-nowrap border border-white/10 backdrop-blur-md"
-                  whileHover={{ y: -2, scale: 1.05, boxShadow: "0 10px 25px -5px rgba(13, 35, 160, 0.4)" }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                >
-                  <BookOpen size={16} className="text-emerald-300" />
-                  <span className="text-sm font-medium">Gerar Caderno</span>
-                </motion.button>
-                <motion.button
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#0c2341]/50 to-[#0f3562]/50 
-                           text-white rounded-full whitespace-nowrap border border-white/10 backdrop-blur-md"
-                  whileHover={{ y: -2, scale: 1.05, boxShadow: "0 10px 25px -5px rgba(13, 35, 160, 0.4)" }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                >
-                  <AlignJustify size={16} className="text-purple-300" />
-                  <span className="text-sm font-medium">Criar Fluxograma</span>
-                </motion.button>
-                <motion.button
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#0c2341]/50 to-[#0f3562]/50 
-                           text-white rounded-full whitespace-nowrap border border-white/10 backdrop-blur-md"
-                  whileHover={{ y: -2, scale: 1.05, boxShadow: "0 10px 25px -5px rgba(13, 35, 160, 0.4)" }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                >
-                  <RotateCw size={16} className="text-indigo-300" />
-                  <span className="text-sm font-medium">Reescrever Explicação</span>
-                </motion.button>
-              </motion.div>
-            </div>
-          </motion.div>
-        </div>
+        <EpictusMessageBox 
+          inputMessage={inputMessage} 
+          setInputMessage={setInputMessage} 
+          handleSendMessage={handleSendMessage} 
+          handleKeyDown={handleKeyDown} 
+          charCount={charCount} 
+          MAX_CHARS={MAX_CHARS} 
+          isTyping={isTyping} 
+          handleButtonClick={handleButtonClick}
+        />
       </div>
 
       {/* Modal de confirmação */}
