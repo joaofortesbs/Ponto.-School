@@ -1,5 +1,5 @@
 import React from "react";
-import { Send, Plus, Mic, Loader2, Brain, BookOpen, AlignJustify, RotateCw } from "lucide-react";
+import { Send, Plus, Mic, Loader2, Brain, BookOpen, AlignJustify, RotateCw, Search, Image } from "lucide-react";
 import { motion } from "framer-motion";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,22 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
 
       {/* Container principal */}
       <div className="relative z-10 p-4">
+        {/* Opções superiores */}
+        <div className="flex items-center gap-2 mb-3">
+          <button className="flex items-center gap-1.5 bg-[#11213f] rounded-md py-1.5 px-3 text-sm text-white/80 hover:bg-[#192c4e] transition-colors">
+            <Search size={14} className="text-white/70" />
+            <span>Buscar</span>
+          </button>
+          <button className="flex items-center gap-1.5 bg-[#11213f] rounded-md py-1.5 px-3 text-sm text-white/80 hover:bg-[#192c4e] transition-colors">
+            <Brain size={14} className="text-white/70" />
+            <span>Pensar</span>
+          </button>
+          <button className="flex items-center gap-1.5 bg-[#11213f] rounded-md py-1.5 px-3 text-sm text-white/80 hover:bg-[#192c4e] transition-colors">
+            <Image size={14} className="text-white/70" />
+            <span>Gerar Imagem</span>
+          </button>
+        </div>
+        
         {/* Área de input */}
         <div className="flex items-center gap-2">
           <motion.button
