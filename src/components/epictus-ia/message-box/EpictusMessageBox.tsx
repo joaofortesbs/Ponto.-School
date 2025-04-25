@@ -44,17 +44,35 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
       {/* Container principal */}
       <div className="relative z-10 p-4">
         {/* Opções superiores */}
-        <div className="flex items-center gap-2 mb-3">
-          <button className="flex items-center gap-1.5 bg-[#11213f] rounded-md py-1.5 px-3 text-sm text-white/80 hover:bg-[#192c4e] transition-colors">
-            <Search size={14} className="text-white/70" />
+        <div className="flex items-center gap-1.5 mb-3 overflow-x-auto scrollbar-hide">
+          <button 
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gradient-to-r from-[#0a1625]/70 to-[#182c4d]/70 text-gray-200 
+                     rounded-lg border border-white/10 backdrop-blur-sm hover:bg-gradient-to-r 
+                     hover:from-[#0D23A0]/40 hover:to-[#5B21BD]/40 hover:border-blue-500/30
+                     hover:text-white transition-all duration-300 flex-shrink-0 shadow-sm"
+            onClick={() => handleButtonClick('Buscar')}
+          >
+            <Search size={14} className="text-blue-300" />
             <span>Buscar</span>
           </button>
-          <button className="flex items-center gap-1.5 bg-[#11213f] rounded-md py-1.5 px-3 text-sm text-white/80 hover:bg-[#192c4e] transition-colors">
-            <Brain size={14} className="text-white/70" />
+          <button 
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gradient-to-r from-[#0a1625]/70 to-[#182c4d]/70 text-gray-200 
+                     rounded-lg border border-white/10 backdrop-blur-sm hover:bg-gradient-to-r 
+                     hover:from-[#0D23A0]/40 hover:to-[#5B21BD]/40 hover:border-purple-500/30
+                     hover:text-white transition-all duration-300 flex-shrink-0 shadow-sm"
+            onClick={() => handleButtonClick('Pensar')}
+          >
+            <Brain size={14} className="text-purple-300" />
             <span>Pensar</span>
           </button>
-          <button className="flex items-center gap-1.5 bg-[#11213f] rounded-md py-1.5 px-3 text-sm text-white/80 hover:bg-[#192c4e] transition-colors">
-            <Image size={14} className="text-white/70" />
+          <button 
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gradient-to-r from-[#0a1625]/70 to-[#182c4d]/70 text-gray-200 
+                     rounded-lg border border-white/10 backdrop-blur-sm hover:bg-gradient-to-r 
+                     hover:from-[#0D23A0]/40 hover:to-[#5B21BD]/40 hover:border-emerald-500/30
+                     hover:text-white transition-all duration-300 flex-shrink-0 shadow-sm"
+            onClick={() => handleButtonClick('Gerar Imagem')}
+          >
+            <Image size={14} className="text-emerald-300" />
             <span>Gerar Imagem</span>
           </button>
         </div>
