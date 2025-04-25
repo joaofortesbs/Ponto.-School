@@ -11,9 +11,7 @@ import {
   Brain,
   BookOpen,
   AlignJustify,
-  RotateCw,
-  Search,
-  FileText
+  RotateCw
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import TurboHeader from "./turbo-header/TurboHeader";
@@ -370,202 +368,146 @@ const EpictusBetaMode: React.FC = () => {
 
         {/* Área para botões removida */}
 
-        {/* Caixa de envio de mensagens conforme design de referência */}
-        <div className="w-full mx-auto bg-[#050e1d] py-3 px-4 border-t border-[#0d1a30]">
+        {/* Caixa de envio de mensagens idêntica ao TurboMessageBox */}
+        <div className="w-[80%] mx-auto mb-2 p-1">
           {error && (
             <Alert className="absolute -top-12 left-0 right-0 bg-red-500 text-white border-none">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
 
-          {/* Barra de ferramentas superior */}
-          <div className="flex items-center justify-between mb-3 px-1">
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-8 w-8 rounded-full bg-[#111c2e] text-white hover:bg-[#1a2942]"
-                onClick={() => {}}
-              >
-                <Search size={16} />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-8 w-8 rounded-full bg-[#111c2e] text-white hover:bg-[#1a2942]"
-                onClick={() => {}}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="12" y1="8" x2="12" y2="16"></line>
-                  <line x1="8" y1="12" x2="16" y2="12"></line>
-                </svg>
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="flex items-center gap-1 px-2 h-8 rounded-full bg-[#111c2e] text-white hover:bg-[#1a2942]"
-                onClick={() => {}}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="9" y1="3" x2="9" y2="21"></line>
-                </svg>
-                <span className="text-xs">Gerar Imagem</span>
-              </Button>
-            </div>
-            <div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-8 rounded-full bg-[#111c2e] text-white hover:bg-[#1a2942]"
-                onClick={() => {}}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 5H21"></path>
-                  <path d="M3 12H21"></path>
-                  <path d="M3 19H21"></path>
-                </svg>
-                <span className="text-xs ml-1">Espaços de Aprendizagem</span>
-              </Button>
-            </div>
-          </div>
-
-          {/* Barra de input principal */}
-          <div className="flex items-center gap-2 mb-3">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-11 w-11 rounded-full bg-[#0D23A0] text-white hover:bg-[#1a30b0]"
-              onClick={() => {}}
-            >
-              <Plus size={20} />
-            </Button>
-
-            <div className={`relative flex-grow overflow-hidden 
-                            bg-[#111c2e] rounded-full border ${isTyping ? 'border-[#1230CC]/70' : 'border-[#1a2942]/50'} 
-                            transition-all duration-300`}>
-              <input
-                type="text"
-                value={inputMessage}
-                onChange={(e) => {
-                  handleInputChange({
-                    target: { value: e.target.value }
-                  } as React.ChangeEvent<HTMLTextAreaElement>);
-                }}
-                onKeyDown={handleKeyDown}
-                placeholder="Digite um comando ou pergunta para o Epictus Turbo..."
-                className="w-full bg-transparent text-white py-2.5 px-4 outline-none placeholder:text-gray-400 text-sm"
-                disabled={isTyping}
-              />
-              
-              <div className="absolute right-3 bottom-1 text-xs text-gray-400 px-1.5 py-0.5 rounded-md">
-                {charCount}/{MAX_CHARS}
-              </div>
+          <motion.div 
+            className="relative bg-gradient-to-r from-[#050e1d]/90 to-[#0d1a30]/90 rounded-2xl shadow-xl 
+                     border border-white/5 backdrop-blur-sm overflow-hidden"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            {/* Partículas de fundo */}
+            <div className="absolute inset-0 opacity-30 pointer-events-none">
+              <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
             </div>
 
-            {/* Botão de microfone (quando não há texto) ou enviar (quando há texto) */}
-            {!inputMessage.trim() ? (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-11 w-11 rounded-full bg-indigo-700 text-white hover:bg-indigo-600"
-              >
-                <Mic size={20} />
-              </Button>
-            ) : (
-              <Button
-                variant="ghost" 
-                size="icon"
-                className="h-11 w-11 rounded-full bg-indigo-700 text-white hover:bg-indigo-600"
-                onClick={handleSendMessage}
-                disabled={isTyping}
-              >
-                {isTyping ? (
-                  <Loader2 className="h-5 w-5 animate-spin text-white" />
+            {/* Container principal */}
+            <div className="relative z-10 p-4">
+              {/* Área de input */}
+              <div className="flex items-center gap-2">
+                <motion.button
+                  className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+                           flex items-center justify-center shadow-lg text-white"
+                  whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {}}
+                >
+                  <Plus size={22} />
+                </motion.button>
+
+                <div className={`relative flex-grow overflow-hidden 
+                                bg-gradient-to-r from-[#0c2341]/30 to-[#0f3562]/30 
+                                rounded-xl border ${isTyping ? 'border-[#1230CC]/70' : 'border-white/10'} 
+                                transition-all duration-300`}>
+                  <input
+                    type="text"
+                    value={inputMessage}
+                    onChange={(e) => {
+                      handleInputChange({
+                        target: { value: e.target.value }
+                      } as React.ChangeEvent<HTMLTextAreaElement>);
+                    }}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Digite um comando ou pergunta para o Epictus Turbo..."
+                    className="w-full bg-transparent text-white py-4 px-4 outline-none placeholder:text-gray-400"
+                    disabled={isTyping}
+                  />
+                  
+                  <div className="absolute right-3 bottom-1.5 text-xs text-gray-400 bg-[#0c2341]/50 px-1.5 py-0.5 rounded-md">
+                    {charCount}/{MAX_CHARS}
+                  </div>
+                </div>
+
+                {/* Botão de microfone (quando não há texto) */}
+                {!inputMessage.trim() ? (
+                  <motion.button 
+                    className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+                             flex items-center justify-center shadow-lg text-white"
+                    whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Mic size={20} />
+                  </motion.button>
                 ) : (
-                  <Send size={20} />
+                  /* Botão de enviar - Visível apenas quando há conteúdo no input */
+                  <motion.button
+                    className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+                             flex items-center justify-center shadow-lg text-white"
+                    whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+                    whileTap={{ scale: 0.95 }}
+                    animate={{ 
+                      boxShadow: ["0 0 0px rgba(13, 35, 160, 0)", "0 0 15px rgba(13, 35, 160, 0.5)", "0 0 0px rgba(13, 35, 160, 0)"],
+                    }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    onClick={handleSendMessage}
+                    disabled={isTyping}
+                  >
+                    {isTyping ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-white" />
+                    ) : (
+                      <Send size={20} />
+                    )}
+                  </motion.button>
                 )}
-              </Button>
-            )}
-          </div>
+              </div>
 
-          {/* Botões de ação rápida */}
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1 px-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-1.5 px-3 py-1.5 h-8 bg-[#111c2e] hover:bg-[#1a2942] 
-                       text-white rounded-full whitespace-nowrap border border-[#1a2942]/40"
-              onClick={() => handleButtonClick("simuladorProvas")}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-300">
-                <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"></path>
-                <path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"></path>
-                <circle cx="12" cy="12" r="2"></circle>
-                <path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"></path>
-                <path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"></path>
-              </svg>
-              <span className="text-xs">Simulador de Provas</span>
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-1.5 px-3 py-1.5 h-8 bg-[#111c2e] hover:bg-[#1a2942] 
-                       text-white rounded-full whitespace-nowrap border border-[#1a2942]/40"
-              onClick={() => handleButtonClick("gerarCaderno")}
-            >
-              <BookOpen size={16} className="text-emerald-300" />
-              <span className="text-xs">Gerar Caderno</span>
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-1.5 px-3 py-1.5 h-8 bg-[#111c2e] hover:bg-[#1a2942] 
-                       text-white rounded-full whitespace-nowrap border border-[#1a2942]/40"
-              onClick={() => handleButtonClick("criarFluxograma")}
-            >
-              <AlignJustify size={16} className="text-purple-300" />
-              <span className="text-xs">Criar Fluxograma</span>
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-1.5 px-3 py-1.5 h-8 bg-[#111c2e] hover:bg-[#1a2942] 
-                       text-white rounded-full whitespace-nowrap border border-[#1a2942]/40"
-              onClick={() => handleButtonClick("reescreverExplicacao")}
-            >
-              <RotateCw size={16} className="text-indigo-300" />
-              <span className="text-xs">Reescrever Explicação</span>
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-1.5 px-3 py-1.5 h-8 bg-[#111c2e] hover:bg-[#1a2942] 
-                       text-white rounded-full whitespace-nowrap border border-[#1a2942]/40"
-              onClick={() => handleButtonClick("analiseRedacao")}
-            >
-              <FileText size={16} className="text-amber-300" />
-              <span className="text-xs">Análise de Redação</span>
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-1.5 px-3 py-1.5 h-8 bg-[#111c2e] hover:bg-[#1a2942] 
-                       text-white rounded-full whitespace-nowrap border border-[#1a2942]/40"
-              onClick={() => handleButtonClick("resumirConteudo")}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-rose-300">
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
-              </svg>
-              <span className="text-xs">Resumir Conteúdo</span>
-            </Button>
-          </div>
+              {/* Ações rápidas */}
+              <motion.div 
+                className="quick-actions mt-3 pb-1 flex gap-2 overflow-x-auto scrollbar-hide"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                transition={{ duration: 0.3 }}
+              >
+                <motion.button
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#0c2341]/50 to-[#0f3562]/50 
+                           text-white rounded-full whitespace-nowrap border border-white/10 backdrop-blur-md"
+                  whileHover={{ y: -2, scale: 1.05, boxShadow: "0 10px 25px -5px rgba(13, 35, 160, 0.4)" }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                >
+                  <Brain size={16} className="text-blue-300" />
+                  <span className="text-sm font-medium">Simulador de Provas</span>
+                </motion.button>
+                <motion.button
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#0c2341]/50 to-[#0f3562]/50 
+                           text-white rounded-full whitespace-nowrap border border-white/10 backdrop-blur-md"
+                  whileHover={{ y: -2, scale: 1.05, boxShadow: "0 10px 25px -5px rgba(13, 35, 160, 0.4)" }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                >
+                  <BookOpen size={16} className="text-emerald-300" />
+                  <span className="text-sm font-medium">Gerar Caderno</span>
+                </motion.button>
+                <motion.button
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#0c2341]/50 to-[#0f3562]/50 
+                           text-white rounded-full whitespace-nowrap border border-white/10 backdrop-blur-md"
+                  whileHover={{ y: -2, scale: 1.05, boxShadow: "0 10px 25px -5px rgba(13, 35, 160, 0.4)" }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                >
+                  <AlignJustify size={16} className="text-purple-300" />
+                  <span className="text-sm font-medium">Criar Fluxograma</span>
+                </motion.button>
+                <motion.button
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#0c2341]/50 to-[#0f3562]/50 
+                           text-white rounded-full whitespace-nowrap border border-white/10 backdrop-blur-md"
+                  whileHover={{ y: -2, scale: 1.05, boxShadow: "0 10px 25px -5px rgba(13, 35, 160, 0.4)" }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                >
+                  <RotateCw size={16} className="text-indigo-300" />
+                  <span className="text-sm font-medium">Reescrever Explicação</span>
+                </motion.button>
+              </motion.div>
+            </div>
+          </motion.div>
         </div>
       </div>
 
