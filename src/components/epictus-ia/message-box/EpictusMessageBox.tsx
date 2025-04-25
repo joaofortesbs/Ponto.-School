@@ -117,8 +117,9 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Digite um comando ou pergunta para o Epictus Turbo…"
-              className="w-full bg-transparent text-white py-1 px-3 text-sm outline-none placeholder:text-gray-400 h-7 resize-none"
+              className="w-full bg-transparent text-white px-3 text-sm outline-none placeholder:text-gray-400 resize-none flex items-center h-full pt-[9px]"
               disabled={isTyping}
+              style={{ lineHeight: '9px' }}
             />
           </div>
 
