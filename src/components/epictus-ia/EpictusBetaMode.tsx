@@ -16,7 +16,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { v4 as uuidv4 } from 'uuid';
-import { generateAIResponse } from "@/services/epictusIAService";
+import { generateAIResponse, addMessageToHistory, createMessage } from "@/services/epictusIAService";
 
 interface Message {
   id: string;
@@ -188,34 +188,46 @@ const EpictusBetaMode: React.FC = () => {
     setIsTyping(true);
 
     try {
-      // Simulação de resposta (1-2 segundos)
-      setTimeout(async () => {
-        try {
-          const response = await generateAIResponse(trimmedMessage, sessionId);
+      // Indicador de digitação antes de receber a resposta da API
+      const typingTimeout = setTimeout(() => {
+        // Se a API demorar muito, mostrar indicador de digitação
+        setIsTyping(true);
+      }, 300);
 
-          const aiMessage: Message = {
-            id: uuidv4(),
-            sender: "ia",
-            content: response,
-            timestamp: new Date()
-          };
+      try {
+        // Chamada para a API Gemini através do nosso serviço
+        console.log("Enviando mensagem para Gemini:", trimmedMessage);
+        const response = await generateAIResponse(trimmedMessage, sessionId);
+        console.log("Resposta recebida de Gemini");
 
-          setMessages(prev => [...prev, aiMessage]);
-        } catch (err) {
-          console.error("Erro ao gerar resposta:", err);
-          const errorMessage: Message = {
-            id: uuidv4(),
-            sender: "ia",
-            content: "Desculpe, algo deu errado. Tente novamente!",
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, errorMessage]);
-        } finally {
-          setIsTyping(false);
-        }
-      }, Math.random() * 1000 + 1000); // 1-2 segundos
+        // Criar mensagem com a resposta da IA
+        const aiMessage: Message = {
+          id: uuidv4(),
+          sender: "ia",
+          content: response,
+          timestamp: new Date()
+        };
+
+        // Adicionar a resposta ao estado
+        setMessages(prev => [...prev, aiMessage]);
+      } catch (err) {
+        console.error("Erro ao gerar resposta com Gemini:", err);
+        
+        // Mensagem de erro para o usuário
+        const errorMessage: Message = {
+          id: uuidv4(),
+          sender: "ia",
+          content: "Desculpe, encontrei um problema ao processar sua solicitação. Por favor, tente novamente em alguns instantes.",
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, errorMessage]);
+      } finally {
+        clearTimeout(typingTimeout);
+        setIsTyping(false);
+      }
     } catch (err) {
-      console.error("Erro ao enviar mensagem:", err);
+      console.error("Erro no processo de envio de mensagem:", err);
       setIsTyping(false);
       setError("Houve um erro ao processar sua mensagem. Tente novamente.");
       setTimeout(() => setError(null), 3000);

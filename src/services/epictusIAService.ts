@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 
 // Interface de mensagem para o chat
@@ -68,48 +69,108 @@ export const clearChatHistory = (sessionId: string): void => {
   }
 };
 
-// Função para gerar resposta da IA
+// Chave da API Gemini
+const GEMINI_API_KEY = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
+const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+
+// Função para gerar resposta da IA usando a API Gemini
 export const generateAIResponse = async (message: string, sessionId?: string): Promise<string> => {
   try {
-    // Aqui poderia ser integrada a chamada para uma API externa de IA
-    // Por enquanto vamos usar uma lista de respostas pré-definidas
+    console.log("Gerando resposta com Gemini para:", message);
 
-    const responses = [
-      "Entendi! Como posso te ajudar mais com isso?",
-      "Interessante perspectiva. Vamos explorar mais esse conceito?",
-      "Ótima pergunta! Vou explicar de forma detalhada.",
-      "Isso é um excelente ponto. Deixe-me expandir um pouco mais...",
-      "Baseado no que você disse, acho que podemos abordar isso de várias maneiras.",
-      "Compreendo sua dúvida. Vamos dividir esse problema em partes menores.",
-      "Vamos analisar isso passo a passo para garantir uma compreensão completa.",
-      "Essa é uma questão complexa. Vou fornecer uma explicação abrangente.",
-      "Obrigado por compartilhar isso. Aqui está o que penso sobre o assunto...",
-      "Sua abordagem é interessante! Posso sugerir algumas alternativas também?"
-    ];
-
-    // Adicionar contexto específico baseado em palavras-chave
-    if (message.toLowerCase().includes("vibe code")) {
-      return "Vibe Code é uma poderosa linguagem de programação orientada a objetos que combina a sintaxe intuitiva do Python com a tipagem forte do TypeScript. Ela é especialmente projetada para aplicações de IA e desenvolvimento web moderno. Quer aprender os conceitos básicos ou tem alguma dúvida específica sobre como implementar algo em Vibe Code?";
+    // Inicializar histórico se não existir
+    if (sessionId && !conversationHistory[sessionId]) {
+      initializeConversationHistory(sessionId);
     }
 
-    if (message.toLowerCase().includes("programar") || message.toLowerCase().includes("programação")) {
-      return "A programação é uma habilidade essencial no mundo digital de hoje! Para começar, recomendo entender os conceitos fundamentais como variáveis, loops, condicionais e funções. Que linguagem de programação você está interessado em aprender? Posso te dar uma introdução personalizada.";
+    // Adicionar mensagem ao histórico se tiver sessionId
+    if (sessionId) {
+      const userMessage = createMessage(message, 'user');
+      addMessageToHistory(sessionId, userMessage);
     }
 
-    if (message.toLowerCase().includes("matemática") || message.toLowerCase().includes("cálculo")) {
-      return "A matemática é fascinante! Desde conceitos básicos até tópicos avançados como cálculo, álgebra linear ou estatística, há muito a explorar. Em que área específica você gostaria de focar? Posso ajudar com explicações, exemplos ou exercícios práticos.";
+    // Obter o histórico para contexto
+    const history = sessionId ? getChatHistory(sessionId) : [];
+    const historyContext = history.map(m => `${m.sender === 'user' ? 'Usuário' : 'Assistente'}: ${m.content}`).join('\n\n');
+
+    // Preparar o prompt para a API Gemini
+    const prompt = `Você é o Epictus IA, um assistente educacional avançado da plataforma Ponto.School. 
+Seu objetivo é ajudar os estudantes com dúvidas sobre matérias escolares, organização de estudos, 
+preparação para provas e qualquer tema relacionado à educação.
+
+Seja amigável, didático e detalhado em suas respostas. Use uma linguagem apropriada para o contexto 
+educacional, incluindo formatação rica com markdown quando necessário para melhorar a compreensão.
+
+HISTÓRICO DA CONVERSA PARA CONTEXTO:
+${historyContext}
+
+Responda à seguinte pergunta de forma educativa, detalhada e amigável: ${message}`;
+
+    // Fazer a requisição para a API Gemini
+    const response = await fetch(`${GEMINI_BASE_URL}?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: prompt }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          topP: 0.95,
+          topK: 40,
+          maxOutputTokens: 2048
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Erro na resposta da API: ${response.status} ${response.statusText}`);
     }
 
-    if (message.toLowerCase().includes("fluxograma")) {
-      return "Fluxogramas são representações visuais poderosas de processos ou algoritmos. Eles usam símbolos como retângulos (processos), losangos (decisões) e setas (fluxo) para ilustrar sequências lógicas. Você gostaria de aprender como criar um fluxograma eficaz ou precisa de ajuda com um fluxograma específico?";
+    const data = await response.json();
+    
+    // Extrair a resposta da IA
+    const aiResponse = data.candidates[0].content.parts[0].text;
+
+    // Adicionar resposta ao histórico se tiver sessionId
+    if (sessionId) {
+      const aiMessage = createMessage(aiResponse, 'ai');
+      addMessageToHistory(sessionId, aiMessage);
     }
 
-    // Resposta aleatória se não houver contexto específico
-    const randomIndex = Math.floor(Math.random() * responses.length);
-    return responses[randomIndex];
-
+    return aiResponse;
   } catch (error) {
-    console.error("Erro ao gerar resposta da IA:", error);
-    return "Desculpe, ocorreu um erro ao processar sua solicitação. Por favor, tente novamente mais tarde.";
+    console.error("Erro ao gerar resposta da IA com Gemini:", error);
+    
+    // Usar respostas de fallback em caso de erro
+    return useFallbackResponse(message);
   }
 };
+
+// Função auxiliar para inicializar conversa
+function initializeConversationHistory(sessionId: string): void {
+  const initialSystemMessage: ChatMessage = {
+    sender: 'system',
+    content: 'Bem-vindo ao Epictus IA! Como posso ajudar com seus estudos hoje?',
+    timestamp: new Date()
+  };
+
+  conversationHistory[sessionId] = [initialSystemMessage];
+}
+
+// Respostas de fallback para quando a API falhar
+function useFallbackResponse(message: string): string {
+  const fallbackResponses = [
+    "Desculpe, estou enfrentando dificuldades técnicas no momento. Por favor, tente novamente em alguns instantes.",
+    "Parece que estou com problemas para processar sua solicitação. Poderia reformular sua pergunta?",
+    "Estou tendo problemas para me conectar aos meus serviços de conhecimento. Tente novamente mais tarde, por favor.",
+    "Ops! Encontrei um problema ao gerar sua resposta. Vamos tentar novamente?",
+    "Desculpe pela inconveniência. Estou enfrentando um problema técnico temporário. Por favor, tente novamente em breve."
+  ];
+
+  // Selecionar uma resposta aleatória do fallback
+  const randomIndex = Math.floor(Math.random() * fallbackResponses.length);
+  return fallbackResponses[randomIndex];
+}
