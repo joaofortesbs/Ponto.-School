@@ -78,7 +78,7 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
               <span>Gerar Imagem</span>
             </button>
           </div>
-          
+
           {/* Espaços de Aprendizagem no canto direito */}
           <button 
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gradient-to-r from-[#001427] to-[#002447] text-gray-200 
@@ -96,7 +96,7 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
             <span>Espaços de Aprendizagem</span>
           </button>
         </div>
-        
+
         {/* Área de input */}
         <div className="flex items-center gap-2">
           <motion.button
@@ -132,14 +132,11 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
               whileTap={{ scale: 0.95 }}
               onClick={() => handleButtonClick('PromptAprimorado')}
               title="Prompt Aprimorado com IA"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
             >
               <PenLine size={16} />
             </motion.button>
           )}
-          
+
           {/* Botão de sugestão de prompts inteligentes - sempre visível */}
           <motion.button
             className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
@@ -151,7 +148,7 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
           >
             <Lightbulb size={16} />
           </motion.button>
-          
+
           {/* Botão de microfone (quando não há texto) */}
           {!inputMessage.trim() ? (
             <motion.button 

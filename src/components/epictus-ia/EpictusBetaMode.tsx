@@ -406,6 +406,38 @@ const EpictusBetaMode: React.FC = () => {
         // Gerar um ID de sessão único para esta interação
         const promptSessionId = `prompt-improvement-${Date.now()}`;
 
+        // Mostrar o modal de carregamento
+        const loadingModalHTML = `
+          <div id="loading-prompt-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+            <div class="bg-[#1a1d2d] text-white rounded-lg w-[90%] max-w-md shadow-xl overflow-hidden border border-gray-700 animate-fadeIn">
+              <div class="bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] p-4 flex justify-between items-center">
+                <h3 class="text-lg font-semibold flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 20h9"></path>
+                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                  </svg>
+                  Prompt Aprimorado com IA
+                </h3>
+              </div>
+              <div class="p-5 flex flex-col items-center justify-center">
+                <div class="flex items-center justify-center mb-4">
+                  <div class="w-6 h-6 border-t-2 border-b-2 border-blue-500 rounded-full animate-spin"></div>
+                </div>
+                <p class="text-center text-gray-300">Aprimorando sua pergunta com IA...</p>
+              </div>
+            </div>
+          </div>
+        `;
+
+        // Remover qualquer modal existente
+        const existingLoadingModal = document.getElementById('loading-prompt-modal');
+        if (existingLoadingModal) {
+          existingLoadingModal.remove();
+        }
+
+        // Adicionar o modal de carregamento ao DOM
+        document.body.insertAdjacentHTML('beforeend', loadingModalHTML);
+
         // Chamar a API para obter uma versão aprimorada do prompt
         let improvedPromptText = "";
 
@@ -435,6 +467,12 @@ const EpictusBetaMode: React.FC = () => {
           );
         } catch (error) {
           console.error("Erro ao chamar API para aprimorar prompt:", error);
+
+          // Remover o modal de carregamento se existe
+          const loadingModal = document.getElementById('loading-prompt-modal');
+          if (loadingModal) {
+            loadingModal.remove();
+          }
 
           // Fallback para melhorias locais se a API falhar
           const enhancementMap: Record<string, string> = {
@@ -481,11 +519,24 @@ const EpictusBetaMode: React.FC = () => {
           .replace(/^["']|["']$/g, '')
           .trim();
 
+        // Remover o modal de carregamento se existe
+        const loadingModal = document.getElementById('loading-prompt-modal');
+        if (loadingModal) {
+          loadingModal.remove();
+        }
+
         // Mostrar o modal com o prompt aprimorado
         showImprovedPromptModal(improvedPromptText);
 
       } catch (error) {
         console.error("Erro ao aprimorar prompt:", error);
+        
+        // Remover o modal de carregamento se existe
+        const loadingModal = document.getElementById('loading-prompt-modal');
+        if (loadingModal) {
+          loadingModal.remove();
+        }
+        
         toast({
           title: "Erro ao aprimorar prompt",
           description: "Não foi possível melhorar o prompt. Por favor, tente novamente.",
