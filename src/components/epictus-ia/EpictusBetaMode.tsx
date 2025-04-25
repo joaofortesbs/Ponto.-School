@@ -263,24 +263,24 @@ const EpictusBetaMode: React.FC = () => {
 
   // Simulação de funcionalidades dos botões existentes
   const handleButtonClick = (action: string) => {
-    const actionMap: Record<string, string> = {
-      "buscar": "Iniciando busca com base na conversa atual...",
-      "pensar": "Analisando a conversa para gerar insights...",
-      "gerarImagem": "Gerando imagem baseada no contexto da conversa...",
-      "simuladorProvas": "Preparando simulado com base no conteúdo discutido...",
-      "gerarCaderno": "Criando caderno com o conteúdo da nossa conversa...",
-      "criarFluxograma": "Gerando fluxograma visual do conteúdo...",
-      "reescreverExplicacao": "Reescrevendo a última explicação em formato diferente...",
-      "analiseRedacao": "Pronto para analisar sua redação. Por favor, envie o texto...",
-      "resumirConteudo": "Resumindo o conteúdo da nossa conversa...",
-      "espacosAprendizagem": "Abrindo espaços de aprendizagem relacionados...",
-      "sugerirPrompt": () => setIsPromptModalOpen(true) // Added prompt suggestion handler
-    };
-
-    if (typeof actionMap[action] === 'function') {
-      actionMap[action]();
+    // Verificar se é a ação de sugestão de prompts
+    if (action === 'SugestaoPrompts') {
+      setIsPromptModalOpen(true);
       return;
     }
+
+    const actionMap: Record<string, string> = {
+      "Buscar": "Iniciando busca com base na conversa atual...",
+      "Pensar": "Analisando a conversa para gerar insights...",
+      "Gerar Imagem": "Gerando imagem baseada no contexto da conversa...",
+      "Simulador de Provas": "Preparando simulado com base no conteúdo discutido...",
+      "Gerar Caderno": "Criando caderno com o conteúdo da nossa conversa...",
+      "Criar Fluxograma": "Gerando fluxograma visual do conteúdo...",
+      "Reescrever Explicação": "Reescrevendo a última explicação em formato diferente...",
+      "Análise de Redação": "Pronto para analisar sua redação. Por favor, envie o texto...",
+      "Resumir Conteúdo": "Resumindo o conteúdo da nossa conversa...",
+      "Espaços de Aprendizagem": "Abrindo espaços de aprendizagem relacionados..."
+    };
 
     const responseMessage = actionMap[action] || "Executando ação...";
 
