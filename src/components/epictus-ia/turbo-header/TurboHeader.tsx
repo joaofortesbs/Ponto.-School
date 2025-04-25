@@ -1,96 +1,147 @@
-
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Zap, Brain } from "lucide-react";
-import GlowingBackground from "./GlowingBackground";
-import LogoSection from "./LogoSection";
-import PersonalitiesDropdown from "./PersonalitiesDropdown";
-import HeaderIcons from "./HeaderIcons";
+import { useTheme } from "@/components/ThemeProvider";
+import { ArrowRight, Sparkles, Bell, User, ChevronDown, Clock, BookOpen, Image } from "lucide-react";
 
 interface TurboHeaderProps {
-  profileOptions: Array<{
+  profileOptions: {
     id: string;
     icon: React.ReactNode;
     color: string;
     name: string;
     onClick: () => void;
-  }>;
-  initialProfileIcon?: React.ReactNode;
-  initialProfileName?: string;
+  }[];
+  initialProfileIcon: React.ReactNode;
+  initialProfileName: string;
 }
 
-const TurboHeader: React.FC<TurboHeaderProps> = ({ 
+const TurboHeader: React.FC<TurboHeaderProps> = ({
   profileOptions,
   initialProfileIcon,
-  initialProfileName = "Personalidades" 
+  initialProfileName,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const [animationComplete, setAnimationComplete] = useState(false);
-  const [profileIcon, setProfileIcon] = useState(initialProfileIcon || (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-      <circle cx="12" cy="7" r="4"></circle>
-    </svg>
-  ));
-  const [profileName, setProfileName] = useState(initialProfileName);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [selectedProfileIcon, setSelectedProfileIcon] = useState(initialProfileIcon);
+  const [selectedProfileName, setSelectedProfileName] = useState(initialProfileName);
+  const { theme: currentTheme } = useTheme();
+  const isDark = currentTheme === "dark";
 
-  // Configurar efeito de animação ao carregar
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setAnimationComplete(true);
-    }, 1200);
-    
-    return () => clearTimeout(timer);
+    const closeDropdownOnOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest(".personality-dropdown")) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("click", closeDropdownOnOutsideClick);
+    return () => {
+      document.removeEventListener("click", closeDropdownOnOutsideClick);
+    };
   }, []);
 
   return (
-    <div className="w-full p-4">
-      <motion.header 
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className={`w-full hub-connected-width bg-gradient-to-r from-[#050e1d] to-[#0d1a30] backdrop-blur-lg py-4 px-5 flex items-center justify-between rounded-xl relative`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <GlowingBackground isHovered={isHovered} />
-        
-        <div className="flex items-center gap-3 z-10 relative">
+    <div className="w-full bg-[#0a2555]">
+      <div className="flex items-center justify-between py-2 px-4">
+        {/* Left section - Logo and title */}
+        <div className="flex items-center z-10">
           <div className="flex items-center">
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-2 rounded-lg mr-3 shadow-lg">
-              <Brain className="h-6 w-6 text-white" />
+            <div className="w-8 h-8 rounded-full bg-[#1E88E5] flex items-center justify-center mr-3">
+              <span className="text-white font-bold">IA</span>
             </div>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-white tracking-tight">
-                  Epictus IA
-                </h1>
-                <motion.div
-                  className="flex items-center px-1.5 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-orange-600 text-xs font-medium text-white shadow-lg"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                >
-                  <Zap className="h-3 w-3 mr-1" />
-                  BETA
-                </motion.div>
-              </div>
-              <p className="text-white/70 text-sm mt-0.5 font-medium tracking-wide">
-                Ferramenta com inteligência artificial para potencializar seus estudos
-              </p>
+            <div>
+              <h1 className="text-lg font-semibold text-white flex items-center">
+                Epictus IA
+                <span className="ml-2 bg-[#1565c0] text-white text-[10px] py-0.5 px-1.5 rounded-md flex items-center">
+                  <Sparkles size={10} className="mr-0.5" />
+                  Avançado
+                </span>
+              </h1>
+              <p className="text-[11px] text-blue-200/80">IA para geração de conversas impecáveis para o público estudantil</p>
             </div>
           </div>
         </div>
-        
-        <div className="flex items-center justify-center z-10 relative gap-3">
-          <PersonalitiesDropdown 
-            profileIcon={profileIcon}
-            profileName={profileName}
-            profileOptions={profileOptions}
-          />
-          
-          <HeaderIcons />
+
+        {/* Right section - Personalities dropdown and icons */}
+        <div className="flex items-center gap-2 z-10">
+          {/* Personality Dropdown */}
+          <div className="relative personality-dropdown">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsDropdownOpen(!isDropdownOpen);
+              }}
+              className="flex items-center gap-1 py-1.5 pl-3 pr-2 rounded-lg bg-[#1565c0] text-white"
+            >
+              <div className="mr-1">
+                <User size={18} className="text-white" />
+              </div>
+              <span className="text-sm text-white font-medium">Personalidades</span>
+              <ChevronDown size={14} className={`text-white/70 transition-transform duration-300 ${isDropdownOpen ? "rotate-180" : ""}`} />
+            </button>
+
+            {isDropdownOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="absolute right-0 mt-2 py-2 w-56 bg-[#1A2634] rounded-xl shadow-xl border border-white/10 z-50"
+              >
+                <h4 className="px-3 pb-1 text-xs text-white/50 font-medium">Selecione uma personalidade</h4>
+                <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-1"></div>
+                {profileOptions.map((option) => (
+                  <div
+                    key={option.id}
+                    onClick={(e) => {
+                      option.onClick();
+                      setIsDropdownOpen(false);
+                    }}
+                    className="flex items-center gap-3 px-3 py-2 hover:bg-white/5 cursor-pointer transition-colors"
+                  >
+                    <div
+                      className="w-7 h-7 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: option.color }}
+                    >
+                      {option.icon}
+                    </div>
+                    <div>
+                      <p className="text-sm text-white">{option.name}</p>
+                      <p className="text-[10px] text-white/50">Especialista em {option.name.toLowerCase()}</p>
+                    </div>
+                  </div>
+                ))}
+              </motion.div>
+            )}
+          </div>
+
+          {/* Time icon */}
+          <button className="w-8 h-8 rounded-full bg-[#0a2555] flex items-center justify-center text-white">
+            <Clock size={18} />
+          </button>
+
+          {/* Book icon */}
+          <button className="w-8 h-8 rounded-full bg-[#0a2555] flex items-center justify-center text-white">
+            <BookOpen size={18} />
+          </button>
+
+          {/* Bell icon */}
+          <button className="w-8 h-8 rounded-full bg-[#0a2555] flex items-center justify-center text-white">
+            <Bell size={18} />
+          </button>
+
+          {/* Image icon */}
+          <button className="w-8 h-8 rounded-full bg-[#0a2555] flex items-center justify-center text-white">
+            <Image size={18} />
+          </button>
+
+          {/* User avatar */}
+          <div className="w-8 h-8 rounded-full bg-[#FF6B00] flex items-center justify-center text-white text-sm font-medium">
+            JF
+          </div>
         </div>
-      </motion.header>
+      </div>
     </div>
   );
 };
