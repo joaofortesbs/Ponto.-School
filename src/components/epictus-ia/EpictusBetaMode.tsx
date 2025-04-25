@@ -31,6 +31,7 @@ interface Message {
   content: string;
   timestamp: Date;
   isEdited?: boolean;
+  feedback?: 'positive' | 'negative';
 }
 
 const EpictusBetaMode: React.FC = () => {
@@ -581,6 +582,29 @@ const EpictusBetaMode: React.FC = () => {
     setIsExportModalOpen(true);
   };
 
+  const handleFeedback = (messageId: string, feedbackType: 'positive' | 'negative') => {
+    setMessages(prev => prev.map(msg => {
+      if (msg.id === messageId) {
+        // Toggle feedback if already set to the same type
+        const newFeedback = msg.feedback === feedbackType ? undefined : feedbackType;
+        
+        // If we have a valid feedback, log it or send to analytics
+        if (newFeedback) {
+          console.log(`Feedback ${newFeedback} registrado para mensagem ${messageId}`);
+          // Here you could add analytics or API call to store feedback
+          toast({
+            title: newFeedback === 'positive' ? "Feedback positivo enviado" : "Feedback negativo enviado",
+            description: "Obrigado por nos ajudar a melhorar a Epictus IA!",
+            duration: 3000,
+          });
+        }
+        
+        return { ...msg, feedback: newFeedback };
+      }
+      return msg;
+    }));
+  };
+
   return (
     <div className="flex flex-col h-full">
       <TurboHeader profileOptions={profileOptions} initialProfileIcon={profileIcon} initialProfileName={profileName} />
@@ -689,9 +713,57 @@ const EpictusBetaMode: React.FC = () => {
                           </>
                         )}
                       </div>
-                      <p className="text-right text-[11px] text-[#D0D0D0]/70 font-mono">
-                        {formatTimestamp(new Date(message.timestamp))}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        {message.sender === "ia" && (
+                          <div className="flex items-center gap-1 mr-2">
+                            <button
+                              onClick={() => handleFeedback(message.id, 'positive')}
+                              className="text-gray-400 hover:text-green-500 transition-colors p-1"
+                              title="Feedback positivo"
+                            >
+                              <svg 
+                                xmlns="http://www.w3.org/2000/svg" 
+                                width="14" 
+                                height="14" 
+                                viewBox="0 0 24 24" 
+                                fill="none" 
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className={message.feedback === 'positive' ? 'text-green-500' : ''}
+                              >
+                                <path d="M7 10v12"></path>
+                                <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"></path>
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => handleFeedback(message.id, 'negative')}
+                              className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                              title="Feedback negativo"
+                            >
+                              <svg 
+                                xmlns="http://www.w3.org/2000/svg" 
+                                width="14" 
+                                height="14" 
+                                viewBox="0 0 24 24" 
+                                fill="none" 
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className={message.feedback === 'negative' ? 'text-red-500' : ''}
+                              >
+                                <path d="M17 14V2"></path>
+                                <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z"></path>
+                              </svg>
+                            </button>
+                          </div>
+                        )}
+                        <p className="text-right text-[11px] text-[#D0D0D0]/70 font-mono">
+                          {formatTimestamp(new Date(message.timestamp))}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
