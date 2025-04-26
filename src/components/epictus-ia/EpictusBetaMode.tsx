@@ -25,6 +25,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { v4 as uuidv4 } from 'uuid';
 import { generateAIResponse, addMessageToHistory, createMessage } from "@/services/epictusIAService";
 import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/lib/supabase";
 
 interface Message {
   id: string;
@@ -660,6 +661,94 @@ const EpictusBetaMode: React.FC = () => {
   };
 
   const [showHistoricoModal, setShowHistoricoModal] = useState(false);
+  const [conversationTitle, setConversationTitle] = useState("Nova conversa");
+  
+  useEffect(() => {
+    // Salvar a conversa no Supabase quando houver pelo menos uma mensagem do usuário
+    const saveConversationToSupabase = async () => {
+      if (messages.length > 2) { // Ignorar mensagem inicial automática
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          
+          if (!user) {
+            console.error("Usuário não autenticado");
+            return;
+          }
+          
+          // Extrair primeiras mensagens para gerar título e preview
+          const firstUserMessage = messages.find(msg => msg.sender === "user");
+          const firstAIResponse = messages.find(msg => msg.sender === "ia" && msg.id !== messages[0].id);
+          
+          // Gerar título baseado na primeira mensagem do usuário (limitado a 50 caracteres)
+          const autoTitle = firstUserMessage 
+            ? firstUserMessage.content.substring(0, 50) + (firstUserMessage.content.length > 50 ? "..." : "")
+            : "Nova conversa";
+            
+          setConversationTitle(autoTitle);
+          
+          // Preparar dados para salvar
+          const conversationData = {
+            title: autoTitle,
+            preview: firstAIResponse 
+              ? firstAIResponse.content.substring(0, 100) + (firstAIResponse.content.length > 100 ? "..." : "") 
+              : "Sem resposta",
+            messages: messages.map(msg => ({
+              sender: msg.sender,
+              content: msg.content,
+              timestamp: msg.timestamp
+            }))
+          };
+          
+          // Verificar se já existe uma conversa para esta sessão
+          const { data: existingConversations, error: fetchError } = await supabase
+            .from('user_conversations')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('session_id', sessionId)
+            .limit(1);
+            
+          if (fetchError) {
+            console.error("Erro ao verificar conversa existente:", fetchError);
+            return;
+          }
+          
+          if (existingConversations && existingConversations.length > 0) {
+            // Atualizar conversa existente
+            const { error: updateError } = await supabase
+              .from('user_conversations')
+              .update({ 
+                conversation: conversationData,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', existingConversations[0].id);
+              
+            if (updateError) {
+              console.error("Erro ao atualizar conversa:", updateError);
+            }
+          } else {
+            // Inserir nova conversa
+            const { error: insertError } = await supabase
+              .from('user_conversations')
+              .insert({
+                user_id: user.id,
+                conversation: conversationData,
+                session_id: sessionId,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              });
+              
+            if (insertError) {
+              console.error("Erro ao inserir conversa:", insertError);
+            }
+          }
+        } catch (error) {
+          console.error("Erro ao salvar conversa:", error);
+        }
+      }
+    };
+    
+    saveConversationToSupabase();
+  }, [messages, sessionId]);
 
   const handleHistoricoClick = () => {
     setShowHistoricoModal(true);
