@@ -4,7 +4,7 @@ import EspacoAprendizagemIcon from "./EspacoAprendizagemIcon";
 import ApostilaInteligenteIcon from "./ApostilaInteligenteIcon";
 import ModoFantasmaIcon from "./ModoFantasmaIcon";
 import GaleriaIcon from "./GaleriaIcon";
-import HistoricoConversasModal from "../../../modals/HistoricoConversasModal"; // Added import
+import HistoricoConversasModal from "../../../modals/HistoricoConversasModal";
 
 interface HeaderIconsProps {
   currentContext?: string;
@@ -24,7 +24,7 @@ const HeaderIcons: React.FC<HeaderIconsProps> = ({
   onGaleriaClick,
 }) => {
   const [modoFantasmaAtivo, setModoFantasmaAtivo] = useState(false);
-  const [isHistoricoModalOpen, setIsHistoricoModalOpen] = useState(false); // Added state for modal
+  const [isHistoricoModalOpen, setIsHistoricoModalOpen] = useState(false);
 
   const handleModoFantasmaClick = () => {
     setModoFantasmaAtivo(!modoFantasmaAtivo);
@@ -33,19 +33,24 @@ const HeaderIcons: React.FC<HeaderIconsProps> = ({
     }
   };
 
-  const handleHistoricoClick = () => { // Added handler for modal
+  const handleHistoricoClick = () => {
+    if (onHistoricoClick) {
+      onHistoricoClick();
+    }
     setIsHistoricoModalOpen(true);
   };
 
   return (
-    <div className="flex items-center justify-center z-10 relative gap-3">
-      <HistoricoIcon onClick={handleHistoricoClick} /> {/* Updated onClick */}
-      <EspacoAprendizagemIcon onClick={onEspacoAprendizagemClick} />
-      <ApostilaInteligenteIcon onClick={onApostilaInteligenteClick} />
-      <ModoFantasmaIcon onClick={handleModoFantasmaClick} active={modoFantasmaAtivo} />
-      <GaleriaIcon onClick={onGaleriaClick} />
-      <HistoricoConversasModal open={isHistoricoModalOpen} onOpenChange={setIsHistoricoModalOpen} /> {/* Added modal */}
-    </div>
+    <>
+      <div className="flex items-center justify-center z-10 relative gap-3">
+        <HistoricoIcon onClick={handleHistoricoClick} />
+        <EspacoAprendizagemIcon onClick={onEspacoAprendizagemClick} />
+        <ApostilaInteligenteIcon onClick={onApostilaInteligenteClick} />
+        <ModoFantasmaIcon onClick={handleModoFantasmaClick} active={modoFantasmaAtivo} />
+        <GaleriaIcon onClick={onGaleriaClick} />
+      </div>
+      <HistoricoConversasModal open={isHistoricoModalOpen} onOpenChange={setIsHistoricoModalOpen} />
+    </>
   );
 };
 

@@ -1,23 +1,29 @@
-
 import React from "react";
-import HeaderIcon from "./HeaderIcon";
+import { Clock } from "lucide-react";
 
 interface HistoricoIconProps {
-  onClick?: () => void;
+  onClick: () => void;
+  isActive?: boolean;
 }
 
-const HistoricoIcon: React.FC<HistoricoIconProps> = ({ onClick }) => {
+const HistoricoIcon: React.FC<HistoricoIconProps> = ({ onClick, isActive = false }) => {
   return (
-    <HeaderIcon
-      icon={
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 8v4l3 3" />
-          <circle cx="12" cy="12" r="10" />
-        </svg>
-      }
+    <button
       onClick={onClick}
-      label="Histórico"
-    />
+      className={`relative flex flex-col items-center justify-center ${
+        isActive ? "text-blue-500" : "text-gray-400 hover:text-white"
+      } transition-colors duration-200`}
+      aria-label="Abrir histórico de conversas"
+      title="Histórico de Conversas"
+    >
+      <div className={`p-2 rounded-full ${isActive ? "bg-blue-500/20" : "hover:bg-white/10"}`}>
+        <Clock className="h-5 w-5" />
+      </div>
+      <span className="text-[10px] mt-1">Histórico</span>
+      {isActive && (
+        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full" />
+      )}
+    </button>
   );
 };
 

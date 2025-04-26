@@ -35,6 +35,7 @@ interface Conversation {
   user_id: string;
   preview?: string;
   messages?: any[];
+  session_id?: string;
 }
 
 const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
@@ -67,6 +68,8 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
         return;
       }
       
+      console.log("Carregando conversas para o usuário:", user.id);
+      
       // Buscar conversas do banco de dados
       const { data, error } = await supabase
         .from('user_conversations')
@@ -80,6 +83,8 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
         return;
       }
       
+      console.log("Conversas carregadas do Supabase:", data?.length || 0);
+      
       // Transformar os dados para o formato necessário
       const conversationsData: Conversation[] = data.map((item: any) => {
         // Se conversation for uma string, tentar parseá-la como JSON
@@ -88,20 +93,28 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
           conversationObj = typeof item.conversation === 'string' 
             ? JSON.parse(item.conversation) 
             : item.conversation;
+            
+          console.log("Objeto de conversa processado:", item.id, conversationObj?.title);
         } catch (e) {
+          console.error("Erro ao processar conversa:", e, item);
           conversationObj = { title: "Conversa sem título" };
         }
         
-        return {
+        // Garantir que os dados estão no formato correto
+        const conversation = {
           id: item.id,
           title: conversationObj.title || `Conversa ${new Date(item.created_at).toLocaleDateString()}`,
           timestamp: new Date(item.created_at),
           user_id: item.user_id,
           preview: conversationObj.preview || "Sem prévia disponível",
-          messages: conversationObj.messages || []
+          messages: conversationObj.messages || [],
+          session_id: item.session_id || "sessão desconhecida"
         };
+        
+        return conversation;
       });
       
+      console.log("Conversas processadas com sucesso:", conversationsData.length);
       setConversations(conversationsData);
       setFilteredConversations(conversationsData);
     } catch (error) {
@@ -290,8 +303,29 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
     }
     
     try {
+      console.log("Retomando conversa:", conversa.id, "Mensagens:", conversa.messages.length);
+      
+      // Garantir que as mensagens estão formatadas corretamente
+      const mensagensFormatadas = conversa.messages.map(msg => {
+        // Converter formato possível de role/content para sender/content
+        if (msg.role && !msg.sender) {
+          return {
+            ...msg,
+            sender: msg.role === 'user' ? 'user' : 'ia',
+            id: msg.id || crypto.randomUUID?.() || Math.random().toString(36).substring(2, 9),
+            timestamp: msg.timestamp || new Date()
+          };
+        }
+        return {
+          ...msg,
+          id: msg.id || crypto.randomUUID?.() || Math.random().toString(36).substring(2, 9),
+          timestamp: msg.timestamp || new Date()
+        };
+      });
+      
       // Armazenar a conversa no localStorage para acesso posterior
-      localStorage.setItem('epictus_retomar_conversa', JSON.stringify(conversa.messages));
+      localStorage.setItem('epictus_retomar_conversa', JSON.stringify(mensagensFormatadas));
+      localStorage.setItem('epictus_session_id', conversa.session_id || "");
       
       // Fechar o modal
       onOpenChange(false);
