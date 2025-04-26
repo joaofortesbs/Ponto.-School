@@ -3,7 +3,12 @@ import {
   Dialog,
   DialogContent,
   DialogPortal,
-  DialogOverlay
+  DialogOverlay,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+  DialogClose
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { 
