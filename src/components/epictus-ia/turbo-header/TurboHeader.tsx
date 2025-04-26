@@ -1,123 +1,264 @@
-import React, { useState, useRef, useEffect } from "react";
-import {
-  Bot,
-  User,
-  Trash2,
-  Loader2,
-  Star,
-  Search,
-  FileText,
-  PenLine,
-  Share,
-  Copy,
-  Clock
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import PersonalitiesDropdown from "./PersonalitiesDropdown";
-import HistoricoModal from "../modals/HistoricoModal";
 
-interface ProfileOption {
-  id: string;
-  icon: React.ReactNode;
-  color: string;
-  name: string;
-  onClick: () => void;
-}
+import React, { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import LogoSection from "./LogoSection";
+import PersonalitiesDropdown from "./PersonalitiesDropdown";
+import { 
+  History, 
+  Settings, 
+  Save, 
+  FileText, 
+  HelpCircle,
+  Wrench, // Substituindo Tool por Wrench
+  Moon, 
+  Sun, 
+  Search
+} from "lucide-react";
+import { useTheme } from "@/components/ThemeProvider";
+import HistoricoModal from "../modals/HistoricoModal";
+import { ErrorBoundary } from "react-error-boundary";
 
 interface TurboHeaderProps {
-  profileOptions: ProfileOption[];
-  initialProfileIcon: React.ReactNode;
-  initialProfileName: string;
+  className?: string;
 }
 
-const TurboHeader: React.FC<TurboHeaderProps> = ({
-  profileOptions,
-  initialProfileIcon,
-  initialProfileName,
-}) => {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isHistoricoModalOpen, setIsHistoricoModalOpen] = useState(false);
-
+// Componente de Fallback para tratamento de erros
+const HeaderErrorFallback = ({ error, resetErrorBoundary }) => {
+  console.error("Erro no TurboHeader:", error);
   return (
-    <header className="w-full bg-gradient-to-r from-[#1E293B] to-[#2F3B4C] border-b border-[#3A4B5C]/30 p-3 flex justify-between items-center">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center shadow-md">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"></path>
-            <path d="M8.5 8.5v.01"></path>
-            <path d="M16 15.5v.01"></path>
-            <path d="M12 12v.01"></path>
-            <path d="M11 17v.01"></path>
-            <path d="M7 14v.01"></path>
-          </svg>
-        </div>
-        <div>
-          <h1 className="text-xl font-bold text-white">Epictus IA</h1>
-          <div className="flex items-center gap-2">
-            <span className="text-[#A0A0A0] text-sm">BETA</span>
-            <div className="h-2 w-2 rounded-full bg-[#4CAF50] animate-pulse"></div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <div className="relative">
-          <button
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex items-center gap-2 bg-gradient-to-r from-[#1E293B] to-[#2F3B4C] border border-[#3A4B5C]/30 rounded-lg p-2 text-white hover:bg-[#2F3B4C] transition-all duration-300"
-          >
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center shadow-md">
-              {initialProfileIcon}
-            </div>
-            <span className="text-sm font-medium">{initialProfileName}</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className={`transition-transform duration-300 ${isDropdownOpen ? "rotate-180" : ""}`}
-            >
-              <path d="m6 9 6 6 6-6" />
-            </svg>
-          </button>
-
-          <AnimatePresence>
-            {isDropdownOpen && (
-              <PersonalitiesDropdown
-                options={profileOptions}
-                onClose={() => setIsDropdownOpen(false)}
-              />
-            )}
-          </AnimatePresence>
-        </div>
-
-        <button
-          className="p-2 rounded-full text-[#A0A0A0] hover:text-white hover:bg-[#2F3B4C] transition-colors"
-          onClick={() => setIsHistoricoModalOpen(true)}
-          title="Histórico de conversas"
-        >
-          <Clock />
-        </button>
-
-        <button className="p-2 rounded-full text-[#A0A0A0] hover:text-white hover:bg-[#2F3B4C] transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M5.52 19c.64-2.2 1.84-3 3.22-3h6.52c1.38 0 2.58.8 3.22 3" />
-            <circle cx="12" cy="10" r="3" />
-            <circle cx="12" cy="12" r="10" />
-          </svg>
-        </button>
-      </div>
-
-      <HistoricoModal
-        isOpen={isHistoricoModalOpen}
-        onClose={() => setIsHistoricoModalOpen(false)}
-      />
-    </header>
+    <div className="w-full bg-red-50 dark:bg-red-900/10 text-red-800 dark:text-red-200 p-3 rounded-md flex items-center justify-between">
+      <span className="text-sm">Erro ao carregar o cabeçalho</span>
+      <Button variant="destructive" size="sm" onClick={resetErrorBoundary}>Recarregar</Button>
+    </div>
   );
 };
+
+const TurboHeader: React.FC<TurboHeaderProps> = ({ className }) => {
+  const [mounted, setMounted] = useState(false);
+  const { setTheme, theme } = useTheme();
+  const [isHistoricoModalOpen, setHistoricoModalOpen] = useState(false);
+
+  // Log de diagnóstico ao montar o componente
+  useEffect(() => {
+    console.log("TurboHeader montado");
+    setMounted(true);
+    
+    return () => {
+      console.log("TurboHeader desmontado");
+    };
+  }, []);
+
+  const toggleTheme = () => {
+    try {
+      setTheme(theme === "dark" ? "light" : "dark");
+      console.log("Tema alternado para:", theme === "dark" ? "light" : "dark");
+    } catch (error) {
+      console.error("Erro ao alternar tema:", error);
+    }
+  };
+
+  const handleHistoricoClick = () => {
+    try {
+      console.log("Botão de histórico clicado");
+      setHistoricoModalOpen(true);
+    } catch (error) {
+      console.error("Erro ao abrir modal de histórico:", error);
+    }
+  };
+
+  const handleCloseHistoricoModal = () => {
+    try {
+      console.log("Fechando modal de histórico");
+      setHistoricoModalOpen(false);
+    } catch (error) {
+      console.error("Erro ao fechar modal de histórico:", error);
+    }
+  };
+
+  // Verificar se o componente está montado para evitar problemas de renderização SSR
+  if (!mounted) {
+    console.log("TurboHeader aguardando montagem");
+    return null;
+  }
+
+  try {
+    return (
+      <ErrorBoundary FallbackComponent={HeaderErrorFallback}>
+        <header className={cn("w-full bg-background dark:bg-[#001427]/95 backdrop-blur-sm border-b border-border h-14 px-4 flex items-center justify-between sticky top-0 z-50", className)}>
+          {/* Logo e Título */}
+          <LogoSection />
+
+          {/* Ações do Cabeçalho */}
+          <div className="flex items-center gap-1 md:gap-2">
+            {/* Seletor de Personalidade */}
+            <PersonalitiesDropdown />
+
+            {/* Ícones de Ação */}
+            <div className="flex items-center">
+              <TooltipProvider>
+                {/* Histórico */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8" 
+                      onClick={handleHistoricoClick}
+                      aria-label="Ver histórico"
+                    >
+                      <History className="h-[1.2rem] w-[1.2rem] text-muted-foreground" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Histórico</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                {/* Salvar */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8"
+                      aria-label="Salvar conversa"
+                    >
+                      <Save className="h-[1.2rem] w-[1.2rem] text-muted-foreground" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Salvar</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                {/* Exportar */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8"
+                      aria-label="Exportar conversa"
+                    >
+                      <FileText className="h-[1.2rem] w-[1.2rem] text-muted-foreground" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Exportar</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                {/* Buscar */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8"
+                      aria-label="Buscar na conversa"
+                    >
+                      <Search className="h-[1.2rem] w-[1.2rem] text-muted-foreground" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Buscar</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                {/* Configurações */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8"
+                      aria-label="Configurações"
+                    >
+                      <Settings className="h-[1.2rem] w-[1.2rem] text-muted-foreground" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Configurações</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                {/* Ferramentas */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8"
+                      aria-label="Ferramentas"
+                    >
+                      <Wrench className="h-[1.2rem] w-[1.2rem] text-muted-foreground" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Ferramentas</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                {/* Ajuda */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8"
+                      aria-label="Ajuda"
+                    >
+                      <HelpCircle className="h-[1.2rem] w-[1.2rem] text-muted-foreground" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Ajuda</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                {/* Alternar Tema */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8" 
+                      onClick={toggleTheme}
+                      aria-label="Alternar tema"
+                    >
+                      {theme === "dark" ? (
+                        <Sun className="h-[1.2rem] w-[1.2rem] text-muted-foreground" />
+                      ) : (
+                        <Moon className="h-[1.2rem] w-[1.2rem] text-muted-foreground" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Tema: {theme === "dark" ? "Claro" : "Escuro"}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </div>
+        </header>
+
+        {/* Modal de Histórico */}
+        <HistoricoModal 
+          isOpen={isHistoricoModalOpen} 
+          onClose={handleCloseHistoricoModal} 
+        />
+      </ErrorBoundary>
+    );
+  } catch (error) {
+    console.error("Erro fatal ao renderizar TurboHeader:", error);
+    return (
+      <div className="w-full bg-red-100 dark:bg-red-900/20 p-3 text-center text-red-800 dark:text-red-200">
+        Erro ao carregar o cabeçalho. Por favor, recarregue a página.
+      </div>
+    );
+  }
+};
+
+export default TurboHeader;
