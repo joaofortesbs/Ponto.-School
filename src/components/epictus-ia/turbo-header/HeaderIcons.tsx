@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import HistoricoConversasModal from "../modals/HistoricoConversasModal";
@@ -33,7 +32,7 @@ export const HeaderIcon: React.FC<HeaderIconProps> = ({ icon, onClick, tooltip }
 
 export const HeaderIcons: React.FC = () => {
   const [historicoAberto, setHistoricoAberto] = useState(false);
-  
+
   const abrirHistorico = () => {
     setHistoricoAberto(true);
   };
@@ -117,7 +116,7 @@ export const HeaderIcons: React.FC = () => {
           Perfil
         </div>
       </div>
-      
+
       {/* Modal de histórico de conversas */}
       <HistoricoConversasModal 
         open={historicoAberto} 

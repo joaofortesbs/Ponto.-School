@@ -7,6 +7,8 @@ import {
   useNavigate,
 } from "react-router-dom";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { Suspense } from "react";
+import { TypewriterLoader } from "./components/ui/typewriter-loader";
 import routes from "./tempo-routes";
 import Home from "@/components/home";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -306,25 +308,139 @@ function App() {
                     <Home />
                   </ProtectedRoute>
                 }>
-                  <Route index element={<Dashboard />} />
-                  <Route path="turmas" element={<Turmas />} />
-                  <Route path="turmas/:id" element={<TurmaDetail />} />
-                  <Route path="turmas/grupos2" element={<GruposEstudo2 />} />
-                  <Route path="turmas/grupos" element={<GruposEstudo />} />
-                  <Route path="turmas/grupos/:id" element={<GruposEstudo />} />
-                  <Route path="comunidades" element={<Comunidades />} />
-                  <Route path="pedidos-ajuda" element={<PedidosAjuda />} />
-                  <Route path="epictus-ia" element={<EpictusIA />} />
-                  <Route path="agenda" element={<Agenda />} />
-                  <Route path="biblioteca" element={<Biblioteca />} />
-                  <Route path="mercado" element={<Mercado />} />
-                  <Route path="conquistas" element={<Conquistas />} />
-                  <Route path="carteira" element={<Carteira />} />
-                  <Route path="organizacao" element={<Organizacao />} />
-                  <Route path="novidades" element={<Novidades />} />
-                  <Route path="configuracoes" element={<Configuracoes />} />
-                  <Route path="planos-estudo" element={<PlanosEstudo />} />
-                  <Route path="portal" element={<Portal />} />
+                  <Route index element={
+                    <Suspense fallback={<TypewriterLoader />}>
+                      <ErrorBoundary>
+                        <Dashboard />
+                      </ErrorBoundary>
+                    </Suspense>
+                  } />
+                  <Route path="turmas" element={
+                    <Suspense fallback={<TypewriterLoader />}>
+                      <ErrorBoundary>
+                        <Turmas />
+                      </ErrorBoundary>
+                    </Suspense>
+                  } />
+                  <Route path="turmas/:id" element={
+                    <Suspense fallback={<TypewriterLoader />}>
+                      <ErrorBoundary>
+                        <TurmaDetail />
+                      </ErrorBoundary>
+                    </Suspense>
+                  } />
+                  <Route path="turmas/grupos2" element={
+                    <Suspense fallback={<TypewriterLoader />}>
+                      <ErrorBoundary>
+                        <GruposEstudo2 />
+                      </ErrorBoundary>
+                    </Suspense>
+                  } />
+                  <Route path="turmas/grupos" element={
+                    <Suspense fallback={<TypewriterLoader />}>
+                      <ErrorBoundary>
+                        <GruposEstudo />
+                      </ErrorBoundary>
+                    </Suspense>
+                  } />
+                  <Route path="turmas/grupos/:id" element={
+                    <Suspense fallback={<TypewriterLoader />}>
+                      <ErrorBoundary>
+                        <GruposEstudo />
+                      </ErrorBoundary>
+                    </Suspense>
+                  } />
+                  <Route path="comunidades" element={
+                    <Suspense fallback={<TypewriterLoader />}>
+                      <ErrorBoundary>
+                        <Comunidades />
+                      </ErrorBoundary>
+                    </Suspense>
+                  } />
+                  <Route path="pedidos-ajuda" element={
+                    <Suspense fallback={<TypewriterLoader />}>
+                      <ErrorBoundary>
+                        <PedidosAjuda />
+                      </ErrorBoundary>
+                    </Suspense>
+                  } />
+                  <Route path="epictus-ia" element={
+                    <Suspense fallback={<TypewriterLoader />}>
+                      <ErrorBoundary>
+                        <EpictusIA />
+                      </ErrorBoundary>
+                    </Suspense>
+                  } />
+                  <Route path="agenda" element={
+                    <Suspense fallback={<TypewriterLoader />}>
+                      <ErrorBoundary>
+                        <Agenda />
+                      </ErrorBoundary>
+                    </Suspense>
+                  } />
+                  <Route path="biblioteca" element={
+                    <Suspense fallback={<TypewriterLoader />}>
+                      <ErrorBoundary>
+                        <Biblioteca />
+                      </ErrorBoundary>
+                    </Suspense>
+                  } />
+                  <Route path="mercado" element={
+                    <Suspense fallback={<TypewriterLoader />}>
+                      <ErrorBoundary>
+                        <Mercado />
+                      </ErrorBoundary>
+                    </Suspense>
+                  } />
+                  <Route path="conquistas" element={
+                    <Suspense fallback={<TypewriterLoader />}>
+                      <ErrorBoundary>
+                        <Conquistas />
+                      </ErrorBoundary>
+                    </Suspense>
+                  } />
+                  <Route path="carteira" element={
+                    <Suspense fallback={<TypewriterLoader />}>
+                      <ErrorBoundary>
+                        <Carteira />
+                      </ErrorBoundary>
+                    </Suspense>
+                  } />
+                  <Route path="organizacao" element={
+                    <Suspense fallback={<TypewriterLoader />}>
+                      <ErrorBoundary>
+                        <Organizacao />
+                      </ErrorBoundary>
+                    </Suspense>
+                  } />
+                  <Route path="novidades" element={
+                    <Suspense fallback={<TypewriterLoader />}>
+                      <ErrorBoundary>
+                        <Novidades />
+                      </ErrorBoundary>
+                    </Suspense>
+                  } />
+                  <Route path="configuracoes" element={
+                    <Suspense fallback={<TypewriterLoader />}>
+                      <ErrorBoundary>
+                        <Configuracoes />
+                      </ErrorBoundary>
+                    </Suspense>
+                  } />
+                  <Route path="planos-estudo" element={
+                    <Suspense fallback={<TypewriterLoader />}>
+                      <ErrorBoundary>
+                        <PlanosEstudo />
+                      </ErrorBoundary>
+                    </Suspense>
+                  } />
+                  <Route path="portal" element={
+                    <Suspense fallback={<TypewriterLoader />}>
+                      <ErrorBoundary>
+                        <Portal />
+                      </ErrorBoundary>
+                    </Suspense>
+                  } />
                 </Route>
 
                 {/* User Profile - Protegida */}
