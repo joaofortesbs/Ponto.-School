@@ -1,0 +1,205 @@
+[plugin:vite:react-swc] × the name `useState` is defined multiple times
+    ╭─[/home/runner/workspace/src/components/epictus-ia/modoepictusiabeta/header/icons/HeaderIcons.tsx:1:1]
+  1 │ import React, { useState } from "react";
+    ·                 ────┬───
+    ·                     ╰── previous definition of `useState` here
+  2 │ import HistoricoIcon from "./HistoricoIcon";
+  3 │ import EspacoAprendizagemIcon from "./EspacoAprendizagemIcon";
+  4 │ import ApostilaInteligenteIcon from "./ApostilaInteligenteIcon";
+  5 │ import ModoFantasmaIcon from "./ModoFantasmaIcon";
+  6 │ import GaleriaIcon from "./GaleriaIcon";
+  7 │ 
+  8 │ interface HeaderIconsProps {
+  9 │   currentContext?: string;
+ 10 │   onHistoricoClick?: () => void;
+ 11 │   onEspacoAprendizagemClick?: () => void;
+ 12 │   onApostilaInteligenteClick?: () => void;
+ 13 │   onModoFantasmaClick?: () => void;
+ 14 │   onGaleriaClick?: () => void;
+ 15 │ }
+ 16 │ 
+ 17 │ const HeaderIcons: React.FC<HeaderIconsProps> = ({
+ 18 │   currentContext = "estudos",
+ 19 │   onHistoricoClick,
+ 20 │   onEspacoAprendizagemClick,
+ 21 │   onApostilaInteligenteClick,
+ 22 │   onModoFantasmaClick,
+ 23 │   onGaleriaClick,
+ 24 │ }) => {
+ 25 │   const [modoFantasmaAtivo, setModoFantasmaAtivo] = useState(false);
+ 26 │ 
+ 27 │   const handleModoFantasmaClick = () => {
+ 28 │     setModoFantasmaAtivo(!modoFantasmaAtivo);
+ 29 │     if (onModoFantasmaClick) {
+ 30 │       onModoFantasmaClick();
+ 31 │     }
+ 32 │   };
+ 33 │ 
+ 34 │   return (
+ 35 │     <div className="flex items-center justify-center z-10 relative gap-3">
+ 36 │       <HistoricoIcon onClick={onHistoricoClick} />
+ 37 │       <EspacoAprendizagemIcon onClick={onEspacoAprendizagemClick} />
+ 38 │       <ApostilaInteligenteIcon onClick={onApostilaInteligenteClick} />
+ 39 │       <ModoFantasmaIcon onClick={handleModoFantasmaClick} active={modoFantasmaAtivo} />
+ 40 │       <GaleriaIcon onClick={onGaleriaClick} />
+ 41 │     </div>
+ 42 │   );
+ 43 │ };
+ 44 │ 
+ 45 │ export default HeaderIcons;
+ 46 │ 
+ 47 │ // Modal Component
+ 48 │ import React, { useState } from 'react';
+    ·                 ────┬───
+    ·                     ╰── `useState` redefined here
+ 49 │ 
+ 50 │ const HistoryModal = ({ onClose }: { onClose: () => void }) => {
+ 51 │   return (
+    ╰────
+
+  × the name `useState` is defined multiple times
+    ╭─[/home/runner/workspace/src/components/epictus-ia/modoepictusiabeta/header/icons/HeaderIcons.tsx:45:1]
+ 45 │ export default HeaderIcons;
+ 46 │ 
+ 47 │ // Modal Component
+ 48 │ import React, { useState } from 'react';
+    ·                 ────┬───
+    ·                     ╰── previous definition of `useState` here
+ 49 │ 
+ 50 │ const HistoryModal = ({ onClose }: { onClose: () => void }) => {
+ 51 │   return (
+ 52 │     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+ 53 │       <div className="bg-white p-8 rounded-lg shadow-lg">
+ 54 │         <p className="text-center">Seu historico irá aparecer aqui!</p>
+ 55 │         <button onClick={onClose} className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+ 56 │           Fechar
+ 57 │         </button>
+ 58 │       </div>
+ 59 │     </div>
+ 60 │   );
+ 61 │ };
+ 62 │ 
+ 63 │ export default HistoryModal;
+ 64 │ 
+ 65 │ 
+ 66 │ //Example of how to use the Modal (This would need to be integrated into the appropriate component)
+ 67 │ 
+ 68 │ import React, { useState } from 'react';
+    ·                 ────┬───
+    ·                     ╰── `useState` redefined here
+ 69 │ import HistoryModal from './HistoryModal';
+ 70 │ 
+ 71 │ const MyComponent = () => {
+    ╰────
+
+  × the name `HistoryModal` is defined multiple times
+    ╭─[/home/runner/workspace/src/components/epictus-ia/modoepictusiabeta/header/icons/HeaderIcons.tsx:47:1]
+ 47 │ // Modal Component
+ 48 │ import React, { useState } from 'react';
+ 49 │ 
+ 50 │ const HistoryModal = ({ onClose }: { onClose: () => void }) => {
+    ·       ──────┬─────
+    ·             ╰── previous definition of `HistoryModal` here
+ 51 │   return (
+ 52 │     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+ 53 │       <div className="bg-white p-8 rounded-lg shadow-lg">
+ 54 │         <p className="text-center">Seu historico irá aparecer aqui!</p>
+ 55 │         <button onClick={onClose} className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+ 56 │           Fechar
+ 57 │         </button>
+ 58 │       </div>
+ 59 │     </div>
+ 60 │   );
+ 61 │ };
+ 62 │ 
+ 63 │ export default HistoryModal;
+ 64 │ 
+ 65 │ 
+ 66 │ //Example of how to use the Modal (This would need to be integrated into the appropriate component)
+ 67 │ 
+ 68 │ import React, { useState } from 'react';
+ 69 │ import HistoryModal from './HistoryModal';
+    ·        ──────┬─────
+    ·              ╰── `HistoryModal` redefined here
+ 70 │ 
+ 71 │ const MyComponent = () => {
+ 72 │   const [showModal, setShowModal] = useState(false);
+    ╰────
+
+  × the name `default` is exported multiple times
+    ╭─[/home/runner/workspace/src/components/epictus-ia/modoepictusiabeta/header/icons/HeaderIcons.tsx:42:1]
+ 42 │   );
+ 43 │ };
+ 44 │ 
+ 45 │ export default HeaderIcons;
+    · ─────────────┬─────────────
+    ·              ╰── previous exported here
+ 46 │ 
+ 47 │ // Modal Component
+ 48 │ import React, { useState } from 'react';
+ 49 │ 
+ 50 │ const HistoryModal = ({ onClose }: { onClose: () => void }) => {
+ 51 │   return (
+ 52 │     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+ 53 │       <div className="bg-white p-8 rounded-lg shadow-lg">
+ 54 │         <p className="text-center">Seu historico irá aparecer aqui!</p>
+ 55 │         <button onClick={onClose} className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+ 56 │           Fechar
+ 57 │         </button>
+ 58 │       </div>
+ 59 │     </div>
+ 60 │   );
+ 61 │ };
+ 62 │ 
+ 63 │ export default HistoryModal;
+    · ──────────────┬─────────────
+    ·               ╰── exported more than once
+ 64 │ 
+ 65 │ 
+ 66 │ //Example of how to use the Modal (This would need to be integrated into the appropriate component)
+    ╰────
+
+Error: 
+  ☞ Exported identifiers must be unique
+
+  × the name `default` is exported multiple times
+    ╭─[/home/runner/workspace/src/components/epictus-ia/modoepictusiabeta/header/icons/HeaderIcons.tsx:60:1]
+ 60 │   );
+ 61 │ };
+ 62 │ 
+ 63 │ export default HistoryModal;
+    · ──────────────┬─────────────
+    ·               ╰── previous exported here
+ 64 │ 
+ 65 │ 
+ 66 │ //Example of how to use the Modal (This would need to be integrated into the appropriate component)
+ 67 │ 
+ 68 │ import React, { useState } from 'react';
+ 69 │ import HistoryModal from './HistoryModal';
+ 70 │ 
+ 71 │ const MyComponent = () => {
+ 72 │   const [showModal, setShowModal] = useState(false);
+ 73 │ 
+ 74 │   const openModal = () => setShowModal(true);
+ 75 │   const closeModal = () => setShowModal(false);
+ 76 │ 
+ 77 │   return (
+ 78 │     <>
+ 79 │       <button onClick={openModal}>Open Modal</button>
+ 80 │       {showModal && <HistoryModal onClose={closeModal} />}
+ 81 │     </>
+ 82 │   );
+ 83 │ };
+ 84 │ 
+ 85 │ export default MyComponent;
+    · ─────────────┬─────────────
+    ·              ╰── exported more than once
+    ╰────
+
+Error: 
+  ☞ Exported identifiers must be unique
+/home/runner/workspace/src/components/epictus-ia/modoepictusiabeta/header/icons/HeaderIcons.tsx:1:1
+1  |  import React, { useState } from "react";
+   |   ^
+2  |  import HistoricoIcon from "./HistoricoIcon";
+3  |  import EspacoAprendizagemIcon from "./EspacoAprendizagemIcon";
