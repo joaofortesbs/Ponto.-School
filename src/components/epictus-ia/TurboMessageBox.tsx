@@ -1,17 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
-import { 
-  Send, 
-  Mic, 
-  Image, 
-  Paperclip, 
-  Wrench, 
-  Settings, 
-  ChevronUp,
-  Sparkles
-} from "lucide-react";
+import React, { useState } from "react";
+import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
 import { ErrorBoundary } from "react-error-boundary";
 
 const MessageBoxFallback = ({ error, resetErrorBoundary }) => {
@@ -35,64 +25,27 @@ const MessageBoxFallback = ({ error, resetErrorBoundary }) => {
 
 const TurboMessageBox: React.FC = () => {
   console.log("Renderizando TurboMessageBox");
-
   const [message, setMessage] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Ajustar altura do textarea conforme conteúdo
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [message]);
 
-  // Focar o textarea quando o componente montar
-  useEffect(() => {
-    if (textareaRef.current) {
-      try {
-        textareaRef.current.focus();
-      } catch (error) {
-        console.error("Erro ao focar textarea:", error);
-      }
-    }
-
-    console.log("TurboMessageBox montado");
-
-    return () => {
-      console.log("TurboMessageBox desmontado");
-    };
-  }, []);
-
-  const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    try {
-      setMessage(e.target.value);
-    } catch (error) {
-      console.error("Erro ao atualizar mensagem:", error);
+  const handleSendMessage = () => {
+    if (message.trim()) {
+      console.log("Mensagem enviada:", message);
+      setMessage("");
+      // Aqui você implementaria a lógica para enviar a mensagem
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      if (message.trim()) {
-        console.log("Mensagem enviada:", message);
-        // Aqui você implementaria a lógica para enviar a mensagem
-        setMessage("");
-      }
-    } catch (error) {
-      console.error("Erro ao enviar mensagem:", error);
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
     }
   };
 
   const toggleExpanded = () => {
-    try {
-      setIsExpanded(prev => !prev);
-    } catch (error) {
-      console.error("Erro ao alternar expansão:", error);
-    }
+    setIsExpanded(prev => !prev);
   };
 
   try {
@@ -100,20 +53,18 @@ const TurboMessageBox: React.FC = () => {
       <ErrorBoundary FallbackComponent={MessageBoxFallback}>
         <div className="mx-auto max-w-4xl px-4 mb-4">
           <div className={cn(
-            "relative bg-white/5 dark:bg-[#11213a]/60 backdrop-blur-md border border-border/50 rounded-xl p-2 transition-all", 
+            "relative bg-white/5 dark:bg-[#11213a]/60 backdrop-blur-md border border-border/50 rounded-xl p-2 transition-all",
             isExpanded ? "pb-12" : ""
           )}>
-            {/* Botão de expansão */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="h-6 w-6 absolute top-1 left-1/2 transform -translate-x-1/2 -translate-y-[80%] bg-background dark:bg-[#11213a] border border-border/50 rounded-full z-10 hover:bg-muted"
               onClick={toggleExpanded}
             >
               <ChevronUp className={cn("h-4 w-4 transform transition-transform", isExpanded ? "rotate-180" : "")} />
             </Button>
 
-            {/* Área de opções expandidas */}
             {isExpanded && (
               <div className="absolute bottom-0 left-0 right-0 p-2 bg-white/5 dark:bg-[#0a1728]/60 border-t border-border/50 rounded-b-xl">
                 <div className="flex items-center justify-between">
@@ -131,77 +82,25 @@ const TurboMessageBox: React.FC = () => {
               </div>
             )}
 
-            {/* Formulário de envio de mensagem */}
-            <form onSubmit={handleSubmit} className="flex items-end gap-1.5">
+            <div className="relative flex items-end gap-1.5">
               <Textarea
-                ref={textareaRef}
-                className="min-h-10 max-h-32 border-0 bg-transparent resize-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/50 text-base"
-                placeholder="Envie uma mensagem..."
                 value={message}
-                onChange={handleMessageChange}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSubmit(e);
-                  }
-                }}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Digite sua mensagem para o Epictus IA..."
+                className="min-h-[80px] border-0 focus-visible:ring-0 focus-visible:ring-transparent resize-none p-3 pr-12 bg-transparent dark:text-white"
               />
-
-              <div className="flex items-center gap-1 mb-1 shrink-0">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
-                  type="button"
-                >
-                  <Mic className="h-5 w-5" />
-                </Button>
-
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
-                  type="button"
-                >
-                  <Paperclip className="h-5 w-5" />
-                </Button>
-
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
-                  type="button"
-                >
-                  <Image className="h-5 w-5" />
-                </Button>
-
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
-                  type="button"
-                >
-                  <Wrench className="h-5 w-5" />
-                </Button>
-
-                <Button
-                  type="submit"
-                  size="icon"
-                  className={cn(
-                    "h-8 w-8 rounded-full", 
-                    message.trim() 
-                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white" 
-                      : "bg-muted text-muted-foreground"
-                  )}
-                  disabled={!message.trim()}
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
-            </form>
+              <Button
+                onClick={handleSendMessage}
+                disabled={!message.trim()}
+                className="absolute bottom-2 right-2 h-8 w-8 p-0 bg-gradient-to-br from-orange-500 to-amber-600 rounded-full"
+                aria-label="Enviar mensagem"
+              >
+                <Send className="h-4 w-4 text-white" />
+              </Button>
+            </div>
           </div>
 
-          {/* Texto de Powered by abaixo da caixa */}
           <div className="text-center mt-2 flex items-center justify-center">
             <span className="text-[10px] text-muted-foreground flex items-center gap-1">
               <span>Powered by</span>

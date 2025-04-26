@@ -1,264 +1,78 @@
-
-import React, { useState, useEffect } from "react";
-import { cn } from "@/lib/utils";
+import React, { useState } from "react";
+import { Bell, Clock, Settings, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import LogoSection from "./LogoSection";
-import PersonalitiesDropdown from "./PersonalitiesDropdown";
-import { 
-  History, 
-  Settings, 
-  Save, 
-  FileText, 
-  HelpCircle,
-  Wrench, // Substituindo Tool por Wrench
-  Moon, 
-  Sun, 
-  Search
-} from "lucide-react";
-import { useTheme } from "@/components/ThemeProvider";
 import HistoricoModal from "../modals/HistoricoModal";
-import { ErrorBoundary } from "react-error-boundary";
 
-interface TurboHeaderProps {
-  className?: string;
-}
+export const TurboHeader: React.FC = () => {
+  console.log("Renderizando TurboHeader");
 
-// Componente de Fallback para tratamento de erros
-const HeaderErrorFallback = ({ error, resetErrorBoundary }) => {
-  console.error("Erro no TurboHeader:", error);
-  return (
-    <div className="w-full bg-red-50 dark:bg-red-900/10 text-red-800 dark:text-red-200 p-3 rounded-md flex items-center justify-between">
-      <span className="text-sm">Erro ao carregar o cabeçalho</span>
-      <Button variant="destructive" size="sm" onClick={resetErrorBoundary}>Recarregar</Button>
-    </div>
-  );
-};
+  // Estado para controlar a exibição do modal de histórico
+  const [isHistoricoModalOpen, setIsHistoricoModalOpen] = useState(false);
 
-const TurboHeader: React.FC<TurboHeaderProps> = ({ className }) => {
-  const [mounted, setMounted] = useState(false);
-  const { setTheme, theme } = useTheme();
-  const [isHistoricoModalOpen, setHistoricoModalOpen] = useState(false);
-
-  // Log de diagnóstico ao montar o componente
-  useEffect(() => {
-    console.log("TurboHeader montado");
-    setMounted(true);
-    
-    return () => {
-      console.log("TurboHeader desmontado");
-    };
-  }, []);
-
-  const toggleTheme = () => {
-    try {
-      setTheme(theme === "dark" ? "light" : "dark");
-      console.log("Tema alternado para:", theme === "dark" ? "light" : "dark");
-    } catch (error) {
-      console.error("Erro ao alternar tema:", error);
-    }
+  // Função para abrir o modal
+  const openHistoricoModal = () => {
+    console.log("Abrindo modal de histórico");
+    setIsHistoricoModalOpen(true);
   };
 
-  const handleHistoricoClick = () => {
-    try {
-      console.log("Botão de histórico clicado");
-      setHistoricoModalOpen(true);
-    } catch (error) {
-      console.error("Erro ao abrir modal de histórico:", error);
-    }
+  // Função para fechar o modal
+  const closeHistoricoModal = () => {
+    console.log("Fechando modal de histórico");
+    setIsHistoricoModalOpen(false);
   };
-
-  const handleCloseHistoricoModal = () => {
-    try {
-      console.log("Fechando modal de histórico");
-      setHistoricoModalOpen(false);
-    } catch (error) {
-      console.error("Erro ao fechar modal de histórico:", error);
-    }
-  };
-
-  // Verificar se o componente está montado para evitar problemas de renderização SSR
-  if (!mounted) {
-    console.log("TurboHeader aguardando montagem");
-    return null;
-  }
 
   try {
     return (
-      <ErrorBoundary FallbackComponent={HeaderErrorFallback}>
-        <header className={cn("w-full bg-background dark:bg-[#001427]/95 backdrop-blur-sm border-b border-border h-14 px-4 flex items-center justify-between sticky top-0 z-50", className)}>
-          {/* Logo e Título */}
-          <LogoSection />
-
-          {/* Ações do Cabeçalho */}
-          <div className="flex items-center gap-1 md:gap-2">
-            {/* Seletor de Personalidade */}
-            <PersonalitiesDropdown />
-
-            {/* Ícones de Ação */}
-            <div className="flex items-center">
-              <TooltipProvider>
-                {/* Histórico */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8" 
-                      onClick={handleHistoricoClick}
-                      aria-label="Ver histórico"
-                    >
-                      <History className="h-[1.2rem] w-[1.2rem] text-muted-foreground" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Histórico</p>
-                  </TooltipContent>
-                </Tooltip>
-
-                {/* Salvar */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8"
-                      aria-label="Salvar conversa"
-                    >
-                      <Save className="h-[1.2rem] w-[1.2rem] text-muted-foreground" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Salvar</p>
-                  </TooltipContent>
-                </Tooltip>
-
-                {/* Exportar */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8"
-                      aria-label="Exportar conversa"
-                    >
-                      <FileText className="h-[1.2rem] w-[1.2rem] text-muted-foreground" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Exportar</p>
-                  </TooltipContent>
-                </Tooltip>
-
-                {/* Buscar */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8"
-                      aria-label="Buscar na conversa"
-                    >
-                      <Search className="h-[1.2rem] w-[1.2rem] text-muted-foreground" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Buscar</p>
-                  </TooltipContent>
-                </Tooltip>
-
-                {/* Configurações */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8"
-                      aria-label="Configurações"
-                    >
-                      <Settings className="h-[1.2rem] w-[1.2rem] text-muted-foreground" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Configurações</p>
-                  </TooltipContent>
-                </Tooltip>
-
-                {/* Ferramentas */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8"
-                      aria-label="Ferramentas"
-                    >
-                      <Wrench className="h-[1.2rem] w-[1.2rem] text-muted-foreground" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Ferramentas</p>
-                  </TooltipContent>
-                </Tooltip>
-
-                {/* Ajuda */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8"
-                      aria-label="Ajuda"
-                    >
-                      <HelpCircle className="h-[1.2rem] w-[1.2rem] text-muted-foreground" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Ajuda</p>
-                  </TooltipContent>
-                </Tooltip>
-
-                {/* Alternar Tema */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8" 
-                      onClick={toggleTheme}
-                      aria-label="Alternar tema"
-                    >
-                      {theme === "dark" ? (
-                        <Sun className="h-[1.2rem] w-[1.2rem] text-muted-foreground" />
-                      ) : (
-                        <Moon className="h-[1.2rem] w-[1.2rem] text-muted-foreground" />
-                      )}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Tema: {theme === "dark" ? "Claro" : "Escuro"}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
+      <div className="flex items-center justify-between w-full h-14 px-4 bg-white dark:bg-[#0A2540] border-b border-gray-200 dark:border-gray-800">
+        {/* Logo e nome do produto */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-amber-600">
+            <Sparkles className="w-4 h-4 text-white" />
           </div>
-        </header>
+          <span className="font-medium text-gray-900 dark:text-white">
+            Epictus IA
+          </span>
+          <span className="text-xs font-semibold text-white bg-gradient-to-r from-orange-500 to-amber-600 px-1.5 py-0.5 rounded-sm">
+            BETA
+          </span>
+        </div>
+
+        {/* Botões de ação */}
+        <div className="flex items-center space-x-2">
+          {/* Botão de Histórico */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={openHistoricoModal}
+            aria-label="Histórico de conversas"
+          >
+            <Clock className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+          </Button>
+
+          {/* Botão de Notificações */}
+          <Button variant="ghost" size="icon" aria-label="Notificações">
+            <Bell className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+          </Button>
+
+          {/* Botão de Configurações */}
+          <Button variant="ghost" size="icon" aria-label="Configurações">
+            <Settings className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+          </Button>
+        </div>
 
         {/* Modal de Histórico */}
         <HistoricoModal 
           isOpen={isHistoricoModalOpen} 
-          onClose={handleCloseHistoricoModal} 
+          onClose={closeHistoricoModal} 
         />
-      </ErrorBoundary>
+      </div>
     );
   } catch (error) {
-    console.error("Erro fatal ao renderizar TurboHeader:", error);
+    console.error("Erro ao renderizar TurboHeader:", error);
     return (
-      <div className="w-full bg-red-100 dark:bg-red-900/20 p-3 text-center text-red-800 dark:text-red-200">
-        Erro ao carregar o cabeçalho. Por favor, recarregue a página.
+      <div className="w-full h-14 bg-white dark:bg-[#0A2540] border-b border-gray-200 dark:border-gray-800 px-4 flex items-center">
+        <span className="text-red-500">Erro ao carregar cabeçalho</span>
       </div>
     );
   }
 };
-
-export default TurboHeader;
