@@ -277,6 +277,44 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
       });
     }
   };
+  
+  // Função para retomar uma conversa
+  const retomarConversa = (conversa: Conversation) => {
+    if (!conversa.messages || conversa.messages.length === 0) {
+      toast({
+        title: "Erro ao retomar conversa",
+        description: "Esta conversa não contém mensagens que possam ser retomadas.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      // Armazenar a conversa no localStorage para acesso posterior
+      localStorage.setItem('epictus_retomar_conversa', JSON.stringify(conversa.messages));
+      
+      // Fechar o modal
+      onOpenChange(false);
+      
+      toast({
+        title: "Conversa retomada",
+        description: "A conversa foi carregada com sucesso."
+      });
+      
+      // Recarregar a página para atualizar o chat com a conversa selecionada
+      // ou usar um callback se disponível para evitar recarregar a página
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    } catch (error) {
+      console.error("Erro ao retomar conversa:", error);
+      toast({
+        title: "Erro ao retomar conversa",
+        description: "Não foi possível carregar a conversa selecionada.",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -615,12 +653,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                           variant="ghost"
                           size="sm"
                           className="text-gray-400 hover:text-white"
-                          onClick={() => {
-                            toast({
-                              title: "Retomar conversa",
-                              description: "Funcionalidade em desenvolvimento"
-                            });
-                          }}
+                          onClick={() => retomarConversa(selectedConversation)}
                         >
                           Retomar
                         </Button>

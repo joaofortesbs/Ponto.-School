@@ -9,7 +9,8 @@ import {
   FileText,
   PenLine,
   Share, 
-  Copy
+  Copy,
+  History
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import EpictusMessageBox from "./message-box/EpictusMessageBox";
@@ -616,8 +617,7 @@ const EpictusBetaMode: React.FC = () => {
       const messageToReformulate = messages.find(msg => msg.id === messageId);
       if (messageToReformulate) {
         const reformulatedResponse = await generateAIResponse(`Reformule a seguinte resposta de forma mais detalhada: ${messageToReformulate.content}`, sessionId);
-        const updatedMessages = messages.map(msg =>
-          msg.id === messageId
+        const updatedMessages = messages.map(msg =>          msg.id === messageId
             ? {...msg, content: reformulatedResponse, isEdited: true, needsImprovement: false }
             : msg
         );
@@ -662,30 +662,30 @@ const EpictusBetaMode: React.FC = () => {
 
   const [showHistoricoModal, setShowHistoricoModal] = useState(false);
   const [conversationTitle, setConversationTitle] = useState("Nova conversa");
-  
+
   useEffect(() => {
     // Salvar a conversa no Supabase quando houver pelo menos uma mensagem do usuário
     const saveConversationToSupabase = async () => {
-      if (messages.length > 2) { // Ignorar mensagem inicial automática
+      if (messages.length > 1) { // Ignorar mensagem inicial automática
         try {
           const { data: { user } } = await supabase.auth.getUser();
-          
+
           if (!user) {
             console.error("Usuário não autenticado");
             return;
           }
-          
+
           // Extrair primeiras mensagens para gerar título e preview
           const firstUserMessage = messages.find(msg => msg.sender === "user");
           const firstAIResponse = messages.find(msg => msg.sender === "ia" && msg.id !== messages[0].id);
-          
+
           // Gerar título baseado na primeira mensagem do usuário (limitado a 50 caracteres)
           const autoTitle = firstUserMessage 
             ? firstUserMessage.content.substring(0, 50) + (firstUserMessage.content.length > 50 ? "..." : "")
             : "Nova conversa";
-            
+
           setConversationTitle(autoTitle);
-          
+
           // Preparar dados para salvar
           const conversationData = {
             title: autoTitle,
@@ -698,7 +698,7 @@ const EpictusBetaMode: React.FC = () => {
               timestamp: msg.timestamp
             }))
           };
-          
+
           // Verificar se já existe uma conversa para esta sessão
           const { data: existingConversations, error: fetchError } = await supabase
             .from('user_conversations')
@@ -706,12 +706,12 @@ const EpictusBetaMode: React.FC = () => {
             .eq('user_id', user.id)
             .eq('session_id', sessionId)
             .limit(1);
-            
+
           if (fetchError) {
             console.error("Erro ao verificar conversa existente:", fetchError);
             return;
           }
-          
+
           if (existingConversations && existingConversations.length > 0) {
             // Atualizar conversa existente
             const { error: updateError } = await supabase
@@ -721,7 +721,7 @@ const EpictusBetaMode: React.FC = () => {
                 updated_at: new Date().toISOString()
               })
               .eq('id', existingConversations[0].id);
-              
+
             if (updateError) {
               console.error("Erro ao atualizar conversa:", updateError);
             }
@@ -736,7 +736,7 @@ const EpictusBetaMode: React.FC = () => {
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
               });
-              
+
             if (insertError) {
               console.error("Erro ao inserir conversa:", insertError);
             }
@@ -746,7 +746,7 @@ const EpictusBetaMode: React.FC = () => {
         }
       }
     };
-    
+
     saveConversationToSupabase();
   }, [messages, sessionId]);
 
@@ -1094,9 +1094,10 @@ const EpictusBetaMode: React.FC = () => {
         </div>
       </div>
 
-      <HistoricoConversasModal 
-        open={showHistoricoModal} 
-        onOpenChange={setShowHistoricoModal} 
+      {/* Modal de Histórico de Conversas */}
+      <HistoricoConversasModal
+        open={showHistoricoModal}
+        onOpenChange={setShowHistoricoModal}
       />
 
       <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
