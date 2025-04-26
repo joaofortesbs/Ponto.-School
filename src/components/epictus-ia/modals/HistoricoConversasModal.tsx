@@ -285,6 +285,25 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
     }
   }, [open, conversas, conversaSelecionada]);
 
+  // Função auxiliar para filtrar por data
+  const filtrarPorData = (data: Date, filtro: string): boolean => {
+    const hoje = new Date();
+    const umDiaEmMs = 24 * 60 * 60 * 1000;
+    
+    switch (filtro) {
+      case "hoje":
+        return data.toDateString() === hoje.toDateString();
+      case "semana":
+        const inicioSemana = new Date(hoje.getTime() - 7 * umDiaEmMs);
+        return data >= inicioSemana;
+      case "mes":
+        const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+        return data >= inicioMes;
+      default:
+        return true;
+    }
+  };
+
   // Função para filtrar conversas
   const conversasFiltradas = conversas.filter(conversa => {
     const matchesTermo = filtro
@@ -304,25 +323,6 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
     
     return matchesTermo && matchesTipo && matchesTag && matchesData;
   });
-
-  // Função auxiliar para filtrar por data
-  const filtrarPorData = (data: Date, filtro: string): boolean => {
-    const hoje = new Date();
-    const umDiaEmMs = 24 * 60 * 60 * 1000;
-    
-    switch (filtro) {
-      case "hoje":
-        return data.toDateString() === hoje.toDateString();
-      case "semana":
-        const inicioSemana = new Date(hoje.getTime() - 7 * umDiaEmMs);
-        return data >= inicioSemana;
-      case "mes":
-        const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-        return data >= inicioMes;
-      default:
-        return true;
-    }
-  };
 
   // Função para obter a lista de todas as tags disponíveis
   const todasTags = Array.from(
