@@ -1,0 +1,337 @@
+[plugin:vite:react-swc] × the name `PerfilIcon` is defined multiple times
+    ╭─[/home/runner/workspace/src/components/epictus-ia/modoepictusiabeta/header/icons/HeaderIcons.tsx:5:1]
+  5 │   onClick?: () => void;
+  6 │ }
+  7 │ 
+  8 │ const PerfilIcon: React.FC<PerfilIconProps> = ({ onClick }) => {
+    ·       ─────┬────
+    ·            ╰── previous definition of `PerfilIcon` here
+  9 │   return (
+ 10 │     <div className="cursor-pointer" onClick={onClick}>
+ 11 │       <img
+ 12 │         src="/path/to/your/profile/image.jpg" // Replace with actual image path
+ 13 │         alt="Profile"
+ 14 │         className="rounded-full w-8 h-8"
+ 15 │       />
+ 16 │     </div>
+ 17 │   );
+ 18 │ };
+ 19 │ 
+ 20 │ export default PerfilIcon;
+ 21 │ 
+ 22 │ 
+ 23 │ // modoepictusiabeta/header/icons/index.tsx
+ 24 │ import HistoricoIcon from "./HistoricoIcon";
+ 25 │ import EspacoAprendizagemIcon from "./EspacoAprendizagemIcon";
+ 26 │ import ApostilaInteligenteIcon from "./ApostilaInteligenteIcon";
+ 27 │ import ModoFantasmaIcon from "./ModoFantasmaIcon";
+ 28 │ import GaleriaIcon from "./GaleriaIcon";
+ 29 │ import PerfilIcon from "./PerfilIcon";
+    ·        ─────┬────
+    ·             ╰── `PerfilIcon` redefined here
+ 30 │ 
+ 31 │ export {
+ 32 │   HistoricoIcon,
+    ╰────
+
+  × the name `HistoricoIcon` is defined multiple times
+    ╭─[/home/runner/workspace/src/components/epictus-ia/modoepictusiabeta/header/icons/HeaderIcons.tsx:21:1]
+ 21 │ 
+ 22 │ 
+ 23 │ // modoepictusiabeta/header/icons/index.tsx
+ 24 │ import HistoricoIcon from "./HistoricoIcon";
+    ·        ──────┬──────
+    ·              ╰── previous definition of `HistoricoIcon` here
+ 25 │ import EspacoAprendizagemIcon from "./EspacoAprendizagemIcon";
+ 26 │ import ApostilaInteligenteIcon from "./ApostilaInteligenteIcon";
+ 27 │ import ModoFantasmaIcon from "./ModoFantasmaIcon";
+ 28 │ import GaleriaIcon from "./GaleriaIcon";
+ 29 │ import PerfilIcon from "./PerfilIcon";
+ 30 │ 
+ 31 │ export {
+ 32 │   HistoricoIcon,
+ 33 │   EspacoAprendizagemIcon,
+ 34 │   ApostilaInteligenteIcon,
+ 35 │   ModoFantasmaIcon,
+ 36 │   GaleriaIcon,
+ 37 │   PerfilIcon,
+ 38 │ };
+ 39 │ 
+ 40 │ 
+ 41 │ // modoepictusiabeta/header/HeaderIcons.tsx
+ 42 │ import React, { useState } from "react";
+ 43 │ import HistoricoIcon from "./icons/HistoricoIcon";
+    ·        ──────┬──────
+    ·              ╰── `HistoricoIcon` redefined here
+ 44 │ import EspacoAprendizagemIcon from "./icons/EspacoAprendizagemIcon";
+ 45 │ import ApostilaInteligenteIcon from "./icons/ApostilaInteligenteIcon";
+ 46 │ import ModoFantasmaIcon from "./icons/ModoFantasmaIcon";
+    ╰────
+
+  × the name `EspacoAprendizagemIcon` is defined multiple times
+    ╭─[/home/runner/workspace/src/components/epictus-ia/modoepictusiabeta/header/icons/HeaderIcons.tsx:22:1]
+ 22 │ 
+ 23 │ // modoepictusiabeta/header/icons/index.tsx
+ 24 │ import HistoricoIcon from "./HistoricoIcon";
+ 25 │ import EspacoAprendizagemIcon from "./EspacoAprendizagemIcon";
+    ·        ───────────┬──────────
+    ·                   ╰── previous definition of `EspacoAprendizagemIcon` here
+ 26 │ import ApostilaInteligenteIcon from "./ApostilaInteligenteIcon";
+ 27 │ import ModoFantasmaIcon from "./ModoFantasmaIcon";
+ 28 │ import GaleriaIcon from "./GaleriaIcon";
+ 29 │ import PerfilIcon from "./PerfilIcon";
+ 30 │ 
+ 31 │ export {
+ 32 │   HistoricoIcon,
+ 33 │   EspacoAprendizagemIcon,
+ 34 │   ApostilaInteligenteIcon,
+ 35 │   ModoFantasmaIcon,
+ 36 │   GaleriaIcon,
+ 37 │   PerfilIcon,
+ 38 │ };
+ 39 │ 
+ 40 │ 
+ 41 │ // modoepictusiabeta/header/HeaderIcons.tsx
+ 42 │ import React, { useState } from "react";
+ 43 │ import HistoricoIcon from "./icons/HistoricoIcon";
+ 44 │ import EspacoAprendizagemIcon from "./icons/EspacoAprendizagemIcon";
+    ·        ───────────┬──────────
+    ·                   ╰── `EspacoAprendizagemIcon` redefined here
+ 45 │ import ApostilaInteligenteIcon from "./icons/ApostilaInteligenteIcon";
+ 46 │ import ModoFantasmaIcon from "./icons/ModoFantasmaIcon";
+ 47 │ import GaleriaIcon from "./icons/GaleriaIcon";
+    ╰────
+
+  × the name `ApostilaInteligenteIcon` is defined multiple times
+    ╭─[/home/runner/workspace/src/components/epictus-ia/modoepictusiabeta/header/icons/HeaderIcons.tsx:23:1]
+ 23 │ // modoepictusiabeta/header/icons/index.tsx
+ 24 │ import HistoricoIcon from "./HistoricoIcon";
+ 25 │ import EspacoAprendizagemIcon from "./EspacoAprendizagemIcon";
+ 26 │ import ApostilaInteligenteIcon from "./ApostilaInteligenteIcon";
+    ·        ───────────┬───────────
+    ·                   ╰── previous definition of `ApostilaInteligenteIcon` here
+ 27 │ import ModoFantasmaIcon from "./ModoFantasmaIcon";
+ 28 │ import GaleriaIcon from "./GaleriaIcon";
+ 29 │ import PerfilIcon from "./PerfilIcon";
+ 30 │ 
+ 31 │ export {
+ 32 │   HistoricoIcon,
+ 33 │   EspacoAprendizagemIcon,
+ 34 │   ApostilaInteligenteIcon,
+ 35 │   ModoFantasmaIcon,
+ 36 │   GaleriaIcon,
+ 37 │   PerfilIcon,
+ 38 │ };
+ 39 │ 
+ 40 │ 
+ 41 │ // modoepictusiabeta/header/HeaderIcons.tsx
+ 42 │ import React, { useState } from "react";
+ 43 │ import HistoricoIcon from "./icons/HistoricoIcon";
+ 44 │ import EspacoAprendizagemIcon from "./icons/EspacoAprendizagemIcon";
+ 45 │ import ApostilaInteligenteIcon from "./icons/ApostilaInteligenteIcon";
+    ·        ───────────┬───────────
+    ·                   ╰── `ApostilaInteligenteIcon` redefined here
+ 46 │ import ModoFantasmaIcon from "./icons/ModoFantasmaIcon";
+ 47 │ import GaleriaIcon from "./icons/GaleriaIcon";
+ 48 │ import PerfilIcon from "./icons/PerfilIcon";
+    ╰────
+
+  × the name `ModoFantasmaIcon` is defined multiple times
+    ╭─[/home/runner/workspace/src/components/epictus-ia/modoepictusiabeta/header/icons/HeaderIcons.tsx:24:1]
+ 24 │ import HistoricoIcon from "./HistoricoIcon";
+ 25 │ import EspacoAprendizagemIcon from "./EspacoAprendizagemIcon";
+ 26 │ import ApostilaInteligenteIcon from "./ApostilaInteligenteIcon";
+ 27 │ import ModoFantasmaIcon from "./ModoFantasmaIcon";
+    ·        ────────┬───────
+    ·                ╰── previous definition of `ModoFantasmaIcon` here
+ 28 │ import GaleriaIcon from "./GaleriaIcon";
+ 29 │ import PerfilIcon from "./PerfilIcon";
+ 30 │ 
+ 31 │ export {
+ 32 │   HistoricoIcon,
+ 33 │   EspacoAprendizagemIcon,
+ 34 │   ApostilaInteligenteIcon,
+ 35 │   ModoFantasmaIcon,
+ 36 │   GaleriaIcon,
+ 37 │   PerfilIcon,
+ 38 │ };
+ 39 │ 
+ 40 │ 
+ 41 │ // modoepictusiabeta/header/HeaderIcons.tsx
+ 42 │ import React, { useState } from "react";
+ 43 │ import HistoricoIcon from "./icons/HistoricoIcon";
+ 44 │ import EspacoAprendizagemIcon from "./icons/EspacoAprendizagemIcon";
+ 45 │ import ApostilaInteligenteIcon from "./icons/ApostilaInteligenteIcon";
+ 46 │ import ModoFantasmaIcon from "./icons/ModoFantasmaIcon";
+    ·        ────────┬───────
+    ·                ╰── `ModoFantasmaIcon` redefined here
+ 47 │ import GaleriaIcon from "./icons/GaleriaIcon";
+ 48 │ import PerfilIcon from "./icons/PerfilIcon";
+ 49 │ import HistoricoConversasModal from "../../../modals/HistoricoConversasModal";
+    ╰────
+
+  × the name `GaleriaIcon` is defined multiple times
+    ╭─[/home/runner/workspace/src/components/epictus-ia/modoepictusiabeta/header/icons/HeaderIcons.tsx:25:1]
+ 25 │ import EspacoAprendizagemIcon from "./EspacoAprendizagemIcon";
+ 26 │ import ApostilaInteligenteIcon from "./ApostilaInteligenteIcon";
+ 27 │ import ModoFantasmaIcon from "./ModoFantasmaIcon";
+ 28 │ import GaleriaIcon from "./GaleriaIcon";
+    ·        ─────┬─────
+    ·             ╰── previous definition of `GaleriaIcon` here
+ 29 │ import PerfilIcon from "./PerfilIcon";
+ 30 │ 
+ 31 │ export {
+ 32 │   HistoricoIcon,
+ 33 │   EspacoAprendizagemIcon,
+ 34 │   ApostilaInteligenteIcon,
+ 35 │   ModoFantasmaIcon,
+ 36 │   GaleriaIcon,
+ 37 │   PerfilIcon,
+ 38 │ };
+ 39 │ 
+ 40 │ 
+ 41 │ // modoepictusiabeta/header/HeaderIcons.tsx
+ 42 │ import React, { useState } from "react";
+ 43 │ import HistoricoIcon from "./icons/HistoricoIcon";
+ 44 │ import EspacoAprendizagemIcon from "./icons/EspacoAprendizagemIcon";
+ 45 │ import ApostilaInteligenteIcon from "./icons/ApostilaInteligenteIcon";
+ 46 │ import ModoFantasmaIcon from "./icons/ModoFantasmaIcon";
+ 47 │ import GaleriaIcon from "./icons/GaleriaIcon";
+    ·        ─────┬─────
+    ·             ╰── `GaleriaIcon` redefined here
+ 48 │ import PerfilIcon from "./icons/PerfilIcon";
+ 49 │ import HistoricoConversasModal from "../../../modals/HistoricoConversasModal";
+    ╰────
+
+  × the name `PerfilIcon` is defined multiple times
+    ╭─[/home/runner/workspace/src/components/epictus-ia/modoepictusiabeta/header/icons/HeaderIcons.tsx:26:1]
+ 26 │ import ApostilaInteligenteIcon from "./ApostilaInteligenteIcon";
+ 27 │ import ModoFantasmaIcon from "./ModoFantasmaIcon";
+ 28 │ import GaleriaIcon from "./GaleriaIcon";
+ 29 │ import PerfilIcon from "./PerfilIcon";
+    ·        ─────┬────
+    ·             ╰── previous definition of `PerfilIcon` here
+ 30 │ 
+ 31 │ export {
+ 32 │   HistoricoIcon,
+ 33 │   EspacoAprendizagemIcon,
+ 34 │   ApostilaInteligenteIcon,
+ 35 │   ModoFantasmaIcon,
+ 36 │   GaleriaIcon,
+ 37 │   PerfilIcon,
+ 38 │ };
+ 39 │ 
+ 40 │ 
+ 41 │ // modoepictusiabeta/header/HeaderIcons.tsx
+ 42 │ import React, { useState } from "react";
+ 43 │ import HistoricoIcon from "./icons/HistoricoIcon";
+ 44 │ import EspacoAprendizagemIcon from "./icons/EspacoAprendizagemIcon";
+ 45 │ import ApostilaInteligenteIcon from "./icons/ApostilaInteligenteIcon";
+ 46 │ import ModoFantasmaIcon from "./icons/ModoFantasmaIcon";
+ 47 │ import GaleriaIcon from "./icons/GaleriaIcon";
+ 48 │ import PerfilIcon from "./icons/PerfilIcon";
+    ·        ─────┬────
+    ·             ╰── `PerfilIcon` redefined here
+ 49 │ import HistoricoConversasModal from "../../../modals/HistoricoConversasModal";
+ 50 │ 
+ 51 │ interface HeaderIconsProps {
+    ╰────
+
+  × the name `default` is exported multiple times
+    ╭─[/home/runner/workspace/src/components/epictus-ia/modoepictusiabeta/header/icons/HeaderIcons.tsx:17:1]
+ 17 │   );
+ 18 │ };
+ 19 │ 
+ 20 │ export default PerfilIcon;
+    · ─────────────┬────────────
+    ·              ╰── previous exported here
+ 21 │ 
+ 22 │ 
+ 23 │ // modoepictusiabeta/header/icons/index.tsx
+ 24 │ import HistoricoIcon from "./HistoricoIcon";
+ 25 │ import EspacoAprendizagemIcon from "./EspacoAprendizagemIcon";
+ 26 │ import ApostilaInteligenteIcon from "./ApostilaInteligenteIcon";
+ 27 │ import ModoFantasmaIcon from "./ModoFantasmaIcon";
+ 28 │ import GaleriaIcon from "./GaleriaIcon";
+ 29 │ import PerfilIcon from "./PerfilIcon";
+ 30 │ 
+ 31 │ export {
+ 32 │   HistoricoIcon,
+ 33 │   EspacoAprendizagemIcon,
+ 34 │   ApostilaInteligenteIcon,
+ 35 │   ModoFantasmaIcon,
+ 36 │   GaleriaIcon,
+ 37 │   PerfilIcon,
+ 38 │ };
+ 39 │ 
+ 40 │ 
+ 41 │ // modoepictusiabeta/header/HeaderIcons.tsx
+ 42 │ import React, { useState } from "react";
+ 43 │ import HistoricoIcon from "./icons/HistoricoIcon";
+ 44 │ import EspacoAprendizagemIcon from "./icons/EspacoAprendizagemIcon";
+ 45 │ import ApostilaInteligenteIcon from "./icons/ApostilaInteligenteIcon";
+ 46 │ import ModoFantasmaIcon from "./icons/ModoFantasmaIcon";
+ 47 │ import GaleriaIcon from "./icons/GaleriaIcon";
+ 48 │ import PerfilIcon from "./icons/PerfilIcon";
+ 49 │ import HistoricoConversasModal from "../../../modals/HistoricoConversasModal";
+ 50 │ 
+ 51 │ interface HeaderIconsProps {
+ 52 │   currentContext?: string;
+ 53 │   onHistoricoClick?: () => void;
+ 54 │   onEspacoAprendizagemClick?: () => void;
+ 55 │   onApostilaInteligenteClick?: () => void;
+ 56 │   onModoFantasmaClick?: () => void;
+ 57 │   onGaleriaClick?: () => void;
+ 58 │   onPerfilClick?: () => void; // Added prop for PerfilIcon
+ 59 │ }
+ 60 │ 
+ 61 │ const HeaderIcons: React.FC<HeaderIconsProps> = ({
+ 62 │   currentContext = "estudos",
+ 63 │   onHistoricoClick,
+ 64 │   onEspacoAprendizagemClick,
+ 65 │   onApostilaInteligenteClick,
+ 66 │   onModoFantasmaClick,
+ 67 │   onGaleriaClick,
+ 68 │   onPerfilClick, // Added prop
+ 69 │ }) => {
+ 70 │   const [modoFantasmaAtivo, setModoFantasmaAtivo] = useState(false);
+ 71 │   const [isHistoricoModalOpen, setIsHistoricoModalOpen] = useState(false);
+ 72 │ 
+ 73 │   const handleModoFantasmaClick = () => {
+ 74 │     setModoFantasmaAtivo(!modoFantasmaAtivo);
+ 75 │     if (onModoFantasmaClick) {
+ 76 │       onModoFantasmaClick();
+ 77 │     }
+ 78 │   };
+ 79 │ 
+ 80 │   const handleHistoricoClick = () => {
+ 81 │     setIsHistoricoModalOpen(true);
+ 82 │   };
+ 83 │ 
+ 84 │   return (
+ 85 │     <div className="flex items-center justify-center z-10 relative gap-3">
+ 86 │       <HistoricoIcon onClick={handleHistoricoClick} />
+ 87 │       <EspacoAprendizagemIcon onClick={onEspacoAprendizagemClick} />
+ 88 │       <ApostilaInteligenteIcon onClick={onApostilaInteligenteClick} />
+ 89 │       <ModoFantasmaIcon onClick={handleModoFantasmaClick} active={modoFantasmaAtivo} />
+ 90 │       <GaleriaIcon onClick={onGaleriaClick} />
+ 91 │       <PerfilIcon onClick={onPerfilClick} /> {/* Added PerfilIcon */}
+ 92 │       <HistoricoConversasModal open={isHistoricoModalOpen} onOpenChange={setIsHistoricoModalOpen} />
+ 93 │     </div>
+ 94 │   );
+ 95 │ };
+ 96 │ 
+ 97 │ export default HeaderIcons;
+    · ─────────────┬─────────────
+    ·              ╰── exported more than once
+    ╰────
+
+Error: 
+  ☞ Exported identifiers must be unique
+/home/runner/workspace/src/components/epictus-ia/modoepictusiabeta/header/icons/HeaderIcons.tsx:5:1
+41 |  // modoepictusiabeta/header/HeaderIcons.tsx
+42 |  import React, { useState } from "react";
+43 |  import HistoricoIcon from "./icons/HistoricoIcon";
+   |           ^
+44 |  import EspacoAprendizagemIcon from "./icons/EspacoAprendizagemIcon";
+45 |  import ApostilaInteligenteIcon from "./icons/ApostilaInteligenteIcon";
