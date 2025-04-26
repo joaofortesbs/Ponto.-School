@@ -37,6 +37,7 @@ interface Message {
 }
 
 import HeaderIcons from "./modoepictusiabeta/header/icons/HeaderIcons";
+import HistoricoConversasModal from "./modals/HistoricoConversasModal";
 
 const EpictusBetaMode: React.FC = () => {
   const [isHovered, setIsHovered] = useState(false);
@@ -49,6 +50,7 @@ const EpictusBetaMode: React.FC = () => {
   );
   const [profileName, setProfileName] = useState("Personalidades");
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
+  const [isHistoricoModalOpen, setIsHistoricoModalOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>(() => {
     try {
       const savedMessages = localStorage.getItem('epictus_beta_chat');
@@ -86,12 +88,6 @@ const EpictusBetaMode: React.FC = () => {
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  
-  // Função para lidar com cliques no ícone de histórico
-  const handleHistoricoClick = () => {
-    // Esta função é passada para PromptSuggestionsModal e usada para abrir o modal de histórico
-    // A abertura real do modal é feita no componente HeaderIcons
-  };
 
   const profileOptions = [
     { 
@@ -663,7 +659,15 @@ const EpictusBetaMode: React.FC = () => {
     }
   };
 
-  // Estado do modal de histórico agora é gerenciado no componente HeaderIcons
+  const [showHistoricoModal, setShowHistoricoModal] = useState(false);
+
+  const handleHistoricoClick = () => {
+    setShowHistoricoModal(true);
+  };
+
+  const closeHistoricoModal = () => {
+    setShowHistoricoModal(false);
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -1000,6 +1004,11 @@ const EpictusBetaMode: React.FC = () => {
           />
         </div>
       </div>
+
+      <HistoricoConversasModal 
+        open={showHistoricoModal} 
+        onOpenChange={setShowHistoricoModal} 
+      />
 
       <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
         <DialogContent className="bg-[#1A2634] text-white border-gray-700">
