@@ -9,7 +9,8 @@ import {
   FileText,
   PenLine,
   Share, 
-  Copy
+  Copy,
+  Edit
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import EpictusMessageBox from "./message-box/EpictusMessageBox";
@@ -34,10 +35,13 @@ interface Message {
   isEdited?: boolean;
   feedback?: 'positive' | 'negative';
   needsImprovement?: boolean; 
+  showTools?: boolean; // Added showTools property
 }
 
 import HeaderIcons from "./modoepictusiabeta/header/icons/HeaderIcons";
 import HistoricoConversasModal from "./modals/HistoricoConversasModal";
+import MessageToolsDropdown from "./message-tools/MessageToolsDropdown"; // Import the new component
+
 
 const EpictusBetaMode: React.FC = () => {
   const [isHovered, setIsHovered] = useState(false);
@@ -69,7 +73,8 @@ const EpictusBetaMode: React.FC = () => {
       id: uuidv4(),
       sender: "ia",
       content: "Olá, João! Eu sou o Epicus IA, seu assistente para aprendizado e programação. Como posso te ajudar hoje?",
-      timestamp: new Date()
+      timestamp: new Date(),
+      showTools: false // Added showTools property
     }];
   });
 
@@ -215,7 +220,8 @@ const EpictusBetaMode: React.FC = () => {
           id: uuidv4(),
           sender: "ia",
           content: response,
-          timestamp: new Date()
+          timestamp: new Date(),
+          showTools: false // Added showTools property
         };
 
         setMessages(prev => [...prev, aiMessage]);
@@ -226,7 +232,8 @@ const EpictusBetaMode: React.FC = () => {
           id: uuidv4(),
           sender: "ia",
           content: "Desculpe, encontrei um problema ao processar sua solicitação. Por favor, tente novamente em alguns instantes.",
-          timestamp: new Date()
+          timestamp: new Date(),
+          showTools: false // Added showTools property
         };
 
         setMessages(prev => [...prev, errorMessage]);
@@ -254,7 +261,8 @@ const EpictusBetaMode: React.FC = () => {
       id: uuidv4(),
       sender: "ia",
       content: "Olá, João! Eu sou o Epicus IA, seu assistente para aprendizado e programação. Como posso te ajudar hoje?",
-      timestamp: new Date()
+      timestamp: new Date(),
+      showTools: false // Added showTools property
     };
 
     setMessages([initialMessage]);
@@ -577,7 +585,8 @@ const EpictusBetaMode: React.FC = () => {
     id: uuidv4(),
     sender: "ia",
     content: responseMessage,
-    timestamp: new Date()
+    timestamp: new Date(),
+    showTools: false // Added showTools property
   };
 
   setMessages(prev => [...prev, botMessage]);
@@ -617,7 +626,7 @@ const EpictusBetaMode: React.FC = () => {
         const reformulatedResponse = await generateAIResponse(`Reformule a seguinte resposta de forma mais detalhada: ${messageToReformulate.content}`, sessionId);
         const updatedMessages = messages.map(msg =>
           msg.id === messageId
-            ? {...msg, content: reformulatedResponse, isEdited: true, needsImprovement: false }
+            ? {...msg, content: reformulatedResponse, isEdited: true, needsImprovement: false, showTools: false } // Added showTools
             : msg
         );
         setMessages(updatedMessages);
@@ -642,7 +651,7 @@ const EpictusBetaMode: React.FC = () => {
         const summarizedResponse = await generateAIResponse(`Resuma a seguinte resposta de forma mais concisa: ${messageToSummarize.content}`, sessionId);
         const updatedMessages = messages.map(msg =>
           msg.id === messageId
-            ? { ...msg, content: summarizedResponse, isEdited: true, needsImprovement: false }
+            ? { ...msg, content: summarizedResponse, isEdited: true, needsImprovement: false, showTools: false } // Added showTools
             : msg
         );
         setMessages(updatedMessages);
@@ -668,6 +677,47 @@ const EpictusBetaMode: React.FC = () => {
   const closeHistoricoModal = () => {
     setShowHistoricoModal(false);
   };
+
+  // Função para editar mensagem
+  const handleEditMessage = (messageId: string) => {
+    const messageToEdit = messages.find((msg) => msg.id === messageId);
+    if (messageToEdit) {
+      setInputMessage(messageToEdit.content);
+      setEditingMessageId(messageId);
+    }
+  };
+
+  // Função para alternar a exibição de ferramentas para uma mensagem
+  const toggleMessageTools = (messageId: string) => {
+    setMessages(prevMessages => 
+      prevMessages.map(msg => ({
+        ...msg,
+        showTools: msg.id === messageId ? !msg.showTools : false
+      }))
+    );
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Fechar todos os menus de ferramentas ao clicar fora
+  useEffect(() => {
+    const handleGlobalClick = () => {
+      setMessages(prevMessages => 
+        prevMessages.map(msg => ({
+          ...msg,
+          showTools: false
+        }))
+      );
+    };
+
+    document.addEventListener('click', handleGlobalClick);
+
+    return () => {
+      document.removeEventListener('click', handleGlobalClick);
+    };
+  }, []);
 
   return (
     <div className="flex flex-col h-full">
@@ -704,7 +754,7 @@ const EpictusBetaMode: React.FC = () => {
                   )}
 
                   <div
-                    className={`max-w-[80%] rounded-xl p-4 shadow-md backdrop-blur-sm transition-all duration-300 ${
+                    className={`max-w-[80%] rounded-xl p-4 shadow-md backdrop-blur-sm transition-all duration-300 group ${
                       message.sender === "user"
                         ? "bg-gradient-to-r from-[#3A7BD5] to-[#4A90E2] text-white border border-[#5AA0F2]/20"
                         : message.needsImprovement 
