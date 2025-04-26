@@ -36,6 +36,8 @@ interface Message {
   needsImprovement?: boolean; 
 }
 
+import HistoricoConversasModal from "./modals/HistoricoConversasModal";
+
 const EpictusBetaMode: React.FC = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [animationComplete, setAnimationComplete] = useState(false);
@@ -47,6 +49,7 @@ const EpictusBetaMode: React.FC = () => {
   );
   const [profileName, setProfileName] = useState("Personalidades");
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
+  const [isHistoricoModalOpen, setIsHistoricoModalOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>(() => {
     try {
       const savedMessages = localStorage.getItem('epictus_beta_chat');
@@ -986,9 +989,15 @@ const EpictusBetaMode: React.FC = () => {
               }, 100);
             }}
             currentContext="estudos"
+          onHistoricoClick={() => setIsHistoricoModalOpen(true)}
           />
         </div>
       </div>
+
+      <HistoricoConversasModal 
+        open={isHistoricoModalOpen} 
+        onOpenChange={setIsHistoricoModalOpen} 
+      />
 
       <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
         <DialogContent className="bg-[#1A2634] text-white border-gray-700">
