@@ -671,7 +671,7 @@ const EpictusBetaMode: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <TurboHeader profileOptions={profileOptions} initialProfileIcon={profileIcon} initialProfileName={profileName} onHistoricoClick={handleHistoricoClick} />
+      <TurboHeader profileOptions={profileOptions} initialProfileIcon={profileIcon} initialProfileName={profileName} />
 
       <div className="flex-1 flex flex-col items-center justify-between p-4 overflow-hidden bg-transparent">
         <div className="w-[80%] h-[85%] relative mb-4 flex-grow overflow-hidden">
