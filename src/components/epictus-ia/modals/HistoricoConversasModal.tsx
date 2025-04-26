@@ -24,7 +24,8 @@ import {
   Bookmark,
   Share2,
   ExternalLink,
-  ArrowUpRight
+  ArrowUpRight,
+  Copy
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
