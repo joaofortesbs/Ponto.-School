@@ -248,53 +248,83 @@ const EpictusTurboMode: React.FC = () => {
           {/* New header icons */}
           <div className="flex items-center justify-center z-10 relative gap-3">
             {/* Personalidades dropdown */}
-            <div className="relative icon-container mr-5 group" style={{ zIndex: 99999, position: "relative" }}>
-              <motion.div
-                className="relative w-auto h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#0055B8] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow px-3 group" 
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                initial={false}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="flex items-center gap-2">
-                  {profileIcon}
-                  <span className="text-white text-sm font-medium">{profileName}</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white transition-transform duration-300 group-hover:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                </div>
-              </motion.div>
+            <div className="relative icon-container mr-5" style={{ zIndex: 99999, position: "relative" }}>
+              {/* Adicionando estado para controlar o dropdown */}
+              {useState && (() => {
+                const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+                
+                // Referência para detectar cliques fora do dropdown
+                const dropdownRef = React.useRef<HTMLDivElement>(null);
+                
+                // Fechar o dropdown quando clicar fora dele
+                React.useEffect(() => {
+                  const handleClickOutside = (event: MouseEvent) => {
+                    if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                      setIsDropdownOpen(false);
+                    }
+                  };
+                  
+                  document.addEventListener('mousedown', handleClickOutside);
+                  return () => {
+                    document.removeEventListener('mousedown', handleClickOutside);
+                  };
+                }, [dropdownRef]);
+                
+                return (
+                  <div ref={dropdownRef}>
+                    <motion.div
+                      className="relative w-auto h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#0055B8] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow px-3" 
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      initial={false}
+                      transition={{ duration: 0.3 }}
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    >
+                      <div className="flex items-center gap-2">
+                        {profileIcon}
+                        <span className="text-white text-sm font-medium">{profileName}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 text-white transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                      </div>
+                    </motion.div>
 
-              {/* Dropdown content - absolute positioning relative to its container */}
-              <div className="fixed group-hover:opacity-100 group-hover:visible opacity-0 invisible transition-all duration-300 z-[99999] left-auto mt-2 personalidades-dropdown" style={{ top: "calc(100% + 10px)" }}>
-                <div className="w-52 bg-[#0f3562] rounded-lg shadow-xl overflow-hidden border border-white/10 backdrop-blur-md" style={{ position: "relative", zIndex: 99999 }}> 
-                  <div className="max-h-60 overflow-y-auto py-2">
-                    {profileOptions.map((item, index) => (
-                      <motion.div 
-                        key={index} 
-                        className="flex items-center gap-2 px-3 py-2 cursor-pointer mb-1 mx-2 rounded-lg hover:bg-white/10 transition-all"
-                        whileHover={{ 
-                          y: -2, 
-                          boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
-                          scale: 1.02
-                        }}
-                        onClick={item.onClick}
-                      >
-                        <div 
-                          className="w-7 h-7 rounded-md flex items-center justify-center shadow-inner"
-                          style={{ 
-                            background: `linear-gradient(135deg, #0055B830, #0055B850)`,
-                            boxShadow: `0 0 15px #0055B840` 
-                          }}
-                        >
-                          {item.icon}
+                    {/* Dropdown content - absolute positioning relative to its container */}
+                    <div className={`fixed ${isDropdownOpen ? 'opacity-100 visible' : 'opacity-0 invisible'} transition-all duration-300 z-[99999] left-auto mt-2 personalidades-dropdown`} style={{ top: "calc(100% + 10px)" }}>
+                      <div className="w-52 bg-[#0f3562] rounded-lg shadow-xl overflow-hidden border border-white/10 backdrop-blur-md" style={{ position: "relative", zIndex: 99999 }}> 
+                        <div className="max-h-60 overflow-y-auto py-2">
+                          {profileOptions.map((item, index) => (
+                            <motion.div 
+                              key={index} 
+                              className="flex items-center gap-2 px-3 py-2 cursor-pointer mb-1 mx-2 rounded-lg hover:bg-white/10 transition-all"
+                              whileHover={{ 
+                                y: -2, 
+                                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+                                scale: 1.02
+                              }}
+                              onClick={() => {
+                                item.onClick();
+                                setIsDropdownOpen(false);
+                              }}
+                            >
+                              <div 
+                                className="w-7 h-7 rounded-md flex items-center justify-center shadow-inner"
+                                style={{ 
+                                  background: `linear-gradient(135deg, #0055B830, #0055B850)`,
+                                  boxShadow: `0 0 15px #0055B840` 
+                                }}
+                              >
+                                {item.icon}
+                              </div>
+                              <span className="text-white text-sm">{item.name}</span>
+                            </motion.div>
+                          ))}
                         </div>
-                        <span className="text-white text-sm">{item.name}</span>
-                      </motion.div>
-                    ))}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                );
+              })()}
             </div>
 
             {/* History icon */}
