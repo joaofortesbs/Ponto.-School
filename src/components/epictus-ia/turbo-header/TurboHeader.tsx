@@ -15,14 +15,12 @@ interface TurboHeaderProps {
   }>;
   initialProfileIcon?: React.ReactNode;
   initialProfileName?: string;
-  onHistoricoClick?: () => void;
 }
 
 const TurboHeader: React.FC<TurboHeaderProps> = ({ 
   profileOptions,
   initialProfileIcon,
-  initialProfileName = "Personalidades",
-  onHistoricoClick
+  initialProfileName = "Personalidades" 
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [animationComplete, setAnimationComplete] = useState(false);
@@ -64,7 +62,7 @@ const TurboHeader: React.FC<TurboHeaderProps> = ({
             profileOptions={profileOptions}
           />
 
-          <HeaderIcons onHistoricoClick={onHistoricoClick} />
+          <HeaderIcons />
         </div>
       </motion.header>
     </div>

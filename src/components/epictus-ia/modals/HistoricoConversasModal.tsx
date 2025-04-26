@@ -54,23 +54,16 @@ interface Conversa {
 interface HistoricoConversasModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  currentConversationId?: string | null;
-  onSelectConversation: (conversationId: string) => void;
-  onCreateNewChat: () => void;
 }
 
 const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
   open,
   onOpenChange,
-  currentConversationId,
-  onSelectConversation,
-  onCreateNewChat
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showActionsMenu, setShowActionsMenu] = useState(false);
-  const [selectedConversation, setSelectedConversation] = useState<string | null>(currentConversationId || null);
+  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [conversasData, setConversasData] = useState<Conversa[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
@@ -83,92 +76,9 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Carregar conversas do Supabase
+  // Gerar dados simulados ao montar o componente
   useEffect(() => {
-    const fetchConversations = async () => {
-      setIsLoading(true);
-      
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          console.error("Usuário não autenticado");
-          setIsLoading(false);
-          return;
-        }
-        
-        // Buscar conversas do usuário atual
-        const { data, error } = await supabase
-          .from('conversas')
-          .select(`
-            id, 
-            title as titulo, 
-            created_at, 
-            updated_at,
-            resumo,
-            categoria,
-            favorito,
-            privado
-          `)
-          .eq('user_id', user.id)
-          .order('updated_at', { ascending: false });
-        
-        if (error) {
-          console.error("Erro ao buscar conversas:", error);
-          return;
-        }
-        
-        // Transformar os dados para o formato esperado pelo componente
-        const formattedConversations: Conversa[] = data.map(conv => ({
-          id: conv.id,
-          titulo: conv.titulo || "Conversa sem título",
-          timestamp: new Date(conv.updated_at),
-          favorito: conv.favorito || false,
-          privado: conv.privado || false,
-          categoria: conv.categoria || undefined,
-          resumo: conv.resumo || undefined
-        }));
-        
-        // Para cada conversa, buscar as 3 primeiras mensagens como preview
-        for (const conv of formattedConversations) {
-          const { data: messagesData, error: messagesError } = await supabase
-            .from('mensagens')
-            .select('*')
-            .eq('conversa_id', conv.id)
-            .order('created_at', { ascending: true })
-            .limit(3);
-          
-          if (!messagesError && messagesData) {
-            conv.messages = messagesData.map(msg => ({
-              id: msg.id,
-              content: msg.content,
-              sender: msg.is_user ? "user" : "ai",
-              timestamp: new Date(msg.created_at)
-            }));
-          }
-        }
-        
-        setConversasData(formattedConversations);
-      } catch (error) {
-        console.error("Erro ao buscar conversas:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (open) {
-      fetchConversations();
-      
-      // Se temos um ID de conversa atual, selecioná-lo
-      if (currentConversationId) {
-        setSelectedConversation(currentConversationId);
-      }
-    }
-  }, [open, currentConversationId]);
-
-  // Simular dados de conversa para teste
-  useEffect(() => {
-    // Datas para agrupamento
+    // Dados de exemplo para conversas
     const hoje = new Date();
     const ontem = new Date(hoje);
     ontem.setDate(ontem.getDate() - 1);
@@ -178,9 +88,33 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
     
     const esteAno = new Date(hoje);
     esteAno.setMonth(esteAno.getMonth() - 3);
-    
-    // Dados simulados de conversa
-    const dadosSimulados = [
+
+    const dadosSimulados: Conversa[] = [
+      {
+        id: "1",
+        titulo: "Otimização de algoritmos de busca",
+        timestamp: new Date(hoje.setHours(hoje.getHours() - 2)),
+        favorito: true,
+        privado: true,
+        categoria: "tecnologia",
+        resumo: "Discussão sobre diferentes métodos de otimização para algoritmos de busca, incluindo análise de complexidade e casos de uso.",
+        messages: [
+          { id: "m1", content: "Como posso otimizar um algoritmo de busca binária?", sender: "user", timestamp: new Date(hoje.setMinutes(hoje.getMinutes() - 30)) },
+          { id: "m2", content: "A busca binária já é um algoritmo otimizado com complexidade O(log n). Para otimizá-lo ainda mais, você pode considerar: 1) Usar arrays ordenados para aproveitar ao máximo o algoritmo; 2) Implementar uma versão iterativa em vez de recursiva para evitar overhead de pilha; 3) Em grandes conjuntos de dados, considerar estruturas de dados especializadas como árvores B ou tabelas hash.", sender: "ai", timestamp: new Date(hoje.setMinutes(hoje.getMinutes() - 29)) },
+          { id: "m3", content: "E quanto à busca em estruturas mais complexas como grafos?", sender: "user", timestamp: new Date(hoje.setMinutes(hoje.getMinutes() - 25)) }
+        ]
+      },
+      {
+        id: "2",
+        titulo: "Desenvolvimento de interfaces responsivas",
+        timestamp: new Date(ontem.setHours(ontem.getHours() - 5)),
+        categoria: "design",
+        resumo: "Exploração de técnicas modernas para criar interfaces responsivas que se adaptam a diferentes tamanhos de tela.",
+        messages: [
+          { id: "m4", content: "Quais são as melhores práticas para interfaces responsivas em 2024?", sender: "user", timestamp: new Date(ontem.setMinutes(ontem.getMinutes() - 45)) },
+          { id: "m5", content: "Em 2024, as melhores práticas para interfaces responsivas incluem: uso de design system consistente, abordagem mobile-first, CSS Grid e Flexbox para layouts flexíveis, componentes adaptáveis por contexto, e uso de media queries estratégicas.", sender: "ai", timestamp: new Date(ontem.setMinutes(ontem.getMinutes() - 43)) }
+        ]
+      },
       {
         id: "3",
         titulo: "Estudo sobre inteligência artificial avançada",
@@ -345,7 +279,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
   };
 
   const criarNovoChat = () => {
-    onCreateNewChat();
+    console.log("Criando novo chat privado");
     onOpenChange(false); // Fechar o modal após criar novo chat
   };
 
@@ -362,150 +296,41 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
     setShowActionsMenu(false);
   };
 
-  const toggleFavorito = async (id: string, event: React.MouseEvent) => {
+  const toggleFavorito = (id: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    
-    try {
-      // Encontrar a conversa atual e seu estado de favorito
-      const conversa = conversasData.find(c => c.id === id);
-      if (!conversa) return;
-      
-      const novoEstadoFavorito = !conversa.favorito;
-      
-      // Atualizar no estado local primeiro para UX responsiva
-      setConversasData(prevState => 
-        prevState.map(conversa => 
-          conversa.id === id 
-            ? { ...conversa, favorito: novoEstadoFavorito } 
-            : conversa
-        )
-      );
-      
-      // Atualizar no Supabase
-      const { error } = await supabase
-        .from('conversas')
-        .update({ favorito: novoEstadoFavorito })
-        .eq('id', id);
-      
-      if (error) {
-        console.error("Erro ao atualizar favorito:", error);
-        // Reverter mudança em caso de erro
-        setConversasData(prevState => 
-          prevState.map(conversa => 
-            conversa.id === id 
-              ? { ...conversa, favorito: !novoEstadoFavorito } 
-              : conversa
-          )
-        );
-      }
-    } catch (error) {
-      console.error("Erro ao processar favorito:", error);
-    }
+    setConversasData(prevState => 
+      prevState.map(conversa => 
+        conversa.id === id 
+          ? { ...conversa, favorito: !conversa.favorito } 
+          : conversa
+      )
+    );
   };
 
-  const togglePrivado = async (id: string, event: React.MouseEvent) => {
+  const togglePrivado = (id: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    
-    try {
-      // Encontrar a conversa atual e seu estado de privacidade
-      const conversa = conversasData.find(c => c.id === id);
-      if (!conversa) return;
-      
-      const novoEstadoPrivado = !conversa.privado;
-      
-      // Atualizar no estado local primeiro para UX responsiva
-      setConversasData(prevState => 
-        prevState.map(conversa => 
-          conversa.id === id 
-            ? { ...conversa, privado: novoEstadoPrivado } 
-            : conversa
-        )
-      );
-      
-      // Atualizar no Supabase
-      const { error } = await supabase
-        .from('conversas')
-        .update({ privado: novoEstadoPrivado })
-        .eq('id', id);
-      
-      if (error) {
-        console.error("Erro ao atualizar privacidade:", error);
-        // Reverter mudança em caso de erro
-        setConversasData(prevState => 
-          prevState.map(conversa => 
-            conversa.id === id 
-              ? { ...conversa, privado: !novoEstadoPrivado } 
-              : conversa
-          )
-        );
-      }
-    } catch (error) {
-      console.error("Erro ao processar privacidade:", error);
-    }
+    setConversasData(prevState => 
+      prevState.map(conversa => 
+        conversa.id === id 
+          ? { ...conversa, privado: !conversa.privado } 
+          : conversa
+      )
+    );
   };
 
-  const excluirConversa = async (id: string, event: React.MouseEvent) => {
+  const excluirConversa = (id: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    
     if (window.confirm('Tem certeza que deseja excluir esta conversa?')) {
-      try {
-        // Primeiro excluir as mensagens relacionadas
-        const { error: messagesError } = await supabase
-          .from('mensagens')
-          .delete()
-          .eq('conversa_id', id);
-        
-        if (messagesError) {
-          console.error("Erro ao excluir mensagens da conversa:", messagesError);
-          return;
-        }
-        
-        // Depois excluir a conversa
-        const { error: conversationError } = await supabase
-          .from('conversas')
-          .delete()
-          .eq('id', id);
-        
-        if (conversationError) {
-          console.error("Erro ao excluir conversa:", conversationError);
-          return;
-        }
-        
-        // Atualizar o estado local removendo a conversa
-        setConversasData(prevState => prevState.filter(conversa => conversa.id !== id));
-        
-        // Se a conversa excluída era a atual, limpar a seleção
-        if (selectedConversation === id) {
-          setSelectedConversation(null);
-        }
-        
-        // Se a conversa excluída era a atual na interface principal, criar uma nova
-        if (currentConversationId === id) {
-          onCreateNewChat();
-        }
-        
-        toast({
-          title: "Conversa excluída",
-          description: "A conversa foi removida com sucesso.",
-          duration: 3000,
-        });
-      } catch (error) {
-        console.error("Erro ao excluir conversa:", error);
-        toast({
-          title: "Erro ao excluir",
-          description: "Não foi possível excluir a conversa. Tente novamente.",
-          variant: "destructive",
-          duration: 3000,
-        });
+      setConversasData(prevState => prevState.filter(conversa => conversa.id !== id));
+      if (selectedConversation === id) {
+        setSelectedConversation(null);
       }
     }
   };
 
   const continuarConversa = () => {
-    if (selectedConversation) {
-      onSelectConversation(selectedConversation);
-      onOpenChange(false);
-    }
+    console.log(`Continuando conversa: ${selectedConversation}`);
+    onOpenChange(false);
   };
 
   const grupos = agruparConversas();
@@ -703,15 +528,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
             {/* Lista de conversas com rolagem */}
             <ScrollArea className="flex-1 px-2">
               <div className="py-2">
-                {isLoading ? (
-                  <div className="flex flex-col items-center justify-center py-10 px-6 text-center">
-                    <div className="w-10 h-10 border-t-2 border-b-2 border-blue-500 rounded-full animate-spin mb-3"></div>
-                    <h3 className="text-lg font-medium text-gray-400">Carregando conversas...</h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Buscando seu histórico de conversas...
-                    </p>
-                  </div>
-                ) : !temResultados && (
+                {!temResultados && (
                   <div className="flex flex-col items-center justify-center py-10 px-6 text-center">
                     <Search className="h-10 w-10 text-gray-500 mb-3 opacity-50" />
                     <h3 className="text-lg font-medium text-gray-400">Nenhum resultado encontrado</h3>

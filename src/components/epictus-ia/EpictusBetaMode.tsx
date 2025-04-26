@@ -16,8 +16,6 @@ import EpictusMessageBox from "./message-box/EpictusMessageBox";
 import PromptSuggestionsModal from "./message-box/PromptSuggestionsModal";
 import ExportShareModal from "./export-modal/ExportShareModal";
 import TurboHeader from "./turbo-header/TurboHeader";
-import HeaderIcons from "./modoepictusiabeta/header/icons/HeaderIcons";
-import HistoricoConversasModal from "./modals/HistoricoConversasModal";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +25,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { v4 as uuidv4 } from 'uuid';
 import { generateAIResponse, addMessageToHistory, createMessage } from "@/services/epictusIAService";
 import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/lib/supabase";
 
 interface Message {
   id: string;
@@ -38,6 +35,9 @@ interface Message {
   feedback?: 'positive' | 'negative';
   needsImprovement?: boolean; 
 }
+
+import HeaderIcons from "./modoepictusiabeta/header/icons/HeaderIcons";
+import HistoricoConversasModal from "./modals/HistoricoConversasModal";
 
 const EpictusBetaMode: React.FC = () => {
   const [isHovered, setIsHovered] = useState(false);
@@ -51,10 +51,6 @@ const EpictusBetaMode: React.FC = () => {
   const [profileName, setProfileName] = useState("Personalidades");
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
   const [isHistoricoModalOpen, setIsHistoricoModalOpen] = useState(false);
-  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
-
-  // Estado para armazenar as mensagens da conversa atual
   const [messages, setMessages] = useState<Message[]>(() => {
     try {
       const savedMessages = localStorage.getItem('epictus_beta_chat');
@@ -72,7 +68,7 @@ const EpictusBetaMode: React.FC = () => {
     return [{
       id: uuidv4(),
       sender: "ia",
-      content: "Olá! Eu sou o Epicus IA, seu assistente para aprendizado e programação. Como posso te ajudar hoje?",
+      content: "Olá, João! Eu sou o Epicus IA, seu assistente para aprendizado e programação. Como posso te ajudar hoje?",
       timestamp: new Date()
     }];
   });
@@ -174,177 +170,6 @@ const EpictusBetaMode: React.FC = () => {
     }
   };
 
-  // Efeito para obter o ID do usuário atual
-  useEffect(() => {
-    const getUserId = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUserId(user?.id || null);
-
-      // Se não temos uma conversa atual mas temos um usuário, vamos criar/buscar a conversa ativa
-      if (!currentConversationId && user?.id) {
-        // Verificar se existe uma conversa ativa salva no localStorage
-        const savedConversationId = localStorage.getItem('epictus_active_conversation');
-
-        if (savedConversationId) {
-          // Verificar se esta conversa existe para o usuário atual
-          const { data: conversationExists } = await supabase
-            .from('conversas')
-            .select('id')
-            .eq('id', savedConversationId)
-            .eq('user_id', user.id)
-            .single();
-
-          if (conversationExists) {
-            setCurrentConversationId(savedConversationId);
-            await loadConversationMessages(savedConversationId);
-          } else {
-            await createNewConversation();
-          }
-        } else {
-          await createNewConversation();
-        }
-      }
-    };
-
-    getUserId();
-  }, []);
-
-  // Função para carregar mensagens de uma conversa
-  const loadConversationMessages = async (conversationId: string) => {
-    try {
-      const { data: messagesData, error } = await supabase
-        .from('mensagens')
-        .select('*')
-        .eq('conversa_id', conversationId)
-        .order('created_at', { ascending: true });
-
-      if (error) {
-        console.error("Erro ao carregar mensagens:", error);
-        return;
-      }
-
-      if (messagesData && messagesData.length > 0) {
-        const formattedMessages: Message[] = messagesData.map(msg => ({
-          id: msg.id,
-          sender: msg.is_user ? "user" : "ia",
-          content: msg.content,
-          timestamp: new Date(msg.created_at),
-          isEdited: msg.is_edited || false,
-          feedback: msg.feedback || undefined
-        }));
-
-        setMessages(formattedMessages);
-      } else {
-        // Se não há mensagens, inicializamos com a mensagem de boas-vindas
-        setMessages([{
-          id: uuidv4(),
-          sender: "ia",
-          content: "Olá! Eu sou o Epicus IA, seu assistente para aprendizado e programação. Como posso te ajudar hoje?",
-          timestamp: new Date()
-        }]);
-      }
-    } catch (error) {
-      console.error("Erro ao processar mensagens:", error);
-    }
-  };
-
-  // Função para criar uma nova conversa
-  const createNewConversation = async () => {
-    if (!userId) return;
-
-    try {
-      // Criar uma nova conversa no Supabase
-      const { data: newConversation, error } = await supabase
-        .from('conversas')
-        .insert([{ 
-          user_id: userId, 
-          title: "Nova Conversa",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }])
-        .select()
-        .single();
-
-      if (error) {
-        console.error("Erro ao criar nova conversa:", error);
-        return;
-      }
-
-      if (newConversation) {
-        setCurrentConversationId(newConversation.id);
-        localStorage.setItem('epictus_active_conversation', newConversation.id);
-
-        // Limpar mensagens e iniciar com a mensagem de boas-vindas
-        const welcomeMessage: Message = {
-          id: uuidv4(),
-          sender: "ia",
-          content: "Olá! Eu sou o Epicus IA, seu assistente para aprendizado e programação. Como posso te ajudar hoje?",
-          timestamp: new Date()
-        };
-
-        setMessages([welcomeMessage]);
-
-        // Salvar a mensagem inicial no Supabase
-        await supabase.from('mensagens').insert([{
-          conversa_id: newConversation.id,
-          user_id: userId,
-          content: welcomeMessage.content,
-          is_user: false,
-          created_at: welcomeMessage.timestamp.toISOString()
-        }]);
-      }
-    } catch (error) {
-      console.error("Erro ao criar nova conversa:", error);
-    }
-  };
-
-  // Função para atualizar o título da conversa com base na primeira mensagem do usuário
-  const updateConversationTitle = async (conversationId: string, message: string) => {
-    if (!conversationId) return;
-
-    try {
-      // Gerar um título baseado na mensagem (limitado a 50 caracteres)
-      let title = message.substring(0, 50);
-      if (message.length > 50) title += "...";
-
-      // Atualizar o título da conversa no Supabase
-      const { error } = await supabase
-        .from('conversas')
-        .update({ 
-          title,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', conversationId);
-
-      if (error) {
-        console.error("Erro ao atualizar título da conversa:", error);
-      }
-    } catch (error) {
-      console.error("Erro ao processar atualização de título:", error);
-    }
-  };
-
-  // Função para verificar se é a primeira mensagem do usuário
-  const isFirstUserMessage = async (conversationId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('mensagens')
-        .select('*')
-        .eq('conversa_id', conversationId)
-        .eq('is_user', true);
-
-      if (error) {
-        console.error("Erro ao verificar mensagens do usuário:", error);
-        return false;
-      }
-
-      return data && data.length === 0;
-    } catch (error) {
-      console.error("Erro ao verificar primeira mensagem:", error);
-      return false;
-    }
-  };
-
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     if (value.length <= MAX_CHARS) {
@@ -362,10 +187,7 @@ const EpictusBetaMode: React.FC = () => {
       return;
     }
 
-    if (isTyping || !currentConversationId || !userId) return;
-
-    // Verificar se é a primeira mensagem do usuário na conversa
-    const isFirst = await isFirstUserMessage(currentConversationId);
+    if (isTyping) return;
 
     const userMessage: Message = {
       id: uuidv4(),
@@ -380,27 +202,6 @@ const EpictusBetaMode: React.FC = () => {
     setIsTyping(true);
 
     try {
-      // Salvar a mensagem do usuário no Supabase
-      await supabase.from('mensagens').insert([{
-        id: userMessage.id,
-        conversa_id: currentConversationId,
-        user_id: userId,
-        content: userMessage.content,
-        is_user: true,
-        created_at: userMessage.timestamp.toISOString()
-      }]);
-
-      // Se for a primeira mensagem, atualizar o título da conversa
-      if (isFirst) {
-        await updateConversationTitle(currentConversationId, trimmedMessage);
-      }
-
-      // Atualizar o timestamp da conversa
-      await supabase
-        .from('conversas')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('id', currentConversationId);
-
       const typingTimeout = setTimeout(() => {
         setIsTyping(true);
       }, 300);
@@ -418,16 +219,6 @@ const EpictusBetaMode: React.FC = () => {
         };
 
         setMessages(prev => [...prev, aiMessage]);
-
-        // Salvar a resposta da IA no Supabase
-        await supabase.from('mensagens').insert([{
-          id: aiMessage.id,
-          conversa_id: currentConversationId,
-          user_id: userId,
-          content: aiMessage.content,
-          is_user: false,
-          created_at: aiMessage.timestamp.toISOString()
-        }]);
       } catch (err) {
         console.error("Erro ao gerar resposta com Gemini:", err);
 
@@ -439,16 +230,6 @@ const EpictusBetaMode: React.FC = () => {
         };
 
         setMessages(prev => [...prev, errorMessage]);
-
-        // Salvar a mensagem de erro no Supabase
-        await supabase.from('mensagens').insert([{
-          id: errorMessage.id,
-          conversa_id: currentConversationId,
-          user_id: userId,
-          content: errorMessage.content,
-          is_user: false,
-          created_at: errorMessage.timestamp.toISOString()
-        }]);
       } finally {
         clearTimeout(typingTimeout);
         setIsTyping(false);
@@ -468,24 +249,16 @@ const EpictusBetaMode: React.FC = () => {
     }
   };
 
-  const clearChat = async () => {
-    // Criar uma nova conversa ao limpar o chat
-    await createNewConversation();
+  const clearChat = () => {
+    const initialMessage: Message = {
+      id: uuidv4(),
+      sender: "ia",
+      content: "Olá, João! Eu sou o Epicus IA, seu assistente para aprendizado e programação. Como posso te ajudar hoje?",
+      timestamp: new Date()
+    };
+
+    setMessages([initialMessage]);
     setIsConfirmOpen(false);
-  };
-
-  // Função para carregar uma conversa a partir do histórico
-  const loadConversationFromHistory = async (conversationId: string) => {
-    if (!conversationId) return;
-
-    setCurrentConversationId(conversationId);
-    localStorage.setItem('epictus_active_conversation', conversationId);
-    await loadConversationMessages(conversationId);
-  };
-
-  // Função para abrir o modal de histórico
-  const openHistoricoModal = () => {
-    setIsHistoricoModalOpen(true);
   };
 
   const formatTimestamp = (date: Date) => {
@@ -499,57 +272,27 @@ const EpictusBetaMode: React.FC = () => {
     }
   };
 
-  const saveEditedMessage = async (messageId: string, newContent: string) => {
-    if (!newContent.trim() || !currentConversationId) {
+  const saveEditedMessage = (messageId: string, newContent: string) => {
+    if (!newContent.trim()) {
       return;
     }
 
-    try {
-      // Atualizar mensagem no estado local
-      const updatedMessages = messages.map(msg => 
-        msg.id === messageId 
-          ? { ...msg, content: newContent, isEdited: true } 
-          : msg
-      );
+    const updatedMessages = messages.map(msg => 
+      msg.id === messageId 
+        ? { ...msg, content: newContent, isEdited: true } 
+        : msg
+    );
 
-      setMessages(updatedMessages);
-      setEditingMessageId(null);
+    setMessages(updatedMessages);
+    setEditingMessageId(null);
 
-      // Atualizar no Supabase
-      const { error } = await supabase
-        .from('mensagens')
-        .update({ 
-          content: newContent,
-          is_edited: true
-        })
-        .eq('id', messageId)
-        .eq('conversa_id', currentConversationId);
+    localStorage.setItem('epictus_beta_chat', JSON.stringify(updatedMessages));
 
-      if (error) {
-        console.error("Erro ao atualizar mensagem no Supabase:", error);
-        return;
-      }
-
-      // Atualizar timestamp da conversa
-      await supabase
-        .from('conversas')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('id', currentConversationId);
-
-      toast({
-        title: "Mensagem editada",
-        description: "A mensagem da IA foi atualizada com sucesso.",
-        duration: 3000,
-      });
-    } catch (error) {
-      console.error("Erro ao salvar edição de mensagem:", error);
-      toast({
-        title: "Erro ao editar mensagem",
-        description: "Não foi possível salvar as alterações. Tente novamente.",
-        variant: "destructive",
-        duration: 3000,
-      });
-    }
+    toast({
+      title: "Mensagem editada",
+      description: "A mensagem da IA foi atualizada com sucesso.",
+      duration: 3000,
+    });
   };
 
   const cancelEditing = () => {
@@ -846,81 +589,38 @@ const EpictusBetaMode: React.FC = () => {
     setIsExportModalOpen(true);
   };
 
-  const handleFeedback = async (messageId: string, feedbackType: 'positive' | 'negative') => {
-    if (!currentConversationId) return;
+  const handleFeedback = (messageId: string, feedbackType: 'positive' | 'negative') => {
+    setMessages(prev => prev.map(msg => {
+      if (msg.id === messageId) {
+        const newFeedback = msg.feedback === feedbackType ? undefined : feedbackType;
 
-    try {
-      // Encontrar a mensagem atual para verificar seu estado de feedback
-      const currentMessage = messages.find(msg => msg.id === messageId);
-      if (!currentMessage) return;
-
-      // Determinar o novo estado de feedback (alternar on/off)
-      const newFeedback = currentMessage.feedback === feedbackType ? undefined : feedbackType;
-
-      // Atualizar mensagens no estado local
-      setMessages(prev => prev.map(msg => {
-        if (msg.id === messageId) {
-          return { ...msg, feedback: newFeedback };
+        if (newFeedback) {
+          console.log(`Feedback ${newFeedback} registrado para mensagem ${messageId}`);
+          toast({
+            title: newFeedback === 'positive' ? "Feedback positivo enviado" : "Feedback negativo enviado",
+            description: "Obrigado por nos ajudar a melhorar a Epictus IA!",
+            duration: 3000,
+          });
         }
-        return msg;
-      }));
 
-      // Atualizar no Supabase
-      const { error } = await supabase
-        .from('mensagens')
-        .update({ feedback: newFeedback })
-        .eq('id', messageId)
-        .eq('conversa_id', currentConversationId);
-
-      if (error) {
-        console.error("Erro ao atualizar feedback no Supabase:", error);
-        return;
+        return { ...msg, feedback: newFeedback };
       }
-
-      if (newFeedback) {
-        console.log(`Feedback ${newFeedback} registrado para mensagem ${messageId}`);
-        toast({
-          title: newFeedback === 'positive' ? "Feedback positivo enviado" : "Feedback negativo enviado",
-          description: "Obrigado por nos ajudar a melhorar a Epictus IA!",
-          duration: 3000,
-        });
-      }
-    } catch (error) {
-      console.error("Erro ao processar feedback:", error);
-    }
+      return msg;
+    }));
   };
 
   const reformulateMessage = async (messageId: string) => {
-    if (!currentConversationId) return;
-
     setIsReformulating(true);
     try {
       const messageToReformulate = messages.find(msg => msg.id === messageId);
       if (messageToReformulate) {
         const reformulatedResponse = await generateAIResponse(`Reformule a seguinte resposta de forma mais detalhada: ${messageToReformulate.content}`, sessionId);
-
-        // Atualizar no estado local
         const updatedMessages = messages.map(msg =>
           msg.id === messageId
             ? {...msg, content: reformulatedResponse, isEdited: true, needsImprovement: false }
             : msg
         );
         setMessages(updatedMessages);
-
-        // Atualizar no Supabase
-        const { error } = await supabase
-          .from('mensagens')
-          .update({ 
-            content: reformulatedResponse, 
-            is_edited: true,
-            needs_improvement: false
-          })
-          .eq('id', messageId)
-          .eq('conversa_id', currentConversationId);
-
-        if (error) {
-          console.error("Erro ao atualizar mensagem reformulada no Supabase:", error);
-        }
       }
     } catch (error) {
       console.error("Erro ao reformular mensagem:", error);
@@ -935,36 +635,17 @@ const EpictusBetaMode: React.FC = () => {
   };
 
   const summarizeMessage = async (messageId: string) => {
-    if (!currentConversationId) return;
-
     setIsReformulating(true);
     try {
       const messageToSummarize = messages.find(msg => msg.id === messageId);
       if (messageToSummarize) {
         const summarizedResponse = await generateAIResponse(`Resuma a seguinte resposta de forma mais concisa: ${messageToSummarize.content}`, sessionId);
-
-        // Atualizar no estado local
         const updatedMessages = messages.map(msg =>
           msg.id === messageId
             ? { ...msg, content: summarizedResponse, isEdited: true, needsImprovement: false }
             : msg
         );
         setMessages(updatedMessages);
-
-        // Atualizar no Supabase
-        const { error } = await supabase
-          .from('mensagens')
-          .update({ 
-            content: summarizedResponse, 
-            is_edited: true,
-            needs_improvement: false
-          })
-          .eq('id', messageId)
-          .eq('conversa_id', currentConversationId);
-
-        if (error) {
-          console.error("Erro ao atualizar mensagem resumida no Supabase:", error);
-        }
       }
     } catch (error) {
       console.error("Erro ao resumir mensagem:", error);
@@ -990,12 +671,7 @@ const EpictusBetaMode: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <TurboHeader 
-        profileOptions={profileOptions} 
-        initialProfileIcon={profileIcon} 
-        initialProfileName={profileName}
-        onHistoricoClick={openHistoricoModal}
-      />
+      <TurboHeader profileOptions={profileOptions} initialProfileIcon={profileIcon} initialProfileName={profileName} />
 
       <div className="flex-1 flex flex-col items-center justify-between p-4 overflow-hidden bg-transparent">
         <div className="w-[80%] h-[85%] relative mb-4 flex-grow overflow-hidden">
@@ -1331,10 +1007,9 @@ const EpictusBetaMode: React.FC = () => {
 
       <HistoricoConversasModal 
         open={isHistoricoModalOpen}
-        onOpenChange={setIsHistoricoModalOpen}
-        currentConversationId={currentConversationId}
-        onSelectConversation={loadConversationFromHistory}
-        onCreateNewChat={createNewConversation}
+        onOpenChange={setIsHistoricoModalOpen} 
+        open={showHistoricoModal} 
+        onOpenChange={setShowHistoricoModal} 
       />
 
       <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
