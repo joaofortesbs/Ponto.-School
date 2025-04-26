@@ -282,7 +282,10 @@ const EpictusTurboMode: React.FC = () => {
                       whileTap={{ scale: 0.98 }}
                       initial={false}
                       transition={{ duration: 0.3 }}
-                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Impede a propagação do clique
+                        setIsDropdownOpen(true); // Sempre abre o dropdown ao clicar
+                      }}
                     >
                       <div className="flex items-center gap-2">
                         {profileIcon}
@@ -294,7 +297,11 @@ const EpictusTurboMode: React.FC = () => {
                     </motion.div>
 
                     {/* Dropdown content - absolute positioning relative to its container */}
-                    <div className={`fixed ${isDropdownOpen ? 'opacity-100 visible' : 'opacity-0 invisible'} transition-all duration-300 z-[99999] left-auto mt-2 personalidades-dropdown`} style={{ top: "calc(100% + 10px)" }}>
+                    <div 
+                      className={`fixed ${isDropdownOpen ? 'opacity-100 visible' : 'opacity-0 invisible'} transition-all duration-300 z-[99999] left-auto mt-2 personalidades-dropdown`} 
+                      style={{ top: "calc(100% + 10px)" }}
+                      onClick={(e) => e.stopPropagation()} // Impede que cliques no dropdown fechem ele mesmo
+                    >
                       <div className="w-52 bg-[#0f3562] rounded-lg shadow-xl overflow-hidden border border-white/10 backdrop-blur-md" style={{ position: "relative", zIndex: 99999 }}> 
                         <div className="max-h-60 overflow-y-auto py-2">
                           {profileOptions.map((item, index) => (
