@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { TurboHeader } from "./turbo-header";
+import { TurboHeader } from "./turbo-header/TurboHeader";
 import TurboHubConnected from "./TurboHubConnected";
 import TurboMessageBox from "./TurboMessageBox";
 import { ErrorBoundary } from "react-error-boundary";
