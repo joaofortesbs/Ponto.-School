@@ -1,832 +1,684 @@
-
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  X,
   Search,
-  Calendar,
-  Star,
   Clock,
-  Edit3,
-  Trash2,
+  Star,
   Pin,
-  MoreHorizontal,
-  ArrowRight,
-  BookOpen,
-  FileText,
-  Award,
-  Tool,
-  Brain,
-  Filter,
+  Edit,
+  Trash2,
   Tag,
   Archive,
+  ChevronRight,
+  MessageCircle,
+  Sparkles,
+  Download,
+  FileText,
+  Copy,
+  Send,
+  Filter,
+  AlignLeft,
+  Bookmark,
+  Zap,
+  Brain,
+  FileQuestion,
   MessageSquare,
-  Book,
-  CheckCircle,
-  X
+  BookOpen,
+  Tool,
+  ArrowRight,
+  CalendarClock
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { useTheme } from "@/components/ThemeProvider";
-import { v4 as uuidv4 } from "uuid";
 
-// Interface para os tipos de mensagens
-interface Message {
-  id: string;
-  sender: 'user' | 'ia';
-  content: string;
-  timestamp: Date;
+interface HistoricoConversasModalProps {
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-// Interface para as conversas
-interface Conversation {
-  id: string;
-  title: string;
-  type: 'conteudo' | 'duvidas' | 'correcao' | 'simulado' | 'resumo';
-  messages: Message[];
-  timestamp: Date;
-  isPinned: boolean;
-  isFavorite: boolean;
-  tags: string[];
-  discipline?: string;
-}
+const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({ isOpen, onClose }) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedConversation, setSelectedConversation] = useState<any>(null);
+  const [expandedDetails, setExpandedDetails] = useState(false);
+  const [activeTab, setActiveTab] = useState("todas");
 
-// Função auxiliar para formatar data
-const formatDate = (date: Date): string => {
-  const hoje = new Date();
-  const ontem = new Date(hoje);
-  ontem.setDate(hoje.getDate() - 1);
-  
-  // Verifica se é hoje
-  if (date.toDateString() === hoje.toDateString()) {
-    return `Hoje, ${date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
-  }
-  
-  // Verifica se é ontem
-  if (date.toDateString() === ontem.toDateString()) {
-    return `Ontem, ${date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
-  }
-  
-  // Caso contrário, mostra a data completa
-  return date.toLocaleDateString('pt-BR', { 
-    day: '2-digit', 
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit', 
-    minute: '2-digit' 
-  });
-};
+  // Mock data para conversas
+  const [conversas, setConversas] = useState([
+    {
+      id: 1,
+      tipo: "conteudo",
+      titulo: "Revisão de Matemática: Funções Quadráticas",
+      data: "2023-09-10T14:30:00",
+      fixado: true,
+      favorito: true,
+      tags: ["Enem", "Matemática", "Importante"],
+      resumo: "Discussão sobre como resolver equações quadráticas e suas aplicações",
+      conteudo: "Nesta conversa exploramos como resolver equações quadráticas usando diferentes métodos como fórmula de Bhaskara, completamento de quadrados e fatoração. Também vimos aplicações práticas em problemas de maximização e minimização."
+    },
+    {
+      id: 2,
+      tipo: "duvida",
+      titulo: "Dúvida sobre Oxidação na Química",
+      data: "2023-09-05T10:15:00",
+      fixado: false,
+      favorito: true,
+      tags: ["Química", "Revisar"],
+      resumo: "Esclarecimento sobre reações de oxidação-redução",
+      conteudo: "Conversamos sobre como identificar os números de oxidação em diferentes elementos e como determinar qual espécie está sendo oxidada ou reduzida em uma reação redox."
+    },
+    {
+      id: 3,
+      tipo: "correcao",
+      titulo: "Correção da Redação sobre Meio Ambiente",
+      data: "2023-09-01T16:45:00",
+      fixado: false,
+      favorito: false,
+      tags: ["Redação", "Português"],
+      resumo: "Análise detalhada da redação sobre sustentabilidade",
+      conteudo: "O Epictus IA analisou minha redação sobre problemas ambientais contemporâneos, destacando pontos fortes na argumentação e sugerindo melhorias na coesão textual e na conclusão."
+    },
+    {
+      id: 4,
+      tipo: "conteudo",
+      titulo: "História do Brasil: Era Vargas",
+      data: "2023-08-25T11:20:00",
+      fixado: false,
+      favorito: false,
+      tags: ["História", "Brasil"],
+      resumo: "Resumo completo sobre o período Vargas (1930-1945)",
+      conteudo: "Conversamos sobre os principais acontecimentos da Era Vargas, incluindo a Revolução de 30, Estado Novo, políticas trabalhistas e o contexto da Segunda Guerra Mundial."
+    },
+    {
+      id: 5,
+      tipo: "duvida",
+      titulo: "Dúvidas sobre Física: Movimento Circular",
+      data: "2023-08-20T09:30:00",
+      fixado: false,
+      favorito: true,
+      tags: ["Física", "Urgente"],
+      resumo: "Explicação sobre força centrípeta e aplicações",
+      conteudo: "Discutimos os conceitos de força centrípeta, aceleração centrípeta e seus cálculos. Vimos exemplos práticos como movimento de satélites e curvas em estradas."
+    }
+  ]);
 
-// Ícones para os tipos de conversa
-const typeIcons = {
-  conteudo: <BookOpen className="h-4 w-4 text-blue-500" />,
-  duvidas: <Brain className="h-4 w-4 text-purple-500" />,
-  correcao: <Tool className="h-4 w-4 text-orange-500" />,
-  simulado: <FileText className="h-4 w-4 text-green-500" />,
-  resumo: <Book className="h-4 w-4 text-indigo-500" />
-};
-
-// Componente principal do modal
-const HistoricoConversasModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-  
-  // Estados
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState('todos');
-  const [conversas, setConversas] = useState<Conversation[]>([]);
-  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
-  const [showDetails, setShowDetails] = useState(false);
-
-  // Simulação de dados
   useEffect(() => {
-    // Dados de exemplo
-    const mockConversas: Conversation[] = [
-      {
-        id: uuidv4(),
-        title: "Estudando Funções Afim para o ENEM",
-        type: "conteudo",
-        messages: [
-          {
-            id: uuidv4(),
-            sender: 'user',
-            content: "Preciso entender melhor como resolver problemas com função afim para o ENEM",
-            timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
-          },
-          {
-            id: uuidv4(),
-            sender: 'ia',
-            content: "Vamos trabalhar isso! Função afim é uma das funções mais importantes para o ENEM. Vou te explicar o conceito e depois trabalhamos com exemplos práticos...",
-            timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000 + 1000)
-          }
-        ],
-        timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-        isPinned: true,
-        isFavorite: true,
-        tags: ["Matemática", "ENEM", "Funções"],
-        discipline: "Matemática"
-      },
-      {
-        id: uuidv4(),
-        title: "Dúvidas sobre Segunda Guerra Mundial",
-        type: "duvidas",
-        messages: [
-          {
-            id: uuidv4(),
-            sender: 'user',
-            content: "Pode me explicar os principais fatores que levaram à Segunda Guerra Mundial?",
-            timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
-          },
-          {
-            id: uuidv4(),
-            sender: 'ia',
-            content: "Claro! A Segunda Guerra Mundial (1939-1945) foi resultado de diversos fatores interconectados. Vamos analisar os principais...",
-            timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000 + 1000)
-          }
-        ],
-        timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-        isPinned: false,
-        isFavorite: false,
-        tags: ["História", "Segunda Guerra"],
-        discipline: "História"
-      },
-      {
-        id: uuidv4(),
-        title: "Correção da minha redação sobre meio ambiente",
-        type: "correcao",
-        messages: [
-          {
-            id: uuidv4(),
-            sender: 'user',
-            content: "Pode corrigir esta redação que fiz sobre o tema 'Desafios para a preservação ambiental no Brasil contemporâneo'?",
-            timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000)
-          },
-          {
-            id: uuidv4(),
-            sender: 'ia',
-            content: "Vou analisar sua redação com base nos critérios de correção do ENEM. Vamos por partes...",
-            timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000 + 1000)
-          }
-        ],
-        timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-        isPinned: false,
-        isFavorite: true,
-        tags: ["Redação", "Meio Ambiente"],
-        discipline: "Português"
-      },
-      {
-        id: uuidv4(),
-        title: "Simulado de Ciências da Natureza",
-        type: "simulado",
-        messages: [
-          {
-            id: uuidv4(),
-            sender: 'user',
-            content: "Gere um simulado com 5 questões sobre Ciências da Natureza focado no ENEM",
-            timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000)
-          },
-          {
-            id: uuidv4(),
-            sender: 'ia',
-            content: "Aqui está um simulado com 5 questões de Ciências da Natureza no estilo ENEM...",
-            timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000 + 1000)
-          }
-        ],
-        timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000),
-        isPinned: false,
-        isFavorite: false,
-        tags: ["Simulado", "Ciências"],
-        discipline: "Ciências"
-      },
-      {
-        id: uuidv4(),
-        title: "Resumo de Literatura Brasileira",
-        type: "resumo",
-        messages: [
-          {
-            id: uuidv4(),
-            sender: 'user',
-            content: "Faça um resumo sobre os principais autores do Modernismo brasileiro",
-            timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000)
-          },
-          {
-            id: uuidv4(),
-            sender: 'ia',
-            content: "Vou criar um resumo sobre os principais autores do Modernismo brasileiro, focando em suas obras e características...",
-            timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000 + 1000)
-          }
-        ],
-        timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
-        isPinned: false,
-        isFavorite: false,
-        tags: ["Literatura", "Resumo"],
-        discipline: "Literatura"
+    console.log("HistoricoConversasModal renderizado, isOpen:", isOpen);
+    // Carregar dados de conversas do storage/banco quando disponível
+    try {
+      // Aqui ficaria a lógica para buscar conversas do banco de dados
+      // Por enquanto, usamos os dados mockados acima
+    } catch (error) {
+      console.error("Erro ao carregar histórico de conversas:", error);
+    }
+  }, [isOpen]);
+
+  const getIconByTipo = (tipo: string) => {
+    try {
+      switch (tipo) {
+        case "conteudo":
+          return <BookOpen size={18} className="text-blue-500" />;
+        case "duvida":
+          return <Brain size={18} className="text-purple-500" />;
+        case "correcao":
+          return <FileText size={18} className="text-green-500" />;
+        default:
+          return <MessageSquare size={18} className="text-gray-500" />;
       }
-    ];
+    } catch (error) {
+      console.error("Erro ao renderizar ícone por tipo:", error);
+      return <MessageSquare size={18} className="text-gray-500" />;
+    }
+  };
 
-    // Ordenar por data (mais recente primeiro) e pinados no topo
-    const sortedConversas = [...mockConversas].sort((a, b) => {
-      if (a.isPinned && !b.isPinned) return -1;
-      if (!a.isPinned && b.isPinned) return 1;
-      return b.timestamp.getTime() - a.timestamp.getTime();
-    });
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('pt-BR', { 
+        day: '2-digit', 
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error("Erro ao formatar data:", error);
+      return "Data inválida";
+    }
+  };
 
-    setConversas(sortedConversas);
-  }, []);
+  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(event.target.value);
+  };
 
-  // Função para filtrar conversas
+  const handleSelectConversation = (conversa: any) => {
+    console.log("Conversa selecionada:", conversa.id);
+    setSelectedConversation(conversa);
+    setExpandedDetails(false);
+  };
+
+  const handleToggleDetails = () => {
+    console.log("Alternando detalhes expandidos");
+    setExpandedDetails(!expandedDetails);
+  };
+
+  const handleToggleFavorite = (id: number, event: React.MouseEvent) => {
+    event.stopPropagation();
+    try {
+      setConversas(conversas.map(conversa => 
+        conversa.id === id 
+          ? { ...conversa, favorito: !conversa.favorito } 
+          : conversa
+      ));
+    } catch (error) {
+      console.error("Erro ao alternar favorito:", error);
+    }
+  };
+
+  const handleTogglePin = (id: number, event: React.MouseEvent) => {
+    event.stopPropagation();
+    try {
+      setConversas(conversas.map(conversa => 
+        conversa.id === id 
+          ? { ...conversa, fixado: !conversa.fixado } 
+          : conversa
+      ));
+    } catch (error) {
+      console.error("Erro ao fixar/desafixar conversa:", error);
+    }
+  };
+
+  const handleDelete = (id: number, event: React.MouseEvent) => {
+    event.stopPropagation();
+    try {
+      if (window.confirm("Tem certeza que deseja excluir esta conversa?")) {
+        setConversas(conversas.filter(conversa => conversa.id !== id));
+        if (selectedConversation && selectedConversation.id === id) {
+          setSelectedConversation(null);
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao excluir conversa:", error);
+    }
+  };
+
+  const handleRenameConversation = (id: number, event: React.MouseEvent) => {
+    event.stopPropagation();
+    try {
+      const conversa = conversas.find(c => c.id === id);
+      if (!conversa) return;
+
+      const novoTitulo = prompt("Digite o novo título para esta conversa:", conversa.titulo);
+      if (novoTitulo && novoTitulo.trim() !== "") {
+        setConversas(conversas.map(c => 
+          c.id === id 
+            ? { ...c, titulo: novoTitulo.trim() } 
+            : c
+        ));
+
+        if (selectedConversation && selectedConversation.id === id) {
+          setSelectedConversation({...selectedConversation, titulo: novoTitulo.trim()});
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao renomear conversa:", error);
+    }
+  };
+
+  const handleContinueConversation = () => {
+    if (!selectedConversation) return;
+    console.log("Continuando conversa:", selectedConversation.id);
+    // Aqui implementaria a lógica para continuar a conversa
+    // Pode ser redirecionamento ou carregar a conversa no chat
+    alert(`Continuando conversa: ${selectedConversation.titulo}`);
+    onClose();
+  };
+
+  const handleExport = () => {
+    if (!selectedConversation) return;
+    try {
+      console.log("Exportando conversa:", selectedConversation.id);
+      // Lógica para exportar como PDF ou outro formato
+      const conversaTexto = `
+        Título: ${selectedConversation.titulo}
+        Data: ${formatDate(selectedConversation.data)}
+        Conteúdo: ${selectedConversation.conteudo}
+      `;
+
+      // Criar um elemento para download
+      const element = document.createElement("a");
+      const file = new Blob([conversaTexto], {type: 'text/plain'});
+      element.href = URL.createObjectURL(file);
+      element.download = `conversa-${selectedConversation.id}.txt`;
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+    } catch (error) {
+      console.error("Erro ao exportar conversa:", error);
+      alert("Não foi possível exportar a conversa. Tente novamente.");
+    }
+  };
+
   const filteredConversas = conversas.filter(conversa => {
-    // Aplicar filtro por tipo
-    if (activeFilter !== 'todos' && conversa.type !== activeFilter) {
-      return false;
-    }
-    
-    // Aplicar busca
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return (
-        conversa.title.toLowerCase().includes(query) ||
-        conversa.tags.some(tag => tag.toLowerCase().includes(query)) ||
-        conversa.messages.some(msg => msg.content.toLowerCase().includes(query))
-      );
-    }
-    
-    return true;
+    const matchesSearch = conversa.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         conversa.conteudo.toLowerCase().includes(searchTerm.toLowerCase());
+
+    if (activeTab === "todas") return matchesSearch;
+    if (activeTab === "favoritas") return matchesSearch && conversa.favorito;
+    if (activeTab === "fixadas") return matchesSearch && conversa.fixado;
+
+    return matchesSearch;
   });
 
-  // Handler para clicar em uma conversa
-  const handleConversationClick = (conversa: Conversation) => {
-    setSelectedConversation(conversa);
-    setShowDetails(false); // Reset para mostrar apenas a prévia
-  };
-
-  // Handler para fixar/desfixar uma conversa
-  const handlePinConversation = (id: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    setConversas(prevConversas => {
-      return prevConversas.map(conv => {
-        if (conv.id === id) {
-          return { ...conv, isPinned: !conv.isPinned };
-        }
-        return conv;
-      });
-    });
-  };
-
-  // Handler para favoritar/desfavoritar uma conversa
-  const handleFavoriteConversation = (id: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    setConversas(prevConversas => {
-      return prevConversas.map(conv => {
-        if (conv.id === id) {
-          return { ...conv, isFavorite: !conv.isFavorite };
-        }
-        return conv;
-      });
-    });
-  };
-
-  // Handler para excluir uma conversa
-  const handleDeleteConversation = (id: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    setConversas(prevConversas => prevConversas.filter(conv => conv.id !== id));
-    if (selectedConversation?.id === id) {
-      setSelectedConversation(null);
-    }
-  };
-
-  // Extrair palavras-chave da conversa
-  const extractKeywords = (conversation: Conversation): string[] => {
-    const content = conversation.messages.map(msg => msg.content).join(' ');
-    const commonWords = ['o', 'a', 'os', 'as', 'um', 'uma', 'de', 'da', 'do', 'para', 'com', 'em', 'no', 'na'];
-    
-    const words = content.toLowerCase()
-      .replace(/[^\w\sáàâãéèêíïóôõöúçñ]/g, '')
-      .split(/\s+/)
-      .filter(word => word.length > 3 && !commonWords.includes(word));
-    
-    const wordCount: {[key: string]: number} = {};
-    words.forEach(word => {
-      wordCount[word] = (wordCount[word] || 0) + 1;
-    });
-    
-    return Object.entries(wordCount)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([word]) => word);
-  };
-
-  // Continuar conversa
-  const handleContinueConversation = (id: string) => {
-    onClose();
-    // Aqui seria implementada a lógica para continuar a conversa
-    console.log("Continuando conversa", id);
-  };
+  // Ordenar conversas: fixadas primeiro, depois por data (mais recentes primeiro)
+  const sortedConversas = [...filteredConversas].sort((a, b) => {
+    if (a.fixado && !b.fixado) return -1;
+    if (!a.fixado && b.fixado) return 1;
+    return new Date(b.data).getTime() - new Date(a.data).getTime();
+  });
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className={`max-w-[85%] h-[85vh] p-0 gap-0 ${isDark ? 'bg-[#001427]/95 text-white border-slate-700' : 'bg-white/95 text-slate-900 border-slate-200'}`}>
-        <div className="w-full h-full flex flex-col">
-          {/* Header do Modal */}
-          <div className={`flex items-center justify-between p-4 border-b ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+      <DialogContent className="sm:max-w-[85%] max-h-[85vh] p-0 gap-0 overflow-hidden bg-white dark:bg-[#0A2540]">
+        <div className="flex flex-col h-full">
+          <DialogTitle className="px-6 py-4 border-b text-xl font-medium flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-blue-500" />
-              <h2 className="text-xl font-bold">Histórico de Conversas</h2>
+              <CalendarClock className="h-5 w-5 text-orange-500" />
+              <span>Histórico de Conversas</span>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
-                <Input
-                  placeholder="Buscar em todas as conversas..."
-                  className={`pl-10 w-[350px] ${isDark ? 'bg-[#0A1625] border-slate-700' : 'bg-slate-100 border-slate-200'}`}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onClose}
-                className={isDark ? 'hover:bg-slate-800' : 'hover:bg-slate-200'}
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
+            <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-8 w-8">
+              <X className="h-4 w-4" />
+            </Button>
+          </DialogTitle>
 
-          {/* Corpo do Modal */}
-          <div className="flex-1 flex overflow-hidden">
+          <div className="grid grid-cols-12 gap-0 flex-grow overflow-hidden">
             {/* Coluna Esquerda - Lista de Conversas */}
-            <div className={`w-1/3 border-r ${isDark ? 'border-slate-700' : 'border-slate-200'} flex flex-col`}>
-              {/* Filtros */}
-              <div className={`p-2 border-b ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
-                <Tabs defaultValue="todos" className="w-full" onValueChange={setActiveFilter}>
-                  <TabsList className={`w-full grid grid-cols-6 ${isDark ? 'bg-[#0A1625]' : 'bg-slate-100'}`}>
-                    <TabsTrigger value="todos" className="text-xs">Todos</TabsTrigger>
-                    <TabsTrigger value="conteudo" className="text-xs flex items-center gap-1">
-                      <BookOpen className="h-3 w-3" /> Conteúdo
-                    </TabsTrigger>
-                    <TabsTrigger value="duvidas" className="text-xs flex items-center gap-1">
-                      <Brain className="h-3 w-3" /> Dúvidas
-                    </TabsTrigger>
-                    <TabsTrigger value="correcao" className="text-xs flex items-center gap-1">
-                      <Tool className="h-3 w-3" /> Correções
-                    </TabsTrigger>
-                    <TabsTrigger value="simulado" className="text-xs flex items-center gap-1">
-                      <FileText className="h-3 w-3" /> Simulados
-                    </TabsTrigger>
-                    <TabsTrigger value="resumo" className="text-xs flex items-center gap-1">
-                      <Book className="h-3 w-3" /> Resumos
-                    </TabsTrigger>
+            <div className="col-span-3 border-r overflow-hidden flex flex-col">
+              <div className="p-4 border-b">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Buscar conversas..."
+                    value={searchTerm}
+                    onChange={handleSearch}
+                    className="pl-9 w-full"
+                  />
+                </div>
+
+                <Tabs defaultValue="todas" value={activeTab} onValueChange={setActiveTab} className="mt-4">
+                  <TabsList className="w-full">
+                    <TabsTrigger value="todas" className="flex-1">Todas</TabsTrigger>
+                    <TabsTrigger value="favoritas" className="flex-1">Favoritas</TabsTrigger>
+                    <TabsTrigger value="fixadas" className="flex-1">Fixadas</TabsTrigger>
                   </TabsList>
                 </Tabs>
-                <div className="flex items-center justify-between mt-2">
-                  <Button variant="outline" size="sm" className="text-xs">
-                    <Filter className="h-3 w-3 mr-1" /> Filtros Avançados
-                  </Button>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" className="text-xs">
-                      <Tag className="h-3 w-3 mr-1" /> Tags
-                    </Button>
-                    <Button variant="outline" size="sm" className="text-xs">
-                      <Archive className="h-3 w-3 mr-1" /> Arquivados
-                    </Button>
-                  </div>
-                </div>
               </div>
 
-              {/* Lista de Conversas */}
-              <ScrollArea className="flex-1">
-                <div className="p-1">
-                  {filteredConversas.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center p-6 text-center">
-                      <MessageSquare className={`h-12 w-12 ${isDark ? 'text-slate-600' : 'text-slate-300'} mb-2`} />
-                      <p className={`${isDark ? 'text-slate-400' : 'text-slate-500'} text-sm`}>
-                        Nenhuma conversa encontrada para "{searchQuery}"
-                      </p>
-                    </div>
-                  ) : (
-                    filteredConversas.map(conversa => (
-                      <motion.div
+              <ScrollArea className="flex-grow">
+                <div className="p-2 space-y-2">
+                  {sortedConversas.length > 0 ? (
+                    sortedConversas.map((conversa) => (
+                      <div
                         key={conversa.id}
-                        className={`p-3 mb-1 rounded-lg cursor-pointer group relative ${
-                          selectedConversation?.id === conversa.id 
-                            ? (isDark ? 'bg-blue-950/40 border-blue-800/50' : 'bg-blue-50 border-blue-200/50') 
-                            : (isDark ? 'hover:bg-slate-800/50' : 'hover:bg-slate-100')
-                        } border ${isDark ? 'border-slate-700' : 'border-slate-200'}`}
-                        onClick={() => handleConversationClick(conversa)}
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.2 }}
+                        className={`p-3 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
+                          selectedConversation?.id === conversa.id
+                            ? "bg-gray-100 dark:bg-gray-800 border-l-4 border-orange-500"
+                            : ""
+                        }`}
+                        onClick={() => handleSelectConversation(conversa)}
                       >
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start gap-2">
-                            <div className={`mt-0.5 rounded-md p-1 ${
-                              isDark ? 'bg-slate-800' : 'bg-slate-200'
-                            }`}>
-                              {typeIcons[conversa.type]}
-                            </div>
-                            <div>
-                              <h3 className="font-medium text-sm line-clamp-1 flex items-center gap-1">
-                                {conversa.title}
-                                {conversa.isPinned && (
-                                  <Pin className="h-3 w-3 text-blue-500 rotate-45" />
-                                )}
-                              </h3>
-                              <div className="flex items-center gap-1 mt-1">
-                                <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                                  {formatDate(conversa.timestamp)}
-                                </p>
-                                <div className="flex items-center gap-1 ml-2">
-                                  {conversa.tags.slice(0, 2).map(tag => (
-                                    <Badge key={tag} variant="outline" className="text-[10px] py-0 h-4">
-                                      {tag}
-                                    </Badge>
-                                  ))}
-                                  {conversa.tags.length > 2 && (
-                                    <Badge variant="outline" className="text-[10px] py-0 h-4">
-                                      +{conversa.tags.length - 2}
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
+                        <div className="flex justify-between items-start mb-1">
+                          <div className="flex items-center gap-2">
+                            {getIconByTipo(conversa.tipo)}
+                            <span className="font-medium truncate max-w-[150px]">
+                              {conversa.titulo}
+                            </span>
                           </div>
-                          
-                          {/* Ações visíveis no hover */}
-                          <div className={`absolute right-3 top-3 flex items-center gap-1 ${
-                            selectedConversation?.id === conversa.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-                          } transition-opacity`}>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-6 w-6" 
-                              onClick={(e) => handleFavoriteConversation(conversa.id, e)}
-                            >
-                              <Star className={`h-4 w-4 ${conversa.isFavorite ? 'fill-yellow-400 text-yellow-400' : isDark ? 'text-slate-400' : 'text-slate-500'}`} />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-6 w-6" 
-                              onClick={(e) => handlePinConversation(conversa.id, e)}
-                            >
-                              <Pin className={`h-4 w-4 ${conversa.isPinned ? 'text-blue-500' : isDark ? 'text-slate-400' : 'text-slate-500'} ${conversa.isPinned ? 'rotate-45' : ''}`} />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-6 w-6" 
-                              onClick={(e) => handleDeleteConversation(conversa.id, e)}
-                            >
-                              <Trash2 className={`h-4 w-4 ${isDark ? 'text-slate-400 hover:text-red-400' : 'text-slate-500 hover:text-red-500'}`} />
-                            </Button>
+                          <div className="flex items-center space-x-1">
+                            {conversa.fixado && <Pin size={14} className="text-gray-500" />}
+                            {conversa.favorito && <Star size={14} fill="currentColor" className="text-yellow-400" />}
                           </div>
                         </div>
-                        
-                        <div className="mt-2 flex items-center justify-between">
-                          <div className="flex items-center gap-1">
-                            {conversa.discipline && (
-                              <Badge variant="secondary" className="text-[10px] py-0 h-4">
-                                {conversa.discipline}
+
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                          {formatDate(conversa.data)}
+                        </div>
+
+                        <div className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+                          {conversa.resumo}
+                        </div>
+
+                        <div className="flex mt-2 justify-between">
+                          <div className="flex flex-wrap gap-1">
+                            {conversa.tags.slice(0, 2).map((tag, idx) => (
+                              <Badge key={idx} variant="outline" className="text-xs py-0 px-1">
+                                {tag}
+                              </Badge>
+                            ))}
+                            {conversa.tags.length > 2 && (
+                              <Badge variant="outline" className="text-xs py-0 px-1">
+                                +{conversa.tags.length - 2}
                               </Badge>
                             )}
                           </div>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className={`h-7 text-xs ${isDark ? 'bg-blue-950/30 hover:bg-blue-900/50 border-blue-900/50' : 'bg-blue-50 hover:bg-blue-100 border-blue-200'}`}
-                            onClick={() => handleContinueConversation(conversa.id)}
-                          >
-                            Continuar <ArrowRight className="h-3 w-3 ml-1" />
-                          </Button>
+
+                          <div className="flex space-x-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 rounded-full"
+                              onClick={(e) => handleToggleFavorite(conversa.id, e)}
+                            >
+                              <Star
+                                size={14}
+                                className={conversa.favorito ? "text-yellow-400 fill-yellow-400" : "text-gray-400"}
+                              />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 rounded-full"
+                              onClick={(e) => handleTogglePin(conversa.id, e)}
+                            >
+                              <Pin
+                                size={14}
+                                className={conversa.fixado ? "text-orange-500" : "text-gray-400"}
+                              />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 rounded-full"
+                              onClick={(e) => handleRenameConversation(conversa.id, e)}
+                            >
+                              <Edit size={14} className="text-gray-400" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 rounded-full"
+                              onClick={(e) => handleDelete(conversa.id, e)}
+                            >
+                              <Trash2 size={14} className="text-gray-400 hover:text-red-500" />
+                            </Button>
+                          </div>
                         </div>
-                      </motion.div>
+                      </div>
                     ))
+                  ) : (
+                    <div className="text-center py-10 text-gray-500">
+                      <MessageCircle className="h-10 w-10 mx-auto mb-2 opacity-20" />
+                      <p>Nenhuma conversa encontrada</p>
+                    </div>
                   )}
                 </div>
               </ScrollArea>
             </div>
 
-            {/* Coluna Central e Direita */}
-            <div className="flex-1 flex flex-col">
+            {/* Coluna Central - Prévia e Conteúdo */}
+            <div className={`${expandedDetails ? 'col-span-4' : 'col-span-9'} border-r overflow-hidden flex flex-col`}>
               {selectedConversation ? (
-                <div className="flex h-full">
-                  {/* Coluna Central - Prévia Visual */}
-                  {!showDetails && (
-                    <div className={`w-full border-r ${isDark ? 'border-slate-700' : 'border-slate-200'} p-4`}>
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.3 }}
-                        className="h-full flex flex-col"
-                      >
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-2">
-                            <div className={`rounded-md p-1.5 ${
-                              isDark ? 'bg-slate-800' : 'bg-slate-200'
-                            }`}>
-                              {typeIcons[selectedConversation.type]}
-                            </div>
-                            <div>
-                              <h2 className="text-xl font-bold">{selectedConversation.title}</h2>
-                              <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                                {formatDate(selectedConversation.timestamp)}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button 
-                              variant="outline" 
-                              className={isDark ? 'border-slate-700 bg-slate-800' : 'border-slate-300'}
-                              onClick={() => setShowDetails(true)}
-                            >
-                              Ver Detalhes
-                            </Button>
-                            <Button 
-                              className={`bg-blue-600 hover:bg-blue-700 text-white`}
-                              onClick={() => handleContinueConversation(selectedConversation.id)}
-                            >
-                              Continuar Conversa
-                            </Button>
-                          </div>
-                        </div>
-                        
-                        {/* Preview da conversa */}
-                        <div className="flex-1 flex flex-col">
-                          {/* Palavras-chave */}
-                          <div className={`p-4 rounded-lg mb-4 ${
-                            isDark ? 'bg-slate-800/50' : 'bg-slate-100'
-                          }`}>
-                            <h3 className="font-medium mb-2">Palavras-chave</h3>
-                            <div className="flex flex-wrap gap-2">
-                              {extractKeywords(selectedConversation).map(keyword => (
-                                <Badge key={keyword} className="bg-blue-600">
-                                  {keyword}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                          
-                          {/* Prévia das mensagens */}
-                          <div className={`flex-1 rounded-lg p-4 ${
-                            isDark ? 'bg-slate-800/50' : 'bg-slate-100'
-                          }`}>
-                            <h3 className="font-medium mb-3">Prévia da conversa</h3>
-                            <div className="space-y-4">
-                              {selectedConversation.messages.map(message => (
-                                <div 
-                                  key={message.id}
-                                  className={`flex gap-3 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                                >
-                                  {message.sender === 'ia' && (
-                                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
-                                      <Brain className="h-4 w-4 text-white" />
-                                    </div>
-                                  )}
-                                  <div 
-                                    className={`max-w-[70%] p-3 rounded-lg ${
-                                      message.sender === 'user'
-                                        ? isDark ? 'bg-blue-700 text-white' : 'bg-blue-100'
-                                        : isDark ? 'bg-slate-700' : 'bg-white border border-slate-200'
-                                    }`}
-                                  >
-                                    <p className="text-sm line-clamp-3">{message.content}</p>
-                                  </div>
-                                  {message.sender === 'user' && (
-                                    <div className="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center flex-shrink-0">
-                                      <span className="text-white text-xs font-medium">EU</span>
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          
-                          {/* Ações sugeridas */}
-                          <div className={`mt-4 p-4 rounded-lg border ${
-                            isDark ? 'bg-blue-950/30 border-blue-900/50' : 'bg-blue-50 border-blue-200'
-                          }`}>
-                            <h3 className="font-medium mb-3">Sugestões da IA</h3>
-                            <div className="grid grid-cols-3 gap-2">
-                              <Button variant="outline" className="justify-start text-sm">
-                                <FileText className="h-4 w-4 mr-2" /> Transformar em resumo
-                              </Button>
-                              <Button variant="outline" className="justify-start text-sm">
-                                <Award className="h-4 w-4 mr-2" /> Gerar quiz
-                              </Button>
-                              <Button variant="outline" className="justify-start text-sm">
-                                <Book className="h-4 w-4 mr-2" /> Salvar na apostila
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </motion.div>
+                <>
+                  <div className="p-4 border-b">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex items-center">
+                        {getIconByTipo(selectedConversation.tipo)}
+                        <h3 className="text-lg font-semibold ml-2">{selectedConversation.titulo}</h3>
+                      </div>
+
+                      <div className="flex space-x-2">
+                        <Button variant="outline" size="sm" onClick={handleToggleDetails}>
+                          {expandedDetails ? 'Recolher Detalhes' : 'Expandir Detalhes'}
+                          <ChevronRight className="ml-1 h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                  )}
-                  
-                  {/* Coluna Direita - Detalhes Completos (aparece quando showDetails é true) */}
-                  {showDetails && (
-                    <motion.div 
-                      className="w-full p-4"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => setShowDetails(false)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <ArrowRight className="h-4 w-4 rotate-180" />
-                          </Button>
-                          <h2 className="text-xl font-bold">Detalhes da Conversa</h2>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button 
-                            variant="outline" 
-                            className={isDark ? 'border-slate-700' : 'border-slate-200'}
-                          >
-                            <FileText className="h-4 w-4 mr-2" /> Exportar PDF
-                          </Button>
-                          <Button 
-                            className="bg-blue-600 hover:bg-blue-700 text-white"
-                            onClick={() => handleContinueConversation(selectedConversation.id)}
-                          >
-                            Continuar Conversa
-                          </Button>
-                        </div>
+
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {selectedConversation.tags.map((tag: string, idx: number) => (
+                        <Badge key={idx} variant="secondary">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+
+                    <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Clock className="h-4 w-4 text-gray-500" />
+                        <span className="text-sm text-gray-600 dark:text-gray-300">
+                          {formatDate(selectedConversation.data)}
+                        </span>
                       </div>
-                      
-                      {/* Conteúdo completo da conversa */}
-                      <div className="flex gap-4 h-[calc(100%-48px)]">
-                        <ScrollArea className="w-2/3 pr-4">
-                          <div className={`p-4 rounded-lg ${
-                            isDark ? 'bg-slate-800/50' : 'bg-slate-100'
-                          }`}>
-                            <div className="flex items-center justify-between mb-4">
-                              <h3 className="font-medium">Conversa Completa</h3>
-                              <Badge className={`${isDark ? 'bg-slate-700' : 'bg-white'}`}>
-                                {selectedConversation.messages.length} mensagens
-                              </Badge>
-                            </div>
-                            
-                            <div className="space-y-6">
-                              {selectedConversation.messages.map(message => (
-                                <div 
-                                  key={message.id}
-                                  className={`flex gap-3 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                                >
-                                  {message.sender === 'ia' && (
-                                    <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
-                                      <Brain className="h-5 w-5 text-white" />
-                                    </div>
-                                  )}
-                                  
-                                  <div 
-                                    className={`max-w-[80%] p-4 rounded-lg ${
-                                      message.sender === 'user'
-                                        ? isDark ? 'bg-blue-700 text-white' : 'bg-blue-100'
-                                        : isDark ? 'bg-slate-700' : 'bg-white border border-slate-200'
-                                    }`}
-                                  >
-                                    <div className={`flex justify-between mb-1 text-xs ${
-                                      message.sender === 'user'
-                                        ? isDark ? 'text-blue-200' : 'text-blue-700'
-                                        : isDark ? 'text-slate-400' : 'text-slate-500'
-                                    }`}>
-                                      <span>{message.sender === 'user' ? 'Você' : 'Epictus IA'}</span>
-                                      <span>{message.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
-                                    </div>
-                                    <p className="text-sm">{message.content}</p>
-                                  </div>
-                                  
-                                  {message.sender === 'user' && (
-                                    <div className="w-10 h-10 rounded-full bg-slate-600 flex items-center justify-center flex-shrink-0">
-                                      <span className="text-white text-xs font-medium">EU</span>
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </ScrollArea>
-                        
-                        {/* Painel de ações */}
-                        <div className="w-1/3">
-                          <div className="space-y-4">
-                            <div className={`p-4 rounded-lg ${
-                              isDark ? 'bg-slate-800/50' : 'bg-slate-100'
-                            }`}>
-                              <h3 className="font-medium mb-2">Ações com esta conversa</h3>
-                              <div className="space-y-2">
-                                <Button variant="outline" className="w-full justify-start">
-                                  <FileText className="h-4 w-4 mr-2" /> Transformar em resumo
-                                </Button>
-                                <Button variant="outline" className="w-full justify-start">
-                                  <Award className="h-4 w-4 mr-2" /> Gerar quiz
-                                </Button>
-                                <Button variant="outline" className="w-full justify-start">
-                                  <Book className="h-4 w-4 mr-2" /> Salvar na apostila
-                                </Button>
-                                <Button variant="outline" className="w-full justify-start">
-                                  <MessageSquare className="h-4 w-4 mr-2" /> Criar flashcards
-                                </Button>
-                              </div>
-                            </div>
-                            
-                            <div className={`p-4 rounded-lg ${
-                              isDark ? 'bg-slate-800/50' : 'bg-slate-100'
-                            }`}>
-                              <h3 className="font-medium mb-2">Informações</h3>
-                              <div className="space-y-3">
-                                <div>
-                                  <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                                    Tipo de conversa
-                                  </p>
-                                  <div className="flex items-center gap-1 mt-1">
-                                    {typeIcons[selectedConversation.type]}
-                                    <span className="text-sm font-medium">
-                                      {
-                                        selectedConversation.type === 'conteudo' ? 'Conteúdo' :
-                                        selectedConversation.type === 'duvidas' ? 'Dúvidas' :
-                                        selectedConversation.type === 'correcao' ? 'Correção' :
-                                        selectedConversation.type === 'simulado' ? 'Simulado' : 'Resumo'
-                                      }
-                                    </span>
-                                  </div>
-                                </div>
-                                
-                                <div>
-                                  <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                                    Data da conversa
-                                  </p>
-                                  <div className="flex items-center gap-1 mt-1">
-                                    <Calendar className="h-4 w-4" />
-                                    <span className="text-sm">
-                                      {formatDate(selectedConversation.timestamp)}
-                                    </span>
-                                  </div>
-                                </div>
-                                
-                                <div>
-                                  <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                                    Tags
-                                  </p>
-                                  <div className="flex flex-wrap gap-1 mt-1">
-                                    {selectedConversation.tags.map(tag => (
-                                      <Badge key={tag} variant="outline" className="text-xs">
-                                        {tag}
-                                      </Badge>
-                                    ))}
-                                    <Button variant="ghost" size="sm" className="h-6 px-2">
-                                      <Edit3 className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                            
-                            <div className={`p-4 rounded-lg ${
-                              isDark ? 'bg-slate-800/50' : 'bg-slate-100'
-                            }`}>
-                              <h3 className="font-medium mb-2">Revisão programada</h3>
-                              <p className={`text-xs mb-3 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                                Agende uma revisão deste conteúdo para fixar seu aprendizado
-                              </p>
-                              <div className="flex items-center justify-between mb-3">
-                                <p className="text-sm">Ativar revisão</p>
-                                <Switch />
-                              </div>
-                              <Button variant="outline" className="w-full" disabled>
-                                <Calendar className="h-4 w-4 mr-2" /> Agendar revisão
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
+
+                      <div className="text-sm font-medium mb-1">Resumo:</div>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                        {selectedConversation.resumo}
+                      </p>
+                    </div>
+                  </div>
+
+                  <ScrollArea className="flex-grow p-4">
+                    <div className="space-y-6">
+                      <div className="bg-white dark:bg-gray-800 border rounded-lg p-4">
+                        <h4 className="font-medium mb-2 flex items-center">
+                          <AlignLeft className="h-4 w-4 mr-2 text-gray-500" />
+                          Conteúdo da Conversa
+                        </h4>
+                        <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">
+                          {selectedConversation.conteudo}
+                        </p>
                       </div>
-                    </motion.div>
-                  )}
-                </div>
+
+                      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg p-4">
+                        <h4 className="font-medium mb-2 flex items-center text-blue-700 dark:text-blue-400">
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Pontos-chave
+                        </h4>
+                        <ul className="space-y-2 text-sm">
+                          <li className="flex items-start">
+                            <span className="bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300 rounded-full p-1 mr-2 mt-0.5">
+                              <ChevronRight className="h-3 w-3" />
+                            </span>
+                            <span>Conceitos importantes discutidos na conversa</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300 rounded-full p-1 mr-2 mt-0.5">
+                              <ChevronRight className="h-3 w-3" />
+                            </span>
+                            <span>Aplicações práticas do conhecimento</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300 rounded-full p-1 mr-2 mt-0.5">
+                              <ChevronRight className="h-3 w-3" />
+                            </span>
+                            <span>Dúvidas esclarecidas durante a conversa</span>
+                          </li>
+                        </ul>
+                      </div>
+
+                      <div className="flex justify-center space-x-3">
+                        <Button
+                          onClick={handleContinueConversation}
+                          className="bg-orange-500 hover:bg-orange-600 text-white"
+                        >
+                          <MessageSquare className="mr-2 h-4 w-4" />
+                          Continuar Conversa
+                        </Button>
+                        <Button variant="outline" onClick={handleExport}>
+                          <Download className="mr-2 h-4 w-4" />
+                          Exportar
+                        </Button>
+                      </div>
+                    </div>
+                  </ScrollArea>
+                </>
               ) : (
-                // Estado vazio - nenhuma conversa selecionada
-                <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-                  <MessageSquare className={`h-16 w-16 ${isDark ? 'text-slate-700' : 'text-slate-300'} mb-4`} />
+                <div className="flex flex-col items-center justify-center h-full p-10 text-center text-gray-500">
+                  <MessageCircle className="h-16 w-16 mb-4 opacity-20" />
                   <h3 className="text-xl font-medium mb-2">Selecione uma conversa</h3>
-                  <p className={`max-w-md ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                    Escolha uma conversa da lista à esquerda para visualizar detalhes, 
-                    continuar de onde parou ou transformar em outros formatos de estudo.
+                  <p className="max-w-md">
+                    Escolha uma conversa da lista à esquerda para visualizar o conteúdo completo
+                    e interagir com as opções disponíveis.
                   </p>
                 </div>
               )}
             </div>
+
+            {/* Coluna Direita - Painel de Ações Avançadas (visível apenas quando expandido) */}
+            {expandedDetails && selectedConversation && (
+              <div className="col-span-5 overflow-hidden flex flex-col">
+                <div className="p-4 border-b">
+                  <h3 className="text-lg font-semibold mb-4 flex items-center">
+                    <Tool className="mr-2 h-5 w-5 text-gray-600" />
+                    Ações Avançadas
+                  </h3>
+                </div>
+
+                <ScrollArea className="flex-grow">
+                  <div className="p-4 space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <Button
+                        variant="outline"
+                        className="flex items-center justify-start p-4 h-auto text-left"
+                        onClick={() => alert("Transformando em resumo...")}
+                      >
+                        <div className="mr-3 p-2 rounded-full bg-purple-100 dark:bg-purple-900">
+                          <FileText className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <div>
+                          <p className="font-medium">Transformar em Resumo</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Gerar versão concisa
+                          </p>
+                        </div>
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        className="flex items-center justify-start p-4 h-auto text-left"
+                        onClick={() => alert("Gerando quiz...")}
+                      >
+                        <div className="mr-3 p-2 rounded-full bg-blue-100 dark:bg-blue-900">
+                          <FileQuestion className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div>
+                          <p className="font-medium">Gerar Quiz</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Criar questões baseadas no conteúdo
+                          </p>
+                        </div>
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        className="flex items-center justify-start p-4 h-auto text-left"
+                        onClick={() => alert("Exportando como PDF...")}
+                      >
+                        <div className="mr-3 p-2 rounded-full bg-red-100 dark:bg-red-900">
+                          <Download className="h-5 w-5 text-red-600 dark:text-red-400" />
+                        </div>
+                        <div>
+                          <p className="font-medium">Exportar como PDF</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Documento formatado
+                          </p>
+                        </div>
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        className="flex items-center justify-start p-4 h-auto text-left"
+                        onClick={() => alert("Enviando para caderno...")}
+                      >
+                        <div className="mr-3 p-2 rounded-full bg-green-100 dark:bg-green-900">
+                          <BookOpen className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        </div>
+                        <div>
+                          <p className="font-medium">Mandar para Caderno</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Salvar em suas anotações
+                          </p>
+                        </div>
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        className="flex items-center justify-start p-4 h-auto text-left"
+                        onClick={() => alert("Criando flashcards...")}
+                      >
+                        <div className="mr-3 p-2 rounded-full bg-amber-100 dark:bg-amber-900">
+                          <Copy className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                        </div>
+                        <div>
+                          <p className="font-medium">Criar Flashcards</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Cartões de estudo inteligentes
+                          </p>
+                        </div>
+                      </Button>
+                    </div>
+
+                    <div className="border rounded-lg overflow-hidden">
+                      <div className="bg-gray-50 dark:bg-gray-800 p-3 border-b font-medium flex items-center">
+                        <Brain className="h-4 w-4 mr-2 text-orange-500" />
+                        Sugestões da IA
+                      </div>
+                      <div className="p-4 space-y-3">
+                        <div className="flex items-start">
+                          <Zap className="h-5 w-5 mr-2 text-orange-500 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <p className="font-medium text-sm">Deseja retomar de onde parou?</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              Continue esta conversa sobre {selectedConversation.titulo.toLowerCase()} para aprofundar seu conhecimento.
+                            </p>
+                            <Button size="sm" variant="link" className="text-orange-500 p-0 h-auto mt-1">
+                              Continuar agora <ArrowRight className="h-3 w-3 ml-1" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start">
+                          <Sparkles className="h-5 w-5 mr-2 text-indigo-500 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <p className="font-medium text-sm">Gerar simulado com base nessa conversa</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              Crie um teste prático para verificar seu aprendizado sobre este tema.
+                            </p>
+                            <Button size="sm" variant="link" className="text-indigo-500 p-0 h-auto mt-1">
+                              Criar simulado <ArrowRight className="h-3 w-3 ml-1" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium mb-3 flex items-center">
+                        <MessageCircle className="h-4 w-4 mr-2 text-gray-500" />
+                        Adicionar Comentário Pessoal
+                      </h4>
+                      <div className="relative">
+                        <textarea
+                          className="w-full border rounded-lg p-3 pr-10 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-gray-800 dark:border-gray-700"
+                          placeholder="Adicione suas observações sobre esta conversa..."
+                          rows={3}
+                        ></textarea>
+                        <Button
+                          size="sm"
+                          className="absolute bottom-2 right-2 h-7 bg-orange-500 hover:bg-orange-600 text-white"
+                        >
+                          Salvar
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </ScrollArea>
+              </div>
+            )}
           </div>
         </div>
       </DialogContent>
