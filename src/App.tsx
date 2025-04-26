@@ -1,4 +1,4 @@
-import React, { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Routes,
   Route,
@@ -50,7 +50,6 @@ import PlanSelectionPage from "@/pages/plan-selection";
 // User Pages
 import ProfilePage from "@/pages/profile";
 import WelcomeModal from "./components/auth/WelcomeModal"; // Added import
-import { TypewriterLoader } from "./components/ui/typewriter-loader"; // Added import
 
 
 // Componente para proteger rotas
