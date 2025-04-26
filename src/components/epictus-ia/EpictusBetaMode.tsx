@@ -37,7 +37,6 @@ interface Message {
 }
 
 import HeaderIcons from "./modoepictusiabeta/header/icons/HeaderIcons";
-import HistoricoConversasModal from "./modals/HistoricoConversasModal";
 
 const EpictusBetaMode: React.FC = () => {
   const [isHovered, setIsHovered] = useState(false);
@@ -50,7 +49,6 @@ const EpictusBetaMode: React.FC = () => {
   );
   const [profileName, setProfileName] = useState("Personalidades");
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
-  const [isHistoricoModalOpen, setIsHistoricoModalOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>(() => {
     try {
       const savedMessages = localStorage.getItem('epictus_beta_chat');
@@ -659,15 +657,7 @@ const EpictusBetaMode: React.FC = () => {
     }
   };
 
-  const [showHistoricoModal, setShowHistoricoModal] = useState(false);
-
-  const handleHistoricoClick = () => {
-    setShowHistoricoModal(true);
-  };
-
-  const closeHistoricoModal = () => {
-    setShowHistoricoModal(false);
-  };
+  // Estado do modal de histórico agora é gerenciado no componente HeaderIcons
 
   return (
     <div className="flex flex-col h-full">
@@ -1004,11 +994,6 @@ const EpictusBetaMode: React.FC = () => {
           />
         </div>
       </div>
-
-      <HistoricoConversasModal 
-        open={showHistoricoModal} 
-        onOpenChange={setShowHistoricoModal} 
-      />
 
       <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
         <DialogContent className="bg-[#1A2634] text-white border-gray-700">
