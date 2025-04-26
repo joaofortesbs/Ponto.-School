@@ -9,8 +9,7 @@ import {
   FileText,
   PenLine,
   Share, 
-  Copy,
-  History
+  Copy
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import EpictusMessageBox from "./message-box/EpictusMessageBox";
@@ -26,7 +25,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { v4 as uuidv4 } from 'uuid';
 import { generateAIResponse, addMessageToHistory, createMessage } from "@/services/epictusIAService";
 import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/lib/supabase";
 
 interface Message {
   id: string;
@@ -85,7 +83,7 @@ const EpictusBetaMode: React.FC = () => {
   const [exportMessageData, setExportMessageData] = useState<Message | null>(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const MAX_CHARS = 1000;
-  const [sessionId, setSessionId] = useState<string>(""); // Added session ID state
+  const [sessionId] = useState(() => localStorage.getItem('epictus_beta_session_id') || uuidv4());
   const [isReformulating, setIsReformulating] = useState(false); 
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -138,11 +136,6 @@ const EpictusBetaMode: React.FC = () => {
     }
   ];
 
-  const [isApostilaModalOpen, setIsApostilaModalOpen] = useState(false);
-  const [isEspacoModalOpen, setIsEspacoModalOpen] = useState(false);
-  const [isGaleriaModalOpen, setIsGaleriaModalOpen] = useState(false);
-  const [isModoFantasmaModalOpen, setIsModoFantasmaModalOpen] = useState(false);
-
   useEffect(() => {
     const timer = setTimeout(() => {
       setAnimationComplete(true);
@@ -158,49 +151,15 @@ const EpictusBetaMode: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const storedSessionId = localStorage.getItem('epictus_session_id');
-    const newSessionId = storedSessionId || `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    if (!storedSessionId) {
-      localStorage.setItem('epictus_session_id', newSessionId);
-    }
-    setSessionId(newSessionId);
-
-    const savedConversation = localStorage.getItem('epictus_retomar_conversa');
-    if (savedConversation) {
-      try {
-        const parsedMessages = JSON.parse(savedConversation);
-        if (Array.isArray(parsedMessages) && parsedMessages.length > 0) {
-          const validMessages = parsedMessages.filter(msg => 
-            msg && typeof msg === 'object' && (msg.sender || msg.role) && msg.content
-          ).map(msg => ({
-            id: msg.id || crypto.randomUUID?.() || Math.random().toString(36).substring(2, 9),
-            sender: msg.sender || (msg.role === 'user' ? 'user' : 'ia'),
-            content: msg.content,
-            timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
-            isEdited: msg.isEdited || false,
-            feedback: msg.feedback
-          }));
-          if (validMessages.length > 0) {
-            console.log("Retomando conversa com", validMessages.length, "mensagens");
-            setMessages(validMessages);
-            localStorage.removeItem('epictus_retomar_conversa');
-          }
-        }
-      } catch (e) {
-        console.error("Erro ao retomar conversa:", e);
-      }
-    }
-  }, []);
-
-
-  useEffect(() => {
-    if (messages.length > 0 && sessionId) {
-      const timeoutId = setTimeout(() => {
-        saveConversationToSupabase(messages, sessionId);
-      }, 2000);
-      return () => clearTimeout(timeoutId);
+    if (messages.length > 0) {
+      localStorage.setItem('epictus_beta_chat', JSON.stringify(messages));
+      localStorage.setItem('epictus_beta_session_id', sessionId);
     }
   }, [messages, sessionId]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const scrollToBottom = () => {
     if (chatContainerRef.current) {
@@ -656,7 +615,8 @@ const EpictusBetaMode: React.FC = () => {
       const messageToReformulate = messages.find(msg => msg.id === messageId);
       if (messageToReformulate) {
         const reformulatedResponse = await generateAIResponse(`Reformule a seguinte resposta de forma mais detalhada: ${messageToReformulate.content}`, sessionId);
-        const updatedMessages = messages.map(msg =>          msg.id === messageId
+        const updatedMessages = messages.map(msg =>
+          msg.id === messageId
             ? {...msg, content: reformulatedResponse, isEdited: true, needsImprovement: false }
             : msg
         );
@@ -700,87 +660,6 @@ const EpictusBetaMode: React.FC = () => {
   };
 
   const [showHistoricoModal, setShowHistoricoModal] = useState(false);
-  const [conversationTitle, setConversationTitle] = useState("Nova conversa");
-
-  useEffect(() => {
-    const saveConversationToSupabase = async () => {
-      if (messages.length > 1) { 
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-
-          if (!user) {
-            console.error("Usuário não autenticado");
-            return;
-          }
-
-          const firstUserMessage = messages.find(msg => msg.sender === "user");
-          const firstAIResponse = messages.find(msg => msg.sender === "ia" && msg.id !== messages[0].id);
-
-          const autoTitle = firstUserMessage 
-            ? firstUserMessage.content.substring(0, 50) + (firstUserMessage.content.length > 50 ? "..." : "")
-            : "Nova conversa";
-
-          setConversationTitle(autoTitle);
-
-          const conversationData = {
-            title: autoTitle,
-            preview: firstAIResponse 
-              ? firstAIResponse.content.substring(0, 100) + (firstAIResponse.content.length > 100 ? "..." : "") 
-              : "Sem resposta",
-            messages: messages.map(msg => ({
-              sender: msg.sender,
-              content: msg.content,
-              timestamp: msg.timestamp
-            }))
-          };
-
-          const { data: existingConversations, error: fetchError } = await supabase
-            .from('user_conversations')
-            .select('id')
-            .eq('user_id', user.id)
-            .eq('session_id', sessionId)
-            .limit(1);
-
-          if (fetchError) {
-            console.error("Erro ao verificar conversa existente:", fetchError);
-            return;
-          }
-
-          if (existingConversations && existingConversations.length > 0) {
-            const { error: updateError } = await supabase
-              .from('user_conversations')
-              .update({ 
-                conversation: conversationData,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', existingConversations[0].id);
-
-            if (updateError) {
-              console.error("Erro ao atualizar conversa:", updateError);
-            }
-          } else {
-            const { error: insertError } = await supabase
-              .from('user_conversations')
-              .insert({
-                user_id: user.id,
-                conversation: conversationData,
-                session_id: sessionId,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              });
-
-            if (insertError) {
-              console.error("Erro ao inserir conversa:", insertError);
-            }
-          }
-        } catch (error) {
-          console.error("Erro ao salvar conversa:", error);
-        }
-      }
-    };
-
-    saveConversationToSupabase();
-  }, [messages, sessionId]);
 
   const handleHistoricoClick = () => {
     setShowHistoricoModal(true);
@@ -965,6 +844,7 @@ const EpictusBetaMode: React.FC = () => {
                           <div className="flex items-center gap-1 mr-2">
                             <button 
                               onClick={() => {
+                                // Implementar edição de mensagem do usuário futuramente
                                 toast({
                                   title: "Editar mensagem",
                                   description: "Esta funcionalidade será implementada em breve",
@@ -1125,7 +1005,10 @@ const EpictusBetaMode: React.FC = () => {
         </div>
       </div>
 
-      {/* O Modal de Histórico de Conversas agora é chamado diretamente do HeaderIcons */}
+      <HistoricoConversasModal 
+        open={showHistoricoModal} 
+        onOpenChange={setShowHistoricoModal} 
+      />
 
       <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
         <DialogContent className="bg-[#1A2634] text-white border-gray-700">

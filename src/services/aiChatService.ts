@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { supabase } from '@/lib/supabase';
 
 // Chaves de API
 const XAI_API_KEY = 'xai-PGLSB6snVtQm82k7xEmfCSo3RjkO41ICX4dUagAp5bz2GY02NTVqO6XWEXuNK5HCYWpYBYuz7WP2ENFP';
@@ -472,16 +471,6 @@ Lá você poderá atualizar seu telefone, localização e outras informações d
 
     // Salvar histórico atualizado no localStorage
     saveConversationHistory(sessionId, conversationHistory[sessionId]);
-    
-    // Salvar conversa no Supabase
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await saveConversationToSupabase(user.id, sessionId, conversationHistory[sessionId]);
-      }
-    } catch (saveError) {
-      console.error('Erro ao salvar conversa no Supabase:', saveError);
-    }
 
     return aiResponse;
   } catch (error) {
@@ -490,91 +479,6 @@ Lá você poderá atualizar seu telefone, localização e outras informações d
     return generateGeminiResponse(message, sessionId);
   }
 }
-
-// Função para salvar conversa no banco de dados
-export const saveConversationToSupabase = async (
-  userId: string, 
-  sessionId: string, 
-  messages: any[], 
-  title?: string
-) => {
-  try {
-    if (!userId || messages.length === 0) {
-      return { success: false, error: "Dados insuficientes para salvar conversa" };
-    }
-    
-    // Extrair primeiras mensagens para gerar título e preview
-    const firstUserMessage = messages.find(msg => msg.sender === "user" || msg.role === "user");
-    const firstAIResponse = messages.find(msg => msg.sender === "ia" || msg.sender === "ai" || msg.role === "assistant");
-    
-    // Gerar título baseado na primeira mensagem do usuário (limitado a 50 caracteres)
-    const autoTitle = title || (firstUserMessage 
-      ? firstUserMessage.content.substring(0, 50) + (firstUserMessage.content.length > 50 ? "..." : "")
-      : "Nova conversa");
-      
-    // Preparar dados para salvar
-    const conversationData = {
-      title: autoTitle,
-      preview: firstAIResponse 
-        ? firstAIResponse.content.substring(0, 100) + (firstAIResponse.content.length > 100 ? "..." : "") 
-        : "Sem resposta",
-      messages: messages
-    };
-    
-    const { data: existingConversations, error: fetchError } = await supabase
-      .from('user_conversations')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('session_id', sessionId)
-      .limit(1);
-      
-    if (fetchError) {
-      console.error("Erro ao verificar conversa existente:", fetchError);
-      return { success: false, error: fetchError };
-    }
-    
-    if (existingConversations && existingConversations.length > 0) {
-      // Atualizar conversa existente
-      const { error: updateError } = await supabase
-        .from('user_conversations')
-        .update({ 
-          conversation: conversationData,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', existingConversations[0].id);
-        
-      if (updateError) {
-        console.error("Erro ao atualizar conversa:", updateError);
-        return { success: false, error: updateError };
-      }
-      
-      return { success: true, conversationId: existingConversations[0].id };
-    } else {
-      // Inserir nova conversa
-      const { data, error: insertError } = await supabase
-        .from('user_conversations')
-        .insert({
-          user_id: userId,
-          conversation: conversationData,
-          session_id: sessionId,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .select('id')
-        .single();
-        
-      if (insertError) {
-        console.error("Erro ao inserir conversa:", insertError);
-        return { success: false, error: insertError };
-      }
-      
-      return { success: true, conversationId: data.id };
-    }
-  } catch (error) {
-    console.error("Erro ao salvar conversa:", error);
-    return { success: false, error };
-  }
-};
 
 // Função auxiliar para inicializar o histórico de conversa com mensagem do sistema
 function initializeConversationHistory(sessionId: string, userContext?: any) {
@@ -997,16 +901,6 @@ Contexto do usuário:
 
     // Salvar histórico atualizado no localStorage
     saveConversationHistory(sessionId, conversationHistory[sessionId]);
-
-    // Salvar conversa no Supabase
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await saveConversationToSupabase(user.id, sessionId, conversationHistory[sessionId]);
-      }
-    } catch (saveError) {
-      console.error('Erro ao salvar conversa no Supabase:', saveError);
-    }
 
     console.log(`Histórico de conversa atualizado para ${sessionId}. Total de mensagens: ${conversationHistory[sessionId].length}`);
 
