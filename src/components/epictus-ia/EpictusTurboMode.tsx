@@ -6,6 +6,7 @@ import { Zap, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import TurboMessageBox from "./TurboMessageBox";
 import TurboHubConnected from "./TurboHubConnected";
+import HistoricoConversasModal from "./modals/HistoricoConversasModal";
 
 const EpictusTurboMode: React.FC = () => {
   const { theme } = useTheme();
@@ -67,6 +68,12 @@ const EpictusTurboMode: React.FC = () => {
   }, []);
 
   const isDark = theme === "dark";
+  const [isHistoricoModalOpen, setIsHistoricoModalOpen] = useState(false);
+
+  // Handler para o clique no ícone de histórico
+  const handleHistoryClick = () => {
+    setIsHistoricoModalOpen(true);
+  };
 
   // Opções de perfil para o dropdown
   const profileOptions = [
@@ -247,6 +254,12 @@ const EpictusTurboMode: React.FC = () => {
 
           {/* New header icons */}
           <div className="flex items-center justify-center z-10 relative gap-3">
+            {/* Modal de Histórico de Conversas */}
+            <HistoricoConversasModal 
+              isOpen={isHistoricoModalOpen}
+              onClose={() => setIsHistoricoModalOpen(false)}
+            />
+            
             {/* Personalidades dropdown */}
             <div className="relative icon-container mr-5" style={{ zIndex: 99999, position: "relative" }}>
               {/* Adicionando estado para controlar o dropdown */}
@@ -347,6 +360,7 @@ const EpictusTurboMode: React.FC = () => {
                 whileTap={{ scale: 0.95 }}
                 initial={false}
                 transition={{ duration: 0.3 }}
+                onClick={handleHistoryClick}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10" />

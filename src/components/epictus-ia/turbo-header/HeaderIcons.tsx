@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 
@@ -25,6 +24,12 @@ export const HeaderIcon: React.FC<HeaderIconProps> = ({ icon, onClick }) => {
 };
 
 export const HeaderIcons: React.FC = () => {
+  // Placeholder for history modal functionality.  This needs to be implemented.
+  const onHistoryClick = () => {
+    console.log("History icon clicked!");
+    // Add code here to open the history modal
+  };
+
   return (
     <div className="flex items-center justify-center z-10 relative gap-3">
       {/* Histórico icon */}
@@ -35,6 +40,7 @@ export const HeaderIcons: React.FC = () => {
             <circle cx="12" cy="12" r="10" />
           </svg>
         } 
+        onClick={onHistoryClick}
       />
 
       {/* Espaço de Aprendizagem icon */}
