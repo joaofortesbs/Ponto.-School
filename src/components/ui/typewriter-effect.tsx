@@ -108,8 +108,8 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
   return (
     <div 
       ref={contentRef}
-      onClick={handleClick} 
-      className={`prose prose-sm dark:prose-invert max-w-none cursor-pointer ${className}`}
+      onClick={isComplete ? undefined : handleClick} 
+      className={`prose prose-sm dark:prose-invert max-w-none ${!isComplete ? 'cursor-pointer' : ''} ${className}`}
     >
       {containsMarkdown ? (
         <React.Suspense fallback={<div style={{ whiteSpace: 'pre-wrap' }}>{displayText}</div>}>
@@ -133,11 +133,6 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
         </div>
       )}
 
-      {!isComplete && !isPaused && currentIndex > 10 && (
-        <div className="text-xs text-blue-600 dark:text-blue-400 mt-2 px-2 py-1 bg-blue-100 dark:bg-blue-900/20 rounded inline-block">
-          Clique para mostrar todo o conteúdo imediatamente
-        </div>
-      )}
     </div>
   );
 };
