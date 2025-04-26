@@ -4,19 +4,19 @@ import { Image } from "lucide-react";
 import HeaderIcon from "./HeaderIcon";
 
 interface GaleriaIconProps {
+  active?: boolean;
   onClick?: () => void;
-  isActive?: boolean;
 }
 
-const GaleriaIcon: React.FC<GaleriaIconProps> = ({ onClick, isActive }) => {
+export const GaleriaIcon: React.FC<GaleriaIconProps> = ({ active = false, onClick }) => {
   return (
     <HeaderIcon
-      icon={<Image size={18} />}
+      icon={<Image size={20} className="text-white" />}
       label="Galeria"
+      active={active}
       onClick={onClick}
-      isActive={isActive}
     />
   );
 };
 
-export { GaleriaIcon };
+export default GaleriaIcon;

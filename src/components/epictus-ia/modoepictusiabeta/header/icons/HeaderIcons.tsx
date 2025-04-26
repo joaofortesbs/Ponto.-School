@@ -1,79 +1,55 @@
-
-import React, { useState } from "react";
-import { HistoricoIcon } from "./HistoricoIcon";
-import { EspacoAprendizagemIcon } from "./EspacoAprendizagemIcon";
-import { ApostilaInteligenteIcon } from "./ApostilaInteligenteIcon";
-import { ModoFantasmaIcon } from "./ModoFantasmaIcon";
-import { GaleriaIcon } from "./GaleriaIcon";
-import { PerfilIcon } from "./PerfilIcon";
+import React from "react";
+import HistoricoIcon from "./HistoricoIcon";
+import EspacoAprendizagemIcon from "./EspacoAprendizagemIcon";
+import ApostilaInteligenteIcon from "./ApostilaInteligenteIcon";
+import ModoFantasmaIcon from "./ModoFantasmaIcon";
+import GaleriaIcon from "./GaleriaIcon";
+import PerfilIcon from "./PerfilIcon";
 
 interface HeaderIconsProps {
-  userInitials?: string;
+  activeIcon?: string;
+  onIconClick?: (iconName: string) => void;
 }
 
-const HeaderIcons: React.FC<HeaderIconsProps> = ({ userInitials = "JF" }) => {
-  const [activeIcon, setActiveIcon] = useState<string | null>(null);
-  
-  const handleIconClick = (iconName: string) => {
-    setActiveIcon(iconName === activeIcon ? null : iconName);
-    
-    // Implement specific functionality for each icon
-    console.log(`${iconName} clicked`);
-    
-    // Example modal handlers or navigation logic can be added here
-    switch(iconName) {
-      case 'historico':
-        // Open history modal or navigate to history page
-        break;
-      case 'espacoAprendizagem':
-        // Open learning space
-        break;
-      case 'apostilaInteligente':
-        // Open intelligent study material
-        break;
-      case 'modoFantasma':
-        // Toggle ghost mode
-        break;
-      case 'galeria':
-        // Open gallery
-        break;
-      case 'perfil':
-        // Open profile settings
-        break;
-      default:
-        break;
-    }
-  };
-  
+const HeaderIcons: React.FC<HeaderIconsProps> = ({ 
+  activeIcon = "",
+  onIconClick = () => {}
+}) => {
+  console.log("Renderizando HeaderIcons para o Modo Epictus IA BETA");
+
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center space-x-2 px-2">
       <HistoricoIcon 
-        isActive={activeIcon === 'historico'} 
-        onClick={() => handleIconClick('historico')} 
+        active={activeIcon === "historico"} 
+        onClick={() => onIconClick("historico")} 
       />
+
       <EspacoAprendizagemIcon 
-        isActive={activeIcon === 'espacoAprendizagem'} 
-        onClick={() => handleIconClick('espacoAprendizagem')} 
+        active={activeIcon === "espacoAprendizagem"} 
+        onClick={() => onIconClick("espacoAprendizagem")} 
       />
+
       <ApostilaInteligenteIcon 
-        isActive={activeIcon === 'apostilaInteligente'} 
-        onClick={() => handleIconClick('apostilaInteligente')} 
+        active={activeIcon === "apostilaInteligente"} 
+        onClick={() => onIconClick("apostilaInteligente")} 
       />
+
       <ModoFantasmaIcon 
-        isActive={activeIcon === 'modoFantasma'} 
-        onClick={() => handleIconClick('modoFantasma')} 
+        active={activeIcon === "modoFantasma"} 
+        onClick={() => onIconClick("modoFantasma")} 
       />
+
       <GaleriaIcon 
-        isActive={activeIcon === 'galeria'} 
-        onClick={() => handleIconClick('galeria')} 
+        active={activeIcon === "galeria"} 
+        onClick={() => onIconClick("galeria")} 
       />
+
       <PerfilIcon 
-        isActive={activeIcon === 'perfil'} 
-        onClick={() => handleIconClick('perfil')} 
-        userInitials={userInitials}
+        active={activeIcon === "perfil"} 
+        onClick={() => onIconClick("perfil")} 
       />
     </div>
   );
 };
 
-export { HeaderIcons };
+export default HeaderIcons;

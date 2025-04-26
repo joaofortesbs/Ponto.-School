@@ -1,34 +1,39 @@
 
 import React from "react";
-import { motion } from "framer-motion";
 
 interface HeaderIconProps {
   icon: React.ReactNode;
   label: string;
+  active?: boolean;
   onClick?: () => void;
-  isActive?: boolean;
 }
 
 const HeaderIcon: React.FC<HeaderIconProps> = ({ 
   icon, 
   label, 
-  onClick, 
-  isActive = false 
+  active = false,
+  onClick 
 }) => {
   return (
-    <motion.div
-      className={`relative flex items-center justify-center w-10 h-10 rounded-full ${
-        isActive 
-          ? "bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] text-white" 
-          : "bg-[#1a2747]/50 text-[#8a9cc5] hover:bg-[#1a2747]/80 hover:text-white"
-      } cursor-pointer transition-colors duration-200`}
+    <button
+      className={`flex flex-col items-center justify-center p-2 rounded-md transition-all ${
+        active 
+          ? "bg-gradient-to-r from-blue-900/50 to-indigo-900/50 text-white" 
+          : "hover:bg-white/5 text-gray-300 hover:text-white"
+      }`}
       onClick={onClick}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      title={label}
     >
-      {icon}
-    </motion.div>
+      <div 
+        className={`w-10 h-10 rounded-full flex items-center justify-center ${
+          active 
+            ? "bg-gradient-to-r from-blue-700 to-indigo-700" 
+            : "bg-gray-800"
+        }`}
+      >
+        {icon}
+      </div>
+      <span className="mt-1 text-xs font-medium">{label}</span>
+    </button>
   );
 };
 

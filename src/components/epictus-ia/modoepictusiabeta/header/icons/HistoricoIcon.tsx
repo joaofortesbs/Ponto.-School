@@ -1,22 +1,22 @@
 
 import React from "react";
-import { History } from "lucide-react";
+import { Clock } from "lucide-react";
 import HeaderIcon from "./HeaderIcon";
 
 interface HistoricoIconProps {
+  active?: boolean;
   onClick?: () => void;
-  isActive?: boolean;
 }
 
-const HistoricoIcon: React.FC<HistoricoIconProps> = ({ onClick, isActive }) => {
+export const HistoricoIcon: React.FC<HistoricoIconProps> = ({ active = false, onClick }) => {
   return (
     <HeaderIcon
-      icon={<History size={18} />}
+      icon={<Clock size={20} className="text-white" />}
       label="Histórico"
+      active={active}
       onClick={onClick}
-      isActive={isActive}
     />
   );
 };
 
-export { HistoricoIcon };
+export default HistoricoIcon;

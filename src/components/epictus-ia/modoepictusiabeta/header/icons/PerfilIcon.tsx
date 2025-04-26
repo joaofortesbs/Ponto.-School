@@ -1,26 +1,22 @@
 
 import React from "react";
+import { User } from "lucide-react";
 import HeaderIcon from "./HeaderIcon";
 
 interface PerfilIconProps {
+  active?: boolean;
   onClick?: () => void;
-  isActive?: boolean;
-  userInitials?: string;
 }
 
-const PerfilIcon: React.FC<PerfilIconProps> = ({ onClick, isActive, userInitials = "JF" }) => {
+export const PerfilIcon: React.FC<PerfilIconProps> = ({ active = false, onClick }) => {
   return (
     <HeaderIcon
-      icon={
-        <div className="flex items-center justify-center w-full h-full text-sm font-semibold">
-          {userInitials}
-        </div>
-      }
+      icon={<User size={20} className="text-white" />}
       label="Perfil"
+      active={active}
       onClick={onClick}
-      isActive={isActive}
     />
   );
 };
 
-export { PerfilIcon };
+export default PerfilIcon;

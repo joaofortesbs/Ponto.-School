@@ -657,14 +657,19 @@ const EpictusBetaMode: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <TurboHeader 
-        profileOptions={profileOptions} 
-        initialProfileIcon={profileIcon} 
-        initialProfileName={profileName} 
-        isBetaMode={true} 
-      />
+      {console.log("Renderizando EpictusBetaMode")}
+      <ErrorBoundary>
+        <TurboHeader 
+          profileOptions={profileOptions} 
+          initialProfileIcon={profileIcon} 
+          initialProfileName={profileName} 
+          isBetaMode={true} 
+        />
+      </ErrorBoundary>
 
       <div className="flex-1 flex flex-col items-center justify-between p-4 overflow-hidden bg-transparent">
+        {console.log("Renderizando área de chat do EpictusBetaMode")}
+        <ErrorBoundary>
         <div className="w-[80%] h-[85%] relative mb-4 flex-grow overflow-hidden">
           <div className="absolute top-0 right-0 z-10 p-2">
             <Button
@@ -965,8 +970,11 @@ const EpictusBetaMode: React.FC = () => {
             </div>
           </ScrollArea>
         </div>
+        </ErrorBoundary>
 
         <div className="w-full h-auto mt-2 flex-shrink-0">
+          {console.log("Renderizando caixa de mensagens")}
+          <ErrorBoundary>
           <EpictusMessageBox 
             inputMessage={inputMessage} 
             setInputMessage={setInputMessage} 
@@ -992,6 +1000,7 @@ const EpictusBetaMode: React.FC = () => {
             }}
             currentContext="estudos"
           />
+          </ErrorBoundary>
         </div>
       </div>
 

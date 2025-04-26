@@ -1,22 +1,22 @@
 
 import React from "react";
-import { Rocket } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import HeaderIcon from "./HeaderIcon";
 
 interface EspacoAprendizagemIconProps {
+  active?: boolean;
   onClick?: () => void;
-  isActive?: boolean;
 }
 
-const EspacoAprendizagemIcon: React.FC<EspacoAprendizagemIconProps> = ({ onClick, isActive }) => {
+export const EspacoAprendizagemIcon: React.FC<EspacoAprendizagemIconProps> = ({ active = false, onClick }) => {
   return (
     <HeaderIcon
-      icon={<Rocket size={18} />}
+      icon={<BookOpen size={20} className="text-white" />}
       label="Espaço de Aprendizagem"
+      active={active}
       onClick={onClick}
-      isActive={isActive}
     />
   );
 };
 
-export { EspacoAprendizagemIcon };
+export default EspacoAprendizagemIcon;

@@ -1,22 +1,22 @@
 
 import React from "react";
-import { BookOpen } from "lucide-react";
+import { FileText } from "lucide-react";
 import HeaderIcon from "./HeaderIcon";
 
 interface ApostilaInteligenteIconProps {
+  active?: boolean;
   onClick?: () => void;
-  isActive?: boolean;
 }
 
-const ApostilaInteligenteIcon: React.FC<ApostilaInteligenteIconProps> = ({ onClick, isActive }) => {
+export const ApostilaInteligenteIcon: React.FC<ApostilaInteligenteIconProps> = ({ active = false, onClick }) => {
   return (
     <HeaderIcon
-      icon={<BookOpen size={18} />}
+      icon={<FileText size={20} className="text-white" />}
       label="Apostila Inteligente"
+      active={active}
       onClick={onClick}
-      isActive={isActive}
     />
   );
 };
 
-export { ApostilaInteligenteIcon };
+export default ApostilaInteligenteIcon;
