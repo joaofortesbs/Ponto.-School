@@ -256,7 +256,7 @@ const EpictusTurboMode: React.FC = () => {
                 // Referência para detectar cliques fora do dropdown
                 const dropdownRef = React.useRef<HTMLDivElement>(null);
                 
-                // Fechar o dropdown quando clicar fora dele
+                // Fechar o dropdown apenas quando clicar fora dele
                 React.useEffect(() => {
                   const handleClickOutside = (event: MouseEvent) => {
                     if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -264,11 +264,15 @@ const EpictusTurboMode: React.FC = () => {
                     }
                   };
                   
-                  document.addEventListener('mousedown', handleClickOutside);
+                  // Adicionando o evento apenas se o dropdown estiver aberto
+                  if (isDropdownOpen) {
+                    document.addEventListener('mousedown', handleClickOutside);
+                  }
+                  
                   return () => {
                     document.removeEventListener('mousedown', handleClickOutside);
                   };
-                }, [dropdownRef]);
+                }, [dropdownRef, isDropdownOpen]);
                 
                 return (
                   <div ref={dropdownRef}>
@@ -302,7 +306,8 @@ const EpictusTurboMode: React.FC = () => {
                                 boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
                                 scale: 1.02
                               }}
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation(); // Evita que o clique se propague
                                 item.onClick();
                                 setIsDropdownOpen(false);
                               }}
