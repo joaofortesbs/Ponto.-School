@@ -1,51 +1,10 @@
-// modoepictusiabeta/header/icons/PerfilIcon.tsx
-import React from "react";
-
-interface PerfilIconProps {
-  onClick?: () => void;
-}
-
-const PerfilIcon: React.FC<PerfilIconProps> = ({ onClick }) => {
-  return (
-    <div className="cursor-pointer" onClick={onClick}>
-      <img
-        src="/path/to/your/profile/image.jpg" // Replace with actual image path
-        alt="Profile"
-        className="rounded-full w-8 h-8"
-      />
-    </div>
-  );
-};
-
-export default PerfilIcon;
-
-
-// modoepictusiabeta/header/icons/index.tsx
+import React, { useState } from "react";
 import HistoricoIcon from "./HistoricoIcon";
 import EspacoAprendizagemIcon from "./EspacoAprendizagemIcon";
 import ApostilaInteligenteIcon from "./ApostilaInteligenteIcon";
 import ModoFantasmaIcon from "./ModoFantasmaIcon";
 import GaleriaIcon from "./GaleriaIcon";
 import PerfilIcon from "./PerfilIcon";
-
-export {
-  HistoricoIcon,
-  EspacoAprendizagemIcon,
-  ApostilaInteligenteIcon,
-  ModoFantasmaIcon,
-  GaleriaIcon,
-  PerfilIcon,
-};
-
-
-// modoepictusiabeta/header/HeaderIcons.tsx
-import React, { useState } from "react";
-import HistoricoIcon from "./icons/HistoricoIcon";
-import EspacoAprendizagemIcon from "./icons/EspacoAprendizagemIcon";
-import ApostilaInteligenteIcon from "./icons/ApostilaInteligenteIcon";
-import ModoFantasmaIcon from "./icons/ModoFantasmaIcon";
-import GaleriaIcon from "./icons/GaleriaIcon";
-import PerfilIcon from "./icons/PerfilIcon";
 import HistoricoConversasModal from "../../../modals/HistoricoConversasModal";
 
 interface HeaderIconsProps {
@@ -55,7 +14,7 @@ interface HeaderIconsProps {
   onApostilaInteligenteClick?: () => void;
   onModoFantasmaClick?: () => void;
   onGaleriaClick?: () => void;
-  onPerfilClick?: () => void; // Added prop for PerfilIcon
+  onPerfilClick?: () => void;
 }
 
 const HeaderIcons: React.FC<HeaderIconsProps> = ({
@@ -65,7 +24,7 @@ const HeaderIcons: React.FC<HeaderIconsProps> = ({
   onApostilaInteligenteClick,
   onModoFantasmaClick,
   onGaleriaClick,
-  onPerfilClick, // Added prop
+  onPerfilClick,
 }) => {
   const [modoFantasmaAtivo, setModoFantasmaAtivo] = useState(false);
   const [isHistoricoModalOpen, setIsHistoricoModalOpen] = useState(false);
@@ -88,7 +47,7 @@ const HeaderIcons: React.FC<HeaderIconsProps> = ({
       <ApostilaInteligenteIcon onClick={onApostilaInteligenteClick} />
       <ModoFantasmaIcon onClick={handleModoFantasmaClick} active={modoFantasmaAtivo} />
       <GaleriaIcon onClick={onGaleriaClick} />
-      <PerfilIcon onClick={onPerfilClick} /> {/* Added PerfilIcon */}
+      <PerfilIcon onClick={onPerfilClick} />
       <HistoricoConversasModal open={isHistoricoModalOpen} onOpenChange={setIsHistoricoModalOpen} />
     </div>
   );
