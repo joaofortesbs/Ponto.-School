@@ -1006,6 +1006,8 @@ const EpictusBetaMode: React.FC = () => {
       </div>
 
       <HistoricoConversasModal 
+        open={isHistoricoModalOpen}
+        onOpenChange={setIsHistoricoModalOpen} 
         open={showHistoricoModal} 
         onOpenChange={setShowHistoricoModal} 
       />
