@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion, AnimatePresence } from "framer-motion";
@@ -5,8 +6,6 @@ import { Zap, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import TurboMessageBox from "./TurboMessageBox";
 import TurboHubConnected from "./TurboHubConnected";
-import HistoricoConversasModal from "./modals/HistoricoConversasModal";
-import ErrorBoundary from "@/components/ErrorBoundary"; // Added ErrorBoundary import
 
 const EpictusTurboMode: React.FC = () => {
   const { theme } = useTheme();
@@ -68,12 +67,6 @@ const EpictusTurboMode: React.FC = () => {
   }, []);
 
   const isDark = theme === "dark";
-  const [isHistoricoModalOpen, setIsHistoricoModalOpen] = useState(false);
-
-  // Handler para o clique no ícone de histórico
-  const handleHistoryClick = () => {
-    setIsHistoricoModalOpen(true);
-  };
 
   // Opções de perfil para o dropdown
   const profileOptions = [
@@ -154,7 +147,6 @@ const EpictusTurboMode: React.FC = () => {
   // New color scheme is now directly applied in the class names
 
   return (
-    <ErrorBoundary> {/* Wrapping the main component with ErrorBoundary */}
     <div className="w-full flex flex-col items-center">
       {/* Header copied from EpictusIAHeader but with title changed to "Epictus Turbo" */}
       <div className="w-full p-4">
@@ -255,22 +247,15 @@ const EpictusTurboMode: React.FC = () => {
 
           {/* New header icons */}
           <div className="flex items-center justify-center z-10 relative gap-3">
-            {/* Modal de Histórico de Conversas */}
-            <ErrorBoundary> {/* Added ErrorBoundary for HistoricoConversasModal */}
-            <HistoricoConversasModal 
-              isOpen={isHistoricoModalOpen}
-              onClose={() => setIsHistoricoModalOpen(false)}
-            />
-            </ErrorBoundary>
-
             {/* Personalidades dropdown */}
             <div className="relative icon-container mr-5" style={{ zIndex: 99999, position: "relative" }}>
+              {/* Adicionando estado para controlar o dropdown */}
               {useState && (() => {
                 const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
+                
                 // Referência para detectar cliques fora do dropdown
                 const dropdownRef = React.useRef<HTMLDivElement>(null);
-
+                
                 // Fechar o dropdown apenas quando clicar fora dele
                 React.useEffect(() => {
                   const handleClickOutside = (event: MouseEvent) => {
@@ -278,17 +263,17 @@ const EpictusTurboMode: React.FC = () => {
                       setIsDropdownOpen(false);
                     }
                   };
-
+                  
                   // Adicionando o evento apenas se o dropdown estiver aberto
                   if (isDropdownOpen) {
                     document.addEventListener('mousedown', handleClickOutside);
                   }
-
+                  
                   return () => {
                     document.removeEventListener('mousedown', handleClickOutside);
                   };
                 }, [dropdownRef, isDropdownOpen]);
-
+                
                 return (
                   <div ref={dropdownRef}>
                     <motion.div
@@ -362,7 +347,6 @@ const EpictusTurboMode: React.FC = () => {
                 whileTap={{ scale: 0.95 }}
                 initial={false}
                 transition={{ duration: 0.3 }}
-                onClick={handleHistoryClick}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10" />
@@ -449,9 +433,7 @@ const EpictusTurboMode: React.FC = () => {
       <div className="w-full flex flex-col items-center justify-center mt-0 mb-2">
         {/* Hub Conectado - novo componente entre o cabeçalho e a caixa de mensagens */}
         <div className="w-full">
-          <ErrorBoundary> {/* Added ErrorBoundary for TurboHubConnected */}
           <TurboHubConnected />
-          </ErrorBoundary>
         </div>
 
         {/* Mini-section selector */}
@@ -461,12 +443,10 @@ const EpictusTurboMode: React.FC = () => {
 
         {/* Caixa de mensagens na parte inferior */}
         <div className="w-full bottom-0 left-0 right-0 z-30 mt-1">
-          <ErrorBoundary> {/* Added ErrorBoundary for TurboMessageBox */}
           <TurboMessageBox />
-          </ErrorBoundary>
         </div>
       </div>
-    </ErrorBoundary>
+    </div>
   );
 };
 

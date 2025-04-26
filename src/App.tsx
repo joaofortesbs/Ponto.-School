@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import {
   Routes,
   Route,
@@ -48,7 +48,8 @@ import PlanSelectionPage from "@/pages/plan-selection";
 // User Pages
 import ProfilePage from "@/pages/profile";
 import WelcomeModal from "./components/auth/WelcomeModal"; // Added import
-import { TypewriterLoader } from "./components/ui/typewriter-loader"; // Importação explícita
+import { TypewriterLoader } from "./components/ui/typewriter-loader"; // Added import
+
 
 // Componente para proteger rotas
 function ProtectedRoute({ children }) {
@@ -91,13 +92,7 @@ function ProtectedRoute({ children }) {
 
   // Mostrar nada enquanto verifica autenticação
   if (isCheckingAuth) {
-    try {
-      console.log("Renderizando TypewriterLoader durante verificação de autenticação");
-      return <TypewriterLoader />;
-    } catch (error) {
-      console.error("Erro ao renderizar TypewriterLoader:", error);
-      return <div className="p-4">Carregando...</div>; // Fallback simples
-    }
+    return <TypewriterLoader />; // Replaced loading spinner
   }
 
   // Se estiver autenticado, renderiza as rotas filhas
