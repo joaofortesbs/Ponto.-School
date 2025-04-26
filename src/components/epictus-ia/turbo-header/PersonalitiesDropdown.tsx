@@ -23,7 +23,7 @@ const PersonalitiesDropdown: React.FC<PersonalitiesDropdownProps> = ({
   return (
     <div className="relative icon-container mr-5 group" style={{ zIndex: 99999, position: "relative" }}>
       <motion.div
-        className="relative w-auto h-10 rounded-full bg-gradient-to-br from-[#001340] to-[#0055B8] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow px-3 group"
+        className="relative w-auto h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow px-3 group"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         initial={false}
@@ -40,7 +40,7 @@ const PersonalitiesDropdown: React.FC<PersonalitiesDropdownProps> = ({
 
       {/* Dropdown content - absolute positioning relative to its container */}
       <div className="fixed group-hover:opacity-100 group-hover:visible opacity-0 invisible transition-all duration-300 z-[99999] left-auto mt-2 personalidades-dropdown" style={{ top: "calc(100% + 10px)" }}>
-        <div className="w-52 bg-gradient-to-r from-[#001340] to-[#0055B8] rounded-lg shadow-xl overflow-hidden border border-white/10 backdrop-blur-md" style={{ position: "relative", zIndex: 99999 }}>
+        <div className="w-52 bg-gradient-to-r from-[#19407E] to-[#2A61B6] rounded-lg shadow-xl overflow-hidden border border-white/10 backdrop-blur-md" style={{ position: "relative", zIndex: 99999 }}>
           <div className="max-h-60 overflow-y-auto py-2">
             {profileOptions.map((item, index) => (
               <motion.div 
@@ -56,8 +56,8 @@ const PersonalitiesDropdown: React.FC<PersonalitiesDropdownProps> = ({
                 <div 
                   className="w-7 h-7 rounded-md flex items-center justify-center shadow-inner"
                   style={{ 
-                    background: `linear-gradient(135deg, #001340, #0055B8)`,
-                    boxShadow: `0 0 15px rgba(0, 85, 184, 0.4)`
+                    background: `linear-gradient(135deg, ${item.color}30, ${item.color}50)`,
+                    boxShadow: `0 0 15px ${item.color}40`
                   }}
                 >
                   {item.icon}
