@@ -41,7 +41,6 @@ interface Message {
 import HeaderIcons from "./modoepictusiabeta/header/icons/HeaderIcons";
 import HistoricoConversasModal from "./modals/HistoricoConversasModal";
 import MessageToolsDropdown from "./message-tools/MessageToolsDropdown"; // Import the new component
-import TypewriterEffect from '@/components/ui/typewriter-effect'; // Import TypewriterEffect
 
 
 const EpictusBetaMode: React.FC = () => {
@@ -720,23 +719,6 @@ const EpictusBetaMode: React.FC = () => {
     };
   }, []);
 
-  const MessageContent = ({ content, isAi }: { content: string; isAi: boolean }) => {
-    return (
-      <div className={`${isAi ? 'prose prose-sm dark:prose-invert max-w-none' : ''}`}>
-        {isAi ? (
-          <TypewriterEffect 
-            text={content}
-            typingSpeed={5}
-            className="message-typewriter"
-          />
-        ) : (
-          <p style={{ whiteSpace: 'pre-wrap' }}>{content}</p>
-        )}
-      </div>
-    );
-  };
-
-
   return (
     <div className="flex flex-col h-full">
       <TurboHeader profileOptions={profileOptions} initialProfileIcon={profileIcon} initialProfileName={profileName} />
@@ -814,7 +796,7 @@ const EpictusBetaMode: React.FC = () => {
                         </div>
                       </div>
                     ) : (
-                      <MessageContent content={message.content} isAi={message.sender === 'ia'} />
+                      <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed font-light">{message.content}</p>
                     )}
                     <div className="flex justify-between items-center mt-2 pt-1 border-t border-white/10">
                       <div className="flex items-center space-x-2">
