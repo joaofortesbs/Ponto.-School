@@ -4,6 +4,7 @@ import EspacoAprendizagemIcon from "./EspacoAprendizagemIcon";
 import ApostilaInteligenteIcon from "./ApostilaInteligenteIcon";
 import ModoFantasmaIcon from "./ModoFantasmaIcon";
 import GaleriaIcon from "./GaleriaIcon";
+import HistoricoConversasModal from "../../../modals/HistoricoConversasModal"; // Added import
 
 interface HeaderIconsProps {
   currentContext?: string;
@@ -23,6 +24,7 @@ const HeaderIcons: React.FC<HeaderIconsProps> = ({
   onGaleriaClick,
 }) => {
   const [modoFantasmaAtivo, setModoFantasmaAtivo] = useState(false);
+  const [isHistoricoModalOpen, setIsHistoricoModalOpen] = useState(false); // Added state for modal
 
   const handleModoFantasmaClick = () => {
     setModoFantasmaAtivo(!modoFantasmaAtivo);
@@ -31,13 +33,18 @@ const HeaderIcons: React.FC<HeaderIconsProps> = ({
     }
   };
 
+  const handleHistoricoClick = () => { // Added handler for modal
+    setIsHistoricoModalOpen(true);
+  };
+
   return (
     <div className="flex items-center justify-center z-10 relative gap-3">
-      <HistoricoIcon onClick={onHistoricoClick} />
+      <HistoricoIcon onClick={handleHistoricoClick} /> {/* Updated onClick */}
       <EspacoAprendizagemIcon onClick={onEspacoAprendizagemClick} />
       <ApostilaInteligenteIcon onClick={onApostilaInteligenteClick} />
       <ModoFantasmaIcon onClick={handleModoFantasmaClick} active={modoFantasmaAtivo} />
       <GaleriaIcon onClick={onGaleriaClick} />
+      <HistoricoConversasModal open={isHistoricoModalOpen} onOpenChange={setIsHistoricoModalOpen} /> {/* Added modal */}
     </div>
   );
 };
