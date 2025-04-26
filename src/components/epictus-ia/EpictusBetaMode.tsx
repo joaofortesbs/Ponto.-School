@@ -207,29 +207,42 @@ const EpictusBetaMode: React.FC = () => {
     try {
       console.log("Enviando mensagem para IA:", trimmedMessage);
       
-      // Usamos uma abordagem de timeout para garantir uma experiência de usuário mais responsiva
-      const responsePromise = generateAIResponse(
-        trimmedMessage, 
-        sessionId, 
-        {
-          intelligenceLevel: 'advanced',
-          languageStyle: 'formal',
-          detailedResponse: true
-        }, 
-        currentConversationId
-      );
+      // Definimos um tempo máximo maior para permitir respostas mais completas
+      const timeoutDuration = 30000; // 30 segundos
       
-      // Definimos um tempo máximo de 15 segundos para a resposta
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Tempo esgotado")), 15000);
-      });
+      // Criamos uma promessa com timeout para garantir que o usuário não espere indefinidamente
+      const responseWithTimeout = async () => {
+        return new Promise<{response: string, conversationId: string}>((resolve, reject) => {
+          const timeoutId = setTimeout(() => {
+            reject(new Error("Tempo de resposta excedido. A IA está demorando mais do que o esperado."));
+          }, timeoutDuration);
+          
+          generateAIResponse(
+            trimmedMessage, 
+            sessionId, 
+            {
+              intelligenceLevel: 'advanced',
+              languageStyle: 'formal',
+              detailedResponse: true
+            }, 
+            currentConversationId
+          )
+          .then((result) => {
+            clearTimeout(timeoutId);
+            resolve(result);
+          })
+          .catch(reject);
+        });
+      };
       
-      const { response, conversationId } = await Promise.race([
-        responsePromise,
-        timeoutPromise
-      ]) as {response: string, conversationId: string};
+      const { response, conversationId } = await responseWithTimeout();
       
       console.log("Resposta recebida da IA, conversa ID:", conversationId);
+      
+      // Verificar se a resposta está vazia
+      if (!response || response.trim() === '') {
+        throw new Error("A resposta recebida está vazia");
+      }
       
       // Atualiza o ID da conversa atual
       if (conversationId) {
@@ -244,13 +257,37 @@ const EpictusBetaMode: React.FC = () => {
       };
 
       setMessages(prev => [...prev, aiMessage]);
+      
+      // Garantir que o chat role para a nova mensagem
+      setTimeout(() => {
+        if (chatContainerRef.current) {
+          chatContainerRef.current.scrollTo({
+            top: chatContainerRef.current.scrollHeight,
+            behavior: "smooth"
+          });
+        }
+      }, 100);
+      
     } catch (err) {
       console.error("Erro ao gerar resposta:", err);
+
+      // Determinar uma mensagem de erro mais específica baseada no tipo de erro
+      let errorContent = "Desculpe, encontrei um problema ao processar sua solicitação. Por favor, tente novamente em alguns instantes.";
+      
+      if (err instanceof Error) {
+        if (err.message.includes("Tempo")) {
+          errorContent = "O tempo de resposta excedeu o limite. Talvez a IA esteja sobrecarregada no momento. Por favor, tente novamente em alguns instantes.";
+        } else if (err.message.includes("vazia")) {
+          errorContent = "Recebi uma resposta vazia da IA. Isso pode indicar problemas com o serviço de IA. Por favor, tente uma pergunta diferente ou tente novamente mais tarde.";
+        } else if (err.message.includes("API")) {
+          errorContent = "Ocorreu um erro na comunicação com o serviço de IA. Verifique sua conexão com a internet e tente novamente.";
+        }
+      }
 
       const errorMessage: Message = {
         id: uuidv4(),
         sender: "ia",
-        content: "Desculpe, encontrei um problema ao processar sua solicitação. Por favor, tente novamente em alguns instantes.",
+        content: errorContent,
         timestamp: new Date()
       };
 
@@ -260,6 +297,7 @@ const EpictusBetaMode: React.FC = () => {
         title: "Erro na comunicação",
         description: "Ocorreu um erro ao se comunicar com a IA. Tente novamente.",
         duration: 3000,
+        variant: "destructive"
       });
     } finally {
       setIsTyping(false);

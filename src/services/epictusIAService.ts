@@ -98,14 +98,38 @@ export const generateAIResponse = async (message: string, sessionId: string, opt
 
     // Obtém o histórico de mensagens para fornecer contexto
     const historyMessages = getChatHistory(sessionId).slice(-10);
+    
+    // Criando um histórico de conversa mais context-aware para melhorar as respostas da IA
+    const systemPrompt = {
+      role: 'system',
+      parts: [{ 
+        text: `Você é o Epictus IA, um assistente educacional avançado da plataforma Ponto.School. 
+        Seu objetivo é ajudar os estudantes com explicações claras, detalhadas e educacionalmente relevantes.
+        
+        Ao responder às perguntas:
+        - Seja educativo, conciso e preciso
+        - Use uma linguagem adaptada ao nível educacional do usuário
+        - Forneça exemplos práticos quando apropriado
+        - Organize suas respostas com formatação clara (títulos, listas, etc.)
+        - Mantenha um tom amigável e encorajador
+
+        Se o usuário fizer uma pergunta sobre conteúdo educacional, forneça uma resposta completa e bem estruturada.
+        Se for solicitado para ajudar com estudos ou exercícios, ofereça orientação sem fornecer respostas diretas.
+        
+        Lembre-se que você é parte da plataforma Ponto.School, que tem como objetivo conectar os estudantes com o futuro através da educação.`
+      }]
+    };
+
+    // Convertendo o histórico para o formato correto do Gemini
     const conversationHistory = historyMessages.map(msg => ({
       role: msg.sender === 'user' ? 'user' : 'model',
       parts: [{ text: msg.content }]
     }));
 
-    // Definindo os parâmetros da solicitação
+    // Definindo os parâmetros da solicitação com o system prompt
     const requestBody = {
       contents: [
+        systemPrompt,
         ...conversationHistory,
         {
           role: 'user',
@@ -138,6 +162,8 @@ export const generateAIResponse = async (message: string, sessionId: string, opt
       ]
     };
 
+    console.log('Enviando requisição para Gemini API...');
+    
     // Realizar a chamada à API Gemini
     const response = await fetch(`${GEMINI_BASE_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
@@ -148,21 +174,31 @@ export const generateAIResponse = async (message: string, sessionId: string, opt
     });
 
     if (!response.ok) {
+      console.error(`Erro na API Gemini: ${response.status} ${response.statusText}`);
+      const errorBody = await response.text();
+      console.error('Detalhes do erro:', errorBody);
       throw new Error(`Erro na API: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
+    console.log('Resposta recebida da Gemini API:', data);
     
     // Extrair a resposta da IA do resultado
     const aiResponseText = data.candidates?.[0]?.content?.parts?.[0]?.text || 
                         useFallbackResponse(message);
 
+    // Formatando a resposta para melhorar a legibilidade
+    const formattedResponse = aiResponseText
+      .replace(/\*\*(.*?)\*\*/g, '**$1**') // Garantir negrito
+      .replace(/\n\n/g, '\n\n') // Manter espaçamento de parágrafos
+      .trim();
+
     // Mensagem da IA
-    const aiMessage = createMessage(aiResponseText, 'ai');
+    const aiMessage = createMessage(formattedResponse, 'ai');
     addMessageToHistory(sessionId, aiMessage);
 
     // Adiciona a resposta da IA à conversa no Supabase
-    await addMessageToConversation(activeConversationId, aiResponseText, 'ai');
+    await addMessageToConversation(activeConversationId, formattedResponse, 'ai');
 
     // Se esta for a primeira troca de mensagens, atualizamos o título e definimos a categoria
     const messages = await getConversationMessages(activeConversationId);
@@ -185,7 +221,7 @@ export const generateAIResponse = async (message: string, sessionId: string, opt
     }
 
     return {
-      response: aiResponseText,
+      response: formattedResponse,
       conversationId: activeConversationId
     };
   } catch (error) {
