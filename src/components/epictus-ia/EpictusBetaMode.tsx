@@ -16,6 +16,8 @@ import EpictusMessageBox from "./message-box/EpictusMessageBox";
 import PromptSuggestionsModal from "./message-box/PromptSuggestionsModal";
 import ExportShareModal from "./export-modal/ExportShareModal";
 import TurboHeader from "./turbo-header/TurboHeader";
+import HeaderIcons from "./modoepictusiabeta/header/icons/HeaderIcons";
+import HistoricoConversasModal from "./modals/HistoricoConversasModal";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -25,9 +27,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { v4 as uuidv4 } from 'uuid';
 import { generateAIResponse, addMessageToHistory, createMessage } from "@/services/epictusIAService";
 import { toast } from "@/components/ui/use-toast";
-
-import HeaderIcons from "./modoepictusiabeta/header/icons/HeaderIcons";
-import HistoricoConversasModal from "./modals/HistoricoConversasModal";
 import { supabase } from "@/lib/supabase";
 
 interface Message {
@@ -38,18 +37,6 @@ interface Message {
   isEdited?: boolean;
   feedback?: 'positive' | 'negative';
   needsImprovement?: boolean; 
-}
-
-interface Conversation {
-  id: string;
-  title: string;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
-  resumo?: string;
-  categoria?: string;
-  favorito?: boolean;
-  privado?: boolean;
 }
 
 const EpictusBetaMode: React.FC = () => {
@@ -66,7 +53,7 @@ const EpictusBetaMode: React.FC = () => {
   const [isHistoricoModalOpen, setIsHistoricoModalOpen] = useState(false);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
-  
+
   // Estado para armazenar as mensagens da conversa atual
   const [messages, setMessages] = useState<Message[]>(() => {
     try {
@@ -192,12 +179,12 @@ const EpictusBetaMode: React.FC = () => {
     const getUserId = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUserId(user?.id || null);
-      
+
       // Se não temos uma conversa atual mas temos um usuário, vamos criar/buscar a conversa ativa
       if (!currentConversationId && user?.id) {
         // Verificar se existe uma conversa ativa salva no localStorage
         const savedConversationId = localStorage.getItem('epictus_active_conversation');
-        
+
         if (savedConversationId) {
           // Verificar se esta conversa existe para o usuário atual
           const { data: conversationExists } = await supabase
@@ -206,7 +193,7 @@ const EpictusBetaMode: React.FC = () => {
             .eq('id', savedConversationId)
             .eq('user_id', user.id)
             .single();
-          
+
           if (conversationExists) {
             setCurrentConversationId(savedConversationId);
             await loadConversationMessages(savedConversationId);
@@ -230,12 +217,12 @@ const EpictusBetaMode: React.FC = () => {
         .select('*')
         .eq('conversa_id', conversationId)
         .order('created_at', { ascending: true });
-      
+
       if (error) {
         console.error("Erro ao carregar mensagens:", error);
         return;
       }
-      
+
       if (messagesData && messagesData.length > 0) {
         const formattedMessages: Message[] = messagesData.map(msg => ({
           id: msg.id,
@@ -245,7 +232,7 @@ const EpictusBetaMode: React.FC = () => {
           isEdited: msg.is_edited || false,
           feedback: msg.feedback || undefined
         }));
-        
+
         setMessages(formattedMessages);
       } else {
         // Se não há mensagens, inicializamos com a mensagem de boas-vindas
@@ -264,7 +251,7 @@ const EpictusBetaMode: React.FC = () => {
   // Função para criar uma nova conversa
   const createNewConversation = async () => {
     if (!userId) return;
-    
+
     try {
       // Criar uma nova conversa no Supabase
       const { data: newConversation, error } = await supabase
@@ -277,16 +264,16 @@ const EpictusBetaMode: React.FC = () => {
         }])
         .select()
         .single();
-      
+
       if (error) {
         console.error("Erro ao criar nova conversa:", error);
         return;
       }
-      
+
       if (newConversation) {
         setCurrentConversationId(newConversation.id);
         localStorage.setItem('epictus_active_conversation', newConversation.id);
-        
+
         // Limpar mensagens e iniciar com a mensagem de boas-vindas
         const welcomeMessage: Message = {
           id: uuidv4(),
@@ -294,9 +281,9 @@ const EpictusBetaMode: React.FC = () => {
           content: "Olá! Eu sou o Epicus IA, seu assistente para aprendizado e programação. Como posso te ajudar hoje?",
           timestamp: new Date()
         };
-        
+
         setMessages([welcomeMessage]);
-        
+
         // Salvar a mensagem inicial no Supabase
         await supabase.from('mensagens').insert([{
           conversa_id: newConversation.id,
@@ -314,12 +301,12 @@ const EpictusBetaMode: React.FC = () => {
   // Função para atualizar o título da conversa com base na primeira mensagem do usuário
   const updateConversationTitle = async (conversationId: string, message: string) => {
     if (!conversationId) return;
-    
+
     try {
       // Gerar um título baseado na mensagem (limitado a 50 caracteres)
       let title = message.substring(0, 50);
       if (message.length > 50) title += "...";
-      
+
       // Atualizar o título da conversa no Supabase
       const { error } = await supabase
         .from('conversas')
@@ -328,7 +315,7 @@ const EpictusBetaMode: React.FC = () => {
           updated_at: new Date().toISOString()
         })
         .eq('id', conversationId);
-      
+
       if (error) {
         console.error("Erro ao atualizar título da conversa:", error);
       }
@@ -345,12 +332,12 @@ const EpictusBetaMode: React.FC = () => {
         .select('*')
         .eq('conversa_id', conversationId)
         .eq('is_user', true);
-      
+
       if (error) {
         console.error("Erro ao verificar mensagens do usuário:", error);
         return false;
       }
-      
+
       return data && data.length === 0;
     } catch (error) {
       console.error("Erro ao verificar primeira mensagem:", error);
@@ -490,7 +477,7 @@ const EpictusBetaMode: React.FC = () => {
   // Função para carregar uma conversa a partir do histórico
   const loadConversationFromHistory = async (conversationId: string) => {
     if (!conversationId) return;
-    
+
     setCurrentConversationId(conversationId);
     localStorage.setItem('epictus_active_conversation', conversationId);
     await loadConversationMessages(conversationId);
@@ -524,7 +511,7 @@ const EpictusBetaMode: React.FC = () => {
           ? { ...msg, content: newContent, isEdited: true } 
           : msg
       );
-      
+
       setMessages(updatedMessages);
       setEditingMessageId(null);
 
@@ -537,7 +524,7 @@ const EpictusBetaMode: React.FC = () => {
         })
         .eq('id', messageId)
         .eq('conversa_id', currentConversationId);
-      
+
       if (error) {
         console.error("Erro ao atualizar mensagem no Supabase:", error);
         return;
@@ -686,7 +673,7 @@ const EpictusBetaMode: React.FC = () => {
 
         if (modal) {
           modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
+            if`            if (e.target === modal) {
               closeModal();
             }
           });
@@ -861,15 +848,15 @@ const EpictusBetaMode: React.FC = () => {
 
   const handleFeedback = async (messageId: string, feedbackType: 'positive' | 'negative') => {
     if (!currentConversationId) return;
-    
+
     try {
       // Encontrar a mensagem atual para verificar seu estado de feedback
       const currentMessage = messages.find(msg => msg.id === messageId);
       if (!currentMessage) return;
-      
+
       // Determinar o novo estado de feedback (alternar on/off)
       const newFeedback = currentMessage.feedback === feedbackType ? undefined : feedbackType;
-      
+
       // Atualizar mensagens no estado local
       setMessages(prev => prev.map(msg => {
         if (msg.id === messageId) {
@@ -877,19 +864,19 @@ const EpictusBetaMode: React.FC = () => {
         }
         return msg;
       }));
-      
+
       // Atualizar no Supabase
       const { error } = await supabase
         .from('mensagens')
         .update({ feedback: newFeedback })
         .eq('id', messageId)
         .eq('conversa_id', currentConversationId);
-      
+
       if (error) {
         console.error("Erro ao atualizar feedback no Supabase:", error);
         return;
       }
-      
+
       if (newFeedback) {
         console.log(`Feedback ${newFeedback} registrado para mensagem ${messageId}`);
         toast({
@@ -905,13 +892,13 @@ const EpictusBetaMode: React.FC = () => {
 
   const reformulateMessage = async (messageId: string) => {
     if (!currentConversationId) return;
-    
+
     setIsReformulating(true);
     try {
       const messageToReformulate = messages.find(msg => msg.id === messageId);
       if (messageToReformulate) {
         const reformulatedResponse = await generateAIResponse(`Reformule a seguinte resposta de forma mais detalhada: ${messageToReformulate.content}`, sessionId);
-        
+
         // Atualizar no estado local
         const updatedMessages = messages.map(msg =>
           msg.id === messageId
@@ -919,7 +906,7 @@ const EpictusBetaMode: React.FC = () => {
             : msg
         );
         setMessages(updatedMessages);
-        
+
         // Atualizar no Supabase
         const { error } = await supabase
           .from('mensagens')
@@ -930,7 +917,7 @@ const EpictusBetaMode: React.FC = () => {
           })
           .eq('id', messageId)
           .eq('conversa_id', currentConversationId);
-        
+
         if (error) {
           console.error("Erro ao atualizar mensagem reformulada no Supabase:", error);
         }
@@ -949,13 +936,13 @@ const EpictusBetaMode: React.FC = () => {
 
   const summarizeMessage = async (messageId: string) => {
     if (!currentConversationId) return;
-    
+
     setIsReformulating(true);
     try {
       const messageToSummarize = messages.find(msg => msg.id === messageId);
       if (messageToSummarize) {
         const summarizedResponse = await generateAIResponse(`Resuma a seguinte resposta de forma mais concisa: ${messageToSummarize.content}`, sessionId);
-        
+
         // Atualizar no estado local
         const updatedMessages = messages.map(msg =>
           msg.id === messageId
@@ -963,7 +950,7 @@ const EpictusBetaMode: React.FC = () => {
             : msg
         );
         setMessages(updatedMessages);
-        
+
         // Atualizar no Supabase
         const { error } = await supabase
           .from('mensagens')
@@ -974,7 +961,7 @@ const EpictusBetaMode: React.FC = () => {
           })
           .eq('id', messageId)
           .eq('conversa_id', currentConversationId);
-        
+
         if (error) {
           console.error("Erro ao atualizar mensagem resumida no Supabase:", error);
         }
