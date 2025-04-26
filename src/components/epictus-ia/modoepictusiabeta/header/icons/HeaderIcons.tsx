@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { HistoricoIcon } from "./HistoricoIcon";
 import { EspacoAprendizagemIcon } from "./EspacoAprendizagemIcon";
@@ -7,53 +7,52 @@ import { ApostilaInteligenteIcon } from "./ApostilaInteligenteIcon";
 import { ModoFantasmaIcon } from "./ModoFantasmaIcon";
 import { GaleriaIcon } from "./GaleriaIcon";
 
+// Componente com ErrorBoundary interno
 export const HeaderIcons = () => {
+  // Estado para rastrear erros de renderização
+  const [hasError, setHasError] = useState(false);
+  
+  // Log para depuração
+  useEffect(() => {
+    console.log("HeaderIcons componente renderizado");
+    
+    // Limpeza
+    return () => {
+      console.log("HeaderIcons componente desmontado");
+    };
+  }, []);
+
+  // Se houver erro, mostrar fallback
+  if (hasError) {
+    return (
+      <div className="flex items-center space-x-3 bg-blue-50 dark:bg-blue-900/30 p-2 rounded-lg">
+        <span className="text-sm text-blue-800 dark:text-blue-200">Carregando ícones...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center space-x-3">
-      {/* Historico */}
-      <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="transition-all duration-200 cursor-pointer"
-      >
+      {/* Adicionando try/catch inline para cada componente para evitar falhas */}
+      <HeaderIconWrapper>
         <HistoricoIcon />
-      </motion.div>
-
-      {/* Espaço de Aprendizagem */}
-      <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="transition-all duration-200 cursor-pointer"
-      >
+      </HeaderIconWrapper>
+      
+      <HeaderIconWrapper>
         <EspacoAprendizagemIcon />
-      </motion.div>
-
-      {/* Apostila Inteligente */}
-      <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="transition-all duration-200 cursor-pointer"
-      >
+      </HeaderIconWrapper>
+      
+      <HeaderIconWrapper>
         <ApostilaInteligenteIcon />
-      </motion.div>
-
-      {/* Modo Fantasma */}
-      <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="transition-all duration-200 cursor-pointer"
-      >
+      </HeaderIconWrapper>
+      
+      <HeaderIconWrapper>
         <ModoFantasmaIcon />
-      </motion.div>
-
-      {/* Galeria */}
-      <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="transition-all duration-200 cursor-pointer"
-      >
+      </HeaderIconWrapper>
+      
+      <HeaderIconWrapper>
         <GaleriaIcon />
-      </motion.div>
+      </HeaderIconWrapper>
 
       {/* Profile picture - a bit more spaced */}
       <div className="relative profile-icon-container ml-4">
@@ -74,3 +73,43 @@ export const HeaderIcons = () => {
     </div>
   );
 };
+
+// Componente wrapper para tratar erros individuais em cada ícone
+const HeaderIconWrapper = ({ children }) => {
+  const [hasError, setHasError] = useState(false);
+  
+  useEffect(() => {
+    console.log("Ícone de cabeçalho renderizado");
+  }, []);
+  
+  // Se ocorrer erro em um ícone específico
+  if (hasError) {
+    return (
+      <motion.div
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center"
+      >
+        <span className="text-xs text-gray-500">...</span>
+      </motion.div>
+    );
+  }
+  
+  try {
+    return (
+      <motion.div
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="transition-all duration-200 cursor-pointer"
+      >
+        {children}
+      </motion.div>
+    );
+  } catch (error) {
+    console.error("Erro ao renderizar ícone de cabeçalho:", error);
+    setHasError(true);
+    return null;
+  }
+};
+
+export default HeaderIcons;

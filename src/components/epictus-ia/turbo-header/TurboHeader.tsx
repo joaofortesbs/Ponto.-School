@@ -4,6 +4,11 @@ import GlowingBackground from "./GlowingBackground";
 import LogoSection from "./LogoSection";
 import PersonalitiesDropdown from "./PersonalitiesDropdown";
 import { HeaderIcons } from "../modoepictusiabeta/header/icons";
+import ErrorHandler from "../../ErrorHandler"; // Added ErrorHandler import
+import { Settings } from "lucide-react"; // Replaced problematic import
+
+
+console.log("Carregando TurboHeader"); // Added log for debugging
 
 interface TurboHeaderProps {
   profileOptions: Array<{
@@ -41,31 +46,43 @@ const TurboHeader: React.FC<TurboHeaderProps> = ({
     return () => clearTimeout(timer);
   }, []);
 
+  // Log para diagnóstico
+  useEffect(() => {
+    console.log("TurboHeader renderizado");
+    return () => console.log("TurboHeader desmontado");
+  }, []);
+
+  // Substituindo Tool por Settings
+  const ToolIcon = Settings;
+
+
   return (
-    <div className="w-full p-4">
-      <motion.header 
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className={`w-full hub-connected-width bg-gradient-to-r from-[#001340] to-[#0055B8] backdrop-blur-lg py-4 px-5 flex items-center justify-between rounded-xl relative`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <GlowingBackground isHovered={isHovered} />
+    <ErrorHandler componentName="TurboHeader"> {/* Wrapped in ErrorHandler */}
+      <div className="w-full p-4">
+        <motion.header 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className={`w-full hub-connected-width bg-gradient-to-r from-[#001340] to-[#0055B8] backdrop-blur-lg py-4 px-5 flex items-center justify-between rounded-xl relative`}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          <GlowingBackground isHovered={isHovered} />
 
-        <LogoSection isHovered={isHovered} animationComplete={animationComplete} description="IA para geração de conversas impecáveis para o público estudantil!" />
+          <LogoSection isHovered={isHovered} animationComplete={animationComplete} description="IA para geração de conversas impecáveis para o público estudantil!" />
 
-        <div className="flex items-center justify-center z-10 relative gap-3">
-          <PersonalitiesDropdown 
-            profileIcon={profileIcon}
-            profileName={profileName}
-            profileOptions={profileOptions}
-          />
+          <div className="flex items-center justify-center z-10 relative gap-3">
+            <PersonalitiesDropdown 
+              profileIcon={profileIcon}
+              profileName={profileName}
+              profileOptions={profileOptions}
+            />
 
-          <HeaderIcons />
-        </div>
-      </motion.header>
-    </div>
+            <HeaderIcons />
+          </div>
+        </motion.header>
+      </div>
+    </ErrorHandler> {/* Closed ErrorHandler */}
   );
 };
 
