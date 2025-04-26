@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -54,6 +53,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { createClient } from '@supabase/supabase-js'
+
 
 interface HistoricoConversasModalProps {
   open: boolean;
@@ -87,155 +88,8 @@ interface Mensagem {
   tipo?: "texto" | "imagem" | "codigo" | "quiz";
 }
 
-// Dados de exemplo para visualização
-const conversasExemplo: Conversa[] = [
-  {
-    id: "1",
-    titulo: "Teorema de Pitágoras e aplicações",
-    tipo: "explicacao",
-    data: new Date(2024, 6, 15, 14, 30),
-    tags: ["Matemática", "Geometria"],
-    preview: "Explicação detalhada do Teorema de Pitágoras e como aplicá-lo em problemas práticos...",
-    fixada: true,
-    favorita: true,
-    mensagens: [
-      {
-        id: "m1",
-        remetente: "usuario",
-        conteudo: "Pode me explicar o Teorema de Pitágoras?",
-        timestamp: new Date(2024, 6, 15, 14, 30)
-      },
-      {
-        id: "m2",
-        remetente: "ia",
-        conteudo: "O Teorema de Pitágoras estabelece que em um triângulo retângulo, o quadrado da hipotenusa é igual à soma dos quadrados dos catetos...",
-        timestamp: new Date(2024, 6, 15, 14, 31)
-      }
-    ],
-    analise: {
-      qualidade: 95,
-      palavrasChave: ["Triângulo retângulo", "Hipotenusa", "Catetos", "Geometria"],
-      sugestoes: ["Revisar em 7 dias", "Aplicar em exercícios práticos"]
-    }
-  },
-  {
-    id: "2",
-    titulo: "Preparação para redação ENEM",
-    tipo: "correcao",
-    data: new Date(2024, 6, 14, 10, 15),
-    tags: ["ENEM", "Redação", "Urgente"],
-    preview: "Análise e correção da redação sobre sustentabilidade com feedback detalhado...",
-    fixada: false,
-    favorita: true,
-    mensagens: [
-      {
-        id: "m3",
-        remetente: "usuario",
-        conteudo: "Pode corrigir minha redação sobre sustentabilidade?",
-        timestamp: new Date(2024, 6, 14, 10, 15)
-      },
-      {
-        id: "m4",
-        remetente: "ia",
-        conteudo: "Sua redação está bem estruturada. Pontos fortes: argumentação coesa e repertório sociocultural. Pontos a melhorar: conclusão poderia propor soluções mais concretas...",
-        timestamp: new Date(2024, 6, 14, 10, 17)
-      }
-    ],
-    analise: {
-      qualidade: 87,
-      palavrasChave: ["Sustentabilidade", "Argumentação", "Coesão", "Propostas"],
-      sugestoes: ["Praticar mais conclusões", "Rever em 3 dias"]
-    }
-  },
-  {
-    id: "3",
-    titulo: "Simulado sobre Revolução Francesa",
-    tipo: "quiz",
-    data: new Date(2024, 6, 10, 16, 45),
-    tags: ["História", "Simulado"],
-    preview: "Quiz com 10 questões sobre causas e consequências da Revolução Francesa...",
-    fixada: false,
-    favorita: false,
-    mensagens: [
-      {
-        id: "m5",
-        remetente: "usuario",
-        conteudo: "Crie um simulado sobre Revolução Francesa",
-        timestamp: new Date(2024, 6, 10, 16, 45)
-      },
-      {
-        id: "m6",
-        remetente: "ia",
-        conteudo: "Aqui está um simulado com 10 questões sobre a Revolução Francesa. 1. Qual evento marcou o início da Revolução Francesa?...",
-        timestamp: new Date(2024, 6, 10, 16, 46),
-        tipo: "quiz"
-      }
-    ],
-    analise: {
-      qualidade: 90,
-      palavrasChave: ["Revolução Francesa", "Bastilha", "Monarquia", "Jacobinos"],
-      sugestoes: ["Revisar conteúdo histórico", "Refazer simulado em uma semana"]
-    }
-  },
-  {
-    id: "4",
-    titulo: "Resumo de Biologia Celular",
-    tipo: "resumo",
-    data: new Date(2024, 6, 8, 9, 20),
-    tags: ["Biologia", "Celular"],
-    preview: "Resumo completo sobre estrutura celular, organelas e suas funções...",
-    fixada: false,
-    favorita: false,
-    mensagens: [
-      {
-        id: "m7",
-        remetente: "usuario",
-        conteudo: "Crie um resumo sobre biologia celular",
-        timestamp: new Date(2024, 6, 8, 9, 20)
-      },
-      {
-        id: "m8",
-        remetente: "ia",
-        conteudo: "# Biologia Celular - Resumo Completo\n\n## Estrutura Celular\nA célula é a unidade básica da vida...",
-        timestamp: new Date(2024, 6, 8, 9, 21)
-      }
-    ],
-    analise: {
-      qualidade: 92,
-      palavrasChave: ["Célula", "Organelas", "Mitocôndria", "Núcleo"],
-      sugestoes: ["Transformar em flashcards", "Revisão espaçada"]
-    }
-  },
-  {
-    id: "5",
-    titulo: "Fluxograma Fotossíntese",
-    tipo: "fluxograma",
-    data: new Date(2024, 6, 5, 11, 30),
-    tags: ["Biologia", "Botânica"],
-    preview: "Fluxograma detalhado do processo de fotossíntese com explicações...",
-    fixada: false,
-    favorita: true,
-    mensagens: [
-      {
-        id: "m9",
-        remetente: "usuario",
-        conteudo: "Crie um fluxograma do processo de fotossíntese",
-        timestamp: new Date(2024, 6, 5, 11, 30)
-      },
-      {
-        id: "m10",
-        remetente: "ia",
-        conteudo: "Aqui está o fluxograma do processo de fotossíntese:\n\n[Diagrama com etapas da fotossíntese]",
-        timestamp: new Date(2024, 6, 5, 11, 32)
-      }
-    ],
-    analise: {
-      qualidade: 98,
-      palavrasChave: ["Fotossíntese", "Cloroplasto", "ATP", "Fase clara"],
-      sugestoes: ["Imprimir esquema", "Comparar com respiração celular"]
-    }
-  }
-];
+// Dados para estado inicial (vazio)
+const conversasIniciais: Conversa[] = [];
 
 // Mapeamento de ícones por tipo de conversa
 const tipoIconMap = {
@@ -266,7 +120,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
   onOpenChange,
 }) => {
   const [filtro, setFiltro] = useState("");
-  const [conversas, setConversas] = useState<Conversa[]>(conversasExemplo);
+  const [conversas, setConversas] = useState<Conversa[]>(conversasIniciais);
   const [conversaSelecionada, setConversaSelecionada] = useState<Conversa | null>(null);
   const [tipoFiltro, setTipoFiltro] = useState<string | null>(null);
   const [tagFiltro, setTagFiltro] = useState<string | null>(null);
@@ -276,6 +130,44 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
   const [cardExpandido, setCardExpandido] = useState<string | null>(null);
   const [showCompactTimeline, setShowCompactTimeline] = useState(true);
   const [showPainelInteligente, setShowPainelInteligente] = useState(false);
+
+  const supabaseClient = createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_ANON_KEY') // Replace with your Supabase credentials
+
+  // Fetch conversas from Supabase
+  useEffect(() => {
+    const fetchConversations = async () => {
+      const { data, error } = await supabaseClient
+        .from('user_conversations')
+        .select('*')
+        .eq('user_id', supabaseClient.auth.user()?.id) // Assuming you have authentication set up
+
+      if (error) {
+        console.error("Error fetching conversations:", error);
+        return;
+      }
+
+      //Basic transformation of data to match Conversa interface.  Improve this based on your actual DB schema
+      const transformedData = data?.map(item => ({
+          id: item.id,
+          titulo: item.conversation.titulo || "Untitled Conversation", // Example, adapt to your data
+          tipo: item.conversation.tipo || "texto", //Example, adapt to your data
+          data: new Date(item.created_at),
+          tags: item.conversation.tags || [], //Example, adapt to your data
+          preview: item.conversation.preview || "No preview available", //Example, adapt to your data
+          fixada: false,
+          favorita: false,
+          mensagens: item.conversation.mensagens || [], //Example, adapt to your data
+          analise: undefined,
+          observacoes: undefined,
+      })) || [];
+
+      setConversas(transformedData);
+    };
+
+    if (supabaseClient.auth.user()) {
+      fetchConversations();
+    }
+  }, [supabaseClient.auth.user()]);
 
   // Efeito para inicializar a conversa selecionada quando o modal abre
   useEffect(() => {
@@ -289,7 +181,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
   const filtrarPorData = (data: Date, filtro: string): boolean => {
     const hoje = new Date();
     const umDiaEmMs = 24 * 60 * 60 * 1000;
-    
+
     switch (filtro) {
       case "hoje":
         return data.toDateString() === hoje.toDateString();
@@ -311,16 +203,16 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
         conversa.preview.toLowerCase().includes(filtro.toLowerCase()) ||
         conversa.mensagens.some(m => m.conteudo.toLowerCase().includes(filtro.toLowerCase()))
       : true;
-    
+
     const matchesTipo = tipoFiltro ? conversa.tipo === tipoFiltro : true;
-    
+
     const matchesTag = tagFiltro
       ? conversa.tags.some(tag => tag.toLowerCase() === tagFiltro.toLowerCase())
       : true;
-    
+
     // Filtragem básica por data (hoje, esta semana, este mês)
     const matchesData = dataFiltro ? filtrarPorData(conversa.data, dataFiltro) : true;
-    
+
     return matchesTermo && matchesTipo && matchesTag && matchesData;
   });
 
@@ -354,7 +246,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
   // Função para excluir uma conversa
   const excluirConversa = (id: string) => {
     setConversas(prev => prev.filter(conversa => conversa.id !== id));
-    
+
     // Se a conversa excluída for a selecionada, selecione outra
     if (conversaSelecionada && conversaSelecionada.id === id) {
       const conversasRestantes = conversas.filter(c => c.id !== id);
@@ -365,7 +257,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
   // Função para renomear uma conversa
   const renomearConversa = (id: string, novoTitulo: string) => {
     if (!novoTitulo.trim()) return;
-    
+
     setConversas(prev => 
       prev.map(conversa => 
         conversa.id === id 
@@ -384,7 +276,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
   // Função para salvar observações
   const salvarObservacoes = () => {
     if (!conversaSelecionada) return;
-    
+
     setConversas(prev => 
       prev.map(conversa => 
         conversa.id === conversaSelecionada.id 
@@ -410,11 +302,11 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
     // Primeiro critério: fixadas no topo
     if (a.fixada && !b.fixada) return -1;
     if (!a.fixada && b.fixada) return 1;
-    
+
     // Segundo critério: favoritas depois das fixadas
     if (a.favorita && !b.favorita) return -1;
     if (!a.favorita && b.favorita) return 1;
-    
+
     // Terceiro critério: data (mais recente primeiro)
     return b.data.getTime() - a.data.getTime();
   });
@@ -424,7 +316,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
     const hoje = new Date();
     const ontem = new Date();
     ontem.setDate(hoje.getDate() - 1);
-    
+
     if (data.toDateString() === hoje.toDateString()) {
       return `Hoje, ${data.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
     } else if (data.toDateString() === ontem.toDateString()) {
@@ -452,7 +344,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                 Histórico de Conversas
               </DialogTitle>
             </div>
-            
+
             <div className="flex items-center gap-3">
               {/* Busca semântica com IA */}
               <div className="relative w-72">
@@ -466,7 +358,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                 />
                 <Sparkles className="absolute right-2.5 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-purple-400" />
               </div>
-              
+
               {/* Trocar modo visualização */}
               <Button 
                 variant="ghost" 
@@ -486,7 +378,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                   </>
                 )}
               </Button>
-              
+
               {/* Mostrar/Ocultar Painel Inteligente */}
               <Button 
                 variant="ghost" 
@@ -506,7 +398,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                   </>
                 )}
               </Button>
-              
+
               {/* Comparar conversas */}
               <Button 
                 variant="ghost" 
@@ -518,14 +410,14 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
               </Button>
             </div>
           </div>
-          
+
           {/* Corpo principal do modal em colunas - com mais espaçamento */}
           <div className="flex flex-1 overflow-hidden gap-0.5">
             {/* COLUNA ESQUERDA: Lista de Conversas */}
             <div className="w-1/4 border-r border-white/5 flex flex-col">
               <div className="px-3 py-2 flex items-center justify-between border-b border-white/5">
                 <h3 className="text-sm font-medium text-gray-300">Suas Conversas</h3>
-                
+
                 <div className="flex items-center gap-1">
                   {/* Filtro por data */}
                   <DropdownMenu>
@@ -563,7 +455,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                       </DropdownMenuGroup>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  
+
                   {/* Filtro por tag */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -591,7 +483,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                       </DropdownMenuGroup>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  
+
                   {/* Filtro por tipo */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -647,7 +539,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                   </DropdownMenu>
                 </div>
               </div>
-              
+
               {/* Lista de conversas - com divisores mais visíveis */}
               <ScrollArea className="flex-1">
                 <div className="p-2 space-y-0.5">
@@ -705,7 +597,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                               </p>
                             </div>
                           </div>
-                          
+
                           <div className="ml-1.5">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
@@ -783,7 +675,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                 </div>
               </ScrollArea>
             </div>
-            
+
             {/* COLUNA CENTRAL: Pré-visualização inteligente */}
             <div className={`${showPainelInteligente ? "w-2/4" : "w-3/4"} flex flex-col relative`}>
               {conversaSelecionada ? (
@@ -795,7 +687,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                       </div>
                       <h3 className="text-sm font-medium text-white">{conversaSelecionada.titulo}</h3>
                     </div>
-                    
+
                     <div className="flex items-center">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -830,10 +722,10 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                       </DropdownMenu>
                     </div>
                   </div>
-                  
+
                   <ScrollArea className="flex-1 px-4 py-3">
                     <h4 className="text-xs font-medium text-gray-400 mb-3">Conversa</h4>
-                    
+
                     <div className="space-y-3 mb-6">
                       {conversaSelecionada.mensagens.map(mensagem => (
                         <motion.div
@@ -844,7 +736,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                           className={`p-3 rounded-xl shadow-sm transition-all hover:shadow-md ${
                             mensagem.remetente === "usuario" 
                               ? "bg-[#1A2033]/60 border border-[#2D3343]/50" 
-                              : "bg-gradient-to-r from-[#1A2642]/60 to-[#1F2A45]/60 border border-blue-500/20"
+                              : ""bg-gradient-to-r from-[#1A2642]/60 to-[#1F2A45]/60 border border-blue-500/20"
                           }`}
                         >
                           <div className="flex justify-between items-start mb-1.5">
@@ -881,7 +773,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                               Mostrar mais
                             </Button>
                           )}
-                          
+
                           <div className="flex gap-1 mt-2 opacity-0 hover:opacity-100 transition-opacity">
                             <Button
                               variant="ghost"
@@ -908,9 +800,9 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                         </motion.div>
                       ))}
                     </div>
-                    
+
                     <h4 className="text-xs font-medium text-gray-400 mt-6 mb-3">Visualização por Cards</h4>
-                    
+
                     <div className="flex overflow-x-auto pb-4 space-x-3 mb-6 hide-scrollbar">
                       {conversaSelecionada.mensagens.map(mensagem => (
                         <motion.div
@@ -968,7 +860,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                   <p>Selecione uma conversa para visualizar</p>
                 </div>
               )}
-              
+
               {/* Botão flutuante para expandir painel inteligente quando está fechado */}
               {!showPainelInteligente && conversaSelecionada && (
                 <Button
@@ -981,7 +873,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                 </Button>
               )}
             </div>
-            
+
             {/* COLUNA DIREITA: Detalhes e inteligência - mais compacta */}
             {showPainelInteligente && (
               <div className="w-1/4 flex flex-col border-l border-white/5">
@@ -993,7 +885,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                       <h3 className="text-sm font-medium text-white">Painel Inteligente</h3>
                     </div>
                   </div>
-                  
+
                   <ScrollArea className="flex-1 p-3">
                     {conversaSelecionada.analise && (
                       <>
@@ -1028,7 +920,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                             </div>
                           </div>
                         </div>
-                        
+
                         {/* Palavras-Chave - chips menores */}
                         <div className="mb-4">
                           <h4 className="text-xs font-medium text-gray-400 mb-2 flex items-center gap-1.5">
@@ -1046,7 +938,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                             ))}
                           </div>
                         </div>
-                        
+
                         {/* Card de Próximas Ações (Sugestões + Observações) */}
                         <div className="mb-4">
                           <h4 className="text-xs font-medium text-gray-400 mb-2 flex items-center gap-1.5">
@@ -1069,7 +961,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                                 ))}
                               </ul>
                             </div>
-                            
+
                             {/* Seção de Minhas Observações */}
                             <div>
                               <h5 className="text-[10px] uppercase text-gray-500 mb-1.5">Minhas Observações</h5>
@@ -1083,7 +975,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                             </div>
                           </div>
                         </div>
-                        
+
                         {/* Ações Unificadas */}
                         <div className="mb-4">
                           <div className="flex items-center justify-between">
@@ -1119,7 +1011,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                                 </DropdownMenuGroup>
                               </DropdownMenuContent>
                             </DropdownMenu>
-                            
+
                             <Button
                               variant="outline"
                               size="sm"
@@ -1130,7 +1022,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                             </Button>
                           </div>
                         </div>
-                        
+
                         {/* Linha do Tempo - mais compacta com ícones */}
                         <div className="mb-4">
                           <h4 className="text-xs font-medium text-gray-400 mb-2 flex items-center gap-1.5">
@@ -1181,7 +1073,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                   <p>Selecione uma conversa para ver detalhes</p>
                 </div>
               )}
-              
+
               {/* Botão para fechar o painel */}
               <Button
                 variant="ghost"
