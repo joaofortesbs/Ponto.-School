@@ -13,6 +13,7 @@ interface HeaderIconsProps {
   onApostilaInteligenteClick?: () => void;
   onModoFantasmaClick?: () => void;
   onGaleriaClick?: () => void;
+  onHistoricoClick?: () => void;
 }
 
 const HeaderIcons: React.FC<HeaderIconsProps> = ({
@@ -21,6 +22,7 @@ const HeaderIcons: React.FC<HeaderIconsProps> = ({
   onApostilaInteligenteClick,
   onModoFantasmaClick,
   onGaleriaClick,
+  onHistoricoClick,
 }) => {
   const [modoFantasmaAtivo, setModoFantasmaAtivo] = useState(false);
   const [isHistoricoModalOpen, setIsHistoricoModalOpen] = useState(false);
@@ -34,6 +36,9 @@ const HeaderIcons: React.FC<HeaderIconsProps> = ({
 
   const handleHistoricoClick = () => {
     setIsHistoricoModalOpen(true);
+    if (onHistoricoClick) {
+      onHistoricoClick();
+    }
   };
 
   return (

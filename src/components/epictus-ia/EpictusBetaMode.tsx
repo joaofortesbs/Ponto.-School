@@ -86,6 +86,12 @@ const EpictusBetaMode: React.FC = () => {
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  // Função para lidar com cliques no ícone de histórico
+  const handleHistoricoClick = () => {
+    // Esta função é passada para PromptSuggestionsModal e usada para abrir o modal de histórico
+    // A abertura real do modal é feita no componente HeaderIcons
+  };
 
   const profileOptions = [
     { 
