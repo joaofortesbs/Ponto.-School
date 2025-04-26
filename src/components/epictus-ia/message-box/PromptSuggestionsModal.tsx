@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Lightbulb, Search, Clock, Sparkles, RefreshCw, ThumbsUp } from "lucide-react";
+import { X, Lightbulb, Search, Clock, Sparkles, RefreshCw, ThumbsUp, ChevronRight } from "lucide-react";
 import { generateAIResponse } from "@/services/aiChatService";
 
 interface PromptSuggestionsModalProps {
@@ -371,8 +371,7 @@ const PromptSuggestionsModal: React.FC<PromptSuggestionsModalProps> = ({
                       <Clock className="mr-2 h-4 w-4 text-[#4A90E2]" />
                       <span>Histórico de conversas</span>
                     </div>
-                    {/* Assuming ChevronRight is imported */}
-                    <ChevronRight className="h-4 w-4" /> {/* Needs import */}
+                    <ChevronRight className="h-4 w-4" />
                   </button>
                 </div>
               )}

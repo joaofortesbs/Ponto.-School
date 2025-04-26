@@ -92,37 +92,77 @@ export const generateAIResponse = async (message: string, sessionId: string, opt
     // Adiciona a mensagem do usuário à conversa
     await addMessageToConversation(activeConversationId, message, 'user');
 
-    // Simular uma resposta de IA (em um cenário real seria uma chamada à API)
-    // Adicionar um pequeno delay para simular processamento
-    await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
-
     // Mensagem do usuário
     const userMessage = createMessage(message, 'user');
     addMessageToHistory(sessionId, userMessage);
 
-    // Um conjunto de respostas pré-definidas para simular a IA
-    const responses = [
-      `Compreendi sua questão sobre "${message.substring(0, 30)}...". Aqui está uma explicação detalhada...`,
-      `Esta é uma excelente pergunta! Com relação a "${message.substring(0, 25)}...", posso explicar que...`,
-      `Vamos analisar sua solicitação sobre "${message.substring(0, 20)}...". Do ponto de vista educacional...`,
-      `Considerando sua questão sobre "${message.substring(0, 28)}...", existem várias abordagens possíveis...`,
-      `Entendi sua dúvida relacionada a "${message.substring(0, 22)}...". Na perspectiva pedagógica...`
-    ];
+    // Obtém o histórico de mensagens para fornecer contexto
+    const historyMessages = getChatHistory(sessionId).slice(-10);
+    const conversationHistory = historyMessages.map(msg => ({
+      role: msg.sender === 'user' ? 'user' : 'model',
+      parts: [{ text: msg.content }]
+    }));
 
-    // Escolhe uma resposta aleatória
-    const baseResponse = responses[Math.floor(Math.random() * responses.length)];
+    // Definindo os parâmetros da solicitação
+    const requestBody = {
+      contents: [
+        ...conversationHistory,
+        {
+          role: 'user',
+          parts: [{ text: message }]
+        }
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 2048,
+      },
+      safetySettings: [
+        {
+          category: "HARM_CATEGORY_HARASSMENT",
+          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        },
+        {
+          category: "HARM_CATEGORY_HATE_SPEECH",
+          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        },
+        {
+          category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        },
+        {
+          category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+          threshold: "BLOCK_MEDIUM_AND_ABOVE"
+        }
+      ]
+    };
 
-    // Adiciona um conteúdo mais elaborado
-    const elaboration = `\n\nPara aprofundar este tópico, considere os seguintes pontos:\n\n1. A importância do contexto e aplicação prática\n2. As diferentes abordagens metodológicas\n3. Como integrar este conhecimento com outras áreas\n\nEspero que esta explicação ajude! Se tiver mais dúvidas, estou à disposição.`;
+    // Realizar a chamada à API Gemini
+    const response = await fetch(`${GEMINI_BASE_URL}?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    });
 
-    const fullResponse = baseResponse + elaboration;
+    if (!response.ok) {
+      throw new Error(`Erro na API: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    
+    // Extrair a resposta da IA do resultado
+    const aiResponseText = data.candidates?.[0]?.content?.parts?.[0]?.text || 
+                        useFallbackResponse(message);
 
     // Mensagem da IA
-    const aiMessage = createMessage(fullResponse, 'ai');
+    const aiMessage = createMessage(aiResponseText, 'ai');
     addMessageToHistory(sessionId, aiMessage);
 
     // Adiciona a resposta da IA à conversa no Supabase
-    await addMessageToConversation(activeConversationId, fullResponse, 'ai');
+    await addMessageToConversation(activeConversationId, aiResponseText, 'ai');
 
     // Se esta for a primeira troca de mensagens, atualizamos o título e definimos a categoria
     const messages = await getConversationMessages(activeConversationId);
@@ -145,13 +185,13 @@ export const generateAIResponse = async (message: string, sessionId: string, opt
     }
 
     return {
-      response: fullResponse,
+      response: aiResponseText,
       conversationId: activeConversationId
     };
   } catch (error) {
     console.error('Erro ao gerar resposta:', error);
     return {
-      response: 'Desculpe, encontrei um problema ao processar sua solicitação. Por favor, tente novamente em instantes.',
+      response: useFallbackResponse(message),
       conversationId: conversationId || ''
     };
   }

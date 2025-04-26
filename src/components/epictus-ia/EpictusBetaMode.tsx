@@ -205,54 +205,64 @@ const EpictusBetaMode: React.FC = () => {
     setIsTyping(true);
 
     try {
-      const typingTimeout = setTimeout(() => {
-        setIsTyping(true);
-      }, 300);
-
-      try {
-        console.log("Enviando mensagem para IA:", trimmedMessage);
-        const { response, conversationId } = await generateAIResponse(
-          trimmedMessage, 
-          sessionId, 
-          {}, 
-          currentConversationId
-        );
-        
-        console.log("Resposta recebida da IA, conversa ID:", conversationId);
-        
-        // Atualiza o ID da conversa atual
-        if (conversationId) {
-          setCurrentConversationId(conversationId);
-        }
-
-        const aiMessage: Message = {
-          id: uuidv4(),
-          sender: "ia",
-          content: response,
-          timestamp: new Date()
-        };
-
-        setMessages(prev => [...prev, aiMessage]);
-      } catch (err) {
-        console.error("Erro ao gerar resposta:", err);
-
-        const errorMessage: Message = {
-          id: uuidv4(),
-          sender: "ia",
-          content: "Desculpe, encontrei um problema ao processar sua solicitação. Por favor, tente novamente em alguns instantes.",
-          timestamp: new Date()
-        };
-
-        setMessages(prev => [...prev, errorMessage]);
-      } finally {
-        clearTimeout(typingTimeout);
-        setIsTyping(false);
+      console.log("Enviando mensagem para IA:", trimmedMessage);
+      
+      // Usamos uma abordagem de timeout para garantir uma experiência de usuário mais responsiva
+      const responsePromise = generateAIResponse(
+        trimmedMessage, 
+        sessionId, 
+        {
+          intelligenceLevel: 'advanced',
+          languageStyle: 'formal',
+          detailedResponse: true
+        }, 
+        currentConversationId
+      );
+      
+      // Definimos um tempo máximo de 15 segundos para a resposta
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Tempo esgotado")), 15000);
+      });
+      
+      const { response, conversationId } = await Promise.race([
+        responsePromise,
+        timeoutPromise
+      ]) as {response: string, conversationId: string};
+      
+      console.log("Resposta recebida da IA, conversa ID:", conversationId);
+      
+      // Atualiza o ID da conversa atual
+      if (conversationId) {
+        setCurrentConversationId(conversationId);
       }
+
+      const aiMessage: Message = {
+        id: uuidv4(),
+        sender: "ia",
+        content: response,
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
     } catch (err) {
-      console.error("Erro no processo de envio de mensagem:", err);
+      console.error("Erro ao gerar resposta:", err);
+
+      const errorMessage: Message = {
+        id: uuidv4(),
+        sender: "ia",
+        content: "Desculpe, encontrei um problema ao processar sua solicitação. Por favor, tente novamente em alguns instantes.",
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, errorMessage]);
+      
+      toast({
+        title: "Erro na comunicação",
+        description: "Ocorreu um erro ao se comunicar com a IA. Tente novamente.",
+        duration: 3000,
+      });
+    } finally {
       setIsTyping(false);
-      setError("Houve um erro ao processar sua mensagem. Tente novamente.");
-      setTimeout(() => setError(null), 3000);
     }
   };
 
