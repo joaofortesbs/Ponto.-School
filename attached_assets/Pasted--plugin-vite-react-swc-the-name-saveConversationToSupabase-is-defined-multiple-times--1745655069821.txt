@@ -1,0 +1,100 @@
+[plugin:vite:react-swc] × the name `saveConversationToSupabase` is defined multiple times
+     ╭─[/home/runner/workspace/src/services/aiChatService.ts:492:1]
+ 492 │ }
+ 493 │ 
+ 494 │ // Função para salvar conversa no banco de dados
+ 495 │ export const saveConversationToSupabase = async (
+     ·              ─────────────┬────────────
+     ·                           ╰── previous definition of `saveConversationToSupabase` here
+ 496 │   userId: string, 
+ 497 │   sessionId: string, 
+ 498 │   messages: any[], 
+ 499 │   title?: string
+ 500 │ ) => {
+ 501 │   try {
+ 502 │     if (!userId || messages.length === 0) {
+ 503 │       return { success: false, error: "Dados insuficientes para salvar conversa" };
+ 504 │     }
+ 505 │     
+ 506 │     // Extrair primeiras mensagens para gerar título e preview
+ 507 │     const firstUserMessage = messages.find(msg => msg.sender === "user" || msg.role === "user");
+ 508 │     const firstAIResponse = messages.find(msg => msg.sender === "ia" || msg.sender === "ai" || msg.role === "assistant");
+ 509 │     
+ 510 │     // Gerar título baseado na primeira mensagem do usuário (limitado a 50 caracteres)
+ 511 │     const autoTitle = title || (firstUserMessage 
+ 512 │       ? firstUserMessage.content.substring(0, 50) + (firstUserMessage.content.length > 50 ? "..." : "")
+ 513 │       : "Nova conversa");
+ 514 │       
+ 515 │     // Preparar dados para salvar
+ 516 │     const conversationData = {
+ 517 │       title: autoTitle,
+ 518 │       preview: firstAIResponse 
+ 519 │         ? firstAIResponse.content.substring(0, 100) + (firstAIResponse.content.length > 100 ? "..." : "") 
+ 520 │         : "Sem resposta",
+ 521 │       messages: messages
+ 522 │     };
+ 523 │     
+ 524 │     const { data: existingConversations, error: fetchError } = await supabase
+ 525 │       .from('user_conversations')
+ 526 │       .select('id')
+ 527 │       .eq('user_id', userId)
+ 528 │       .eq('session_id', sessionId)
+ 529 │       .limit(1);
+ 530 │       
+ 531 │     if (fetchError) {
+ 532 │       console.error("Erro ao verificar conversa existente:", fetchError);
+ 533 │       return { success: false, error: fetchError };
+ 534 │     }
+ 535 │     
+ 536 │     if (existingConversations && existingConversations.length > 0) {
+ 537 │       // Atualizar conversa existente
+ 538 │       const { error: updateError } = await supabase
+ 539 │         .from('user_conversations')
+ 540 │         .update({ 
+ 541 │           conversation: conversationData,
+ 542 │           updated_at: new Date().toISOString()
+ 543 │         })
+ 544 │         .eq('id', existingConversations[0].id);
+ 545 │         
+ 546 │       if (updateError) {
+ 547 │         console.error("Erro ao atualizar conversa:", updateError);
+ 548 │         return { success: false, error: updateError };
+ 549 │       }
+ 550 │       
+ 551 │       return { success: true, conversationId: existingConversations[0].id };
+ 552 │     } else {
+ 553 │       // Inserir nova conversa
+ 554 │       const { data, error: insertError } = await supabase
+ 555 │         .from('user_conversations')
+ 556 │         .insert({
+ 557 │           user_id: userId,
+ 558 │           conversation: conversationData,
+ 559 │           session_id: sessionId,
+ 560 │           created_at: new Date().toISOString(),
+ 561 │           updated_at: new Date().toISOString()
+ 562 │         })
+ 563 │         .select('id')
+ 564 │         .single();
+ 565 │         
+ 566 │       if (insertError) {
+ 567 │         console.error("Erro ao inserir conversa:", insertError);
+ 568 │         return { success: false, error: insertError };
+ 569 │       }
+ 570 │       
+ 571 │       return { success: true, conversationId: data.id };
+ 572 │     }
+ 573 │   } catch (error) {
+ 574 │     console.error("Erro ao salvar conversa:", error);
+ 575 │     return { success: false, error };
+ 576 │   }
+ 577 │ };
+ 578 │ 
+ 579 │ // Função para salvar conversa no banco de dados
+ 580 │ export const saveConversationToSupabase = async (
+     ·              ─────────────┬────────────
+     ·                           ╰── `saveConversationToSupabase` redefined here
+ 581 │   userId: string, 
+ 582 │   sessionId: string, 
+ 583 │   messages: any[], 
+     ╰────
+/home/runner/workspace/src/services/aiChatService.ts:492:1
