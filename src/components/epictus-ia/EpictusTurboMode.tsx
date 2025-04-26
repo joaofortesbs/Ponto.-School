@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, Sparkles, Clock } from "lucide-react";
+import { Zap, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import TurboMessageBox from "./TurboMessageBox";
 import TurboHubConnected from "./TurboHubConnected";
@@ -348,7 +348,10 @@ const EpictusTurboMode: React.FC = () => {
                 initial={false}
                 transition={{ duration: 0.3 }}
               >
-                <Clock className="h-5 w-5 text-white" />
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
               </motion.div>
             </div>
 
