@@ -467,7 +467,6 @@ const EpictusTurboMode: React.FC = () => {
         </div>
       </div>
     </ErrorBoundary>
-    </div>
   );
 };
 
