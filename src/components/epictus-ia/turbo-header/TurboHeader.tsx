@@ -1,72 +1,123 @@
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import GlowingBackground from "./GlowingBackground";
-import LogoSection from "./LogoSection";
+import React, { useState, useRef, useEffect } from "react";
+import {
+  Bot,
+  User,
+  Trash2,
+  Loader2,
+  Star,
+  Search,
+  FileText,
+  PenLine,
+  Share,
+  Copy,
+  Clock
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
 import PersonalitiesDropdown from "./PersonalitiesDropdown";
-import HeaderIcons from "./HeaderIcons";
+import HistoricoModal from "../modals/HistoricoModal";
 
-interface TurboHeaderProps {
-  profileOptions: Array<{
-    id: string;
-    icon: React.ReactNode;
-    color: string;
-    name: string;
-    onClick: () => void;
-  }>;
-  initialProfileIcon?: React.ReactNode;
-  initialProfileName?: string;
+interface ProfileOption {
+  id: string;
+  icon: React.ReactNode;
+  color: string;
+  name: string;
+  onClick: () => void;
 }
 
-const TurboHeader: React.FC<TurboHeaderProps> = ({ 
+interface TurboHeaderProps {
+  profileOptions: ProfileOption[];
+  initialProfileIcon: React.ReactNode;
+  initialProfileName: string;
+}
+
+const TurboHeader: React.FC<TurboHeaderProps> = ({
   profileOptions,
   initialProfileIcon,
-  initialProfileName = "Personalidades" 
+  initialProfileName,
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const [animationComplete, setAnimationComplete] = useState(false);
-  const [profileIcon, setProfileIcon] = useState(initialProfileIcon || (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-      <circle cx="12" cy="7" r="4"></circle>
-    </svg>
-  ));
-  const [profileName, setProfileName] = useState(initialProfileName);
-
-  // Configurar efeito de animação ao carregar
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setAnimationComplete(true);
-    }, 1200);
-
-    return () => clearTimeout(timer);
-  }, []);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isHistoricoModalOpen, setIsHistoricoModalOpen] = useState(false);
 
   return (
-    <div className="w-full p-4">
-      <motion.header 
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className={`w-full hub-connected-width bg-gradient-to-r from-[#001340] to-[#0055B8] backdrop-blur-lg py-4 px-5 flex items-center justify-between rounded-xl relative`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <GlowingBackground isHovered={isHovered} />
-
-        <LogoSection isHovered={isHovered} animationComplete={animationComplete} description="IA para geração de conversas impecáveis para o público estudantil!" />
-
-        <div className="flex items-center justify-center z-10 relative gap-3">
-          <PersonalitiesDropdown 
-            profileIcon={profileIcon}
-            profileName={profileName}
-            profileOptions={profileOptions}
-          />
-
-          <HeaderIcons />
+    <header className="w-full bg-gradient-to-r from-[#1E293B] to-[#2F3B4C] border-b border-[#3A4B5C]/30 p-3 flex justify-between items-center">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center shadow-md">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"></path>
+            <path d="M8.5 8.5v.01"></path>
+            <path d="M16 15.5v.01"></path>
+            <path d="M12 12v.01"></path>
+            <path d="M11 17v.01"></path>
+            <path d="M7 14v.01"></path>
+          </svg>
         </div>
-      </motion.header>
-    </div>
+        <div>
+          <h1 className="text-xl font-bold text-white">Epictus IA</h1>
+          <div className="flex items-center gap-2">
+            <span className="text-[#A0A0A0] text-sm">BETA</span>
+            <div className="h-2 w-2 rounded-full bg-[#4CAF50] animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <div className="relative">
+          <button
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="flex items-center gap-2 bg-gradient-to-r from-[#1E293B] to-[#2F3B4C] border border-[#3A4B5C]/30 rounded-lg p-2 text-white hover:bg-[#2F3B4C] transition-all duration-300"
+          >
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center shadow-md">
+              {initialProfileIcon}
+            </div>
+            <span className="text-sm font-medium">{initialProfileName}</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`transition-transform duration-300 ${isDropdownOpen ? "rotate-180" : ""}`}
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
+
+          <AnimatePresence>
+            {isDropdownOpen && (
+              <PersonalitiesDropdown
+                options={profileOptions}
+                onClose={() => setIsDropdownOpen(false)}
+              />
+            )}
+          </AnimatePresence>
+        </div>
+
+        <button
+          className="p-2 rounded-full text-[#A0A0A0] hover:text-white hover:bg-[#2F3B4C] transition-colors"
+          onClick={() => setIsHistoricoModalOpen(true)}
+          title="Histórico de conversas"
+        >
+          <Clock />
+        </button>
+
+        <button className="p-2 rounded-full text-[#A0A0A0] hover:text-white hover:bg-[#2F3B4C] transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5.52 19c.64-2.2 1.84-3 3.22-3h6.52c1.38 0 2.58.8 3.22 3" />
+            <circle cx="12" cy="10" r="3" />
+            <circle cx="12" cy="12" r="10" />
+          </svg>
+        </button>
+      </div>
+
+      <HistoricoModal
+        isOpen={isHistoricoModalOpen}
+        onClose={() => setIsHistoricoModalOpen(false)}
+      />
+    </header>
   );
 };
-
-export default TurboHeader;
