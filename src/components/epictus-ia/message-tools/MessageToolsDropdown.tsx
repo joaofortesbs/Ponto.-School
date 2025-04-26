@@ -7,7 +7,7 @@ interface MessageToolsDropdownProps {
   messageId: number;
   content: string;
   showTools: boolean;
-  onToggleTools: () => void;
+  onToggleTools: (e?: React.MouseEvent) => void;
 }
 
 const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
