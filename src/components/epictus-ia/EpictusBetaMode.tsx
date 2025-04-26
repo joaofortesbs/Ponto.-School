@@ -85,6 +85,7 @@ const EpictusBetaMode: React.FC = () => {
   const MAX_CHARS = 1000;
   const [sessionId] = useState(() => localStorage.getItem('epictus_beta_session_id') || uuidv4());
   const [isReformulating, setIsReformulating] = useState(false); 
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -253,11 +254,13 @@ const EpictusBetaMode: React.FC = () => {
     const initialMessage: Message = {
       id: uuidv4(),
       sender: "ia",
-      content: "Olá, João! Eu sou o Epicus IA, seu assistente para aprendizado e programação. Como posso te ajudar hoje?",
+      content: "Olá! Estou pronto para começar uma nova conversa. Como posso ajudar você hoje?",
       timestamp: new Date()
     };
 
     setMessages([initialMessage]);
+    setCurrentConversationId(null); // Resetar ID da conversação atual
+    localStorage.removeItem('epictus_beta_chat');
     setIsConfirmOpen(false);
   };
 
@@ -659,10 +662,8 @@ const EpictusBetaMode: React.FC = () => {
     }
   };
 
-  const [showHistoricoModal, setShowHistoricoModal] = useState(false);
-
   const handleHistoricoClick = () => {
-    setShowHistoricoModal(true);
+    setIsHistoricoModalOpen(true);
   };
 
   const closeHistoricoModal = () => {
