@@ -33,8 +33,12 @@ const HeaderIcons: React.FC<HeaderIconsProps> = ({
     }
   };
 
-  const handleHistoricoClick = () => { // Added handler for modal
-    setIsHistoricoModalOpen(true);
+  const handleHistoricoClick = () => {
+    if (onHistoricoClick) {
+      onHistoricoClick();
+    } else {
+      setIsHistoricoModalOpen(true);
+    }
   };
 
   return (
