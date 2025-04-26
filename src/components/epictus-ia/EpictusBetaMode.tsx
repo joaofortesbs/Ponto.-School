@@ -10,7 +10,13 @@ import {
   MessageSquare,
   ChevronDown,
   Sparkles,
-  Clock
+  Clock,
+  Trash2,
+  PenLine,
+  Share,
+  Copy,
+  User,
+  Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import EpictusMessageBox from "./message-box/EpictusMessageBox";
