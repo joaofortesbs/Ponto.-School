@@ -100,6 +100,7 @@ function ProtectedRoute({ children }) {
 }
 
 function App() {
+  console.log("Renderizando App principal");
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false); // Added state
