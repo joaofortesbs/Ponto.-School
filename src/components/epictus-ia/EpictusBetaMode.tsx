@@ -26,6 +26,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { generateAIResponse, addMessageToHistory, createMessage } from "@/services/epictusIAService";
 import { toast } from "@/components/ui/use-toast";
 
+import HeaderIcons from "./modoepictusiabeta/header/icons/HeaderIcons";
+import HistoricoConversasModal from "./modals/HistoricoConversasModal";
+import { supabase } from "@/lib/supabase";
+
 interface Message {
   id: string;
   sender: "user" | "ia";
@@ -35,11 +39,6 @@ interface Message {
   feedback?: 'positive' | 'negative';
   needsImprovement?: boolean; 
 }
-
-import HeaderIcons from "./modoepictusiabeta/header/icons/HeaderIcons";
-import HistoricoConversasModal from "./modals/HistoricoConversasModal";
-import { supabase } from "@/lib/supabase";
-import { useEffect } from "react";
 
 interface Conversation {
   id: string;
