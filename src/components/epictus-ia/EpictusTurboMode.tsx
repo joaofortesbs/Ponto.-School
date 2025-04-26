@@ -1,8 +1,11 @@
+
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import { Zap, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import TurboMessageBox from "./TurboMessageBox";
+import TurboHubConnected from "./TurboHubConnected";
 
 const EpictusTurboMode: React.FC = () => {
   const { theme } = useTheme();
@@ -69,8 +72,8 @@ const EpictusTurboMode: React.FC = () => {
   const profileOptions = [
     { 
       id: "estudante",
-      icon: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#0D23A0]"><path d="M12 10v-2a2 2 0 0 0-2-2V4"></path><path d="M10 4H8a2 2 0 0 0-2 2v1a2 2 0 0 0-2 2v1"></path><path d="M14 4h2a2 2 0 0 1 2 2v1a2 2 0 0 1 2 2v1"></path><path d="M18 15v1a2 2 0 0 1-2 2h-1a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2h-1a2 2 0 0 1-2-2v-1a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2Z"></path></svg>, 
-      color: "#0D23A0", 
+      icon: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#0055B8]"><path d="M12 10v-2a2 2 0 0 0-2-2V4"></path><path d="M10 4H8a2 2 0 0 0-2 2v1a2 2 0 0 0-2 2v1"></path><path d="M14 4h2a2 2 0 0 1 2 2v1a2 2 0 0 1 2 2v1"></path><path d="M18 15v1a2 2 0 0 1-2 2h-1a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2h-1a2 2 0 0 1-2-2v-1a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2Z"></path></svg>, 
+      color: "#0055B8", 
       name: "Estudante",
       onClick: () => {
         setSelectedProfile("Estudante");
@@ -87,8 +90,8 @@ const EpictusTurboMode: React.FC = () => {
     },
     { 
       id: "professor",
-      icon: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#5B21BD]"><path d="M8 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3.93a2 2 0 0 1-1.66-.9L15.12 4a2 2 0 0 0-1.66-.9H8.83A3 3 0 0 0 6 5.17V17"></path><path d="M2 14h7"></path><path d="M6 10 2 14l4 4"></path></svg>, 
-      color: "#5B21BD", 
+      icon: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#0055B8]"><path d="M8 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3.93a2 2 0 0 1-1.66-.9L15.12 4a2 2 0 0 0-1.66-.9H8.83A3 3 0 0 0 6 5.17V17"></path><path d="M2 14h7"></path><path d="M6 10 2 14l4 4"></path></svg>, 
+      color: "#0055B8", 
       name: "Professor",
       onClick: () => {
         setSelectedProfile("Professor");
@@ -105,8 +108,8 @@ const EpictusTurboMode: React.FC = () => {
     },
     { 
       id: "coordenador",
-      icon: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#1230CC]"><path d="M15.5 2H8.6c-.4 0-.8.2-1.1.5-.3.3-.5.7-.5 1.1v12.8c0 .4.2.8.5 1.1.3.3.7.5 1.1.5h9.8c.4 0 .8-.2 1.1-.5.3-.3.5-.7.5-1.1V6.5L15.5 2z"></path><path d="M3 7.6v12.8c0 .4.2.8.5 1.1.3.3.7.5 1.1.5h9.8"></path><path d="M15 2v5h5"></path></svg>, 
-      color: "#1230CC", 
+      icon: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#0055B8]"><path d="M15.5 2H8.6c-.4 0-.8.2-1.1.5-.3.3-.5.7-.5 1.1v12.8c0 .4.2.8.5 1.1.3.3.7.5 1.1.5h9.8c.4 0 .8-.2 1.1-.5.3-.3.5-.7.5-1.1V6.5L15.5 2z"></path><path d="M3 7.6v12.8c0 .4.2.8.5 1.1.3.3.7.5 1.1.5h9.8"></path><path d="M15 2v5h5"></path></svg>, 
+      color: "#0055B8", 
       name: "Coordenador",
       onClick: () => {
         setSelectedProfile("Coordenador");
@@ -123,8 +126,8 @@ const EpictusTurboMode: React.FC = () => {
     },
     { 
       id: "expert",
-      icon: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#4A0D9F]"><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"></path><path d="M8.5 8.5v.01"></path><path d="M16 15.5v.01"></path><path d="M12 12v.01"></path><path d="M11 17v.01"></path><path d="M7 14v.01"></path></svg>, 
-      color: "#4A0D9F", 
+      icon: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#0055B8]"><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"></path><path d="M8.5 8.5v.01"></path><path d="M16 15.5v.01"></path><path d="M12 12v.01"></path><path d="M11 17v.01"></path><path d="M7 14v.01"></path></svg>, 
+      color: "#0055B8", 
       name: "Expert",
       onClick: () => {
         setSelectedProfile("Expert");
@@ -245,59 +248,101 @@ const EpictusTurboMode: React.FC = () => {
           {/* New header icons */}
           <div className="flex items-center justify-center z-10 relative gap-3">
             {/* Personalidades dropdown */}
-            <div className="relative icon-container mr-5 group" style={{ zIndex: 99999, position: "relative" }}>
-              <motion.div
-                className="relative w-auto h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow px-3 group"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                initial={false}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="flex items-center gap-2">
-                  {profileIcon}
-                  <span className="text-white text-sm font-medium">{profileName}</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white transition-transform duration-300 group-hover:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                </div>
-              </motion.div>
+            <div className="relative icon-container mr-5" style={{ zIndex: 99999, position: "relative" }}>
+              {/* Adicionando estado para controlar o dropdown */}
+              {useState && (() => {
+                const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+                
+                // Referência para detectar cliques fora do dropdown
+                const dropdownRef = React.useRef<HTMLDivElement>(null);
+                
+                // Fechar o dropdown apenas quando clicar fora dele
+                React.useEffect(() => {
+                  const handleClickOutside = (event: MouseEvent) => {
+                    if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                      setIsDropdownOpen(false);
+                    }
+                  };
+                  
+                  // Adicionando o evento apenas se o dropdown estiver aberto
+                  if (isDropdownOpen) {
+                    document.addEventListener('mousedown', handleClickOutside);
+                  }
+                  
+                  return () => {
+                    document.removeEventListener('mousedown', handleClickOutside);
+                  };
+                }, [dropdownRef, isDropdownOpen]);
+                
+                return (
+                  <div ref={dropdownRef}>
+                    <motion.div
+                      className="relative w-auto h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#0055B8] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow px-3" 
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      initial={false}
+                      transition={{ duration: 0.3 }}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Impede a propagação do clique
+                        setIsDropdownOpen(true); // Sempre abre o dropdown ao clicar
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        {profileIcon}
+                        <span className="text-white text-sm font-medium">{profileName}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 text-white transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                      </div>
+                    </motion.div>
 
-              {/* Dropdown content - absolute positioning relative to its container */}
-              <div className="fixed group-hover:opacity-100 group-hover:visible opacity-0 invisible transition-all duration-300 z-[99999] left-auto mt-2 personalidades-dropdown" style={{ top: "calc(100% + 10px)" }}>
-                <div className="w-52 bg-gradient-to-r from-[#0c2341] to-[#0f3562] rounded-lg shadow-xl overflow-hidden border border-white/10 backdrop-blur-md" style={{ position: "relative", zIndex: 99999 }}>
-                  <div className="max-h-60 overflow-y-auto py-2">
-                    {profileOptions.map((item, index) => (
-                      <motion.div 
-                        key={index} 
-                        className="flex items-center gap-2 px-3 py-2 cursor-pointer mb-1 mx-2 rounded-lg hover:bg-white/10 transition-all"
-                        whileHover={{ 
-                          y: -2, 
-                          boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
-                          scale: 1.02
-                        }}
-                        onClick={item.onClick}
-                      >
-                        <div 
-                          className="w-7 h-7 rounded-md flex items-center justify-center shadow-inner"
-                          style={{ 
-                            background: `linear-gradient(135deg, ${item.color}30, ${item.color}50)`,
-                            boxShadow: `0 0 15px ${item.color}40`
-                          }}
-                        >
-                          {item.icon}
+                    {/* Dropdown content - absolute positioning relative to its container */}
+                    <div 
+                      className={`fixed ${isDropdownOpen ? 'opacity-100 visible' : 'opacity-0 invisible'} transition-all duration-300 z-[99999] left-auto mt-2 personalidades-dropdown`} 
+                      style={{ top: "calc(100% + 10px)" }}
+                      onClick={(e) => e.stopPropagation()} // Impede que cliques no dropdown fechem ele mesmo
+                    >
+                      <div className="w-52 bg-[#0f3562] rounded-lg shadow-xl overflow-hidden border border-white/10 backdrop-blur-md" style={{ position: "relative", zIndex: 99999 }}> 
+                        <div className="max-h-60 overflow-y-auto py-2">
+                          {profileOptions.map((item, index) => (
+                            <motion.div 
+                              key={index} 
+                              className="flex items-center gap-2 px-3 py-2 cursor-pointer mb-1 mx-2 rounded-lg hover:bg-white/10 transition-all"
+                              whileHover={{ 
+                                y: -2, 
+                                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+                                scale: 1.02
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation(); // Evita que o clique se propague
+                                item.onClick();
+                                setIsDropdownOpen(false);
+                              }}
+                            >
+                              <div 
+                                className="w-7 h-7 rounded-md flex items-center justify-center shadow-inner"
+                                style={{ 
+                                  background: `linear-gradient(135deg, #0055B830, #0055B850)`,
+                                  boxShadow: `0 0 15px #0055B840` 
+                                }}
+                              >
+                                {item.icon}
+                              </div>
+                              <span className="text-white text-sm">{item.name}</span>
+                            </motion.div>
+                          ))}
                         </div>
-                        <span className="text-white text-sm">{item.name}</span>
-                      </motion.div>
-                    ))}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                );
+              })()}
             </div>
 
             {/* History icon */}
             <div className="relative icon-container">
               <motion.div
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#0055B8] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow" 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 initial={false}
@@ -313,7 +358,7 @@ const EpictusTurboMode: React.FC = () => {
             {/* Favorites icon */}
             <div className="relative icon-container">
               <motion.div
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#0055B8] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow" 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 initial={false}
@@ -328,7 +373,7 @@ const EpictusTurboMode: React.FC = () => {
             {/* Calendar icon */}
             <div className="relative icon-container">
               <motion.div
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#0055B8] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow" 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 initial={false}
@@ -346,7 +391,7 @@ const EpictusTurboMode: React.FC = () => {
             {/* Notifications icon */}
             <div className="relative icon-container">
               <motion.div
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#0055B8] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow" 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 initial={false}
@@ -362,7 +407,7 @@ const EpictusTurboMode: React.FC = () => {
             {/* Profile picture - a bit more spaced */}
             <div className="relative profile-icon-container ml-4">
               <motion.div
-                className="w-11 h-11 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] p-[2px] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow overflow-hidden"
+                className="w-11 h-11 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#0055B8] p-[2px] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow overflow-hidden" 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 initial={false}
@@ -405,6 +450,4 @@ const EpictusTurboMode: React.FC = () => {
   );
 };
 
-import TurboMessageBox from "./TurboMessageBox";
-import TurboHubConnected from "./TurboHubConnected";
 export default EpictusTurboMode;
