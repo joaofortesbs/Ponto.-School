@@ -82,7 +82,7 @@ const TurboHeader: React.FC<TurboHeaderProps> = ({
           </div>
         </motion.header>
       </div>
-    </ErrorHandler> {/* Closed ErrorHandler */}
+    </ErrorHandler>
   );
 };
 
