@@ -1,8 +1,8 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Wrench } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import TypewriterEffect from '@/components/ui/typewriter-effect'; // Added import
 
 interface MessageToolsDropdownProps {
   messageId: number;
@@ -135,7 +135,7 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
             <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
           </svg>
         </button>
-        
+
         {showTools && (
           <div className="absolute z-50 top-full right-0 mt-1 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
             <button 
@@ -156,7 +156,7 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
               </svg>
               Aprofundar no tema
             </button>
-            
+
             <button 
               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
               onClick={(e) => {
@@ -175,7 +175,7 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
               </svg>
               Simulador de questões
             </button>
-            
+
             <button 
               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
               onClick={(e) => {
@@ -196,7 +196,7 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
               </svg>
               Escrever no Caderno
             </button>
-            
+
             <button 
               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
               onClick={(e) => {
@@ -255,7 +255,7 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
               </button>
             ))}
           </div>
-          
+
           <div className="bg-[#1A2634]/70 border-t border-[#3A4B5C]/30 p-3 flex justify-end">
             <button
               onClick={() => setModalOpen(false)}
@@ -271,3 +271,19 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
 };
 
 export default MessageToolsDropdown;
+
+const MessageContent = ({ content, isAi }: { content: string; isAi: boolean }) => {
+  return (
+    <div className={`${isAi ? 'prose prose-sm dark:prose-invert max-w-none' : ''}`}>
+      {isAi ? (
+        <TypewriterEffect 
+          text={content}
+          typingSpeed={5}
+          className="message-typewriter"
+        />
+      ) : (
+        <p style={{ whiteSpace: 'pre-wrap' }}>{content}</p>
+      )}
+    </div>
+  );
+};
