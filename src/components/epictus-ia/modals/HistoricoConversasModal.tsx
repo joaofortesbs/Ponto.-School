@@ -37,3 +37,29 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
 };
 
 export default HistoricoConversasModal;
+import React from 'react';
+
+interface HistoricoConversasModalProps {
+  onClose: () => void;
+}
+
+const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({ onClose }) => {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+        <h2 className="text-xl font-bold mb-4 text-center">Histórico de Conversas</h2>
+        <p className="text-center text-gray-600">Seu histórico irá aparecer aqui!</p>
+        <div className="mt-6 flex justify-center">
+          <button 
+            onClick={onClose} 
+            className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
+          >
+            Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default HistoricoConversasModal;

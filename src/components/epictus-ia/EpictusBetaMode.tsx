@@ -36,6 +36,7 @@ interface Message {
   needsImprovement?: boolean; 
 }
 
+import HeaderIcons from "./modoepictusiabeta/header/icons/HeaderIcons";
 import HistoricoConversasModal from "./modals/HistoricoConversasModal";
 
 const EpictusBetaMode: React.FC = () => {
@@ -616,7 +617,7 @@ const EpictusBetaMode: React.FC = () => {
         const reformulatedResponse = await generateAIResponse(`Reformule a seguinte resposta de forma mais detalhada: ${messageToReformulate.content}`, sessionId);
         const updatedMessages = messages.map(msg =>
           msg.id === messageId
-            ? { ...msg, content: reformulatedResponse, isEdited: true, needsImprovement: false }
+            ? {...msg, content: reformulatedResponse, isEdited: true, needsImprovement: false }
             : msg
         );
         setMessages(updatedMessages);
@@ -656,6 +657,16 @@ const EpictusBetaMode: React.FC = () => {
     } finally {
       setIsReformulating(false);
     }
+  };
+
+  const [showHistoricoModal, setShowHistoricoModal] = useState(false);
+
+  const handleHistoricoClick = () => {
+    setShowHistoricoModal(true);
+  };
+
+  const closeHistoricoModal = () => {
+    setShowHistoricoModal(false);
   };
 
   return (
@@ -989,14 +1000,14 @@ const EpictusBetaMode: React.FC = () => {
               }, 100);
             }}
             currentContext="estudos"
-          onHistoricoClick={() => setIsHistoricoModalOpen(true)}
+            onHistoricoClick={handleHistoricoClick}
           />
         </div>
       </div>
 
       <HistoricoConversasModal 
-        open={isHistoricoModalOpen} 
-        onOpenChange={setIsHistoricoModalOpen} 
+        open={showHistoricoModal} 
+        onOpenChange={setShowHistoricoModal} 
       />
 
       <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
