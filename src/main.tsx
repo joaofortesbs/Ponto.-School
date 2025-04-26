@@ -63,82 +63,21 @@ function inicializarTeiasComPrioridadeMaxima() {
 // Executar inicialização prioritária
 inicializarTeiasComPrioridadeMaxima();
 
-// Configuração de tratamento global de erros aprimorada
+// Configuração de tratamento global de erros
 const handleGlobalError = (event: ErrorEvent) => {
   console.error("Erro global capturado:", event.error || event.message);
-  console.error("Localização do erro:", event.filename, "linha:", event.lineno, "coluna:", event.colono);
-  
-  // Capturar informações do stack trace se disponível
-  if (event.error && event.error.stack) {
-    console.error("Stack trace:", event.error.stack);
-  }
-  
-  // Verificar se o erro está relacionado ao lucide-react (problema identificado)
-  if (event.message && (
-    event.message.includes("lucide-react") || 
-    event.message.includes("Tool")
-  )) {
-    console.warn("Detectado erro relacionado a lucide-react - possivelmente um problema de importação");
-  }
-  
   // Não interrompe a aplicação aqui, apenas loga o erro
   event.preventDefault();
-  
-  // Contagem de erros para detectar cascatas
-  window._errorCount = (window._errorCount || 0) + 1;
-  
-  // Se muitos erros ocorrerem em sequência, mostrar alerta
-  if (window._errorCount > 10) {
-    console.error("ALERTA: Muitos erros detectados - possível loop de erros");
-    // Resetar contagem para não sobrecarregar o console
-    window._errorCount = 0;
-  }
 };
 
 // Registrar handler de erro global
 window.addEventListener('error', handleGlobalError);
 
-// Adicionar tratamento melhorado para promessas não tratadas
+// Adicionar tratamento para promessas não tratadas
 window.addEventListener('unhandledrejection', (event) => {
   console.warn('Promessa não tratada:', event.reason);
-  
-  // Capturar mais informações sobre o erro da promessa
-  if (event.reason instanceof Error) {
-    console.warn('Detalhes do erro da promessa:', {
-      message: event.reason.message,
-      stack: event.reason.stack,
-      name: event.reason.name
-    });
-  }
-  
-  // Verificar se é um erro de rede
-  if (event.reason instanceof TypeError && 
-      event.reason.message.includes('NetworkError')) {
-    console.warn('Possível problema de rede detectado');
-  }
-  
-  // Verificar problemas de dados
-  if (event.reason && event.reason.message && 
-      event.reason.message.includes('undefined is not')) {
-    console.warn('Possível acesso a dados undefined detectado');
-  }
+  // Não cancela o evento para permitir outros handlers
 });
-
-// Detectar problemas de renderização React
-window.__REACT_ERROR_OVERLAY_GLOBAL_HOOK__ = window.__REACT_ERROR_OVERLAY_GLOBAL_HOOK__ || {};
-const originalConsoleError = console.error;
-console.error = function(...args) {
-  // Capturar erros específicos do React
-  if (args[0] && typeof args[0] === 'string') {
-    if (args[0].includes('Invalid hook call')) {
-      console.warn('ERRO CRÍTICO: Uso inválido de hook React detectado. Verifique chamadas de hooks em loops, condicionais ou componentes não-React.');
-    }
-    if (args[0].includes('Maximum update depth exceeded')) {
-      console.warn('ERRO CRÍTICO: Profundidade máxima de atualização excedida. Possível loop infinito de renderização.');
-    }
-  }
-  originalConsoleError.apply(console, args);
-};
 
 console.log("Iniciando aplicação...");
 

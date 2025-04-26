@@ -286,70 +286,24 @@ function App() {
     };
   }, [location.pathname]);
 
-  console.log("Renderizando App principal");
-  
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <UsernameProvider>
         <StudyGoalProvider>
           <ErrorBoundary>
             <div className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
-              {/* Feedback visual de carregamento para o usuário */}
-              {isLoading && (
-                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="w-12 h-12 rounded-full border-4 border-t-primary border-r-transparent border-b-transparent border-l-transparent animate-spin"></div>
-                    <p className="text-sm text-muted-foreground">Carregando aplicação...</p>
-                  </div>
-                </div>
-              )}
-              
               <Routes>
                 {/* Auth Routes - Públicas */}
-                <Route path="/login" element={
-                  <ErrorBoundary>
-                    <Suspense fallback={<div>Carregando página de login...</div>}>
-                      <LoginPage />
-                    </Suspense>
-                  </ErrorBoundary>
-                } />
-                <Route path="/register" element={
-                  <ErrorBoundary>
-                    <Suspense fallback={<div>Carregando página de registro...</div>}>
-                      <RegisterPage />
-                    </Suspense>
-                  </ErrorBoundary>
-                } />
-                <Route path="/forgot-password" element={
-                  <ErrorBoundary>
-                    <Suspense fallback={<div>Carregando...</div>}>
-                      <ForgotPasswordPage />
-                    </Suspense>
-                  </ErrorBoundary>
-                } />
-                <Route path="/reset-password" element={
-                  <ErrorBoundary>
-                    <Suspense fallback={<div>Carregando...</div>}>
-                      <ResetPasswordPage />
-                    </Suspense>
-                  </ErrorBoundary>
-                } />
-                <Route path="/select-plan" element={
-                  <ErrorBoundary>
-                    <Suspense fallback={<div>Carregando planos...</div>}>
-                      <PlanSelectionPage />
-                    </Suspense>
-                  </ErrorBoundary>
-                } />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/select-plan" element={<PlanSelectionPage />} />
 
                 {/* Main App Routes - Protegidas */}
                 <Route path="/" element={
                   <ProtectedRoute>
-                    <ErrorBoundary>
-                      <Suspense fallback={<div>Carregando página inicial...</div>}>
-                        <Home />
-                      </Suspense>
-                    </ErrorBoundary>
+                    <Home />
                   </ProtectedRoute>
                 }>
                   <Route index element={<Dashboard />} />
@@ -414,32 +368,11 @@ function App() {
               }
             </div>
             <Toaster />
-            {/* Ferramenta de diagnóstico - ativa com Ctrl+Shift+D */}
-            {import.meta.env.DEV && <React.Suspense fallback={null}>
-              {React.createElement(React.lazy(() => import('./components/diagnostic/DiagnosticTool')))}
-            </React.Suspense>}
           </ErrorBoundary>
         </StudyGoalProvider>
       </UsernameProvider>
     </ThemeProvider>
   );
-}
-
-// Adicionar logs globais para identificar problemas de carregamento
-if (typeof window !== 'undefined') {
-  window.addEventListener('load', () => {
-    console.log('Aplicação carregada completamente');
-    
-    // Verificar se tem tela branca após 2 segundos
-    setTimeout(() => {
-      const hasVisibleContent = document.body.innerText?.trim().length > 0;
-      if (!hasVisibleContent) {
-        console.error('Possível problema de tela branca detectado - nenhum conteúdo visível');
-      } else {
-        console.log('Conteúdo visível encontrado na página');
-      }
-    }, 2000);
-  });
 }
 
 export default App;
