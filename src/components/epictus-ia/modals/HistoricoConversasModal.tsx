@@ -2,15 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogPortal,
-  DialogOverlay,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-  DialogDescription,
-  DialogClose
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
 import { 
   Search, 
   Plus, 
@@ -42,22 +34,29 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tooltip } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "@/components/ui/use-toast";
-import { 
-  Conversation, 
-  Message, 
-  getUserConversations, 
-  getConversationMessages,
-  createNewConversation,
-  toggleFavoriteConversation,
-  togglePrivateConversation,
-  deleteConversation
-} from "@/services/conversationHistoryService";
+import { toast } from "@/components/ui/use-toast"; // Corrigido para use-toast
+
+
+interface Conversa {
+  id: string;
+  titulo: string;
+  timestamp: Date;
+  favorito?: boolean;
+  privado?: boolean;
+  categoria?: string;
+  resumo?: string;
+  messages?: {
+    id: string;
+    content: string;
+    sender: "user" | "ai";
+    timestamp: Date;
+  }[];
+}
 
 interface HistoricoConversasModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onContinueConversation?: (conversationId: string, messages: Message[]) => void;
+  onContinueConversation?: (conversationId: string, messages: {id: string; content: string; sender: "user" | "ai"; timestamp: Date}[]) => void; // Added prop
 }
 
 const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
@@ -68,51 +67,153 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [showActionsMenu, setShowActionsMenu] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
-  const [conversasData, setConversasData] = useState<Conversation[]>([]);
+  const [conversasData, setConversasData] = useState<Conversa[]>([]);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [selectedTab, setSelectedTab] = useState("todas");
-  const [isLoading, setIsLoading] = useState(true); // Add loading state
-  const [error, setError] = useState<string | null>(null); // Add error state
   const searchInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(true); // Added loading state
+  const [conversationMessages, setConversationMessages] = useState<{id: string; content: string; sender: "user" | "ai"; timestamp: Date}[]>([]); // Added state for messages
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false); // Added loading state for messages
+
 
   // Função para rolar até o final das mensagens quando uma conversa é selecionada
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Gerar dados simulados ao montar o componente
   useEffect(() => {
-    const fetchConversations = async () => {
-      setIsLoading(true);
-      try {
-        const conversations = await getUserConversations();
-        setConversasData(conversations);
-      } catch (error) {
-        setError("Erro ao carregar conversas.");
-        console.error("Error fetching conversations:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    // Dados de exemplo para conversas
+    const hoje = new Date();
+    const ontem = new Date(hoje);
+    ontem.setDate(ontem.getDate() - 1);
 
-    fetchConversations();
+    const ultimos7Dias = new Date(hoje);
+    ultimos7Dias.setDate(ultimos7Dias.getDate() - 7);
+
+    const esteAno = new Date(hoje);
+    esteAno.setMonth(esteAno.getMonth() - 3);
+
+    const dadosSimulados: Conversa[] = [
+      {
+        id: "1",
+        titulo: "Otimização de algoritmos de busca",
+        timestamp: new Date(hoje.setHours(hoje.getHours() - 2)),
+        favorito: true,
+        privado: true,
+        categoria: "tecnologia",
+        resumo: "Discussão sobre diferentes métodos de otimização para algoritmos de busca, incluindo análise de complexidade e casos de uso.",
+        messages: [
+          { id: "m1", content: "Como posso otimizar um algoritmo de busca binária?", sender: "user", timestamp: new Date(hoje.setMinutes(hoje.getMinutes() - 30)) },
+          { id: "m2", content: "A busca binária já é um algoritmo otimizado com complexidade O(log n). Para otimizá-lo ainda mais, você pode considerar: 1) Usar arrays ordenados para aproveitar ao máximo o algoritmo; 2) Implementar uma versão iterativa em vez de recursiva para evitar overhead de pilha; 3) Em grandes conjuntos de dados, considerar estruturas de dados especializadas como árvores B ou tabelas hash.", sender: "ai", timestamp: new Date(hoje.setMinutes(hoje.getMinutes() - 29)) },
+          { id: "m3", content: "E quanto à busca em estruturas mais complexas como grafos?", sender: "user", timestamp: new Date(hoje.setMinutes(hoje.getMinutes() - 25)) }
+        ]
+      },
+      {
+        id: "2",
+        titulo: "Desenvolvimento de interfaces responsivas",
+        timestamp: new Date(ontem.setHours(ontem.getHours() - 5)),
+        categoria: "design",
+        resumo: "Exploração de técnicas modernas para criar interfaces responsivas que se adaptam a diferentes tamanhos de tela.",
+        messages: [
+          { id: "m4", content: "Quais são as melhores práticas para interfaces responsivas em 2024?", sender: "user", timestamp: new Date(ontem.setMinutes(ontem.getMinutes() - 45)) },
+          { id: "m5", content: "Em 2024, as melhores práticas para interfaces responsivas incluem: uso de design system consistente, abordagem mobile-first, CSS Grid e Flexbox para layouts flexíveis, componentes adaptáveis por contexto, e uso de media queries estratégicas.", sender: "ai", timestamp: new Date(ontem.setMinutes(ontem.getMinutes() - 43)) }
+        ]
+      },
+      {
+        id: "3",
+        titulo: "Estudo sobre inteligência artificial avançada",
+        timestamp: new Date(ontem),
+        favorito: true,
+        categoria: "ia",
+        resumo: "Análise profunda sobre modelos de IA modernos, arquiteturas de transformers e aplicações práticas.",
+        messages: [
+          { id: "m6", content: "Explique como funcionam os modelos de transformer em detalhes", sender: "user", timestamp: new Date(ontem.setMinutes(ontem.getMinutes() - 120)) },
+          { id: "m7", content: "Os transformers são arquiteturas de redes neurais que utilizam mecanismos de atenção para processar dados sequenciais como texto. Diferente de RNNs, eles processam toda a sequência simultaneamente, permitindo paralelização e captura de dependências de longo alcance.", sender: "ai", timestamp: new Date(ontem.setMinutes(ontem.getMinutes() - 118)) }
+        ]
+      },
+      {
+        id: "4",
+        titulo: "Estratégias para aprendizado de máquina",
+        timestamp: new Date(ultimos7Dias.setDate(ultimos7Dias.getDate() + 2)),
+        categoria: "ia",
+        resumo: "Discussão sobre métodos eficientes de treinamento e validação de modelos de machine learning.",
+        messages: [
+          { id: "m8", content: "Quais são as melhores estratégias para evitar overfitting?", sender: "user", timestamp: new Date(ultimos7Dias.setMinutes(ultimos7Dias.getMinutes() - 60)) },
+          { id: "m9", content: "Para evitar overfitting, você pode utilizar: regularização (L1, L2), dropout, data augmentation, early stopping, validação cruzada, e conjuntos de dados maiores.", sender: "ai", timestamp: new Date(ultimos7Dias.setMinutes(ultimos7Dias.getMinutes() - 58)) }
+        ]
+      },
+      {
+        id: "5",
+        titulo: "Técnicas de processamento de linguagem natural",
+        timestamp: new Date(ultimos7Dias),
+        privado: true,
+        categoria: "ia",
+        resumo: "Exploração de métodos avançados de NLP para análise semântica e geração de texto.",
+        messages: [
+          { id: "m10", content: "Quais são as técnicas modernas de NLP além dos transformers?", sender: "user", timestamp: new Date(ultimos7Dias.setMinutes(ultimos7Dias.getMinutes() - 75)) },
+          { id: "m11", content: "Além dos transformers, as técnicas modernas de NLP incluem: modelos híbridos com CNNs, sistemas de retrieval-augmented generation (RAG), aprendizado por reforço com feedback humano (RLHF), e arquiteturas específicas como Mamba (SSMs).", sender: "ai", timestamp: new Date(ultimos7Dias.setMinutes(ultimos7Dias.getMinutes() - 73)) }
+        ]
+      },
+      {
+        id: "6",
+        titulo: "Frameworks modernos para desenvolvimento web",
+        timestamp: new Date(esteAno),
+        categoria: "tecnologia",
+        resumo: "Comparação entre os principais frameworks web modernos e seus casos de uso ideais.",
+        messages: [
+          { id: "m12", content: "Qual a diferença entre React, Vue e Svelte?", sender: "user", timestamp: new Date(esteAno.setMinutes(esteAno.getMinutes() - 90)) },
+          { id: "m13", content: "React utiliza Virtual DOM e é baseado em componentes com JSX. Vue combina reatividade declarativa com templates. Svelte é um compilador que converte código em JavaScript otimizado sem runtime virtual DOM. React tem maior ecossistema, Vue é mais fácil de integrar, e Svelte oferece melhor performance com menos código.", sender: "ai", timestamp: new Date(esteAno.setMinutes(esteAno.getMinutes() - 88)) }
+        ]
+      },
+      {
+        id: "7",
+        titulo: "Composição e estruturas de dados avançadas",
+        timestamp: new Date(esteAno.setDate(esteAno.getDate() + 15)),
+        categoria: "tecnologia",
+        resumo: "Abordagem detalhada sobre estruturas de dados complexas e sua aplicação em algoritmos eficientes.",
+        messages: [
+          { id: "m14", content: "Quando devo usar uma árvore B+ em vez de uma árvore binária?", sender: "user", timestamp: new Date(esteAno.setMinutes(esteAno.getMinutes() - 110)) },
+          { id: "m15", content: "Árvores B+ são preferíveis quando você trabalha com sistemas que acessam dados em blocos, como bancos de dados e sistemas de arquivos. Elas maximizam o uso da memória cache e minimizam operações de I/O ao armazenar mais chaves por nó. Árvores binárias são mais simples para operações em memória com conjuntos de dados menores.", sender: "ai", timestamp: new Date(esteAno.setMinutes(esteAno.getMinutes() - 108)) }
+        ]
+      }
+    ];
+
+    setConversasData(dadosSimulados);
+    setIsLoading(false); // Set loading to false after data is fetched
   }, []);
 
   useEffect(() => {
     // Quando uma conversa é selecionada, role para o final das mensagens
     if (selectedConversation) {
       scrollToBottom();
+      loadConversationMessages(selectedConversation);
     }
+  }, [selectedConversation]);
 
-    // Quando o modal abre, foque no campo de pesquisa
-    if (open && searchInputRef.current) {
-      setTimeout(() => {
-        searchInputRef.current?.focus();
-      }, 300);
+  const loadConversationMessages = async (conversationId: string) => {
+    setIsLoadingMessages(true);
+    try {
+      // Simulate fetching messages from Supabase
+      const conversa = conversasData.find(c => c.id === conversationId);
+      if(conversa){
+        setConversationMessages(conversa.messages || []);
+      } else {
+        setConversationMessages([]);
+      }
+      
+    } catch (error) {
+      console.error("Erro ao carregar mensagens:", error);
+      // Handle error appropriately (e.g., display an error message)
+      setConversationMessages([]);
+    } finally {
+      setIsLoadingMessages(false);
     }
-  }, [selectedConversation, open]);
+  };
+
 
   // Função para agrupar conversas por período
   const agruparConversas = () => {
@@ -123,7 +224,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
     const ultimos7Dias = new Date(hoje);
     ultimos7Dias.setDate(ultimos7Dias.getDate() - 7);
 
-    const grupos: {[key: string]: Conversation[]} = {
+    const grupos: {[key: string]: Conversa[]} = {
       "HOJE": [],
       "ONTEM": [],
       "ÚLTIMOS 7 DIAS": [],
@@ -197,30 +298,13 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
     return timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   };
 
-  const selecionarConversa = async (id: string) => {
+  const selecionarConversa = (id: string) => {
     setSelectedConversation(id);
-    try {
-      const messages = await getConversationMessages(id);
-      //  You might want to update the conversaSelecionada state here to reflect the messages.
-    } catch (error) {
-      console.error("Error fetching messages:", error)
-      setError("Erro ao carregar mensagens.");
-    }
   };
 
-  const criarNovoChat = async () => {
-    try {
-      const newConversation = await createNewConversation();
-      if (newConversation) {
-        console.log("Nova conversa criada:", newConversation);
-        onOpenChange(false);
-      } else {
-        toast({ title: "Erro ao criar nova conversa" });
-      }
-    } catch (error) {
-      console.error("Error creating new conversation:", error);
-      toast({ title: "Erro ao criar nova conversa", description: (error as Error).message });
-    }
+  const criarNovoChat = () => {
+    console.log("Criando novo chat privado");
+    onOpenChange(false); // Fechar o modal após criar novo chat
   };
 
   const toggleActionsMenu = () => {
@@ -236,66 +320,42 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
     setShowActionsMenu(false);
   };
 
-  const toggleFavorito = async (id: string, event: React.MouseEvent) => {
+  const handleToggleFavorito = (id: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    try {
-      await toggleFavoriteConversation(id);
-      setConversasData(prevState => 
-        prevState.map(conversa => 
-          conversa.id === id 
-            ? { ...conversa, favorito: !conversa.favorito } 
-            : conversa
-        )
-      );
-    } catch (error) {
-      console.error("Error toggling favorite:", error);
-      toast({ title: "Erro ao alternar favoritos" });
-    }
+    setConversasData(prevState => 
+      prevState.map(conversa => 
+        conversa.id === id 
+          ? { ...conversa, favorito: !conversa.favorito } 
+          : conversa
+      )
+    );
   };
 
-  const togglePrivado = async (id: string, event: React.MouseEvent) => {
+  const handleTogglePrivado = (id: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    try {
-      await togglePrivateConversation(id);
-      setConversasData(prevState => 
-        prevState.map(conversa => 
-          conversa.id === id 
-            ? { ...conversa, privado: !conversa.privado } 
-            : conversa
-        )
-      );
-    } catch (error) {
-      console.error("Error toggling private:", error);
-      toast({ title: "Erro ao alternar privacidade" });
-    }
+    setConversasData(prevState => 
+      prevState.map(conversa => 
+        conversa.id === id 
+          ? { ...conversa, privado: !conversa.privado } 
+          : conversa
+      )
+    );
   };
 
-  const excluirConversa = async (id: string, event: React.MouseEvent) => {
+  const handleExcluirConversa = (id: string, event: React.MouseEvent) => {
     event.stopPropagation();
     if (window.confirm('Tem certeza que deseja excluir esta conversa?')) {
-      try {
-        await deleteConversation(id);
-        setConversasData(prevState => prevState.filter(conversa => conversa.id !== id));
-        if (selectedConversation === id) {
-          setSelectedConversation(null);
-        }
-      } catch (error) {
-        console.error("Error deleting conversation:", error);
-        toast({ title: "Erro ao excluir conversa" });
+      setConversasData(prevState => prevState.filter(conversa => conversa.id !== id));
+      if (selectedConversation === id) {
+        setSelectedConversation(null);
       }
     }
   };
 
   const continuarConversa = () => {
     if (selectedConversation && onContinueConversation) {
-      // Fetch messages again to ensure up-to-date data
-      getConversationMessages(selectedConversation).then(messages => {
-        onContinueConversation(selectedConversation, messages)
-        onOpenChange(false);
-      }).catch(err => {
-        console.error("Error fetching messages for continue conversation", err)
-        toast({ title: "Erro ao continuar conversa" })
-      })
+      onContinueConversation(selectedConversation, conversationMessages);
+      onOpenChange(false);
     }
   };
 
@@ -308,18 +368,13 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogPortal>
-        <DialogOverlay />
-        <DialogContent 
-          className={cn(
-            "fixed left-[50%] top-[50%] z-50 grid w-full max-w-5xl translate-x-[-50%] translate-y-[-50%] p-0 overflow-hidden border-none sm:rounded-xl text-white",
-          )}
-          style={{ 
-            width: "85vw", 
-            height: "85vh",
-            background: "linear-gradient(145deg, #0a0f1a 0%, #131d2e 100%)",
-            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)"
-          }}>
+      <DialogContent className="max-w-5xl p-0 overflow-hidden border-none sm:rounded-xl text-white"
+        style={{ 
+          width: "85vw", 
+          height: "85vh",
+          background: "linear-gradient(145deg, #0a0f1a 0%, #131d2e 100%)",
+          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)"
+        }}>
         <div className="flex h-full">
           {/* Painel lateral esquerdo com histórico */}
           <div className="w-1/3 border-r border-[#1e2a3e]/80 flex flex-col h-full bg-[#0b121f]/50 backdrop-blur-sm">
@@ -509,9 +564,11 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                     <Search className="h-10 w-10 text-gray-500 mb-3 opacity-50" />
                     <h3 className="text-lg font-medium text-gray-400">Nenhum resultado encontrado</h3>
                     <p className="text-sm text-gray-500 mt-1 max-w-xs">
-                      Tente usar termos diferentes ou remover os filtros aplicados.
+                      {conversasData.length === 0 
+                        ? "Você ainda não tem conversas. Inicie um novo chat!"
+                        : "Tente usar termos diferentes ou remover os filtros aplicados."}
                     </p>
-                    {(searchTerm || categoryFilter || selectedTab !== "todas") && (
+                    {(searchTerm || categoryFilter || selectedTab !== "todas") && conversasData.length > 0 && (
                       <Button
                         variant="outline"
                         size="sm"
@@ -574,7 +631,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                                         </span>
                                       </div>
                                       <span className="text-xs text-gray-400 mt-0.5 truncate max-w-[200px]">
-                                        {conversa.resumo?.substring(0, 45)}...
+                                        {conversa.resumo ? `${conversa.resumo.substring(0, 45)}...` : "Sem resumo disponível"}
                                       </span>
                                     </div>
                                   </div>
@@ -583,8 +640,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                                       {conversa.favorito && <Star className="h-3 w-3 mr-1 text-[#FF6B00]" />}
                                       <span className="text-xs text-gray-400 whitespace-nowrap">
                                         {formatarTimestamp(conversa.timestamp)}
-                                      </span>
-                                    </div>
+                                      </span></div>
                                     {conversa.categoria && (
                                       <Badge variant="outline" className="mt-1 px-1.5 py-0 h-4 text-[10px] bg-[#131d2e]/50 border-[#1e2a3e]/70 text-gray-300">
                                         {conversa.categoria}
@@ -599,7 +655,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                                     variant="ghost"
                                     size="icon"
                                     className="h-6 w-6 bg-[#131d2e]/70 hover:bg-[#1e2a3e] rounded-full"
-                                    onClick={(e) => toggleFavorito(conversa.id, e)}
+                                    onClick={(e) => handleToggleFavorito(conversa.id, e)}
                                     title={conversa.favorito ? "Remover dos favoritos" : "Adicionar aos favoritos"}
                                   >
                                     <Star className={`h-3 w-3 ${conversa.favorito ? 'text-[#FF6B00] fill-[#FF6B00]' : 'text-gray-400'}`} />
@@ -608,7 +664,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                                     variant="ghost"
                                     size="icon"
                                     className="h-6 w-6 bg-[#131d2e]/70 hover:bg-[#1e2a3e] rounded-full"
-                                    onClick={(e) => togglePrivado(conversa.id, e)}
+                                    onClick={(e) => handleTogglePrivado(conversa.id, e)}
                                     title={conversa.privado ? "Tornar público" : "Tornar privado"}
                                   >
                                     <Lock className={`h-3 w-3 ${conversa.privado ? 'text-[#4A0D9F]' : 'text-gray-400'}`} />
@@ -617,7 +673,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                                     variant="ghost"
                                     size="icon"
                                     className="h-6 w-6 bg-[#131d2e]/70 hover:bg-[#1e2a3e] hover:text-red-500 rounded-full"
-                                    onClick={(e) => excluirConversa(conversa.id, e)}
+                                    onClick={(e) => handleExcluirConversa(conversa.id, e)}
                                     title="Excluir conversa"
                                   >
                                     <Trash2 className="h-3 w-3 text-gray-400" />
@@ -650,7 +706,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                                     <div>
                                       <h4 className="text-xs font-medium text-gray-200 truncate max-w-[100px]">{conversa.titulo}</h4>
                                       <p className="text-[10px] text-gray-400 truncate max-w-[100px]">
-                                        {conversa.resumo?.substring(0, 30)}...
+                                        {conversa.resumo ? `${conversa.resumo.substring(0, 30)}...` : "Sem resumo disponível"}
                                       </p>
                                     </div>
                                   </div>
@@ -691,7 +747,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                         )}
                       </div>
                     );
-                  })}
+                  })
                 )}
               </div>
             </ScrollArea>
@@ -771,7 +827,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 rounded-full hover:bg-[#1e2a3e] text-gray-400 hover:text-white"
-                      onClick={(e) => toggleFavorito(conversaSelecionada.id, e)}
+                      onClick={(e) => handleToggleFavorito(conversaSelecionada.id, e)}
                       title={conversaSelecionada.favorito ? "Remover dos favoritos" : "Adicionar aos favoritos"}
                     >
                       <Star className={`h-4 w-4 ${conversaSelecionada.favorito ? 'text-[#FF6B00] fill-[#FF6B00]' : ''}`} />
@@ -796,7 +852,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 rounded-full hover:bg-[#1e2a3e] text-gray-400 hover:text-red-500"
-                      onClick={(e) => excluirConversa(conversaSelecionada.id, e)}
+                      onClick={(e) => handleExcluirConversa(conversaSelecionada.id, e)}
                       title="Excluir conversa"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -816,72 +872,91 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                       </div>
                     )}
 
-                    <div className="space-y-4">
-                      {conversaSelecionada.messages?.map((msg, index) => (
-                        <motion.div
-                          key={msg.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3, delay: index * 0.1 }}
-                          className={`flex items-start gap-3 ${msg.sender === "user" ? "justify-end" : ""}`}
-                        >
-                          {msg.sender === "ai" && (
-                            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#4A0D9F] flex items-center justify-center flex-shrink-0 mt-1">
-                              <MessageSquare className="h-4 w-4 text-white" />
-                            </div>
-                          )}
-
-                          <div 
-                            className={`rounded-lg p-3 max-w-[80%] ${
-                              msg.sender === "user" 
-                                ? "bg-[#1e2a3e] text-gray-200 rounded-tr-none" 
-                                : "bg-[#131d2e] text-gray-200 rounded-tl-none"
-                            } shadow-sm group relative`}
+                    {isLoadingMessages ? (
+                      <div className="flex items-center justify-center py-10">
+                        <Loader2 className="h-6 w-6 text-[#4A0D9F] animate-spin mr-2" />
+                        <p className="text-sm text-gray-400">Carregando mensagens...</p>
+                      </div>
+                    ) : conversationMessages.length === 0 ? (
+                      <div className="text-center py-10">
+                        <p className="text-gray-400">Nenhuma mensagem encontrada para esta conversa.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {conversationMessages.map((msg, index) => (
+                          <motion.div
+                            key={msg.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: index * 0.1 }}
+                            className={`flex items-start gap-3 ${msg.sender === "user" ? "justify-end" : ""}`}
                           >
-                            <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                            <div className="mt-1 flex justify-between items-center">
-                              <span className="text-xs text-gray-500">{formatarHoraMensagem(msg.timestamp)}</span>
+                            {msg.sender === "ai" && (
+                              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#4A0D9F] flex items-center justify-center flex-shrink-0 mt-1">
+                                <MessageSquare className="h-4 w-4 text-white" />
+                              </div>
+                            )}
 
-                              <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-5 w-5 rounded-full hover:bg-[#1e2a3e] text-gray-500 hover:text-white"
-                                  title="Copiar mensagem"
-                                >
-                                  <Copy className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-5 w-5 rounded-full hover:bg-[#1e2a3e] text-gray-500 hover:text-white"
-                                  title="Salvar mensagem"
-                                >
-                                  <Bookmark className="h-3 w-3" />
-                                </Button>
-                                {msg.sender === "ai" && (
+                            <div 
+                              className={`rounded-lg p-3 max-w-[80%] ${
+                                msg.sender === "user" 
+                                  ? "bg-[#1e2a3e] text-gray-200 rounded-tr-none" 
+                                  : "bg-[#131d2e] text-gray-200 rounded-tl-none"
+                              } shadow-sm group relative`}
+                            >
+                              <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                              <div className="mt-1 flex justify-between items-center">
+                                <span className="text-xs text-gray-500">{formatarHoraMensagem(msg.timestamp)}</span>
+
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                                   <Button
                                     variant="ghost"
                                     size="icon"
                                     className="h-5 w-5 rounded-full hover:bg-[#1e2a3e] text-gray-500 hover:text-white"
-                                    title="Explorar mais"
+                                    title="Copiar mensagem"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(msg.content);
+                                      toast({
+                                        title: "Copiado!",
+                                        description: "Mensagem copiada para a área de transferência.",
+                                        duration: 2000
+                                      });
+                                    }}
                                   >
-                                    <ExternalLink className="h-3 w-3" />
+                                    <Copy className="h-3 w-3" />
                                   </Button>
-                                )}
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-5 w-5 rounded-full hover:bg-[#1e2a3e] text-gray-500 hover:text-white"
+                                    title="Salvar mensagem"
+                                  >
+                                    <Bookmark className="h-3 w-3" />
+                                  </Button>
+                                  {msg.sender === "ai" && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-5 w-5 rounded-full hover:bg-[#1e2a3e] text-gray-500 hover:text-white"
+                                      title="Explorar mais"
+                                    >
+                                      <ExternalLink className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
 
-                          {msg.sender === "user" && (
-                            <div className="h-8 w-8 rounded-full bg-[#FF6B00] flex items-center justify-center flex-shrink-0 mt-1">
-                              <span className="text-white text-xs font-bold">JF</span>
-                            </div>
-                          )}
-                        </motion.div>
-                      ))}
-                      <div ref={messagesEndRef} />
-                    </div>
+                            {msg.sender === "user" && (
+                              <div className="h-8 w-8 rounded-full bg-[#FF6B00] flex items-center justify-center flex-shrink-0 mt-1">
+                                <span className="text-white text-xs font-bold">JF</span>
+                              </div>
+                            )}
+                          </motion.div>
+                        ))}
+                        <div ref={messagesEndRef} />
+                      </div>
+                    )}
                   </ScrollArea>
                 </div>
 
@@ -890,6 +965,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                     <Button 
                       className="flex-1 bg-gradient-to-r from-[#0D23A0] to-[#4A0D9F] hover:from-[#1230CC] hover:to-[#5D15BE] py-2 rounded-md border-none text-white font-medium shadow-md hover:shadow-lg transition-all duration-200"
                       onClick={continuarConversa}
+                      disabled={isLoadingMessages}
                     >
                       Continuar Conversa
                       <ArrowUpRight className="h-4 w-4 ml-1.5" />
@@ -944,8 +1020,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
             )}
           </div>
         </div>
-        </DialogContent>
-      </DialogPortal>
+      </DialogContent>
     </Dialog>
   );
 };

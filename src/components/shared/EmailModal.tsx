@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -45,7 +46,7 @@ const EmailModal: React.FC<EmailModalProps> = ({
         subject: emailContent.subject || "Material compartilhado da Ponto.School",
         html: emailContent.html || "Conteúdo do e-mail"
       };
-
+      
       await sendEmail(emailData);
       setShowSuccess(true);
     } catch (error) {
@@ -87,14 +88,14 @@ const EmailModal: React.FC<EmailModalProps> = ({
               </Button>
             </div>
           </DialogHeader>
-
+          
           <div className="py-4">
             <div className="bg-orange-50/50 dark:bg-orange-900/20 p-3 rounded-lg border border-orange-100 dark:border-orange-800/30 mb-4">
               <p className="text-sm text-gray-700 dark:text-gray-300">
                 Insira o endereço de e-mail do destinatário para compartilhar o conteúdo.
               </p>
             </div>
-
+            
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 E-mail do destinatário:
@@ -109,7 +110,7 @@ const EmailModal: React.FC<EmailModalProps> = ({
               />
             </div>
           </div>
-
+          
           <DialogFooter className="flex justify-end gap-2 sm:justify-end">
             <Button
               type="button"
@@ -142,13 +143,13 @@ const EmailModal: React.FC<EmailModalProps> = ({
             {/* Background elements */}
             <div className="absolute -top-20 -right-20 w-40 h-40 bg-orange-400/10 rounded-full blur-2xl"></div>
             <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-orange-400/10 rounded-full blur-2xl"></div>
-
+            
             <div className="p-6 relative z-10">
               {/* Success Icon */}
               <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-green-400 to-green-500 flex items-center justify-center text-white shadow-lg shadow-green-500/20">
                 <Check className="w-10 h-10" strokeWidth={3} />
               </div>
-
+              
               {/* Content */}
               <div className="text-center space-y-4">
                 <h3 className="text-xl font-bold text-gray-800 dark:text-white">E-mail Enviado com Sucesso!</h3>
@@ -156,7 +157,7 @@ const EmailModal: React.FC<EmailModalProps> = ({
                   O conteúdo foi enviado para <span className="font-medium text-gray-800 dark:text-white">{email}</span> com sucesso.
                 </p>
               </div>
-
+              
               {/* Footer */}
               <div className="mt-8 flex justify-center">
                 <Button 

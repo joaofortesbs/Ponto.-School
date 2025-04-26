@@ -1,271 +1,366 @@
 
-import { supabase } from '@/lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '@/lib/supabase';
 
-export interface Message {
+export interface Conversa {
   id: string;
-  content: string;
-  sender: 'user' | 'ai';
-  timestamp: Date;
-}
-
-export interface Conversation {
-  id: string;
-  title: string;
+  titulo: string;
   timestamp: Date;
   favorito?: boolean;
   privado?: boolean;
   categoria?: string;
   resumo?: string;
   user_id?: string;
-  messages?: Message[];
+  messages?: {
+    id: string;
+    content: string;
+    sender: "user" | "ai";
+    timestamp: Date;
+  }[];
 }
 
-// Recuperar conversas do usuário logado
-export const getUserConversations = async (): Promise<Conversation[]> => {
-  try {
-    const { data: user } = await supabase.auth.getUser();
-    
-    if (!user || !user.user) {
-      console.error('Usuário não autenticado');
-      return [];
-    }
+export interface Message {
+  id: string;
+  content: string;
+  sender: "user" | "ai";
+  timestamp: Date;
+  conversation_id: string;
+  user_id?: string;
+}
 
-    const { data, error } = await supabase
-      .from('conversations')
-      .select('*')
-      .eq('user_id', user.user.id)
-      .order('timestamp', { ascending: false });
-
-    if (error) {
-      console.error('Erro ao buscar conversas:', error);
-      return [];
-    }
-
-    return data.map(conversation => ({
-      ...conversation,
-      timestamp: new Date(conversation.timestamp),
-    }));
-  } catch (error) {
-    console.error('Erro ao buscar conversas:', error);
-    return [];
-  }
-};
-
-// Recuperar mensagens de uma conversa específica
-export const getConversationMessages = async (conversationId: string): Promise<Message[]> => {
+// Função para criar uma nova conversa
+export const createNewConversation = async (userId: string, titulo: string = "Nova Conversa"): Promise<string | null> => {
   try {
     const { data, error } = await supabase
-      .from('messages')
-      .select('*')
-      .eq('conversation_id', conversationId)
-      .order('timestamp', { ascending: true });
-
-    if (error) {
-      console.error('Erro ao buscar mensagens:', error);
-      return [];
-    }
-
-    return data.map(message => ({
-      ...message,
-      timestamp: new Date(message.timestamp),
-    }));
-  } catch (error) {
-    console.error('Erro ao buscar mensagens:', error);
-    return [];
-  }
-};
-
-// Criar uma nova conversa
-export const createNewConversation = async (title: string = "Nova Conversa"): Promise<string | null> => {
-  try {
-    const { data: user } = await supabase.auth.getUser();
-    
-    if (!user || !user.user) {
-      console.error('Usuário não autenticado');
-      return null;
-    }
-
-    const newConversation = {
-      id: uuidv4(),
-      user_id: user.user.id,
-      title,
-      timestamp: new Date().toISOString(),
-      privado: false,
-      favorito: false,
-      categoria: 'geral'
-    };
-
-    const { data, error } = await supabase
-      .from('conversations')
-      .insert([newConversation])
+      .from('conversas')
+      .insert([
+        { 
+          id: uuidv4(),
+          user_id: userId, 
+          titulo, 
+          criado_at: new Date().toISOString(),
+          atualizado_at: new Date().toISOString(),
+          privado: false,
+          favorito: false
+        }
+      ])
       .select();
 
     if (error) {
-      console.error('Erro ao criar conversa:', error);
+      console.error("Erro ao criar nova conversa:", error);
       return null;
     }
 
-    return data[0].id;
+    return data?.[0]?.id || null;
   } catch (error) {
-    console.error('Erro ao criar conversa:', error);
+    console.error("Erro ao criar conversa:", error);
     return null;
   }
 };
 
-// Adicionar mensagem a uma conversa
-export const addMessageToConversation = async (
-  conversationId: string,
-  content: string,
-  sender: 'user' | 'ai'
-): Promise<boolean> => {
+// Função para atualizar o título de uma conversa
+export const updateConversationTitle = async (conversationId: string, titulo: string): Promise<boolean> => {
   try {
-    const { data: user } = await supabase.auth.getUser();
-    
-    if (!user || !user.user) {
-      console.error('Usuário não autenticado');
+    const { error } = await supabase
+      .from('conversas')
+      .update({ 
+        titulo, 
+        atualizado_at: new Date().toISOString() 
+      })
+      .eq('id', conversationId);
+
+    if (error) {
+      console.error("Erro ao atualizar título da conversa:", error);
       return false;
     }
 
-    const newMessage = {
-      id: uuidv4(),
-      conversation_id: conversationId,
-      user_id: user.user.id,
-      content,
-      sender,
-      timestamp: new Date().toISOString(),
+    return true;
+  } catch (error) {
+    console.error("Erro ao atualizar título:", error);
+    return false;
+  }
+};
+
+// Função para atualizar dados da conversa (favorito, privado, etc)
+export const updateConversationData = async (conversationId: string, data: Partial<Conversa>): Promise<boolean> => {
+  try {
+    const updateData = {
+      ...data,
+      atualizado_at: new Date().toISOString()
     };
+    
+    // Remover campos que não devem ser atualizados diretamente
+    delete updateData.id;
+    delete updateData.user_id;
+    delete updateData.messages;
+    
+    const { error } = await supabase
+      .from('conversas')
+      .update(updateData)
+      .eq('id', conversationId);
 
-    const { error: messageError } = await supabase
-      .from('messages')
-      .insert([newMessage]);
-
-    if (messageError) {
-      console.error('Erro ao adicionar mensagem:', messageError);
+    if (error) {
+      console.error("Erro ao atualizar dados da conversa:", error);
       return false;
     }
 
-    // Atualizar timestamp da conversa
+    return true;
+  } catch (error) {
+    console.error("Erro ao atualizar dados:", error);
+    return false;
+  }
+};
+
+// Função para salvar uma mensagem na conversa
+export const saveMessage = async (conversationId: string, userId: string, content: string, sender: "user" | "ai"): Promise<string | null> => {
+  try {
+    // Primeiro atualiza o timestamp da conversa
     const { error: updateError } = await supabase
-      .from('conversations')
-      .update({ timestamp: new Date().toISOString() })
+      .from('conversas')
+      .update({ atualizado_at: new Date().toISOString() })
       .eq('id', conversationId);
 
     if (updateError) {
-      console.error('Erro ao atualizar timestamp da conversa:', updateError);
+      console.error("Erro ao atualizar timestamp da conversa:", updateError);
     }
 
-    return true;
-  } catch (error) {
-    console.error('Erro ao adicionar mensagem:', error);
-    return false;
-  }
-};
-
-// Atualizar título da conversa
-export const updateConversationTitle = async (conversationId: string, title: string): Promise<boolean> => {
-  try {
+    // Depois salva a mensagem
+    const messageId = uuidv4();
     const { error } = await supabase
-      .from('conversations')
-      .update({ title })
-      .eq('id', conversationId);
+      .from('mensagens')
+      .insert([
+        { 
+          id: messageId,
+          conversa_id: conversationId,
+          user_id: userId,
+          content,
+          is_user: sender === 'user',
+          criado_at: new Date().toISOString(),
+          sender
+        }
+      ]);
 
     if (error) {
-      console.error('Erro ao atualizar título da conversa:', error);
-      return false;
+      console.error("Erro ao salvar mensagem:", error);
+      return null;
     }
 
-    return true;
+    return messageId;
   } catch (error) {
-    console.error('Erro ao atualizar título da conversa:', error);
-    return false;
+    console.error("Erro ao salvar mensagem:", error);
+    return null;
   }
 };
 
-// Gerar resumo da conversa com base nas primeiras mensagens
-export const generateConversationSummary = (messages: Message[]): string => {
-  if (messages.length === 0) return "Conversa vazia";
-  
-  const firstUserMessage = messages.find(m => m.sender === 'user');
-  if (firstUserMessage) {
-    // Limita o resumo às primeiras 100 caracteres da mensagem do usuário
-    const summary = firstUserMessage.content.substring(0, 100);
-    return summary.length < firstUserMessage.content.length 
-      ? `${summary}...` 
-      : summary;
-  }
-  
-  return "Nova conversa";
-};
-
-// Marcar/desmarcar conversa como favorita
-export const toggleFavoriteConversation = async (conversationId: string, isFavorite: boolean): Promise<boolean> => {
+// Função para buscar todas as conversas do usuário
+export const getUserConversations = async (userId: string): Promise<Conversa[]> => {
   try {
-    const { error } = await supabase
-      .from('conversations')
-      .update({ favorito: isFavorite })
-      .eq('id', conversationId);
+    const { data, error } = await supabase
+      .from('conversas')
+      .select('*')
+      .eq('user_id', userId)
+      .order('atualizado_at', { ascending: false });
 
     if (error) {
-      console.error('Erro ao atualizar status de favorito:', error);
-      return false;
+      console.error("Erro ao buscar conversas do usuário:", error);
+      return [];
     }
 
-    return true;
+    // Converter timestamps para objetos Date
+    return data.map(conv => ({
+      id: conv.id,
+      titulo: conv.titulo,
+      timestamp: new Date(conv.atualizado_at),
+      favorito: conv.favorito,
+      privado: conv.privado,
+      categoria: conv.categoria,
+      resumo: conv.resumo,
+      user_id: conv.user_id
+    }));
   } catch (error) {
-    console.error('Erro ao atualizar status de favorito:', error);
-    return false;
+    console.error("Erro ao buscar conversas:", error);
+    return [];
   }
 };
 
-// Marcar/desmarcar conversa como privada
-export const togglePrivateConversation = async (conversationId: string, isPrivate: boolean): Promise<boolean> => {
+// Função para buscar mensagens de uma conversa
+export const getConversationMessages = async (conversationId: string): Promise<Message[]> => {
   try {
-    const { error } = await supabase
-      .from('conversations')
-      .update({ privado: isPrivate })
-      .eq('id', conversationId);
+    const { data, error } = await supabase
+      .from('mensagens')
+      .select('*')
+      .eq('conversa_id', conversationId)
+      .order('criado_at', { ascending: true });
 
     if (error) {
-      console.error('Erro ao atualizar status de privacidade:', error);
-      return false;
+      console.error("Erro ao buscar mensagens da conversa:", error);
+      return [];
     }
 
-    return true;
+    // Converter dados para o formato esperado
+    return data.map(msg => ({
+      id: msg.id,
+      content: msg.content,
+      sender: msg.is_user ? 'user' : 'ai',
+      timestamp: new Date(msg.criado_at),
+      conversation_id: msg.conversa_id,
+      user_id: msg.user_id
+    }));
   } catch (error) {
-    console.error('Erro ao atualizar status de privacidade:', error);
-    return false;
+    console.error("Erro ao buscar mensagens:", error);
+    return [];
   }
 };
 
-// Excluir conversa e suas mensagens
+// Função para excluir uma conversa e suas mensagens
 export const deleteConversation = async (conversationId: string): Promise<boolean> => {
   try {
-    // Primeiro exclui todas as mensagens da conversa
-    const { error: messagesError } = await supabase
-      .from('messages')
+    // Primeiro exclui as mensagens relacionadas
+    const { error: msgError } = await supabase
+      .from('mensagens')
       .delete()
-      .eq('conversation_id', conversationId);
+      .eq('conversa_id', conversationId);
 
-    if (messagesError) {
-      console.error('Erro ao excluir mensagens da conversa:', messagesError);
+    if (msgError) {
+      console.error("Erro ao excluir mensagens da conversa:", msgError);
       return false;
     }
 
     // Depois exclui a conversa
-    const { error: conversationError } = await supabase
-      .from('conversations')
+    const { error } = await supabase
+      .from('conversas')
       .delete()
       .eq('id', conversationId);
 
-    if (conversationError) {
-      console.error('Erro ao excluir conversa:', conversationError);
+    if (error) {
+      console.error("Erro ao excluir conversa:", error);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Erro ao excluir conversa:', error);
+    console.error("Erro ao excluir conversa:", error);
+    return false;
+  }
+};
+
+// Função para gerar um resumo automático com base nas mensagens
+export const generateConversationSummary = async (conversationId: string): Promise<string | null> => {
+  try {
+    // Buscar as primeiras mensagens para criar um resumo
+    const { data, error } = await supabase
+      .from('mensagens')
+      .select('content')
+      .eq('conversa_id', conversationId)
+      .order('criado_at', { ascending: true })
+      .limit(3);
+
+    if (error) {
+      console.error("Erro ao buscar mensagens para resumo:", error);
+      return null;
+    }
+
+    if (!data || data.length === 0) {
+      return null;
+    }
+
+    // Criar um resumo simples
+    const firstMessage = data[0].content;
+    // Limitar a um número razoável de caracteres
+    const summary = firstMessage.length > 120 
+      ? `${firstMessage.substring(0, 120)}...` 
+      : firstMessage;
+
+    // Atualizar o resumo na conversa
+    const { error: updateError } = await supabase
+      .from('conversas')
+      .update({ resumo: summary })
+      .eq('id', conversationId);
+
+    if (updateError) {
+      console.error("Erro ao atualizar resumo da conversa:", updateError);
+    }
+
+    return summary;
+  } catch (error) {
+    console.error("Erro ao gerar resumo:", error);
+    return null;
+  }
+};
+
+// Função para buscar conversas por termo de pesquisa
+export const searchConversations = async (userId: string, searchTerm: string): Promise<Conversa[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('conversas')
+      .select('*')
+      .eq('user_id', userId)
+      .ilike('titulo', `%${searchTerm}%`)
+      .order('atualizado_at', { ascending: false });
+
+    if (error) {
+      console.error("Erro ao pesquisar conversas:", error);
+      return [];
+    }
+
+    return data.map(conv => ({
+      id: conv.id,
+      titulo: conv.titulo,
+      timestamp: new Date(conv.atualizado_at),
+      favorito: conv.favorito,
+      privado: conv.privado,
+      categoria: conv.categoria,
+      resumo: conv.resumo,
+      user_id: conv.user_id
+    }));
+  } catch (error) {
+    console.error("Erro ao pesquisar conversas:", error);
+    return [];
+  }
+};
+
+// Função para configurar favorito
+export const toggleFavorite = async (conversationId: string, isFavorite: boolean): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('conversas')
+      .update({ 
+        favorito: isFavorite,
+        atualizado_at: new Date().toISOString()
+      })
+      .eq('id', conversationId);
+
+    if (error) {
+      console.error("Erro ao atualizar favorito:", error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Erro ao configurar favorito:", error);
+    return false;
+  }
+};
+
+// Função para configurar privacidade
+export const togglePrivate = async (conversationId: string, isPrivate: boolean): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('conversas')
+      .update({ 
+        privado: isPrivate,
+        atualizado_at: new Date().toISOString()
+      })
+      .eq('id', conversationId);
+
+    if (error) {
+      console.error("Erro ao atualizar privacidade:", error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Erro ao configurar privacidade:", error);
     return false;
   }
 };
