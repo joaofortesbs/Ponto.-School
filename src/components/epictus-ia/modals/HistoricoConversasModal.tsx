@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
-  Dialog as DialogRoot,
+  Dialog,
   DialogContent,
   DialogOverlay,
   DialogPortal,
@@ -302,7 +302,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
   const temResultados = Object.values(grupos).some(grupo => grupo.length > 0);
 
   return (
-    <DialogRoot open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl p-0 overflow-hidden border-none sm:rounded-xl text-white"
         style={{ 
           width: "85vw", 
@@ -935,7 +935,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
           </div>
         </div>
       </DialogContent>
-    </DialogRoot>
+    </Dialog>
   );
 };
 
