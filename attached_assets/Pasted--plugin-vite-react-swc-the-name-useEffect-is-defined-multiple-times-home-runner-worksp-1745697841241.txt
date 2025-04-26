@@ -1,0 +1,57 @@
+[plugin:vite:react-swc] × the name `useEffect` is defined multiple times
+    ╭─[/home/runner/workspace/src/components/epictus-ia/EpictusBetaMode.tsx:1:1]
+  1 │ import React, { useState, useRef, useEffect } from "react";
+    ·                                   ────┬────
+    ·                                       ╰── previous definition of `useEffect` here
+  2 │ import { 
+  3 │   Bot, 
+  4 │   User, 
+  5 │   Trash2, 
+  6 │   Loader2,
+  7 │   Star,
+  8 │   Search,
+  9 │   FileText,
+ 10 │   PenLine,
+ 11 │   Share, 
+ 12 │   Copy
+ 13 │ } from "lucide-react";
+ 14 │ import { motion, AnimatePresence } from "framer-motion";
+ 15 │ import EpictusMessageBox from "./message-box/EpictusMessageBox";
+ 16 │ import PromptSuggestionsModal from "./message-box/PromptSuggestionsModal";
+ 17 │ import ExportShareModal from "./export-modal/ExportShareModal";
+ 18 │ import TurboHeader from "./turbo-header/TurboHeader";
+ 19 │ import { Button } from "@/components/ui/button";
+ 20 │ import { Textarea } from "@/components/ui/textarea";
+ 21 │ import { Badge } from "@/components/ui/badge";
+ 22 │ import { ScrollArea } from "@/components/ui/scroll-area";
+ 23 │ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+ 24 │ import { Alert, AlertDescription } from "@/components/ui/alert";
+ 25 │ import { v4 as uuidv4 } from 'uuid';
+ 26 │ import { generateAIResponse, addMessageToHistory, createMessage } from "@/services/epictusIAService";
+ 27 │ import { toast } from "@/components/ui/use-toast";
+ 28 │ 
+ 29 │ interface Message {
+ 30 │   id: string;
+ 31 │   sender: "user" | "ia";
+ 32 │   content: string;
+ 33 │   timestamp: Date;
+ 34 │   isEdited?: boolean;
+ 35 │   feedback?: 'positive' | 'negative';
+ 36 │   needsImprovement?: boolean; 
+ 37 │ }
+ 38 │ 
+ 39 │ import HeaderIcons from "./modoepictusiabeta/header/icons/HeaderIcons";
+ 40 │ import HistoricoConversasModal from "./modals/HistoricoConversasModal";
+ 41 │ import { supabase } from "@/lib/supabase";
+ 42 │ import { useEffect } from "react";
+    ·          ────┬────
+    ·              ╰── `useEffect` redefined here
+ 43 │ 
+ 44 │ interface Conversation {
+ 45 │   id: string;
+    ╰────
+/home/runner/workspace/src/components/epictus-ia/EpictusBetaMode.tsx:1:1
+1  |  import React, { useState, useRef, useEffect } from "react";
+   |   ^
+2  |  import { 
+3  |    Bot,
