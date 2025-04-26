@@ -276,8 +276,6 @@ const EpictusTurboMode: React.FC = () => {
     }, 1000);
   };
 
-  const isDark = theme === "dark";
-
   return (
     <div className="w-full flex flex-col items-center">
       <div className="w-full p-4">
