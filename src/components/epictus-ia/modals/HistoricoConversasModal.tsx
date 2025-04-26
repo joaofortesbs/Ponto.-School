@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import {
   Dialog,
@@ -34,6 +33,9 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tooltip } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader } from "@/components/ui/loader"; // Import the Loader component
+import { toast } from "@/components/ui/toast"; // Import the toast function
+
 
 interface Conversa {
   id: string;
@@ -54,11 +56,13 @@ interface Conversa {
 interface HistoricoConversasModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onContinueConversation?: (conversationId: string, messages: {id: string; content: string; sender: "user" | "ai"; timestamp: Date}[]) => void; // Added prop
 }
 
 const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
   open,
   onOpenChange,
+  onContinueConversation
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showActionsMenu, setShowActionsMenu] = useState(false);
@@ -70,6 +74,10 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
   const [selectedTab, setSelectedTab] = useState("todas");
   const searchInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(true); // Added loading state
+  const [conversationMessages, setConversationMessages] = useState<{id: string; content: string; sender: "user" | "ai"; timestamp: Date}[]>([]); // Added state for messages
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false); // Added loading state for messages
+
 
   // Função para rolar até o final das mensagens quando uma conversa é selecionada
   const scrollToBottom = () => {
@@ -82,10 +90,10 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
     const hoje = new Date();
     const ontem = new Date(hoje);
     ontem.setDate(ontem.getDate() - 1);
-    
+
     const ultimos7Dias = new Date(hoje);
     ultimos7Dias.setDate(ultimos7Dias.getDate() - 7);
-    
+
     const esteAno = new Date(hoje);
     esteAno.setMonth(esteAno.getMonth() - 3);
 
@@ -175,31 +183,47 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
     ];
 
     setConversasData(dadosSimulados);
+    setIsLoading(false); // Set loading to false after data is fetched
   }, []);
 
   useEffect(() => {
     // Quando uma conversa é selecionada, role para o final das mensagens
     if (selectedConversation) {
       scrollToBottom();
+      loadConversationMessages(selectedConversation);
     }
-    
-    // Quando o modal abre, foque no campo de pesquisa
-    if (open && searchInputRef.current) {
-      setTimeout(() => {
-        searchInputRef.current?.focus();
-      }, 300);
+  }, [selectedConversation]);
+
+  const loadConversationMessages = async (conversationId: string) => {
+    setIsLoadingMessages(true);
+    try {
+      // Simulate fetching messages from Supabase
+      const conversa = conversasData.find(c => c.id === conversationId);
+      if(conversa){
+        setConversationMessages(conversa.messages || []);
+      } else {
+        setConversationMessages([]);
+      }
+      
+    } catch (error) {
+      console.error("Erro ao carregar mensagens:", error);
+      // Handle error appropriately (e.g., display an error message)
+      setConversationMessages([]);
+    } finally {
+      setIsLoadingMessages(false);
     }
-  }, [selectedConversation, open]);
+  };
+
 
   // Função para agrupar conversas por período
   const agruparConversas = () => {
     const hoje = new Date();
     const ontem = new Date(hoje);
     ontem.setDate(ontem.getDate() - 1);
-    
+
     const ultimos7Dias = new Date(hoje);
     ultimos7Dias.setDate(ultimos7Dias.getDate() - 7);
-    
+
     const grupos: {[key: string]: Conversa[]} = {
       "HOJE": [],
       "ONTEM": [],
@@ -208,21 +232,21 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
     };
 
     let conversasFiltradas = conversasData;
-    
+
     // Filtro por termo de pesquisa
     if (searchTerm) {
       conversasFiltradas = conversasFiltradas.filter(conversa => 
         conversa.titulo.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
+
     // Filtro por categoria
     if (categoryFilter) {
       conversasFiltradas = conversasFiltradas.filter(conversa => 
         conversa.categoria === categoryFilter
       );
     }
-    
+
     // Filtro por tab
     if (selectedTab === "favoritos") {
       conversasFiltradas = conversasFiltradas.filter(conversa => conversa.favorito);
@@ -232,7 +256,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
 
     conversasFiltradas.forEach(conversa => {
       const data = new Date(conversa.timestamp);
-      
+
       if (data.toDateString() === hoje.toDateString()) {
         grupos["HOJE"].push(conversa);
       } else if (data.toDateString() === ontem.toDateString()) {
@@ -296,7 +320,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
     setShowActionsMenu(false);
   };
 
-  const toggleFavorito = (id: string, event: React.MouseEvent) => {
+  const handleToggleFavorito = (id: string, event: React.MouseEvent) => {
     event.stopPropagation();
     setConversasData(prevState => 
       prevState.map(conversa => 
@@ -307,7 +331,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
     );
   };
 
-  const togglePrivado = (id: string, event: React.MouseEvent) => {
+  const handleTogglePrivado = (id: string, event: React.MouseEvent) => {
     event.stopPropagation();
     setConversasData(prevState => 
       prevState.map(conversa => 
@@ -318,7 +342,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
     );
   };
 
-  const excluirConversa = (id: string, event: React.MouseEvent) => {
+  const handleExcluirConversa = (id: string, event: React.MouseEvent) => {
     event.stopPropagation();
     if (window.confirm('Tem certeza que deseja excluir esta conversa?')) {
       setConversasData(prevState => prevState.filter(conversa => conversa.id !== id));
@@ -329,8 +353,10 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
   };
 
   const continuarConversa = () => {
-    console.log(`Continuando conversa: ${selectedConversation}`);
-    onOpenChange(false);
+    if (selectedConversation && onContinueConversation) {
+      onContinueConversation(selectedConversation, conversationMessages);
+      onOpenChange(false);
+    }
   };
 
   const grupos = agruparConversas();
@@ -528,14 +554,21 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
             {/* Lista de conversas com rolagem */}
             <ScrollArea className="flex-1 px-2">
               <div className="py-2">
-                {!temResultados && (
+                {isLoading ? (
+                  <div className="flex flex-col items-center justify-center py-20">
+                    <Loader className="h-8 w-8 text-[#4A0D9F] animate-spin mb-4" />
+                    <p className="text-sm text-gray-400">Carregando conversas...</p>
+                  </div>
+                ) : !temResultados ? (
                   <div className="flex flex-col items-center justify-center py-10 px-6 text-center">
                     <Search className="h-10 w-10 text-gray-500 mb-3 opacity-50" />
                     <h3 className="text-lg font-medium text-gray-400">Nenhum resultado encontrado</h3>
                     <p className="text-sm text-gray-500 mt-1 max-w-xs">
-                      Tente usar termos diferentes ou remover os filtros aplicados.
+                      {conversasData.length === 0 
+                        ? "Você ainda não tem conversas. Inicie um novo chat!"
+                        : "Tente usar termos diferentes ou remover os filtros aplicados."}
                     </p>
-                    {(searchTerm || categoryFilter || selectedTab !== "todas") && (
+                    {(searchTerm || categoryFilter || selectedTab !== "todas") && conversasData.length > 0 && (
                       <Button
                         variant="outline"
                         size="sm"
@@ -550,173 +583,172 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                       </Button>
                     )}
                   </div>
-                )}
+                ) : (
+                  Object.keys(grupos).map(periodo => {
+                    if (grupos[periodo].length === 0) return null;
 
-                {Object.keys(grupos).map(periodo => {
-                  if (grupos[periodo].length === 0) return null;
-                  
-                  return (
-                    <div key={periodo} className="mb-4">
-                      <div className="flex items-center">
-                        <h3 className="text-xs font-bold text-gray-400 px-2 mb-2">{periodo}</h3>
-                        <div className="h-px flex-grow bg-[#1e2a3e]/50 ml-2 mb-2" />
-                      </div>
-                      
-                      {viewMode === "list" ? (
-                        <ul>
-                          {grupos[periodo].map(conversa => (
-                            <motion.li
-                              key={conversa.id}
-                              whileHover={{ 
-                                backgroundColor: "rgba(30, 42, 62, 0.5)",
-                                scale: 1.01,
-                                transition: { duration: 0.1 }
-                              }}
-                              className={`relative px-3 py-2 rounded-md cursor-pointer overflow-hidden mb-1.5 group
-                                ${selectedConversation === conversa.id 
-                                  ? "bg-gradient-to-r from-[#131d2e] to-[#1e2a3e]" 
-                                  : "hover:bg-[#1e2a3e]/50 bg-[#131d2e]/30"
-                                } transition-all duration-150`}
-                              onClick={() => selecionarConversa(conversa.id)}
-                            >
-                              {selectedConversation === conversa.id && (
-                                <motion.div
-                                  layoutId="selectedHighlight"
-                                  className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-[#0D23A0] to-[#4A0D9F]"
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}
-                                  transition={{ duration: 0.2 }}
-                                />
-                              )}
-                              
-                              <div className="flex justify-between items-start">
-                                <div className="flex items-center pr-2 truncate max-w-[70%]">
-                                  <div className="flex flex-col">
-                                    <div className="flex items-center">
-                                      {conversa.privado && <Lock className="h-3 w-3 mr-1 text-[#4A0D9F]" />}
-                                      <span className={`truncate text-sm font-medium ${selectedConversation === conversa.id ? 'text-white' : 'text-gray-200'}`}>
-                                        {conversa.titulo}
+                    return (
+                      <div key={periodo} className="mb-4">
+                        <div className="flex items-center">
+                          <h3 className="text-xs font-bold text-gray-400 px-2 mb-2">{periodo}</h3>
+                          <div className="h-px flex-grow bg-[#1e2a3e]/50 ml-2 mb-2" />
+                        </div>
+
+                        {viewMode === "list" ? (
+                          <ul>
+                            {grupos[periodo].map(conversa => (
+                              <motion.li
+                                key={conversa.id}
+                                whileHover={{ 
+                                  backgroundColor: "rgba(30, 42, 62, 0.5)",
+                                  scale: 1.01,
+                                  transition: { duration: 0.1 }
+                                }}
+                                className={`relative px-3 py-2 rounded-md cursor-pointer overflow-hidden mb-1.5 group
+                                  ${selectedConversation === conversa.id 
+                                    ? "bg-gradient-to-r from-[#131d2e] to-[#1e2a3e]" 
+                                    : "hover:bg-[#1e2a3e]/50 bg-[#131d2e]/30"
+                                  } transition-all duration-150`}
+                                onClick={() => selecionarConversa(conversa.id)}
+                              >
+                                {selectedConversation === conversa.id && (
+                                  <motion.div
+                                    layoutId="selectedHighlight"
+                                    className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-[#0D23A0] to-[#4A0D9F]"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ duration: 0.2 }}
+                                  />
+                                )}
+
+                                <div className="flex justify-between items-start">
+                                  <div className="flex items-center pr-2 truncate max-w-[70%]">
+                                    <div className="flex flex-col">
+                                      <div className="flex items-center">
+                                        {conversa.privado && <Lock className="h-3 w-3 mr-1 text-[#4A0D9F]" />}
+                                        <span className={`truncate text-sm font-medium ${selectedConversation === conversa.id ? 'text-white' : 'text-gray-200'}`}>
+                                          {conversa.titulo}
+                                        </span>
+                                      </div>
+                                      <span className="text-xs text-gray-400 mt-0.5 truncate max-w-[200px]">
+                                        {conversa.resumo ? `${conversa.resumo.substring(0, 45)}...` : "Sem resumo disponível"}
                                       </span>
                                     </div>
-                                    <span className="text-xs text-gray-400 mt-0.5 truncate max-w-[200px]">
-                                      {conversa.resumo?.substring(0, 45)}...
-                                    </span>
+                                  </div>
+                                  <div className="flex flex-col items-end">
+                                    <div className="flex items-center">
+                                      {conversa.favorito && <Star className="h-3 w-3 mr-1 text-[#FF6B00]" />}
+                                      <span className="text-xs text-gray-400 whitespace-nowrap">
+                                        {formatarTimestamp(conversa.timestamp)}
+                                      </span></div>
+                                    {conversa.categoria && (
+                                      <Badge variant="outline" className="mt-1 px-1.5 py-0 h-4 text-[10px] bg-[#131d2e]/50 border-[#1e2a3e]/70 text-gray-300">
+                                        {conversa.categoria}
+                                      </Badge>
+                                    )}
                                   </div>
                                 </div>
-                                <div className="flex flex-col items-end">
-                                  <div className="flex items-center">
-                                    {conversa.favorito && <Star className="h-3 w-3 mr-1 text-[#FF6B00]" />}
-                                    <span className="text-xs text-gray-400 whitespace-nowrap">
-                                      {formatarTimestamp(conversa.timestamp)}
-                                    </span>
-                                  </div>
-                                  {conversa.categoria && (
-                                    <Badge variant="outline" className="mt-1 px-1.5 py-0 h-4 text-[10px] bg-[#131d2e]/50 border-[#1e2a3e]/70 text-gray-300">
-                                      {conversa.categoria}
-                                    </Badge>
-                                  )}
+
+                                {/* Botões de ação que aparecem ao passar o mouse */}
+                                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 bg-[#131d2e]/70 hover:bg-[#1e2a3e] rounded-full"
+                                    onClick={(e) => handleToggleFavorito(conversa.id, e)}
+                                    title={conversa.favorito ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+                                  >
+                                    <Star className={`h-3 w-3 ${conversa.favorito ? 'text-[#FF6B00] fill-[#FF6B00]' : 'text-gray-400'}`} />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 bg-[#131d2e]/70 hover:bg-[#1e2a3e] rounded-full"
+                                    onClick={(e) => handleTogglePrivado(conversa.id, e)}
+                                    title={conversa.privado ? "Tornar público" : "Tornar privado"}
+                                  >
+                                    <Lock className={`h-3 w-3 ${conversa.privado ? 'text-[#4A0D9F]' : 'text-gray-400'}`} />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 bg-[#131d2e]/70 hover:bg-[#1e2a3e] hover:text-red-500 rounded-full"
+                                    onClick={(e) => handleExcluirConversa(conversa.id, e)}
+                                    title="Excluir conversa"
+                                  >
+                                    <Trash2 className="h-3 w-3 text-gray-400" />
+                                  </Button>
                                 </div>
-                              </div>
-                              
-                              {/* Botões de ação que aparecem ao passar o mouse */}
-                              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 bg-[#131d2e]/70 hover:bg-[#1e2a3e] rounded-full"
-                                  onClick={(e) => toggleFavorito(conversa.id, e)}
-                                  title={conversa.favorito ? "Remover dos favoritos" : "Adicionar aos favoritos"}
-                                >
-                                  <Star className={`h-3 w-3 ${conversa.favorito ? 'text-[#FF6B00] fill-[#FF6B00]' : 'text-gray-400'}`} />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 bg-[#131d2e]/70 hover:bg-[#1e2a3e] rounded-full"
-                                  onClick={(e) => togglePrivado(conversa.id, e)}
-                                  title={conversa.privado ? "Tornar público" : "Tornar privado"}
-                                >
-                                  <Lock className={`h-3 w-3 ${conversa.privado ? 'text-[#4A0D9F]' : 'text-gray-400'}`} />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 bg-[#131d2e]/70 hover:bg-[#1e2a3e] hover:text-red-500 rounded-full"
-                                  onClick={(e) => excluirConversa(conversa.id, e)}
-                                  title="Excluir conversa"
-                                >
-                                  <Trash2 className="h-3 w-3 text-gray-400" />
-                                </Button>
-                              </div>
-                            </motion.li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <div className="grid grid-cols-2 gap-2">
-                          {grupos[periodo].map(conversa => (
-                            <motion.div
-                              key={conversa.id}
-                              whileHover={{ 
-                                scale: 1.02,
-                                transition: { duration: 0.1 }
-                              }}
-                              className={`relative p-3 rounded-md cursor-pointer overflow-hidden mb-1 group
-                                ${selectedConversation === conversa.id 
-                                  ? "bg-gradient-to-br from-[#131d2e] to-[#1e2a3e] border border-[#0D23A0]/30" 
-                                  : "hover:bg-[#1e2a3e]/50 bg-[#131d2e]/30"
-                                } transition-all duration-150 h-24 flex flex-col justify-between`}
-                              onClick={() => selecionarConversa(conversa.id)}
-                            >
-                              <div className="flex justify-between items-start">
-                                <div className="flex items-start gap-2">
-                                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0D23A0]/20 to-[#4A0D9F]/20 flex items-center justify-center">
-                                    <MessageSquare className="h-3.5 w-3.5 text-[#4A0D9F]" />
+                              </motion.li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <div className="grid grid-cols-2 gap-2">
+                            {grupos[periodo].map(conversa => (
+                              <motion.div
+                                key={conversa.id}
+                                whileHover={{ 
+                                  scale: 1.02,
+                                  transition: { duration: 0.1 }
+                                }}
+                                className={`relative p-3 rounded-md cursor-pointer overflow-hidden mb-1 group
+                                  ${selectedConversation === conversa.id 
+                                    ? "bg-gradient-to-br from-[#131d2e] to-[#1e2a3e] border border-[#0D23A0]/30" 
+                                    : "hover:bg-[#1e2a3e]/50 bg-[#131d2e]/30"
+                                  } transition-all duration-150 h-24 flex flex-col justify-between`}
+                                onClick={() => selecionarConversa(conversa.id)}
+                              >
+                                <div className="flex justify-between items-start">
+                                  <div className="flex items-start gap-2">
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0D23A0]/20 to-[#4A0D9F]/20 flex items-center justify-center">
+                                      <MessageSquare className="h-3.5 w-3.5 text-[#4A0D9F]" />
+                                    </div>
+                                    <div>
+                                      <h4 className="text-xs font-medium text-gray-200 truncate max-w-[100px]">{conversa.titulo}</h4>
+                                      <p className="text-[10px] text-gray-400 truncate max-w-[100px]">
+                                        {conversa.resumo ? `${conversa.resumo.substring(0, 30)}...` : "Sem resumo disponível"}
+                                      </p>
+                                    </div>
                                   </div>
-                                  <div>
-                                    <h4 className="text-xs font-medium text-gray-200 truncate max-w-[100px]">{conversa.titulo}</h4>
-                                    <p className="text-[10px] text-gray-400 truncate max-w-[100px]">
-                                      {conversa.resumo?.substring(0, 30)}...
-                                    </p>
+                                  {conversa.favorito && <Star className="h-3 w-3 text-[#FF6B00] fill-[#FF6B00]" />}
+                                </div>
+
+                                <div className="flex justify-between items-end">
+                                  <div className="flex gap-1">
+                                    {conversa.categoria && (
+                                      <Badge variant="outline" className="px-1.5 py-0 h-4 text-[10px] bg-[#131d2e]/50 border-[#1e2a3e]/70 text-gray-300">
+                                        {conversa.categoria}
+                                      </Badge>
+                                    )}
+                                    {conversa.privado && (
+                                      <Badge variant="outline" className="px-1.5 py-0 h-4 text-[10px] bg-[#131d2e]/50 border-[#1e2a3e]/70 text-[#4A0D9F]">
+                                        <Lock className="h-2 w-2 mr-0.5" /> privado
+                                      </Badge>
+                                    )}
                                   </div>
+                                  <span className="text-[10px] text-gray-400">
+                                    {formatarTimestamp(conversa.timestamp)}
+                                  </span>
                                 </div>
-                                {conversa.favorito && <Star className="h-3 w-3 text-[#FF6B00] fill-[#FF6B00]" />}
-                              </div>
-                              
-                              <div className="flex justify-between items-end">
-                                <div className="flex gap-1">
-                                  {conversa.categoria && (
-                                    <Badge variant="outline" className="px-1.5 py-0 h-4 text-[10px] bg-[#131d2e]/50 border-[#1e2a3e]/70 text-gray-300">
-                                      {conversa.categoria}
-                                    </Badge>
-                                  )}
-                                  {conversa.privado && (
-                                    <Badge variant="outline" className="px-1.5 py-0 h-4 text-[10px] bg-[#131d2e]/50 border-[#1e2a3e]/70 text-[#4A0D9F]">
-                                      <Lock className="h-2 w-2 mr-0.5" /> privado
-                                    </Badge>
-                                  )}
-                                </div>
-                                <span className="text-[10px] text-gray-400">
-                                  {formatarTimestamp(conversa.timestamp)}
-                                </span>
-                              </div>
-                              
-                              {/* Efeito de seleção */}
-                              {selectedConversation === conversa.id && (
-                                <motion.div
-                                  layoutId="selectedHighlightGrid"
-                                  className="absolute right-0 top-0 h-full w-1 bg-gradient-to-b from-[#0D23A0] to-[#4A0D9F]"
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}
-                                  transition={{ duration: 0.2 }}
-                                />
-                              )}
-                            </motion.div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+
+                                {/* Efeito de seleção */}
+                                {selectedConversation === conversa.id && (
+                                  <motion.div
+                                    layoutId="selectedHighlightGrid"
+                                    className="absolute right-0 top-0 h-full w-1 bg-gradient-to-b from-[#0D23A0] to-[#4A0D9F]"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ duration: 0.2 }}
+                                  />
+                                )}
+                              </motion.div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </ScrollArea>
 
@@ -789,13 +821,13 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 rounded-full hover:bg-[#1e2a3e] text-gray-400 hover:text-white"
-                      onClick={(e) => toggleFavorito(conversaSelecionada.id, e)}
+                      onClick={(e) => handleToggleFavorito(conversaSelecionada.id, e)}
                       title={conversaSelecionada.favorito ? "Remover dos favoritos" : "Adicionar aos favoritos"}
                     >
                       <Star className={`h-4 w-4 ${conversaSelecionada.favorito ? 'text-[#FF6B00] fill-[#FF6B00]' : ''}`} />
@@ -820,14 +852,14 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 rounded-full hover:bg-[#1e2a3e] text-gray-400 hover:text-red-500"
-                      onClick={(e) => excluirConversa(conversaSelecionada.id, e)}
+                      onClick={(e) => handleExcluirConversa(conversaSelecionada.id, e)}
                       title="Excluir conversa"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
-                
+
                 <div className="bg-[#0a1321]/50 rounded-lg p-4 mb-4 flex-1 overflow-hidden relative border border-[#1e2a3e]/50 shadow-inner">
                   <ScrollArea className="h-full pr-4">
                     {conversaSelecionada.resumo && (
@@ -839,81 +871,101 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                         <p className="text-sm text-gray-300 leading-relaxed">{conversaSelecionada.resumo}</p>
                       </div>
                     )}
-                    
-                    <div className="space-y-4">
-                      {conversaSelecionada.messages?.map((msg, index) => (
-                        <motion.div
-                          key={msg.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3, delay: index * 0.1 }}
-                          className={`flex items-start gap-3 ${msg.sender === "user" ? "justify-end" : ""}`}
-                        >
-                          {msg.sender === "ai" && (
-                            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#4A0D9F] flex items-center justify-center flex-shrink-0 mt-1">
-                              <MessageSquare className="h-4 w-4 text-white" />
-                            </div>
-                          )}
-                          
-                          <div 
-                            className={`rounded-lg p-3 max-w-[80%] ${
-                              msg.sender === "user" 
-                                ? "bg-[#1e2a3e] text-gray-200 rounded-tr-none" 
-                                : "bg-[#131d2e] text-gray-200 rounded-tl-none"
-                            } shadow-sm group relative`}
+
+                    {isLoadingMessages ? (
+                      <div className="flex items-center justify-center py-10">
+                        <Loader className="h-6 w-6 text-[#4A0D9F] animate-spin mr-2" />
+                        <p className="text-sm text-gray-400">Carregando mensagens...</p>
+                      </div>
+                    ) : conversationMessages.length === 0 ? (
+                      <div className="text-center py-10">
+                        <p className="text-gray-400">Nenhuma mensagem encontrada para esta conversa.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {conversationMessages.map((msg, index) => (
+                          <motion.div
+                            key={msg.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: index * 0.1 }}
+                            className={`flex items-start gap-3 ${msg.sender === "user" ? "justify-end" : ""}`}
                           >
-                            <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                            <div className="mt-1 flex justify-between items-center">
-                              <span className="text-xs text-gray-500">{formatarHoraMensagem(msg.timestamp)}</span>
-                              
-                              <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-5 w-5 rounded-full hover:bg-[#1e2a3e] text-gray-500 hover:text-white"
-                                  title="Copiar mensagem"
-                                >
-                                  <Copy className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-5 w-5 rounded-full hover:bg-[#1e2a3e] text-gray-500 hover:text-white"
-                                  title="Salvar mensagem"
-                                >
-                                  <Bookmark className="h-3 w-3" />
-                                </Button>
-                                {msg.sender === "ai" && (
+                            {msg.sender === "ai" && (
+                              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#4A0D9F] flex items-center justify-center flex-shrink-0 mt-1">
+                                <MessageSquare className="h-4 w-4 text-white" />
+                              </div>
+                            )}
+
+                            <div 
+                              className={`rounded-lg p-3 max-w-[80%] ${
+                                msg.sender === "user" 
+                                  ? "bg-[#1e2a3e] text-gray-200 rounded-tr-none" 
+                                  : "bg-[#131d2e] text-gray-200 rounded-tl-none"
+                              } shadow-sm group relative`}
+                            >
+                              <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                              <div className="mt-1 flex justify-between items-center">
+                                <span className="text-xs text-gray-500">{formatarHoraMensagem(msg.timestamp)}</span>
+
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                                   <Button
                                     variant="ghost"
                                     size="icon"
                                     className="h-5 w-5 rounded-full hover:bg-[#1e2a3e] text-gray-500 hover:text-white"
-                                    title="Explorar mais"
+                                    title="Copiar mensagem"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(msg.content);
+                                      toast({
+                                        title: "Copiado!",
+                                        description: "Mensagem copiada para a área de transferência.",
+                                        duration: 2000
+                                      });
+                                    }}
                                   >
-                                    <ExternalLink className="h-3 w-3" />
+                                    <Copy className="h-3 w-3" />
                                   </Button>
-                                )}
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-5 w-5 rounded-full hover:bg-[#1e2a3e] text-gray-500 hover:text-white"
+                                    title="Salvar mensagem"
+                                  >
+                                    <Bookmark className="h-3 w-3" />
+                                  </Button>
+                                  {msg.sender === "ai" && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-5 w-5 rounded-full hover:bg-[#1e2a3e] text-gray-500 hover:text-white"
+                                      title="Explorar mais"
+                                    >
+                                      <ExternalLink className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                          
-                          {msg.sender === "user" && (
-                            <div className="h-8 w-8 rounded-full bg-[#FF6B00] flex items-center justify-center flex-shrink-0 mt-1">
-                              <span className="text-white text-xs font-bold">JF</span>
-                            </div>
-                          )}
-                        </motion.div>
-                      ))}
-                      <div ref={messagesEndRef} />
-                    </div>
+
+                            {msg.sender === "user" && (
+                              <div className="h-8 w-8 rounded-full bg-[#FF6B00] flex items-center justify-center flex-shrink-0 mt-1">
+                                <span className="text-white text-xs font-bold">JF</span>
+                              </div>
+                            )}
+                          </motion.div>
+                        ))}
+                        <div ref={messagesEndRef} />
+                      </div>
+                    )}
                   </ScrollArea>
                 </div>
-                
+
                 <div className="mt-auto">
                   <div className="flex gap-2">
                     <Button 
                       className="flex-1 bg-gradient-to-r from-[#0D23A0] to-[#4A0D9F] hover:from-[#1230CC] hover:to-[#5D15BE] py-2 rounded-md border-none text-white font-medium shadow-md hover:shadow-lg transition-all duration-200"
                       onClick={continuarConversa}
+                      disabled={isLoadingMessages}
                     >
                       Continuar Conversa
                       <ArrowUpRight className="h-4 w-4 ml-1.5" />
