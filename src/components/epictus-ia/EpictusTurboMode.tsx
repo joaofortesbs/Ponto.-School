@@ -6,13 +6,11 @@ import { Zap, Sparkles, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import TurboMessageBox from "./TurboMessageBox";
 import TurboHubConnected from "./TurboHubConnected";
-import HistoricoConversasModal from "./modals/HistoricoConversasModal";
 
 const EpictusTurboMode: React.FC = () => {
   const { theme } = useTheme();
   const [isHovered, setIsHovered] = useState(false);
   const [animationComplete, setAnimationComplete] = useState(false);
-  const [isHistoricoModalOpen, setIsHistoricoModalOpen] = useState(false);
   // Perfil selecionado no dropdown de personalidades
   const [profileIcon, setProfileIcon] = useState(
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -349,7 +347,6 @@ const EpictusTurboMode: React.FC = () => {
                 whileTap={{ scale: 0.95 }}
                 initial={false}
                 transition={{ duration: 0.3 }}
-                onClick={() => setIsHistoricoModalOpen(true)}
               >
                 <Clock className="h-5 w-5 text-white" />
               </motion.div>
@@ -446,12 +443,6 @@ const EpictusTurboMode: React.FC = () => {
           <TurboMessageBox />
         </div>
       </div>
-      
-      {/* Modal de histórico de conversas */}
-      <HistoricoConversasModal 
-        isOpen={isHistoricoModalOpen} 
-        onClose={() => setIsHistoricoModalOpen(false)} 
-      />
     </div>
   );
 };

@@ -14,7 +14,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-4/5 max-w-4xl mx-auto bg-gradient-to-b from-[#0c2341] to-[#0f3562] text-white border border-white/10 rounded-xl shadow-xl backdrop-blur-lg">
+      <DialogContent className="w-4/5 max-w-4xl mx-auto bg-gradient-to-b from-[#0c2341]/95 to-[#0f3562]/95 text-white border border-white/10 rounded-xl shadow-xl backdrop-blur-lg">
         <div className="p-6 flex flex-col items-center justify-center min-h-[400px]">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
