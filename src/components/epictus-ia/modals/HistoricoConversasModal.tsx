@@ -6,7 +6,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -31,7 +30,6 @@ import {
   Clock,
   Search,
   Star,
-  Bookmark,
   Pin,
   Edit,
   Trash2,
@@ -39,28 +37,19 @@ import {
   MoreHorizontal,
   FileText,
   Brain,
-  Tool,
-  Calendar,
-  AlarmClock,
-  PlayCircle,
+  CheckSquare,
+  MessageSquare,
+  RefreshCw,
+  AlertTriangle,
+  Book,
+  Expand,
+  Sparkles,
   Download,
   Send,
-  Copy,
-  CheckCircle,
-  Book,
   StickyNote,
-  Filter,
-  SlidersHorizontal,
-  RefreshCw,
-  ArrowRight,
-  MessageSquare,
-  Clock10,
+  Calendar,
   Award,
-  CheckSquare,
-  TimerReset,
-  Expand,
-  AlertTriangle,
-  Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -279,13 +268,15 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
 
   // Componente para a coluna da lista de conversas (esquerda)
   const ColunaListaConversas = () => (
-    <div className="w-full h-full border-r border-gray-700">
-      <div className="p-4 border-b border-gray-700">
+    <div className="w-full h-full border-r border-gray-700/50">
+      <div className="p-4 border-b border-gray-700/50 bg-gray-800/30">
         <div className="relative mb-3">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+          <div className="absolute left-2.5 top-2.5 text-gray-400">
+            <Search className="h-4 w-4" />
+          </div>
           <Input
             placeholder="Buscar conversa..."
-            className="pl-8 bg-gray-800 border-gray-700 focus-visible:ring-blue-600"
+            className="pl-9 bg-gray-800/60 border-gray-700/70 focus-visible:ring-blue-600 h-9 text-sm rounded-lg"
             value={termoBusca}
             onChange={(e) => setTermoBusca(e.target.value)}
           />
@@ -293,11 +284,11 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
         
         <div className="flex justify-between items-center">
           <Tabs defaultValue="todos" className="w-full" onValueChange={setFiltroAtual}>
-            <TabsList className="bg-gray-800 border border-gray-700">
-              <TabsTrigger value="todos" className="text-xs">Todos</TabsTrigger>
-              <TabsTrigger value="favoritos" className="text-xs">Favoritos</TabsTrigger>
-              <TabsTrigger value="conteudo" className="text-xs">Conteúdo</TabsTrigger>
-              <TabsTrigger value="duvida" className="text-xs">Dúvidas</TabsTrigger>
+            <TabsList className="bg-gray-800/70 border border-gray-700/70 p-0.5 h-8">
+              <TabsTrigger value="todos" className="text-xs px-2.5 py-1">Todos</TabsTrigger>
+              <TabsTrigger value="favoritos" className="text-xs px-2.5 py-1">Favoritos</TabsTrigger>
+              <TabsTrigger value="conteudo" className="text-xs px-2.5 py-1">Conteúdo</TabsTrigger>
+              <TabsTrigger value="duvida" className="text-xs px-2.5 py-1">Dúvidas</TabsTrigger>
             </TabsList>
           </Tabs>
           
@@ -307,13 +298,13 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="ml-2"
+                  className="ml-2 h-8 w-8 rounded-full"
                   onClick={() => setModoArquivados(!modoArquivados)}
                 >
                   <Archive className={`h-4 w-4 ${modoArquivados ? 'text-blue-400' : 'text-gray-400'}`} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
+              <TooltipContent side="bottom" className="text-xs">
                 {modoArquivados ? 'Ver conversas ativas' : 'Ver arquivadas'}
               </TooltipContent>
             </Tooltip>
@@ -322,11 +313,11 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="ml-1">
+                <Button variant="ghost" size="icon" className="ml-1 h-8 w-8 rounded-full">
                   <Filter className="h-4 w-4 text-gray-400" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
+              <TooltipContent side="bottom" className="text-xs">
                 Filtros avançados
               </TooltipContent>
             </Tooltip>
@@ -335,7 +326,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
       </div>
       
       <ScrollArea className="h-[calc(100%-100px)]">
-        <div className="p-2 space-y-2">
+        <div className="p-3 space-y-2.5">
           {conversasFiltradas.length > 0 ? (
             conversasFiltradas.map((conversa) => (
               <ConversaItem 
@@ -354,9 +345,9 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
               />
             ))
           ) : (
-            <div className="flex flex-col items-center justify-center p-6 text-center text-gray-400">
-              <SearchX className="h-12 w-12 mb-2 opacity-50" />
-              <p>Nenhuma conversa encontrada</p>
+            <div className="flex flex-col items-center justify-center p-10 text-center text-gray-400">
+              <SearchX className="h-12 w-12 mb-3 opacity-50" />
+              <p className="font-medium mb-1">Nenhuma conversa encontrada</p>
               <p className="text-sm opacity-70">Tente alterar os filtros ou a busca</p>
             </div>
           )}
@@ -394,16 +385,18 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
         transition={{ type: "spring", stiffness: 400, damping: 10 }}
         className={`relative p-3 rounded-lg cursor-pointer ${
           selecionada 
-            ? 'bg-gradient-to-r from-blue-900/40 to-indigo-900/40 border border-blue-700/50'
-            : 'bg-gray-800/60 hover:bg-gray-800 border border-gray-700/60'
+            ? 'bg-gradient-to-r from-blue-900/50 to-indigo-900/50 border border-blue-600/60 shadow-[0_0_10px_rgba(59,130,246,0.2)]'
+            : 'bg-gray-800/60 hover:bg-gray-800/80 border border-gray-700/60'
         }`}
         onClick={onClick}
       >
-        <div className="flex items-center justify-between mb-1">
-          <div className="flex items-center">
-            {renderIconeTipo(conversa.tipo)}
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-1">
+            <div className="w-5 h-5 rounded-full flex items-center justify-center bg-gray-700/80">
+              {renderIconeTipo(conversa.tipo)}
+            </div>
             {conversa.fixada && (
-              <Pin className="h-3 w-3 ml-1 text-blue-300" fill="currentColor" />
+              <Pin className="h-3 w-3 ml-1 text-blue-400" fill="currentColor" />
             )}
           </div>
           
@@ -414,7 +407,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-6 w-6" 
+                    className="h-6 w-6 rounded-full hover:bg-gray-700/60" 
                     onClick={(e) => {
                       e.stopPropagation();
                       onFavoritar();
@@ -423,7 +416,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                     <Star className={`h-3.5 w-3.5 ${conversa.favorita ? 'text-yellow-400 fill-yellow-400' : 'text-gray-400'}`} />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>
+                <TooltipContent side="left" className="text-xs">
                   {conversa.favorita ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
                 </TooltipContent>
               </Tooltip>
@@ -431,30 +424,30 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <Button variant="ghost" size="icon" className="h-6 w-6">
+                <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-gray-700/60">
                   <MoreHorizontal className="h-3.5 w-3.5 text-gray-400" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-gray-900 border-gray-700">
+              <DropdownMenuContent align="end" className="bg-gray-900 border-gray-700 p-1.5 min-w-[160px]">
                 <DropdownMenuItem onClick={(e) => {
                   e.stopPropagation();
                   setEditandoTitulo(true);
-                }}>
-                  <Edit className="h-4 w-4 mr-2" />
+                }} className="py-1.5 text-sm gap-2">
+                  <Edit className="h-3.5 w-3.5" />
                   <span>Renomear</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={(e) => {
                   e.stopPropagation();
                   onFixar();
-                }}>
-                  <Pin className="h-4 w-4 mr-2" />
+                }} className="py-1.5 text-sm gap-2">
+                  <Pin className="h-3.5 w-3.5" />
                   <span>{conversa.fixada ? 'Desafixar' : 'Fixar'}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={(e) => {
                   e.stopPropagation();
                   onArquivar();
-                }}>
-                  <Archive className="h-4 w-4 mr-2" />
+                }} className="py-1.5 text-sm gap-2">
+                  <Archive className="h-3.5 w-3.5" />
                   <span>{conversa.arquivada ? 'Desarquivar' : 'Arquivar'}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem 
@@ -462,9 +455,9 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                     e.stopPropagation();
                     onExcluir();
                   }}
-                  className="text-red-400"
+                  className="text-red-400 py-1.5 text-sm gap-2"
                 >
-                  <Trash2 className="h-4 w-4 mr-2" />
+                  <Trash2 className="h-3.5 w-3.5" />
                   <span>Excluir</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -477,7 +470,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
             <Input 
               value={novoTitulo}
               onChange={(e) => setNovoTitulo(e.target.value)}
-              className="bg-gray-700 border-blue-600"
+              className="bg-gray-700/80 border-blue-700/60 text-sm"
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -488,11 +481,11 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                 }
               }}
             />
-            <div className="flex justify-end mt-1 space-x-1">
+            <div className="flex justify-end mt-1.5 space-x-1">
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-6 text-xs"
+                className="h-6 text-xs px-2"
                 onClick={() => {
                   setEditandoTitulo(false);
                   setNovoTitulo(conversa.titulo);
@@ -503,7 +496,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
               <Button 
                 variant="default" 
                 size="sm" 
-                className="h-6 text-xs"
+                className="h-6 text-xs px-2 bg-blue-600 hover:bg-blue-700"
                 onClick={salvarNovoTitulo}
               >
                 Salvar
@@ -511,16 +504,18 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
             </div>
           </div>
         ) : (
-          <h4 className="font-medium text-sm text-white truncate">{conversa.titulo}</h4>
+          <h4 className="font-medium text-sm text-white mb-1 truncate">{conversa.titulo}</h4>
         )}
         
-        <div className="flex justify-between items-center mt-1.5">
+        {!editandoTitulo && <p className="text-xs text-gray-300/80 truncate line-clamp-1 mb-2">{conversa.previa}</p>}
+        
+        <div className="flex justify-between items-center mt-1">
           <div className="flex flex-wrap gap-1 max-w-[70%]">
             {conversa.tags.slice(0, 2).map((tag, idx) => (
               <Badge 
                 key={idx} 
                 variant="outline" 
-                className="px-1.5 py-0 text-[10px] bg-gray-800/70 border-gray-600 text-gray-300"
+                className="px-1.5 py-0 text-[10px] bg-gray-800/70 border-gray-600/70 text-gray-300"
               >
                 {tag}
               </Badge>
@@ -528,13 +523,16 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
             {conversa.tags.length > 2 && (
               <Badge 
                 variant="outline" 
-                className="px-1.5 py-0 text-[10px] bg-gray-800/70 border-gray-600 text-gray-300"
+                className="px-1.5 py-0 text-[10px] bg-gray-800/70 border-gray-600/70 text-gray-300"
               >
                 +{conversa.tags.length - 2}
               </Badge>
             )}
           </div>
-          <p className="text-[10px] text-gray-400">{formatarData(conversa.data)}</p>
+          <p className="text-[10px] text-gray-400 flex items-center gap-1">
+            <Clock className="h-2.5 w-2.5" />
+            {formatarData(conversa.data)}
+          </p>
         </div>
       </motion.div>
     );
@@ -545,34 +543,40 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
     if (!conversaSelecionada) {
       return (
         <div className="flex h-full items-center justify-center text-gray-400">
-          <p>Selecione uma conversa para visualizar</p>
+          <div className="text-center">
+            <MessageSquare className="h-12 w-12 mb-3 mx-auto opacity-30" />
+            <p className="text-lg font-medium mb-1">Selecione uma conversa</p>
+            <p className="text-sm opacity-70">Escolha uma conversa para visualizar</p>
+          </div>
         </div>
       );
     }
     
     return (
       <div className="h-full flex flex-col">
-        <div className="border-b border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              {renderIconeTipo(conversaSelecionada.tipo)}
-              <h3 className="ml-2 font-medium">{conversaSelecionada.titulo}</h3>
+        <div className="border-b border-gray-700/50 p-4 bg-gradient-to-r from-gray-800/40 to-gray-800/20">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full flex items-center justify-center bg-gray-700/80">
+                {renderIconeTipo(conversaSelecionada.tipo)}
+              </div>
+              <h3 className="font-medium text-base">{conversaSelecionada.titulo}</h3>
             </div>
             <div>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button 
-                      variant="ghost" 
+                      variant="outline" 
                       size="sm" 
-                      className="flex items-center gap-1"
+                      className="flex items-center gap-1.5 bg-gray-800/60 border-gray-700/50 hover:bg-gray-700/60"
                       onClick={() => setMostrarDetalhes(true)}
                     >
-                      <Expand className="h-4 w-4" />
+                      <Expand className="h-3.5 w-3.5" />
                       <span className="text-xs">Expandir</span>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>
+                  <TooltipContent side="left" className="text-xs">
                     Ver detalhes completos
                   </TooltipContent>
                 </Tooltip>
@@ -580,12 +584,12 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
             </div>
           </div>
           
-          <div className="flex flex-wrap gap-1 mt-2">
+          <div className="flex flex-wrap gap-1.5 mt-2">
             {conversaSelecionada.tags.map((tag, idx) => (
               <Badge 
                 key={idx} 
                 variant="outline" 
-                className="bg-gray-800 border-gray-700 text-gray-300"
+                className="bg-gray-800/60 border-gray-700/50 text-gray-300 hover:bg-gray-700/60 cursor-pointer text-xs px-2"
               >
                 {tag}
               </Badge>
@@ -600,32 +604,43 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
           </div>
         </div>
         
-        <div className="flex-1 overflow-y-auto p-4">
+        <ScrollArea className="flex-1 p-4">
           <div className="space-y-4">
-            <div className="bg-gray-800/60 p-4 rounded-lg border border-gray-700">
-              <h4 className="font-medium text-sm mb-2 flex items-center">
-                <MessageSquare className="h-4 w-4 mr-2 text-blue-400" />
+            <div className="bg-gray-800/40 p-4 rounded-lg border border-gray-700/50 hover:border-gray-700/70 transition-colors">
+              <h4 className="font-medium text-sm mb-3 flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full flex items-center justify-center bg-blue-600/20">
+                  <MessageSquare className="h-3 w-3 text-blue-400" />
+                </div>
                 Resumo da Conversa
               </h4>
-              <p className="text-sm text-gray-300">{conversaSelecionada.previa}</p>
+              <p className="text-sm text-gray-300/90 leading-relaxed">{conversaSelecionada.previa}</p>
             </div>
             
-            <div className="bg-gray-800/60 p-4 rounded-lg border border-gray-700">
-              <h4 className="font-medium text-sm mb-2 flex items-center">
-                <Clock10 className="h-4 w-4 mr-2 text-blue-400" />
+            <div className="bg-gray-800/40 p-4 rounded-lg border border-gray-700/50 hover:border-gray-700/70 transition-colors">
+              <h4 className="font-medium text-sm mb-3 flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full flex items-center justify-center bg-indigo-600/20">
+                  <Clock className="h-3 w-3 text-indigo-400" />
+                </div>
                 Linha do Tempo
               </h4>
-              <div className="flex items-center space-x-2 overflow-x-auto py-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+              <div className="flex items-center space-x-2 overflow-x-auto py-2 pb-1 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
                 {conversaSelecionada.conteudo.map((item, idx) => (
                   <div 
                     key={idx}
-                    className={`flex-shrink-0 w-32 h-16 rounded-md flex flex-col justify-center items-center p-2 ${
+                    className={`flex-shrink-0 w-40 h-16 rounded-md flex flex-col justify-center items-center p-2 ${
                       item.role === 'user' 
-                        ? 'bg-blue-900/30 border border-blue-800/50' 
+                        ? 'bg-blue-900/30 border border-blue-700/60' 
                         : 'bg-gray-700/50 border border-gray-600/50'
                     }`}
                   >
-                    <div className="text-[10px] text-gray-400 mb-1">
+                    <div className="text-[10px] text-gray-400 mb-1 flex items-center gap-1">
+                      <div className="w-3 h-3 rounded-full flex items-center justify-center bg-gray-600/60">
+                        {item.role === 'user' ? (
+                          <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                        ) : (
+                          <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                        )}
+                      </div>
                       {item.role === 'user' ? 'Você' : 'Epictus IA'}
                     </div>
                     <div className="text-[10px] text-center truncate w-full">
@@ -636,40 +651,54 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
               </div>
             </div>
             
-            <div className="bg-gray-800/60 p-4 rounded-lg border border-gray-700">
-              <h4 className="font-medium text-sm mb-2 flex items-center">
-                <Sparkles className="h-4 w-4 mr-2 text-blue-400" />
+            <div className="bg-gray-800/40 p-4 rounded-lg border border-gray-700/50 hover:border-gray-700/70 transition-colors">
+              <h4 className="font-medium text-sm mb-3 flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full flex items-center justify-center bg-orange-600/20">
+                  <Sparkles className="h-3 w-3 text-orange-400" />
+                </div>
                 Sugestões da IA
               </h4>
               <div className="space-y-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="w-full justify-start text-sm bg-gray-700 border-gray-600 hover:bg-gray-600"
+                  className="w-full justify-start text-sm bg-gray-700/60 border-gray-600/60 hover:bg-gray-600/60 group"
                 >
-                  <RefreshCw className="h-3.5 w-3.5 mr-2" />
-                  <span>Retomar de onde parou</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center bg-blue-900/40 group-hover:bg-blue-900/60 transition-colors">
+                      <RefreshCw className="h-3 w-3 text-blue-400" />
+                    </div>
+                    <span className="text-xs">Retomar de onde parou</span>
+                  </div>
                 </Button>
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="w-full justify-start text-sm bg-gray-700 border-gray-600 hover:bg-gray-600"
+                  className="w-full justify-start text-sm bg-gray-700/60 border-gray-600/60 hover:bg-gray-600/60 group"
                 >
-                  <AlertTriangle className="h-3.5 w-3.5 mr-2" />
-                  <span>Gerar simulado baseado nessa conversa</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center bg-orange-900/40 group-hover:bg-orange-900/60 transition-colors">
+                      <AlertTriangle className="h-3 w-3 text-orange-400" />
+                    </div>
+                    <span className="text-xs">Gerar simulado baseado nessa conversa</span>
+                  </div>
                 </Button>
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="w-full justify-start text-sm bg-gray-700 border-gray-600 hover:bg-gray-600"
+                  className="w-full justify-start text-sm bg-gray-700/60 border-gray-600/60 hover:bg-gray-600/60 group"
                 >
-                  <Book className="h-3.5 w-3.5 mr-2" />
-                  <span>Criar resumo interativo</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center bg-green-900/40 group-hover:bg-green-900/60 transition-colors">
+                      <Book className="h-3 w-3 text-green-400" />
+                    </div>
+                    <span className="text-xs">Criar resumo interativo</span>
+                  </div>
                 </Button>
               </div>
             </div>
           </div>
-        </div>
+        </ScrollArea>
       </div>
     );
   };
@@ -686,17 +715,20 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 50 }}
             transition={{ duration: 0.2 }}
-            className="absolute right-0 top-0 h-full bg-gray-900 border-l border-gray-700 w-full md:w-[60%] lg:w-[50%] z-10"
+            className="absolute right-0 top-0 h-full bg-gray-900 border-l border-gray-700/50 w-full md:w-[60%] lg:w-[50%] z-10 shadow-lg"
           >
             <div className="flex flex-col h-full">
-              <div className="border-b border-gray-700 p-4 flex justify-between items-center">
-                <h3 className="font-medium flex items-center">
-                  {renderIconeTipo(conversaSelecionada.tipo)}
-                  <span className="ml-2">{conversaSelecionada.titulo}</span>
-                </h3>
+              <div className="border-b border-gray-700/50 p-4 flex justify-between items-center bg-gradient-to-r from-gray-800/40 to-gray-800/20">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center bg-gray-700/80">
+                    {renderIconeTipo(conversaSelecionada.tipo)}
+                  </div>
+                  <h3 className="font-medium text-base">{conversaSelecionada.titulo}</h3>
+                </div>
                 <Button 
                   variant="ghost" 
                   size="icon"
+                  className="rounded-full hover:bg-gray-700/50"
                   onClick={() => setMostrarDetalhes(false)}
                 >
                   <X className="h-4 w-4" />
@@ -704,11 +736,11 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
               </div>
               
               <Tabs defaultValue="conteudo" className="flex-1 flex flex-col">
-                <div className="border-b border-gray-700">
-                  <TabsList className="m-4 bg-gray-800 border border-gray-700">
-                    <TabsTrigger value="conteudo">Conteúdo</TabsTrigger>
-                    <TabsTrigger value="acoes">Ações</TabsTrigger>
-                    <TabsTrigger value="comentarios">Comentários</TabsTrigger>
+                <div className="border-b border-gray-700/50 bg-gray-800/30">
+                  <TabsList className="mx-4 my-2 bg-gray-800/70 border border-gray-700/50">
+                    <TabsTrigger value="conteudo" className="text-sm">Conteúdo</TabsTrigger>
+                    <TabsTrigger value="acoes" className="text-sm">Ações</TabsTrigger>
+                    <TabsTrigger value="comentarios" className="text-sm">Comentários</TabsTrigger>
                   </TabsList>
                 </div>
                 
@@ -721,13 +753,46 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                           className={`p-4 rounded-lg ${
                             item.role === 'user' 
                               ? 'bg-blue-900/30 border border-blue-800/50' 
-                              : 'bg-gray-800/70 border border-gray-700/50'
+                              : 'bg-gray-800/60 border border-gray-700/50'
                           }`}
                         >
-                          <div className="text-xs text-gray-400 mb-2">
-                            {item.role === 'user' ? 'Você' : 'Epictus IA'}
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-6 h-6 rounded-full flex items-center justify-center bg-gray-700/70">
+                              {item.role === 'user' ? (
+                                <div className="w-2.5 h-2.5 rounded-full bg-blue-400" />
+                              ) : (
+                                <Brain className="h-3.5 w-3.5 text-indigo-400" />
+                              )}
+                            </div>
+                            <div className="text-sm font-medium">
+                              {item.role === 'user' ? 'Você' : 'Epictus IA'}
+                            </div>
+                            <div className="text-xs text-gray-400 ml-auto">
+                              {idx === 0 ? formatarData(conversaSelecionada.data) : null}
+                            </div>
                           </div>
-                          <p className="text-sm whitespace-pre-wrap">{item.content}</p>
+                          <p className="text-sm whitespace-pre-wrap ml-8 leading-relaxed">{item.content}</p>
+                          
+                          <div className="flex mt-3 ml-8 gap-1">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-7 text-xs rounded-full px-2.5 hover:bg-gray-700/50"
+                            >
+                              <Copy className="h-3 w-3 mr-1.5" />
+                              Copiar
+                            </Button>
+                            {item.role === 'assistant' && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-7 text-xs rounded-full px-2.5 hover:bg-gray-700/50"
+                              >
+                                <RefreshCw className="h-3 w-3 mr-1.5" />
+                                Regenerar
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -737,83 +802,61 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                 <TabsContent value="acoes" className="flex-1 p-0 overflow-hidden">
                   <ScrollArea className="h-full p-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <Button 
-                        variant="outline" 
-                        className="flex items-center justify-start h-auto p-3 bg-gray-800 border-gray-700 hover:bg-gray-700"
-                      >
-                        <div className="mr-3 p-2 rounded-md bg-blue-900/30 border border-blue-800/50">
-                          <Book className="h-4 w-4 text-blue-400" />
-                        </div>
-                        <div className="text-left">
-                          <div className="font-medium text-sm">Transformar em Resumo</div>
-                          <div className="text-xs text-gray-400">Gera uma versão condensada</div>
-                        </div>
-                      </Button>
+                      <AcaoCard 
+                        titulo="Transformar em Resumo"
+                        descricao="Gera uma versão condensada"
+                        icone={<Book className="h-4 w-4 text-blue-400" />}
+                        cor="blue"
+                      />
                       
-                      <Button 
-                        variant="outline" 
-                        className="flex items-center justify-start h-auto p-3 bg-gray-800 border-gray-700 hover:bg-gray-700"
-                      >
-                        <div className="mr-3 p-2 rounded-md bg-purple-900/30 border border-purple-800/50">
-                          <AlertTriangle className="h-4 w-4 text-purple-400" />
-                        </div>
-                        <div className="text-left">
-                          <div className="font-medium text-sm">Gerar Quiz</div>
-                          <div className="text-xs text-gray-400">Cria questões baseadas no conteúdo</div>
-                        </div>
-                      </Button>
+                      <AcaoCard 
+                        titulo="Gerar Quiz"
+                        descricao="Cria questões baseadas no conteúdo"
+                        icone={<AlertTriangle className="h-4 w-4 text-purple-400" />}
+                        cor="purple"
+                      />
                       
-                      <Button 
-                        variant="outline" 
-                        className="flex items-center justify-start h-auto p-3 bg-gray-800 border-gray-700 hover:bg-gray-700"
-                      >
-                        <div className="mr-3 p-2 rounded-md bg-teal-900/30 border border-teal-800/50">
-                          <Download className="h-4 w-4 text-teal-400" />
-                        </div>
-                        <div className="text-left">
-                          <div className="font-medium text-sm">Exportar como PDF</div>
-                          <div className="text-xs text-gray-400">Salve a conversa localmente</div>
-                        </div>
-                      </Button>
+                      <AcaoCard 
+                        titulo="Exportar como PDF"
+                        descricao="Salve a conversa localmente"
+                        icone={<Download className="h-4 w-4 text-teal-400" />}
+                        cor="teal"
+                      />
                       
-                      <Button 
-                        variant="outline" 
-                        className="flex items-center justify-start h-auto p-3 bg-gray-800 border-gray-700 hover:bg-gray-700"
-                      >
-                        <div className="mr-3 p-2 rounded-md bg-green-900/30 border border-green-800/50">
-                          <StickyNote className="h-4 w-4 text-green-400" />
-                        </div>
-                        <div className="text-left">
-                          <div className="font-medium text-sm">Mandar para Caderno</div>
-                          <div className="text-xs text-gray-400">Salve como anotação pessoal</div>
-                        </div>
-                      </Button>
+                      <AcaoCard 
+                        titulo="Mandar para Caderno"
+                        descricao="Salve como anotação pessoal"
+                        icone={<StickyNote className="h-4 w-4 text-green-400" />}
+                        cor="green"
+                      />
                       
-                      <Button 
-                        variant="outline" 
-                        className="flex items-center justify-start h-auto p-3 bg-gray-800 border-gray-700 hover:bg-gray-700"
-                      >
-                        <div className="mr-3 p-2 rounded-md bg-orange-900/30 border border-orange-800/50">
-                          <Calendar className="h-4 w-4 text-orange-400" />
-                        </div>
-                        <div className="text-left">
-                          <div className="font-medium text-sm">Agendar Revisão</div>
-                          <div className="text-xs text-gray-400">Programe uma revisão futura</div>
-                        </div>
-                      </Button>
+                      <AcaoCard 
+                        titulo="Agendar Revisão"
+                        descricao="Programe uma revisão futura"
+                        icone={<Calendar className="h-4 w-4 text-orange-400" />}
+                        cor="orange"
+                      />
                       
-                      <Button 
-                        variant="outline" 
-                        className="flex items-center justify-start h-auto p-3 bg-gray-800 border-gray-700 hover:bg-gray-700"
-                      >
-                        <div className="mr-3 p-2 rounded-md bg-red-900/30 border border-red-800/50">
-                          <Award className="h-4 w-4 text-red-400" />
-                        </div>
-                        <div className="text-left">
-                          <div className="font-medium text-sm">Análise de Qualidade</div>
-                          <div className="text-xs text-gray-400">Avalie seu estudo com IA</div>
-                        </div>
-                      </Button>
+                      <AcaoCard 
+                        titulo="Análise de Qualidade"
+                        descricao="Avalie seu estudo com IA"
+                        icone={<Award className="h-4 w-4 text-red-400" />}
+                        cor="red"
+                      />
+                      
+                      <AcaoCard 
+                        titulo="Retomar Conversa"
+                        descricao="Continue de onde parou"
+                        icone={<ArrowRight className="h-4 w-4 text-indigo-400" />}
+                        cor="indigo"
+                      />
+                      
+                      <AcaoCard 
+                        titulo="Criar Fluxograma"
+                        descricao="Visualize o conteúdo graficamente"
+                        icone={<Sparkles className="h-4 w-4 text-yellow-400" />}
+                        cor="yellow"
+                      />
                     </div>
                   </ScrollArea>
                 </TabsContent>
@@ -821,22 +864,25 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                 <TabsContent value="comentarios" className="flex-1 p-0 overflow-hidden">
                   <div className="flex flex-col h-full">
                     <ScrollArea className="flex-1 p-4">
-                      <div className="space-y-4">
-                        <div className="text-center text-gray-400 p-6">
-                          <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-30" />
-                          <p>Você ainda não adicionou comentários a esta conversa</p>
-                          <p className="text-sm mt-1">Adicione notas pessoais para organizar seus estudos</p>
-                        </div>
+                      <div className="flex flex-col items-center justify-center text-center text-gray-400 h-64">
+                        <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-30" />
+                        <p className="font-medium mb-1">Nenhum comentário ainda</p>
+                        <p className="text-sm opacity-70 mb-4">Adicione notas pessoais para organizar seus estudos</p>
+                        
+                        <Button variant="outline" size="sm" className="bg-gray-800/50 border-gray-700/50 hover:bg-gray-700/50">
+                          <MessageSquare className="h-3.5 w-3.5 mr-2" />
+                          Adicionar primeiro comentário
+                        </Button>
                       </div>
                     </ScrollArea>
                     
-                    <div className="border-t border-gray-700 p-3">
+                    <div className="border-t border-gray-700/50 p-3 bg-gray-800/20">
                       <div className="flex space-x-2">
                         <Input 
                           placeholder="Adicione um comentário pessoal..."
-                          className="bg-gray-800 border-gray-700"
+                          className="bg-gray-800/50 border-gray-700/50 text-sm focus-visible:ring-blue-600"
                         />
-                        <Button>
+                        <Button className="bg-blue-600 hover:bg-blue-700">
                           <Send className="h-4 w-4" />
                         </Button>
                       </div>
@@ -850,26 +896,60 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
       </AnimatePresence>
     );
   };
+  
+  // Componente de card de ação
+  const AcaoCard = ({ titulo, descricao, icone, cor }) => {
+    const getBgColor = () => {
+      switch (cor) {
+        case 'blue': return 'bg-blue-900/30 border-blue-800/50 hover:bg-blue-900/40';
+        case 'purple': return 'bg-purple-900/30 border-purple-800/50 hover:bg-purple-900/40';
+        case 'teal': return 'bg-teal-900/30 border-teal-800/50 hover:bg-teal-900/40';
+        case 'green': return 'bg-green-900/30 border-green-800/50 hover:bg-green-900/40';
+        case 'orange': return 'bg-orange-900/30 border-orange-800/50 hover:bg-orange-900/40';
+        case 'red': return 'bg-red-900/30 border-red-800/50 hover:bg-red-900/40';
+        case 'indigo': return 'bg-indigo-900/30 border-indigo-800/50 hover:bg-indigo-900/40';
+        case 'yellow': return 'bg-yellow-900/30 border-yellow-800/50 hover:bg-yellow-900/40';
+        default: return 'bg-gray-900/30 border-gray-800/50 hover:bg-gray-900/40';
+      }
+    };
+    
+    return (
+      <Button 
+        variant="outline" 
+        className={`flex items-center justify-start h-auto p-3 ${getBgColor()} border transition-colors group`}
+      >
+        <div className={`mr-3 p-2 rounded-md ${getBgColor()} group-hover:scale-105 transition-transform`}>
+          {icone}
+        </div>
+        <div className="text-left">
+          <div className="font-medium text-sm">{titulo}</div>
+          <div className="text-xs text-gray-400">{descricao}</div>
+        </div>
+      </Button>
+    );
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="sm:max-w-[80%] md:max-w-[80%] lg:max-w-[80%] xl:max-w-[1000px] h-[80vh] bg-gradient-to-br from-[#161b26] to-[#1d2234] text-white border-gray-800 p-0 overflow-hidden"
+        className="sm:max-w-[85%] md:max-w-[85%] lg:max-w-[85%] xl:max-w-[1100px] h-[85vh] bg-gradient-to-br from-[#161b26] to-[#1d2234] text-white border-gray-800 p-0 overflow-hidden shadow-2xl"
         onEscapeKeyDown={() => mostrarDetalhes ? setMostrarDetalhes(false) : onOpenChange(false)}
       >
-        <DialogHeader className="px-6 py-3 border-b border-gray-800 bg-gradient-to-r from-blue-900/20 to-indigo-900/20">
-          <DialogTitle className="text-xl font-bold text-white flex items-center gap-2">
-            <Clock className="h-5 w-5 text-[#FF6B00]" />
+        <DialogHeader className="px-6 py-3 border-b border-gray-800 bg-gradient-to-r from-blue-900/30 to-indigo-900/20">
+          <DialogTitle className="text-xl font-semibold text-white flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-full bg-[#FF6B00] flex items-center justify-center">
+              <Clock className="h-4 w-4 text-white" />
+            </div>
             Histórico de Conversas
           </DialogTitle>
         </DialogHeader>
         
         <div className="grid grid-cols-1 md:grid-cols-2 h-[calc(100%-60px)] overflow-hidden relative">
-          <div className="flex flex-col h-full md:border-r border-gray-800">
+          <div className="w-full h-full md:max-w-[350px]">
             <ColunaListaConversas />
           </div>
           
-          <div className="hidden md:block h-full">
+          <div className="hidden md:block h-full md:col-span-1">
             <ColunaPreviaVisual />
           </div>
           
@@ -934,6 +1014,23 @@ const X = ({ className, ...props }) => (
   >
     <path d="M18 6 6 18" />
     <path d="m6 6 12 12" />
+  </svg>
+);
+
+// Componente Filter que estava faltando
+const Filter = ({ className, ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
   </svg>
 );
 
