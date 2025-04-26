@@ -673,7 +673,7 @@ const EpictusBetaMode: React.FC = () => {
 
         if (modal) {
           modal.addEventListener('click', (e) => {
-            if`            if (e.target === modal) {
+            if (e.target === modal) {
               closeModal();
             }
           });
