@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Send, Plus, Mic, Loader2, Brain, BookOpen, AlignJustify, RotateCw, Search, Image, Lightbulb, PenLine, X, Sparkles } from "lucide-react";
+import React, { useState } from "react";
+import { Send, Plus, Mic, Loader2, Brain, BookOpen, AlignJustify, RotateCw, Search, Image, Lightbulb, PenLine } from "lucide-react";
 import { motion } from "framer-motion";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -8,9 +8,6 @@ import QuickActionButton from "./QuickActionButton";
 
 
 interface EpictusMessageBoxProps {
-  onClose: () => void;
-  sessionId: string;
-  onNewSession: () => void;
   inputMessage: string;
   setInputMessage: (value: string) => void;
   handleSendMessage: () => void;
@@ -22,9 +19,6 @@ interface EpictusMessageBoxProps {
 }
 
 const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
-  onClose,
-  sessionId,
-  onNewSession,
   inputMessage,
   setInputMessage,
   handleSendMessage,
@@ -34,100 +28,6 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
   handleKeyDown,
   handleButtonClick
 }) => {
-  const [messages, setMessages] = useState<any[]>([]); // Initialize messages state
-  const [currentMessage, setCurrentMessage] = useState('');
-  const messageEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-
-
-  useEffect(() => {
-    // Focar no input de mensagem ao abrir
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-
-    // Carregar histórico de conversa se for uma conversa existente
-    const loadConversationHistory = async () => {
-      try {
-        const history = getConversationHistory(sessionId);
-        if (history.length > 1) { // Se tem mais que só a mensagem do sistema
-          const messagesForDisplay = history.slice(1).map(msg => ({
-            id: Math.random().toString(),
-            content: msg.content,
-            sender: msg.role === 'user' ? 'user' : 'ai',
-            type: 'text',
-            timestamp: new Date()
-          }));
-          setMessages(messagesForDisplay);
-        }
-      } catch (error) {
-        console.error("Erro ao carregar histórico da conversa:", error);
-      }
-    };
-
-    loadConversationHistory();
-  }, [sessionId]);
-
-  const generateResponse = async () => {
-    if (!currentMessage.trim()) return;
-
-    // Criar novo ID para a mensagem
-    const messageId = Math.random().toString();
-
-    // Adicionar mensagem do usuário
-    const userMessage = {
-      id: messageId,
-      content: currentMessage,
-      sender: 'user' as const,
-      type: 'text' as const,
-      timestamp: new Date()
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setCurrentMessage('');
-    setIsTyping(true);
-
-    try {
-      // Gerar resposta da IA usando o sessionId fornecido
-      const response = await generateAIResponse(userMessage.content, sessionId, {
-        intelligenceLevel: 'advanced',
-        detailedResponse: true,
-        maximumLength: true
-      });
-
-      // Adicionar resposta da IA
-      const aiMessage = {
-        id: Math.random().toString(),
-        content: response,
-        sender: 'ai' as const,
-        type: 'text' as const,
-        timestamp: new Date()
-      };
-
-      setMessages((prev) => [...prev, aiMessage]);
-      setIsTyping(false);
-
-      // Atualiza a barra de rolagem
-      setTimeout(() => {
-        messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-    } catch (error) {
-      console.error('Erro ao gerar resposta:', error);
-      setIsTyping(false);
-
-      // Mensagem de erro
-      const errorMessage = {
-        id: Math.random().toString(),
-        content: 'Desculpe, ocorreu um erro ao processar sua solicitação. Por favor, tente novamente mais tarde.',
-        sender: 'ai' as const,
-        type: 'text' as const,
-        timestamp: new Date()
-      };
-
-      setMessages((prev) => [...prev, errorMessage]);
-    }
-  };
-
   return (
     <motion.div 
       className="relative w-[60%] h-auto mx-auto bg-transparent rounded-2xl shadow-xl 
@@ -144,39 +44,6 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
 
       {/* Container principal */}
       <div className="relative z-10 p-4">
-        {/* Cabeçalho */}
-        <div className="bg-gradient-to-r from-[#1F2739]/90 to-[#1A2036]/90 backdrop-blur-md border-b border-white/10 p-3 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-blue-400" />
-            <h3 className="text-white font-medium">Epictus IA</h3>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-gray-400 hover:text-blue-400 text-xs flex items-center gap-1.5"
-              onClick={() => {
-                // Criar nova sessão
-                onNewSession();
-                // Limpar mensagens
-                setMessages([]);
-              }}
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Nova conversa
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="text-gray-400 hover:text-white" 
-              onClick={onClose}
-            >
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-
-
         {/* Opções superiores */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
@@ -253,7 +120,6 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
               placeholder="Digite um comando ou pergunta para o Epictus Turbo..."
               className="w-full bg-transparent text-white py-3 px-3 text-sm outline-none placeholder:text-gray-400"
               disabled={isTyping}
-              ref={inputRef} // Add ref to the Textarea
             />
           </div>
 
@@ -304,7 +170,7 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
                 boxShadow: ["0 0 0px rgba(13, 35, 160, 0)", "0 0 15px rgba(13, 35, 160, 0.5)", "0 0 0px rgba(13, 35, 160, 0)"],
               }}
               transition={{ duration: 2, repeat: Infinity }}
-              onClick={generateResponse} // Changed to generateResponse
+              onClick={handleSendMessage}
               disabled={isTyping}
             >
               {isTyping ? (
@@ -331,16 +197,3 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
 };
 
 export default EpictusMessageBox;
-
-// Placeholder functions -  REPLACE THESE WITH YOUR ACTUAL IMPLEMENTATIONS
-async function generateAIResponse(prompt: string, sessionId: string, options: any): Promise<string> {
-  // Your AI response generation logic here...  This is a placeholder.
-  console.log("Generating AI response for:", prompt, sessionId, options);
-  return "This is a placeholder AI response.";
-}
-
-async function getConversationHistory(sessionId: string): Promise<any[]> {
-  // Your Supabase interaction logic here... This is a placeholder.
-  console.log("Fetching conversation history for:", sessionId);
-  return [{ role: 'system', content: 'System message' }]; // Placeholder return value
-}

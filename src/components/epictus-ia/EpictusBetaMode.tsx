@@ -85,12 +85,6 @@ const EpictusBetaMode: React.FC = () => {
   const MAX_CHARS = 1000;
   const [sessionId] = useState(() => localStorage.getItem('epictus_beta_session_id') || uuidv4());
   const [isReformulating, setIsReformulating] = useState(false); 
-  const [isEpictusMessageBoxOpen, setIsEpictusMessageBoxOpen] = useState(false);
-  const [currentSessionId, setCurrentSessionId] = useState<string>(() => {
-    // Gerar um novo UUID para a sessão de conversa ou reutilizar um existente
-    const savedSessionId = localStorage.getItem('current_chat_session_id');
-    return savedSessionId || uuidv4();
-  });
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -665,22 +659,14 @@ const EpictusBetaMode: React.FC = () => {
     }
   };
 
+  const [showHistoricoModal, setShowHistoricoModal] = useState(false);
+
   const handleHistoricoClick = () => {
-    setIsHistoricoModalOpen(true);
+    setShowHistoricoModal(true);
   };
 
   const closeHistoricoModal = () => {
-    setIsHistoricoModalOpen(false);
-  };
-
-  // Função para retomar uma conversa do histórico
-  const handleResumeConversation = (conversaId: string) => {
-    // Atualiza o ID da sessão para o ID da conversa selecionada
-    setCurrentSessionId(conversaId);
-    localStorage.setItem('current_chat_session_id', conversaId);
-
-    // Abre a caixa de mensagens
-    setIsEpictusMessageBoxOpen(true);
+    setShowHistoricoModal(false);
   };
 
   return (
@@ -999,7 +985,6 @@ const EpictusBetaMode: React.FC = () => {
             MAX_CHARS={MAX_CHARS} 
             isTyping={isTyping} 
             handleButtonClick={handleButtonClick}
-            sessionId={sessionId}
           />
 
           <PromptSuggestionsModal 
@@ -1020,24 +1005,9 @@ const EpictusBetaMode: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal de chat Epictus IA */}
-      {isEpictusMessageBoxOpen && (
-        <EpictusMessageBox 
-          onClose={() => setIsEpictusMessageBoxOpen(false)} 
-          sessionId={currentSessionId}
-          onNewSession={() => {
-            const newSessionId = uuidv4();
-            setCurrentSessionId(newSessionId);
-            localStorage.setItem('current_chat_session_id', newSessionId);
-          }}
-        />
-      )}
-
-      {/* Modal de histórico de conversas */}
-      <HistoricoConversasModal
-        open={isHistoricoModalOpen}
-        onOpenChange={setIsHistoricoModalOpen}
-        onResumeConversation={handleResumeConversation}
+      <HistoricoConversasModal 
+        open={showHistoricoModal} 
+        onOpenChange={setShowHistoricoModal} 
       />
 
       <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
