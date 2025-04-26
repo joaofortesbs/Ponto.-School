@@ -814,15 +814,6 @@ const EpictusBetaMode: React.FC = () => {
                                 >
                                   <PenLine size={12} />
                                 </button>
-                                <MessageToolsDropdown 
-                                  messageId={parseInt(message.id)}
-                                  content={message.content}
-                                  showTools={message.showTools || false}
-                                  onToggleTools={(e) => {
-                                    e?.stopPropagation();
-                                    toggleMessageTools(message.id);
-                                  }}
-                                />
                                 <button 
                                   onClick={() => handleExportMessage(message)}
                                   className="text-gray-400 hover:text-blue-400 transition-colors"
