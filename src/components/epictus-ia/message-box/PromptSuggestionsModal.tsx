@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Lightbulb, Search, Clock, Sparkles, RefreshCw, ThumbsUp, ChevronRight } from "lucide-react";
+import { X, Lightbulb, Search, Clock, Sparkles, RefreshCw, ThumbsUp } from "lucide-react";
 import { generateAIResponse } from "@/services/aiChatService";
 
 interface PromptSuggestionsModalProps {
@@ -8,15 +9,13 @@ interface PromptSuggestionsModalProps {
   onClose: () => void;
   onSelectPrompt: (prompt: string) => void;
   currentContext?: string;
-  onHistoricoClick?: () => void; // Added for the history modal
 }
 
 const PromptSuggestionsModal: React.FC<PromptSuggestionsModalProps> = ({
   isOpen,
   onClose,
   onSelectPrompt,
-  currentContext = "estudos",
-  onHistoricoClick
+  currentContext = "estudos"
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestedPrompts, setSuggestedPrompts] = useState<string[]>([]);
@@ -57,9 +56,9 @@ const PromptSuggestionsModal: React.FC<PromptSuggestionsModalProps> = ({
     const contextKey = currentContext in defaultPrompts 
       ? currentContext as keyof typeof defaultPrompts
       : 'geral';
-
+    
     setSuggestedPrompts(defaultPrompts[contextKey]);
-
+    
     // Carregar prompts recentes do localStorage
     const savedRecentPrompts = localStorage.getItem('recentPrompts');
     if (savedRecentPrompts) {
@@ -97,10 +96,10 @@ const PromptSuggestionsModal: React.FC<PromptSuggestionsModalProps> = ({
   // Função para gerar prompts personalizados baseados no conteúdo
   const generateCustomPrompts = async () => {
     if (!customContent.trim()) return;
-
+    
     setIsGenerating(true);
     setGeneratedPrompts([]);
-
+    
     try {
       // Criar um prompt para o AI gerar sugestões de prompts
       const promptEngineering = `
@@ -108,11 +107,11 @@ const PromptSuggestionsModal: React.FC<PromptSuggestionsModalProps> = ({
         que o usuário poderia fazer para obter informações valiosas sobre o assunto.
         Os prompts devem ser variados, cobrir diferentes aspectos do tema, e ser formulados para obter respostas detalhadas.
         Responda APENAS com os 5 prompts, um por linha, sem numeração ou explicações adicionais.
-
+        
         Contexto de estudo:
         ${customContent}
       `;
-
+      
       // Chamar a API para gerar os prompts
       const response = await generateAIResponse(
         promptEngineering,
@@ -122,14 +121,14 @@ const PromptSuggestionsModal: React.FC<PromptSuggestionsModalProps> = ({
           languageStyle: 'formal'
         }
       );
-
+      
       // Processar a resposta para extrair os prompts
       if (response) {
         const extractedPrompts = response
           .split('\n')
           .map(line => line.trim())
           .filter(line => line.length > 10 && !line.startsWith('Prompt') && !line.startsWith('-'));
-
+        
         setGeneratedPrompts(extractedPrompts.slice(0, 5));
       }
     } catch (error) {
@@ -300,7 +299,7 @@ const PromptSuggestionsModal: React.FC<PromptSuggestionsModalProps> = ({
                       onChange={(e) => setCustomContent(e.target.value)}
                     ></textarea>
                   </div>
-
+                  
                   <button
                     className="w-full py-2 bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] rounded-lg text-white font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={generateCustomPrompts}
@@ -318,14 +317,14 @@ const PromptSuggestionsModal: React.FC<PromptSuggestionsModalProps> = ({
                       </>
                     )}
                   </button>
-
+                  
                   {generatedPrompts.length > 0 && (
                     <div className="mt-4 space-y-2">
                       <h4 className="text-sm font-medium text-gray-300 flex items-center gap-2">
                         <ThumbsUp className="h-4 w-4 text-green-400" />
                         <span>Prompts personalizados gerados:</span>
                       </h4>
-
+                      
                       {generatedPrompts.map((prompt, index) => (
                         <div
                           key={index}
@@ -352,29 +351,6 @@ const PromptSuggestionsModal: React.FC<PromptSuggestionsModalProps> = ({
               >
                 Cancelar
               </button>
-              {onHistoricoClick && ( // Conditionally render the button
-                <div className="p-2">
-                  <button
-                    variant="outline"
-                    size="sm"
-                    className="w-full flex items-center justify-between text-gray-300 bg-[#1A2634]/30 hover:bg-[#1A2634]/50 border-[#2A3645]/50"
-                    onClick={() => {
-                      if (typeof onClose === 'function') {
-                        onClose();
-                      }
-                      if (typeof onHistoricoClick === 'function') {
-                        onHistoricoClick();
-                      }
-                    }}
-                  >
-                    <div className="flex items-center">
-                      <Clock className="mr-2 h-4 w-4 text-[#4A90E2]" />
-                      <span>Histórico de conversas</span>
-                    </div>
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
-              )}
             </div>
           </motion.div>
         </motion.div>

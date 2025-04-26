@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 
 // Interface de mensagem para o chat
@@ -73,211 +74,79 @@ const GEMINI_API_KEY = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 // Função para gerar resposta da IA usando a API Gemini
-export const generateAIResponse = async (message: string, sessionId: string, options?: any, conversationId?: string): Promise<{response: string, conversationId: string}> => {
+export const generateAIResponse = async (message: string, sessionId?: string): Promise<string> => {
   try {
-    // Obtém o userId do localStorage ou de algum outro armazenamento
-    const userId = localStorage.getItem('user_id') || 'anonymous';
-    let activeConversationId = conversationId;
+    console.log("Gerando resposta com Gemini para:", message);
 
-    // Se não tiver conversationId, cria uma nova conversa
-    if (!activeConversationId) {
-      const tempTitle = message.length > 30 ? message.substring(0, 30) + '...' : message;
-      activeConversationId = await createOrGetConversation(userId, tempTitle);
+    // Inicializar histórico se não existir
+    if (sessionId && !conversationHistory[sessionId]) {
+      initializeConversationHistory(sessionId);
     }
 
-    if (!activeConversationId) {
-      throw new Error('Falha ao criar ou recuperar ID de conversa');
+    // Adicionar mensagem ao histórico se tiver sessionId
+    if (sessionId) {
+      const userMessage = createMessage(message, 'user');
+      addMessageToHistory(sessionId, userMessage);
     }
 
-    // Adiciona a mensagem do usuário à conversa
-    await addMessageToConversation(activeConversationId, message, 'user');
+    // Obter o histórico para contexto
+    const history = sessionId ? getChatHistory(sessionId) : [];
+    const historyContext = history.map(m => `${m.sender === 'user' ? 'Usuário' : 'Assistente'}: ${m.content}`).join('\n\n');
 
-    // Mensagem do usuário
-    const userMessage = createMessage(message, 'user');
-    addMessageToHistory(sessionId, userMessage);
+    // Preparar o prompt para a API Gemini
+    const prompt = `Você é o Epictus IA, um assistente educacional avançado da plataforma Ponto.School. 
+Seu objetivo é ajudar os estudantes com dúvidas sobre matérias escolares, organização de estudos, 
+preparação para provas e qualquer tema relacionado à educação.
 
-    // Obtém o histórico de mensagens para fornecer contexto
-    const historyMessages = getChatHistory(sessionId).slice(-10);
-    
-    // Criando um histórico de conversa mais context-aware para melhorar as respostas da IA
-    const systemPrompt = {
-      role: 'system',
-      parts: [{ 
-        text: `Você é o Epictus IA, um assistente educacional avançado da plataforma Ponto.School. 
-        Seu objetivo é ajudar os estudantes com explicações claras, detalhadas e educacionalmente relevantes.
-        
-        Ao responder às perguntas:
-        - Seja educativo, conciso e preciso
-        - Use uma linguagem adaptada ao nível educacional do usuário
-        - Forneça exemplos práticos quando apropriado
-        - Organize suas respostas com formatação clara (títulos, listas, etc.)
-        - Mantenha um tom amigável e encorajador
+Seja amigável, didático e detalhado em suas respostas. Use uma linguagem apropriada para o contexto 
+educacional, incluindo formatação rica com markdown quando necessário para melhorar a compreensão.
 
-        Se o usuário fizer uma pergunta sobre conteúdo educacional, forneça uma resposta completa e bem estruturada.
-        Se for solicitado para ajudar com estudos ou exercícios, ofereça orientação sem fornecer respostas diretas.
-        
-        Lembre-se que você é parte da plataforma Ponto.School, que tem como objetivo conectar os estudantes com o futuro através da educação.`
-      }]
-    };
+HISTÓRICO DA CONVERSA PARA CONTEXTO:
+${historyContext}
 
-    // Convertendo o histórico para o formato correto do Gemini
-    const conversationHistory = historyMessages.map(msg => ({
-      role: msg.sender === 'user' ? 'user' : 'model',
-      parts: [{ text: msg.content }]
-    }));
+Responda à seguinte pergunta de forma educativa, detalhada e amigável: ${message}`;
 
-    // Definindo os parâmetros da solicitação com o system prompt
-    const requestBody = {
-      contents: [
-        systemPrompt,
-        ...conversationHistory,
-        {
-          role: 'user',
-          parts: [{ text: message }]
-        }
-      ],
-      generationConfig: {
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 2048,
-      },
-      safetySettings: [
-        {
-          category: "HARM_CATEGORY_HARASSMENT",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
-        },
-        {
-          category: "HARM_CATEGORY_HATE_SPEECH",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
-        },
-        {
-          category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
-        },
-        {
-          category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
-        }
-      ]
-    };
-
-    console.log('Enviando requisição para Gemini API...');
-    
-    // Realizar a chamada à API Gemini
+    // Fazer a requisição para a API Gemini
     const response = await fetch(`${GEMINI_BASE_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: prompt }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          topP: 0.95,
+          topK: 40,
+          maxOutputTokens: 2048
+        }
+      })
     });
 
     if (!response.ok) {
-      console.error(`Erro na API Gemini: ${response.status} ${response.statusText}`);
-      const errorBody = await response.text();
-      console.error('Detalhes do erro:', errorBody);
-      throw new Error(`Erro na API: ${response.status} ${response.statusText}`);
+      throw new Error(`Erro na resposta da API: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
-    console.log('Resposta recebida da Gemini API:', data);
     
-    // Extrair a resposta da IA do resultado
-    const aiResponseText = data.candidates?.[0]?.content?.parts?.[0]?.text || 
-                        useFallbackResponse(message);
+    // Extrair a resposta da IA
+    const aiResponse = data.candidates[0].content.parts[0].text;
 
-    // Formatando a resposta para melhorar a legibilidade
-    const formattedResponse = aiResponseText
-      .replace(/\*\*(.*?)\*\*/g, '**$1**') // Garantir negrito
-      .replace(/\n\n/g, '\n\n') // Manter espaçamento de parágrafos
-      .trim();
-
-    // Mensagem da IA
-    const aiMessage = createMessage(formattedResponse, 'ai');
-    addMessageToHistory(sessionId, aiMessage);
-
-    // Adiciona a resposta da IA à conversa no Supabase
-    await addMessageToConversation(activeConversationId, formattedResponse, 'ai');
-
-    // Se esta for a primeira troca de mensagens, atualizamos o título e definimos a categoria
-    const messages = await getConversationMessages(activeConversationId);
-    if (messages && messages.length <= 2) {
-      // Gera um título mais significativo baseado na primeira troca
-      const betterTitle = generateBetterTitle(message);
-
-      // Determina a categoria baseada no conteúdo
-      const category = determineCategory([userMessage, aiMessage]);
-
-      // Gera um resumo da conversa
-      const summary = `Conversa sobre ${betterTitle.toLowerCase()}`;
-
-      // Atualiza os metadados da conversa
-      await updateConversationMetadata(activeConversationId, {
-        title: betterTitle,
-        categoria: category,
-        resumo: summary
-      });
+    // Adicionar resposta ao histórico se tiver sessionId
+    if (sessionId) {
+      const aiMessage = createMessage(aiResponse, 'ai');
+      addMessageToHistory(sessionId, aiMessage);
     }
 
-    return {
-      response: formattedResponse,
-      conversationId: activeConversationId
-    };
+    return aiResponse;
   } catch (error) {
-    console.error('Erro ao gerar resposta:', error);
-    return {
-      response: useFallbackResponse(message),
-      conversationId: conversationId || ''
-    };
+    console.error("Erro ao gerar resposta da IA com Gemini:", error);
+    
+    // Usar respostas de fallback em caso de erro
+    return useFallbackResponse(message);
   }
-};
-
-// Funções auxiliares para integração com o Supabase
-import { 
-  createConversation, 
-  addMessage as addMessageToConversation,
-  getMessages as getConversationMessages,
-  updateConversationTitle,
-  updateConversationMetadata,
-  determineCategory
-} from './conversationHistoryService';
-
-// Função para criar uma nova conversa ou recuperar uma existente
-const createOrGetConversation = async (userId: string, initialTitle: string): Promise<string> => {
-  try {
-    const conversationId = await createConversation(userId, initialTitle);
-    return conversationId || '';
-  } catch (error) {
-    console.error('Erro ao criar conversa:', error);
-    return '';
-  }
-};
-
-// Função para gerar um título melhor com base na primeira mensagem
-const generateBetterTitle = (message: string): string => {
-  // Limita o tamanho do título
-  const maxLength = 40;
-
-  // Remove pontuações do final e trunca se necessário
-  let title = message.trim().replace(/[.!?]$/, '');
-
-  if (title.length > maxLength) {
-    // Trunca no final de uma palavra para evitar cortar palavras no meio
-    const truncated = title.substring(0, maxLength);
-    const lastSpaceIndex = truncated.lastIndexOf(' ');
-
-    if (lastSpaceIndex > maxLength * 0.7) { // Só trunca na palavra se não perder muito do título
-      title = truncated.substring(0, lastSpaceIndex);
-    } else {
-      title = truncated;
-    }
-
-    title += '...';
-  }
-
-  // Capitaliza a primeira letra
-  return title.charAt(0).toUpperCase() + title.slice(1);
 };
 
 // Função auxiliar para inicializar conversa

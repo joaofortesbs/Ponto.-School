@@ -178,9 +178,6 @@ const EpictusBetaMode: React.FC = () => {
     }
   };
 
-  // Estado para armazenar o ID da conversa atual
-  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
-
   const handleSendMessage = async () => {
     const trimmedMessage = inputMessage.trim();
 
@@ -205,102 +202,43 @@ const EpictusBetaMode: React.FC = () => {
     setIsTyping(true);
 
     try {
-      console.log("Enviando mensagem para IA:", trimmedMessage);
-      
-      // Definimos um tempo máximo maior para permitir respostas mais completas
-      const timeoutDuration = 30000; // 30 segundos
-      
-      // Criamos uma promessa com timeout para garantir que o usuário não espere indefinidamente
-      const responseWithTimeout = async () => {
-        return new Promise<{response: string, conversationId: string}>((resolve, reject) => {
-          const timeoutId = setTimeout(() => {
-            reject(new Error("Tempo de resposta excedido. A IA está demorando mais do que o esperado."));
-          }, timeoutDuration);
-          
-          generateAIResponse(
-            trimmedMessage, 
-            sessionId, 
-            {
-              intelligenceLevel: 'advanced',
-              languageStyle: 'formal',
-              detailedResponse: true
-            }, 
-            currentConversationId
-          )
-          .then((result) => {
-            clearTimeout(timeoutId);
-            resolve(result);
-          })
-          .catch(reject);
-        });
-      };
-      
-      const { response, conversationId } = await responseWithTimeout();
-      
-      console.log("Resposta recebida da IA, conversa ID:", conversationId);
-      
-      // Verificar se a resposta está vazia
-      if (!response || response.trim() === '') {
-        throw new Error("A resposta recebida está vazia");
-      }
-      
-      // Atualiza o ID da conversa atual
-      if (conversationId) {
-        setCurrentConversationId(conversationId);
-      }
+      const typingTimeout = setTimeout(() => {
+        setIsTyping(true);
+      }, 300);
 
-      const aiMessage: Message = {
-        id: uuidv4(),
-        sender: "ia",
-        content: response,
-        timestamp: new Date()
-      };
+      try {
+        console.log("Enviando mensagem para Gemini:", trimmedMessage);
+        const response = await generateAIResponse(trimmedMessage, sessionId);
+        console.log("Resposta recebida de Gemini");
 
-      setMessages(prev => [...prev, aiMessage]);
-      
-      // Garantir que o chat role para a nova mensagem
-      setTimeout(() => {
-        if (chatContainerRef.current) {
-          chatContainerRef.current.scrollTo({
-            top: chatContainerRef.current.scrollHeight,
-            behavior: "smooth"
-          });
-        }
-      }, 100);
-      
+        const aiMessage: Message = {
+          id: uuidv4(),
+          sender: "ia",
+          content: response,
+          timestamp: new Date()
+        };
+
+        setMessages(prev => [...prev, aiMessage]);
+      } catch (err) {
+        console.error("Erro ao gerar resposta com Gemini:", err);
+
+        const errorMessage: Message = {
+          id: uuidv4(),
+          sender: "ia",
+          content: "Desculpe, encontrei um problema ao processar sua solicitação. Por favor, tente novamente em alguns instantes.",
+          timestamp: new Date()
+        };
+
+        setMessages(prev => [...prev, errorMessage]);
+      } finally {
+        clearTimeout(typingTimeout);
+        setIsTyping(false);
+      }
     } catch (err) {
-      console.error("Erro ao gerar resposta:", err);
-
-      // Determinar uma mensagem de erro mais específica baseada no tipo de erro
-      let errorContent = "Desculpe, encontrei um problema ao processar sua solicitação. Por favor, tente novamente em alguns instantes.";
-      
-      if (err instanceof Error) {
-        if (err.message.includes("Tempo")) {
-          errorContent = "O tempo de resposta excedeu o limite. Talvez a IA esteja sobrecarregada no momento. Por favor, tente novamente em alguns instantes.";
-        } else if (err.message.includes("vazia")) {
-          errorContent = "Recebi uma resposta vazia da IA. Isso pode indicar problemas com o serviço de IA. Por favor, tente uma pergunta diferente ou tente novamente mais tarde.";
-        } else if (err.message.includes("API")) {
-          errorContent = "Ocorreu um erro na comunicação com o serviço de IA. Verifique sua conexão com a internet e tente novamente.";
-        }
-      }
-
-      const errorMessage: Message = {
-        id: uuidv4(),
-        sender: "ia",
-        content: errorContent,
-        timestamp: new Date()
-      };
-
-      setMessages(prev => [...prev, errorMessage]);
-      
-      toast({
-        title: "Erro na comunicação",
-        description: "Ocorreu um erro ao se comunicar com a IA. Tente novamente.",
-        duration: 3000,
-        variant: "destructive"
-      });
-    } finally {
+      console.error("Erro no processo de envio de mensagem:", err);
       setIsTyping(false);
+      setError("Houve um erro ao processar sua mensagem. Tente novamente.");
+      setTimeout(() => setError(null), 3000);
     }
   };
 
@@ -312,9 +250,6 @@ const EpictusBetaMode: React.FC = () => {
   };
 
   const clearChat = () => {
-    // Reseta o ID da conversa atual para iniciar uma nova
-    setCurrentConversationId(null);
-    
     const initialMessage: Message = {
       id: uuidv4(),
       sender: "ia",
@@ -736,12 +671,7 @@ const EpictusBetaMode: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <TurboHeader 
-        profileOptions={profileOptions} 
-        initialProfileIcon={profileIcon} 
-        initialProfileName={profileName} 
-        onHistoricoClick={() => setIsHistoricoModalOpen(true)}
-      />
+      <TurboHeader profileOptions={profileOptions} initialProfileIcon={profileIcon} initialProfileName={profileName} />
 
       <div className="flex-1 flex flex-col items-center justify-between p-4 overflow-hidden bg-transparent">
         <div className="w-[80%] h-[85%] relative mb-4 flex-grow overflow-hidden">
@@ -1077,59 +1007,9 @@ const EpictusBetaMode: React.FC = () => {
 
       <HistoricoConversasModal 
         open={isHistoricoModalOpen}
-        onOpenChange={setIsHistoricoModalOpen}
-        onSelectConversation={async (conversationId) => {
-          // Quando o usuário seleciona uma conversa no histórico
-          try {
-            setIsTyping(true);
-            
-            // Atualizamos o ID da conversa atual
-            setCurrentConversationId(conversationId);
-            
-            // Importamos getMessages diretamente para evitar circular dependency
-            const { getMessages } = await import('@/services/conversationHistoryService');
-            
-            // Buscamos as mensagens da conversa selecionada
-            const conversationMessages = await getMessages(conversationId);
-            
-            if (conversationMessages && conversationMessages.length > 0) {
-              // Atualizamos o estado de mensagens com as mensagens da conversa
-              setMessages(
-                conversationMessages.map(msg => ({
-                  id: msg.id,
-                  sender: msg.sender,
-                  content: msg.content,
-                  timestamp: new Date(msg.timestamp),
-                  isEdited: msg.isEdited
-                }))
-              );
-              
-              // Rolamos para o final da conversa
-              setTimeout(() => {
-                if (chatContainerRef.current) {
-                  chatContainerRef.current.scrollTo({
-                    top: chatContainerRef.current.scrollHeight,
-                    behavior: "smooth"
-                  });
-                }
-              }, 100);
-            }
-          } catch (error) {
-            console.error("Erro ao carregar conversa:", error);
-            toast({
-              title: "Erro ao carregar conversa",
-              description: "Não foi possível carregar a conversa selecionada.",
-              variant: "destructive",
-              duration: 3000
-            });
-          } finally {
-            setIsTyping(false);
-          }
-        }}
-        onCreateNewChat={() => {
-          // Limpa o chat atual e começa uma nova conversa
-          clearChat();
-        }}
+        onOpenChange={setIsHistoricoModalOpen} 
+        open={showHistoricoModal} 
+        onOpenChange={setShowHistoricoModal} 
       />
 
       <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
