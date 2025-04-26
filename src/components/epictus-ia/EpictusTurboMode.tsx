@@ -6,13 +6,11 @@ import { Zap, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import TurboMessageBox from "./TurboMessageBox";
 import TurboHubConnected from "./TurboHubConnected";
-import HistoricoConversasModal from "./modals/HistoricoConversasModal";
 
 const EpictusTurboMode: React.FC = () => {
   const { theme } = useTheme();
   const [isHovered, setIsHovered] = useState(false);
   const [animationComplete, setAnimationComplete] = useState(false);
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
   // Perfil selecionado no dropdown de personalidades
   const [profileIcon, setProfileIcon] = useState(
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -150,15 +148,6 @@ const EpictusTurboMode: React.FC = () => {
 
   return (
     <div className="w-full flex flex-col items-center">
-      {/* History Conversations Modal */}
-      <HistoricoConversasModal 
-        open={showHistoryModal} 
-        onOpenChange={setShowHistoryModal}
-        onContinueConversation={(conversationId) => {
-          console.log("Continuing conversation with ID:", conversationId);
-          // Logic to continue the conversation
-        }}
-      />
       {/* Header copied from EpictusIAHeader but with title changed to "Epictus Turbo" */}
       <div className="w-full p-4">
         <motion.header 
@@ -358,7 +347,6 @@ const EpictusTurboMode: React.FC = () => {
                 whileTap={{ scale: 0.95 }}
                 initial={false}
                 transition={{ duration: 0.3 }}
-                onClick={() => setShowHistoryModal(true)}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10" />
