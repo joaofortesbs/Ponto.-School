@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 
 // Interface de mensagem para o chat
@@ -74,79 +73,135 @@ const GEMINI_API_KEY = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 // Função para gerar resposta da IA usando a API Gemini
-export const generateAIResponse = async (message: string, sessionId?: string): Promise<string> => {
+export const generateAIResponse = async (message: string, sessionId: string, options?: any, conversationId?: string): Promise<{response: string, conversationId: string}> => {
   try {
-    console.log("Gerando resposta com Gemini para:", message);
+    // Obtém o userId do localStorage ou de algum outro armazenamento
+    const userId = localStorage.getItem('user_id') || 'anonymous';
+    let activeConversationId = conversationId;
 
-    // Inicializar histórico se não existir
-    if (sessionId && !conversationHistory[sessionId]) {
-      initializeConversationHistory(sessionId);
+    // Se não tiver conversationId, cria uma nova conversa
+    if (!activeConversationId) {
+      const tempTitle = message.length > 30 ? message.substring(0, 30) + '...' : message;
+      activeConversationId = await createOrGetConversation(userId, tempTitle);
     }
 
-    // Adicionar mensagem ao histórico se tiver sessionId
-    if (sessionId) {
-      const userMessage = createMessage(message, 'user');
-      addMessageToHistory(sessionId, userMessage);
+    if (!activeConversationId) {
+      throw new Error('Falha ao criar ou recuperar ID de conversa');
     }
 
-    // Obter o histórico para contexto
-    const history = sessionId ? getChatHistory(sessionId) : [];
-    const historyContext = history.map(m => `${m.sender === 'user' ? 'Usuário' : 'Assistente'}: ${m.content}`).join('\n\n');
+    // Adiciona a mensagem do usuário à conversa
+    await addMessageToConversation(activeConversationId, message, 'user');
 
-    // Preparar o prompt para a API Gemini
-    const prompt = `Você é o Epictus IA, um assistente educacional avançado da plataforma Ponto.School. 
-Seu objetivo é ajudar os estudantes com dúvidas sobre matérias escolares, organização de estudos, 
-preparação para provas e qualquer tema relacionado à educação.
+    // Simular uma resposta de IA (em um cenário real seria uma chamada à API)
+    // Adicionar um pequeno delay para simular processamento
+    await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
 
-Seja amigável, didático e detalhado em suas respostas. Use uma linguagem apropriada para o contexto 
-educacional, incluindo formatação rica com markdown quando necessário para melhorar a compreensão.
+    // Mensagem do usuário
+    const userMessage = createMessage(message, 'user');
+    addMessageToHistory(sessionId, userMessage);
 
-HISTÓRICO DA CONVERSA PARA CONTEXTO:
-${historyContext}
+    // Um conjunto de respostas pré-definidas para simular a IA
+    const responses = [
+      `Compreendi sua questão sobre "${message.substring(0, 30)}...". Aqui está uma explicação detalhada...`,
+      `Esta é uma excelente pergunta! Com relação a "${message.substring(0, 25)}...", posso explicar que...`,
+      `Vamos analisar sua solicitação sobre "${message.substring(0, 20)}...". Do ponto de vista educacional...`,
+      `Considerando sua questão sobre "${message.substring(0, 28)}...", existem várias abordagens possíveis...`,
+      `Entendi sua dúvida relacionada a "${message.substring(0, 22)}...". Na perspectiva pedagógica...`
+    ];
 
-Responda à seguinte pergunta de forma educativa, detalhada e amigável: ${message}`;
+    // Escolhe uma resposta aleatória
+    const baseResponse = responses[Math.floor(Math.random() * responses.length)];
 
-    // Fazer a requisição para a API Gemini
-    const response = await fetch(`${GEMINI_BASE_URL}?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topP: 0.95,
-          topK: 40,
-          maxOutputTokens: 2048
-        }
-      })
-    });
+    // Adiciona um conteúdo mais elaborado
+    const elaboration = `\n\nPara aprofundar este tópico, considere os seguintes pontos:\n\n1. A importância do contexto e aplicação prática\n2. As diferentes abordagens metodológicas\n3. Como integrar este conhecimento com outras áreas\n\nEspero que esta explicação ajude! Se tiver mais dúvidas, estou à disposição.`;
 
-    if (!response.ok) {
-      throw new Error(`Erro na resposta da API: ${response.status} ${response.statusText}`);
+    const fullResponse = baseResponse + elaboration;
+
+    // Mensagem da IA
+    const aiMessage = createMessage(fullResponse, 'ai');
+    addMessageToHistory(sessionId, aiMessage);
+
+    // Adiciona a resposta da IA à conversa no Supabase
+    await addMessageToConversation(activeConversationId, fullResponse, 'ai');
+
+    // Se esta for a primeira troca de mensagens, atualizamos o título e definimos a categoria
+    const messages = await getConversationMessages(activeConversationId);
+    if (messages && messages.length <= 2) {
+      // Gera um título mais significativo baseado na primeira troca
+      const betterTitle = generateBetterTitle(message);
+
+      // Determina a categoria baseada no conteúdo
+      const category = determineCategory([userMessage, aiMessage]);
+
+      // Gera um resumo da conversa
+      const summary = `Conversa sobre ${betterTitle.toLowerCase()}`;
+
+      // Atualiza os metadados da conversa
+      await updateConversationMetadata(activeConversationId, {
+        title: betterTitle,
+        categoria: category,
+        resumo: summary
+      });
     }
 
-    const data = await response.json();
-    
-    // Extrair a resposta da IA
-    const aiResponse = data.candidates[0].content.parts[0].text;
-
-    // Adicionar resposta ao histórico se tiver sessionId
-    if (sessionId) {
-      const aiMessage = createMessage(aiResponse, 'ai');
-      addMessageToHistory(sessionId, aiMessage);
-    }
-
-    return aiResponse;
+    return {
+      response: fullResponse,
+      conversationId: activeConversationId
+    };
   } catch (error) {
-    console.error("Erro ao gerar resposta da IA com Gemini:", error);
-    
-    // Usar respostas de fallback em caso de erro
-    return useFallbackResponse(message);
+    console.error('Erro ao gerar resposta:', error);
+    return {
+      response: 'Desculpe, encontrei um problema ao processar sua solicitação. Por favor, tente novamente em instantes.',
+      conversationId: conversationId || ''
+    };
   }
+};
+
+// Funções auxiliares para integração com o Supabase
+import { 
+  createConversation, 
+  addMessage as addMessageToConversation,
+  getMessages as getConversationMessages,
+  updateConversationTitle,
+  updateConversationMetadata,
+  determineCategory
+} from './conversationHistoryService';
+
+// Função para criar uma nova conversa ou recuperar uma existente
+const createOrGetConversation = async (userId: string, initialTitle: string): Promise<string> => {
+  try {
+    const conversationId = await createConversation(userId, initialTitle);
+    return conversationId || '';
+  } catch (error) {
+    console.error('Erro ao criar conversa:', error);
+    return '';
+  }
+};
+
+// Função para gerar um título melhor com base na primeira mensagem
+const generateBetterTitle = (message: string): string => {
+  // Limita o tamanho do título
+  const maxLength = 40;
+
+  // Remove pontuações do final e trunca se necessário
+  let title = message.trim().replace(/[.!?]$/, '');
+
+  if (title.length > maxLength) {
+    // Trunca no final de uma palavra para evitar cortar palavras no meio
+    const truncated = title.substring(0, maxLength);
+    const lastSpaceIndex = truncated.lastIndexOf(' ');
+
+    if (lastSpaceIndex > maxLength * 0.7) { // Só trunca na palavra se não perder muito do título
+      title = truncated.substring(0, lastSpaceIndex);
+    } else {
+      title = truncated;
+    }
+
+    title += '...';
+  }
+
+  // Capitaliza a primeira letra
+  return title.charAt(0).toUpperCase() + title.slice(1);
 };
 
 // Função auxiliar para inicializar conversa

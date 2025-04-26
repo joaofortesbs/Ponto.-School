@@ -178,6 +178,9 @@ const EpictusBetaMode: React.FC = () => {
     }
   };
 
+  // Estado para armazenar o ID da conversa atual
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
+
   const handleSendMessage = async () => {
     const trimmedMessage = inputMessage.trim();
 
@@ -207,9 +210,20 @@ const EpictusBetaMode: React.FC = () => {
       }, 300);
 
       try {
-        console.log("Enviando mensagem para Gemini:", trimmedMessage);
-        const response = await generateAIResponse(trimmedMessage, sessionId);
-        console.log("Resposta recebida de Gemini");
+        console.log("Enviando mensagem para IA:", trimmedMessage);
+        const { response, conversationId } = await generateAIResponse(
+          trimmedMessage, 
+          sessionId, 
+          {}, 
+          currentConversationId
+        );
+        
+        console.log("Resposta recebida da IA, conversa ID:", conversationId);
+        
+        // Atualiza o ID da conversa atual
+        if (conversationId) {
+          setCurrentConversationId(conversationId);
+        }
 
         const aiMessage: Message = {
           id: uuidv4(),
@@ -220,7 +234,7 @@ const EpictusBetaMode: React.FC = () => {
 
         setMessages(prev => [...prev, aiMessage]);
       } catch (err) {
-        console.error("Erro ao gerar resposta com Gemini:", err);
+        console.error("Erro ao gerar resposta:", err);
 
         const errorMessage: Message = {
           id: uuidv4(),
@@ -250,6 +264,9 @@ const EpictusBetaMode: React.FC = () => {
   };
 
   const clearChat = () => {
+    // Reseta o ID da conversa atual para iniciar uma nova
+    setCurrentConversationId(null);
+    
     const initialMessage: Message = {
       id: uuidv4(),
       sender: "ia",
@@ -671,7 +688,12 @@ const EpictusBetaMode: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <TurboHeader profileOptions={profileOptions} initialProfileIcon={profileIcon} initialProfileName={profileName} />
+      <TurboHeader 
+        profileOptions={profileOptions} 
+        initialProfileIcon={profileIcon} 
+        initialProfileName={profileName} 
+        onHistoricoClick={() => setIsHistoricoModalOpen(true)}
+      />
 
       <div className="flex-1 flex flex-col items-center justify-between p-4 overflow-hidden bg-transparent">
         <div className="w-[80%] h-[85%] relative mb-4 flex-grow overflow-hidden">
@@ -1007,9 +1029,59 @@ const EpictusBetaMode: React.FC = () => {
 
       <HistoricoConversasModal 
         open={isHistoricoModalOpen}
-        onOpenChange={setIsHistoricoModalOpen} 
-        open={showHistoricoModal} 
-        onOpenChange={setShowHistoricoModal} 
+        onOpenChange={setIsHistoricoModalOpen}
+        onSelectConversation={async (conversationId) => {
+          // Quando o usuário seleciona uma conversa no histórico
+          try {
+            setIsTyping(true);
+            
+            // Atualizamos o ID da conversa atual
+            setCurrentConversationId(conversationId);
+            
+            // Importamos getMessages diretamente para evitar circular dependency
+            const { getMessages } = await import('@/services/conversationHistoryService');
+            
+            // Buscamos as mensagens da conversa selecionada
+            const conversationMessages = await getMessages(conversationId);
+            
+            if (conversationMessages && conversationMessages.length > 0) {
+              // Atualizamos o estado de mensagens com as mensagens da conversa
+              setMessages(
+                conversationMessages.map(msg => ({
+                  id: msg.id,
+                  sender: msg.sender,
+                  content: msg.content,
+                  timestamp: new Date(msg.timestamp),
+                  isEdited: msg.isEdited
+                }))
+              );
+              
+              // Rolamos para o final da conversa
+              setTimeout(() => {
+                if (chatContainerRef.current) {
+                  chatContainerRef.current.scrollTo({
+                    top: chatContainerRef.current.scrollHeight,
+                    behavior: "smooth"
+                  });
+                }
+              }, 100);
+            }
+          } catch (error) {
+            console.error("Erro ao carregar conversa:", error);
+            toast({
+              title: "Erro ao carregar conversa",
+              description: "Não foi possível carregar a conversa selecionada.",
+              variant: "destructive",
+              duration: 3000
+            });
+          } finally {
+            setIsTyping(false);
+          }
+        }}
+        onCreateNewChat={() => {
+          // Limpa o chat atual e começa uma nova conversa
+          clearChat();
+        }}
       />
 
       <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
