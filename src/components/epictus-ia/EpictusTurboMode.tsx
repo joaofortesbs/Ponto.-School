@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion, AnimatePresence } from "framer-motion";
@@ -6,12 +5,25 @@ import { Zap, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import TurboMessageBox from "./TurboMessageBox";
 import TurboHubConnected from "./TurboHubConnected";
+import { v4 as uuidv4 } from 'uuid';
+
+interface Message {
+  id: string;
+  sender: "user" | "ia";
+  content: string;
+  timestamp: Date;
+  conversationId?: string;
+  metadata?: {
+    tipo?: "conteudo" | "duvidas" | "correcao" | "simulado" | "resumo" | "boas-vindas";
+    titulo?: string;
+    tags?: string[];
+  };
+}
 
 const EpictusTurboMode: React.FC = () => {
   const { theme } = useTheme();
   const [isHovered, setIsHovered] = useState(false);
   const [animationComplete, setAnimationComplete] = useState(false);
-  // Perfil selecionado no dropdown de personalidades
   const [profileIcon, setProfileIcon] = useState(
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -20,10 +32,41 @@ const EpictusTurboMode: React.FC = () => {
   );
   const [profileName, setProfileName] = useState("Personalidades");
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
+  const [inputMessage, setInputMessage] = useState("");
+  const [messages, setMessages] = useState<Message[]>(() => {
+    try {
+      const savedMessages = localStorage.getItem('epictus_beta_chat');
+      if (savedMessages) {
+        const parsedMessages = JSON.parse(savedMessages) as Message[];
+        return parsedMessages.map(msg => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        }));
+      }
+    } catch (error) {
+      console.error("Erro ao carregar histórico do chat:", error);
+    }
 
-  // Adicionar estilos globais para garantir que o modal de personalidades fique por cima
+    const mensagemInicial = {
+      id: uuidv4(),
+      sender: "ia",
+      content: "Olá, João! Eu sou o Epictus IA, seu assistente para aprendizado e programação. Como posso te ajudar hoje?",
+      timestamp: new Date(),
+      conversationId: uuidv4(),
+      metadata: {
+        tipo: "boas-vindas",
+        titulo: "Início de conversa"
+      }
+    };
+
+    localStorage.setItem('epictus_beta_chat', JSON.stringify([mensagemInicial]));
+
+    return [mensagemInicial];
+  });
+  const [isTyping, setIsTyping] = useState(false);
+
+
   useEffect(() => {
-    // Adicionar estilos CSS para os modais de personalidades
     const style = document.createElement('style');
     style.innerHTML = `
       .personalidades-dropdown {
@@ -44,7 +87,6 @@ const EpictusTurboMode: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Trigger initial animation
     const timer = setTimeout(() => {
       setAnimationComplete(true);
     }, 1200);
@@ -52,7 +94,6 @@ const EpictusTurboMode: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Ouvir o evento de seleção de perfil
   useEffect(() => {
     const handleProfileSelection = (event: any) => {
       setProfileIcon(event.detail.icon);
@@ -68,7 +109,6 @@ const EpictusTurboMode: React.FC = () => {
 
   const isDark = theme === "dark";
 
-  // Opções de perfil para o dropdown
   const profileOptions = [
     { 
       id: "estudante",
@@ -77,8 +117,6 @@ const EpictusTurboMode: React.FC = () => {
       name: "Estudante",
       onClick: () => {
         setSelectedProfile("Estudante");
-
-        // Disparar um evento customizado para atualizar o texto do botão
         const event = new CustomEvent('profileSelected', { 
           detail: { 
             name: "Estudante", 
@@ -95,8 +133,6 @@ const EpictusTurboMode: React.FC = () => {
       name: "Professor",
       onClick: () => {
         setSelectedProfile("Professor");
-
-        // Disparar um evento customizado para atualizar o texto do botão
         const event = new CustomEvent('profileSelected', { 
           detail: { 
             name: "Professor", 
@@ -113,8 +149,6 @@ const EpictusTurboMode: React.FC = () => {
       name: "Coordenador",
       onClick: () => {
         setSelectedProfile("Coordenador");
-
-        // Disparar um evento customizado para atualizar o texto do botão
         const event = new CustomEvent('profileSelected', { 
           detail: { 
             name: "Coordenador", 
@@ -131,8 +165,6 @@ const EpictusTurboMode: React.FC = () => {
       name: "Expert",
       onClick: () => {
         setSelectedProfile("Expert");
-
-        // Disparar um evento customizado para atualizar o texto do botão
         const event = new CustomEvent('profileSelected', { 
           detail: { 
             name: "Expert", 
@@ -144,11 +176,110 @@ const EpictusTurboMode: React.FC = () => {
     }
   ];
 
-  // New color scheme is now directly applied in the class names
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim()) return;
+
+    const currentConversationId = messages.length > 0 && messages[messages.length - 1].conversationId 
+      ? messages[messages.length - 1].conversationId 
+      : uuidv4();
+
+    const possibleTitle = messages.length <= 2 
+      ? inputMessage.slice(0, 40) + (inputMessage.length > 40 ? "..." : "") 
+      : null;
+
+    let tipoConversa = "duvidas"; 
+    const lowerInput = inputMessage.toLowerCase();
+
+    if (lowerInput.includes("corrige") || lowerInput.includes("revisar") || lowerInput.includes("analisar")) {
+      tipoConversa = "correcao";
+    } else if (lowerInput.includes("resumo") || lowerInput.includes("resumir")) {
+      tipoConversa = "resumo";
+    } else if (lowerInput.includes("simulado") || lowerInput.includes("exercícios") || lowerInput.includes("questões")) {
+      tipoConversa = "simulado";
+    } else if (lowerInput.includes("explica") || lowerInput.includes("conteúdo") || lowerInput.includes("conceito")) {
+      tipoConversa = "conteudo";
+    }
+
+    const userMessage: Message = {
+      id: uuidv4(),
+      sender: "user",
+      content: inputMessage,
+      timestamp: new Date(),
+      conversationId: currentConversationId,
+      metadata: {
+        tipo: tipoConversa,
+        titulo: possibleTitle
+      }
+    };
+
+    setInputMessage("");
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
+
+    try {
+      localStorage.setItem('epictus_beta_chat', JSON.stringify(updatedMessages));
+
+      const conversationsIndex = localStorage.getItem('epictus_conversations_index') || '{}';
+      const conversationsObj = JSON.parse(conversationsIndex);
+
+      if (!conversationsObj[currentConversationId]) {
+        conversationsObj[currentConversationId] = {
+          id: currentConversationId,
+          timestamp: new Date(),
+          titulo: possibleTitle || "Conversa em " + new Date().toLocaleDateString(),
+          tipo: tipoConversa,
+          previa: inputMessage.slice(0, 100) + (inputMessage.length > 100 ? "..." : ""),
+          mensagens: [userMessage.id]
+        };
+      } else {
+        conversationsObj[currentConversationId].mensagens.push(userMessage.id);
+        conversationsObj[currentConversationId].timestamp = new Date();
+        if (conversationsObj[currentConversationId].mensagens.length <= 3) {
+          conversationsObj[currentConversationId].previa = inputMessage.slice(0, 100) + (inputMessage.length > 100 ? "..." : "");
+        }
+      }
+
+      localStorage.setItem('epictus_conversations_index', JSON.stringify(conversationsObj));
+    } catch (error) {
+      console.error("Erro ao salvar histórico do chat:", error);
+    }
+
+    setIsTyping(true);
+    // Simulate API call and response (replace with actual API call)
+    setTimeout(async () => {
+      const responseContent = "This is a simulated AI response.";
+      const currentConversationId = userMessage.conversationId || uuidv4();
+      const aiResponse: Message = {
+        id: uuidv4(),
+        sender: "ia",
+        content: responseContent,
+        timestamp: new Date(),
+        conversationId: currentConversationId,
+        metadata: {
+          tipo: userMessage.metadata?.tipo || "duvidas"
+        }
+      };
+      const newMessages = [...messages, userMessage, aiResponse];
+      setMessages(newMessages);
+      try {
+        localStorage.setItem('epictus_beta_chat', JSON.stringify(newMessages));
+        const conversationsIndex = localStorage.getItem('epictus_conversations_index') || '{}';
+        const conversationsObj = JSON.parse(conversationsIndex);
+        if (conversationsObj[currentConversationId]) {
+          conversationsObj[currentConversationId].mensagens.push(aiResponse.id);
+          localStorage.setItem('epictus_conversations_index', JSON.stringify(conversationsObj));
+        }
+      } catch (error) {
+        console.error("Erro ao salvar histórico do chat:", error);
+      }
+      setIsTyping(false);
+    }, 1000);
+  };
+
+  const isDark = theme === "dark";
 
   return (
     <div className="w-full flex flex-col items-center">
-      {/* Header copied from EpictusIAHeader but with title changed to "Epictus Turbo" */}
       <div className="w-full p-4">
         <motion.header 
           initial={{ opacity: 0, y: -10 }}
@@ -158,13 +289,11 @@ const EpictusTurboMode: React.FC = () => {
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          {/* Animated gradient background */}
           <div className="absolute inset-0 opacity-20">
             <div className={`absolute inset-0 bg-gradient-to-r from-[#0D23A0] via-[#1230CC] to-[#4A0D9F] ${isHovered ? 'opacity-60' : 'opacity-30'} transition-opacity duration-700`}></div>
             <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
           </div>
 
-          {/* Glowing orbs */}
           <motion.div 
             className="absolute top-1/2 left-1/4 w-32 h-32 rounded-full bg-[#0D23A0]/10 blur-3xl"
             animate={{
@@ -192,7 +321,6 @@ const EpictusTurboMode: React.FC = () => {
             }}
           />
 
-          {/* Logo and title section */}
           <div className="flex items-center gap-4 z-10 flex-1">
             <div className="relative group mr-3">
               <div className={`absolute inset-0 bg-gradient-to-br from-[#0D23A0] via-[#1230CC] to-[#4A0D9F] rounded-full ${isHovered ? 'blur-[6px]' : 'blur-[3px]'} opacity-80 group-hover:opacity-100 transition-all duration-300 scale-110`}></div>
@@ -245,35 +373,26 @@ const EpictusTurboMode: React.FC = () => {
             </div>
           </div>
 
-          {/* New header icons */}
           <div className="flex items-center justify-center z-10 relative gap-3">
-            {/* Personalidades dropdown */}
             <div className="relative icon-container mr-5" style={{ zIndex: 99999, position: "relative" }}>
-              {/* Adicionando estado para controlar o dropdown */}
               {useState && (() => {
                 const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-                
-                // Referência para detectar cliques fora do dropdown
                 const dropdownRef = React.useRef<HTMLDivElement>(null);
-                
-                // Fechar o dropdown apenas quando clicar fora dele
+
                 React.useEffect(() => {
                   const handleClickOutside = (event: MouseEvent) => {
                     if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                       setIsDropdownOpen(false);
                     }
                   };
-                  
-                  // Adicionando o evento apenas se o dropdown estiver aberto
                   if (isDropdownOpen) {
                     document.addEventListener('mousedown', handleClickOutside);
                   }
-                  
                   return () => {
                     document.removeEventListener('mousedown', handleClickOutside);
                   };
                 }, [dropdownRef, isDropdownOpen]);
-                
+
                 return (
                   <div ref={dropdownRef}>
                     <motion.div
@@ -283,8 +402,8 @@ const EpictusTurboMode: React.FC = () => {
                       initial={false}
                       transition={{ duration: 0.3 }}
                       onClick={(e) => {
-                        e.stopPropagation(); // Impede a propagação do clique
-                        setIsDropdownOpen(true); // Sempre abre o dropdown ao clicar
+                        e.stopPropagation(); 
+                        setIsDropdownOpen(true); 
                       }}
                     >
                       <div className="flex items-center gap-2">
@@ -296,11 +415,10 @@ const EpictusTurboMode: React.FC = () => {
                       </div>
                     </motion.div>
 
-                    {/* Dropdown content - absolute positioning relative to its container */}
                     <div 
                       className={`fixed ${isDropdownOpen ? 'opacity-100 visible' : 'opacity-0 invisible'} transition-all duration-300 z-[99999] left-auto mt-2 personalidades-dropdown`} 
                       style={{ top: "calc(100% + 10px)" }}
-                      onClick={(e) => e.stopPropagation()} // Impede que cliques no dropdown fechem ele mesmo
+                      onClick={(e) => e.stopPropagation()} 
                     >
                       <div className="w-52 bg-[#0f3562] rounded-lg shadow-xl overflow-hidden border border-white/10 backdrop-blur-md" style={{ position: "relative", zIndex: 99999 }}> 
                         <div className="max-h-60 overflow-y-auto py-2">
@@ -314,7 +432,7 @@ const EpictusTurboMode: React.FC = () => {
                                 scale: 1.02
                               }}
                               onClick={(e) => {
-                                e.stopPropagation(); // Evita que o clique se propague
+                                e.stopPropagation(); 
                                 item.onClick();
                                 setIsDropdownOpen(false);
                               }}
@@ -339,7 +457,6 @@ const EpictusTurboMode: React.FC = () => {
               })()}
             </div>
 
-            {/* History icon */}
             <div className="relative icon-container">
               <motion.div
                 className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#0055B8] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow" 
@@ -347,6 +464,10 @@ const EpictusTurboMode: React.FC = () => {
                 whileTap={{ scale: 0.95 }}
                 initial={false}
                 transition={{ duration: 0.3 }}
+                onClick={() => {
+                  // Aqui você implementaria a lógica para abrir o modal de histórico
+                  console.log("Abrindo modal de histórico");
+                }}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10" />
@@ -355,7 +476,6 @@ const EpictusTurboMode: React.FC = () => {
               </motion.div>
             </div>
 
-            {/* Favorites icon */}
             <div className="relative icon-container">
               <motion.div
                 className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#0055B8] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow" 
@@ -370,7 +490,6 @@ const EpictusTurboMode: React.FC = () => {
               </motion.div>
             </div>
 
-            {/* Calendar icon */}
             <div className="relative icon-container">
               <motion.div
                 className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#0055B8] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow" 
@@ -388,7 +507,6 @@ const EpictusTurboMode: React.FC = () => {
               </motion.div>
             </div>
 
-            {/* Notifications icon */}
             <div className="relative icon-container">
               <motion.div
                 className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#0055B8] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow" 
@@ -404,7 +522,6 @@ const EpictusTurboMode: React.FC = () => {
               </motion.div>
             </div>
 
-            {/* Profile picture - a bit more spaced */}
             <div className="relative profile-icon-container ml-4">
               <motion.div
                 className="w-11 h-11 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#0055B8] p-[2px] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow overflow-hidden" 
@@ -422,28 +539,22 @@ const EpictusTurboMode: React.FC = () => {
             </div>
           </div>
 
-          {/* Hidden until expansion - will appear when user interaction happens */}
           <div className="absolute bottom-0 left-0 w-full h-1">
             <div className="h-full bg-gradient-to-r from-transparent via-[#1230CC] to-transparent opacity-30"></div>
           </div>
         </motion.header>
       </div>
 
-      {/* Content area now below the header */}
       <div className="w-full flex flex-col items-center justify-center mt-0 mb-2">
-        {/* Hub Conectado - novo componente entre o cabeçalho e a caixa de mensagens */}
         <div className="w-full">
           <TurboHubConnected />
         </div>
 
-        {/* Mini-section selector */}
         <div className="w-full flex-grow flex items-center justify-center">
-          {/* Aqui virá o conteúdo principal (histórico de conversas, resultados, etc.) */}
         </div>
 
-        {/* Caixa de mensagens na parte inferior */}
         <div className="w-full bottom-0 left-0 right-0 z-30 mt-1">
-          <TurboMessageBox />
+          <TurboMessageBox sendMessage={handleSendMessage} inputMessage={inputMessage} setInputMessage={setInputMessage} isTyping={isTyping}/>
         </div>
       </div>
     </div>
