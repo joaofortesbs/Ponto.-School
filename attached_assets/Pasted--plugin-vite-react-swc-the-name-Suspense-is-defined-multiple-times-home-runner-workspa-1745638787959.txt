@@ -1,0 +1,82 @@
+[plugin:vite:react-swc] × the name `Suspense` is defined multiple times
+    ╭─[/home/runner/workspace/src/App.tsx:1:1]
+  1 │ import React, { useEffect, useState, Suspense } from "react";
+    ·                                      ────┬───
+    ·                                          ╰── previous definition of `Suspense` here
+  2 │ import {
+  3 │   Routes,
+  4 │   Route,
+  5 │   Navigate,
+  6 │   useLocation,
+  7 │   useNavigate,
+  8 │ } from "react-router-dom";
+  9 │ import ErrorBoundary from "@/components/ErrorBoundary";
+ 10 │ import { Suspense } from "react";
+    ·          ────┬───
+    ·              ╰── `Suspense` redefined here
+ 11 │ import { TypewriterLoader } from "./components/ui/typewriter-loader";
+ 12 │ import routes from "./tempo-routes";
+ 13 │ import Home from "@/components/home";
+    ╰────
+
+  × the name `TypewriterLoader` is defined multiple times
+    ╭─[/home/runner/workspace/src/App.tsx:8:1]
+  8 │ } from "react-router-dom";
+  9 │ import ErrorBoundary from "@/components/ErrorBoundary";
+ 10 │ import { Suspense } from "react";
+ 11 │ import { TypewriterLoader } from "./components/ui/typewriter-loader";
+    ·          ────────┬───────
+    ·                  ╰── previous definition of `TypewriterLoader` here
+ 12 │ import routes from "./tempo-routes";
+ 13 │ import Home from "@/components/home";
+ 14 │ import { ThemeProvider } from "@/components/ThemeProvider";
+ 15 │ import { Toaster } from "@/components/ui/toaster";
+ 16 │ import FloatingChatSupport from "@/components/chat/FloatingChatSupport";
+ 17 │ import { supabase } from "@/lib/supabase";
+ 18 │ import { checkAuthentication } from "@/lib/auth-utils";
+ 19 │ import { StudyGoalProvider } from "@/components/dashboard/StudyGoalContext";
+ 20 │ import UsernameProvider from "./components/UsernameProvider"; // Added import
+ 21 │ 
+ 22 │ // Importações diretas
+ 23 │ import Dashboard from "@/pages/dashboard";
+ 24 │ import Turmas from "@/pages/turmas";
+ 25 │ import TurmaDetail from "@/pages/turmas/[id]";
+ 26 │ import GruposEstudo2 from "@/pages/turmas/grupos2";
+ 27 │ import Comunidades from "@/pages/comunidades";
+ 28 │ import PedidosAjuda from "@/pages/pedidos-ajuda";
+ 29 │ import EpictusIA from "@/pages/epictus-ia";
+ 30 │ import Agenda from "@/pages/agenda";
+ 31 │ import Biblioteca from "@/pages/biblioteca";
+ 32 │ import Mercado from "@/pages/mercado";
+ 33 │ import Conquistas from "@/pages/conquistas";
+ 34 │ import Carteira from "@/pages/carteira";
+ 35 │ import Organizacao from "@/pages/organizacao";
+ 36 │ import Novidades from "@/pages/novidades";
+ 37 │ import Configuracoes from "@/pages/configuracoes";
+ 38 │ import PlanosEstudo from "@/pages/planos-estudo";
+ 39 │ import Portal from "@/pages/portal";
+ 40 │ import GruposEstudo from "@/pages/turmas/grupos";
+ 41 │ 
+ 42 │ 
+ 43 │ // Auth Pages
+ 44 │ import LoginPage from "@/pages/auth/login";
+ 45 │ import RegisterPage from "@/pages/auth/register";
+ 46 │ import ForgotPasswordPage from "@/pages/auth/forgot-password";
+ 47 │ import ResetPasswordPage from "@/pages/auth/reset-password";
+ 48 │ import PlanSelectionPage from "@/pages/plan-selection";
+ 49 │ 
+ 50 │ // User Pages
+ 51 │ import ProfilePage from "@/pages/profile";
+ 52 │ import WelcomeModal from "./components/auth/WelcomeModal"; // Added import
+ 53 │ import { TypewriterLoader } from "./components/ui/typewriter-loader"; // Added import
+    ·          ────────┬───────
+    ·                  ╰── `TypewriterLoader` redefined here
+ 54 │ 
+ 55 │ 
+ 56 │ // Componente para proteger rotas
+    ╰────
+/home/runner/workspace/src/App.tsx:1:1
+1  |  import React, { useEffect, useState, Suspense } from "react";
+   |   ^
+2  |  import {
+3  |    Routes,
