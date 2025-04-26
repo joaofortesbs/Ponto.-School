@@ -165,6 +165,22 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
       }
     }
   }, [open, currentConversationId]);
+
+  // Simular dados de conversa para teste
+  useEffect(() => {
+    // Datas para agrupamento
+    const hoje = new Date();
+    const ontem = new Date(hoje);
+    ontem.setDate(ontem.getDate() - 1);
+    
+    const ultimos7Dias = new Date(hoje);
+    ultimos7Dias.setDate(ultimos7Dias.getDate() - 7);
+    
+    const esteAno = new Date(hoje);
+    esteAno.setMonth(esteAno.getMonth() - 3);
+    
+    // Dados simulados de conversa
+    const dadosSimulados = [
       {
         id: "3",
         titulo: "Estudo sobre inteligência artificial avançada",
