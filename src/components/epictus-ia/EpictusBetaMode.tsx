@@ -9,8 +9,10 @@ import {
   FileText,
   PenLine,
   Share, 
-  Copy
+  Copy,
+  Clock
 } from "lucide-react";
+import HistoricoConversasModal from "./modals/HistoricoConversasModal";
 import { motion, AnimatePresence } from "framer-motion";
 import EpictusMessageBox from "./message-box/EpictusMessageBox";
 import PromptSuggestionsModal from "./message-box/PromptSuggestionsModal";
@@ -39,6 +41,7 @@ interface Message {
 const EpictusBetaMode: React.FC = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [animationComplete, setAnimationComplete] = useState(false);
+  const [isHistoricoModalOpen, setIsHistoricoModalOpen] = useState(false);
   const [profileIcon, setProfileIcon] = useState(
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -989,6 +992,22 @@ const EpictusBetaMode: React.FC = () => {
           />
         </div>
       </div>
+
+      {/* Botão de histórico flutuante */}
+      <div className="absolute top-4 right-4 z-10">
+        <button
+          onClick={() => setIsHistoricoModalOpen(true)}
+          className="w-10 h-10 rounded-full bg-gradient-to-r from-[#0D23A0] to-[#4A0D9F] flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+        >
+          <Clock className="h-5 w-5 text-white" />
+        </button>
+      </div>
+
+      {/* Modal de histórico de conversas */}
+      <HistoricoConversasModal 
+        isOpen={isHistoricoModalOpen} 
+        onClose={() => setIsHistoricoModalOpen(false)} 
+      />
 
       <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
         <DialogContent className="bg-[#1A2634] text-white border-gray-700">
