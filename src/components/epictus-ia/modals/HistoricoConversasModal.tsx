@@ -10,7 +10,7 @@ import {
   History,
   Book,
   Brain,
-  Wrench, // Substituído Tool por Wrench
+  Tool,
   Clock,
   Pin,
   Star,
@@ -23,8 +23,6 @@ import {
   X,
   Filter,
   PlusCircle,
-  CheckSquare, // Adicionado para substituir o componente Check
-  Sparkles // Adicionado para substituir o componente Sparkle
 } from "lucide-react";
 
 interface Conversation {
@@ -49,7 +47,6 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
   onOpenChange,
   onContinueConversation,
 }) => {
-  console.log("Renderizando HistoricoConversasModal, estado open:", open);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -58,9 +55,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
 
   // Mock data for demonstration
   useEffect(() => {
-    console.log("Carregando conversas mock em HistoricoConversasModal");
-    try {
-      const mockConversations: Conversation[] = [
+    const mockConversations: Conversation[] = [
       {
         id: "1",
         type: "content",
@@ -124,10 +119,6 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
     ];
 
     setConversations(mockConversations);
-    } catch (error) {
-      console.error("Erro ao carregar conversas mock:", error);
-      setConversations([]);
-    }
   }, []);
 
   const getTypeIcon = (type: string) => {
@@ -367,7 +358,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                                           className="h-7 px-2 ml-1"
                                           onClick={() => saveTitle(conv.id)}
                                         >
-                                          <CheckSquare className="w-4 h-4" />
+                                          <Check className="w-4 h-4" />
                                         </Button>
                                       </div>
                                     ) : (
@@ -513,7 +504,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                                         onClick={() => generateAITitle(conv.id)}
                                         className="text-xs h-7"
                                       >
-                                        <Sparkles className="w-3 h-3 mr-1" />
+                                        <Sparkle className="w-3 h-3 mr-1" />
                                         Gerar título com IA
                                       </Button>
                                       <Button
@@ -594,4 +585,37 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
 
 export default HistoricoConversasModal;
 
-// Ícones agora são importados diretamente da biblioteca lucide-react
+// Missing icons definition
+const Check = (props: any) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <polyline points="20 6 9 17 4 12"></polyline>
+  </svg>
+);
+
+const Sparkle = (props: any) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"></path>
+  </svg>
+);

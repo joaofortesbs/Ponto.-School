@@ -1,19 +1,8 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App.tsx'
-import './index.css'
-import ErrorBoundary from './components/epictus-ia/ErrorHandler.tsx'
-
-// Configurar handler global para erros não capturados
-window.addEventListener('error', (event) => {
-  console.error('Erro não capturado:', event.error);
-});
-
-// Configurar handler para promises rejeitadas não tratadas
-window.addEventListener('unhandledrejection', (event) => {
-  console.error('Promise rejeitada não tratada:', event.reason);
-});
-
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App.tsx";
+import "./index.css";
+import { BrowserRouter } from "react-router-dom";
 import './lib/username-initializer.ts'
 import { preInitializeWebNodes } from './lib/web-persistence.ts'
 
@@ -74,6 +63,21 @@ function inicializarTeiasComPrioridadeMaxima() {
 // Executar inicialização prioritária
 inicializarTeiasComPrioridadeMaxima();
 
+// Configuração de tratamento global de erros
+const handleGlobalError = (event: ErrorEvent) => {
+  console.error("Erro global capturado:", event.error || event.message);
+  // Não interrompe a aplicação aqui, apenas loga o erro
+  event.preventDefault();
+};
+
+// Registrar handler de erro global
+window.addEventListener('error', handleGlobalError);
+
+// Adicionar tratamento para promessas não tratadas
+window.addEventListener('unhandledrejection', (event) => {
+  console.warn('Promessa não tratada:', event.reason);
+  // Não cancela o evento para permitir outros handlers
+});
 
 console.log("Iniciando aplicação...");
 
@@ -108,11 +112,11 @@ const initializeApp = () => {
     // Renderização otimizada usando requestIdleCallback ou fallback
     const renderApp = () => {
       const AppRoot = (
-        <BrowserRouter>
-          <ErrorBoundary>
+        <ErrorBoundary>
+          <BrowserRouter>
             <App />
-          </ErrorBoundary>
-        </BrowserRouter>
+          </BrowserRouter>
+        </ErrorBoundary>
       );
 
       ReactDOM.createRoot(rootElement).render(
@@ -135,7 +139,7 @@ const initializeApp = () => {
     // Renderizar imediatamente sem esperar por idle callback
     // para garantir carregamento rápido
     renderApp();
-
+    
     // Timeout reduzido para garantir que a UI não fique presa em carregamento
     setTimeout(() => {
       if (document.getElementById('initial-loader')) {
@@ -162,6 +166,56 @@ const initializeApp = () => {
     }
   }
 };
+
+// Componente ErrorBoundary para capturar erros durante a renderização
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("Erro capturado pelo ErrorBoundary:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          fontFamily: 'system-ui, sans-serif',
+          padding: '2rem',
+          textAlign: 'center',
+          background: 'linear-gradient(135deg, rgba(0,20,39,1) 0%, rgba(41,51,92,1) 100%)',
+          minHeight: '100vh',
+          color: 'white'
+        }}>
+          <h1>Algo deu errado</h1>
+          <p>Ocorreu um erro ao renderizar a aplicação. Tente recarregar a página.</p>
+          <button 
+            onClick={() => window.location.reload()}
+            style={{
+              padding: '0.5rem 1rem',
+              marginTop: '1rem',
+              cursor: 'pointer',
+              background: '#FF6B00',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px'
+            }}
+          >
+            Recarregar
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 // Inicializar a aplicação
 initializeApp();

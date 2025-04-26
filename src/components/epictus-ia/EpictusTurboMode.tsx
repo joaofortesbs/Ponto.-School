@@ -1,12 +1,12 @@
+
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, Sparkles, Wrench } from "lucide-react";
+import { Zap, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import TurboMessageBox from "./TurboMessageBox";
 import TurboHubConnected from "./TurboHubConnected";
 import HistoricoConversasModal from "./modals/HistoricoConversasModal";
-import ErrorBoundary from "./ErrorHandler";
 
 const EpictusTurboMode: React.FC = () => {
   const { theme } = useTheme();
@@ -151,7 +151,6 @@ const EpictusTurboMode: React.FC = () => {
   return (
     <div className="w-full flex flex-col items-center">
       {/* History Conversations Modal */}
-      <ErrorBoundary>
       <HistoricoConversasModal 
         open={showHistoryModal} 
         onOpenChange={setShowHistoryModal}
@@ -160,9 +159,7 @@ const EpictusTurboMode: React.FC = () => {
           // Logic to continue the conversation
         }}
       />
-      </ErrorBoundary>
       {/* Header copied from EpictusIAHeader but with title changed to "Epictus Turbo" */}
-      <ErrorBoundary>
       <div className="w-full p-4">
         <motion.header 
           initial={{ opacity: 0, y: -10 }}
@@ -266,10 +263,10 @@ const EpictusTurboMode: React.FC = () => {
               {/* Adicionando estado para controlar o dropdown */}
               {useState && (() => {
                 const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
+                
                 // Referência para detectar cliques fora do dropdown
                 const dropdownRef = React.useRef<HTMLDivElement>(null);
-
+                
                 // Fechar o dropdown apenas quando clicar fora dele
                 React.useEffect(() => {
                   const handleClickOutside = (event: MouseEvent) => {
@@ -277,17 +274,17 @@ const EpictusTurboMode: React.FC = () => {
                       setIsDropdownOpen(false);
                     }
                   };
-
+                  
                   // Adicionando o evento apenas se o dropdown estiver aberto
                   if (isDropdownOpen) {
                     document.addEventListener('mousedown', handleClickOutside);
                   }
-
+                  
                   return () => {
                     document.removeEventListener('mousedown', handleClickOutside);
                   };
                 }, [dropdownRef, isDropdownOpen]);
-
+                
                 return (
                   <div ref={dropdownRef}>
                     <motion.div
@@ -443,10 +440,8 @@ const EpictusTurboMode: React.FC = () => {
           </div>
         </motion.header>
       </div>
-      </ErrorBoundary>
 
       {/* Content area now below the header */}
-      <ErrorBoundary>
       <div className="w-full flex flex-col items-center justify-center mt-0 mb-2">
         {/* Hub Conectado - novo componente entre o cabeçalho e a caixa de mensagens */}
         <div className="w-full">
@@ -463,7 +458,6 @@ const EpictusTurboMode: React.FC = () => {
           <TurboMessageBox />
         </div>
       </div>
-      </ErrorBoundary>
     </div>
   );
 };
