@@ -1,15 +1,16 @@
 import React, { useState, useRef, useEffect } from "react";
 import { 
   Bot, 
-  User, 
-  Trash2, 
-  Loader2,
-  Star,
-  Search,
-  FileText,
-  PenLine,
-  Share, 
-  Copy
+  RefreshCcw, 
+  Send, 
+  Plus, 
+  Settings, 
+  Zap, 
+  BookOpen,
+  MessageSquare,
+  ChevronDown,
+  Sparkles,
+  Clock
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import EpictusMessageBox from "./message-box/EpictusMessageBox";
@@ -25,6 +26,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { v4 as uuidv4 } from 'uuid';
 import { generateAIResponse, addMessageToHistory, createMessage } from "@/services/epictusIAService";
 import { toast } from "@/components/ui/use-toast";
+import HistoricoConversasModal from "./modals/HistoricoConversasModal";
+import { saveConversationToSupabase } from "@/services/aiChatService";
 
 interface Message {
   id: string;
@@ -36,8 +39,6 @@ interface Message {
   needsImprovement?: boolean; 
 }
 
-import HeaderIcons from "./modoepictusiabeta/header/icons/HeaderIcons";
-import HistoricoConversasModal from "./modals/HistoricoConversasModal";
 
 const EpictusBetaMode: React.FC = () => {
   const [isHovered, setIsHovered] = useState(false);
@@ -85,6 +86,8 @@ const EpictusBetaMode: React.FC = () => {
   const MAX_CHARS = 1000;
   const [sessionId] = useState(() => localStorage.getItem('epictus_beta_session_id') || uuidv4());
   const [isReformulating, setIsReformulating] = useState(false); 
+  const [historicoModalAberto, setHistoricoModalAberto] = useState(false);
+  const [sessaoId] = useState(`chat-session-${Date.now()}`); // ID único para esta sessão de chat
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -219,6 +222,9 @@ const EpictusBetaMode: React.FC = () => {
         };
 
         setMessages(prev => [...prev, aiMessage]);
+        // Salvar a conversa no Supabase após receber a resposta da IA
+        saveConversationToSupabase(sessaoId, trimmedMessage);
+
       } catch (err) {
         console.error("Erro ao gerar resposta com Gemini:", err);
 
@@ -609,7 +615,7 @@ const EpictusBetaMode: React.FC = () => {
     }));
   };
 
-  const reformulateMessage = async (messageId: string) => {
+const reformulateMessage = async (messageId: string) => {
     setIsReformulating(true);
     try {
       const messageToReformulate = messages.find(msg => msg.id === messageId);
@@ -659,19 +665,10 @@ const EpictusBetaMode: React.FC = () => {
     }
   };
 
-  const [showHistoricoModal, setShowHistoricoModal] = useState(false);
-
-  const handleHistoricoClick = () => {
-    setShowHistoricoModal(true);
-  };
-
-  const closeHistoricoModal = () => {
-    setShowHistoricoModal(false);
-  };
 
   return (
     <div className="flex flex-col h-full">
-      <TurboHeader profileOptions={profileOptions} initialProfileIcon={profileIcon} initialProfileName={profileName} onHistoricoClick={handleHistoricoClick} />
+      <TurboHeader profileOptions={profileOptions} initialProfileIcon={profileIcon} initialProfileName={profileName} onHistoricoClick={() => setHistoricoModalAberto(true)} />
 
       <div className="flex-1 flex flex-col items-center justify-between p-4 overflow-hidden bg-transparent">
         <div className="w-[80%] h-[85%] relative mb-4 flex-grow overflow-hidden">
@@ -1000,14 +997,14 @@ const EpictusBetaMode: React.FC = () => {
               }, 100);
             }}
             currentContext="estudos"
-            onHistoricoClick={handleHistoricoClick}
+            onHistoricoClick={() => setHistoricoModalAberto(true)}
           />
         </div>
       </div>
 
       <HistoricoConversasModal 
-        open={showHistoricoModal} 
-        onOpenChange={setShowHistoricoModal} 
+        open={historicoModalAberto} 
+        onOpenChange={setHistoricoModalAberto} 
       />
 
       <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>

@@ -6,7 +6,11 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from "@/components/ui/dialog";
+import { supabase } from "@/lib/supabase";
+import { getUserConversations, SavedConversation, updateConversation, deleteConversation } from "@/services/aiChatService";
+import { Cross2Icon } from "@radix-ui/react-icons";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -87,155 +91,132 @@ interface Mensagem {
   tipo?: "texto" | "imagem" | "codigo" | "quiz";
 }
 
-// Dados de exemplo para visualização
-const conversasExemplo: Conversa[] = [
-  {
-    id: "1",
-    titulo: "Teorema de Pitágoras e aplicações",
-    tipo: "explicacao",
-    data: new Date(2024, 6, 15, 14, 30),
-    tags: ["Matemática", "Geometria"],
-    preview: "Explicação detalhada do Teorema de Pitágoras e como aplicá-lo em problemas práticos...",
-    fixada: true,
-    favorita: true,
-    mensagens: [
-      {
-        id: "m1",
-        remetente: "usuario",
-        conteudo: "Pode me explicar o Teorema de Pitágoras?",
-        timestamp: new Date(2024, 6, 15, 14, 30)
-      },
-      {
-        id: "m2",
-        remetente: "ia",
-        conteudo: "O Teorema de Pitágoras estabelece que em um triângulo retângulo, o quadrado da hipotenusa é igual à soma dos quadrados dos catetos...",
-        timestamp: new Date(2024, 6, 15, 14, 31)
-      }
-    ],
-    analise: {
-      qualidade: 95,
-      palavrasChave: ["Triângulo retângulo", "Hipotenusa", "Catetos", "Geometria"],
-      sugestoes: ["Revisar em 7 dias", "Aplicar em exercícios práticos"]
+// Estado inicial vazio para o carregamento das conversas
+const conversasIniciais: Conversa[] = [];
+
+// Função auxiliar para gerar análise automática de conversa
+const gerarAnaliseAutomatica = (mensagens: Mensagem[]): { qualidade: number; palavrasChave: string[]; sugestoes: string[] } => {
+  // Extrair todo o texto da conversa
+  const textoCompleto = mensagens.map(m => m.conteudo).join(' ').toLowerCase();
+  
+  // Detector simples de palavras-chave por área de conhecimento
+  const potenciaisPalavrasChave = [
+    // Matemática
+    { palavra: "equação", area: "Matemática" },
+    { palavra: "teorema", area: "Matemática" },
+    { palavra: "triângulo", area: "Geometria" },
+    { palavra: "função", area: "Matemática" },
+    { palavra: "álgebra", area: "Matemática" },
+    
+    // Física
+    { palavra: "força", area: "Física" },
+    { palavra: "energia", area: "Física" },
+    { palavra: "movimento", area: "Física" },
+    { palavra: "gravitação", area: "Física" },
+    
+    // Química
+    { palavra: "átomo", area: "Química" },
+    { palavra: "molécula", area: "Química" },
+    { palavra: "elemento", area: "Química" },
+    { palavra: "reação", area: "Química" },
+    
+    // Biologia
+    { palavra: "célula", area: "Biologia" },
+    { palavra: "dna", area: "Biologia" },
+    { palavra: "ecossistema", area: "Biologia" },
+    { palavra: "organela", area: "Biologia Celular" },
+    { palavra: "fotossíntese", area: "Botânica" },
+    
+    // História
+    { palavra: "revolução", area: "História" },
+    { palavra: "guerra", area: "História" },
+    { palavra: "império", area: "História" },
+    { palavra: "política", area: "História" },
+    
+    // Português/Redação
+    { palavra: "gramática", area: "Português" },
+    { palavra: "redação", area: "Português" },
+    { palavra: "literatura", area: "Literatura" },
+    { palavra: "argumento", area: "Redação" },
+    { palavra: "coesão", area: "Redação" },
+    
+    // Geografia
+    { palavra: "clima", area: "Geografia" },
+    { palavra: "relevo", area: "Geografia" },
+    { palavra: "urbanização", area: "Geografia" },
+    { palavra: "população", area: "Geografia" }
+  ];
+  
+  // Identificar palavras-chave no texto
+  const palavrasChaveEncontradas = new Set<string>();
+  potenciaisPalavrasChave.forEach(item => {
+    if (textoCompleto.includes(item.palavra)) {
+      if (item.area) palavrasChaveEncontradas.add(item.area);
+      palavrasChaveEncontradas.add(item.palavra.charAt(0).toUpperCase() + item.palavra.slice(1));
     }
-  },
-  {
-    id: "2",
-    titulo: "Preparação para redação ENEM",
-    tipo: "correcao",
-    data: new Date(2024, 6, 14, 10, 15),
-    tags: ["ENEM", "Redação", "Urgente"],
-    preview: "Análise e correção da redação sobre sustentabilidade com feedback detalhado...",
-    fixada: false,
-    favorita: true,
-    mensagens: [
-      {
-        id: "m3",
-        remetente: "usuario",
-        conteudo: "Pode corrigir minha redação sobre sustentabilidade?",
-        timestamp: new Date(2024, 6, 14, 10, 15)
-      },
-      {
-        id: "m4",
-        remetente: "ia",
-        conteudo: "Sua redação está bem estruturada. Pontos fortes: argumentação coesa e repertório sociocultural. Pontos a melhorar: conclusão poderia propor soluções mais concretas...",
-        timestamp: new Date(2024, 6, 14, 10, 17)
+  });
+  
+  // Se não encontrar palavras-chave específicas, tentar extrair substantivos importantes
+  if (palavrasChaveEncontradas.size < 2) {
+    const substantivosComuns = [
+      "conceito", "princípio", "sistema", "método", "análise", 
+      "pesquisa", "estudo", "aprendizado", "conhecimento", "ciência",
+      "teoria", "prática", "exercício", "demonstração", "exemplo",
+      "caso", "problema", "solução", "aplicação", "tecnologia",
+      "desenvolvimento", "estrutura", "processo", "resultado", "conclusão"
+    ];
+    
+    substantivosComuns.forEach(substantivo => {
+      if (textoCompleto.includes(substantivo) && palavrasChaveEncontradas.size < 4) {
+        palavrasChaveEncontradas.add(substantivo.charAt(0).toUpperCase() + substantivo.slice(1));
       }
-    ],
-    analise: {
-      qualidade: 87,
-      palavrasChave: ["Sustentabilidade", "Argumentação", "Coesão", "Propostas"],
-      sugestoes: ["Praticar mais conclusões", "Rever em 3 dias"]
-    }
-  },
-  {
-    id: "3",
-    titulo: "Simulado sobre Revolução Francesa",
-    tipo: "quiz",
-    data: new Date(2024, 6, 10, 16, 45),
-    tags: ["História", "Simulado"],
-    preview: "Quiz com 10 questões sobre causas e consequências da Revolução Francesa...",
-    fixada: false,
-    favorita: false,
-    mensagens: [
-      {
-        id: "m5",
-        remetente: "usuario",
-        conteudo: "Crie um simulado sobre Revolução Francesa",
-        timestamp: new Date(2024, 6, 10, 16, 45)
-      },
-      {
-        id: "m6",
-        remetente: "ia",
-        conteudo: "Aqui está um simulado com 10 questões sobre a Revolução Francesa. 1. Qual evento marcou o início da Revolução Francesa?...",
-        timestamp: new Date(2024, 6, 10, 16, 46),
-        tipo: "quiz"
-      }
-    ],
-    analise: {
-      qualidade: 90,
-      palavrasChave: ["Revolução Francesa", "Bastilha", "Monarquia", "Jacobinos"],
-      sugestoes: ["Revisar conteúdo histórico", "Refazer simulado em uma semana"]
-    }
-  },
-  {
-    id: "4",
-    titulo: "Resumo de Biologia Celular",
-    tipo: "resumo",
-    data: new Date(2024, 6, 8, 9, 20),
-    tags: ["Biologia", "Celular"],
-    preview: "Resumo completo sobre estrutura celular, organelas e suas funções...",
-    fixada: false,
-    favorita: false,
-    mensagens: [
-      {
-        id: "m7",
-        remetente: "usuario",
-        conteudo: "Crie um resumo sobre biologia celular",
-        timestamp: new Date(2024, 6, 8, 9, 20)
-      },
-      {
-        id: "m8",
-        remetente: "ia",
-        conteudo: "# Biologia Celular - Resumo Completo\n\n## Estrutura Celular\nA célula é a unidade básica da vida...",
-        timestamp: new Date(2024, 6, 8, 9, 21)
-      }
-    ],
-    analise: {
-      qualidade: 92,
-      palavrasChave: ["Célula", "Organelas", "Mitocôndria", "Núcleo"],
-      sugestoes: ["Transformar em flashcards", "Revisão espaçada"]
-    }
-  },
-  {
-    id: "5",
-    titulo: "Fluxograma Fotossíntese",
-    tipo: "fluxograma",
-    data: new Date(2024, 6, 5, 11, 30),
-    tags: ["Biologia", "Botânica"],
-    preview: "Fluxograma detalhado do processo de fotossíntese com explicações...",
-    fixada: false,
-    favorita: true,
-    mensagens: [
-      {
-        id: "m9",
-        remetente: "usuario",
-        conteudo: "Crie um fluxograma do processo de fotossíntese",
-        timestamp: new Date(2024, 6, 5, 11, 30)
-      },
-      {
-        id: "m10",
-        remetente: "ia",
-        conteudo: "Aqui está o fluxograma do processo de fotossíntese:\n\n[Diagrama com etapas da fotossíntese]",
-        timestamp: new Date(2024, 6, 5, 11, 32)
-      }
-    ],
-    analise: {
-      qualidade: 98,
-      palavrasChave: ["Fotossíntese", "Cloroplasto", "ATP", "Fase clara"],
-      sugestoes: ["Imprimir esquema", "Comparar com respiração celular"]
-    }
+    });
   }
-];
+  
+  // Gerar sugestões com base no conteúdo
+  const sugestoes: string[] = [];
+  
+  // Sugestões baseadas no tipo de conteúdo
+  if (textoCompleto.includes("questão") || textoCompleto.includes("exercício")) {
+    sugestoes.push("Praticar mais exercícios similares");
+  }
+  
+  if (textoCompleto.includes("conceito") || textoCompleto.includes("definição")) {
+    sugestoes.push("Revisar conceitos fundamentais");
+  }
+  
+  if (textoCompleto.includes("exemplo") || textoCompleto.includes("aplicação")) {
+    sugestoes.push("Buscar exemplos práticos adicionais");
+  }
+  
+  // Adicionar sugestões padrão se necessário
+  if (sugestoes.length < 2) {
+    sugestoes.push("Revisar este conteúdo em 7 dias");
+    sugestoes.push("Criar mapas mentais sobre o tema");
+  }
+  
+  // Calcular "qualidade" da conversa - um valor simulado para interface
+  // Baseado na quantidade de trocas de mensagens e presença de palavras-chave
+  const numeroTrocas = mensagens.length;
+  const temPalavrasChave = palavrasChaveEncontradas.size >= 3;
+  const temConteudoDetalhado = mensagens.some(m => m.conteudo.length > 200);
+  
+  let qualidade = 75; // Base
+  
+  if (numeroTrocas > 4) qualidade += 5;
+  if (numeroTrocas > 8) qualidade += 5;
+  if (temPalavrasChave) qualidade += 8;
+  if (temConteudoDetalhado) qualidade += 7;
+  
+  // Limitar a 100
+  qualidade = Math.min(qualidade, 98);
+  
+  return {
+    qualidade,
+    palavrasChave: Array.from(palavrasChaveEncontradas).slice(0, 5),
+    sugestoes
+  };
+};
 
 // Mapeamento de ícones por tipo de conversa
 const tipoIconMap = {
@@ -266,7 +247,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
   onOpenChange,
 }) => {
   const [filtro, setFiltro] = useState("");
-  const [conversas, setConversas] = useState<Conversa[]>(conversasExemplo);
+  const [conversas, setConversas] = useState<Conversa[]>(conversasIniciais);
   const [conversaSelecionada, setConversaSelecionada] = useState<Conversa | null>(null);
   const [tipoFiltro, setTipoFiltro] = useState<string | null>(null);
   const [tagFiltro, setTagFiltro] = useState<string | null>(null);
@@ -276,14 +257,87 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
   const [cardExpandido, setCardExpandido] = useState<string | null>(null);
   const [showCompactTimeline, setShowCompactTimeline] = useState(true);
   const [showPainelInteligente, setShowPainelInteligente] = useState(false);
+  const [carregando, setCarregando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
 
-  // Efeito para inicializar a conversa selecionada quando o modal abre
-  useEffect(() => {
-    if (open && conversas.length > 0 && !conversaSelecionada) {
-      setConversaSelecionada(conversas[0]);
-      setObservacoes(conversas[0].observacoes || "");
+  // Carrega as conversas do usuário do Supabase
+  const carregarConversas = async () => {
+    try {
+      setCarregando(true);
+      setErro(null);
+      
+      const conversasUsuario = await getUserConversations();
+      
+      // Converter do formato do banco para o formato do componente
+      const conversasMapeadas: Conversa[] = conversasUsuario.map(c => ({
+        id: c.id,
+        titulo: c.title,
+        tipo: c.tipo as any,
+        data: new Date(c.created_at),
+        tags: Array.isArray(c.tags) ? c.tags : [],
+        preview: c.preview || "",
+        fixada: c.fixada,
+        favorita: c.favorita,
+        mensagens: c.mensagens || [],
+        analise: c.analise || gerarAnaliseAutomatica(c.mensagens || []),
+        observacoes: c.observacoes
+      }));
+      
+      setConversas(conversasMapeadas);
+      
+      // Se não houver conversa selecionada e tiver conversas, seleciona a primeira
+      if (conversasMapeadas.length > 0 && !conversaSelecionada) {
+        setConversaSelecionada(conversasMapeadas[0]);
+        setObservacoes(conversasMapeadas[0].observacoes || "");
+      }
+    } catch (error) {
+      console.error("Erro ao carregar conversas:", error);
+      setErro("Não foi possível carregar as conversas. Tente novamente mais tarde.");
+    } finally {
+      setCarregando(false);
     }
-  }, [open, conversas, conversaSelecionada]);
+  };
+
+  // Efeito para carregar conversas quando o modal abre
+  useEffect(() => {
+    if (open) {
+      carregarConversas();
+    }
+  }, [open]);
+
+  // Efeito para atualizar observações ao selecionar outra conversa
+  useEffect(() => {
+    if (conversaSelecionada) {
+      setObservacoes(conversaSelecionada.observacoes || "");
+    }
+  }, [conversaSelecionada]);
+
+  // Configurar escuta em tempo real para atualizações nas conversas
+  useEffect(() => {
+    const setupRealTime = async () => {
+      // Inscrever-se para mudanças na tabela de conversas
+      const subscription = supabase
+        .channel('user_conversations_changes')
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'user_conversations' 
+        }, () => {
+          // Quando houver qualquer mudança, recarregar as conversas
+          carregarConversas();
+        })
+        .subscribe();
+
+      // Limpar a inscrição quando o componente for desmontado
+      return () => {
+        subscription.unsubscribe();
+      };
+    };
+
+    if (open) {
+      setupRealTime();
+    }
+  }, [open]);
 
   // Função auxiliar para filtrar por data
   const filtrarPorData = (data: Date, filtro: string): boolean => {
@@ -330,49 +384,106 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
   );
 
   // Função para fixar/desfixar uma conversa
-  const toggleFixar = (id: string) => {
-    setConversas(prev => 
-      prev.map(conversa => 
-        conversa.id === id 
-          ? { ...conversa, fixada: !conversa.fixada } 
-          : conversa
-      )
-    );
+  const toggleFixar = async (id: string) => {
+    try {
+      // Atualizar estado local imediatamente para UX responsiva
+      setConversas(prev => 
+        prev.map(conversa => 
+          conversa.id === id 
+            ? { ...conversa, fixada: !conversa.fixada } 
+            : conversa
+        )
+      );
+      
+      // Encontrar a conversa no estado atual para ver seu valor atual
+      const conversa = conversas.find(c => c.id === id);
+      if (!conversa) return;
+      
+      // Atualizar no Supabase
+      await updateConversation(id, {
+        fixada: !conversa.fixada
+      });
+    } catch (error) {
+      console.error("Erro ao alternar fixação da conversa:", error);
+      // Reverter alteração em caso de erro
+      carregarConversas();
+    }
   };
 
   // Função para favoritar/desfavoritar uma conversa
-  const toggleFavorito = (id: string) => {
-    setConversas(prev => 
-      prev.map(conversa => 
-        conversa.id === id 
-          ? { ...conversa, favorita: !conversa.favorita } 
-          : conversa
-      )
-    );
+  const toggleFavorito = async (id: string) => {
+    try {
+      // Atualizar estado local imediatamente para UX responsiva
+      setConversas(prev => 
+        prev.map(conversa => 
+          conversa.id === id 
+            ? { ...conversa, favorita: !conversa.favorita } 
+            : conversa
+        )
+      );
+      
+      // Encontrar a conversa no estado atual para ver seu valor atual
+      const conversa = conversas.find(c => c.id === id);
+      if (!conversa) return;
+      
+      // Atualizar no Supabase
+      await updateConversation(id, {
+        favorita: !conversa.favorita
+      });
+    } catch (error) {
+      console.error("Erro ao alternar favorito da conversa:", error);
+      // Reverter alteração em caso de erro
+      carregarConversas();
+    }
   };
 
   // Função para excluir uma conversa
-  const excluirConversa = (id: string) => {
-    setConversas(prev => prev.filter(conversa => conversa.id !== id));
-    
-    // Se a conversa excluída for a selecionada, selecione outra
-    if (conversaSelecionada && conversaSelecionada.id === id) {
-      const conversasRestantes = conversas.filter(c => c.id !== id);
-      setConversaSelecionada(conversasRestantes.length > 0 ? conversasRestantes[0] : null);
+  const excluirConversa = async (id: string) => {
+    try {
+      // Atualizar estado local imediatamente para UX responsiva
+      setConversas(prev => prev.filter(conversa => conversa.id !== id));
+      
+      // Se a conversa excluída for a selecionada, selecione outra
+      if (conversaSelecionada && conversaSelecionada.id === id) {
+        const conversasRestantes = conversas.filter(c => c.id !== id);
+        setConversaSelecionada(conversasRestantes.length > 0 ? conversasRestantes[0] : null);
+      }
+      
+      // Excluir no Supabase
+      await deleteConversation(id);
+    } catch (error) {
+      console.error("Erro ao excluir conversa:", error);
+      // Reverter alteração em caso de erro
+      carregarConversas();
     }
   };
 
   // Função para renomear uma conversa
-  const renomearConversa = (id: string, novoTitulo: string) => {
+  const renomearConversa = async (id: string, novoTitulo: string) => {
     if (!novoTitulo.trim()) return;
     
-    setConversas(prev => 
-      prev.map(conversa => 
-        conversa.id === id 
-          ? { ...conversa, titulo: novoTitulo } 
-          : conversa
-      )
-    );
+    try {
+      // Atualizar estado local imediatamente para UX responsiva
+      setConversas(prev => 
+        prev.map(conversa => 
+          conversa.id === id 
+            ? { ...conversa, titulo: novoTitulo } 
+            : conversa
+        )
+      );
+      
+      // Atualizar conversa selecionada se for a mesma
+      if (conversaSelecionada && conversaSelecionada.id === id) {
+        setConversaSelecionada(prev => prev ? { ...prev, titulo: novoTitulo } : null);
+      }
+      
+      // Atualizar no Supabase
+      await updateConversation(id, { title: novoTitulo });
+    } catch (error) {
+      console.error("Erro ao renomear conversa:", error);
+      // Reverter alteração em caso de erro
+      carregarConversas();
+    }
   };
 
   // Função para lidar com clique em uma conversa
@@ -382,16 +493,34 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
   };
 
   // Função para salvar observações
-  const salvarObservacoes = () => {
+  const salvarObservacoes = async () => {
     if (!conversaSelecionada) return;
     
-    setConversas(prev => 
-      prev.map(conversa => 
-        conversa.id === conversaSelecionada.id 
-          ? { ...conversa, observacoes } 
-          : conversa
-      )
-    );
+    try {
+      // Atualizar estado local imediatamente para UX responsiva
+      setConversas(prev => 
+        prev.map(conversa => 
+          conversa.id === conversaSelecionada.id 
+            ? { ...conversa, observacoes } 
+            : conversa
+        )
+      );
+      
+      // Atualizar no Supabase
+      await updateConversation(conversaSelecionada.id, { observacoes });
+    } catch (error) {
+      console.error("Erro ao salvar observações:", error);
+    }
+  };
+  
+  // Função para retomar uma conversa no chat principal
+  const retomarConversa = (conversa: Conversa) => {
+    // Fechar o modal
+    onOpenChange(false);
+    
+    // Aqui iria a lógica para carregar esta conversa no chat principal
+    // Isso depende da implementação do chat principal
+    alert("Conversa retomada! Esta funcionalidade seria integrada ao chat principal.");
   };
 
   // Atualiza observações ao digitar

@@ -12,10 +12,215 @@ const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
+  timestamp?: Date;
+  id?: string;
+}
+
+// Interface para conversas salvas
+export interface SavedConversation {
+  id: string;
+  title: string;
+  tipo: "explicacao" | "quiz" | "correcao" | "resumo" | "fluxograma";
+  tags: string[];
+  preview: string;
+  fixada: boolean;
+  favorita: boolean;
+  mensagens: {
+    id: string;
+    remetente: "usuario" | "ia";
+    conteudo: string;
+    timestamp: Date;
+    tipo?: "texto" | "imagem" | "codigo" | "quiz";
+  }[];
+  analise?: {
+    qualidade: number;
+    palavrasChave: string[];
+    sugestoes: string[];
+  };
+  observacoes?: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
 // Histórico de conversas
 let conversationHistory: Record<string, ChatMessage[]> = {};
+
+// Função para salvar conversa no Supabase
+export const saveConversationToSupabase = async (sessionId: string, title?: string) => {
+  try {
+    const { supabase } = await import('@/lib/supabase');
+    const messages = conversationHistory[sessionId] || [];
+    
+    if (messages.length < 2) {
+      return null; // Não salvar se não houver uma conversa significativa
+    }
+    
+    // Determinar o tipo da conversa com base no conteúdo
+    const conteudo = messages.map(m => m.content.toLowerCase()).join(' ');
+    let tipo: string = "explicacao"; // padrão
+    
+    if (conteudo.includes('quiz') || conteudo.includes('simulado') || conteudo.includes('teste')) {
+      tipo = "quiz";
+    } else if (conteudo.includes('corrigir') || conteudo.includes('revisar') || conteudo.includes('feedback')) {
+      tipo = "correcao";
+    } else if (conteudo.includes('resumo') || conteudo.includes('sintetizar')) {
+      tipo = "resumo";
+    } else if (conteudo.includes('fluxograma') || conteudo.includes('diagrama')) {
+      tipo = "fluxograma";
+    }
+    
+    // Extrair possíveis tags com base no conteúdo
+    const potenciaisTags = [
+      'Matemática', 'Português', 'História', 'Geografia', 'Física', 'Química', 
+      'Biologia', 'Filosofia', 'Sociologia', 'Literatura', 'Inglês',
+      'ENEM', 'Vestibular', 'Concurso'
+    ];
+    
+    const tags = potenciaisTags.filter(tag => 
+      conteudo.includes(tag.toLowerCase())
+    );
+    
+    // Criar um preview da conversa
+    const userMessages = messages.filter(m => m.role === 'user');
+    const preview = userMessages.length > 0 
+      ? userMessages[0].content.substring(0, 150) + (userMessages[0].content.length > 150 ? '...' : '')
+      : 'Nova conversa';
+    
+    // Gerar título automático se não fornecido
+    const conversationTitle = title || `Conversa sobre ${tipo} - ${new Date().toLocaleDateString()}`;
+    
+    // Formatar mensagens para o formato do banco de dados
+    const mensagens = messages.map(message => ({
+      id: message.id || Date.now().toString(),
+      remetente: message.role === 'user' ? 'usuario' : 'ia',
+      conteudo: message.content,
+      timestamp: message.timestamp || new Date(),
+      tipo: "texto"
+    }));
+    
+    // Obter o ID do usuário atual
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error('Usuário não autenticado');
+      return null;
+    }
+    
+    // Salvar a conversa no banco de dados
+    const { data, error } = await supabase.from('user_conversations').insert({
+      user_id: user.id,
+      title: conversationTitle,
+      conversation: JSON.stringify(mensagens),
+      tipo,
+      tags: JSON.stringify(tags),
+      preview,
+      created_at: new Date(),
+      updated_at: new Date()
+    }).select('*').single();
+    
+    if (error) {
+      console.error('Erro ao salvar conversa:', error);
+      return null;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Erro ao salvar conversa:', error);
+    return null;
+  }
+};
+
+// Função para obter conversas do usuário do Supabase
+export const getUserConversations = async (): Promise<SavedConversation[]> => {
+  try {
+    const { supabase } = await import('@/lib/supabase');
+    
+    const { data, error } = await supabase
+      .from('user_conversations')
+      .select('*')
+      .order('updated_at', { ascending: false });
+    
+    if (error) {
+      console.error('Erro ao buscar conversas:', error);
+      return [];
+    }
+    
+    return data.map(item => ({
+      id: item.id,
+      title: item.title,
+      tipo: item.tipo,
+      tags: Array.isArray(item.tags) ? item.tags : JSON.parse(item.tags || '[]'),
+      preview: item.preview || '',
+      fixada: item.fixada || false,
+      favorita: item.favorita || false,
+      mensagens: Array.isArray(item.conversation) ? item.conversation : JSON.parse(item.conversation || '[]'),
+      analise: item.analise ? (typeof item.analise === 'string' ? JSON.parse(item.analise) : item.analise) : undefined,
+      observacoes: item.observacoes,
+      created_at: new Date(item.created_at),
+      updated_at: new Date(item.updated_at)
+    }));
+  } catch (error) {
+    console.error('Erro ao processar conversas:', error);
+    return [];
+  }
+};
+
+// Função para atualizar uma conversa no Supabase
+export const updateConversation = async (conversationId: string, updates: Partial<SavedConversation>) => {
+  try {
+    const { supabase } = await import('@/lib/supabase');
+    
+    // Preparar os dados para atualização
+    const updateData: any = {};
+    
+    if (updates.title) updateData.title = updates.title;
+    if (updates.tipo) updateData.tipo = updates.tipo;
+    if (updates.tags) updateData.tags = JSON.stringify(updates.tags);
+    if (updates.fixada !== undefined) updateData.fixada = updates.fixada;
+    if (updates.favorita !== undefined) updateData.favorita = updates.favorita;
+    if (updates.observacoes !== undefined) updateData.observacoes = updates.observacoes;
+    if (updates.analise) updateData.analise = JSON.stringify(updates.analise);
+    
+    // Não atualizamos mensagens aqui, pois isso geralmente ocorre durante a conversa ativa
+    
+    const { error } = await supabase
+      .from('user_conversations')
+      .update(updateData)
+      .eq('id', conversationId);
+    
+    if (error) {
+      console.error('Erro ao atualizar conversa:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Erro ao atualizar conversa:', error);
+    return false;
+  }
+};
+
+// Função para excluir uma conversa do Supabase
+export const deleteConversation = async (conversationId: string) => {
+  try {
+    const { supabase } = await import('@/lib/supabase');
+    
+    const { error } = await supabase
+      .from('user_conversations')
+      .delete()
+      .eq('id', conversationId);
+    
+    if (error) {
+      console.error('Erro ao excluir conversa:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Erro ao excluir conversa:', error);
+    return false;
+  }
+};
 
 // Função para obter dados do usuário atual com acesso expandido e completo
 async function getUserContext() {
