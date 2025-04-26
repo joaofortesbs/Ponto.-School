@@ -47,9 +47,7 @@ const HeaderIcons: React.FC<HeaderIconsProps> = ({
       <ApostilaInteligenteIcon onClick={onApostilaInteligenteClick} />
       <ModoFantasmaIcon onClick={handleModoFantasmaClick} active={modoFantasmaAtivo} />
       <GaleriaIcon onClick={onGaleriaClick} />
-      <div className="ml-1">
-        <PerfilIcon onClick={onPerfilClick} />
-      </div>
+      <PerfilIcon onClick={onPerfilClick} />
       <HistoricoConversasModal open={isHistoricoModalOpen} onOpenChange={setIsHistoricoModalOpen} />
     </div>
   );
