@@ -1,8 +1,11 @@
+
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import { Zap, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import TurboMessageBox from "./TurboMessageBox";
+import TurboHubConnected from "./TurboHubConnected";
 
 const EpictusTurboMode: React.FC = () => {
   const { theme } = useTheme();
@@ -247,7 +250,7 @@ const EpictusTurboMode: React.FC = () => {
             {/* Personalidades dropdown */}
             <div className="relative icon-container mr-5 group" style={{ zIndex: 99999, position: "relative" }}>
               <motion.div
-                className="relative w-auto h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#0055B8] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow px-3 group" {/* Changed background color here */}
+                className="relative w-auto h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#0055B8] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow px-3 group" 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 initial={false}
@@ -264,7 +267,7 @@ const EpictusTurboMode: React.FC = () => {
 
               {/* Dropdown content - absolute positioning relative to its container */}
               <div className="fixed group-hover:opacity-100 group-hover:visible opacity-0 invisible transition-all duration-300 z-[99999] left-auto mt-2 personalidades-dropdown" style={{ top: "calc(100% + 10px)" }}>
-                <div className="w-52 bg-[#0f3562] rounded-lg shadow-xl overflow-hidden border border-white/10 backdrop-blur-md" style={{ position: "relative", zIndex: 99999 }}> {/* Changed background color here */}
+                <div className="w-52 bg-[#0f3562] rounded-lg shadow-xl overflow-hidden border border-white/10 backdrop-blur-md" style={{ position: "relative", zIndex: 99999 }}> 
                   <div className="max-h-60 overflow-y-auto py-2">
                     {profileOptions.map((item, index) => (
                       <motion.div 
@@ -280,8 +283,8 @@ const EpictusTurboMode: React.FC = () => {
                         <div 
                           className="w-7 h-7 rounded-md flex items-center justify-center shadow-inner"
                           style={{ 
-                            background: `linear-gradient(135deg, #0055B830, #0055B850)`, {/* Changed color here */}
-                            boxShadow: `0 0 15px #0055B840` {/* Changed color here */}
+                            background: `linear-gradient(135deg, #0055B830, #0055B850)`,
+                            boxShadow: `0 0 15px #0055B840` 
                           }}
                         >
                           {item.icon}
@@ -297,7 +300,7 @@ const EpictusTurboMode: React.FC = () => {
             {/* History icon */}
             <div className="relative icon-container">
               <motion.div
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#0055B8] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow" {/* Changed background color here */}
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#0055B8] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow" 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 initial={false}
@@ -313,7 +316,7 @@ const EpictusTurboMode: React.FC = () => {
             {/* Favorites icon */}
             <div className="relative icon-container">
               <motion.div
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#0055B8] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow" {/* Changed background color here */}
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#0055B8] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow" 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 initial={false}
@@ -328,7 +331,7 @@ const EpictusTurboMode: React.FC = () => {
             {/* Calendar icon */}
             <div className="relative icon-container">
               <motion.div
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#0055B8] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow" {/* Changed background color here */}
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#0055B8] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow" 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 initial={false}
@@ -346,7 +349,7 @@ const EpictusTurboMode: React.FC = () => {
             {/* Notifications icon */}
             <div className="relative icon-container">
               <motion.div
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#0055B8] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow" {/* Changed background color here */}
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#0055B8] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow" 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 initial={false}
@@ -362,7 +365,7 @@ const EpictusTurboMode: React.FC = () => {
             {/* Profile picture - a bit more spaced */}
             <div className="relative profile-icon-container ml-4">
               <motion.div
-                className="w-11 h-11 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#0055B8] p-[2px] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow overflow-hidden" {/* Changed background color here */}
+                className="w-11 h-11 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#0055B8] p-[2px] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow overflow-hidden" 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 initial={false}
@@ -405,6 +408,4 @@ const EpictusTurboMode: React.FC = () => {
   );
 };
 
-import TurboMessageBox from "./TurboMessageBox";
-import TurboHubConnected from "./TurboHubConnected";
 export default EpictusTurboMode;
