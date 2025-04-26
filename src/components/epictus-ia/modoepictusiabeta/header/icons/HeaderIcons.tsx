@@ -1,53 +1,42 @@
-import React from "react";
+
+import React, { useState } from "react";
 import HistoricoIcon from "./HistoricoIcon";
 import EspacoAprendizagemIcon from "./EspacoAprendizagemIcon";
 import ApostilaInteligenteIcon from "./ApostilaInteligenteIcon";
 import ModoFantasmaIcon from "./ModoFantasmaIcon";
 import GaleriaIcon from "./GaleriaIcon";
-import PerfilIcon from "./PerfilIcon";
 
 interface HeaderIconsProps {
-  activeIcon?: string;
-  onIconClick?: (iconName: string) => void;
+  onHistoricoClick?: () => void;
+  onEspacoAprendizagemClick?: () => void;
+  onApostilaInteligenteClick?: () => void;
+  onModoFantasmaClick?: () => void;
+  onGaleriaClick?: () => void;
 }
 
-const HeaderIcons: React.FC<HeaderIconsProps> = ({ 
-  activeIcon = "",
-  onIconClick = () => {}
+const HeaderIcons: React.FC<HeaderIconsProps> = ({
+  onHistoricoClick,
+  onEspacoAprendizagemClick,
+  onApostilaInteligenteClick,
+  onModoFantasmaClick,
+  onGaleriaClick
 }) => {
-  console.log("Renderizando HeaderIcons para o Modo Epictus IA BETA");
+  const [modoFantasmaAtivo, setModoFantasmaAtivo] = useState(false);
+
+  const handleModoFantasmaClick = () => {
+    setModoFantasmaAtivo(!modoFantasmaAtivo);
+    if (onModoFantasmaClick) {
+      onModoFantasmaClick();
+    }
+  };
 
   return (
-    <div className="flex items-center space-x-2 px-2">
-      <HistoricoIcon 
-        active={activeIcon === "historico"} 
-        onClick={() => onIconClick("historico")} 
-      />
-
-      <EspacoAprendizagemIcon 
-        active={activeIcon === "espacoAprendizagem"} 
-        onClick={() => onIconClick("espacoAprendizagem")} 
-      />
-
-      <ApostilaInteligenteIcon 
-        active={activeIcon === "apostilaInteligente"} 
-        onClick={() => onIconClick("apostilaInteligente")} 
-      />
-
-      <ModoFantasmaIcon 
-        active={activeIcon === "modoFantasma"} 
-        onClick={() => onIconClick("modoFantasma")} 
-      />
-
-      <GaleriaIcon 
-        active={activeIcon === "galeria"} 
-        onClick={() => onIconClick("galeria")} 
-      />
-
-      <PerfilIcon 
-        active={activeIcon === "perfil"} 
-        onClick={() => onIconClick("perfil")} 
-      />
+    <div className="flex items-center justify-center z-10 relative gap-3">
+      <HistoricoIcon onClick={onHistoricoClick} />
+      <EspacoAprendizagemIcon onClick={onEspacoAprendizagemClick} />
+      <ApostilaInteligenteIcon onClick={onApostilaInteligenteClick} />
+      <ModoFantasmaIcon onClick={handleModoFantasmaClick} active={modoFantasmaAtivo} />
+      <GaleriaIcon onClick={onGaleriaClick} />
     </div>
   );
 };

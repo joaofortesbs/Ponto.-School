@@ -1,5 +1,5 @@
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component, ErrorInfo, ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
@@ -9,68 +9,47 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
-  errorInfo: ErrorInfo | null;
 }
 
 class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      hasError: false,
-      error: null,
-      errorInfo: null
-    };
+  public state: State = {
+    hasError: false,
+    error: null
+  };
+
+  public static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
   }
 
-  static getDerivedStateFromError(error: Error): State {
-    console.error('ErrorBoundary capturou um erro:', error.message);
-    return { hasError: true, error, errorInfo: null };
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Erro capturado pelo ErrorBoundary:", error, errorInfo);
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    console.error('Detalhes do erro capturado:', error, errorInfo);
-    
-    this.setState({
-      error,
-      errorInfo
-    });
-    
-    // Você poderia enviar o erro para um serviço de rastreamento aqui
-    // Ex: reportErrorToService(error, errorInfo);
-  }
-
-  render(): ReactNode {
+  public render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
         return this.props.fallback;
       }
       
-      // Fallback padrão se nenhum for fornecido
       return (
-        <div className="p-4 rounded-md bg-red-50 border border-red-200 m-4">
-          <h2 className="text-xl font-semibold text-red-800 mb-2">
-            Algo deu errado
-          </h2>
-          <div className="text-red-700 mb-4">
-            {this.state.error?.message}
+        <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-white dark:bg-[#001427]">
+          <div className="max-w-md w-full p-6 bg-white dark:bg-[#0A2540] rounded-lg shadow-lg border border-gray-200 dark:border-gray-800">
+            <h2 className="text-xl font-bold text-red-600 mb-4">Algo deu errado</h2>
+            <p className="text-gray-700 dark:text-gray-300 mb-4">
+              Ocorreu um problema ao carregar a plataforma.
+            </p>
+            <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md overflow-auto mb-4">
+              <code className="text-sm text-red-500 dark:text-red-400">
+                {this.state.error?.message || "Erro desconhecido"}
+              </code>
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors"
+            >
+              Tentar novamente
+            </button>
           </div>
-          <details className="mt-2 text-sm text-gray-700 rounded-md bg-white p-2 overflow-auto max-h-96">
-            <summary className="font-medium cursor-pointer mb-2">Detalhes técnicos para depuração</summary>
-            <pre className="whitespace-pre-wrap font-mono text-xs">
-              {this.state.error?.stack}
-            </pre>
-            {this.state.errorInfo && (
-              <pre className="whitespace-pre-wrap font-mono text-xs mt-2 pt-2 border-t border-gray-200">
-                {this.state.errorInfo.componentStack}
-              </pre>
-            )}
-          </details>
-          <button
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-            onClick={() => window.location.reload()}
-          >
-            Recarregar página
-          </button>
         </div>
       );
     }

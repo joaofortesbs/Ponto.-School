@@ -1,20 +1,22 @@
 
 import React from "react";
-import { Clock } from "lucide-react";
 import HeaderIcon from "./HeaderIcon";
 
 interface HistoricoIconProps {
-  active?: boolean;
   onClick?: () => void;
 }
 
-export const HistoricoIcon: React.FC<HistoricoIconProps> = ({ active = false, onClick }) => {
+const HistoricoIcon: React.FC<HistoricoIconProps> = ({ onClick }) => {
   return (
     <HeaderIcon
-      icon={<Clock size={20} className="text-white" />}
-      label="Histórico"
-      active={active}
+      icon={
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 8v4l3 3" />
+          <circle cx="12" cy="12" r="10" />
+        </svg>
+      }
       onClick={onClick}
+      label="Histórico"
     />
   );
 };
