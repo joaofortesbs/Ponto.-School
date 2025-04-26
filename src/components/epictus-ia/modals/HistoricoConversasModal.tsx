@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-// Importação direta dos componentes primitivos para evitar conflitos
-import * as DialogPrimitive from "@radix-ui/react-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogPortal,
+  DialogOverlay
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { 
   Search, 
@@ -298,10 +302,10 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
   const temResultados = Object.values(grupos).some(grupo => grupo.length > 0);
 
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
-      <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <DialogPrimitive.Content 
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogPortal>
+        <DialogOverlay />
+        <DialogContent 
           className={cn(
             "fixed left-[50%] top-[50%] z-50 grid w-full max-w-5xl translate-x-[-50%] translate-y-[-50%] p-0 overflow-hidden border-none sm:rounded-xl text-white",
           )}
@@ -935,9 +939,9 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
             )}
           </div>
         </div>
-        </DialogPrimitive.Content>
-      </DialogPrimitive.Portal>
-    </DialogPrimitive.Root>
+        </DialogContent>
+      </DialogPortal>
+    </Dialog>
   );
 };
 
