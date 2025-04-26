@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import GlowingBackground from "./GlowingBackground";
 import LogoSection from "./LogoSection";
 import PersonalitiesDropdown from "./PersonalitiesDropdown";
-import HeaderIcons from "./HeaderIcons";
+import { HeaderIcons } from "../modoepictusiabeta/header/icons";
 
 interface TurboHeaderProps {
   profileOptions: Array<{
