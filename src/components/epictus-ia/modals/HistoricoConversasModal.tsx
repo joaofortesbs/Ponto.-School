@@ -24,7 +24,8 @@ import {
   Share2,
   ExternalLink,
   ArrowUpRight,
-  Copy
+  Copy,
+  Loader2
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -33,8 +34,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tooltip } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader } from "@/components/ui/loader"; // Import the Loader component
-import { toast } from "@/components/ui/toast"; // Import the toast function
+import { toast } from "@/components/ui/use-toast"; // Corrigido para use-toast
 
 
 interface Conversa {
@@ -556,7 +556,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
               <div className="py-2">
                 {isLoading ? (
                   <div className="flex flex-col items-center justify-center py-20">
-                    <Loader className="h-8 w-8 text-[#4A0D9F] animate-spin mb-4" />
+                    <Loader2 className="h-8 w-8 text-[#4A0D9F] animate-spin mb-4" />
                     <p className="text-sm text-gray-400">Carregando conversas...</p>
                   </div>
                 ) : !temResultados ? (
@@ -874,7 +874,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
 
                     {isLoadingMessages ? (
                       <div className="flex items-center justify-center py-10">
-                        <Loader className="h-6 w-6 text-[#4A0D9F] animate-spin mr-2" />
+                        <Loader2 className="h-6 w-6 text-[#4A0D9F] animate-spin mr-2" />
                         <p className="text-sm text-gray-400">Carregando mensagens...</p>
                       </div>
                     ) : conversationMessages.length === 0 ? (
