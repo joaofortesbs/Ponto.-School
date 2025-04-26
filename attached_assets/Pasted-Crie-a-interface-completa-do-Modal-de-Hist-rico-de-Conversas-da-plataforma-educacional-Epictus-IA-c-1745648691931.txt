@@ -1,0 +1,132 @@
+Crie a interface completa do Modal de Histórico de Conversas da plataforma educacional Epictus IA, com foco em um layout ultramoderno, sofisticado e de altíssima usabilidade, inspirado em plataformas como OpenAI, Grok (xAI), Gemini (Google), e Notion.
+
+Este modal será ativado ao clicar em um ícone de histórico (🕘) no topo do Chat Epictus IA.
+Deve ser construído em React + Tailwind + Framer Motion, com código limpo, responsivo e modular.
+
+🧩 ESTRUTURA VISUAL DO MODAL (DIVIDIDA EM TRÊS ÁREAS PRINCIPAIS)
+🧱 Modal Central: max-w-[90vw] max-h-[90vh] com glassmorphism, bordas 2xl, fundo com blur suave e sombra elegante.
+🅰️ COLUNA ESQUERDA: Lista de Conversas
+Posição: w-1/4 — Com scroll vertical interno
+
+Título da Seção: Suas Conversas (topo da coluna, fonte text-xl font-bold)
+
+🔍 Campo de Busca: com debounce e highlight dos resultados
+
+📅 Filtro por Data (dropdown)
+
+🏷️ Filtro por Tags (Enem, Urgente, etc.)
+
+🧠 Filtro por Tipo (Explicação, Quiz, Correção, etc.)
+
+🧾 Cada item da lista exibe:
+Ícone do tipo (ex: 📘 para conteúdo, 🧪 para simulado)
+
+Título da Conversa (renomeável via ícone ✏️)
+
+Data e hora
+
+Botões interativos ao passar o mouse:
+
+📌 Fixar
+
+⭐ Favoritar
+
+🗑️ Deletar
+
+🔁 Retomar
+
+🅱️ COLUNA CENTRAL: Pré-Visualização Inteligente
+Posição: w-2/4 — Área de destaque visual
+
+Header com nome da conversa + botão flutuante de ações rápidas:
+
+"Gerar Quiz"
+
+"Transformar em resumo"
+
+"Exportar PDF"
+
+"Mandar para Apostila"
+
+Resumo Visual em Cards Horizontais (scroll x):
+
+Cada card representa uma pergunta, resposta, imagem, explicação ou recurso gerado pela IA.
+
+Hover suave revela ícones: 📎 Anexar, ✏️ Editar, 💡 Refatorar com IA
+
+💡 Ao clicar em um card:
+Ele se expande com transição Framer Motion
+
+Mostra contexto + mini timeline de como o conteúdo foi evoluindo na conversa
+
+🆎 COLUNA DIREITA: Detalhes e Inteligência
+Posição: w-1/4 — Abre automaticamente ao clicar em uma conversa da esquerda
+
+Título: “Painel Inteligente” com ícone 🧠
+
+Mostra:
+
+✅ Análise de Qualidade do Estudo
+
+📊 Palavras-chave identificadas
+
+🧠 Sugestões da IA: (ex: “Revisar isso em 7 dias?”)
+
+📝 Campo de “Minhas Observações” com autosave
+
+📤 Botões: "Exportar", "Mandar para Caderno", "Transformar em Flashcards", "Agendar Revisão"
+
+🔁 Linha do Tempo da Conversa (com mini cards organizados por momentos)
+
+🧠 FUNCIONALIDADES AVANÇADAS (NO TOPO DO MODAL)
+🧠 Busca Semântica com IA:
+
+Input com placeholder: “Digite palavras-chave ou temas que você lembra...”
+
+A IA deve localizar qualquer conversa mesmo que os termos exatos não apareçam
+
+🧰 Botão flutuante: “Comparar Conversas”:
+
+Permite selecionar 2 ou mais conversas e exibir lado a lado (split screen)
+
+Útil para comparar abordagens da IA, evolução do entendimento ou revisões
+
+🕑 Modo Linha do Tempo Geral:
+
+Ícone de relógio no topo
+
+Mostra todos os chats em sequência cronológica, com zoom scroll e filtros dinâmicos
+
+💫 INTERAÇÕES E TRANSIÇÕES (UX Moderno)
+Modal com Fade + ScaleIn (Framer Motion)
+
+Desfoque suave no fundo ao abrir
+
+Hover com glow discreto em botões e cards
+
+Feedback visual ao clicar (ex: ícones vibram, ou escurecem brevemente)
+
+Scroll suave e com snapping
+
+Cards com efeito de tilt (leve inclinação) ao passar o mouse
+
+📱 RESPONSIVIDADE
+No mobile:
+
+Modal vira tela cheia (w-full h-full)
+
+Colunas viram seções com swipe horizontal (ou collapsible vertical)
+
+Cards empilhados, ações acessíveis via ícones suspensos
+
+🎨 ESTILO VISUAL (UI)
+Glassmorphism com blur e transparência moderada
+
+Paleta: tons azul-escuro, roxo elegante, cinza futurista, com detalhes em neon discreto
+
+Ícones lucide-react ou personalizados
+
+Fontes modernas (Inter, Urbanist, Outfit)
+
+Sombra suave, cantos 2xl, microinterações
+
