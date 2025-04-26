@@ -41,7 +41,11 @@ import {
   MessageCircle,
   Reply,
   ExternalLink,
-  AlignJustify
+  AlignJustify,
+  ChevronRight,
+  ChevronLeft,
+  PanelRightClose,
+  PanelRightOpen
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -271,6 +275,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
   const [observacoes, setObservacoes] = useState("");
   const [cardExpandido, setCardExpandido] = useState<string | null>(null);
   const [showCompactTimeline, setShowCompactTimeline] = useState(true);
+  const [showPainelInteligente, setShowPainelInteligente] = useState(false);
 
   // Efeito para inicializar a conversa selecionada quando o modal abre
   useEffect(() => {
@@ -482,6 +487,26 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                 )}
               </Button>
               
+              {/* Mostrar/Ocultar Painel Inteligente */}
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className={`text-xs flex items-center gap-1 px-2 h-7 ${showPainelInteligente ? "bg-purple-900/30 text-purple-300" : "text-gray-300"}`}
+                onClick={() => setShowPainelInteligente(prev => !prev)}
+              >
+                {showPainelInteligente ? (
+                  <>
+                    <PanelRightClose className="h-3.5 w-3.5" />
+                    <span>Ocultar Painel</span>
+                  </>
+                ) : (
+                  <>
+                    <PanelRightOpen className="h-3.5 w-3.5" />
+                    <span>Mostrar Painel</span>
+                  </>
+                )}
+              </Button>
+              
               {/* Comparar conversas */}
               <Button 
                 variant="ghost" 
@@ -494,7 +519,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
             </div>
           </div>
           
-          {/* Corpo principal do modal em 3 colunas - com mais espaçamento */}
+          {/* Corpo principal do modal em colunas - com mais espaçamento */}
           <div className="flex flex-1 overflow-hidden gap-0.5">
             {/* COLUNA ESQUERDA: Lista de Conversas */}
             <div className="w-1/4 border-r border-white/5 flex flex-col">
@@ -760,7 +785,7 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
             </div>
             
             {/* COLUNA CENTRAL: Pré-visualização inteligente */}
-            <div className="w-2/4 border-r border-white/5 flex flex-col">
+            <div className={`${showPainelInteligente ? "w-2/4" : "w-3/4"} flex flex-col relative`}>
               {conversaSelecionada ? (
                 <>
                   <div className="px-4 py-2 border-b border-white/5 flex justify-between items-center">
@@ -943,10 +968,23 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                   <p>Selecione uma conversa para visualizar</p>
                 </div>
               )}
+              
+              {/* Botão flutuante para expandir painel inteligente quando está fechado */}
+              {!showPainelInteligente && conversaSelecionada && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-[#1A2033]/80 border-gray-700/50 text-gray-300 hover:bg-[#1A2642]/70 hover:text-purple-300 h-auto py-6"
+                  onClick={() => setShowPainelInteligente(true)}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+              )}
             </div>
             
             {/* COLUNA DIREITA: Detalhes e inteligência - mais compacta */}
-            <div className="w-1/4 flex flex-col">
+            {showPainelInteligente && (
+              <div className="w-1/4 flex flex-col border-l border-white/5">
               {conversaSelecionada ? (
                 <>
                   <div className="px-4 py-2 border-b border-white/5 flex items-center">
@@ -1143,7 +1181,18 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
                   <p>Selecione uma conversa para ver detalhes</p>
                 </div>
               )}
+              
+              {/* Botão para fechar o painel */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute left-0 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-purple-300 h-auto py-6"
+                onClick={() => setShowPainelInteligente(false)}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
+            )}
           </div>
         </div>
       </DialogContent>
