@@ -3,8 +3,8 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import {
   Dialog,
   DialogContent,
-  DialogOverlay,
   DialogPortal,
+  DialogOverlay,
   DialogClose,
 } from "@/components/ui/dialog";
 import { 
@@ -304,13 +304,15 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl p-0 overflow-hidden border-none sm:rounded-xl text-white"
-        style={{ 
-          width: "85vw", 
-          height: "85vh",
-          background: "linear-gradient(145deg, #0a0f1a 0%, #131d2e 100%)",
-          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)"
-        }}>
+      <DialogPortal>
+        <DialogOverlay />
+        <DialogContent className="max-w-5xl p-0 overflow-hidden border-none sm:rounded-xl text-white"
+          style={{ 
+            width: "85vw", 
+            height: "85vh",
+            background: "linear-gradient(145deg, #0a0f1a 0%, #131d2e 100%)",
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)"
+          }}>
         <div className="flex h-full">
           {/* Painel lateral esquerdo com histórico */}
           <div className="w-1/3 border-r border-[#1e2a3e]/80 flex flex-col h-full bg-[#0b121f]/50 backdrop-blur-sm">
@@ -935,7 +937,8 @@ const HistoricoConversasModal: React.FC<HistoricoConversasModalProps> = ({
             )}
           </div>
         </div>
-      </DialogContent>
+        </DialogContent>
+      </DialogPortal>
     </Dialog>
   );
 };
