@@ -1,0 +1,90 @@
+O modal será uma seção lateral fixada à esquerda da tela, projetada para exibir o histórico de conversas do usuário. Ele será dividido em frascos temporais (como "Ontem", "Últimos 7 dias" e "Este ano"), com uma barra de pesquisa, botões de ação e um botão para criar novos chats. O modal terá uma área à direita para pré-visualização de conversas (sem exemplos de pré-visualização, conforme solicitado), e o design seguirá um tema escuro e minimalista.
+
+Componentes e Funcionalidades
+Barra de Pesquisa
+Localização : No topo do modal, fixa (não rola com o conteúdo).
+Estrutura :
+Um campo de entrada de texto com o placeholder "Pesquisar...".
+Um ícone de lupa à direita do campo.
+O campo deve ter bordas arredondadas e fundo cinza escuro.
+Funcionalidade :
+Permite ao usuário digitar palavras-chave para filtrar as conversas.
+À medida que o usuário digital, a lista de conversas deve ser atualizada dinamicamente para mostrar apenas as conversas cujos títulos contêm o texto digitalizado (ignorando guardas/minúsculas).
+Se o campo de pesquisa estiver vazio, todas as conversas deverão ser exibidas.
+Botão de Ações
+Localização : Abaixo da barra de pesquisa.
+Estrutura :
+Um botão ou texto clicável chamado "Ações".
+Deve ser estilizado com texto branco e fundo transparente (ou cinza escuro ao passar o mouse).
+Funcionalidade :
+Ao clicar, exibe um menu suspenso com opções como "Arquivar conversas", "Excluir conversas" ou "Exportar histórico".
+Para simplificar, o menu suspenso pode ser uma lista estática (sem funcionalidade real de arquivar/excluir/exportar, apenas para demonstração).
+Botão de Novo Chat
+Localização : Abaixo do botão "Ações" e repetir no rodapé do modal.
+Estrutura :
+Um botão com o texto "Criar novo chat privado".
+Um ícone de cadenciado à esquerda do texto.
+O botão deve ter fundo cinza escuro, bordas arredondadas e texto branco.
+Funcionalidade :
+Ao clicar, o botão deve limpar a conversa atual (simulada por um console.log ou alerta para este exemplo).
+A repetição do botão no rodapé garante que o usuário possa iniciar um novo chat sem rolar até o topo.
+Seções de Conversas
+Localização : Abaixo do botão de novo chat (topo).
+Estrutura :
+As conversas devem ser agrupadas em repositórios temporários:
+"Ontem": Conversas do dia anterior.
+"Últimos 7 dias": Conversas dos últimos 7 dias (excluindo ontem).
+"Este ano": Conversas mais antigas, dentro do ano corrente.
+Cada seção deve ter um cabeçalho em letras designadas (ex.: "ONTEM") com texto branco.
+Funcionalidade :
+Os depósitos serão gerados dinamicamente com base nos dados das conversas.
+Se não houver conversas em uma seção, ela não deverá aparecer.
+Lista de Conversas
+Localização : Dentro de cada seção temporal.
+Estrutura :
+Cada conversa é um item da lista contendo:
+Um título (ex.: "Otimização de SEO para um site").
+Um timestamp à direita (ex.: “Há 27 horas” ou “16 de abr.”).
+O título deve ser em branco, e o timestamp em cinza claro.
+Cada item deve ser clicável e ter uma leve mudança de cor ao passar o mouse (passar o mouse).
+Funcionalidade :
+As conversas devem ser ordenadas dentro de cada seção, do mais recente para o mais antigo.
+Ao clicar em uma conversa, ela deve ser marcada como selecionada (com um fundo cinza escuro ou borda destacada).
+A seleção de uma conversa deve disparar uma ação para carregar seu conteúdo na área de pré-visualização (para este exemplo, apenas um console.log inserir a conversa selecionada).
+Área de Pré-visualização
+Localização : À direita do modal.
+Estrutura :
+Uma área com texto inicial "Selecione uma conversa para pré-visualizar" em cinza claro.
+Deve ocupar o espaço à direita do modal, com fundo preto escuro.
+Funcionalidade :
+Quando uma conversa é selecionada, essa área deve ser atualizada para indicar que a conversa foi incluída (neste caso, apenas via console.log, sem exemplos de pré-visualização).
+Barra de Rolagem
+Localização : À direita do modal.
+Estrutura :
+Uma barra de rolagem vertical fina, estilizada em cinza.
+Funcionalidade :
+Permite ao usuário rolar pelo histórico de conversas quando o conteúdo ultrapassa a altura do modal.
+Ícone de Microfone (Rodapé)
+Localização : À direita do botão "Criar novo chat privado" no rodapé.
+Estrutura :
+Um ícone de microfone, estilizado em cinza claro.
+Funcionalidade :
+Para este exemplo, o ícone será apenas visual (sem funcionalidade real), mas pode ser configurado para ativar um modo de voz no futuro.
+Projeto
+Tema Escuro :
+Fundo do modal: Preto escuro (#1C2526).
+Texto principal (títulos, cabeçalhos): Branco (#FFFFFF).
+Texto secundário (timestamps): Cinza claro (#A0A0A0).
+Botões: Fundo escuro cinza (#333333), texto branco.
+Tipografia :
+Fonte sem serifa (ex.: "Arial" ou "Roboto").
+Títulos de títulos: 12px, letras guardadas, negrito.
+Títulos de conversas: 14px, negro.
+Carimbos de data e hora: 12px, regular.
+Espaçamento :
+Margem interna do modal: 16px.
+Espaço entre receitas: 20px.
+Espaço entre itens de conversa: 10px.
+Bordas e Interatividade :
+Botões e barra de pesquisa com bordas arredondadas (raio: 8px).
+Efeito de passar o mouse nos itens de conversa e botões (fundo mais claro, ex.: #444444).
