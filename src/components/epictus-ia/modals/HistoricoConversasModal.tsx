@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogOverlay,
+  DialogPortal,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { 
   Search, 
