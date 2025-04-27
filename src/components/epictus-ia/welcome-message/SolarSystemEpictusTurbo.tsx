@@ -106,7 +106,7 @@ const SolarSystemEpictusTurbo: React.FC<SolarSystemEpictusTurboProps> = ({
   ];
 
   return (
-    <div className="relative w-full h-[70vh] flex items-center justify-center overflow-hidden">
+    <div className="solar-system-container relative w-full h-[70vh] flex items-center justify-center overflow-hidden">
       {/* Partículas de fundo aprimoradas */}
       <div className="absolute inset-0 -z-1">
         <Particles
@@ -282,19 +282,6 @@ const SolarSystemEpictusTurbo: React.FC<SolarSystemEpictusTurboProps> = ({
       <div className="absolute w-72 h-72 bg-indigo-500/5 rounded-full filter blur-3xl"></div>
       <div className="absolute w-48 h-48 bg-blue-500/5 rounded-full filter blur-3xl"></div>
       <div className="absolute w-36 h-36 bg-orange-500/10 rounded-full filter blur-xl"></div>
-
-      {/* Instruções para o usuário - Redesenhada */}
-      <motion.div 
-        className="absolute bottom-8 text-center max-w-md px-6 py-4 rounded-xl bg-[#0d1425]/60 backdrop-blur-md 
-                  border border-indigo-500/20 shadow-[0_4px_20px_rgba(79,70,229,0.15)]"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1, duration: 0.5 }}
-      >
-        <p className="text-white/90 text-sm font-medium">
-          Digite sua mensagem na caixa abaixo para interagir com o Epictus IA
-        </p>
-      </motion.div>
     </div>
   );
 };
