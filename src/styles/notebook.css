@@ -20,3 +20,37 @@
   width: 1px;
   background-color: #ff9e9e;
 }
+
+/* Notebook lines styling */
+.notebook-lines {
+  position: relative;
+  scroll-behavior: smooth;
+}
+
+.notebook-lines::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.notebook-lines::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.notebook-lines::-webkit-scrollbar-thumb {
+  background: #ff9e9e;
+  border-radius: 4px;
+}
+
+.notebook-lines::-webkit-scrollbar-thumb:hover {
+  background: #ff7e7e;
+}
+
+/* Animation for notebook modal */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+#notebook-modal {
+  animation: fadeIn 0.3s ease-out;
+}
