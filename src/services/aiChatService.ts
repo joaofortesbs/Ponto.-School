@@ -1471,6 +1471,5 @@ const convertToNotebookFormat = async (
 export {
   generateAIResponse,
   getConversationHistory,
-  clearConversationHistory,
   convertToNotebookFormat
 };
