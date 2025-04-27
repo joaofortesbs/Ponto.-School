@@ -490,8 +490,33 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
                     <Textarea 
                       value={editedContent}
                       onChange={handleContentChange}
-                      className="w-full min-h-[250px] p-0 bg-transparent focus:ring-0 focus:border-0 border-none shadow-none resize-none font-['Architects_Daughter',_'Comic_Sans_MS',_cursive,_system-ui] text-lg leading-notebook-line notebook-textarea text-[#333] dark:text-[#f0f0f0]"
+                      className="w-full min-h-[250px] p-0 bg-transparent focus:ring-0 focus:border-0 border-none shadow-none resize-none font-['Architects_Daughter',_'Comic_Sans_MS',_cursive,_system-ui] text-lg leading-notebook-line notebook-textarea text-[#333] dark:text-[#f0f0f0] whitespace-pre-wrap"
                       placeholder="Digite suas anotações aqui..."
+                      onKeyDown={(e) => {
+                        // Verificar se a linha atual excede o tamanho recomendado ao apertar Enter
+                        if (e.key === 'Enter') {
+                          const textarea = e.currentTarget;
+                          const cursorPosition = textarea.selectionStart;
+                          const text = textarea.value;
+                          
+                          // Encontrar o início da linha atual
+                          let lineStart = cursorPosition;
+                          while (lineStart > 0 && text[lineStart - 1] !== '\n') {
+                            lineStart--;
+                          }
+                          
+                          // Verificar o comprimento da linha atual
+                          const currentLineText = text.substring(lineStart, cursorPosition);
+                          if (currentLineText.length > 58) {
+                            // Sugerir quebrar em linhas menores
+                            toast({
+                              title: "Dica de formatação",
+                              description: "Linha muito longa! Considere quebrar em linhas menores para melhor visualização.",
+                              duration: 3000,
+                            });
+                          }
+                        }
+                      }}
                     />
                   </div>
                 ) : (

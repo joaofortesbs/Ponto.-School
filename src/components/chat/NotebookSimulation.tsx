@@ -23,7 +23,7 @@ const NotebookSimulation: React.FC<NotebookSimulationProps> = ({ content }) => {
     return cleaned;
   };
 
-  // Processa o conteúdo preservando formatações especiais
+  // Processa o conteúdo preservando formatações especiais e ajustando para as linhas do caderno
   const processNotebookContent = (rawContent: string) => {
     // Aplicar limpeza mínima
     let processed = cleanContent(rawContent);
@@ -32,7 +32,40 @@ const NotebookSimulation: React.FC<NotebookSimulationProps> = ({ content }) => {
     processed = processed.replace(/^[•\-\*]\s+/gm, '• ');
     processed = processed.replace(/^(\d+\.\s+)/gm, '$1 ');
     
-    return processed;
+    // Ajustar conteúdo para garantir que palavras não sejam quebradas entre linhas
+    // e que todo texto comece no início da linha
+    const lines = processed.split('\n');
+    let formattedLines: string[] = [];
+    
+    lines.forEach(line => {
+      // Pular linhas em branco ou que são apenas formatação
+      if (line.trim() === '' || /^(#|\*\*|\*|_|>|\d+\.|•)$/.test(line.trim())) {
+        formattedLines.push(line);
+        return;
+      }
+      
+      // Estimar comprimento médio ideal por linha (aproximadamente 55-60 caracteres)
+      const targetLineLength = 58;
+      const words = line.split(' ');
+      let currentLine = '';
+      
+      words.forEach(word => {
+        // Verificar se adicionar a próxima palavra excederia o comprimento alvo
+        if ((currentLine + ' ' + word).length > targetLineLength && currentLine !== '') {
+          formattedLines.push(currentLine.trim());
+          currentLine = word;
+        } else {
+          currentLine = currentLine === '' ? word : currentLine + ' ' + word;
+        }
+      });
+      
+      // Adicionar última linha se tiver conteúdo
+      if (currentLine.trim() !== '') {
+        formattedLines.push(currentLine.trim());
+      }
+    });
+    
+    return formattedLines.join('\n');
   };
 
   // Aplicar formatação HTML mais rica e preservar estrutura original

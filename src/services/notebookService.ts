@@ -1,4 +1,59 @@
 
+
+// Função para formatar o texto para se encaixar adequadamente nas linhas do caderno
+export const formatTextForNotebookLines = (text: string): string => {
+  // Estimar comprimento médio ideal por linha (aproximadamente 55-60 caracteres)
+  const targetLineLength = 58;
+  
+  // Dividir o texto em parágrafos
+  const paragraphs = text.split(/\n\s*\n/);
+  
+  // Processar cada parágrafo
+  const formattedParagraphs = paragraphs.map(paragraph => {
+    // Ignorar parágrafos que são cabeçalhos ou especiais
+    if (paragraph.startsWith('📖') || 
+        paragraph.startsWith('🧠') || 
+        paragraph.startsWith('⚙️') || 
+        paragraph.startsWith('🔍') || 
+        paragraph.startsWith('💡') ||
+        paragraph.startsWith('✅')) {
+      return paragraph;
+    }
+
+    // Ignorar linhas que são marcadores de lista
+    if (paragraph.trim().startsWith('•') || /^\d+\./.test(paragraph.trim())) {
+      return paragraph;
+    }
+    
+    // Dividir em palavras
+    const words = paragraph.split(/\s+/);
+    let lines = [];
+    let currentLine = '';
+    
+    words.forEach(word => {
+      // Se adicionar a palavra exceder o comprimento da linha e já tivermos palavras na linha atual
+      if ((currentLine + ' ' + word).length > targetLineLength && currentLine !== '') {
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        // Adicionar com espaço se não for o início da linha
+        currentLine = currentLine === '' ? word : currentLine + ' ' + word;
+      }
+    });
+    
+    // Adicionar a última linha
+    if (currentLine) {
+      lines.push(currentLine);
+    }
+    
+    return lines.join('\n');
+  });
+  
+  // Juntar os parágrafos formatados
+  return formattedParagraphs.join('\n\n');
+};
+
+
 /**
  * This service handles the transformation of regular content into notebook-style format
  */
@@ -166,9 +221,13 @@ const isKeyInformation = (sentence: string): boolean => {
 // to transform content intelligently
 export const transformContentWithAI = async (content: string): Promise<string> => {
   try {
-    // This is a placeholder. In a real app, you would call an AI service here.
-    // For now, we'll just use our simple transformation function
-    return await convertToNotebookFormat(content);
+    // Primeiro converte para o formato básico do caderno
+    let transformedContent = await convertToNotebookFormat(content);
+    
+    // Agora aplicar as regras de formatação para linhas do caderno
+    transformedContent = formatTextForNotebookLines(transformedContent);
+    
+    return transformedContent;
   } catch (error) {
     console.error('Error transforming content with AI:', error);
     return `Erro ao transformar conteúdo.\n\nConteúdo original:\n${content}`;
