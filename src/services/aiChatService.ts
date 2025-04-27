@@ -1363,7 +1363,7 @@ export const pauseResponse = async (sessionId: string): Promise<void> => {
     isCancelled[sessionId] = false; // Garantir que não está cancelada
     console.log(`Resposta da IA pausada para a sessão ${sessionId}. Estado atual:`, isPaused[sessionId]);
   } catch (error) {
-    console.error('Erro ao pausar resposta da IA:', error);
+    console.error`Erro ao pausar resposta da IA:', error);
     throw error;
   }
 };
@@ -1425,4 +1425,52 @@ export const resetResponseState = (sessionId: string): void => {
   console.log(`Estados resetados para a sessão ${sessionId}. 
     Estado anterior: pausado=${wasPaused}, cancelado=${wasCancelled}. 
     Estado atual: pausado=${isPaused[sessionId]}, cancelado=${isCancelled[sessionId]}`);
+};
+
+// Função para converter conteúdo para formato de caderno
+const convertToNotebookFormat = async (
+  content: string, 
+  sessionId: string,
+  options?: AIResponseOptions
+): Promise<string> => {
+  const notebookPrompt = `
+    A partir do conteúdo abaixo, crie uma versão em formato de caderno de anotações estudantil.
+
+    Siga estas diretrizes OBRIGATÓRIAS:
+    - Comece com um título direto sobre o tema
+    - Liste os pontos principais usando marcadores (•)
+    - Destaque palavras-chave usando **asteriscos duplos**
+    - Organize o conteúdo com títulos em maiúsculas seguidos de dois pontos
+    - Use uma linguagem técnica e direta
+    - Inclua um resumo dos pontos principais
+    - NÃO INCLUA LINKS PARA NENHUM SITE OU PLATAFORMA
+    - NÃO FAÇA REFERÊNCIAS A RECURSOS EXTERNOS
+    - NÃO MENCIONE A PONTO.SCHOOL OU QUALQUER OUTRA PLATAFORMA
+    - NÃO INCLUA SAUDAÇÕES, INTRODUÇÕES OU CONCLUSÕES
+    - FOQUE APENAS NO CONTEÚDO EDUCACIONAL
+
+    Conteúdo original:
+    "${content}"
+
+    Formato exemplo:
+    EQUAÇÃO DO 2º GRAU
+    • Forma geral: ax² + bx + c = 0
+    • Δ = b² - 4ac
+    • Bhaskara: x = (-b ± √Δ) / 2a
+    • Se Δ < 0 → sem raízes reais
+    • Se Δ = 0 → uma raiz real
+    • Se Δ > 0 → duas raízes reais
+
+    👉 Anotação pronta! Agora é só revisar no modo caderno digital :)
+  `;
+
+  return await generateAIResponse(notebookPrompt, sessionId, options);
+};
+
+// Exporta as funções para uso em outros componentes
+export {
+  generateAIResponse,
+  getConversationHistory,
+  clearConversationHistory,
+  convertToNotebookFormat
 };

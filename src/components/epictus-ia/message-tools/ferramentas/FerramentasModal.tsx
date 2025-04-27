@@ -12,12 +12,14 @@ interface FerramentasModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAprofundarClick: () => void;
+  currentContent?: string;
 }
 
 const FerramentasModal: React.FC<FerramentasModalProps> = ({
   open,
   onOpenChange,
-  onAprofundarClick
+  onAprofundarClick,
+  currentContent
 }) => {
   
   const handleSimuladorQuestoes = () => {
@@ -35,6 +37,16 @@ const FerramentasModal: React.FC<FerramentasModalProps> = ({
       description: "Convertendo conteúdo para formato de caderno...",
       duration: 2000,
     });
+    
+    // Dispara um evento personalizado para converter o conteúdo para formato de caderno
+    const event = new CustomEvent('transform-to-notebook', { 
+      detail: { 
+        content: currentContent || '',
+        source: 'ferramentas-modal'
+      } 
+    });
+    document.dispatchEvent(event);
+    
     onOpenChange(false);
   };
   

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { FerramentasEmDesenvolvimentoModal } from "./index";
@@ -51,7 +50,7 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
       duration: 3000,
     });
   };
-  
+
   const handleEscreverNoCaderno = (e: React.MouseEvent) => {
     e.stopPropagation();
     toast({
@@ -60,7 +59,7 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
       duration: 2000,
     });
   };
-  
+
   const handleSimularApresentacao = (e: React.MouseEvent) => {
     e.stopPropagation();
     toast({
@@ -82,7 +81,7 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
             <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
           </svg>
         </button>
-        
+
         {showTools && (
           <div className="absolute z-50 top-full right-0 mt-1 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
             <button 
@@ -99,7 +98,7 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
               </svg>
               Aprofundar no tema
             </button>
-            
+
             <button 
               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
               onClick={handleSimuladorQuestoes}
@@ -111,7 +110,7 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
               </svg>
               Simulador de questões
             </button>
-            
+
             <button 
               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
               onClick={handleEscreverNoCaderno}
@@ -125,7 +124,7 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
               </svg>
               Escrever no Caderno
             </button>
-            
+
             <button 
               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
               onClick={handleSimularApresentacao}
@@ -146,6 +145,7 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
         open={modalOpen} 
         onOpenChange={setModalOpen}
         onAprofundarClick={handleAprofundarClick}
+        currentContent={content} // Passando o conteúdo para o modal
       />
 
       {/* Modal de funcionalidade em desenvolvimento */}
