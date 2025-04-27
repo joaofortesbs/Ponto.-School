@@ -490,7 +490,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
                     <Textarea 
                       value={editedContent}
                       onChange={handleContentChange}
-                      className="w-full min-h-[250px] p-0 bg-transparent focus:ring-0 focus:border-0 border-none shadow-none resize-none font-['Architects_Daughter',_'Comic_Sans_MS',_cursive,_system-ui] text-lg leading-notebook-line notebook-textarea"
+                      className="w-full min-h-[250px] p-0 bg-transparent focus:ring-0 focus:border-0 border-none shadow-none resize-none font-['Architects_Daughter',_'Comic_Sans_MS',_cursive,_system-ui] text-lg leading-notebook-line notebook-textarea text-[#333] dark:text-[#f0f0f0]"
                       placeholder="Digite suas anotações aqui..."
                     />
                   </div>

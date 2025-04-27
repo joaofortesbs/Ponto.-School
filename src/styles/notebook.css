@@ -313,11 +313,16 @@
   background-position: 0 14px;
   outline: none !important;
   box-shadow: none !important;
-  color: inherit;
+  color: #333 !important; /* Cor para tema claro */
   caret-color: #FF6B00;
   letter-spacing: 0.7px;
   overflow-y: auto;
   max-height: 65vh;
+}
+
+.dark .notebook-textarea {
+  color: #f0f0f0 !important; /* Cor para tema escuro */
+  background-image: linear-gradient(rgba(120, 130, 140, 0.4) 1px, transparent 1px);
 }
 
 .dark .notebook-textarea {
