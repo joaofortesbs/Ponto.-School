@@ -105,7 +105,7 @@ const SolarSystemEpictusTurbo: React.FC<SolarSystemEpictusTurboProps> = ({
   ];
 
   return (
-    <div className="relative w-full max-w-7xl mx-auto h-[50vh] flex items-center justify-center overflow-hidden"> {/* Reduced height */}
+    <div className="relative w-full max-w-7xl mx-auto h-[50vh] flex items-center justify-center overflow-hidden bg-transparent"> {/* Reduced height with transparent background */}
       {/* Partículas flutuantes decorativas */}
       <div className="absolute inset-0 -z-1 pointer-events-none">
         {Array.from({ length: 20 }).map((_, index) => (
