@@ -1,0 +1,193 @@
+[plugin:vite:react-swc] × the name `NotebookSimulation` is defined multiple times
+    ╭─[/home/runner/workspace/src/components/chat/NotebookSimulation.tsx:5:1]
+  5 │   content: string;
+  6 │ }
+  7 │ 
+  8 │ const NotebookSimulation: React.FC<NotebookSimulationProps> = ({ content }) => {
+    ·       ─────────┬────────
+    ·                ╰── previous definition of `NotebookSimulation` here
+  9 │   // Função para converter texto normal em formato de caderno
+ 10 │   const formatNotebookContent = (text: string) => {
+ 11 │     if (!text) return [];
+ 12 │     
+ 13 │     // Dividir por linhas
+ 14 │     return text.split('\n').map((line, index) => {
+ 15 │       // Aplicar formatação de markdown básica (negrito, itálico, etc)
+ 16 │       let formattedLine = line
+ 17 │         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Negrito
+ 18 │         .replace(/\*(.*?)\*/g, '<em>$1</em>') // Itálico
+ 19 │         .replace(/^#\s+(.*)$/g, '<h1 class="text-xl font-bold text-[#FF6B00] mb-2">$1</h1>') // Título H1
+ 20 │         .replace(/^##\s+(.*)$/g, '<h2 class="text-lg font-bold mb-1">$1</h2>') // Título H2
+ 21 │         .replace(/^###\s+(.*)$/g, '<h3 class="text-md font-bold">$1</h3>') // Título H3
+ 22 │         .replace(/^•\s+(.*)$/g, '<li class="flex"><span class="mr-2">•</span><span>$1</span></li>') // Lista com bullets
+ 23 │         .replace(/^-\s+(.*)$/g, '<li class="flex"><span class="mr-2">-</span><span>$1</span></li>'); // Lista com traços
+ 24 │       
+ 25 │       if (formattedLine.includes('<li')) {
+ 26 │         return formattedLine;
+ 27 │       } else if (formattedLine.includes('<h')) {
+ 28 │         return formattedLine;
+ 29 │       } else if (formattedLine.trim() === '') {
+ 30 │         return '<div class="h-6"></div>'; // Espaço em branco
+ 31 │       } else {
+ 32 │         return `<p class="mb-2">${formattedLine}</p>`;
+ 33 │       }
+ 34 │     });
+ 35 │   };
+ 36 │ 
+ 37 │   const formattedContent = formatNotebookContent(content);
+ 38 │ 
+ 39 │   return (
+ 40 │     <div className="font-notebook text-[#333] dark:text-[#DDD] leading-relaxed">
+ 41 │       <div 
+ 42 │         className="whitespace-pre-wrap"
+ 43 │         dangerouslySetInnerHTML={{ 
+ 44 │           __html: formattedContent.join('')
+ 45 │         }} 
+ 46 │       />
+ 47 │     </div>
+ 48 │   );
+ 49 │ };
+ 50 │ 
+ 51 │ export default NotebookSimulation;
+ 52 │ 
+ 53 │ import React from 'react';
+ 54 │ 
+ 55 │ interface NotebookSimulationProps {
+ 56 │   content: string;
+ 57 │ }
+ 58 │ 
+ 59 │ const NotebookSimulation: React.FC<NotebookSimulationProps> = ({ content }) => {
+    ·       ─────────┬────────
+    ·                ╰── `NotebookSimulation` redefined here
+ 60 │   // Clean up the content to remove platform references, links, greetings and common phrases
+ 61 │     const cleanContent = (originalContent: string) => {
+ 62 │       let cleaned = originalContent;
+    ╰────
+
+  × the name `default` is exported multiple times
+     ╭─[/home/runner/workspace/src/components/chat/NotebookSimulation.tsx:48:1]
+  48 │   );
+  49 │ };
+  50 │ 
+  51 │ export default NotebookSimulation;
+     · ─────────────────┬────────────────
+     ·                  ╰── previous exported here
+  52 │ 
+  53 │ import React from 'react';
+  54 │ 
+  55 │ interface NotebookSimulationProps {
+  56 │   content: string;
+  57 │ }
+  58 │ 
+  59 │ const NotebookSimulation: React.FC<NotebookSimulationProps> = ({ content }) => {
+  60 │   // Clean up the content to remove platform references, links, greetings and common phrases
+  61 │     const cleanContent = (originalContent: string) => {
+  62 │       let cleaned = originalContent;
+  63 │ 
+  64 │       // Remove links using regex (matches markdown links and URLs)
+  65 │       cleaned = cleaned.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1');
+  66 │       cleaned = cleaned.replace(/(https?:\/\/[^\s]+)/g, '');
+  67 │ 
+  68 │       // Remove all types of greetings, salutations and casual phrases
+  69 │       const phrasesToRemove = [
+  70 │         // Greetings and salutations - expanded pattern
+  71 │         /(?:olá|oi|hey|hello|hi|bom dia|boa tarde|boa noite|e aí|tudo bem|tudo certo|tudo sussa|como vai|tranquilo|beleza|e então)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
+  72 │         /(?:atenciosamente|abraços|saudações|cumprimentos|até mais|até logo|até breve|fique bem|até a próxima)/gi,
+  73 │ 
+  74 │         // Emoji patterns - expanded to catch more emojis
+  75 │         /[\uD800-\uDBFF][\uDC00-\uDFFF]|[\u2600-\u27FF]|😉|😊|🙂|😄|😃|👋|✌️|👏|👍/g,
+  76 │ 
+  77 │         // Understanding phrases
+  78 │         /(?:compreend(?:i|endo)|entend(?:i|endo)|analise(?:i|ando)|segue|conforme|de acordo|baseado|com base|segundo)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
+  79 │ 
+  80 │         // Platform integration mentions
+  81 │         /(?:se liga|mesmo não podendo|você pode|poderia|na plataforma|no sistema|no ambiente|no site|na interface)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
+  82 │ 
+  83 │         // Additional resources
+  84 │         /(?:recursos adicionais|para mais|para saber mais|para aprofundar|veja também|consulte|recomendo)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
+  85 │ 
+  86 │         // Engagement and summary phrases
+  87 │         /(?:espero|desejo|tomara|que|isso|ajude|ajudei|auxilie|contribua|dúvidas|perguntar|contato|feedback|curtiu)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
+  88 │ 
+  89 │         // Opening sentences patterns
+  90 │         /(?:^|\n)(?:recebi seu pedido|preparei um resumo|dá uma olhada|aqui está|segue abaixo|conforme solicitado|bora nessa|tipo|umas anotações de caderno|né|sem problemas)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
+  91 │ 
+  92 │         // Farewell patterns
+  93 │         /(?:^|\n)(?:e aí, curtiu|se precisar|só chamar|até mais|até a próxima|até logo|até breve|tchau|adeus)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
+  94 │ 
+  95 │         // Casual expressions
+  96 │         /(?:super|hiper|mega|ultra|clean|maneiro|legal|bacana|show|top|incrível)/gi
+  97 │       ];
+  98 │ 
+  99 │       phrasesToRemove.forEach(pattern => {
+ 100 │         cleaned = cleaned.replace(pattern, '');
+ 101 │       });
+ 102 │ 
+ 103 │       // Remove references to the platform
+ 104 │       cleaned = cleaned.replace(/ponto\.school|ponto school|plataforma|site|ambiente|interface|sistema/gi, '');
+ 105 │ 
+ 106 │       // Additional cleaning for specific greeting patterns
+ 107 │       cleaned = cleaned.replace(/e aí! tudo sussa\?/gi, '');
+ 108 │       cleaned = cleaned.replace(/tipo umas anotações de caderno, né\? sem problemas, bora nessa!/gi, '');
+ 109 │       cleaned = cleaned.replace(/## e aí, curtiu\?/gi, '');
+ 110 │       cleaned = cleaned.replace(/se precisar de mais alguma coisa, é só chamar!/gi, '');
+ 111 │ 
+ 112 │       // Trim any extra whitespace created by the removals
+ 113 │       cleaned = cleaned.replace(/\n\s*\n\s*\n/g, '\n\n');
+ 114 │ 
+ 115 │       // Remove leading/trailing whitespace from each line
+ 116 │       cleaned = cleaned.split('\n').map(line => line.trim()).join('\n');
+ 117 │ 
+ 118 │       // Ensure content starts with a title (usually in uppercase)
+ 119 │       const lines = cleaned.split('\n').filter(line => line.trim() !== '');
+ 120 │       if (lines.length > 0 && !/^[A-Z\s]+/.test(lines[0])) {
+ 121 │         // Remove any text before the first title-like line
+ 122 │         const titleLineIndex = lines.findIndex(line => /^[A-Z\s]+/.test(line));
+ 123 │         if (titleLineIndex > 0) {
+ 124 │           cleaned = lines.slice(titleLineIndex).join('\n');
+ 125 │         }
+ 126 │       }
+ 127 │ 
+ 128 │       cleaned = cleaned.trim();
+ 129 │ 
+ 130 │       return cleaned;
+ 131 │     };
+ 132 │ 
+ 133 │   return (
+ 134 │     <div className="notebook-simulation p-4">
+ 135 │       <div 
+ 136 │         className="w-full text-gray-800 dark:text-gray-200 whitespace-pre-line leading-loose px-3"
+ 137 │         style={{
+ 138 │           backgroundImage: 'linear-gradient(#aaa 1px, transparent 1px)',
+ 139 │           backgroundSize: '100% 28px',
+ 140 │           lineHeight: '28px',
+ 141 │           fontFamily: "'Architects Daughter', cursive, system-ui",
+ 142 │           letterSpacing: '0.5px',
+ 143 │           fontSize: '1.05rem',
+ 144 │           textShadow: '0px 0px 0.3px rgba(0,0,0,0.3)'
+ 145 │         }}
+ 146 │         dangerouslySetInnerHTML={{ 
+ 147 │           __html: cleanContent(content)
+ 148 │             .replace(/•/g, '<span class="text-[#FF6B00] text-lg">✎</span>')
+ 149 │             .replace(/(\*\*|__)([^*_]+)(\*\*|__)/g, '<span class="underline decoration-wavy decoration-[#FF6B00]/70 font-bold">$2</span>')
+ 150 │             .replace(/(^|\n)([A-Z][^:\n]+:)/g, '$1<span class="text-[#3a86ff] dark:text-[#4cc9f0] font-bold">$2</span>')
+ 151 │         }}
+ 152 │       />
+ 153 │     </div>
+ 154 │   );
+ 155 │ };
+ 156 │ 
+ 157 │ export default NotebookSimulation;
+     · ─────────────────┬────────────────
+     ·                  ╰── exported more than once
+     ╰────
+
+Error: 
+  ☞ Exported identifiers must be unique
+/home/runner/workspace/src/components/chat/NotebookSimulation.tsx:5:1
+17 |          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Negrito
+18 |          .replace(/\*(.*?)\*/g, '<em>$1</em>') // Itálico
+19 |          .replace(/^#\s+(.*)$/g, '<h1 class="text-xl font-bold text-[#FF6B00] mb-2">$1</h1>') // Título H1
+   |                                   ^
+20 |          .replace(/^##\s+(.*)$/g, '<h2 class="text-lg font-bold mb-1">$1</h2>') // Título H2
+21 |          .replace(/^###\s+(.*)$/g, '<h3 class="text-md font-bold">$1</h3>') // Título H3
