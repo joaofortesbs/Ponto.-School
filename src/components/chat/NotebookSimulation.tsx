@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface NotebookSimulationProps {
@@ -100,28 +101,24 @@ export const NotebookSimulation: React.FC<NotebookSimulationProps> = ({ content 
   return (
     <div className="notebook-simulation">
       <div 
-        className="w-full text-gray-800 dark:text-gray-200 whitespace-pre-line leading-loose px-5"
-        style={{
-          backgroundImage: 'linear-gradient(rgba(170,170,170,0.5) 1px, transparent 1px)',
-          backgroundSize: '100% 28px',
-          lineHeight: '28px',
-          fontFamily: "'Architects Daughter', 'Comic Sans MS', cursive, system-ui",
-          letterSpacing: '0.7px',
-          fontSize: '1.1rem',
-          textShadow: '0px 0px 0.3px rgba(0,0,0,0.3)'
-        }}
-        dangerouslySetInnerHTML={{ 
-          __html: processNotebookContent(content)
-            .replace(/^•\s+/gm, '<span class="text-[#FF6B00] text-lg mr-1.5">✎</span> ')
-            .replace(/(\*\*|__)([^*_]+)(\*\*|__)/g, '<span class="underline decoration-wavy decoration-[#FF6B00]/70 font-bold">$2</span>')
-            .replace(/(^|\n)([A-Z][^:\n]+:?)/g, '$1<span class="text-[#3a86ff] dark:text-[#4cc9f0] font-bold text-xl leading-10">$2</span>')
-            .replace(/👉([^<]*)/g, '<span class="text-[#FF6B00] font-semibold">👉$1</span>')
-            .replace(/IMPORTANTE/gi, '<span class="uppercase font-bold text-red-500 dark:text-red-400">IMPORTANTE</span>')
-            .replace(/DICA/gi, '<span class="uppercase font-bold text-green-500 dark:text-green-400">DICA</span>')
-            .replace(/OBSERVAÇÃO/gi, '<span class="uppercase font-bold text-purple-500 dark:text-purple-400">OBSERVAÇÃO</span>')
-            .replace(/LEMBRE-SE/gi, '<span class="uppercase font-bold text-amber-500 dark:text-amber-400">LEMBRE-SE</span>')
-        }}
-      />
+        className="notebook-lines"
+      >
+        <div
+          className="notebook-content"
+          dangerouslySetInnerHTML={{ 
+            __html: processNotebookContent(content)
+              .replace(/^•\s+/gm, '<span class="notebook-bullet">✎</span> ')
+              .replace(/(\*\*|__)([^*_]+)(\*\*|__)/g, '<span class="notebook-highlight">$2</span>')
+              .replace(/(^|\n)([A-Z][^:\n]+:?)/g, '$1<span class="notebook-title">$2</span>')
+              .replace(/👉([^<]*)/g, '<span class="notebook-closing">👉$1</span>')
+              .replace(/IMPORTANTE/gi, '<span class="notebook-important">IMPORTANTE</span>')
+              .replace(/DICA/gi, '<span class="notebook-tip">DICA</span>')
+              .replace(/OBSERVAÇÃO/gi, '<span class="notebook-note">OBSERVAÇÃO</span>')
+              .replace(/LEMBRE-SE/gi, '<span class="notebook-remember">LEMBRE-SE</span>')
+              .replace(/(\w+\s*=\s*[\w\s\+\-\*\/\(\)\^√∆]{1,40})/g, '<span class="notebook-formula">$1</span>')
+          }}
+        />
+      </div>
     </div>
   );
 };

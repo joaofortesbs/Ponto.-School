@@ -1,31 +1,14 @@
 
 /* Notebook simulation styles */
 .notebook-simulation {
-  background-color: #fffdf0;
   position: relative;
-  border-radius: 4px;
+  border-radius: 6px;
   overflow: hidden;
   min-height: 200px;
+  width: 100%;
 }
 
-.dark .notebook-simulation {
-  background-color: #1b1c1a;
-}
-
-/* Add notebook red line on the left */
-.notebook-simulation::before {
-  content: '';
-  position: absolute;
-  left: 40px;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background-color: #ff9e9e;
-  opacity: 0.7;
-  z-index: 1;
-}
-
-/* Add paper texture effect */
+/* Add notebook paper texture effect */
 .notebook-simulation::after {
   content: '';
   position: absolute;
@@ -41,25 +24,35 @@
   padding: 0;
   position: relative;
   background-color: #fffef8;
-  background-image: linear-gradient(rgba(170, 170, 170, 0.5) 1px, transparent 1px);
+  background-image: linear-gradient(#D3DDE6 1px, transparent 1px);
   background-size: 100% 28px;
+  background-position: 0 14px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   border-radius: 5px;
   overflow: hidden;
+  min-height: 500px;
+  transition: all 0.3s ease;
 }
 
+.dark .notebook-lines {
+  background-color: #121826;
+  background-image: linear-gradient(rgba(120, 130, 140, 0.4) 1px, transparent 1px);
+}
+
+/* Red vertical line */
 .notebook-lines::before {
   content: '';
   position: absolute;
   top: 0;
-  left: 26px;
+  left: 36px;
   height: 100%;
   width: 1px;
-  background: rgba(255, 107, 0, 0.4);
+  background: linear-gradient(180deg, rgba(255, 107, 0, 0.6) 0%, rgba(255, 107, 0, 0.3) 100%);
+  z-index: 1;
 }
 
 .notebook-content {
-  padding: 16px 45px;
+  padding: 16px 55px;
   font-family: 'Architects Daughter', 'Comic Sans MS', cursive, system-ui;
   letter-spacing: 0.7px;
   font-size: 1.1rem;
@@ -69,24 +62,22 @@
 }
 
 /* Dark mode support */
-.dark .notebook-lines {
-  background-color: #121826;
-  background-image: linear-gradient(rgba(100, 100, 100, 0.5) 1px, transparent 1px);
-}
-
 .dark .notebook-content {
   color: #f0f0f0;
 }
 
 /* Title styling */
 .notebook-title {
+  font-family: 'Caveat', 'Kalam', 'Architects Daughter', cursive;
   color: #3a86ff;
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   font-weight: bold;
   margin-bottom: 14px;
   line-height: 32px;
   position: relative;
   display: inline-block;
+  letter-spacing: 1px;
+  text-shadow: 0.5px 0.5px 0px rgba(0, 0, 0, 0.2);
 }
 
 .notebook-title::after {
@@ -99,6 +90,13 @@
   background: linear-gradient(90deg, #3a86ff, transparent);
   border-radius: 3px;
   opacity: 0.5;
+  transform-origin: left;
+  animation: highlight-grow 0.5s ease-out forwards;
+}
+
+@keyframes highlight-grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
 }
 
 .dark .notebook-title {
@@ -115,6 +113,12 @@
   font-size: 1.25rem;
   margin-right: 0.75rem;
   position: relative;
+  animation: pencil-draw 0.3s ease-in-out;
+}
+
+@keyframes pencil-draw {
+  0% { opacity: 0; transform: scale(0.8) rotate(-20deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
 }
 
 /* Highlighted text */
@@ -223,14 +227,45 @@
   animation: highlight-pulse 3s ease-in-out infinite;
 }
 
+/* Estilos para o campo de texto do modo edição */
+.notebook-textarea {
+  background-image: linear-gradient(#D3DDE6 1px, transparent 1px);
+  background-size: 100% 28px;
+  background-position: 0 14px;
+  outline: none !important;
+  box-shadow: none !important;
+  color: inherit;
+  caret-color: #FF6B00;
+  letter-spacing: 0.7px;
+}
+
+.dark .notebook-textarea {
+  background-image: linear-gradient(rgba(120, 130, 140, 0.4) 1px, transparent 1px);
+}
+
+/* Estilo de linha de caderno para edição */
+.leading-notebook-line {
+  line-height: 28px;
+}
+
+/* Animação de aparecimento suave */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
 /* Mobile responsiveness */
 @media (max-width: 640px) {
   .notebook-content {
-    padding: 14px 30px;
+    padding: 14px 45px;
     font-size: 0.95rem;
   }
   
   .notebook-lines::before {
-    left: 20px;
+    left: 30px;
   }
 }
