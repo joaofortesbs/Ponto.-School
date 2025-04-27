@@ -25,7 +25,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { v4 as uuidv4 } from 'uuid';
-import { generateAIResponse, addMessageToHistory, createMessage } from "@/services/epictusIAService";
+import { addMessageToHistory, createMessage } from "@/services/epictusIAService";
 import { toast } from "@/components/ui/use-toast";
 import TypewriterEffect from '@/components/ui/typewriter-effect'; // Added import
 import WelcomeMessage from './welcome-message/WelcomeMessage';
