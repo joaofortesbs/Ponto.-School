@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Wrench } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { FerramentasEmDesenvolvimentoModal } from "./index";
 
 interface MessageToolsDropdownProps {
   messageId: number;
@@ -18,6 +19,7 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
   onToggleTools
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
+  const [showDevModal, setShowDevModal] = useState(false);
 
   const openModal = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -51,12 +53,8 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
         </svg>
       ),
       onClick: () => {
-        toast({
-          title: "Aprofundando no tema",
-          description: "Gerando conteúdo mais detalhado sobre este tópico...",
-          duration: 3000,
-        });
         setModalOpen(false);
+        setShowDevModal(true);
       }
     },
     {
@@ -142,11 +140,7 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
               onClick={(e) => {
                 e.stopPropagation();
-                toast({
-                  title: "Aprofundando no tema",
-                  description: "Gerando conteúdo mais detalhado sobre este tópico...",
-                  duration: 3000,
-                });
+                setShowDevModal(true);
               }}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 mr-1.5 text-blue-500 dark:text-blue-400">
@@ -266,6 +260,12 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de funcionalidade em desenvolvimento */}
+      <FerramentasEmDesenvolvimentoModal 
+        open={showDevModal} 
+        onClose={() => setShowDevModal(false)} 
+      />
     </>
   );
 };
