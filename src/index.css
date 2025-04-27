@@ -37,18 +37,6 @@
 @import "./styles/typewriter-loader.css";
 @import "./styles/rotina-calendar.css";
 
-
-/* Estilo para centralizar o sistema solar */
-.solar-system-container {
-  position: fixed;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  max-width: 600px;
-  max-height: 600px;
-  margin: 0 auto;
-}
-
 /* Animação ping-slow personalizada para efeitos espaciais */
 @keyframes ping-slow {
   0% {
