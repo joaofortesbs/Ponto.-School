@@ -1,3 +1,4 @@
+
 /* Notebook simulation styles */
 .notebook-simulation {
   background-color: #fffdf0;
@@ -18,82 +19,4 @@
   bottom: 0;
   width: 1px;
   background-color: #ff9e9e;
-}
-
-/* Notebook lines styling */
-.notebook-lines {
-  padding: 0;
-  position: relative;
-}
-
-.notebook-simulation {
-  position: relative;
-}
-
-.notebook-simulation::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 25px;
-  height: 100%;
-  border-left: 1px solid rgba(255, 107, 0, 0.5);
-  z-index: 0;
-}
-
-/* Fonte do caderno - assegura a disponibilidade */
-@import url('https://fonts.googleapis.com/css2?family=Architects+Daughter&display=swap');
-
-/* Estilização adicional para o modal do caderno */
-#notebook-modal {
-  font-family: 'Architects Daughter', cursive, system-ui;
-}
-
-#notebook-content {
-  min-height: 100%;
-}
-
-/* Animação para o modal do caderno */
-@keyframes fadeInModal {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-#notebook-modal > div:nth-child(2) {
-  animation: fadeInModal 0.3s ease-out forwards;
-}
-
-.notebook-lines::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-.notebook-lines::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-}
-
-.notebook-lines::-webkit-scrollbar-thumb {
-  background: #ff9e9e;
-  border-radius: 4px;
-}
-
-.notebook-lines::-webkit-scrollbar-thumb:hover {
-  background: #ff7e7e;
-}
-
-/* Animation for notebook modal */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-#notebook-modal {
-  animation: fadeIn 0.3s ease-out;
-  z-index: 9999 !important; /* Garantir que o modal aparece acima de outros elementos */
-}
-
-#notebook-modal .absolute {
-  position: absolute;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
 }

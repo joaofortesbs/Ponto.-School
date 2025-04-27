@@ -10,8 +10,7 @@ import {
   PenLine,
   Share, 
   Copy,
-  Edit,
-  BookOpen
+  Edit
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import EpictusMessageBox from "./message-box/EpictusMessageBox";
@@ -25,12 +24,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { v4 as uuidv4 } from 'uuid';
-import { addMessageToHistory, createMessage } from "@/services/epictusIAService";
+import { generateAIResponse, addMessageToHistory, createMessage } from "@/services/epictusIAService";
 import { toast } from "@/components/ui/use-toast";
 import TypewriterEffect from '@/components/ui/typewriter-effect'; // Added import
 import WelcomeMessage from './welcome-message/WelcomeMessage';
-import NotebookSimulation from './notebook-simulation/NotebookSimulation'; // Import NotebookSimulation
-
 
 interface Message {
   id: string;
@@ -46,7 +43,6 @@ interface Message {
 import HeaderIcons from "./modoepictusiabeta/header/icons/HeaderIcons";
 import HistoricoConversasModal from "./modals/HistoricoConversasModal";
 import MessageToolsDropdown from "./message-tools/MessageToolsDropdown"; // Import the new component
-import { generateAIResponse } from "@/services/aiChatService";
 
 
 const EpictusBetaMode: React.FC = () => {
@@ -93,13 +89,11 @@ const EpictusBetaMode: React.FC = () => {
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [exportMessageData, setExportMessageData] = useState<Message | null>(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  const [showNotebook, setShowNotebook] = useState(false); // State for notebook modal
-  const [notebookContent, setNotebookContent] = useState(""); // State for notebook content
   const MAX_CHARS = 1000;
   const [sessionId] = useState(() => localStorage.getItem('epictus_beta_session_id') || uuidv4());
   const [isReformulating, setIsReformulating] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
-
+  
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -615,7 +609,7 @@ const EpictusBetaMode: React.FC = () => {
   };
 
   const handleFeedback = (messageId: string, feedbackType: 'positive' | 'negative') => {
-setMessages(prev => prev.map(msg => {
+    setMessages(prev => prev.map(msg => {
       if (msg.id === messageId) {
         const newFeedback = msg.feedback === feedbackType ? undefined : feedbackType;
 
@@ -735,21 +729,6 @@ setMessages(prev => prev.map(msg => {
     };
   }, []);
 
-  const handleWriteToNotebook = (content: string) => {
-    // Atualiza o estado com o conteúdo completo
-    setNotebookContent(content);
-    
-    // Força a abertura do caderno
-    setShowNotebook(true);
-    
-    // Toast de confirmação
-    toast({
-      title: "Caderno aberto",
-      description: "O conteúdo foi transferido para o caderno de anotações",
-      duration: 3000,
-    });
-  };
-
   return (
     <div className="flex flex-col h-full">
       <TurboHeader profileOptions={profileOptions} initialProfileIcon={profileIcon} initialProfileName={profileName} />
@@ -862,7 +841,6 @@ setMessages(prev => prev.map(msg => {
                                     e?.stopPropagation();
                                     toggleMessageTools(message.id);
                                   }}
-                                  onWriteToNotebook={handleWriteToNotebook}
                                 />
                                 <button 
                                   onClick={() => handleExportMessage(message)}
@@ -1150,52 +1128,6 @@ setMessages(prev => prev.map(msg => {
           }}
         />
       )}
-
-      {/* Notebook Modal */}
-      <Dialog 
-        open={showNotebook} 
-        onOpenChange={setShowNotebook}
-        modal={true}
-      >
-        <DialogContent className="sm:max-w-[80%] max-h-[80vh] overflow-y-auto bg-white dark:bg-[#1A2634] border border-gray-300 dark:border-gray-700">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-black dark:text-white">
-              <BookOpen className="h-5 w-5 text-[#FF6B00]" />
-              Caderno de Anotações
-            </DialogTitle>
-            <DialogDescription className="text-gray-600 dark:text-gray-300">
-              Conteúdo otimizado para seus estudos
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="mt-4 overflow-y-auto max-h-[60vh] bg-[#fffdf0] dark:bg-[#1a1d2d] p-4 rounded-md border border-gray-200 dark:border-gray-700">
-            <NotebookSimulation content={notebookContent} />
-          </div>
-
-          <DialogFooter className="mt-6 gap-2">
-            <Button 
-              variant="outline"
-              onClick={() => setShowNotebook(false)}
-              className="bg-transparent border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              Fechar
-            </Button>
-            <Button 
-              className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
-              onClick={() => {
-                navigator.clipboard.writeText(notebookContent);
-                toast({
-                  title: "Copiado!",
-                  description: "O conteúdo do caderno foi copiado para a área de transferência",
-                  duration: 3000,
-                });
-              }}
-            >
-              Copiar texto
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
