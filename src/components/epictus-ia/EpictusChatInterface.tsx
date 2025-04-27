@@ -176,22 +176,13 @@ const EpictusChatInterface: React.FC = () => {
       if (savedMessages && savedMessages.length > 0) {
         setMessages(savedMessages);
       } else {
-        // Se não houver mensagens salvas, criar a mensagem de boas-vindas
-        const welcomeMessage = createMessage(
-          "Olá! Eu sou a Epictus IA, seu assistente de estudos. Como posso ajudar você hoje?",
-          'ai'
-        );
-        setMessages([welcomeMessage]);
-        addMessageToHistory(sessionId, welcomeMessage);
+        // Inicializa com um array vazio em vez de adicionar uma mensagem de boas-vindas
+        setMessages([]);
       }
     } catch (error) {
       console.error("Erro ao carregar mensagens iniciais:", error);
-      const welcomeMessage = createMessage(
-        "Olá! Eu sou a Epictus IA, seu assistente de estudos. Como posso ajudar você hoje?",
-        'ai'
-      );
-      setMessages([welcomeMessage]);
-      addMessageToHistory(sessionId, welcomeMessage);
+      // Inicializa com um array vazio em caso de erro
+      setMessages([]);
     }
   }, [sessionId]);
 
