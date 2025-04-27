@@ -1,0 +1,170 @@
+🧠 Como a IA deve escrever as anotações para o caderno digital?
+A ideia aqui é garantir que as informações sejam claras, resumidas, e facilmente compreendidas quando o aluno for revisá-las no futuro, sem a necessidade de releitura de explicações longas ou complexas. A IA precisa transformar qualquer conteúdo em algo que se encaixe bem no formato de um caderno de anotações digital.
+
+🔑 Diretrizes para a escrita das anotações
+Título Claro e Objetivo
+
+Sempre inicie com um título temático, explicando do que se trata o conteúdo. O título deve ser simples e descritivo, como:
+
+Matemática - Fórmulas de Bhaskara
+
+Física - Leis de Newton
+
+História - Revolução Francesa
+
+O título ajuda a organizar o conteúdo e dá o contexto para o que vem a seguir.
+
+Frases Curta e Objetivas
+
+As anotações precisam ser resumidas, diretas e sem rodeios. Frases longas ou explicações complicadas não devem ser incluídas.
+
+A ideia é capturar somente o essencial do que o aluno precisa lembrar, de forma simples e clara.
+
+Formato de Lista (Bullet Points)
+
+Use bullet points (•) para organizar as informações. Isso facilita a leitura e ajuda na organização do conteúdo.
+
+Cada ponto deve ser uma informação chave que o aluno pode revisar rapidamente, como:
+
+Definições: O que o termo ou conceito significa.
+
+Fórmulas e Regras: Formulas, teoremas, ou regras que são fundamentais.
+
+Dicas de Memorização: Técnicas ou dicas que ajudam a memorizar o conteúdo.
+
+Conceitos Importantes: Palavras-chave ou termos que o aluno deve recordar.
+
+Exemplos Rápidos: Exemplos curtos e objetivos para ilustrar a teoria.
+
+Usar uma Linguagem Clara e Simples
+
+Evite jargões ou explicações excessivamente técnicas, a menos que o público tenha o conhecimento necessário para entendê-los.
+
+O texto deve ser escrito de forma que qualquer aluno consiga entender facilmente.
+
+Exemplo: "A aceleração de um corpo é a taxa de variação da sua velocidade."
+
+Evite Explicações Longas
+
+O conteúdo precisa ser direto. Para que o aluno use o caderno como um material de revisão, ele não deve ter que "decifrar" a anotação. Portanto, elimine qualquer excesso de texto.
+
+Não é para a IA fornecer uma explicação completa do conceito, mas sim um resumo ou as informações mais cruciais.
+
+Finalizar com uma Nota Positiva
+
+Ao final da "anotação", a IA deve sempre terminar com algo como:
+👉 “Anotação pronta! Agora é só revisar no modo caderno digital :)”
+Isso ajuda a fechar o fluxo de forma positiva e motivadora.
+
+💡 Exemplos de como a IA deve escrever as anotações no caderno digital:
+Exemplo 1: Matemática - Equações do 2º Grau
+Título:
+Matemática - Equação do 2º grau
+
+Anotações:
+
+Forma geral: 
+𝑎
+𝑥
+2
++
+𝑏
+𝑥
++
+𝑐
+=
+0
+ax 
+2
+ +bx+c=0
+
+Fórmula de Bhaskara:
+𝑥
+=
+−
+𝑏
+±
+Δ
+2
+𝑎
+x= 
+2a
+−b± 
+Δ
+​
+ 
+​
+ 
+
+Δ = b² - 4ac
+(Se Δ > 0 → 2 raízes reais)
+(Se Δ = 0 → 1 raiz real)
+(Se Δ < 0 → sem raízes reais)
+
+Lembre-se: sempre que Δ for negativo, a equação não tem solução real!
+
+👉 Anotação pronta! Agora é só revisar no modo caderno digital :)
+
+Exemplo 2: História - Revolução Francesa
+Título:
+História - Revolução Francesa
+
+Anotações:
+
+Data: 1789
+
+Principais causas: desigualdade social, crise econômica, inspiração na Revolução Americana.
+
+Eventos chave:
+
+Queda da Bastilha (14 de julho de 1789)
+
+Proclamação da Declaração dos Direitos do Homem e do Cidadão
+
+Execução de Luís XVI (1793)
+
+Consequências:
+
+Fim do Antigo Regime
+
+Ascensão de Napoleão Bonaparte
+
+👉 Anotação pronta! Agora é só revisar no modo caderno digital :)
+
+Exemplo 3: Física - Leis de Newton
+Título:
+Física - Leis de Newton
+
+Anotações:
+
+1ª Lei (Inércia): Um corpo em repouso ou em movimento continuará assim até que uma força externa atue sobre ele.
+
+2ª Lei (Força e Aceleração): 
+𝐹
+=
+𝑚
+𝑎
+F=ma, onde 
+𝐹
+F é a força, 
+𝑚
+m é a massa e 
+𝑎
+a é a aceleração.
+
+3ª Lei (Ação e Reação): Toda ação tem uma reação de mesma intensidade, direção e sentido oposto.
+
+👉 Anotação pronta! Agora é só revisar no modo caderno digital :)
+
+🎯 Resumo das Diretrizes para a IA:
+Título objetivo: Explique o tema claramente no início.
+
+Informações em bullet points: Frases curtas e objetivas.
+
+Texto direto e simples: Não use explicações longas, apenas o essencial.
+
+Formato de lista: Organize as ideias para facilitar a leitura e revisão.
+
+Toque final positivo: Sempre termine com algo como "Anotação pronta!"
+
+Com isso, a IA vai gerar respostas concisas e bem organizadas, ideais para o formato de caderno digital que você está criando. A ideia é que o aluno consiga, com apenas uma olhada, pegar os pontos mais importantes e revisar de forma rápida e eficiente.
