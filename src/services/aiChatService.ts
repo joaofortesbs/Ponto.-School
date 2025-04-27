@@ -1427,6 +1427,14 @@ export const resetResponseState = (sessionId: string): void => {
     Estado atual: pausado=${isPaused[sessionId]}, cancelado=${isCancelled[sessionId]}`);
 };
 
+// Tipo para opções da resposta da IA
+interface AIResponseOptions {
+  intelligenceLevel?: 'basic' | 'normal' | 'advanced';
+  languageStyle?: 'casual' | 'formal' | 'technical' | 'direct';
+  detailedResponse?: boolean;
+  maximumLength?: boolean;
+}
+
 // Função para converter conteúdo para formato de caderno
 export const convertToNotebookFormat = async (
   content: string,

@@ -12,13 +12,17 @@ interface FerramentasModalProps {
   onClose: () => void;
   initialTab?: string;
   messageContent?: string;
+  onOpenChange?: (open: boolean) => void;
+  onAprofundarClick?: () => void;
 }
 
 const FerramentasModal: React.FC<FerramentasModalProps> = ({ 
   isOpen, 
   onClose,
   initialTab = "aprofundar",
-  messageContent = "" 
+  messageContent = "",
+  onOpenChange,
+  onAprofundarClick
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>

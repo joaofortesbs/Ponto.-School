@@ -1,79 +1,147 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Loader2, Download, Copy, Share } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import NotebookSimulation from '@/components/chat/NotebookSimulation';
-import { X, Download, Copy } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from '@/components/ui/use-toast';
 
 interface NotebookModalProps {
   isOpen: boolean;
   onClose: () => void;
   content: string;
+  isLoading?: boolean;
 }
 
-const NotebookModal: React.FC<NotebookModalProps> = ({ isOpen, onClose, content }) => {
-  const { toast } = useToast();
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(content);
-    toast({
-      title: "Copiado!",
-      description: "Conteúdo copiado para a área de transferência",
+const NotebookModal: React.FC<NotebookModalProps> = ({
+  isOpen,
+  onClose,
+  content,
+  isLoading = false
+}) => {
+  // Função para copiar o conteúdo do caderno
+  const handleCopyContent = () => {
+    navigator.clipboard.writeText(content).then(() => {
+      toast({
+        title: "Conteúdo copiado",
+        description: "O texto do caderno foi copiado para a área de transferência.",
+      });
+    }).catch(err => {
+      console.error('Erro ao copiar texto: ', err);
+      toast({
+        title: "Erro ao copiar",
+        description: "Não foi possível copiar o conteúdo. Tente novamente.",
+        variant: "destructive",
+      });
     });
   };
 
-  const handleDownload = () => {
+  // Função para baixar o conteúdo como um arquivo de texto
+  const handleDownloadContent = () => {
     const element = document.createElement('a');
-    const file = new Blob([content], { type: 'text/plain' });
+    const file = new Blob([content], {type: 'text/plain'});
     element.href = URL.createObjectURL(file);
-    element.download = `caderno-anotacoes-${new Date().toISOString().slice(0, 10)}.txt`;
+    
+    // Gerar nome de arquivo baseado na data atual
+    const date = new Date();
+    const fileName = `caderno_${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}.txt`;
+    
+    element.download = fileName;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
+    
+    toast({
+      title: "Download iniciado",
+      description: `Salvando ${fileName}`,
+    });
+  };
+
+  // Função para compartilhar o conteúdo (básica)
+  const handleShareContent = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: 'Meu Caderno de Anotações',
+        text: content,
+      }).then(() => {
+        toast({
+          title: "Compartilhamento",
+          description: "Conteúdo compartilhado com sucesso!",
+        });
+      }).catch(error => {
+        console.error('Erro ao compartilhar:', error);
+        toast({
+          title: "Erro",
+          description: "Ocorreu um erro ao compartilhar o conteúdo.",
+          variant: "destructive",
+        });
+      });
+    } else {
+      // Fallback se Web Share API não for suportada
+      handleCopyContent();
+      toast({
+        title: "Compartilhamento",
+        description: "Conteúdo copiado para área de transferência. Você pode colá-lo onde desejar para compartilhar.",
+      });
+    }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[800px] md:max-w-[900px] bg-amber-50 dark:bg-slate-900 p-0 overflow-hidden">
-        <DialogHeader className="bg-amber-100 dark:bg-slate-800 p-4 flex flex-row items-center justify-between rounded-t-lg">
-          <div>
-            <DialogTitle className="text-xl font-bold text-amber-900 dark:text-amber-200">
-              Caderno de Anotações
-            </DialogTitle>
-            <DialogDescription className="text-amber-700 dark:text-amber-300">
-              Suas anotações de estudo em formato de caderno
-            </DialogDescription>
-          </div>
-          <button 
-            onClick={onClose}
-            className="text-amber-700 hover:text-amber-900 dark:text-amber-400 dark:hover:text-amber-200 transition-colors"
-          >
-            <X size={20} />
-          </button>
+      <DialogContent className="sm:max-w-[700px] bg-[#f5f5dc] border-[#d3be98] shadow-lg max-h-[80vh] overflow-hidden flex flex-col">
+        <DialogHeader className="border-b border-[#d3be98] pb-4 mb-4">
+          <DialogTitle className="text-[#5d4037] text-xl font-serif relative">
+            Meu Caderno de Anotações
+            <div className="absolute right-0 top-0 flex gap-2">
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                className="h-7 w-7 text-[#8d6e63] hover:text-[#5d4037] hover:bg-[#e6ddc4]"
+                onClick={handleCopyContent}
+                title="Copiar conteúdo"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                className="h-7 w-7 text-[#8d6e63] hover:text-[#5d4037] hover:bg-[#e6ddc4]"
+                onClick={handleDownloadContent}
+                title="Baixar como arquivo de texto"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                className="h-7 w-7 text-[#8d6e63] hover:text-[#5d4037] hover:bg-[#e6ddc4]"
+                onClick={handleShareContent}
+                title="Compartilhar conteúdo"
+              >
+                <Share className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogTitle>
         </DialogHeader>
-        
-        <div className="p-6 max-h-[75vh] overflow-y-auto">
-          <NotebookSimulation content={content} />
-        </div>
-        
-        <div className="bg-amber-100 dark:bg-slate-800 p-4 flex justify-end gap-2">
-          <Button 
-            variant="outline" 
-            className="bg-amber-50 border-amber-200 text-amber-800 hover:bg-amber-200 dark:bg-slate-700 dark:border-slate-600"
-            onClick={handleCopy}
-          >
-            <Copy className="mr-2 h-4 w-4" />
-            Copiar
-          </Button>
-          <Button 
-            className="bg-amber-600 hover:bg-amber-700 text-white"
-            onClick={handleDownload}
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Baixar
-          </Button>
-        </div>
+
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-16">
+            <Loader2 className="h-8 w-8 text-[#8d6e63] animate-spin mb-4" />
+            <p className="text-[#5d4037] text-lg">Preparando seu caderno...</p>
+          </div>
+        ) : (
+          <div className="overflow-y-auto notebook-lines pr-3 py-2 flex-1">
+            <div 
+              className="text-[#5d4037] font-serif text-base leading-7 whitespace-pre-wrap"
+              dangerouslySetInnerHTML={{ 
+                __html: content
+                  // Formatar conteúdo para destacar pontos
+                  .replace(/\*\*(.*?)\*\*/g, '<span class="font-bold text-[#ad4e3a]">$1</span>')
+                  .replace(/^• (.*)$/gm, '<div class="flex mb-1"><span class="mr-2">•</span><span>$1</span></div>')
+                  .replace(/\n\n/g, '<div class="h-4"></div>')
+              }}
+            />
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

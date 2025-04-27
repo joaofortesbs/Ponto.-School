@@ -1,147 +1,121 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { ClipboardEdit, FileText, Check, Copy } from 'lucide-react';
-import { generateAIResponse } from '@/services/aiChatService';
-import NotebookSimulation from '@/components/chat/NotebookSimulation';
-import { useToast } from '@/components/ui/use-toast';
+import { PenLine, FileText, Loader2 } from 'lucide-react';
+import { convertToNotebookFormat } from '@/services/aiChatService';
+import NotebookModal from '../../notebook-simulation/NotebookModal';
+import { toast } from '@/components/ui/use-toast';
 
 interface EscreverNoCadernoProps {
-  messageContent: string;
   closeModal: () => void;
+  messageContent?: string;
 }
 
-const EscreverNoCaderno: React.FC<EscreverNoCadernoProps> = ({ messageContent, closeModal }) => {
+const EscreverNoCaderno: React.FC<EscreverNoCadernoProps> = ({ closeModal, messageContent = "" }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [notebookContent, setNotebookContent] = useState<string>('');
-  const [copied, setCopied] = useState(false);
-  const { toast } = useToast();
+  const [notebookContent, setNotebookContent] = useState("");
+  const [notebookModalOpen, setNotebookModalOpen] = useState(false);
 
-  const handleTransformToNotebook = async () => {
-    setIsLoading(true);
+  // Função para gerar caderno de anotações
+  const handleGerarCaderno = async () => {
+    if (!messageContent.trim()) {
+      toast({
+        title: "Conteúdo vazio",
+        description: "Não há conteúdo para converter em formato de caderno.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
-      const notebookPrompt = `
-        A partir da explicação completa a seguir, gere uma versão resumida no formato de caderno de anotações.
-        
-        Siga estas diretrizes OBRIGATÓRIAS:
-        - Comece com um título direto sobre o tema
-        - Liste os pontos principais usando marcadores (•)
-        - Destaque palavras-chave com **asteriscos duplos**
-        - Use linguagem resumida, direta e didática
-        - Inclua apenas os pontos mais importantes para revisar depois
-        - Inclua fórmulas, regras, dicas de memorização e conceitos-chave
-        - NÃO INCLUA TAGS HTML
-        - NÃO USE EXPLICAÇÕES LONGAS OU REPETIÇÕES
-        - FOQUE APENAS NO CONTEÚDO EDUCACIONAL
-        
-        Conteúdo original:
-        "${messageContent}"
-        
-        Formato exemplo:
-        MATEMÁTICA - EQUAÇÃO DO 2º GRAU
-        • Forma geral: ax² + bx + c = 0
-        • Δ = b² - 4ac
-        • Bhaskara: x = (-b ± √Δ) / 2a
-        • Se Δ < 0 → sem raízes reais
-        • Se Δ = 0 → uma raiz real
-        • Se Δ > 0 → duas raízes reais
+      setIsLoading(true);
 
-        👉 Anotação pronta! Agora é só revisar no modo caderno digital :)
-      `;
-      
-      const result = await generateAIResponse(notebookPrompt, 'notebook_session', {
-        intelligenceLevel: 'advanced',
-        languageStyle: 'direct'
-      });
-      
-      setNotebookContent(result);
+      // Conversão do conteúdo para formato de caderno
+      const formattedContent = await convertToNotebookFormat(messageContent);
+      setNotebookContent(formattedContent);
+
+      // Fecha o modal de ferramentas
+      closeModal();
+
+      // Abre o modal do caderno
+      setNotebookModalOpen(true);
     } catch (error) {
-      console.error("Erro ao transformar em caderno:", error);
+      console.error("Erro ao converter para formato de caderno:", error);
       toast({
         title: "Erro",
-        description: "Não foi possível transformar o conteúdo em caderno.",
-        variant: "destructive"
+        description: "Ocorreu um erro ao gerar o caderno. Por favor, tente novamente.",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const copyToClipboard = () => {
-    if (notebookContent) {
-      navigator.clipboard.writeText(notebookContent);
-      setCopied(true);
-      toast({
-        title: "Copiado!",
-        description: "Conteúdo do caderno copiado para a área de transferência.",
-      });
-      
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
   return (
-    <div className="p-4 space-y-4">
-      <div className="flex items-center space-x-2 mb-4">
-        <FileText className="h-5 w-5 text-green-500" />
-        <h3 className="text-lg font-medium">Escrever no Caderno</h3>
-      </div>
-      
-      <p className="text-sm text-gray-500 dark:text-gray-400">
-        Transforme este conteúdo em formato de caderno de anotações para facilitar seus estudos.
-      </p>
-      
-      {!notebookContent ? (
-        <Button 
-          onClick={handleTransformToNotebook} 
-          className="w-full bg-green-600 hover:bg-green-700"
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <>
-              <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-              Transformando...
-            </>
-          ) : (
-            <>
-              <ClipboardEdit className="mr-2 h-4 w-4" />
-              Transformar em caderno
-            </>
-          )}
-        </Button>
-      ) : (
-        <div className="space-y-4">
-          <div className="border rounded-lg overflow-hidden">
-            <ScrollArea className="h-[300px] p-4">
-              <NotebookSimulation content={notebookContent} />
-            </ScrollArea>
+    <>
+      <div className="space-y-4 text-white">
+        <div className="flex items-start space-x-3">
+          <div className="bg-green-600 p-2 rounded-full">
+            <PenLine className="h-5 w-5 text-white" />
           </div>
-          
-          <div className="flex space-x-2">
-            <Button 
-              onClick={copyToClipboard} 
-              variant="outline" 
-              className="flex-1"
-            >
-              {copied ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
-              {copied ? "Copiado!" : "Copiar texto"}
-            </Button>
-            
-            <Button 
-              onClick={handleTransformToNotebook} 
-              variant="outline" 
-              className="flex-1"
-              disabled={isLoading}
-            >
-              <ClipboardEdit className="mr-2 h-4 w-4" />
-              Regenerar
-            </Button>
+          <div>
+            <h3 className="text-lg font-medium text-white">Escrever no Caderno</h3>
+            <p className="text-indigo-200 text-sm">
+              Transforme este conteúdo em um formato de caderno digital com resumos e pontos-chave para seus estudos
+            </p>
           </div>
         </div>
-      )}
-    </div>
+
+        <div className="border border-indigo-800/50 rounded-lg p-4 bg-indigo-950/30">
+          <div className="flex items-center mb-3">
+            <FileText className="h-4 w-4 mr-2 text-indigo-300" />
+            <h4 className="text-sm font-medium text-indigo-300">Como funciona?</h4>
+          </div>
+          <p className="text-sm text-indigo-200">
+            Este assistente transformará o conteúdo em um formato de caderno digital com:
+          </p>
+          <ul className="text-sm text-indigo-200 mt-2 space-y-1 list-disc list-inside">
+            <li>Resumo dos pontos principais</li>
+            <li>Tópicos e subtópicos organizados</li>
+            <li>Palavras-chave destacadas</li>
+            <li>Fórmulas e conceitos importantes</li>
+            <li>Layout de fácil leitura no estilo de caderno</li>
+          </ul>
+        </div>
+
+        <div className="flex justify-end space-x-2 pt-2">
+          <Button 
+            variant="ghost" 
+            onClick={closeModal}
+            className="text-indigo-200 hover:text-white hover:bg-indigo-800"
+            disabled={isLoading}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleGerarCaderno}
+            className="bg-green-600 hover:bg-green-700 text-white"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Gerando...
+              </>
+            ) : (
+              "Gerar Caderno"
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {/* Modal do caderno */}
+      <NotebookModal
+        isOpen={notebookModalOpen}
+        onClose={() => setNotebookModalOpen(false)}
+        content={notebookContent}
+        isLoading={isLoading}
+      />
+    </>
   );
 };
 

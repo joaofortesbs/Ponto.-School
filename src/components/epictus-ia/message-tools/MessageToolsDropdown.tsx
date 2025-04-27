@@ -2,22 +2,28 @@ import React, { useState, useEffect } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { FerramentasEmDesenvolvimentoModal } from "./index";
 import { FerramentasModal } from "./ferramentas";
+import NotebookModal from "../notebook-simulation/NotebookModal";
+import { convertToNotebookFormat } from "@/services/aiChatService";
 
 interface MessageToolsDropdownProps {
-  messageId: number;
+  messageId: number | string;
   content: string;
-  showTools: boolean;
-  onToggleTools: (e?: React.MouseEvent) => void;
+  showTools?: boolean;
+  onToggleTools?: (e?: React.MouseEvent) => void;
 }
 
 const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
   messageId,
   content,
-  showTools,
-  onToggleTools
+  showTools = false,
+  onToggleTools = () => {}
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [showDevModal, setShowDevModal] = useState(false);
+  const [notebookModalOpen, setNotebookModalOpen] = useState(false);
+  const [notebookContent, setNotebookContent] = useState("");
+  const [isGeneratingNotebook, setIsGeneratingNotebook] = useState(false);
+  const [activeTab, setActiveTab] = useState("aprofundar");
 
   const openModal = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -51,13 +57,36 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
     });
   };
 
-  const handleEscreverNoCaderno = (e: React.MouseEvent) => {
+  const handleEscreverNoCaderno = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    toast({
-      title: "Caderno de Anotações",
-      description: "Convertendo conteúdo para formato de caderno...",
-      duration: 2000,
-    });
+    try {
+      setIsGeneratingNotebook(true);
+      toast({
+        title: "Caderno de Anotações",
+        description: "Convertendo conteúdo para formato de caderno...",
+        duration: 2000,
+      });
+      
+      // Obter conteúdo convertido para formato de caderno
+      const formattedContent = await convertToNotebookFormat(content);
+      setNotebookContent(formattedContent);
+      
+      // Fechar modal de ferramentas se estiver aberto
+      setModalOpen(false);
+      
+      // Abrir modal do caderno
+      setNotebookModalOpen(true);
+    } catch (error) {
+      console.error("Erro ao converter para formato de caderno:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível converter o conteúdo para o formato de caderno.",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setIsGeneratingNotebook(false);
+    }
   };
 
   const handleSimularApresentacao = (e: React.MouseEvent) => {
@@ -67,6 +96,12 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
       description: "Iniciando simulação de apresentação deste conteúdo...",
       duration: 3000,
     });
+  };
+  
+  const handleFerramentasClick = (e: React.MouseEvent, tab: string) => {
+    e.stopPropagation();
+    setActiveTab(tab);
+    setModalOpen(true);
   };
 
   return (
@@ -86,10 +121,7 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
           <div className="absolute z-50 top-full right-0 mt-1 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
             <button 
               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowDevModal(true);
-              }}
+              onClick={(e) => handleFerramentasClick(e, "aprofundar")}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 mr-1.5 text-blue-500 dark:text-blue-400">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -101,7 +133,7 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
 
             <button 
               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
-              onClick={handleSimuladorQuestoes}
+              onClick={(e) => handleFerramentasClick(e, "simulador")}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 mr-1.5 text-orange-500 dark:text-orange-400">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -113,7 +145,7 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
 
             <button 
               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
-              onClick={handleEscreverNoCaderno}
+              onClick={(e) => handleFerramentasClick(e, "caderno")}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 mr-1.5 text-green-500 dark:text-green-400">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -127,7 +159,7 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
 
             <button 
               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
-              onClick={handleSimularApresentacao}
+              onClick={(e) => handleFerramentasClick(e, "apresentacao")}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 mr-1.5 text-purple-500 dark:text-purple-400">
                 <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
@@ -142,16 +174,24 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
 
       {/* Modal principal de ferramentas */}
       <FerramentasModal 
-        open={modalOpen} 
-        onOpenChange={setModalOpen}
-        onAprofundarClick={handleAprofundarClick}
-        messageContent={content} // Passando o conteúdo aqui
+        isOpen={modalOpen} 
+        onClose={() => setModalOpen(false)}
+        initialTab={activeTab}
+        messageContent={content}
       />
 
       {/* Modal de funcionalidade em desenvolvimento */}
       <FerramentasEmDesenvolvimentoModal 
         open={showDevModal} 
         onClose={() => setShowDevModal(false)} 
+      />
+
+      {/* Modal do caderno */}
+      <NotebookModal
+        isOpen={notebookModalOpen}
+        onClose={() => setNotebookModalOpen(false)}
+        content={notebookContent}
+        isLoading={isGeneratingNotebook}
       />
     </>
   );
