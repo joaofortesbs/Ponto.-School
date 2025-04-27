@@ -20,3 +20,126 @@
   width: 1px;
   background-color: #ff9e9e;
 }
+/* Notebook Lines Styling */
+.notebook-lines {
+  padding: 0;
+  position: relative;
+  background-color: #fffef8;
+  background-image: linear-gradient(#aaa 1px, transparent 1px);
+  background-size: 100% 28px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.notebook-lines::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 26px;
+  height: 100%;
+  width: 1px;
+  background: rgba(255, 107, 0, 0.4);
+}
+
+.notebook-content {
+  padding: 14px 40px;
+  font-family: 'Architects Daughter', cursive, system-ui;
+  letter-spacing: 0.5px;
+  font-size: 1.05rem;
+  line-height: 28px;
+  color: #333;
+  text-shadow: 0px 0px 0.3px rgba(0, 0, 0, 0.3);
+}
+
+/* Dark mode support */
+.dark .notebook-lines {
+  background-color: #121826;
+  background-image: linear-gradient(rgba(100, 100, 100, 0.5) 1px, transparent 1px);
+}
+
+.dark .notebook-content {
+  color: #f0f0f0;
+}
+
+/* Title styling */
+.notebook-title {
+  color: #3a86ff;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 14px;
+  line-height: 28px;
+}
+
+.dark .notebook-title {
+  color: #4cc9f0;
+}
+
+/* Bullet points styling */
+.notebook-bullet {
+  color: #FF6B00;
+  font-size: 1.25rem;
+  margin-right: 0.5rem;
+}
+
+/* Highlighted text */
+.notebook-highlight {
+  text-decoration: underline wavy rgba(255, 107, 0, 0.5);
+  font-weight: bold;
+}
+
+/* Formula styling */
+.notebook-formula {
+  font-family: 'Courier New', monospace;
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 0 4px;
+  border-radius: 2px;
+}
+
+.dark .notebook-formula {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* Closing note styling */
+.notebook-closing {
+  color: #FF6B00;
+  font-weight: 600;
+  margin-top: 14px;
+}
+
+/* Special emphasis styles */
+.notebook-important {
+  text-transform: uppercase;
+  font-weight: bold;
+  color: #e63946;
+}
+
+.notebook-tip {
+  text-transform: uppercase;
+  font-weight: bold;
+  color: #2a9d8f;
+}
+
+.notebook-note {
+  text-transform: uppercase;
+  font-weight: bold;
+  color: #9b5de5;
+}
+
+.notebook-remember {
+  text-transform: uppercase;
+  font-weight: bold;
+  color: #f4a261;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+  .notebook-content {
+    padding: 14px 30px;
+    font-size: 0.95rem;
+  }
+  
+  .notebook-lines::before {
+    left: 20px;
+  }
+}

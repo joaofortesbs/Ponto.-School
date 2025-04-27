@@ -1,88 +1,136 @@
-
-import React from 'react';
-import { Wrench, X } from 'lucide-react';
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import React, { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import AprofundarNoTema from "./AprofundarNoTema";
+import SimuladorQuestoes from "./SimuladorQuestoes";
+import EscreverNoCaderno from "./EscreverNoCaderno";
+import SimularApresentacao from "./SimularApresentacao";
+import { X } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-import AprofundarNoTema from './AprofundarNoTema';
-import SimuladorQuestoes from './SimuladorQuestoes';
-import EscreverNoCaderno from './EscreverNoCaderno';
-import SimularApresentacao from './SimularApresentacao';
+import { NotebookModal } from "@/components/epictus-ia/notebook-simulation";
+import { transformContentWithAI } from "@/services/notebookService";
 
 interface FerramentasModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAprofundarClick: () => void;
+  content?: string;
 }
 
 const FerramentasModal: React.FC<FerramentasModalProps> = ({
   open,
   onOpenChange,
-  onAprofundarClick
+  onAprofundarClick,
+  content = ""
 }) => {
-  
-  const handleSimuladorQuestoes = () => {
-    toast({
-      title: "Simulador de questões",
-      description: "Iniciando simulador de questões para este tema...",
-      duration: 3000,
-    });
-    onOpenChange(false);
+  const [notebookModalOpen, setNotebookModalOpen] = useState(false);
+  const [notebookContent, setNotebookContent] = useState<string>("");
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleOnOpenChange = (value: boolean) => {
+    onOpenChange(value);
   };
-  
-  const handleEscreverNoCaderno = () => {
+
+  const handleModalClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
+  const handleEscreverNoCaderno = async () => {
+    if (isProcessing || !content) return;
+
+    setIsProcessing(true);
+    onOpenChange(false);
+
     toast({
       title: "Caderno de Anotações",
       description: "Convertendo conteúdo para formato de caderno...",
       duration: 2000,
     });
-    onOpenChange(false);
-  };
-  
-  const handleSimularApresentacao = () => {
-    toast({
-      title: "Modo Apresentação",
-      description: "Iniciando simulação de apresentação deste conteúdo...",
-      duration: 3000,
-    });
-    onOpenChange(false);
+
+    try {
+      // Transform the content to notebook format
+      const transformedContent = await transformContentWithAI(content);
+      setNotebookContent(transformedContent);
+
+      // Open the notebook modal
+      setNotebookModalOpen(true);
+    } catch (error) {
+      console.error("Erro ao transformar conteúdo para formato de caderno:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível converter o conteúdo para o formato de caderno.",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-gradient-to-b from-[#1A2634] to-[#253245] border-[#3A4B5C]/50 text-white p-0 overflow-hidden">
-        <div className="bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] p-4">
-          <h2 className="text-lg font-semibold flex items-center space-x-2">
-            <Wrench className="h-5 w-5 mr-2" />
-            Ferramentas Epictus IA
-          </h2>
-          <p className="text-sm text-white/70 mt-1">
-            Transforme este conteúdo com nossas ferramentas inteligentes
-          </p>
-        </div>
+    <>
+      <Dialog open={open} onOpenChange={handleOnOpenChange}>
+        <DialogContent 
+          className="bg-[#0D1F44] text-white border-[#3A4B5C] w-[500px] shadow-2xl p-0 overflow-hidden" 
+          onClick={handleModalClick}
+        >
+          <DialogHeader className="bg-[#1E3A8A] py-3 px-4 flex flex-row items-center justify-between border-b border-[#3A4B5C]">
+            <DialogTitle className="text-white font-medium text-lg flex items-center space-x-2">
+              <span>Ferramentas Epictus IA</span>
+            </DialogTitle>
+            <button
+              onClick={() => onOpenChange(false)}
+              className="text-gray-300 hover:text-white transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </DialogHeader>
 
-        <div className="p-4 grid grid-cols-1 gap-3">
-          <AprofundarNoTema onClick={() => {
-            onOpenChange(false);
-            onAprofundarClick();
-          }} />
-          
-          <SimuladorQuestoes onClick={handleSimuladorQuestoes} />
-          
-          <EscreverNoCaderno onClick={handleEscreverNoCaderno} />
-          
-          <SimularApresentacao onClick={handleSimularApresentacao} />
-        </div>
-        
-        <div className="bg-[#1A2634]/70 border-t border-[#3A4B5C]/30 p-3 flex justify-end">
-          <button
-            onClick={() => onOpenChange(false)}
-            className="px-4 py-2 rounded text-sm bg-[#2A3645] hover:bg-[#3A4B5C] text-white transition-colors"
-          >
-            Fechar
-          </button>
-        </div>
-      </DialogContent>
-    </Dialog>
+          <div className="flex flex-col p-3 space-y-2 max-h-[400px] overflow-y-auto">
+            <div className="px-1 text-gray-300 text-sm mb-1">
+              Transforme este conteúdo com nossas ferramentas inteligentes
+            </div>
+
+            <AprofundarNoTema onClick={onAprofundarClick} />
+
+            <SimuladorQuestoes onClick={() => {
+              onOpenChange(false);
+              toast({
+                title: "Simulador de questões",
+                description: "Iniciando simulador de questões para este tema...",
+                duration: 3000,
+              });
+            }} />
+
+            <EscreverNoCaderno onClick={handleEscreverNoCaderno} />
+
+            <SimularApresentacao onClick={() => {
+              onOpenChange(false);
+              toast({
+                title: "Modo Apresentação",
+                description: "Iniciando simulação de apresentação deste conteúdo...",
+                duration: 3000,
+              });
+            }} />
+          </div>
+
+          <div className="p-3 border-t border-[#3A4B5C] flex justify-end">
+            <button
+              onClick={() => onOpenChange(false)}
+              className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm"
+            >
+              Fechar
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para exibir o conteúdo em formato de caderno */}
+      <NotebookModal
+        open={notebookModalOpen}
+        onOpenChange={setNotebookModalOpen}
+        content={notebookContent}
+      />
+    </>
   );
 };
 

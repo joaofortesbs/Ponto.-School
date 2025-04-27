@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { FerramentasEmDesenvolvimentoModal } from "./index";
 import { FerramentasModal } from "./ferramentas";
+import { NotebookModal } from "@/components/epictus-ia/notebook-simulation";
+import { transformContentWithAI } from "@/services/notebookService";
 
 interface MessageToolsDropdownProps {
   messageId: number;
@@ -19,6 +21,9 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [showDevModal, setShowDevModal] = useState(false);
+  const [notebookModalOpen, setNotebookModalOpen] = useState(false);
+  const [notebookContent, setNotebookContent] = useState<string>("");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const openModal = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -52,13 +57,37 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
     });
   };
   
-  const handleEscreverNoCaderno = (e: React.MouseEvent) => {
+  const handleEscreverNoCaderno = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    if (isProcessing) return;
+    
+    setIsProcessing(true);
+    
     toast({
       title: "Caderno de Anotações",
       description: "Convertendo conteúdo para formato de caderno...",
       duration: 2000,
     });
+    
+    try {
+      // Transform the content to notebook format
+      const transformedContent = await transformContentWithAI(content);
+      setNotebookContent(transformedContent);
+      
+      // Open the notebook modal
+      setNotebookModalOpen(true);
+    } catch (error) {
+      console.error("Erro ao transformar conteúdo para formato de caderno:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível converter o conteúdo para o formato de caderno.",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
   
   const handleSimularApresentacao = (e: React.MouseEvent) => {
@@ -115,6 +144,7 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
             <button 
               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
               onClick={handleEscreverNoCaderno}
+              disabled={isProcessing}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 mr-1.5 text-green-500 dark:text-green-400">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -146,12 +176,20 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
         open={modalOpen} 
         onOpenChange={setModalOpen}
         onAprofundarClick={handleAprofundarClick}
+        content={content}
       />
 
       {/* Modal de funcionalidade em desenvolvimento */}
       <FerramentasEmDesenvolvimentoModal 
         open={showDevModal} 
         onClose={() => setShowDevModal(false)} 
+      />
+
+      {/* Modal para exibir o conteúdo em formato de caderno */}
+      <NotebookModal
+        open={notebookModalOpen}
+        onOpenChange={setNotebookModalOpen}
+        content={notebookContent}
       />
     </>
   );
