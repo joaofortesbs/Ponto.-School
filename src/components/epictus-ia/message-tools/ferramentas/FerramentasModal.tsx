@@ -87,3 +87,70 @@ const FerramentasModal: React.FC<FerramentasModalProps> = ({
 };
 
 export default FerramentasModal;
+import React from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import EscreverNoCaderno from './EscreverNoCaderno';
+import SimuladorQuestoes from './SimuladorQuestoes';
+import AprofundarNoTema from './AprofundarNoTema';
+import SimularApresentacao from './SimularApresentacao';
+
+interface FerramentasModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onAprofundarClick: () => void;
+  content?: string;
+  messageId?: number;
+}
+
+export const FerramentasModal: React.FC<FerramentasModalProps> = ({
+  open,
+  onOpenChange,
+  onAprofundarClick,
+  content,
+  messageId
+}) => {
+  const handleEscreverNoCadernoClick = () => {
+    // Disparar evento personalizado para transformação em caderno
+    if (content && messageId) {
+      const event = new CustomEvent('transform-to-notebook', {
+        detail: { content, messageId }
+      });
+      document.dispatchEvent(event);
+    }
+    
+    // Fechar o modal de ferramentas após iniciar a ação
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px] bg-[#111827] border-gray-700">
+        <DialogHeader>
+          <DialogTitle className="text-white">Ferramentas Epictus</DialogTitle>
+        </DialogHeader>
+        
+        <div className="grid gap-3 py-4">
+          <AprofundarNoTema onClick={onAprofundarClick} />
+          
+          <SimuladorQuestoes onClick={() => {
+            // Implementação futura
+            onOpenChange(false);
+          }} />
+          
+          <EscreverNoCaderno 
+            onClick={handleEscreverNoCadernoClick}
+            content={content}
+            messageId={messageId}
+          />
+          
+          <SimularApresentacao onClick={() => {
+            // Implementação futura
+            onOpenChange(false);
+          }} />
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default FerramentasModal;

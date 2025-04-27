@@ -155,6 +155,8 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
         open={modalOpen} 
         onOpenChange={setModalOpen}
         onAprofundarClick={handleAprofundarClick}
+        content={content}
+        messageId={messageId}
       />
 
       {/* Modal de funcionalidade em desenvolvimento */}

@@ -9,15 +9,17 @@ interface EscreverNoCadernoProps {
 
 const EscreverNoCaderno: React.FC<EscreverNoCadernoProps> = ({ onClick, content, messageId }) => {
   const handleClick = () => {
-    onClick();
-    
-    // Caso o componente seja usado fora do MessageToolsDropdown
+    // Disparar o evento transform-to-notebook para converter o conteúdo
     if (content && messageId) {
+      console.log("Disparando evento transform-to-notebook com conteúdo:", content);
       const event = new CustomEvent('transform-to-notebook', {
         detail: { content, messageId }
       });
       document.dispatchEvent(event);
     }
+    
+    // Chamar a função onClick do parent
+    onClick();
   };
   
   return (

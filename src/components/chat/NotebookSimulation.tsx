@@ -1,3 +1,55 @@
+
+import React from 'react';
+
+interface NotebookSimulationProps {
+  content: string;
+}
+
+const NotebookSimulation: React.FC<NotebookSimulationProps> = ({ content }) => {
+  // Função para converter texto normal em formato de caderno
+  const formatNotebookContent = (text: string) => {
+    if (!text) return [];
+    
+    // Dividir por linhas
+    return text.split('\n').map((line, index) => {
+      // Aplicar formatação de markdown básica (negrito, itálico, etc)
+      let formattedLine = line
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Negrito
+        .replace(/\*(.*?)\*/g, '<em>$1</em>') // Itálico
+        .replace(/^#\s+(.*)$/g, '<h1 class="text-xl font-bold text-[#FF6B00] mb-2">$1</h1>') // Título H1
+        .replace(/^##\s+(.*)$/g, '<h2 class="text-lg font-bold mb-1">$1</h2>') // Título H2
+        .replace(/^###\s+(.*)$/g, '<h3 class="text-md font-bold">$1</h3>') // Título H3
+        .replace(/^•\s+(.*)$/g, '<li class="flex"><span class="mr-2">•</span><span>$1</span></li>') // Lista com bullets
+        .replace(/^-\s+(.*)$/g, '<li class="flex"><span class="mr-2">-</span><span>$1</span></li>'); // Lista com traços
+      
+      if (formattedLine.includes('<li')) {
+        return formattedLine;
+      } else if (formattedLine.includes('<h')) {
+        return formattedLine;
+      } else if (formattedLine.trim() === '') {
+        return '<div class="h-6"></div>'; // Espaço em branco
+      } else {
+        return `<p class="mb-2">${formattedLine}</p>`;
+      }
+    });
+  };
+
+  const formattedContent = formatNotebookContent(content);
+
+  return (
+    <div className="font-notebook text-[#333] dark:text-[#DDD] leading-relaxed">
+      <div 
+        className="whitespace-pre-wrap"
+        dangerouslySetInnerHTML={{ 
+          __html: formattedContent.join('')
+        }} 
+      />
+    </div>
+  );
+};
+
+export default NotebookSimulation;
+
 import React from 'react';
 
 interface NotebookSimulationProps {

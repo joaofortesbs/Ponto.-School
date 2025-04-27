@@ -23,7 +23,12 @@ const NotebookModal: React.FC<NotebookModalProps> = ({
 
   useEffect(() => {
     // Verificar se o conteúdo existe e não está vazio
-    setHasContent(!!content && content.trim().length > 0);
+    const contentExists = !!content && content.trim().length > 0;
+    setHasContent(contentExists);
+    
+    // Adicionar console.log para debugging
+    console.log("NotebookModal - Conteúdo recebido:", content);
+    console.log("NotebookModal - hasContent:", contentExists);
     
     // Reset copied state when modal opens/closes
     setCopied(false);

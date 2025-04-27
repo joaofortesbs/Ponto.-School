@@ -64,6 +64,36 @@
 .notebook-lines {
   padding: 0;
   position: relative;
+  background-image: linear-gradient(#ffffe7 1px, transparent 1px);
+  background-size: 100% 2rem;
+  background-position-y: 1.6rem;
+  line-height: 2rem;
+}
+
+/* Estilo para fonte de caderno */
+@font-face {
+  font-family: 'NotebookFont';
+  src: url('https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.font-notebook {
+  font-family: 'NotebookFont', 'Indie Flower', cursive, sans-serif;
+  font-size: 1.1rem;
+}
+
+/* Estilo para modal do caderno */
+.notebook-modal {
+  background-color: #ffffe0;
+  border: 1px solid #e6e6b8;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Tema escuro */
+.dark .notebook-lines {
+  background-image: linear-gradient(#333 1px, transparent 1px);
+  background-color: #252525;
 }
 
 .notebook-lines .notebook-simulation {
