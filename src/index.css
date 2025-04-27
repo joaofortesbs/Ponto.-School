@@ -1,16 +1,40 @@
 /* Estilos para corrigir problemas de altura em componentes específicos */
+.mode-epictus-turbo-advanced {
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+  min-height: 100vh;
+  overflow-y: auto;
+  padding-top: 0.5rem;
+}
+
+/* Ajustar visualização em telas menores */
+@media (max-height: 768px) {
+  .mode-epictus-turbo-advanced {
+    padding-top: 1rem;
+  }
+}
+
 
 @import "./styles/animations.css";
 @import "./styles/hide-scrollbar.css";
 @import "./styles/typewriter-loader.css";
 @import "./styles/notebook.css";
 @import "./styles/header-animations.css";
+@import "./styles/hide-scrollbar.css";
+@import "./styles/notebook.css";
+@import "./styles/animations.css";
 @import "./styles/carousel-effects.css";
+@import "./styles/header-animations.css";
 @import "./styles/modern-scanner.css";
+@import "./styles/typewriter-loader.css";
 @import "./styles/rotina-calendar.css";
 
 /* Animação ping-slow personalizada para efeitos espaciais */
@@ -35,29 +59,6 @@
 /* Gradiente radial para efeitos de fundo */
 .bg-gradient-radial {
   background-image: radial-gradient(var(--tw-gradient-stops));
-}
-
-/* Estilos para corrigir problemas de altura em componentes específicos */
-.mode-epictus-turbo-advanced {
-  min-height: 100vh;
-  overflow-y: auto;
-  padding-top: 0.5rem;
-}
-
-/* Ajustar visualização em telas menores */
-@media (max-height: 768px) {
-  .mode-epictus-turbo-advanced {
-    padding-top: 1rem;
-  }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-out forwards;
 }
 
 /* Pulse animation for the scroll to bottom button */
@@ -98,8 +99,6 @@
   background-image: 
     linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
-  background-size: 20px 20px;
-}
 
 /* Ensure modals and dialogs are always on top */
 
@@ -191,6 +190,14 @@ button[aria-haspopup="menu"] {
   z-index: 9999 !important;
 }
 
+  background-size: 20px 20px;
+}
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* Estilos auxiliares para o Hub Conectado */
 @keyframes pulse-glow {
   0% { filter: drop-shadow(0 0 5px rgba(13, 35, 160, 0.3)); }
@@ -202,7 +209,43 @@ button[aria-haspopup="menu"] {
   animation: pulse-glow 3s infinite ease-in-out;
 }
 
-:::root {
+::root {
+
+/* Estilos para linhas tecnológicas */
+@keyframes pulse-tech-line {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 20; }
+}
+
+@keyframes flow-pulse {
+  0% { stroke-width: 0.8px; opacity: 0.7; }
+  50% { stroke-width: 1.5px; opacity: 1; }
+  100% { stroke-width: 0.8px; opacity: 0.7; }
+}
+
+.tech-line {
+  animation: pulse-tech-line 3s linear infinite;
+  stroke-width: 1.5px !important;
+  opacity: 1 !important;
+}
+
+.tech-highlight {
+  animation: flow-pulse 2s ease-in-out infinite;
+  stroke-width: 1.2px !important;
+  opacity: 0.9 !important;
+}
+
+/* Certificar que as linhas SVG estejam sempre visíveis */
+svg.neural-connections {
+  z-index: 30 !important;
+  position: relative;
+}
+
+/* Efeito de brilho para conectores */
+.connector-node {
+  filter: drop-shadow(0 0 3px rgba(138, 99, 232, 0.8));
+}
+
   --primary: #FF6B00;
   --primary-lighter: #FF9B50;
   --dark-bg: #0A2540;
@@ -780,7 +823,7 @@ body.modal-open {
 }
 
 /* Custom cursor styles */
-:::root:not(.dark) body {
+::root:not(.dark) body {
   cursor:
     url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="%23FF6B00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" fill="rgba(255, 107, 0, 0.15)" stroke="%23FF6B00"/><path d="M2 2l7 4" stroke="%23FF6B00"/><path d="M8.5 9.5L5 6" stroke="%23FF6B00"/><path d="M18 13l-2.5-2.5" stroke="%23FF6B00"/><path d="M13 18l-2.5-2.5" stroke="%23FF6B00"/><circle cx="16.5" cy="11.5" r="0.5" fill="%23FF6B00" stroke="none"/></svg>')
       1 1,
