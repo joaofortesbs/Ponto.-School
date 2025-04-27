@@ -4,6 +4,8 @@ import GlowingBackground from "./GlowingBackground";
 import LogoSection from "./LogoSection";
 import PersonalitiesDropdown from "./PersonalitiesDropdown";
 import { HeaderIcons } from "../modoepictusiabeta/header/icons";
+import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface TurboHeaderProps {
   profileOptions: Array<{
@@ -22,6 +24,7 @@ const TurboHeader: React.FC<TurboHeaderProps> = ({
   initialProfileIcon,
   initialProfileName = "Personalidades" 
 }) => {
+  const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
   const [animationComplete, setAnimationComplete] = useState(false);
   const [profileIcon, setProfileIcon] = useState(initialProfileIcon || (
@@ -41,6 +44,10 @@ const TurboHeader: React.FC<TurboHeaderProps> = ({
     return () => clearTimeout(timer);
   }, []);
 
+  const handleBackToEpictusIA = () => {
+    navigate("/epictus-ia");
+  };
+
   return (
     <div className="w-full p-4">
       <motion.header 
@@ -56,6 +63,16 @@ const TurboHeader: React.FC<TurboHeaderProps> = ({
         <LogoSection isHovered={isHovered} animationComplete={animationComplete} description="IA para geração de conversas impecáveis para o público estudantil!" />
 
         <div className="flex items-center justify-center z-10 relative gap-3">
+          <motion.button
+            onClick={handleBackToEpictusIA}
+            className="p-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors flex items-center mr-1"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            title="Voltar para Epictus IA"
+          >
+            <ArrowLeft size={20} className="mr-1" />
+            <span className="text-sm hidden sm:inline">Voltar</span>
+          </motion.button>
           <PersonalitiesDropdown 
             profileIcon={profileIcon}
             profileName={profileName}
