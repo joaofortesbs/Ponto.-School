@@ -1,0 +1,77 @@
+Quando criar anotações para o "Caderno Digital", siga estas regras para garantir a organização, beleza e didática:
+
+📚 Estrutura e Organização:
+Título principal no topo:
+
+Deve ser grande, estilizado, e ocupar 1 ou 2 linhas do caderno.
+
+Exemplo de estilo: "📖 Introdução às Equações do Segundo Grau"
+
+Subtítulos entre seções:
+
+Antes de começar cada parte do conteúdo, criar subtítulos bem destacados.
+
+Exemplo: "🧠 Definição", "🔍 Exemplos Práticos", "⚙️ Fórmulas Importantes"
+
+Divisão Clara de Parágrafos:
+
+Cada parágrafo novo deve começar com espaçamento suficiente para dar sensação de "respiro".
+
+🎨 Estilo Visual:
+Inserir ilustrações visuais (emojis pequenos) apenas onde for útil (nunca poluir).
+
+Exemplo: usar 📈 para gráficos, ✏️ para exemplos, 💬 para dicas.
+
+Usar negrito (se possível) para destacar termos chave e fórmulas importantes.
+
+Usar listas numeradas ou marcadores sempre que for necessário listar algo.
+
+🪄 Regras de Visualização:
+Evitar parágrafos muito grandes (quebrar grandes blocos de texto sempre que possível).
+
+Não deixar duas imagens/emojis seguidos — sempre intercalar com texto.
+
+Tentar terminar cada seção com uma frase de transição suave para a próxima.
+
+✏️ Exemplo de Modelo Ideal:
+markdown
+Copiar
+Editar
+📖 Introdução às Equações do Segundo Grau
+
+As equações do segundo grau são fundamentais na matemática e aparecem em várias situações práticas.
+
+🧠 Definição:
+Uma equação do segundo grau tem a forma geral:  
+**ax² + bx + c = 0**, onde:
+- **a**, **b**, **c** são números reais
+- **x** é a incógnita que desejamos descobrir
+
+🔍 Exemplos Práticos:
+1. Resolver: **x² + 5x + 6 = 0**
+2. Resolver: **2x² - 3x + 1 = 0**
+
+⚙️ Fórmulas Importantes:
+- Fórmula de Bhaskara:  
+  \( x = \frac{-b \pm \sqrt{b² - 4ac}}{2a} \)
+
+💬 Dica:
+Sempre verifique o valor do discriminante (**Δ**) antes de calcular as raízes!
+
+✅ Anotação concluída! Agora, revise no seu Caderno Digital. 😉
+🔥 Sugestões Extras para Deixar Ainda Melhor:
+Criar pequenas caixas de "Dica de Ouro" ou "Atenção!" destacadas visualmente no caderno.
+
+Quando necessário, a IA pode propor pequenas atividades (tipo: "Tente resolver este exemplo sozinho agora!").
+
+Usar um tom de voz amigável, direto e motivador (sem perder a seriedade acadêmica).
+
+🎯 Resultado esperado:
+➔ Um caderno que parece uma mistura de:
+
+Livro didático visual
+
+Anotações bem-feitas de um aluno de alto nível
+
+Organização perfeita, com hierarquia clara e espaçamento impecável.
+
