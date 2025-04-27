@@ -88,4 +88,12 @@
 
 #notebook-modal {
   animation: fadeIn 0.3s ease-out;
+  z-index: 9999 !important; /* Garantir que o modal aparece acima de outros elementos */
+}
+
+#notebook-modal .absolute {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
 }

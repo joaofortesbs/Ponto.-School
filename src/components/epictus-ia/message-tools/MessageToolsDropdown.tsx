@@ -509,6 +509,7 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
 
                     // Processar o conteúdo para o formato do caderno
                     const processNotebookContent = (content) => {
+                      if (!content) return '';
                       return content
                         .replace(/•/g, '<span class="text-[#FF6B00] text-lg">✎</span>')
                         .replace(/(\*\*|__)([^*_]+)(\*\*|__)/g, '<span class="underline decoration-wavy decoration-[#FF6B00]/70 font-bold">$2</span>')
@@ -516,29 +517,35 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
                     };
 
                     // Adicionar o conteúdo ao modal
-                    const notebookContentElement = document.getElementById('notebook-content');
-                    if (notebookContentElement) {
-                      notebookContentElement.innerHTML = processNotebookContent(notebookContent);
-                    }
+                    setTimeout(() => {
+                      const notebookContentElement = document.getElementById('notebook-content');
+                      if (notebookContentElement) {
+                        notebookContentElement.innerHTML = processNotebookContent(notebookContent);
+                      }
+                    }, 100); // Pequeno atraso para garantir que o DOM esteja pronto
 
                     // Adicionar event listeners
-                    const closeButton = document.getElementById('close-notebook-modal');
-                    const copyButton = document.getElementById('copy-notebook-content');
-                    const downloadButton = document.getElementById('download-notebook-content');
-                    const modal = document.getElementById('notebook-modal');
-
-                    if (closeButton) {
-                      closeButton.addEventListener('click', () => {
-                        modal.remove();
-                      });
-                    }
+                    setTimeout(() => {
+                      const closeButton = document.getElementById('close-notebook-modal');
+                      const copyButton = document.getElementById('copy-notebook-content');
+                      const downloadButton = document.getElementById('download-notebook-content');
+                      const modal = document.getElementById('notebook-modal');
+  
+                      if (closeButton && modal) {
+                        closeButton.addEventListener('click', () => {
+                          modal.remove();
+                        });
+                      }
 
                     if (modal) {
-                      modal.addEventListener('click', (e) => {
-                        if (e.target === modal.querySelector('.absolute')) {
-                          modal.remove();
-                        }
-                      });
+                      const backdropElement = modal.querySelector('.absolute');
+                      if (backdropElement) {
+                        modal.addEventListener('click', (e) => {
+                          if (e.target === backdropElement) {
+                            modal.remove();
+                          }
+                        });
+                      }
                     }
 
                     if (copyButton) {
@@ -571,6 +578,7 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
                         });
                       });
                     }
+                    }, 200); // Fim do setTimeout
                   })
                   .catch(error => {
                     console.error("Erro ao converter para formato de caderno:", error);
