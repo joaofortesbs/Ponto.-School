@@ -736,13 +736,18 @@ setMessages(prev => prev.map(msg => {
   }, []);
 
   const handleWriteToNotebook = (content: string) => {
+    console.log("handleWriteToNotebook chamado com conteúdo:", content.substring(0, 50) + "...");
     setNotebookContent(content);
     setShowNotebook(true);
-    toast({
-      title: "Caderno aberto",
-      description: "O conteúdo foi transferido para o caderno de anotações",
-      duration: 3000,
-    });
+    
+    // Pequeno atraso para garantir que o estado seja atualizado antes de mostrar o toast
+    setTimeout(() => {
+      toast({
+        title: "Caderno aberto",
+        description: "O conteúdo foi transferido para o caderno de anotações",
+        duration: 3000,
+      });
+    }, 100);
   };
 
   return (
@@ -857,7 +862,7 @@ setMessages(prev => prev.map(msg => {
                                     e?.stopPropagation();
                                     toggleMessageTools(message.id);
                                   }}
-                                  onWriteToNotebook={() => handleWriteToNotebook(message.content)}
+                                  onWriteToNotebook={handleWriteToNotebook}
                                 />
                                 <button 
                                   onClick={() => handleExportMessage(message)}

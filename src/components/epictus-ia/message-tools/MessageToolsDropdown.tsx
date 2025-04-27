@@ -413,7 +413,9 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
             <button 
               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
               onClick={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
+
                 // Fechar menu de contexto
                 onToggleTools();
 
@@ -425,6 +427,9 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
                     description: "Convertendo conteúdo para formato de caderno...",
                     duration: 2000,
                   });
+
+                  // Fechar modal de ferramentas
+                  setModalOpen(false);
 
                   // Gerar prompt para conversão para formato de caderno
                   const notebookPrompt = `
@@ -449,174 +454,211 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
                   "${content}"
                   `;
 
-                  // Mostrar modal de carregamento
-                  setModalOpen(false);
+                  try {
+                    // Se temos uma função externa para manipular a escrita no caderno
+                    if (onWriteToNotebook) {
+                      console.log("Chamando onWriteToNotebook do componente pai");
+                      // Chamar serviço para converter conteúdo
+                      generateAIResponse(notebookPrompt, 'notebook_conversion_session', {
+                        intelligenceLevel: 'advanced',
+                        languageStyle: 'formal'
+                      })
+                      .then(notebookContent => {
+                        if (!notebookContent) {
+                          throw new Error("Conteúdo vazio recebido do serviço");
+                        }
+                        // Usar a função passada pelo componente pai
+                        onWriteToNotebook(notebookContent);
+                      })
+                      .catch(error => {
+                        console.error("Erro ao converter para formato de caderno:", error);
+                        toast({
+                          title: "Erro",
+                          description: "Não foi possível converter o conteúdo para o formato de caderno.",
+                          variant: "destructive",
+                          duration: 3000,
+                        });
+                      });
+                      return;
+                    }
+                    // Caso contrário, use o comportamento padrão com modal inline
+                    generateAIResponse(notebookPrompt, 'notebook_conversion_session', {
+                      intelligenceLevel: 'advanced',
+                      languageStyle: 'formal'
+                    })
+                    .then(notebookContent => {
+                      if (!notebookContent) {
+                        throw new Error("Conteúdo vazio recebido do serviço");
+                      }
 
-                  // Chamar serviço para converter conteúdo
-                  generateAIResponse(notebookPrompt, 'notebook_conversion_session', {
-                    intelligenceLevel: 'advanced',
-                    languageStyle: 'formal'
-                  })
-                  .then(notebookContent => {
-                    // Criar e adicionar o modal diretamente ao DOM
-                    const modalHTML = `
-                      <div id="notebook-modal" class="fixed inset-0 flex items-center justify-center z-50">
-                        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
-                        <div class="relative bg-[#fffdf0] dark:bg-[#1e1e18] w-[95%] max-w-3xl max-h-[70vh] rounded-lg border border-gray-400 dark:border-gray-600 shadow-2xl overflow-hidden">
-                          <!-- Cabeçalho do caderno -->
-                          <div class="flex justify-between items-center px-4 py-2 bg-amber-100 dark:bg-gray-800 border-b border-gray-400 dark:border-gray-600">
-                            <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#FF6B00]">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                <polyline points="14 2 14 8 20 8"></polyline>
-                                <line x1="16" y1="13" x2="8" y2="13"></line>
-                                <line x1="16" y1="17" x2="8" y2="17"></line>
-                                <polyline points="10 9 9 9 8 9"></polyline>
-                              </svg>
-                              Caderno de Anotações
-                            </h3>
-                            <button
-                              id="close-notebook-modal"
-                              class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                              </svg>
-                            </button>
-                          </div>
+                      // Criar e adicionar o modal diretamente ao DOM
+                      const modalHTML = `
+                        <div id="notebook-modal" class="fixed inset-0 flex items-center justify-center z-50">
+                          <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+                          <div class="relative bg-[#fffdf0] dark:bg-[#1e1e18] w-[95%] max-w-3xl max-h-[70vh] rounded-lg border border-gray-400 dark:border-gray-600 shadow-2xl overflow-hidden">
+                            <!-- Cabeçalho do caderno -->
+                            <div class="flex justify-between items-center px-4 py-2 bg-amber-100 dark:bg-gray-800 border-b border-gray-400 dark:border-gray-600">
+                              <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#FF6B00]">
+                                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                  <polyline points="14 2 14 8 20 8"></polyline>
+                                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                                  <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
+                                Caderno de Anotações
+                              </h3>
+                              <button
+                                id="close-notebook-modal"
+                                class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                              </button>
+                            </div>
 
-                          <!-- Conteúdo do caderno com linhas -->
-                          <div class="h-[50vh] bg-[#fffdf0] dark:bg-[#1e1e18] p-4 notebook-lines overflow-y-auto">
-                            <div class="notebook-simulation p-4">
-                              <div 
-                                class="w-full text-gray-800 dark:text-gray-200 whitespace-pre-line leading-loose px-3"
-                                style="background-image: linear-gradient(#aaa 1px, transparent 1px); background-size: 100% 28px; line-height: 28px; font-family: 'Architects Daughter', cursive, system-ui; letter-spacing: 0.5px; font-size: 1.05rem; text-shadow: 0px 0px 0.3px rgba(0,0,0,0.3);"
-                                id="notebook-content"
-                              ></div>
+                            <!-- Conteúdo do caderno com linhas -->
+                            <div class="h-[50vh] bg-[#fffdf0] dark:bg-[#1e1e18] p-4 notebook-lines overflow-y-auto">
+                              <div class="notebook-simulation p-4">
+                                <div 
+                                  class="w-full text-gray-800 dark:text-gray-200 whitespace-pre-line leading-loose px-3"
+                                  style="background-image: linear-gradient(#aaa 1px, transparent 1px); background-size: 100% 28px; line-height: 28px; font-family: 'Architects Daughter', cursive, system-ui; letter-spacing: 0.5px; font-size: 1.05rem; text-shadow: 0px 0px 0.3px rgba(0,0,0,0.3);"
+                                  id="notebook-content"
+                                ></div>
+                              </div>
+                            </div>
+
+                            <!-- Rodapé com ações -->
+                            <div class="p-3 border-t border-gray-400 dark:border-gray-600 bg-amber-100 dark:bg-gray-800 flex justify-between">
+                              <button 
+                                id="copy-notebook-content"
+                                class="px-3 py-1.5 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-600 hover:bg-amber-200 dark:hover:bg-gray-700 rounded-md flex items-center gap-1.5"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                                Copiar texto
+                              </button>
+
+                              <button 
+                                id="download-notebook-content"
+                                class="px-3 py-1.5 bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white rounded-md flex items-center gap-1.5"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path></path>
+                                  <polyline points="7 10 12 15 17 10"></polyline>
+                                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                Baixar
+                              </button>
                             </div>
                           </div>
-
-                          <!-- Rodapé com ações -->
-                          <div class="p-3 border-t border-gray-400 dark:border-gray-600 bg-amber-100 dark:bg-gray-800 flex justify-between">
-                            <button 
-                              id="copy-notebook-content"
-                              class="px-3 py-1.5 text-gray-800 dark:text-gray-200 border border-gray-400 dark:border-gray-600 hover:bg-amber-200 dark:hover:bg-gray-700 rounded-md flex items-center gap-1.5"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                              </svg>
-                              Copiar texto
-                            </button>
-
-                            <button 
-                              id="download-notebook-content"
-                              class="px-3 py-1.5 bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white rounded-md flex items-center gap-1.5"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="7 10 12 15 17 10"></polyline>
-                                <line x1="12" y1="15" x2="12" y2="3"></line>
-                              </svg>
-                              Baixar
-                            </button>
-                          </div>
                         </div>
-                      </div>
-                    `;
+                      `;
 
-                    // Remover qualquer modal existente
-                    const existingModal = document.getElementById('notebook-modal');
-                    if (existingModal) {
-                      existingModal.remove();
-                    }
-
-                    // Adicionar o novo modal ao DOM
-                    document.body.insertAdjacentHTML('beforeend', modalHTML);
-
-                    // Processar o conteúdo para o formato do caderno
-                    const processNotebookContent = (content) => {
-                      if (!content) return '';
-                      return content
-                        .replace(/•/g, '<span class="text-[#FF6B00] text-lg">✎</span>')
-                        .replace(/(\*\*|__)([^*_]+)(\*\*|__)/g, '<span class="underline decoration-wavy decoration-[#FF6B00]/70 font-bold">$2</span>')
-                        .replace(/(^|\n)([A-Z][^:\n]+:)/g, '$1<span class="text-[#3a86ff] dark:text-[#4cc9f0] font-bold">$2</span>');
-                    };
-
-                    // Adicionar o conteúdo ao modal
-                    setTimeout(() => {
-                      const notebookContentElement = document.getElementById('notebook-content');
-                      if (notebookContentElement) {
-                        notebookContentElement.innerHTML = processNotebookContent(notebookContent);
-                      }
-                    }, 100); // Pequeno atraso para garantir que o DOM esteja pronto
-
-                    // Adicionar event listeners
-                    setTimeout(() => {
-                      const closeButton = document.getElementById('close-notebook-modal');
-                      const copyButton = document.getElementById('copy-notebook-content');
-                      const downloadButton = document.getElementById('download-notebook-content');
-                      const modal = document.getElementById('notebook-modal');
-
-                      if (closeButton && modal) {
-                        closeButton.addEventListener('click', () => {
-                          modal.remove();
-                        });
+                      // Remover qualquer modal existente
+                      const existingModal = document.getElementById('notebook-modal');
+                      if (existingModal) {
+                        existingModal.remove();
                       }
 
-                      if (modal) {
-                        const backdropElement = modal.querySelector('.absolute');
-                        if (backdropElement) {
-                          modal.addEventListener('click', (e) => {
-                            if (e.target === backdropElement) {
-                              modal.remove();
-                            }
+                      // Adicionar o novo modal ao DOM
+                      document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+                      // Processar o conteúdo para o formato do caderno
+                      const processNotebookContent = (content) => {
+                        if (!content) return '';
+                        return content
+                          .replace(/•/g, '<span class="text-[#FF6B00] text-lg">✎</span>')
+                          .replace(/(\*\*|__)([^*_]+)(\*\*|__)/g, '<span class="underline decoration-wavy decoration-[#FF6B00]/70 font-bold">$2</span>')
+                          .replace(/(^|\n)([A-Z][^:\n]+:)/g, '$1<span class="text-[#3a86ff] dark:text-[#4cc9f0] font-bold">$2</span>');
+                      };
+
+                      // Adicionar o conteúdo ao modal
+                      setTimeout(() => {
+                        const notebookContentElement = document.getElementById('notebook-content');
+                        if (notebookContentElement) {
+                          notebookContentElement.innerHTML = processNotebookContent(notebookContent);
+                        }
+                      }, 100); // Pequeno atraso para garantir que o DOM esteja pronto
+
+                      // Adicionar event listeners
+                      setTimeout(() => {
+                        const closeButton = document.getElementById('close-notebook-modal');
+                        const copyButton = document.getElementById('copy-notebook-content');
+                        const downloadButton = document.getElementById('download-notebook-content');
+                        const modal = document.getElementById('notebook-modal');
+
+                        if (closeButton && modal) {
+                          closeButton.addEventListener('click', () => {
+                            modal.remove();
                           });
                         }
-                      }
 
-                      if (copyButton) {
-                        copyButton.addEventListener('click', () => {
-                          navigator.clipboard.writeText(notebookContent);
-                          toast({
-                            title: "Conteúdo copiado!",
-                            description: "As anotações foram copiadas para a área de transferência",
-                            duration: 3000,
+                        if (modal) {
+                          const backdropElement = modal.querySelector('.absolute');
+                          if (backdropElement) {
+                            modal.addEventListener('click', (e) => {
+                              if (e.target === backdropElement) {
+                                modal.remove();
+                              }
+                            });
+                          }
+                        }
+
+                        if (copyButton) {
+                          copyButton.addEventListener('click', () => {
+                            navigator.clipboard.writeText(notebookContent);
+                            toast({
+                              title: "Conteúdo copiado!",
+                              description: "As anotações foram copiadas para a área de transferência",
+                              duration: 3000,
+                            });
                           });
-                        });
-                      }
+                        }
 
-                      if (downloadButton) {
-                        downloadButton.addEventListener('click', () => {
-                          const blob = new Blob([notebookContent], { type: 'text/plain' });
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = `caderno-anotacoes-${Date.now()}.txt`;
-                          document.body.appendChild(a);
-                          a.click();
-                          document.body.removeChild(a);
-                          URL.revokeObjectURL(url);
+                        if (downloadButton) {
+                          downloadButton.addEventListener('click', () => {
+                            const blob = new Blob([notebookContent], { type: 'text/plain' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `caderno-anotacoes-${Date.now()}.txt`;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
 
-                          toast({
-                            title: "Download iniciado",
-                            description: "Seu caderno de anotações está sendo baixado",
-                            duration: 3000,
+                            toast({
+                              title: "Download iniciado",
+                              description: "Seu caderno de anotações está sendo baixado",
+                              duration: 3000,
+                            });
                           });
-                        });
-                      }
-                    }, 200); // Fim do setTimeout
-                  })
-                  .catch(error => {
-                    console.error("Erro ao converter para formato de caderno:", error);
+                        }
+                      }, 200); // Fim do setTimeout
+                    })
+                    .catch(error => {
+                      console.error("Erro ao converter para formato de caderno:", error);
+                      toast({
+                        title: "Erro",
+                        description: "Não foi possível converter o conteúdo para o formato de caderno.",
+                        variant: "destructive",
+                        duration: 3000,
+                      });
+                    });
+                  } catch (error) {
+                    console.error("Erro ao processar a conversão para caderno:", error);
                     toast({
                       title: "Erro",
-                      description: "Não foi possível converter o conteúdo para o formato de caderno.",
+                      description: "Ocorreu um erro ao processar a conversão para o caderno.",
                       variant: "destructive",
                       duration: 3000,
                     });
-                  });
+                  }
                 } else {
                   toast({
                     title: "Aviso",
