@@ -37,6 +37,30 @@
 @import "./styles/typewriter-loader.css";
 @import "./styles/rotina-calendar.css";
 
+/* Animação ping-slow personalizada para efeitos espaciais */
+@keyframes ping-slow {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+}
+
+.animate-ping-slow {
+  animation: ping-slow 3s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Gradiente radial para efeitos de fundo */
+.bg-gradient-radial {
+  background-image: radial-gradient(var(--tw-gradient-stops));
+}
+
 /* Pulse animation for the scroll to bottom button */
 @keyframes pulse {
   0% {

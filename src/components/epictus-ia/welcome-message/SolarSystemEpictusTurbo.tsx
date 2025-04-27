@@ -12,8 +12,7 @@ import {
   Lightbulb, 
   FileText, 
   Rocket, 
-  Sparkles, 
-  Zap,
+  Sparkles,
   Compass
 } from 'lucide-react';
 
@@ -60,62 +59,55 @@ const SolarSystemEpictusTurbo: React.FC<SolarSystemEpictusTurboProps> = ({
     };
   }, []);
 
-  // Definindo os planetas/funcionalidades
+  // Definindo os planetas/funcionalidades com tamanhos reduzidos
   const planets = [
     { 
-      icon: <Brain className="w-8 h-8 text-indigo-400" />, 
+      icon: <Brain className="w-6 h-6 text-indigo-400" />, 
       name: "Assistente IA", 
-      orbitSize: 140, 
-      duration: 20, 
+      orbitSize: 110, 
+      duration: 28, 
       delay: 0 
     },
     { 
-      icon: <BookOpen className="w-7 h-7 text-cyan-400" />, 
+      icon: <BookOpen className="w-6 h-6 text-cyan-400" />, 
       name: "Resumos", 
-      orbitSize: 180, 
-      duration: 25, 
+      orbitSize: 140, 
+      duration: 35, 
       delay: 2 
     },
     { 
-      icon: <BarChart className="w-7 h-7 text-emerald-400" />, 
+      icon: <BarChart className="w-6 h-6 text-emerald-400" />, 
       name: "Análises", 
-      orbitSize: 220, 
-      duration: 30, 
+      orbitSize: 170, 
+      duration: 42, 
       delay: 4 
     },
     { 
-      icon: <Lightbulb className="w-7 h-7 text-amber-400" />, 
+      icon: <Lightbulb className="w-6 h-6 text-amber-400" />, 
       name: "Ideias", 
-      orbitSize: 260, 
-      duration: 35, 
+      orbitSize: 200, 
+      duration: 48, 
       delay: 6 
     },
     { 
-      icon: <FileText className="w-7 h-7 text-rose-400" />, 
+      icon: <FileText className="w-6 h-6 text-rose-400" />, 
       name: "Escrita", 
-      orbitSize: 300, 
-      duration: 40, 
+      orbitSize: 230, 
+      duration: 55, 
       delay: 8 
     },
     { 
-      icon: <Rocket className="w-7 h-7 text-purple-400" />, 
+      icon: <Rocket className="w-6 h-6 text-purple-400" />, 
       name: "Simulador", 
-      orbitSize: 340, 
-      duration: 45, 
+      orbitSize: 260, 
+      duration: 60, 
       delay: 10 
-    },
-    { 
-      icon: <Compass className="w-7 h-7 text-blue-400" />, 
-      name: "Navegador", 
-      orbitSize: 380, 
-      duration: 50, 
-      delay: 12 
     }
   ];
 
   return (
-    <div className="relative w-full h-[85vh] flex items-center justify-center overflow-hidden">
-      {/* Partículas de fundo */}
+    <div className="relative w-full h-[70vh] flex items-center justify-center overflow-hidden">
+      {/* Partículas de fundo aprimoradas */}
       <div className="absolute inset-0 -z-1">
         <Particles
           id="turboparticles"
@@ -123,25 +115,77 @@ const SolarSystemEpictusTurbo: React.FC<SolarSystemEpictusTurboProps> = ({
           options={{
             fullScreen: { enable: false },
             particles: {
-              number: { value: 80 },
-              color: { value: "#ffffff" },
+              number: { value: 100 },
+              color: { 
+                value: ["#ffffff", "#8b5cf6", "#3b82f6", "#10b981"] 
+              },
               shape: { type: "circle" },
               opacity: {
                 value: 0.15,
                 random: true,
+                anim: {
+                  enable: true,
+                  speed: 0.2,
+                  opacity_min: 0.05,
+                  sync: false
+                }
               },
               size: {
-                value: 1.5,
+                value: 1.8,
                 random: true,
+                anim: {
+                  enable: true,
+                  speed: 0.5,
+                  size_min: 0.5,
+                  sync: false
+                }
               },
               move: {
                 enable: true,
-                speed: 0.3,
+                speed: 0.4,
                 direction: "none",
                 random: true,
                 straight: false,
-                outModes: "out",
+                out_mode: "out",
+                bounce: false,
+                attract: {
+                  enable: true,
+                  rotateX: 600,
+                  rotateY: 1200
+                }
               },
+              links: {
+                enable: true,
+                distance: 80,
+                color: "#ffffff",
+                opacity: 0.04,
+                width: 1
+              },
+            },
+            interactivity: {
+              detect_on: "canvas",
+              events: {
+                onhover: {
+                  enable: true,
+                  mode: "grab"
+                },
+                onclick: {
+                  enable: true,
+                  mode: "push"
+                },
+                resize: true
+              },
+              modes: {
+                grab: {
+                  distance: 100,
+                  line_linked: {
+                    opacity: 0.25
+                  }
+                },
+                push: {
+                  particles_nb: 3
+                }
+              }
             },
             background: { color: "transparent" },
           }}
@@ -149,11 +193,15 @@ const SolarSystemEpictusTurbo: React.FC<SolarSystemEpictusTurboProps> = ({
         />
       </div>
 
-      {/* Centro - Sol (Epictus Turbo) */}
+      {/* Gradiente de fundo circular */}
+      <div className="absolute w-full h-full bg-gradient-radial from-indigo-900/10 via-blue-900/5 to-transparent"></div>
+
+      {/* Centro - Sol (Epictus IA) - Design aprimorado */}
       <motion.div
         className="absolute z-10 flex flex-col items-center justify-center"
         animate={{
           scale: [1, 1.05, 1],
+          filter: ["brightness(1)", "brightness(1.1)", "brightness(1)"]
         }}
         transition={{
           duration: 3,
@@ -161,30 +209,32 @@ const SolarSystemEpictusTurbo: React.FC<SolarSystemEpictusTurboProps> = ({
           repeatType: "reverse",
         }}
       >
-        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8F40] flex items-center justify-center shadow-lg shadow-orange-500/20 border border-orange-400/30">
-          <Bot className="h-12 w-12 text-white" />
+        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8F40] flex items-center justify-center shadow-lg shadow-orange-500/30 border border-orange-400/40 relative">
+          <Bot className="h-10 w-10 text-white" />
+          <div className="absolute inset-0 rounded-full bg-orange-500/20 animate-pulse"></div>
+          <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-orange-400/20 to-amber-300/20 blur-sm"></div>
         </div>
-        <div className="absolute -bottom-10 text-center">
-          <h2 className="text-xl font-bold bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">
+        <div className="absolute -bottom-9 text-center">
+          <h2 className="text-lg font-bold bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">
             Epictus IA
           </h2>
-          <p className="text-sm text-white/70">BETA</p>
+          <p className="text-xs text-white/70 -mt-0.5">BETA</p>
         </div>
       </motion.div>
 
-      {/* Planetas orbitais */}
+      {/* Planetas orbitais - Design aprimorado */}
       {planets.map((planet, index) => (
         <div key={index} className="absolute" style={{
           width: `${planet.orbitSize * 2}px`,
           height: `${planet.orbitSize * 2}px`,
           borderRadius: '50%',
-          border: '1px dashed rgba(255, 255, 255, 0.1)',
+          border: '1px dashed rgba(255, 255, 255, 0.07)',
         }}>
           <motion.div
             className="absolute"
             animate={{ 
               rotate: pauseOrbit ? 
-                [null, `${index % 2 === 0 ? -10 : 10}deg`] : 
+                [null, `${index % 2 === 0 ? -5 : 5}deg`] : 
                 [0, 360] 
             }}
             transition={{
@@ -208,12 +258,17 @@ const SolarSystemEpictusTurbo: React.FC<SolarSystemEpictusTurboProps> = ({
                 left: "100%",
                 top: "50%",
               }}
-              whileHover={{ scale: 1.1 }}
+              whileHover={{ scale: 1.15, filter: "brightness(1.2)" }}
             >
               <div className="flex flex-col items-center">
-                <div className="w-14 h-14 rounded-full bg-[#1c2842] bg-opacity-80 backdrop-blur-sm flex items-center justify-center shadow-lg border border-white/10 hover:border-white/30 transition-all cursor-pointer group">
+                <div className="w-12 h-12 rounded-full bg-[#1c2842]/90 backdrop-blur-md flex items-center justify-center 
+                      shadow-lg border border-white/10 hover:border-white/30 transition-all cursor-pointer group
+                      hover:shadow-[0_0_15px_rgba(79,70,229,0.3)] relative">
                   {planet.icon}
-                  <div className="absolute opacity-0 group-hover:opacity-100 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded -top-8 transition-opacity duration-200">
+                  <div className="absolute w-full h-full rounded-full bg-indigo-500/10 animate-ping-slow"></div>
+                  <div className="absolute opacity-0 group-hover:opacity-100 whitespace-nowrap bg-[#0f172a]/90 backdrop-blur-md 
+                        text-white text-xs px-3 py-1.5 rounded-full -top-8 transition-all duration-200 
+                        border border-indigo-500/20 shadow-lg transform group-hover:-translate-y-1">
                     {planet.name}
                   </div>
                 </div>
@@ -223,19 +278,21 @@ const SolarSystemEpictusTurbo: React.FC<SolarSystemEpictusTurboProps> = ({
         </div>
       ))}
 
-      {/* Efeito de brilho central */}
-      <div className="absolute w-80 h-80 bg-orange-500/5 rounded-full filter blur-3xl"></div>
-      <div className="absolute w-40 h-40 bg-blue-500/5 rounded-full filter blur-2xl"></div>
+      {/* Efeitos de luz aprimorados */}
+      <div className="absolute w-72 h-72 bg-indigo-500/5 rounded-full filter blur-3xl"></div>
+      <div className="absolute w-48 h-48 bg-blue-500/5 rounded-full filter blur-3xl"></div>
+      <div className="absolute w-36 h-36 bg-orange-500/10 rounded-full filter blur-xl"></div>
 
-      {/* Instruções para o usuário */}
+      {/* Instruções para o usuário - Redesenhada */}
       <motion.div 
-        className="absolute bottom-10 text-center max-w-md px-6 py-3 rounded-lg bg-[#0d1425]/60 backdrop-blur-md border border-white/10"
+        className="absolute bottom-8 text-center max-w-md px-6 py-4 rounded-xl bg-[#0d1425]/60 backdrop-blur-md 
+                  border border-indigo-500/20 shadow-[0_4px_20px_rgba(79,70,229,0.15)]"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1, duration: 0.5 }}
       >
-        <p className="text-white/80 text-sm">
-          Digite sua mensagem na caixa abaixo para iniciar a conversa com o Epictus IA
+        <p className="text-white/90 text-sm font-medium">
+          Digite sua mensagem na caixa abaixo para interagir com o Epictus IA
         </p>
       </motion.div>
     </div>
