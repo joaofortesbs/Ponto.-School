@@ -1470,6 +1470,5 @@ const convertToNotebookFormat = async (
 // Exporta as funções para uso em outros componentes
 export {
   generateAIResponse,
-  getConversationHistory,
   convertToNotebookFormat
 };
