@@ -50,6 +50,17 @@ const TurboHeader: React.FC<TurboHeaderProps> = ({
 
   return (
     <div className="w-full p-4">
+      <motion.button
+        onClick={handleBackToEpictusIA}
+        className="absolute left-6 z-20 p-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors flex items-center mb-2"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        title="Voltar para Epictus IA"
+        style={{ top: '5rem' }}
+      >
+        <ArrowLeft size={20} className="mr-1" />
+        <span className="text-sm">Voltar</span>
+      </motion.button>
       <motion.header 
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -63,16 +74,6 @@ const TurboHeader: React.FC<TurboHeaderProps> = ({
         <LogoSection isHovered={isHovered} animationComplete={animationComplete} description="IA para geração de conversas impecáveis para o público estudantil!" />
 
         <div className="flex items-center justify-center z-10 relative gap-3">
-          <motion.button
-            onClick={handleBackToEpictusIA}
-            className="p-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors flex items-center mr-1"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            title="Voltar para Epictus IA"
-          >
-            <ArrowLeft size={20} className="mr-1" />
-            <span className="text-sm hidden sm:inline">Voltar</span>
-          </motion.button>
           <PersonalitiesDropdown 
             profileIcon={profileIcon}
             profileName={profileName}
