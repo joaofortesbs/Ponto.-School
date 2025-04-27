@@ -46,6 +46,7 @@ interface Message {
 import HeaderIcons from "./modoepictusiabeta/header/icons/HeaderIcons";
 import HistoricoConversasModal from "./modals/HistoricoConversasModal";
 import MessageToolsDropdown from "./message-tools/MessageToolsDropdown"; // Import the new component
+import { generateAIResponse } from "@/services/aiChatService";
 
 
 const EpictusBetaMode: React.FC = () => {
@@ -739,7 +740,7 @@ setMessages(prev => prev.map(msg => {
     setShowNotebook(true);
     toast({
       title: "Caderno aberto",
-      description: "O conteúdo foi transferido para o caderno",
+      description: "O conteúdo foi transferido para o caderno de anotações",
       duration: 3000,
     });
   };
@@ -856,6 +857,7 @@ setMessages(prev => prev.map(msg => {
                                     e?.stopPropagation();
                                     toggleMessageTools(message.id);
                                   }}
+                                  onWriteToNotebook={() => handleWriteToNotebook(message.content)}
                                 />
                                 <button 
                                   onClick={() => handleExportMessage(message)}

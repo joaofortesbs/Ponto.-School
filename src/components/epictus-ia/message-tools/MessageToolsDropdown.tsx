@@ -10,13 +10,15 @@ interface MessageToolsDropdownProps {
   content: string;
   showTools: boolean;
   onToggleTools: (e?: React.MouseEvent) => void;
+  onWriteToNotebook?: (notebookContent: string) => void; // Added prop for external notebook handling
 }
 
 const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
   messageId,
   content,
   showTools,
-  onToggleTools
+  onToggleTools,
+  onWriteToNotebook, // Use the added prop
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [showDevModal, setShowDevModal] = useState(false);
@@ -105,6 +107,9 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
             duration: 2000,
           });
 
+          // Fechar modal de ferramentas
+          setModalOpen(false);
+
           // Gerar prompt para conversão para formato de caderno
           const notebookPrompt = `
           A partir da explicação abaixo, crie uma versão resumida no formato de caderno de anotações estudantil.
@@ -128,11 +133,34 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
           "${content}"
           `;
 
-          // Fechar modal de ferramentas
-          setModalOpen(false);
-
           try {
-            // Chamar serviço para converter conteúdo
+            // Se temos uma função externa para manipular a escrita no caderno
+            if (onWriteToNotebook) {
+              // Chamar serviço para converter conteúdo
+              generateAIResponse(notebookPrompt, 'notebook_conversion_session', {
+                intelligenceLevel: 'advanced',
+                languageStyle: 'formal'
+              })
+              .then(notebookContent => {
+                if (!notebookContent) {
+                  throw new Error("Conteúdo vazio recebido do serviço");
+                }
+                // Usar a função passada pelo componente pai
+                onWriteToNotebook(notebookContent);
+              })
+              .catch(error => {
+                console.error("Erro ao converter para formato de caderno:", error);
+                toast({
+                  title: "Erro",
+                  description: "Não foi possível converter o conteúdo para o formato de caderno.",
+                  variant: "destructive",
+                  duration: 3000,
+                });
+              });
+              return;
+            }
+
+            // Caso contrário, use o comportamento padrão com modal inline
             generateAIResponse(notebookPrompt, 'notebook_conversion_session', {
               intelligenceLevel: 'advanced',
               languageStyle: 'formal'
@@ -530,54 +558,54 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
                       const copyButton = document.getElementById('copy-notebook-content');
                       const downloadButton = document.getElementById('download-notebook-content');
                       const modal = document.getElementById('notebook-modal');
-  
+
                       if (closeButton && modal) {
                         closeButton.addEventListener('click', () => {
                           modal.remove();
                         });
                       }
 
-                    if (modal) {
-                      const backdropElement = modal.querySelector('.absolute');
-                      if (backdropElement) {
-                        modal.addEventListener('click', (e) => {
-                          if (e.target === backdropElement) {
-                            modal.remove();
-                          }
+                      if (modal) {
+                        const backdropElement = modal.querySelector('.absolute');
+                        if (backdropElement) {
+                          modal.addEventListener('click', (e) => {
+                            if (e.target === backdropElement) {
+                              modal.remove();
+                            }
+                          });
+                        }
+                      }
+
+                      if (copyButton) {
+                        copyButton.addEventListener('click', () => {
+                          navigator.clipboard.writeText(notebookContent);
+                          toast({
+                            title: "Conteúdo copiado!",
+                            description: "As anotações foram copiadas para a área de transferência",
+                            duration: 3000,
+                          });
                         });
                       }
-                    }
 
-                    if (copyButton) {
-                      copyButton.addEventListener('click', () => {
-                        navigator.clipboard.writeText(notebookContent);
-                        toast({
-                          title: "Conteúdo copiado!",
-                          description: "As anotações foram copiadas para a área de transferência",
-                          duration: 3000,
+                      if (downloadButton) {
+                        downloadButton.addEventListener('click', () => {
+                          const blob = new Blob([notebookContent], { type: 'text/plain' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `caderno-anotacoes-${Date.now()}.txt`;
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          URL.revokeObjectURL(url);
+
+                          toast({
+                            title: "Download iniciado",
+                            description: "Seu caderno de anotações está sendo baixado",
+                            duration: 3000,
+                          });
                         });
-                      });
-                    }
-
-                    if (downloadButton) {
-                      downloadButton.addEventListener('click', () => {
-                        const blob = new Blob([notebookContent], { type: 'text/plain' });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `caderno-anotacoes-${Date.now()}.txt`;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-
-                        toast({
-                          title: "Download iniciado",
-                          description: "Seu caderno de anotações está sendo baixado",
-                          duration: 3000,
-                        });
-                      });
-                    }
+                      }
                     }, 200); // Fim do setTimeout
                   })
                   .catch(error => {
