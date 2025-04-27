@@ -1,0 +1,76 @@
+Quero que você reformule e melhore o modal de "Anotações em Caderno" que está atualmente na plataforma. Aqui estão todas as melhorias que precisam ser implementadas:
+
+🎯 Melhorias de Estrutura e Estética:
+Alinhar melhor as linhas horizontais no fundo do caderno:
+
+Deixe espaçamento igual entre elas.
+
+Garanta que com textos maiores ou menores as linhas se adaptem dinamicamente.
+
+Melhorar a tipografia:
+
+Para os títulos (ex: "Onde:") usar uma fonte diferenciada, que destaque (tipo handwriting moderna ou elegante).
+
+Para os textos, usar uma fonte confortável para leitura contínua, sem ser muito carregada.
+
+Deixar os ícones de copiar, baixar, compartilhar mais elegantes:
+
+Usar uma linha fina, animações sutis de hover (ex: cor mudando suavemente).
+
+Adicionar tooltip ("Copiar", "Baixar", "Compartilhar") quando passa o mouse.
+
+Reformular o bloco de texto principal:
+
+Deixar o fundo do caderno com um leve efeito de papel.
+
+Melhorar o contraste entre linhas, textos e fundo.
+
+Adicionar uma borda suave ou sombra para dar profundidade.
+
+🛠️ Funcionalidades novas:
+Modo de Edição Direta:
+
+Adicionar botão "Editar Texto" no canto inferior direito.
+
+Ao clicar, o texto do caderno vira uma textarea para o usuário editar.
+
+Depois de editar, o usuário pode clicar em "Salvar" ou "Cancelar".
+
+Auto-Ajuste de Linhas:
+
+Conforme o usuário digitar mais ou menos texto, as linhas do caderno se expandem ou retraem automaticamente, mantendo o layout bonito.
+
+Sugestões Inteligentes:
+
+Quando o usuário terminar a edição, mostrar sugestões como:
+
+"Quer adicionar um resumo?"
+
+"Deseja marcar esta anotação como importante?"
+
+Auto-Correção Básica:
+
+Quando o usuário estiver editando, sugerir correções simples de português automaticamente (opcional).
+
+🎨 Detalhes Visuais
+Fundo: Gradiente muito suave, simulando uma folha levemente iluminada.
+
+Linhas: Cinza-azul claro (#D3DDE6).
+
+Ícones: Estilo minimalista, cor laranja-dourado (#FFA726) com hover.
+
+Botão de editar: Ícone de lápis moderno.
+
+Animações: Tudo deve ser bem suave (0.3s de transição).
+
+💡 Ideias Adicionais (opcional):
+Mostrar número de palavras ou caracteres no rodapé do caderno.
+
+Permitir exportar a anotação como .pdf diretamente do modal.
+
+Permitir favoritar uma anotação com uma estrela ⭐ no título.
+
+Mostrar uma pequena animação (efeito de escrita) enquanto salva a anotação.
+
+✅ Resumo Final:
+Preciso que o novo modal "Anotações em Caderno" seja muito mais bonito, moderno, funcional e prazeroso de usar, com edição de texto, melhorias visuais e novas opções de interação.
