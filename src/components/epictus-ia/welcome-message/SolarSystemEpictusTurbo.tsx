@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Particles from 'react-tsparticles';
@@ -40,11 +39,11 @@ const SolarSystemEpictusTurbo: React.FC<SolarSystemEpictusTurboProps> = ({
   const handleTyping = () => {
     setPauseOrbit(true);
     if (onPauseChange) onPauseChange(true);
-    
+
     if (typingTimeout.current) {
       clearTimeout(typingTimeout.current);
     }
-    
+
     typingTimeout.current = setTimeout(() => {
       setPauseOrbit(false);
       if (onPauseChange) onPauseChange(false);
@@ -106,7 +105,33 @@ const SolarSystemEpictusTurbo: React.FC<SolarSystemEpictusTurboProps> = ({
   ];
 
   return (
-    <div className="relative w-full h-[70vh] flex items-center justify-center overflow-hidden">
+    <div className="relative w-full max-w-7xl mx-auto h-[70vh] flex items-center justify-center overflow-hidden"> {/* Increased width */}
+      {/* Partículas flutuantes decorativas */}
+      <div className="absolute inset-0 -z-1 pointer-events-none">
+        {Array.from({ length: 20 }).map((_, index) => (
+          <motion.div
+            key={`floating-particle-${index}`}
+            className="absolute rounded-full bg-white/20"
+            style={{
+              width: Math.random() * 3 + 1 + 'px',
+              height: Math.random() * 3 + 1 + 'px',
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              y: [0, -20, 0],
+              x: [0, Math.random() * 20 - 10, 0],
+              opacity: [0.3, 0.7, 0.3],
+            }}
+            transition={{
+              duration: 4 + Math.random() * 4,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: Math.random() * 2,
+            }}
+          />
+        ))}
+      </div>
       {/* Partículas de fundo aprimoradas */}
       <div className="absolute inset-0 -z-1">
         <Particles
