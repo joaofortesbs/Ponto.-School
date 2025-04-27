@@ -699,9 +699,7 @@ O Professor Abner é uma **referência absoluta no ensino de Empreendedorismo e 
 
 ## Quem é o Professor Abner?
 
-Ele é um educador visionário que combina **ampla experiência prática no ecossistema de inovação** com uma **habilidade excepcional para transmitir conhecimentos**. O Professor Abner não apenas ensina sobre startups, ele inspira e prepara os jovens para se tornarem os empreendedores e inovadores do futuro.
-
-## Por que ele é tão especial?
+Ele é um educador visionário que combina **ampla experiência prática no ecossistema de inovação** com uma **habilidade excepcional para transmitir conhecimentos**. O Professor Abner não apenas ensina sobre startups, ele inspira e prepara os jovens para se tornarem os empreendedores e inovadores do futuro.## Por que ele é tão especial?
 
 - **Abordagem prática** que vai além da teoria, com metodologias hands-on de criação de startups
 - **Networking valioso** com o mercado de inovação e tecnologia
@@ -919,7 +917,9 @@ export async function generateAIResponse(
     intelligenceLevel?: 'basic' | 'normal' | 'advanced',
     languageStyle?: 'casual' | 'formal' | 'technical',
     detailedResponse?: boolean,
-    maximumLength?: boolean
+    maximumLength?: boolean,
+    maxRetries?: number,
+    timeout?: number
   }
 ): Promise<string> {
   try {
@@ -1433,6 +1433,8 @@ interface AIResponseOptions {
   languageStyle?: 'casual' | 'formal' | 'technical' | 'direct';
   detailedResponse?: boolean;
   maximumLength?: boolean;
+  maxRetries?: number;
+  timeout?: number;
 }
 
 // Função para converter conteúdo para formato de caderno
@@ -1442,43 +1444,55 @@ export const convertToNotebookFormat = async (
   options: AIResponseOptions = {}
 ): Promise<string> => {
   try {
-    const notebookPrompt = `
-      A partir da explicação completa a seguir, gere uma versão resumida no formato de caderno de anotações.
+    // Verificação de conteúdo vazio
+    if (!content || content.trim() === "") {
+      return "Não foi possível gerar o caderno: conteúdo vazio.";
+    }
+
+    console.log("Iniciando conversão para formato de caderno...");
+
+    // Utiliza a API para formatar o conteúdo
+    const response = await generateAIResponse(
+      `
+      Converta este conteúdo em formato de caderno de anotações estudantil.
 
       Siga estas diretrizes OBRIGATÓRIAS:
-      - Comece com um título direto sobre o tema
+      - Comece com um título claro e direto sobre o tema
       - Liste os pontos principais usando marcadores (•)
-      - Destaque palavras-chave com **asteriscos duplos**
-      - Use linguagem resumida, direta e didática
-      - Inclua apenas os pontos mais importantes para revisar depois
-      - Inclua fórmulas, regras, dicas de memorização e conceitos-chave
-      - NÃO INCLUA TAGS HTML
-      - NÃO USE EXPLICAÇÕES LONGAS OU REPETIÇÕES
-      - FOQUE APENAS NO CONTEÚDO EDUCACIONAL
+      - Destaque palavras-chave e conceitos com **asteriscos duplos**
+      - Organize o conteúdo em tópicos claros
+      - Use uma linguagem técnica e direta
+      - Inclua fórmulas se aplicável
+      - Mantenha o formato estruturado e legível
+      - Divida o conteúdo em seções bem definidas
+
+      NÃO INCLUA:
+      - LINKS PARA NENHUM SITE OU PLATAFORMA
+      - REFERÊNCIAS A RECURSOS EXTERNOS
+      - SAUDAÇÕES, INTRODUÇÕES OU CONCLUSÕES
 
       Conteúdo original:
       "${content}"
+      `,
+      'notebook-format',
+      {
+        maxRetries: 2,
+        timeout: 30000, // Tempo maior para garantir resposta completa
+        ...options
+      }
+    );
 
-      Formato exemplo:
-      MATEMÁTICA - EQUAÇÃO DO 2º GRAU
-      • Forma geral: ax² + bx + c = 0
-      • Δ = b² - 4ac
-      • Bhaskara: x = (-b ± √Δ) / 2a
-      • Se Δ < 0 → sem raízes reais
-      • Se Δ = 0 → uma raiz real
-      • Se Δ > 0 → duas raízes reais
+    console.log("Conversão para caderno concluída com sucesso");
 
-      👉 Anotação pronta! Agora é só revisar no modo caderno digital :)
-    `;
+    // Verificar se a resposta é válida
+    if (!response || typeof response !== 'string' || response.trim() === "") {
+      return "Não foi possível gerar conteúdo adequado para o caderno.";
+    }
 
-    return await generateAIResponse(notebookPrompt, sessionId, {
-      intelligenceLevel: 'advanced',
-      languageStyle: 'direct',
-      ...options
-    });
+    return response;
   } catch (error) {
     console.error("Erro ao converter para formato de caderno:", error);
-    throw error;
+    return "Erro ao gerar caderno. Por favor, tente novamente mais tarde.";
   }
 };
 

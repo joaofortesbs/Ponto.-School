@@ -27,19 +27,29 @@ const EscreverNoCaderno: React.FC<EscreverNoCadernoProps> = ({ closeModal, messa
     }
 
     try {
+      // 1. Definir estado de carregamento
       setIsLoading(true);
-
-      // Primeiro ativa o modal com estado de carregamento
-      setNotebookModalOpen(true);
       
-      // Fecha o modal de ferramentas
+      // 2. Fechar o modal de ferramentas
       closeModal();
       
-      // Conversão do conteúdo para formato de caderno (com um pequeno atraso para garantir que o modal esteja visível)
+      // 3. Abrir o modal do caderno com indicador de carregamento
+      setNotebookModalOpen(true);
+      
+      // 4. Importante: Deixar o estado ser atualizado antes de continuar
+      // Isso garante que o modal seja aberto corretamente
       setTimeout(async () => {
         try {
+          console.log("Iniciando conversão para formato de caderno...");
+          
+          // 5. Converter o conteúdo
           const formattedContent = await convertToNotebookFormat(messageContent);
-          setNotebookContent(formattedContent);
+          
+          // 6. Garantir que o modal ainda está aberto antes de atualizar
+          if (setNotebookContent) {
+            console.log("Conteúdo convertido com sucesso, atualizando caderno...");
+            setNotebookContent(formattedContent);
+          }
         } catch (error) {
           console.error("Erro ao converter para formato de caderno:", error);
           toast({
@@ -47,11 +57,14 @@ const EscreverNoCaderno: React.FC<EscreverNoCadernoProps> = ({ closeModal, messa
             description: "Ocorreu um erro ao gerar o caderno. Por favor, tente novamente.",
             variant: "destructive",
           });
-          setNotebookModalOpen(false);
+          
+          // Não feche automaticamente em caso de erro
+          // Permita que o usuário feche manualmente
         } finally {
+          // 7. Finalizar o carregamento, mas manter o modal aberto
           setIsLoading(false);
         }
-      }, 100);
+      }, 300); // Aumentando o tempo para garantir que o modal tenha tempo suficiente
     } catch (error) {
       console.error("Erro ao iniciar geração do caderno:", error);
       toast({
@@ -125,11 +138,20 @@ const EscreverNoCaderno: React.FC<EscreverNoCadernoProps> = ({ closeModal, messa
       <NotebookModal
         isOpen={notebookModalOpen}
         onClose={() => {
-          // Garantir que o modal só seja fechado quando não estiver carregando
-          if (!isLoading) {
-            setNotebookModalOpen(false);
-            setNotebookContent(""); // Limpar conteúdo ao fechar
+          // Não permitir fechamento durante carregamento
+          if (isLoading) {
+            console.log("Modal não pode ser fechado durante carregamento");
+            return;
           }
+          
+          console.log("Fechando modal do caderno");
+          setNotebookModalOpen(false);
+          
+          // Pequeno atraso antes de limpar o conteúdo
+          // para garantir transição suave
+          setTimeout(() => {
+            setNotebookContent("");
+          }, 300);
         }}
         content={notebookContent}
         isLoading={isLoading}

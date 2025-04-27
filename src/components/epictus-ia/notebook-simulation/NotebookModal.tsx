@@ -21,7 +21,10 @@ const NotebookModal: React.FC<NotebookModalProps> = ({
   // Prevenção de fechamento acidental
   const handleOpenChange = (open: boolean) => {
     if (!open && !isLoading) {
-      onClose();
+      // Pequeno atraso para garantir que não haja fechamento acidental
+      setTimeout(() => {
+        onClose();
+      }, 100);
     }
   };
   // Função para copiar o conteúdo do caderno
@@ -91,8 +94,13 @@ const NotebookModal: React.FC<NotebookModalProps> = ({
     }
   };
 
+  // Garantir que o Dialog permaneça visível
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+    <Dialog 
+      open={isOpen} 
+      onOpenChange={isLoading ? () => {} : handleOpenChange}
+      modal={true}
+    >
       <DialogContent className="sm:max-w-[700px] bg-[#f5f5dc] border-[#d3be98] shadow-lg max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader className="border-b border-[#d3be98] pb-4 mb-4">
           <DialogTitle className="text-[#5d4037] text-xl font-serif relative">
@@ -130,9 +138,10 @@ const NotebookModal: React.FC<NotebookModalProps> = ({
         </DialogHeader>
 
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-16">
-            <Loader2 className="h-8 w-8 text-[#8d6e63] animate-spin mb-4" />
-            <p className="text-[#5d4037] text-lg">Preparando seu caderno...</p>
+          <div className="flex flex-col items-center justify-center py-16 min-h-[400px]">
+            <Loader2 className="h-10 w-10 text-[#8d6e63] animate-spin mb-4" />
+            <p className="text-[#5d4037] text-lg font-medium">Preparando seu caderno...</p>
+            <p className="text-[#8d6e63] text-sm mt-2">Isso pode levar alguns segundos</p>
           </div>
         ) : (
           <div className="overflow-y-auto notebook-lines pr-3 py-2 flex-1">
