@@ -280,17 +280,17 @@ const SolarSystemEpictusTurbo: React.FC<SolarSystemEpictusTurboProps> = ({
               }}
               whileHover={{ scale: 1.15, filter: "brightness(1.2)" }}
             >
-              <div className="flex flex-col items-center">
+              <div className="flex flex-col items-center group">
                 <div className="w-12 h-12 rounded-full bg-[#1c2842]/90 backdrop-blur-md flex items-center justify-center 
-                      shadow-lg border border-white/10 hover:border-white/30 transition-all cursor-pointer group
-                      hover:shadow-[0_0_15px_rgba(79,70,229,0.3)] relative">
+                      shadow-lg border border-white/10 hover:border-white/30 transition-all cursor-pointer
+                      hover:shadow-[0_0_15px_rgba(79,70,229,0.3)] relative z-10">
                   {planet.icon}
                   <div className="absolute w-full h-full rounded-full bg-indigo-500/10 animate-ping-slow"></div>
-                  <div className="absolute opacity-0 group-hover:opacity-100 whitespace-nowrap bg-[#0f172a]/90 backdrop-blur-md 
-                        text-white text-xs px-3 py-1.5 rounded-full -top-8 transition-all duration-200 
-                        border border-indigo-500/20 shadow-lg transform group-hover:-translate-y-1">
-                    {planet.name}
-                  </div>
+                </div>
+                <div className="absolute opacity-0 group-hover:opacity-100 whitespace-nowrap bg-[#0f172a]/90 backdrop-blur-md 
+                     text-white text-xs px-3 py-1.5 rounded-full -top-8 transition-all duration-200 z-20
+                     border border-indigo-500/20 shadow-lg transform group-hover:-translate-y-1 pointer-events-none">
+                  {planet.name}
                 </div>
               </div>
             </motion.div>
