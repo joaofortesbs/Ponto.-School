@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { PenLine, FileText, Loader2 } from 'lucide-react';
@@ -14,6 +15,7 @@ const EscreverNoCaderno: React.FC<EscreverNoCadernoProps> = ({ closeModal, messa
   const [isLoading, setIsLoading] = useState(false);
   const [notebookContent, setNotebookContent] = useState("");
   const [notebookModalOpen, setNotebookModalOpen] = useState(false);
+  const [conversionError, setConversionError] = useState(false);
 
   // Função para gerar caderno de anotações
   const handleGerarCaderno = async () => {
@@ -27,46 +29,53 @@ const EscreverNoCaderno: React.FC<EscreverNoCadernoProps> = ({ closeModal, messa
     }
 
     try {
-      // 1. Definir estado de carregamento
+      // Iniciar estado de carregamento
       setIsLoading(true);
+      setConversionError(false);
       
-      // 2. Fechar o modal de ferramentas
+      // Fechar o modal de ferramentas
       closeModal();
       
-      // 3. Abrir o modal do caderno com indicador de carregamento
+      // Abrir modal do caderno ANTES de começar a converter
+      // Isso garante que o modal esteja visível durante o carregamento
       setNotebookModalOpen(true);
       
-      // 4. Importante: Deixar o estado ser atualizado antes de continuar
-      // Isso garante que o modal seja aberto corretamente
-      setTimeout(async () => {
-        try {
-          console.log("Iniciando conversão para formato de caderno...");
-          
-          // 5. Converter o conteúdo
-          const formattedContent = await convertToNotebookFormat(messageContent);
-          
-          // 6. Garantir que o modal ainda está aberto antes de atualizar
-          if (setNotebookContent) {
-            console.log("Conteúdo convertido com sucesso, atualizando caderno...");
-            setNotebookContent(formattedContent);
+      console.log("Iniciando conversão para formato de caderno...");
+      
+      // Converter mensagem para formato de caderno
+      try {
+        // Usar um timeout para garantir que o modal esteja realmente aberto
+        setTimeout(async () => {
+          try {
+            // Obter o conteúdo convertido
+            const formattedContent = await convertToNotebookFormat(messageContent);
+            
+            // Verificar se o conteúdo foi gerado corretamente
+            if (formattedContent && formattedContent.trim() !== "") {
+              console.log("Conteúdo do caderno gerado com sucesso");
+              setNotebookContent(formattedContent);
+            } else {
+              console.error("Conteúdo do caderno retornou vazio");
+              setConversionError(true);
+              setNotebookContent("Não foi possível gerar o conteúdo do caderno. Por favor, tente novamente.");
+            }
+          } catch (error) {
+            console.error("Erro durante a conversão do conteúdo:", error);
+            setConversionError(true);
+            setNotebookContent("Ocorreu um erro ao gerar o caderno. Por favor, tente novamente.");
+          } finally {
+            // Finalizar carregamento, mas manter o modal aberto
+            setIsLoading(false);
           }
-        } catch (error) {
-          console.error("Erro ao converter para formato de caderno:", error);
-          toast({
-            title: "Erro",
-            description: "Ocorreu um erro ao gerar o caderno. Por favor, tente novamente.",
-            variant: "destructive",
-          });
-          
-          // Não feche automaticamente em caso de erro
-          // Permita que o usuário feche manualmente
-        } finally {
-          // 7. Finalizar o carregamento, mas manter o modal aberto
-          setIsLoading(false);
-        }
-      }, 300); // Aumentando o tempo para garantir que o modal tenha tempo suficiente
+        }, 300);
+      } catch (error) {
+        console.error("Erro ao processar conversão:", error);
+        setConversionError(true);
+        setNotebookContent("Ocorreu um erro ao gerar o caderno. Por favor, tente novamente.");
+        setIsLoading(false);
+      }
     } catch (error) {
-      console.error("Erro ao iniciar geração do caderno:", error);
+      console.error("Erro geral ao iniciar a conversão:", error);
       toast({
         title: "Erro",
         description: "Ocorreu um erro ao gerar o caderno. Por favor, tente novamente.",
@@ -74,6 +83,17 @@ const EscreverNoCaderno: React.FC<EscreverNoCadernoProps> = ({ closeModal, messa
       });
       setIsLoading(false);
     }
+  };
+
+  // Função para fechar o modal de caderno
+  const handleCloseNotebookModal = () => {
+    console.log("Fechando modal do caderno a pedido do usuário");
+    setNotebookModalOpen(false);
+    // Limpar o conteúdo apenas após o modal estar fechado
+    setTimeout(() => {
+      setNotebookContent("");
+      setConversionError(false);
+    }, 300);
   };
 
   return (
@@ -134,25 +154,10 @@ const EscreverNoCaderno: React.FC<EscreverNoCadernoProps> = ({ closeModal, messa
         </div>
       </div>
 
-      {/* Modal do caderno */}
+      {/* Modal do caderno - sempre sob controle do usuário */}
       <NotebookModal
         isOpen={notebookModalOpen}
-        onClose={() => {
-          // Não permitir fechamento durante carregamento
-          if (isLoading) {
-            console.log("Modal não pode ser fechado durante carregamento");
-            return;
-          }
-          
-          console.log("Fechando modal do caderno");
-          setNotebookModalOpen(false);
-          
-          // Pequeno atraso antes de limpar o conteúdo
-          // para garantir transição suave
-          setTimeout(() => {
-            setNotebookContent("");
-          }, 300);
-        }}
+        onClose={handleCloseNotebookModal}
         content={notebookContent}
         isLoading={isLoading}
       />

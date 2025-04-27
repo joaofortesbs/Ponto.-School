@@ -18,15 +18,6 @@ const NotebookModal: React.FC<NotebookModalProps> = ({
   content,
   isLoading = false
 }) => {
-  // Prevenção de fechamento acidental
-  const handleOpenChange = (open: boolean) => {
-    if (!open && !isLoading) {
-      // Pequeno atraso para garantir que não haja fechamento acidental
-      setTimeout(() => {
-        onClose();
-      }, 100);
-    }
-  };
   // Função para copiar o conteúdo do caderno
   const handleCopyContent = () => {
     navigator.clipboard.writeText(content).then(() => {
@@ -94,14 +85,26 @@ const NotebookModal: React.FC<NotebookModalProps> = ({
     }
   };
 
-  // Garantir que o Dialog permaneça visível
+  // Importante: só permitir que o usuário feche o modal diretamente
+  // O modal não será fechado automaticamente
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      // Garantir que só o usuário pode fechar manualmente
+      onClose();
+    }
+  };
+
   return (
     <Dialog 
       open={isOpen} 
-      onOpenChange={isLoading ? () => {} : handleOpenChange}
+      onOpenChange={handleOpenChange}
       modal={true}
     >
-      <DialogContent className="sm:max-w-[700px] bg-[#f5f5dc] border-[#d3be98] shadow-lg max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent 
+        className="sm:max-w-[700px] bg-[#f5f5dc] border-[#d3be98] shadow-lg max-h-[80vh] overflow-hidden flex flex-col"
+        onEscapeKeyDown={(e) => e.preventDefault()} // Impedir fechamento com ESC
+        onInteractOutside={(e) => e.preventDefault()} // Impedir fechamento ao clicar fora
+      >
         <DialogHeader className="border-b border-[#d3be98] pb-4 mb-4">
           <DialogTitle className="text-[#5d4037] text-xl font-serif relative">
             Meu Caderno de Anotações
@@ -145,18 +148,36 @@ const NotebookModal: React.FC<NotebookModalProps> = ({
           </div>
         ) : (
           <div className="overflow-y-auto notebook-lines pr-3 py-2 flex-1">
-            <div 
-              className="text-[#5d4037] font-serif text-base leading-7 whitespace-pre-wrap"
-              dangerouslySetInnerHTML={{ 
-                __html: content
-                  // Formatar conteúdo para destacar pontos
-                  .replace(/\*\*(.*?)\*\*/g, '<span class="font-bold text-[#ad4e3a]">$1</span>')
-                  .replace(/^• (.*)$/gm, '<div class="flex mb-1"><span class="mr-2">•</span><span>$1</span></div>')
-                  .replace(/\n\n/g, '<div class="h-4"></div>')
-              }}
-            />
+            {content ? (
+              <div 
+                className="text-[#5d4037] font-serif text-base leading-7 whitespace-pre-wrap"
+                dangerouslySetInnerHTML={{ 
+                  __html: content
+                    // Formatar conteúdo para destacar pontos
+                    .replace(/\*\*(.*?)\*\*/g, '<span class="font-bold text-[#ad4e3a]">$1</span>')
+                    .replace(/^• (.*)$/gm, '<div class="flex mb-1"><span class="mr-2">•</span><span>$1</span></div>')
+                    .replace(/\n\n/g, '<div class="h-4"></div>')
+                }}
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 min-h-[300px]">
+                <p className="text-[#5d4037] text-lg font-medium">Não foi possível gerar o conteúdo.</p>
+                <p className="text-[#8d6e63] text-sm mt-2">Por favor, tente novamente ou feche manualmente.</p>
+              </div>
+            )}
           </div>
         )}
+        
+        {/* Botão para fechar explicitamente */}
+        <div className="mt-4 border-t border-[#d3be98] pt-4 flex justify-end">
+          <Button 
+            onClick={onClose}
+            variant="outline"
+            className="bg-transparent border-[#8d6e63] text-[#5d4037] hover:bg-[#e6ddc4]"
+          >
+            Fechar caderno
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

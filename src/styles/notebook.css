@@ -1,11 +1,13 @@
-
 /* Notebook simulation styles */
 .notebook-simulation {
   background-color: #fffdf0;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   position: relative;
   z-index: 9999; /* Aumentado para garantir que fique sobre outros elementos */
-  min-height: 300px;
+  min-height: 400px;
+  width: 100%;
+  margin: 0 auto;
+  border-radius: 2px;
   display: flex;
   flex-direction: column;
 }
@@ -28,14 +30,12 @@
 /* Estilos para o caderno de anotações */
 
 .notebook-lines {
-  background-color: #f5f5dc;
-  background-image: linear-gradient(#e5e5be 1px, transparent 1px);
-  background-size: 100% 2rem;
-  line-height: 2rem;
-  padding: 0.5rem 1.5rem;
+  padding: 0;
   position: relative;
-  min-height: 400px;
-  max-height: 70vh;
+  min-height: 300px;
+  max-height: 60vh;
+  background-color: #fffdf0;
+  z-index: 30;
   overflow-y: auto;
   flex: 1;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;

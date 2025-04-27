@@ -60,31 +60,48 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
   const handleEscreverNoCaderno = async (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
+      // Atualizar estado de geração
       setIsGeneratingNotebook(true);
+      
+      // Notificar usuário
       toast({
         title: "Caderno de Anotações",
-        description: "Convertendo conteúdo para formato de caderno...",
+        description: "Preparando seu caderno de anotações...",
         duration: 2000,
       });
       
-      // Obter conteúdo convertido para formato de caderno
-      const formattedContent = await convertToNotebookFormat(content);
-      setNotebookContent(formattedContent);
-      
-      // Fechar modal de ferramentas se estiver aberto
+      // Fechar modal de ferramentas
       setModalOpen(false);
       
-      // Abrir modal do caderno
+      // Abrir modal do caderno (com estado de carregamento)
       setNotebookModalOpen(true);
+      
+      // Obter conteúdo convertido para formato de caderno
+      // com um pequeno atraso para garantir que o modal esteja visível
+      setTimeout(async () => {
+        try {
+          const formattedContent = await convertToNotebookFormat(content);
+          if (formattedContent && formattedContent.trim() !== "") {
+            setNotebookContent(formattedContent);
+          } else {
+            console.error("Conteúdo do caderno retornou vazio");
+            setNotebookContent("Não foi possível gerar o conteúdo do caderno. Você pode fechar este modal e tentar novamente.");
+          }
+        } catch (error) {
+          console.error("Erro ao converter para formato de caderno:", error);
+          setNotebookContent("Ocorreu um erro ao gerar o caderno. Você pode fechar este modal e tentar novamente.");
+        } finally {
+          setIsGeneratingNotebook(false);
+        }
+      }, 300);
     } catch (error) {
-      console.error("Erro ao converter para formato de caderno:", error);
+      console.error("Erro ao iniciar conversão para formato de caderno:", error);
       toast({
         title: "Erro",
-        description: "Não foi possível converter o conteúdo para o formato de caderno.",
+        description: "Não foi possível iniciar a conversão do conteúdo.",
         variant: "destructive",
         duration: 3000,
       });
-    } finally {
       setIsGeneratingNotebook(false);
     }
   };
