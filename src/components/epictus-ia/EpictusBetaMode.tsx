@@ -27,6 +27,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { generateAIResponse, addMessageToHistory, createMessage } from "@/services/epictusIAService";
 import { toast } from "@/components/ui/use-toast";
 import TypewriterEffect from '@/components/ui/typewriter-effect'; // Added import
+import WelcomeMessage from './welcome-message/WelcomeMessage';
 
 interface Message {
   id: string;
@@ -90,8 +91,9 @@ const EpictusBetaMode: React.FC = () => {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const MAX_CHARS = 1000;
   const [sessionId] = useState(() => localStorage.getItem('epictus_beta_session_id') || uuidv4());
-  const [isReformulating, setIsReformulating] = useState(false); 
-
+  const [isReformulating, setIsReformulating] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(true);
+  
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -195,6 +197,11 @@ const EpictusBetaMode: React.FC = () => {
 
     if (isTyping) return;
 
+    // Ocultar mensagem de boas-vindas quando o usuário envia uma mensagem
+    if (showWelcome) {
+      setShowWelcome(false);
+    }
+
     const userMessage: Message = {
       id: uuidv4(),
       sender: "user",
@@ -268,6 +275,8 @@ const EpictusBetaMode: React.FC = () => {
 
     setMessages([initialMessage]);
     setIsConfirmOpen(false);
+    // Mostrar novamente a mensagem de boas-vindas quando o chat for limpo
+    setShowWelcome(true);
   };
 
   const formatTimestamp = (date: Date) => {
@@ -742,8 +751,11 @@ const EpictusBetaMode: React.FC = () => {
             className="w-full h-full bg-transparent rounded-lg overflow-hidden shadow-lg"
             ref={chatContainerRef}
           >
-            <div className="p-4 space-y-6">
-              {messages.map((message) => (
+            {showWelcome ? (
+              <WelcomeMessage />
+            ) : (
+              <div className="p-4 space-y-6">
+                {messages.map((message) => (
                 <div
                   key={message.id}
                   className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"} animate-fadeIn`}
@@ -1038,6 +1050,7 @@ const EpictusBetaMode: React.FC = () => {
                 </div>
               )}
             </div>
+            )}
           </ScrollArea>
         </div>
 
