@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { NotebookSimulation } from '@/components/chat/NotebookSimulation';
+import NotebookSimulation from '@/components/chat/NotebookSimulation';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Copy, Download, Share2, X, Pencil, Save, FileText, Star, StarOff, BarChart, FilePdf } from 'lucide-react';
+import { BookOpen, Copy, Download, Share2, X, Pencil, Save, FileText, Star, StarOff, BarChart, FileText as FilePdf } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Textarea } from '@/components/ui/textarea';

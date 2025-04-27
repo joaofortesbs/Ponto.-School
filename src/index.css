@@ -1,15 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Caveat:wght@400;600&family=Kalam:wght@400;700&display=swap');
+@import "./styles/animations.css";
+@import "./styles/hide-scrollbar.css";
+@import "./styles/typewriter-loader.css";
+@import "./styles/notebook.css";
+@import "./styles/header-animations.css";
+@import "./styles/carousel-effects.css";
+@import "./styles/modern-scanner.css";
+@import "./styles/rotina-calendar.css";
+
 /* Estilos para corrigir problemas de altura em componentes específicos */
 .mode-epictus-turbo-advanced {
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-out forwards;
-}
-
   min-height: 100vh;
   overflow-y: auto;
   padding-top: 0.5rem;
@@ -22,24 +22,14 @@
   }
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Caveat:wght@400;600&family=Kalam:wght@400;700&display=swap');
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
-
-
-
-@import "./styles/animations.css";
-@import "./styles/hide-scrollbar.css";
-@import "./styles/typewriter-loader.css";
-@import "./styles/notebook.css";
-@import "./styles/header-animations.css";
-@import "./styles/hide-scrollbar.css";
-@import "./styles/notebook.css";
-@import "./styles/animations.css";
-@import "./styles/carousel-effects.css";
-@import "./styles/header-animations.css";
-@import "./styles/modern-scanner.css";
-@import "./styles/typewriter-loader.css";
-@import "./styles/rotina-calendar.css";
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+}
 
 /* Animação ping-slow personalizada para efeitos espaciais */
 @keyframes ping-slow {
