@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import NotebookSimulation from '@/components/chat/NotebookSimulation';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Copy, Download, Share2, X, Pencil, Save, FileText, Star, StarOff, BarChart, FileText as FilePdf, AlignLeft, Sparkles, Template } from 'lucide-react';
+import { BookOpen, Copy, Download, Share2, X, Pencil, Save, FileText, Star, StarOff, BarChart, AlignLeft, Sparkles } from 'lucide-react';
+import { FileText as FileIcon } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Textarea } from '@/components/ui/textarea';
@@ -370,7 +371,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
                     className="text-amber-700 hover:text-red-600 hover:bg-red-50 dark:text-amber-400 dark:hover:text-red-400 dark:hover:bg-red-900/20 transition-all duration-300"
                     onClick={handleExportPDF}
                   >
-                    <FilePdf className="h-4 w-4 mr-1.5" /> PDF
+                    <FileIcon className="h-4 w-4 mr-1.5" /> PDF
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -578,7 +579,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
                       size="sm" 
                       className="border-amber-200 text-amber-700 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-400 dark:hover:bg-amber-900/20 transition-all duration-300 flex items-center"
                     >
-                      <Template className="h-4 w-4 mr-1.5" />
+                      <FileText className="h-4 w-4 mr-1.5" />
                       Modelos
                     </Button>
                   </PopoverTrigger>

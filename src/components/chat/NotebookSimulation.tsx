@@ -8,13 +8,15 @@ interface NotebookSimulationProps {
 const NotebookSimulation: React.FC<NotebookSimulationProps> = ({ content }) => {
   // Preserva mais do texto original com limpeza mínima
   const cleanContent = (originalContent: string) => {
+    if (!originalContent) return '';
+    
     let cleaned = originalContent;
     
     // Remove apenas links markdown e URLs completas (preserva o texto do link)
     cleaned = cleaned.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1');
     cleaned = cleaned.replace(/(https?:\/\/[^\s]+)/g, '');
     
-    // Remove espaços extras e quebras de linha duplicadas, preservando a estrutura
+    // Preserva quebras de linha e espaços importantes para a estrutura
     cleaned = cleaned.replace(/\n\s*\n\s*\n+/g, '\n\n');
     cleaned = cleaned.trim();
     
@@ -35,7 +37,12 @@ const NotebookSimulation: React.FC<NotebookSimulationProps> = ({ content }) => {
 
   // Aplicar formatação HTML mais rica e preservar estrutura original
   const formatHtml = (text: string) => {
-    return text
+    if (!text) return '';
+    
+    // Primeiro, garantimos que todas as linhas sejam preservadas
+    const preservedText = text.replace(/\n/g, '|||NEWLINE|||');
+    
+    let formattedHtml = preservedText
       // Títulos principais (linhas que começam com emoji e têm texto grande)
       .replace(/^(.*📖.*|.*📚.*|.*📝.*|.*📑.*|.*📔.*|.*📕.*|.*📗.*|.*📘.*|.*📙.*)$/gm, 
         '<div class="notebook-main-title">$1</div>')
@@ -69,11 +76,11 @@ const NotebookSimulation: React.FC<NotebookSimulationProps> = ({ content }) => {
       // Parágrafos normais para melhor legibilidade
       .replace(/^([^<].*[^>])$/gm, '<p class="notebook-paragraph">$1</p>')
       
-      // Garantir que quebras de linha sejam respeitadas
-      .replace(/\n/g, '')
-      
       // Nota de fechamento personalizada
       .replace(/(✅.*Anotação concluída.*|👉.*)/g, '<div class="notebook-closing">$1</div>');
+    
+    // Restaurar quebras de linha respeitando a estrutura HTML
+    return formattedHtml.replace(/\|\|\|NEWLINE\|\|\|/g, '<br>');
   };
 
   return (
@@ -82,7 +89,7 @@ const NotebookSimulation: React.FC<NotebookSimulationProps> = ({ content }) => {
         <div
           className="notebook-content"
           dangerouslySetInnerHTML={{ 
-            __html: formatHtml(processNotebookContent(content))
+            __html: formatHtml(processNotebookContent(content || ''))
           }}
         />
       </div>
