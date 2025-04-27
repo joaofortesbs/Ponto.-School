@@ -4,6 +4,7 @@
   background-color: #fffdf0;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   position: relative;
+  z-index: 50;
 }
 
 .dark .notebook-simulation {
@@ -19,6 +20,7 @@
   bottom: 0;
   width: 1px;
   background-color: #ff9e9e;
+  z-index: 1;
 }
 /* Estilos para o caderno de anotações */
 
@@ -29,6 +31,8 @@
   line-height: 2rem;
   padding: 0.25rem 1rem;
   position: relative;
+  min-height: 300px;
+  max-height: 70vh;
 }
 
 .notebook-lines::before {

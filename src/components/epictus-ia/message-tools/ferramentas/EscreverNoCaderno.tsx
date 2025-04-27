@@ -29,23 +29,36 @@ const EscreverNoCaderno: React.FC<EscreverNoCadernoProps> = ({ closeModal, messa
     try {
       setIsLoading(true);
 
-      // Conversão do conteúdo para formato de caderno
-      const formattedContent = await convertToNotebookFormat(messageContent);
-      setNotebookContent(formattedContent);
-
+      // Primeiro ativa o modal com estado de carregamento
+      setNotebookModalOpen(true);
+      
       // Fecha o modal de ferramentas
       closeModal();
-
-      // Abre o modal do caderno
-      setNotebookModalOpen(true);
+      
+      // Conversão do conteúdo para formato de caderno (com um pequeno atraso para garantir que o modal esteja visível)
+      setTimeout(async () => {
+        try {
+          const formattedContent = await convertToNotebookFormat(messageContent);
+          setNotebookContent(formattedContent);
+        } catch (error) {
+          console.error("Erro ao converter para formato de caderno:", error);
+          toast({
+            title: "Erro",
+            description: "Ocorreu um erro ao gerar o caderno. Por favor, tente novamente.",
+            variant: "destructive",
+          });
+          setNotebookModalOpen(false);
+        } finally {
+          setIsLoading(false);
+        }
+      }, 100);
     } catch (error) {
-      console.error("Erro ao converter para formato de caderno:", error);
+      console.error("Erro ao iniciar geração do caderno:", error);
       toast({
         title: "Erro",
         description: "Ocorreu um erro ao gerar o caderno. Por favor, tente novamente.",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };
@@ -111,7 +124,13 @@ const EscreverNoCaderno: React.FC<EscreverNoCadernoProps> = ({ closeModal, messa
       {/* Modal do caderno */}
       <NotebookModal
         isOpen={notebookModalOpen}
-        onClose={() => setNotebookModalOpen(false)}
+        onClose={() => {
+          // Garantir que o modal só seja fechado quando não estiver carregando
+          if (!isLoading) {
+            setNotebookModalOpen(false);
+            setNotebookContent(""); // Limpar conteúdo ao fechar
+          }
+        }}
         content={notebookContent}
         isLoading={isLoading}
       />

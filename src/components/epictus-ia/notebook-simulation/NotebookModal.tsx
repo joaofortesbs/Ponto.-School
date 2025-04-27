@@ -18,6 +18,12 @@ const NotebookModal: React.FC<NotebookModalProps> = ({
   content,
   isLoading = false
 }) => {
+  // Prevenção de fechamento acidental
+  const handleOpenChange = (open: boolean) => {
+    if (!open && !isLoading) {
+      onClose();
+    }
+  };
   // Função para copiar o conteúdo do caderno
   const handleCopyContent = () => {
     navigator.clipboard.writeText(content).then(() => {
@@ -86,7 +92,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[700px] bg-[#f5f5dc] border-[#d3be98] shadow-lg max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader className="border-b border-[#d3be98] pb-4 mb-4">
           <DialogTitle className="text-[#5d4037] text-xl font-serif relative">
