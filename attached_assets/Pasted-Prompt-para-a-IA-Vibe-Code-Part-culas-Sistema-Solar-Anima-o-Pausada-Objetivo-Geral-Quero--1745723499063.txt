@@ -1,0 +1,133 @@
+Prompt para a IA Vibe Code (Partículas + Sistema Solar + Animação Pausada)
+💡 Objetivo Geral:
+Quero criar um sistema visual interativo, imersivo e fluido para a interface superior da seção Epictus Turbo. Esse sistema será posicionado acima da caixa de texto onde o usuário digita, evitando espaços vazios e dando uma identidade visual forte e tecnológica à seção.
+
+🪐 COMPONENTE: “Sistema Solar Interativo do Modo Epictus IA BETA”
+🧩 1. Estrutura Visual Geral
+Imagine o ícone central do Epictus Turbo representando o “Sol”.
+
+Ao redor, as funcionalidades principais do Epictus Turbo estarão representadas como “luas” ou “planetas”, cada uma em sua órbita circular, girando suavemente em volta do centro.
+
+Cada funcionalidade deve ser um ícone animado, posicionado em órbitas circulares diferentes, como na imagem enviada como referência.
+
+Deve haver um fundo com efeito espacial, com partículas flutuando constantemente.
+
+🎨 2. Design das Partículas no Fundo
+✅ Use uma biblioteca como react-tsparticles, pois ela é leve, personalizável e compatível com React.
+⚙️ Configurações desejadas:
+Quantidade de partículas: entre 60 e 100.
+
+Cor: branco, com opacidade baixa (0.1 ~ 0.2), podendo variar com leve roxo, azul ou rosa cósmico.
+
+Tamanho: pequeno (1px ~ 2px), algumas partículas podem ser maiores com leve brilho pulsante.
+
+Movimento: aleatório, lento (velocidade 0.3), não linear.
+
+Camada: deve ficar atrás de todos os elementos (z-index: -1 ou como plano de fundo da div principal).
+
+Responsividade: garantir que partículas não ultrapassem a área visível da seção.
+
+Exemplo de configuração:
+jsx
+Copiar
+Editar
+<Particles
+  id="turboparticles"
+  options={{
+    fullScreen: { enable: false },
+    particles: {
+      number: { value: 80 },
+      color: { value: "#ffffff" },
+      shape: { type: "circle" },
+      opacity: {
+        value: 0.1,
+        random: true,
+      },
+      size: {
+        value: 1.5,
+        random: true,
+      },
+      move: {
+        enable: true,
+        speed: 0.3,
+        direction: "none",
+        random: true,
+        straight: false,
+        outModes: "out",
+      },
+    },
+    background: { color: "transparent" },
+  }}
+/>
+🌌 3. Sistema Solar de Funcionalidades (ícones orbitais)
+🎯 Funcionalidade:
+Ícone central (Epictus Turbo) permanece fixo no centro.
+
+Vários ícones (de funcionalidades como Quiz, Gerador de Conteúdo, Correção Inteligente, Fluxograma, etc.) orbitam ao redor desse centro.
+
+Cada ícone está posicionado em uma órbita independente, com velocidade, raio e delay diferentes, criando um efeito hipnótico e dinâmico.
+
+🔁 Animação:
+Use Framer Motion (ou alternativa) para animar os ícones em volta do centro.
+
+Velocidade contínua, mas suave (duração de 15 a 25s por volta).
+
+Adicione um leve hover nos ícones para ampliar o zoom com scale: 1.1.
+
+Exemplo de animação circular:
+jsx
+Copiar
+Editar
+<motion.div
+  animate={{ rotate: pauseOrbit ? 0 : 360 }}
+  transition={{
+    duration: pauseOrbit ? 0.2 : 20,
+    ease: "linear",
+    repeat: Infinity,
+  }}
+>
+  {/* Ícones aqui */}
+</motion.div>
+⏸️ 4. Animação Pausada Quando o Usuário Digita
+🎯 Comportamento desejado:
+Quando o usuário começa a digitar na caixa de texto logo abaixo, os ícones orbitais devem parar suavemente, como se o tempo desacelerasse.
+
+Após 1.5 segundos sem digitar, os ícones voltam a se mover de forma fluida.
+
+⚙️ Lógica em React:
+jsx
+Copiar
+Editar
+const [pauseOrbit, setPauseOrbit] = useState(false);
+const typingTimeout = useRef(null);
+
+const handleTyping = () => {
+  setPauseOrbit(true);
+  clearTimeout(typingTimeout.current);
+  typingTimeout.current = setTimeout(() => {
+    setPauseOrbit(false);
+  }, 1500);
+};
+Vincule o onChange ou onInput da textarea/input de digitação para chamar handleTyping.
+
+🧠 Considerações Importantes:
+O layout precisa ser responsivo, mantendo o centro da órbita visível em telas pequenas (mobile/tablet).
+
+Utilize ícones com boa semântica visual para representar cada funcionalidade (pode usar lucide-react, tabler-icons, phosphor-icons, etc).
+
+Toda a animação deve ser suave, fluída e elegante, evitando qualquer travamento ou sobreposição.
+
+Considere adicionar efeitos de som espacial leves no hover (opcional).
+
+✅ Output Esperado:
+Um componente React chamado SolarSystemEpictusTurbo.
+
+Com um container contendo:
+
+Ícone central fixo do Epictus Turbo.
+
+Ícones orbitais animados representando funcionalidades.
+
+Partículas flutuando ao fundo.
+
+Comportamento de pausa inteligente quando o usuário digitar.
