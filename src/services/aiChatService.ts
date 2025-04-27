@@ -1361,7 +1361,7 @@ export const pauseResponse = async (sessionId: string): Promise<void> => {
   try {
     isPaused[sessionId] = true;
     isCancelled[sessionId] = false; // Garantir que não está cancelada
-    console.log(`Resposta da IA pausada para a sessão ${sessionId`. Estado atual:`, isPaused[sessionId]);
+    console.log(`Resposta da IA pausada para a sessão ${sessionId}. Estado atual:`, isPaused[sessionId]);
   } catch (error) {
     console.error('Erro ao pausar resposta da IA:', error);
     throw error;
