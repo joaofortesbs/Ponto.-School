@@ -1,0 +1,797 @@
+[plugin:vite:react-swc] × the name `Dialog` is defined multiple times
+    ╭─[/home/runner/workspace/src/components/epictus-ia/message-tools/ferramentas/FerramentasModal.tsx:1:1]
+  1 │ 
+  2 │ import React from 'react';
+  3 │ import { Wrench, X } from 'lucide-react';
+  4 │ import { Dialog, DialogContent } from "@/components/ui/dialog";
+    ·          ───┬──
+    ·             ╰── previous definition of `Dialog` here
+  5 │ import { toast } from "@/components/ui/use-toast";
+  6 │ import AprofundarNoTema from './AprofundarNoTema';
+  7 │ import SimuladorQuestoes from './SimuladorQuestoes';
+  8 │ import EscreverNoCaderno from './EscreverNoCaderno';
+  9 │ import SimularApresentacao from './SimularApresentacao';
+ 10 │ 
+ 11 │ interface FerramentasModalProps {
+ 12 │   open: boolean;
+ 13 │   onOpenChange: (open: boolean) => void;
+ 14 │   onAprofundarClick: () => void;
+ 15 │ }
+ 16 │ 
+ 17 │ const FerramentasModal: React.FC<FerramentasModalProps> = ({
+ 18 │   open,
+ 19 │   onOpenChange,
+ 20 │   onAprofundarClick
+ 21 │ }) => {
+ 22 │   
+ 23 │   const handleSimuladorQuestoes = () => {
+ 24 │     toast({
+ 25 │       title: "Simulador de questões",
+ 26 │       description: "Iniciando simulador de questões para este tema...",
+ 27 │       duration: 3000,
+ 28 │     });
+ 29 │     onOpenChange(false);
+ 30 │   };
+ 31 │   
+ 32 │   const handleEscreverNoCaderno = () => {
+ 33 │     toast({
+ 34 │       title: "Caderno de Anotações",
+ 35 │       description: "Convertendo conteúdo para formato de caderno...",
+ 36 │       duration: 2000,
+ 37 │     });
+ 38 │     onOpenChange(false);
+ 39 │   };
+ 40 │   
+ 41 │   const handleSimularApresentacao = () => {
+ 42 │     toast({
+ 43 │       title: "Modo Apresentação",
+ 44 │       description: "Iniciando simulação de apresentação deste conteúdo...",
+ 45 │       duration: 3000,
+ 46 │     });
+ 47 │     onOpenChange(false);
+ 48 │   };
+ 49 │ 
+ 50 │   return (
+ 51 │     <Dialog open={open} onOpenChange={onOpenChange}>
+ 52 │       <DialogContent className="sm:max-w-md bg-gradient-to-b from-[#1A2634] to-[#253245] border-[#3A4B5C]/50 text-white p-0 overflow-hidden">
+ 53 │         <div className="bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] p-4">
+ 54 │           <h2 className="text-lg font-semibold flex items-center space-x-2">
+ 55 │             <Wrench className="h-5 w-5 mr-2" />
+ 56 │             Ferramentas Epictus IA
+ 57 │           </h2>
+ 58 │           <p className="text-sm text-white/70 mt-1">
+ 59 │             Transforme este conteúdo com nossas ferramentas inteligentes
+ 60 │           </p>
+ 61 │         </div>
+ 62 │ 
+ 63 │         <div className="p-4 grid grid-cols-1 gap-3">
+ 64 │           <AprofundarNoTema onClick={() => {
+ 65 │             onOpenChange(false);
+ 66 │             onAprofundarClick();
+ 67 │           }} />
+ 68 │           
+ 69 │           <SimuladorQuestoes onClick={handleSimuladorQuestoes} />
+ 70 │           
+ 71 │           <EscreverNoCaderno onClick={handleEscreverNoCaderno} />
+ 72 │           
+ 73 │           <SimularApresentacao onClick={handleSimularApresentacao} />
+ 74 │         </div>
+ 75 │         
+ 76 │         <div className="bg-[#1A2634]/70 border-t border-[#3A4B5C]/30 p-3 flex justify-end">
+ 77 │           <button
+ 78 │             onClick={() => onOpenChange(false)}
+ 79 │             className="px-4 py-2 rounded text-sm bg-[#2A3645] hover:bg-[#3A4B5C] text-white transition-colors"
+ 80 │           >
+ 81 │             Fechar
+ 82 │           </button>
+ 83 │         </div>
+ 84 │       </DialogContent>
+ 85 │     </Dialog>
+ 86 │   );
+ 87 │ };
+ 88 │ 
+ 89 │ export default FerramentasModal;
+ 90 │ import React from 'react';
+ 91 │ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+    ·          ───┬──
+    ·             ╰── `Dialog` redefined here
+ 92 │ import EscreverNoCaderno from './EscreverNoCaderno';
+ 93 │ import SimuladorQuestoes from './SimuladorQuestoes';
+ 94 │ import AprofundarNoTema from './AprofundarNoTema';
+    ╰────
+
+  × the name `DialogContent` is defined multiple times
+    ╭─[/home/runner/workspace/src/components/epictus-ia/message-tools/ferramentas/FerramentasModal.tsx:1:1]
+  1 │ 
+  2 │ import React from 'react';
+  3 │ import { Wrench, X } from 'lucide-react';
+  4 │ import { Dialog, DialogContent } from "@/components/ui/dialog";
+    ·                  ──────┬──────
+    ·                        ╰── previous definition of `DialogContent` here
+  5 │ import { toast } from "@/components/ui/use-toast";
+  6 │ import AprofundarNoTema from './AprofundarNoTema';
+  7 │ import SimuladorQuestoes from './SimuladorQuestoes';
+  8 │ import EscreverNoCaderno from './EscreverNoCaderno';
+  9 │ import SimularApresentacao from './SimularApresentacao';
+ 10 │ 
+ 11 │ interface FerramentasModalProps {
+ 12 │   open: boolean;
+ 13 │   onOpenChange: (open: boolean) => void;
+ 14 │   onAprofundarClick: () => void;
+ 15 │ }
+ 16 │ 
+ 17 │ const FerramentasModal: React.FC<FerramentasModalProps> = ({
+ 18 │   open,
+ 19 │   onOpenChange,
+ 20 │   onAprofundarClick
+ 21 │ }) => {
+ 22 │   
+ 23 │   const handleSimuladorQuestoes = () => {
+ 24 │     toast({
+ 25 │       title: "Simulador de questões",
+ 26 │       description: "Iniciando simulador de questões para este tema...",
+ 27 │       duration: 3000,
+ 28 │     });
+ 29 │     onOpenChange(false);
+ 30 │   };
+ 31 │   
+ 32 │   const handleEscreverNoCaderno = () => {
+ 33 │     toast({
+ 34 │       title: "Caderno de Anotações",
+ 35 │       description: "Convertendo conteúdo para formato de caderno...",
+ 36 │       duration: 2000,
+ 37 │     });
+ 38 │     onOpenChange(false);
+ 39 │   };
+ 40 │   
+ 41 │   const handleSimularApresentacao = () => {
+ 42 │     toast({
+ 43 │       title: "Modo Apresentação",
+ 44 │       description: "Iniciando simulação de apresentação deste conteúdo...",
+ 45 │       duration: 3000,
+ 46 │     });
+ 47 │     onOpenChange(false);
+ 48 │   };
+ 49 │ 
+ 50 │   return (
+ 51 │     <Dialog open={open} onOpenChange={onOpenChange}>
+ 52 │       <DialogContent className="sm:max-w-md bg-gradient-to-b from-[#1A2634] to-[#253245] border-[#3A4B5C]/50 text-white p-0 overflow-hidden">
+ 53 │         <div className="bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] p-4">
+ 54 │           <h2 className="text-lg font-semibold flex items-center space-x-2">
+ 55 │             <Wrench className="h-5 w-5 mr-2" />
+ 56 │             Ferramentas Epictus IA
+ 57 │           </h2>
+ 58 │           <p className="text-sm text-white/70 mt-1">
+ 59 │             Transforme este conteúdo com nossas ferramentas inteligentes
+ 60 │           </p>
+ 61 │         </div>
+ 62 │ 
+ 63 │         <div className="p-4 grid grid-cols-1 gap-3">
+ 64 │           <AprofundarNoTema onClick={() => {
+ 65 │             onOpenChange(false);
+ 66 │             onAprofundarClick();
+ 67 │           }} />
+ 68 │           
+ 69 │           <SimuladorQuestoes onClick={handleSimuladorQuestoes} />
+ 70 │           
+ 71 │           <EscreverNoCaderno onClick={handleEscreverNoCaderno} />
+ 72 │           
+ 73 │           <SimularApresentacao onClick={handleSimularApresentacao} />
+ 74 │         </div>
+ 75 │         
+ 76 │         <div className="bg-[#1A2634]/70 border-t border-[#3A4B5C]/30 p-3 flex justify-end">
+ 77 │           <button
+ 78 │             onClick={() => onOpenChange(false)}
+ 79 │             className="px-4 py-2 rounded text-sm bg-[#2A3645] hover:bg-[#3A4B5C] text-white transition-colors"
+ 80 │           >
+ 81 │             Fechar
+ 82 │           </button>
+ 83 │         </div>
+ 84 │       </DialogContent>
+ 85 │     </Dialog>
+ 86 │   );
+ 87 │ };
+ 88 │ 
+ 89 │ export default FerramentasModal;
+ 90 │ import React from 'react';
+ 91 │ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+    ·                  ──────┬──────
+    ·                        ╰── `DialogContent` redefined here
+ 92 │ import EscreverNoCaderno from './EscreverNoCaderno';
+ 93 │ import SimuladorQuestoes from './SimuladorQuestoes';
+ 94 │ import AprofundarNoTema from './AprofundarNoTema';
+    ╰────
+
+  × the name `EscreverNoCaderno` is defined multiple times
+    ╭─[/home/runner/workspace/src/components/epictus-ia/message-tools/ferramentas/FerramentasModal.tsx:5:1]
+  5 │ import { toast } from "@/components/ui/use-toast";
+  6 │ import AprofundarNoTema from './AprofundarNoTema';
+  7 │ import SimuladorQuestoes from './SimuladorQuestoes';
+  8 │ import EscreverNoCaderno from './EscreverNoCaderno';
+    ·        ────────┬────────
+    ·                ╰── previous definition of `EscreverNoCaderno` here
+  9 │ import SimularApresentacao from './SimularApresentacao';
+ 10 │ 
+ 11 │ interface FerramentasModalProps {
+ 12 │   open: boolean;
+ 13 │   onOpenChange: (open: boolean) => void;
+ 14 │   onAprofundarClick: () => void;
+ 15 │ }
+ 16 │ 
+ 17 │ const FerramentasModal: React.FC<FerramentasModalProps> = ({
+ 18 │   open,
+ 19 │   onOpenChange,
+ 20 │   onAprofundarClick
+ 21 │ }) => {
+ 22 │   
+ 23 │   const handleSimuladorQuestoes = () => {
+ 24 │     toast({
+ 25 │       title: "Simulador de questões",
+ 26 │       description: "Iniciando simulador de questões para este tema...",
+ 27 │       duration: 3000,
+ 28 │     });
+ 29 │     onOpenChange(false);
+ 30 │   };
+ 31 │   
+ 32 │   const handleEscreverNoCaderno = () => {
+ 33 │     toast({
+ 34 │       title: "Caderno de Anotações",
+ 35 │       description: "Convertendo conteúdo para formato de caderno...",
+ 36 │       duration: 2000,
+ 37 │     });
+ 38 │     onOpenChange(false);
+ 39 │   };
+ 40 │   
+ 41 │   const handleSimularApresentacao = () => {
+ 42 │     toast({
+ 43 │       title: "Modo Apresentação",
+ 44 │       description: "Iniciando simulação de apresentação deste conteúdo...",
+ 45 │       duration: 3000,
+ 46 │     });
+ 47 │     onOpenChange(false);
+ 48 │   };
+ 49 │ 
+ 50 │   return (
+ 51 │     <Dialog open={open} onOpenChange={onOpenChange}>
+ 52 │       <DialogContent className="sm:max-w-md bg-gradient-to-b from-[#1A2634] to-[#253245] border-[#3A4B5C]/50 text-white p-0 overflow-hidden">
+ 53 │         <div className="bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] p-4">
+ 54 │           <h2 className="text-lg font-semibold flex items-center space-x-2">
+ 55 │             <Wrench className="h-5 w-5 mr-2" />
+ 56 │             Ferramentas Epictus IA
+ 57 │           </h2>
+ 58 │           <p className="text-sm text-white/70 mt-1">
+ 59 │             Transforme este conteúdo com nossas ferramentas inteligentes
+ 60 │           </p>
+ 61 │         </div>
+ 62 │ 
+ 63 │         <div className="p-4 grid grid-cols-1 gap-3">
+ 64 │           <AprofundarNoTema onClick={() => {
+ 65 │             onOpenChange(false);
+ 66 │             onAprofundarClick();
+ 67 │           }} />
+ 68 │           
+ 69 │           <SimuladorQuestoes onClick={handleSimuladorQuestoes} />
+ 70 │           
+ 71 │           <EscreverNoCaderno onClick={handleEscreverNoCaderno} />
+ 72 │           
+ 73 │           <SimularApresentacao onClick={handleSimularApresentacao} />
+ 74 │         </div>
+ 75 │         
+ 76 │         <div className="bg-[#1A2634]/70 border-t border-[#3A4B5C]/30 p-3 flex justify-end">
+ 77 │           <button
+ 78 │             onClick={() => onOpenChange(false)}
+ 79 │             className="px-4 py-2 rounded text-sm bg-[#2A3645] hover:bg-[#3A4B5C] text-white transition-colors"
+ 80 │           >
+ 81 │             Fechar
+ 82 │           </button>
+ 83 │         </div>
+ 84 │       </DialogContent>
+ 85 │     </Dialog>
+ 86 │   );
+ 87 │ };
+ 88 │ 
+ 89 │ export default FerramentasModal;
+ 90 │ import React from 'react';
+ 91 │ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+ 92 │ import EscreverNoCaderno from './EscreverNoCaderno';
+    ·        ────────┬────────
+    ·                ╰── `EscreverNoCaderno` redefined here
+ 93 │ import SimuladorQuestoes from './SimuladorQuestoes';
+ 94 │ import AprofundarNoTema from './AprofundarNoTema';
+ 95 │ import SimularApresentacao from './SimularApresentacao';
+    ╰────
+
+  × the name `SimuladorQuestoes` is defined multiple times
+    ╭─[/home/runner/workspace/src/components/epictus-ia/message-tools/ferramentas/FerramentasModal.tsx:4:1]
+  4 │ import { Dialog, DialogContent } from "@/components/ui/dialog";
+  5 │ import { toast } from "@/components/ui/use-toast";
+  6 │ import AprofundarNoTema from './AprofundarNoTema';
+  7 │ import SimuladorQuestoes from './SimuladorQuestoes';
+    ·        ────────┬────────
+    ·                ╰── previous definition of `SimuladorQuestoes` here
+  8 │ import EscreverNoCaderno from './EscreverNoCaderno';
+  9 │ import SimularApresentacao from './SimularApresentacao';
+ 10 │ 
+ 11 │ interface FerramentasModalProps {
+ 12 │   open: boolean;
+ 13 │   onOpenChange: (open: boolean) => void;
+ 14 │   onAprofundarClick: () => void;
+ 15 │ }
+ 16 │ 
+ 17 │ const FerramentasModal: React.FC<FerramentasModalProps> = ({
+ 18 │   open,
+ 19 │   onOpenChange,
+ 20 │   onAprofundarClick
+ 21 │ }) => {
+ 22 │   
+ 23 │   const handleSimuladorQuestoes = () => {
+ 24 │     toast({
+ 25 │       title: "Simulador de questões",
+ 26 │       description: "Iniciando simulador de questões para este tema...",
+ 27 │       duration: 3000,
+ 28 │     });
+ 29 │     onOpenChange(false);
+ 30 │   };
+ 31 │   
+ 32 │   const handleEscreverNoCaderno = () => {
+ 33 │     toast({
+ 34 │       title: "Caderno de Anotações",
+ 35 │       description: "Convertendo conteúdo para formato de caderno...",
+ 36 │       duration: 2000,
+ 37 │     });
+ 38 │     onOpenChange(false);
+ 39 │   };
+ 40 │   
+ 41 │   const handleSimularApresentacao = () => {
+ 42 │     toast({
+ 43 │       title: "Modo Apresentação",
+ 44 │       description: "Iniciando simulação de apresentação deste conteúdo...",
+ 45 │       duration: 3000,
+ 46 │     });
+ 47 │     onOpenChange(false);
+ 48 │   };
+ 49 │ 
+ 50 │   return (
+ 51 │     <Dialog open={open} onOpenChange={onOpenChange}>
+ 52 │       <DialogContent className="sm:max-w-md bg-gradient-to-b from-[#1A2634] to-[#253245] border-[#3A4B5C]/50 text-white p-0 overflow-hidden">
+ 53 │         <div className="bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] p-4">
+ 54 │           <h2 className="text-lg font-semibold flex items-center space-x-2">
+ 55 │             <Wrench className="h-5 w-5 mr-2" />
+ 56 │             Ferramentas Epictus IA
+ 57 │           </h2>
+ 58 │           <p className="text-sm text-white/70 mt-1">
+ 59 │             Transforme este conteúdo com nossas ferramentas inteligentes
+ 60 │           </p>
+ 61 │         </div>
+ 62 │ 
+ 63 │         <div className="p-4 grid grid-cols-1 gap-3">
+ 64 │           <AprofundarNoTema onClick={() => {
+ 65 │             onOpenChange(false);
+ 66 │             onAprofundarClick();
+ 67 │           }} />
+ 68 │           
+ 69 │           <SimuladorQuestoes onClick={handleSimuladorQuestoes} />
+ 70 │           
+ 71 │           <EscreverNoCaderno onClick={handleEscreverNoCaderno} />
+ 72 │           
+ 73 │           <SimularApresentacao onClick={handleSimularApresentacao} />
+ 74 │         </div>
+ 75 │         
+ 76 │         <div className="bg-[#1A2634]/70 border-t border-[#3A4B5C]/30 p-3 flex justify-end">
+ 77 │           <button
+ 78 │             onClick={() => onOpenChange(false)}
+ 79 │             className="px-4 py-2 rounded text-sm bg-[#2A3645] hover:bg-[#3A4B5C] text-white transition-colors"
+ 80 │           >
+ 81 │             Fechar
+ 82 │           </button>
+ 83 │         </div>
+ 84 │       </DialogContent>
+ 85 │     </Dialog>
+ 86 │   );
+ 87 │ };
+ 88 │ 
+ 89 │ export default FerramentasModal;
+ 90 │ import React from 'react';
+ 91 │ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+ 92 │ import EscreverNoCaderno from './EscreverNoCaderno';
+ 93 │ import SimuladorQuestoes from './SimuladorQuestoes';
+    ·        ────────┬────────
+    ·                ╰── `SimuladorQuestoes` redefined here
+ 94 │ import AprofundarNoTema from './AprofundarNoTema';
+ 95 │ import SimularApresentacao from './SimularApresentacao';
+    ╰────
+
+  × the name `AprofundarNoTema` is defined multiple times
+    ╭─[/home/runner/workspace/src/components/epictus-ia/message-tools/ferramentas/FerramentasModal.tsx:3:1]
+  3 │ import { Wrench, X } from 'lucide-react';
+  4 │ import { Dialog, DialogContent } from "@/components/ui/dialog";
+  5 │ import { toast } from "@/components/ui/use-toast";
+  6 │ import AprofundarNoTema from './AprofundarNoTema';
+    ·        ────────┬───────
+    ·                ╰── previous definition of `AprofundarNoTema` here
+  7 │ import SimuladorQuestoes from './SimuladorQuestoes';
+  8 │ import EscreverNoCaderno from './EscreverNoCaderno';
+  9 │ import SimularApresentacao from './SimularApresentacao';
+ 10 │ 
+ 11 │ interface FerramentasModalProps {
+ 12 │   open: boolean;
+ 13 │   onOpenChange: (open: boolean) => void;
+ 14 │   onAprofundarClick: () => void;
+ 15 │ }
+ 16 │ 
+ 17 │ const FerramentasModal: React.FC<FerramentasModalProps> = ({
+ 18 │   open,
+ 19 │   onOpenChange,
+ 20 │   onAprofundarClick
+ 21 │ }) => {
+ 22 │   
+ 23 │   const handleSimuladorQuestoes = () => {
+ 24 │     toast({
+ 25 │       title: "Simulador de questões",
+ 26 │       description: "Iniciando simulador de questões para este tema...",
+ 27 │       duration: 3000,
+ 28 │     });
+ 29 │     onOpenChange(false);
+ 30 │   };
+ 31 │   
+ 32 │   const handleEscreverNoCaderno = () => {
+ 33 │     toast({
+ 34 │       title: "Caderno de Anotações",
+ 35 │       description: "Convertendo conteúdo para formato de caderno...",
+ 36 │       duration: 2000,
+ 37 │     });
+ 38 │     onOpenChange(false);
+ 39 │   };
+ 40 │   
+ 41 │   const handleSimularApresentacao = () => {
+ 42 │     toast({
+ 43 │       title: "Modo Apresentação",
+ 44 │       description: "Iniciando simulação de apresentação deste conteúdo...",
+ 45 │       duration: 3000,
+ 46 │     });
+ 47 │     onOpenChange(false);
+ 48 │   };
+ 49 │ 
+ 50 │   return (
+ 51 │     <Dialog open={open} onOpenChange={onOpenChange}>
+ 52 │       <DialogContent className="sm:max-w-md bg-gradient-to-b from-[#1A2634] to-[#253245] border-[#3A4B5C]/50 text-white p-0 overflow-hidden">
+ 53 │         <div className="bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] p-4">
+ 54 │           <h2 className="text-lg font-semibold flex items-center space-x-2">
+ 55 │             <Wrench className="h-5 w-5 mr-2" />
+ 56 │             Ferramentas Epictus IA
+ 57 │           </h2>
+ 58 │           <p className="text-sm text-white/70 mt-1">
+ 59 │             Transforme este conteúdo com nossas ferramentas inteligentes
+ 60 │           </p>
+ 61 │         </div>
+ 62 │ 
+ 63 │         <div className="p-4 grid grid-cols-1 gap-3">
+ 64 │           <AprofundarNoTema onClick={() => {
+ 65 │             onOpenChange(false);
+ 66 │             onAprofundarClick();
+ 67 │           }} />
+ 68 │           
+ 69 │           <SimuladorQuestoes onClick={handleSimuladorQuestoes} />
+ 70 │           
+ 71 │           <EscreverNoCaderno onClick={handleEscreverNoCaderno} />
+ 72 │           
+ 73 │           <SimularApresentacao onClick={handleSimularApresentacao} />
+ 74 │         </div>
+ 75 │         
+ 76 │         <div className="bg-[#1A2634]/70 border-t border-[#3A4B5C]/30 p-3 flex justify-end">
+ 77 │           <button
+ 78 │             onClick={() => onOpenChange(false)}
+ 79 │             className="px-4 py-2 rounded text-sm bg-[#2A3645] hover:bg-[#3A4B5C] text-white transition-colors"
+ 80 │           >
+ 81 │             Fechar
+ 82 │           </button>
+ 83 │         </div>
+ 84 │       </DialogContent>
+ 85 │     </Dialog>
+ 86 │   );
+ 87 │ };
+ 88 │ 
+ 89 │ export default FerramentasModal;
+ 90 │ import React from 'react';
+ 91 │ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+ 92 │ import EscreverNoCaderno from './EscreverNoCaderno';
+ 93 │ import SimuladorQuestoes from './SimuladorQuestoes';
+ 94 │ import AprofundarNoTema from './AprofundarNoTema';
+    ·        ────────┬───────
+    ·                ╰── `AprofundarNoTema` redefined here
+ 95 │ import SimularApresentacao from './SimularApresentacao';
+ 96 │ 
+ 97 │ interface FerramentasModalProps {
+    ╰────
+
+  × the name `SimularApresentacao` is defined multiple times
+    ╭─[/home/runner/workspace/src/components/epictus-ia/message-tools/ferramentas/FerramentasModal.tsx:6:1]
+  6 │ import AprofundarNoTema from './AprofundarNoTema';
+  7 │ import SimuladorQuestoes from './SimuladorQuestoes';
+  8 │ import EscreverNoCaderno from './EscreverNoCaderno';
+  9 │ import SimularApresentacao from './SimularApresentacao';
+    ·        ─────────┬─────────
+    ·                 ╰── previous definition of `SimularApresentacao` here
+ 10 │ 
+ 11 │ interface FerramentasModalProps {
+ 12 │   open: boolean;
+ 13 │   onOpenChange: (open: boolean) => void;
+ 14 │   onAprofundarClick: () => void;
+ 15 │ }
+ 16 │ 
+ 17 │ const FerramentasModal: React.FC<FerramentasModalProps> = ({
+ 18 │   open,
+ 19 │   onOpenChange,
+ 20 │   onAprofundarClick
+ 21 │ }) => {
+ 22 │   
+ 23 │   const handleSimuladorQuestoes = () => {
+ 24 │     toast({
+ 25 │       title: "Simulador de questões",
+ 26 │       description: "Iniciando simulador de questões para este tema...",
+ 27 │       duration: 3000,
+ 28 │     });
+ 29 │     onOpenChange(false);
+ 30 │   };
+ 31 │   
+ 32 │   const handleEscreverNoCaderno = () => {
+ 33 │     toast({
+ 34 │       title: "Caderno de Anotações",
+ 35 │       description: "Convertendo conteúdo para formato de caderno...",
+ 36 │       duration: 2000,
+ 37 │     });
+ 38 │     onOpenChange(false);
+ 39 │   };
+ 40 │   
+ 41 │   const handleSimularApresentacao = () => {
+ 42 │     toast({
+ 43 │       title: "Modo Apresentação",
+ 44 │       description: "Iniciando simulação de apresentação deste conteúdo...",
+ 45 │       duration: 3000,
+ 46 │     });
+ 47 │     onOpenChange(false);
+ 48 │   };
+ 49 │ 
+ 50 │   return (
+ 51 │     <Dialog open={open} onOpenChange={onOpenChange}>
+ 52 │       <DialogContent className="sm:max-w-md bg-gradient-to-b from-[#1A2634] to-[#253245] border-[#3A4B5C]/50 text-white p-0 overflow-hidden">
+ 53 │         <div className="bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] p-4">
+ 54 │           <h2 className="text-lg font-semibold flex items-center space-x-2">
+ 55 │             <Wrench className="h-5 w-5 mr-2" />
+ 56 │             Ferramentas Epictus IA
+ 57 │           </h2>
+ 58 │           <p className="text-sm text-white/70 mt-1">
+ 59 │             Transforme este conteúdo com nossas ferramentas inteligentes
+ 60 │           </p>
+ 61 │         </div>
+ 62 │ 
+ 63 │         <div className="p-4 grid grid-cols-1 gap-3">
+ 64 │           <AprofundarNoTema onClick={() => {
+ 65 │             onOpenChange(false);
+ 66 │             onAprofundarClick();
+ 67 │           }} />
+ 68 │           
+ 69 │           <SimuladorQuestoes onClick={handleSimuladorQuestoes} />
+ 70 │           
+ 71 │           <EscreverNoCaderno onClick={handleEscreverNoCaderno} />
+ 72 │           
+ 73 │           <SimularApresentacao onClick={handleSimularApresentacao} />
+ 74 │         </div>
+ 75 │         
+ 76 │         <div className="bg-[#1A2634]/70 border-t border-[#3A4B5C]/30 p-3 flex justify-end">
+ 77 │           <button
+ 78 │             onClick={() => onOpenChange(false)}
+ 79 │             className="px-4 py-2 rounded text-sm bg-[#2A3645] hover:bg-[#3A4B5C] text-white transition-colors"
+ 80 │           >
+ 81 │             Fechar
+ 82 │           </button>
+ 83 │         </div>
+ 84 │       </DialogContent>
+ 85 │     </Dialog>
+ 86 │   );
+ 87 │ };
+ 88 │ 
+ 89 │ export default FerramentasModal;
+ 90 │ import React from 'react';
+ 91 │ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+ 92 │ import EscreverNoCaderno from './EscreverNoCaderno';
+ 93 │ import SimuladorQuestoes from './SimuladorQuestoes';
+ 94 │ import AprofundarNoTema from './AprofundarNoTema';
+ 95 │ import SimularApresentacao from './SimularApresentacao';
+    ·        ─────────┬─────────
+    ·                 ╰── `SimularApresentacao` redefined here
+ 96 │ 
+ 97 │ interface FerramentasModalProps {
+ 98 │   open: boolean;
+    ╰────
+
+  × the name `FerramentasModal` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/epictus-ia/message-tools/ferramentas/FerramentasModal.tsx:14:1]
+  14 │   onAprofundarClick: () => void;
+  15 │ }
+  16 │ 
+  17 │ const FerramentasModal: React.FC<FerramentasModalProps> = ({
+     ·       ────────┬───────
+     ·               ╰── previous definition of `FerramentasModal` here
+  18 │   open,
+  19 │   onOpenChange,
+  20 │   onAprofundarClick
+  21 │ }) => {
+  22 │   
+  23 │   const handleSimuladorQuestoes = () => {
+  24 │     toast({
+  25 │       title: "Simulador de questões",
+  26 │       description: "Iniciando simulador de questões para este tema...",
+  27 │       duration: 3000,
+  28 │     });
+  29 │     onOpenChange(false);
+  30 │   };
+  31 │   
+  32 │   const handleEscreverNoCaderno = () => {
+  33 │     toast({
+  34 │       title: "Caderno de Anotações",
+  35 │       description: "Convertendo conteúdo para formato de caderno...",
+  36 │       duration: 2000,
+  37 │     });
+  38 │     onOpenChange(false);
+  39 │   };
+  40 │   
+  41 │   const handleSimularApresentacao = () => {
+  42 │     toast({
+  43 │       title: "Modo Apresentação",
+  44 │       description: "Iniciando simulação de apresentação deste conteúdo...",
+  45 │       duration: 3000,
+  46 │     });
+  47 │     onOpenChange(false);
+  48 │   };
+  49 │ 
+  50 │   return (
+  51 │     <Dialog open={open} onOpenChange={onOpenChange}>
+  52 │       <DialogContent className="sm:max-w-md bg-gradient-to-b from-[#1A2634] to-[#253245] border-[#3A4B5C]/50 text-white p-0 overflow-hidden">
+  53 │         <div className="bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] p-4">
+  54 │           <h2 className="text-lg font-semibold flex items-center space-x-2">
+  55 │             <Wrench className="h-5 w-5 mr-2" />
+  56 │             Ferramentas Epictus IA
+  57 │           </h2>
+  58 │           <p className="text-sm text-white/70 mt-1">
+  59 │             Transforme este conteúdo com nossas ferramentas inteligentes
+  60 │           </p>
+  61 │         </div>
+  62 │ 
+  63 │         <div className="p-4 grid grid-cols-1 gap-3">
+  64 │           <AprofundarNoTema onClick={() => {
+  65 │             onOpenChange(false);
+  66 │             onAprofundarClick();
+  67 │           }} />
+  68 │           
+  69 │           <SimuladorQuestoes onClick={handleSimuladorQuestoes} />
+  70 │           
+  71 │           <EscreverNoCaderno onClick={handleEscreverNoCaderno} />
+  72 │           
+  73 │           <SimularApresentacao onClick={handleSimularApresentacao} />
+  74 │         </div>
+  75 │         
+  76 │         <div className="bg-[#1A2634]/70 border-t border-[#3A4B5C]/30 p-3 flex justify-end">
+  77 │           <button
+  78 │             onClick={() => onOpenChange(false)}
+  79 │             className="px-4 py-2 rounded text-sm bg-[#2A3645] hover:bg-[#3A4B5C] text-white transition-colors"
+  80 │           >
+  81 │             Fechar
+  82 │           </button>
+  83 │         </div>
+  84 │       </DialogContent>
+  85 │     </Dialog>
+  86 │   );
+  87 │ };
+  88 │ 
+  89 │ export default FerramentasModal;
+  90 │ import React from 'react';
+  91 │ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+  92 │ import EscreverNoCaderno from './EscreverNoCaderno';
+  93 │ import SimuladorQuestoes from './SimuladorQuestoes';
+  94 │ import AprofundarNoTema from './AprofundarNoTema';
+  95 │ import SimularApresentacao from './SimularApresentacao';
+  96 │ 
+  97 │ interface FerramentasModalProps {
+  98 │   open: boolean;
+  99 │   onOpenChange: (open: boolean) => void;
+ 100 │   onAprofundarClick: () => void;
+ 101 │   content?: string;
+ 102 │   messageId?: number;
+ 103 │ }
+ 104 │ 
+ 105 │ export const FerramentasModal: React.FC<FerramentasModalProps> = ({
+     ·              ────────┬───────
+     ·                      ╰── `FerramentasModal` redefined here
+ 106 │   open,
+ 107 │   onOpenChange,
+ 108 │   onAprofundarClick,
+     ╰────
+
+  × the name `default` is exported multiple times
+     ╭─[/home/runner/workspace/src/components/epictus-ia/message-tools/ferramentas/FerramentasModal.tsx:86:1]
+  86 │   );
+  87 │ };
+  88 │ 
+  89 │ export default FerramentasModal;
+     · ────────────────┬───────────────
+     ·                 ╰── previous exported here
+  90 │ import React from 'react';
+  91 │ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+  92 │ import EscreverNoCaderno from './EscreverNoCaderno';
+  93 │ import SimuladorQuestoes from './SimuladorQuestoes';
+  94 │ import AprofundarNoTema from './AprofundarNoTema';
+  95 │ import SimularApresentacao from './SimularApresentacao';
+  96 │ 
+  97 │ interface FerramentasModalProps {
+  98 │   open: boolean;
+  99 │   onOpenChange: (open: boolean) => void;
+ 100 │   onAprofundarClick: () => void;
+ 101 │   content?: string;
+ 102 │   messageId?: number;
+ 103 │ }
+ 104 │ 
+ 105 │ export const FerramentasModal: React.FC<FerramentasModalProps> = ({
+ 106 │   open,
+ 107 │   onOpenChange,
+ 108 │   onAprofundarClick,
+ 109 │   content,
+ 110 │   messageId
+ 111 │ }) => {
+ 112 │   const handleEscreverNoCadernoClick = () => {
+ 113 │     // Disparar evento personalizado para transformação em caderno
+ 114 │     if (content && messageId) {
+ 115 │       const event = new CustomEvent('transform-to-notebook', {
+ 116 │         detail: { content, messageId }
+ 117 │       });
+ 118 │       document.dispatchEvent(event);
+ 119 │     }
+ 120 │     
+ 121 │     // Fechar o modal de ferramentas após iniciar a ação
+ 122 │     onOpenChange(false);
+ 123 │   };
+ 124 │ 
+ 125 │   return (
+ 126 │     <Dialog open={open} onOpenChange={onOpenChange}>
+ 127 │       <DialogContent className="sm:max-w-[425px] bg-[#111827] border-gray-700">
+ 128 │         <DialogHeader>
+ 129 │           <DialogTitle className="text-white">Ferramentas Epictus</DialogTitle>
+ 130 │         </DialogHeader>
+ 131 │         
+ 132 │         <div className="grid gap-3 py-4">
+ 133 │           <AprofundarNoTema onClick={onAprofundarClick} />
+ 134 │           
+ 135 │           <SimuladorQuestoes onClick={() => {
+ 136 │             // Implementação futura
+ 137 │             onOpenChange(false);
+ 138 │           }} />
+ 139 │           
+ 140 │           <EscreverNoCaderno 
+ 141 │             onClick={handleEscreverNoCadernoClick}
+ 142 │             content={content}
+ 143 │             messageId={messageId}
+ 144 │           />
+ 145 │           
+ 146 │           <SimularApresentacao onClick={() => {
+ 147 │             // Implementação futura
+ 148 │             onOpenChange(false);
+ 149 │           }} />
+ 150 │         </div>
+ 151 │       </DialogContent>
+ 152 │     </Dialog>
+ 153 │   );
+ 154 │ };
+ 155 │ 
+ 156 │ export default FerramentasModal;
+     · ────────────────┬───────────────
+     ·                 ╰── exported more than once
+     ╰────
+
+Error: 
+  ☞ Exported identifiers must be unique
+/home/runner/workspace/src/components/epictus-ia/message-tools/ferramentas/FerramentasModal.tsx:1:1
+1  |  
+2  |  import React from 'react';
+   |  ^
+3  |  import { Wrench, X } from 'lucide-react';
+4  |  import { Dialog, DialogContent } from "@/components/ui/dialog";
