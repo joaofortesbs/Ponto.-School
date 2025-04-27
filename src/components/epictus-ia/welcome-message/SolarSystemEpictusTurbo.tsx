@@ -239,11 +239,7 @@ const SolarSystemEpictusTurbo: React.FC<SolarSystemEpictusTurboProps> = ({
           <div className="absolute inset-0 rounded-full bg-orange-500/20 animate-pulse"></div>
           <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-orange-400/20 to-amber-300/20 blur-sm"></div>
         </div>
-        <div className="absolute -bottom-8 text-center">
-          <h2 className="text-base font-bold bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">
-            Epictus IA
-          </h2>
-        </div>
+        {/* Texto removido completamente */}
       </motion.div>
 
       {/* Planetas orbitais - Design aprimorado */}
