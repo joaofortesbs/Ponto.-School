@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 
@@ -29,30 +30,41 @@ interface TypewriterEffectProps {
 
 const TypewriterEffect: React.FC<TypewriterEffectProps> = ({ 
   text, 
-  typingSpeed = 10, // Aumentar a velocidade para maior rapidez
+  typingSpeed = 10,
   className = ''
 }) => {
   const [displayText, setDisplayText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const animationCompleted = useRef<boolean>(false);
 
-  // Reset quando o texto muda
+  // Iniciar a digitação apenas uma vez quando o componente for montado
   useEffect(() => {
-    setDisplayText('');
-    setCurrentIndex(0);
-    setIsComplete(false);
-  }, [text]);
+    if (!hasStarted) {
+      setHasStarted(true);
+      setDisplayText('');
+      setCurrentIndex(0);
+      setIsComplete(false);
+      animationCompleted.current = false;
+    }
+  }, [hasStarted]);
 
   useEffect(() => {
-    // Verifica se é o texto inicial/carregando
+    // Verificar se é o texto inicial/carregando
     if (text.includes("Preparando conteúdo") || text === '') {
       setDisplayText(text);
+      setIsComplete(true);
       return;
     }
 
-    if (currentIndex < text.length && !isPaused) {
+    // Se o efeito já foi concluído, não execute novamente
+    if (animationCompleted.current) {
+      return;
+    }
+
+    if (currentIndex < text.length) {
       const timeout = setTimeout(() => {
         // Adiciona caracteres por chunks em vez de um por um para melhor performance
         const chunkSize = Math.max(1, Math.floor(text.length / 100));
@@ -65,6 +77,7 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
         // Verifica se chegou ao final do texto
         if (nextIndex >= text.length) {
           setIsComplete(true);
+          animationCompleted.current = true;
         }
 
         // Scroll para o final do conteúdo para acompanhar a digitação
@@ -75,24 +88,16 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
 
       return () => clearTimeout(timeout);
     }
-  }, [currentIndex, text, typingSpeed, isPaused]);
+  }, [currentIndex, text, typingSpeed]);
 
+  // Mostrar texto completo imediatamente ao clicar, mas apenas se o efeito estiver em andamento
   const handleClick = () => {
-    // Se já completou, não faz nada ao clicar
     if (isComplete) return;
-
-    // Se estiver pausado, continua a digitação
-    if (isPaused) {
-      setIsPaused(false);
-      return;
-    }
-
-    // Se o texto estiver sendo digitado e o usuário clicar, completa imediatamente
-    if (currentIndex < text.length) {
-      setDisplayText(text);
-      setCurrentIndex(text.length);
-      setIsComplete(true);
-    }
+    
+    setDisplayText(text);
+    setCurrentIndex(text.length);
+    setIsComplete(true);
+    animationCompleted.current = true;
   };
 
   // Detecta se o texto parece ser markdown
@@ -108,8 +113,8 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
   return (
     <div 
       ref={contentRef}
-      onClick={handleClick} 
-      className={`prose prose-sm dark:prose-invert max-w-none cursor-pointer ${className}`}
+      onClick={isComplete ? undefined : handleClick} 
+      className={`prose prose-sm dark:prose-invert max-w-none ${!isComplete ? 'cursor-pointer' : ''} ${className}`}
     >
       {containsMarkdown ? (
         <React.Suspense fallback={<div style={{ whiteSpace: 'pre-wrap' }}>{displayText}</div>}>
@@ -123,20 +128,8 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
         <div style={{ whiteSpace: 'pre-wrap' }}>{displayText}</div>
       )}
 
-      {currentIndex < text.length && !isPaused && (
+      {currentIndex < text.length && (
         <span className="animate-pulse inline-block h-4 w-1 ml-0.5 bg-blue-500 dark:bg-blue-400"></span>
-      )}
-
-      {isPaused && (
-        <div className="text-xs text-blue-600 dark:text-blue-400 mt-2 px-2 py-1 bg-blue-100 dark:bg-blue-900/20 rounded inline-block">
-          Clique para continuar a digitação
-        </div>
-      )}
-
-      {!isComplete && !isPaused && currentIndex > 10 && (
-        <div className="text-xs text-blue-600 dark:text-blue-400 mt-2 px-2 py-1 bg-blue-100 dark:bg-blue-900/20 rounded inline-block">
-          Clique para mostrar todo o conteúdo imediatamente
-        </div>
       )}
     </div>
   );

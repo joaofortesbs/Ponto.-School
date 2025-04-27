@@ -26,6 +26,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { v4 as uuidv4 } from 'uuid';
 import { generateAIResponse, addMessageToHistory, createMessage } from "@/services/epictusIAService";
 import { toast } from "@/components/ui/use-toast";
+import TypewriterEffect from '@/components/ui/typewriter-effect'; // Added import
 
 interface Message {
   id: string;
@@ -796,7 +797,11 @@ const EpictusBetaMode: React.FC = () => {
                         </div>
                       </div>
                     ) : (
-                      <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed font-light">{message.content}</p>
+                      <TypewriterEffect 
+                        text={message.content} 
+                        typingSpeed={5}
+                        className="typewriter-message"
+                      />
                     )}
                     <div className="flex justify-between items-center mt-2 pt-1 border-t border-white/10">
                       <div className="flex items-center space-x-2">
