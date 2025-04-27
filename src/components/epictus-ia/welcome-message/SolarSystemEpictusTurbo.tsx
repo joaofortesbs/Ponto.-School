@@ -106,7 +106,7 @@ const SolarSystemEpictusTurbo: React.FC<SolarSystemEpictusTurboProps> = ({
   ];
 
   return (
-    <div className="solar-system-container relative flex items-center justify-center overflow-hidden">
+    <div className="relative w-full h-[70vh] flex items-center justify-center overflow-hidden">
       {/* Partículas de fundo aprimoradas */}
       <div className="absolute inset-0 -z-1">
         <Particles
