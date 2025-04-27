@@ -59,6 +59,8 @@
   line-height: 28px;
   color: #333;
   text-shadow: 0px 0px 0.3px rgba(0, 0, 0, 0.3);
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 /* Dark mode support */
@@ -66,59 +68,175 @@
   color: #f0f0f0;
 }
 
-/* Title styling */
-.notebook-title {
-  font-family: 'Caveat', 'Kalam', 'Architects Daughter', cursive;
-  color: #3a86ff;
-  font-size: 1.8rem;
+/* Títulos principais estilizados */
+.notebook-main-title {
+  font-family: 'Caveat', 'Kalam', 'Comic Sans MS', cursive;
+  color: #FF6B00;
+  font-size: 2rem;
   font-weight: bold;
-  margin-bottom: 14px;
-  line-height: 32px;
+  line-height: 2.4rem;
+  margin: 1.5rem 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px dotted rgba(255, 107, 0, 0.3);
+  text-align: center;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
   position: relative;
-  display: inline-block;
-  letter-spacing: 1px;
-  text-shadow: 0.5px 0.5px 0px rgba(0, 0, 0, 0.2);
 }
 
-.notebook-title::after {
-  content: '';
+.notebook-main-title::before, 
+.notebook-main-title::after {
+  content: "✦";
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #3a86ff, transparent);
-  border-radius: 3px;
-  opacity: 0.5;
-  transform-origin: left;
-  animation: highlight-grow 0.5s ease-out forwards;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 107, 0, 0.5);
+  font-size: 1.5rem;
 }
 
-@keyframes highlight-grow {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
+.notebook-main-title::before {
+  left: 10px;
 }
 
-.dark .notebook-title {
+.notebook-main-title::after {
+  right: 10px;
+}
+
+/* Subtítulos com emojis */
+.notebook-subtitle {
+  font-family: 'Kalam', 'Architects Daughter', cursive;
+  color: #3a86ff;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 1.2rem 0 0.8rem;
+  padding-left: 0.5rem;
+  position: relative;
+  border-left: 3px solid #3a86ff;
+}
+
+.dark .notebook-subtitle {
+  color: #4cc9f0;
+  border-left-color: #4cc9f0;
+}
+
+/* Parágrafos de texto normais */
+.notebook-paragraph {
+  margin: 0.75rem 0;
+  text-align: justify;
+  line-height: 1.6;
+}
+
+/* Elementos de destaque (dicas, notas, etc.) */
+.notebook-callout {
+  background-color: rgba(255, 248, 229, 0.7);
+  border-left: 4px solid #f7b801;
+  margin: 1rem 0;
+  padding: 0.8rem 1rem;
+  border-radius: 0 6px 6px 0;
+  position: relative;
+  font-style: italic;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.dark .notebook-callout {
+  background-color: rgba(255, 248, 229, 0.1);
+}
+
+/* Bullets e listas */
+.notebook-bullet {
+  margin: 0.5rem 0 0.5rem 1.5rem;
+  position: relative;
+  padding-left: 0.5rem;
+}
+
+.bullet-icon {
+  color: #FF6B00;
+  position: absolute;
+  left: -1.5rem;
+  top: 0.2rem;
+}
+
+/* Listas numeradas */
+.notebook-numbered {
+  margin: 0.5rem 0 0.5rem 1.5rem;
+  position: relative;
+  padding-left: 0.5rem;
+}
+
+.number-icon {
+  color: #3a86ff;
+  position: absolute;
+  left: -1.5rem;
+  top: 0.2rem;
+  font-weight: bold;
+}
+
+.dark .number-icon {
   color: #4cc9f0;
 }
 
-.dark .notebook-title::after {
-  background: linear-gradient(90deg, #4cc9f0, transparent);
+/* Texto em negrito */
+.notebook-bold {
+  font-weight: bold;
+  color: #1a1a1a;
+  background-color: rgba(255, 248, 200, 0.3);
+  padding: 0 4px;
+  border-radius: 3px;
 }
 
-/* Bullet points styling */
-.notebook-bullet {
+.dark .notebook-bold {
+  color: #ffffff;
+  background-color: rgba(255, 248, 200, 0.1);
+}
+
+/* Formula styling */
+.notebook-formula {
+  font-family: 'Courier New', monospace;
+  background-color: rgba(255, 255, 255, 0.3);
+  padding: 1px 5px;
+  border-radius: 3px;
+  border-left: 2px solid #3a86ff;
+  display: inline-block;
+  margin: 0.3rem 0;
+}
+
+.dark .notebook-formula {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-left: 2px solid #4cc9f0;
+}
+
+/* Closing note styling */
+.notebook-closing {
   color: #FF6B00;
-  font-size: 1.25rem;
-  margin-right: 0.75rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  padding: 0.8rem;
+  font-style: italic;
   position: relative;
-  animation: pencil-draw 0.3s ease-in-out;
+  display: block;
+  background-color: rgba(255, 107, 0, 0.05);
+  border-radius: 6px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
-@keyframes pencil-draw {
-  0% { opacity: 0; transform: scale(0.8) rotate(-20deg); }
-  100% { opacity: 1; transform: scale(1) rotate(0); }
+.notebook-closing::after {
+  content: '✓';
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  font-size: 1rem;
+}
+
+/* Special emphasis styles */
+.notebook-important {
+  text-transform: uppercase;
+  font-weight: bold;
+  color: #e63946;
+  background-color: rgba(230, 57, 70, 0.1);
+  padding: 0 5px;
+  border-radius: 3px;
+  display: inline-block;
 }
 
 /* Highlighted text */
@@ -142,49 +260,7 @@
   z-index: -1;
 }
 
-/* Formula styling */
-.notebook-formula {
-  font-family: 'Courier New', monospace;
-  background-color: rgba(255, 255, 255, 0.3);
-  padding: 1px 5px;
-  border-radius: 3px;
-  border-left: 2px solid #3a86ff;
-}
-
-.dark .notebook-formula {
-  background-color: rgba(0, 0, 0, 0.3);
-  border-left: 2px solid #4cc9f0;
-}
-
-/* Closing note styling */
-.notebook-closing {
-  color: #FF6B00;
-  font-weight: 600;
-  margin-top: 18px;
-  font-style: italic;
-  position: relative;
-  display: inline-block;
-  padding-right: 20px;
-}
-
-.notebook-closing::after {
-  content: '✓';
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  font-size: 0.9rem;
-}
-
-/* Special emphasis styles */
-.notebook-important {
-  text-transform: uppercase;
-  font-weight: bold;
-  color: #e63946;
-  background-color: rgba(230, 57, 70, 0.1);
-  padding: 0 5px;
-  border-radius: 3px;
-}
-
+/* Variações de ênfase */
 .notebook-tip {
   text-transform: uppercase;
   font-weight: bold;
@@ -192,6 +268,7 @@
   background-color: rgba(42, 157, 143, 0.1);
   padding: 0 5px;
   border-radius: 3px;
+  display: inline-block;
 }
 
 .notebook-note {
@@ -201,6 +278,7 @@
   background-color: rgba(155, 93, 229, 0.1);
   padding: 0 5px;
   border-radius: 3px;
+  display: inline-block;
 }
 
 .notebook-remember {
@@ -210,6 +288,7 @@
   background-color: rgba(244, 162, 97, 0.1);
   padding: 0 5px;
   border-radius: 3px;
+  display: inline-block;
 }
 
 /* Animação suave para destacar elementos importantes */
@@ -237,6 +316,8 @@
   color: inherit;
   caret-color: #FF6B00;
   letter-spacing: 0.7px;
+  overflow-y: auto;
+  max-height: 65vh;
 }
 
 .dark .notebook-textarea {
@@ -267,5 +348,14 @@
   
   .notebook-lines::before {
     left: 30px;
+  }
+  
+  .notebook-main-title {
+    font-size: 1.6rem;
+    line-height: 2rem;
+  }
+  
+  .notebook-subtitle {
+    font-size: 1.3rem;
   }
 }

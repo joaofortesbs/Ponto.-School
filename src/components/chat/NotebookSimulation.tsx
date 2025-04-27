@@ -5,69 +5,75 @@ interface NotebookSimulationProps {
   content: string;
 }
 
-export const NotebookSimulation: React.FC<NotebookSimulationProps> = ({ content }) => {
-  // Versão simplificada da limpeza de conteúdo que preserva mais do texto original
+const NotebookSimulation: React.FC<NotebookSimulationProps> = ({ content }) => {
+  // Preserva mais do texto original com limpeza mínima
   const cleanContent = (originalContent: string) => {
     let cleaned = originalContent;
-
-    // Remove links usando regex (apenas links markdown e URLs completas)
+    
+    // Remove apenas links markdown e URLs completas (preserva o texto do link)
     cleaned = cleaned.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1');
     cleaned = cleaned.replace(/(https?:\/\/[^\s]+)/g, '');
-
-    // Remove saudações mais específicas para evitar perda de conteúdo
-    const phrasesToRemove = [
-      /^(?:olá|oi|hey|hello|hi|bom dia|boa tarde|boa noite)[,.!]?\s*/gi,
-      /(?:atenciosamente|abraços|saudações|cumprimentos|até mais|até logo|até breve|fique bem|até a próxima)$/gi,
-    ];
-
-    phrasesToRemove.forEach(pattern => {
-      cleaned = cleaned.replace(pattern, '');
-    });
-
-    // Remover linhas vazias extras mas preservar estrutura do texto
-    cleaned = cleaned.replace(/\n\s*\n\s*\n/g, '\n\n');
     
-    // Remover espaços em branco extras no início e fim
+    // Remove espaços extras e quebras de linha duplicadas, preservando a estrutura
+    cleaned = cleaned.replace(/\n\s*\n\s*\n+/g, '\n\n');
     cleaned = cleaned.trim();
-
+    
     return cleaned;
   };
 
-  // Processa o conteúdo mantendo a maioria do texto original
+  // Processa o conteúdo preservando formatações especiais
   const processNotebookContent = (rawContent: string) => {
-    // Aplicar limpeza básica sem remover conteúdo importante
+    // Aplicar limpeza mínima
     let processed = cleanContent(rawContent);
     
-    // Padronizar formatação de bullet points
+    // Padronização de símbolos
     processed = processed.replace(/^[•\-\*]\s+/gm, '• ');
-    processed = processed.replace(/^(\d+\.\s+)/gm, '• ');
-    
-    // Adicionar nota de fechamento apenas se não existir um fechamento similar
-    if (!processed.includes('Anotação pronta') && !processed.includes('👉')) {
-      processed += '\n\n👉 Anotação pronta! Agora é só revisar no modo caderno digital :)';
-    }
+    processed = processed.replace(/^(\d+\.\s+)/gm, '$1 ');
     
     return processed;
   };
 
-  // Aplicar formatação HTML
+  // Aplicar formatação HTML mais rica e preservar estrutura original
   const formatHtml = (text: string) => {
     return text
-      // Bullets com estilo de lápis
-      .replace(/^•\s+/gm, '<span class="notebook-bullet">✎</span> ')
+      // Títulos principais (linhas que começam com emoji e têm texto grande)
+      .replace(/^(.*📖.*|.*📚.*|.*📝.*|.*📑.*|.*📔.*|.*📕.*|.*📗.*|.*📘.*|.*📙.*)$/gm, 
+        '<div class="notebook-main-title">$1</div>')
+      
+      // Subtítulos com emojis (🧠, 🔍, ⚙️, etc.)
+      .replace(/^(.*🧠.*|.*🔍.*|.*⚙️.*|.*💡.*|.*📌.*|.*🔑.*|.*⭐.*|.*📊.*)$/gm, 
+        '<div class="notebook-subtitle">$1</div>')
+      
+      // Destaque para dicas, atenção, etc.
+      .replace(/^(.*💬.*|.*✅.*|.*⚠️.*|.*📢.*|.*🎯.*|.*🎨.*|.*✏️.*|.*📝.*|.*🪄.*)$/gm, 
+        '<div class="notebook-callout">$1</div>')
+      
+      // Listas com marcadores
+      .replace(/^•\s+(.*)$/gm, '<div class="notebook-bullet"><span class="bullet-icon">✎</span> $1</div>')
+      
+      // Listas numeradas
+      .replace(/^(\d+)\.\s+(.*)$/gm, '<div class="notebook-numbered"><span class="number-icon">$1.</span> $2</div>')
+      
       // Negrito
-      .replace(/(\*\*|__)([^*_]+?)(\*\*|__)/g, '<span class="notebook-highlight">$2</span>')
-      // Títulos (linhas que começam com maiúsculas ou têm : no final)
-      .replace(/(^|\n)([A-Z][^:\n]+:?)($|\n)/g, '$1<span class="notebook-title">$2</span>$3')
-      // Nota de fechamento
-      .replace(/👉([^<]*)/g, '<span class="notebook-closing">👉$1</span>')
-      // Palavras-chave
-      .replace(/\b(IMPORTANTE|IMPORTANTE:)\b/gi, '<span class="notebook-important">IMPORTANTE</span>')
-      .replace(/\b(DICA|DICA:)\b/gi, '<span class="notebook-tip">DICA</span>')
-      .replace(/\b(OBSERVAÇÃO|OBSERVAÇÃO:|NOTA|NOTA:)\b/gi, '<span class="notebook-note">OBSERVAÇÃO</span>')
-      .replace(/\b(LEMBRE-SE|LEMBRE-SE:)\b/gi, '<span class="notebook-remember">LEMBRE-SE</span>')
-      // Fórmulas matemáticas
-      .replace(/(\w+\s*=\s*[\w\s\+\-\*\/\(\)\^√∆]{1,40})/g, '<span class="notebook-formula">$1</span>');
+      .replace(/\*\*([^*]+)\*\*/g, '<span class="notebook-bold">$1</span>')
+      .replace(/__([^_]+)__/g, '<span class="notebook-bold">$1</span>')
+      
+      // Fórmulas e expressões matemáticas com destaque
+      .replace(/(\b[a-zA-Z²³¹]+\s*[=+\-*/^]+\s*[\w\s+\-*/^()²³¹]+)/g, 
+        '<span class="notebook-formula">$1</span>')
+      
+      // Destaque para termos importantes
+      .replace(/\b(IMPORTANTE|ATENÇÃO|DICA|OBSERVAÇÃO|NOTA|LEMBRE-SE)\b:/gi, 
+        '<span class="notebook-important">$1:</span>')
+      
+      // Parágrafos normais para melhor legibilidade
+      .replace(/^([^<].*[^>])$/gm, '<p class="notebook-paragraph">$1</p>')
+      
+      // Garantir que quebras de linha sejam respeitadas
+      .replace(/\n/g, '')
+      
+      // Nota de fechamento personalizada
+      .replace(/(✅.*Anotação concluída.*|👉.*)/g, '<div class="notebook-closing">$1</div>');
   };
 
   return (
