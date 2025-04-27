@@ -1467,8 +1467,4 @@ const convertToNotebookFormat = async (
   return await generateAIResponse(notebookPrompt, sessionId, options);
 };
 
-// Exporta as funções para uso em outros componentes
-export {
-  generateAIResponse,
-  convertToNotebookFormat
-};
+// generateAIResponse e convertToNotebookFormat já são exportados individualmente
