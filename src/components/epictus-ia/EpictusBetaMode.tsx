@@ -797,11 +797,15 @@ const EpictusBetaMode: React.FC = () => {
                         </div>
                       </div>
                     ) : (
-                      <TypewriterEffect 
-                        text={message.content} 
-                        typingSpeed={5}
-                        className="typewriter-message"
-                      />
+                      {message.sender === "ia" ? (
+                        <TypewriterEffect 
+                          text={message.content} 
+                          typingSpeed={5}
+                          className="typewriter-message"
+                        />
+                      ) : (
+                        <div style={{ whiteSpace: 'pre-wrap' }}>{message.content}</div>
+                      )}
                     )}
                     <div className="flex justify-between items-center mt-2 pt-1 border-t border-white/10">
                       <div className="flex items-center space-x-2">
