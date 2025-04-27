@@ -1,15 +1,9 @@
+
 /* Notebook simulation styles */
 .notebook-simulation {
   background-color: #fffdf0;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   position: relative;
-  z-index: 9999; /* Aumentado para garantir que fique sobre outros elementos */
-  min-height: 400px;
-  width: 100%;
-  margin: 0 auto;
-  border-radius: 2px;
-  display: flex;
-  flex-direction: column;
 }
 
 .dark .notebook-simulation {
@@ -25,93 +19,4 @@
   bottom: 0;
   width: 1px;
   background-color: #ff9e9e;
-  z-index: 1;
-}
-/* Estilos para o caderno de anotações */
-
-.notebook-lines {
-  padding: 0;
-  position: relative;
-  min-height: 300px;
-  max-height: 60vh;
-  background-color: #fffdf0;
-  z-index: 30;
-  overflow-y: auto;
-  flex: 1;
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  font-size: 1rem;
-}
-
-.notebook-lines::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 2.5rem;
-  bottom: 0;
-  width: 1px;
-  background-color: #ff9d8a;
-}
-
-/* Estilos para fórmulas matemáticas */
-.formula {
-  font-family: 'Courier New', monospace;
-  background-color: rgba(255, 235, 205, 0.5);
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  border-left: 3px solid #ff9d8a;
-  display: inline-block;
-  margin: 0.25rem 0;
-}
-
-/* Destaque para títulos no caderno */
-.notebook-title {
-  font-size: 1.5rem;
-  color: #5d4037;
-  font-weight: bold;
-  border-bottom: 2px solid #8d6e63;
-  padding-bottom: 0.5rem;
-  margin-bottom: 1rem;
-  text-align: center;
-  line-height: 1.8;
-}
-
-/* Estilo para subtítulos */
-.notebook-subtitle {
-  font-size: 1.1rem;
-  color: #8d6e63;
-  font-weight: bold;
-  margin-top: 1rem;
-  margin-bottom: 0.5rem;
-  text-decoration: underline;
-  text-decoration-color: #d7ccc8;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 4px;
-}
-
-/* Estilo para marcadores no caderno */
-.bullet-point {
-  display: flex;
-  align-items: baseline;
-  margin-bottom: 0.25rem;
-}
-
-.bullet {
-  color: #ad4e3a;
-  margin-right: 0.5rem;
-  font-weight: bold;
-}
-
-/* Estilo para destacar palavras importantes */
-.important-word {
-  font-weight: bold;
-  color: #ad4e3a;
-}
-
-/* Estilo para a mensagem final */
-.notebook-footer {
-  text-align: right;
-  color: #8d6e63;
-  font-style: italic;
-  margin-top: 1.5rem;
-  font-size: 0.9rem;
 }

@@ -1,167 +1,34 @@
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { PenLine, FileText, Loader2 } from 'lucide-react';
-import { convertToNotebookFormat } from '@/services/aiChatService';
-import NotebookModal from '../../notebook-simulation/NotebookModal';
-import { toast } from '@/components/ui/use-toast';
+import React from 'react';
 
 interface EscreverNoCadernoProps {
-  closeModal: () => void;
-  messageContent?: string;
+  onClick: () => void;
 }
 
-const EscreverNoCaderno: React.FC<EscreverNoCadernoProps> = ({ closeModal, messageContent = "" }) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [notebookContent, setNotebookContent] = useState("");
-  const [notebookModalOpen, setNotebookModalOpen] = useState(false);
-  const [conversionError, setConversionError] = useState(false);
-
-  // Função para gerar caderno de anotações
-  const handleGerarCaderno = async () => {
-    if (!messageContent.trim()) {
-      toast({
-        title: "Conteúdo vazio",
-        description: "Não há conteúdo para converter em formato de caderno.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      // Iniciar estado de carregamento
-      setIsLoading(true);
-      setConversionError(false);
-      
-      // Fechar o modal de ferramentas
-      closeModal();
-      
-      // Abrir modal do caderno ANTES de começar a converter
-      // Isso garante que o modal esteja visível durante o carregamento
-      setNotebookModalOpen(true);
-      
-      console.log("Iniciando conversão para formato de caderno...");
-      
-      // Converter mensagem para formato de caderno
-      try {
-        // Usar um timeout para garantir que o modal esteja realmente aberto
-        setTimeout(async () => {
-          try {
-            // Obter o conteúdo convertido
-            const formattedContent = await convertToNotebookFormat(messageContent);
-            
-            // Verificar se o conteúdo foi gerado corretamente
-            if (formattedContent && formattedContent.trim() !== "") {
-              console.log("Conteúdo do caderno gerado com sucesso");
-              setNotebookContent(formattedContent);
-            } else {
-              console.error("Conteúdo do caderno retornou vazio");
-              setConversionError(true);
-              setNotebookContent("Não foi possível gerar o conteúdo do caderno. Por favor, tente novamente.");
-            }
-          } catch (error) {
-            console.error("Erro durante a conversão do conteúdo:", error);
-            setConversionError(true);
-            setNotebookContent("Ocorreu um erro ao gerar o caderno. Por favor, tente novamente.");
-          } finally {
-            // Finalizar carregamento, mas manter o modal aberto
-            setIsLoading(false);
-          }
-        }, 300);
-      } catch (error) {
-        console.error("Erro ao processar conversão:", error);
-        setConversionError(true);
-        setNotebookContent("Ocorreu um erro ao gerar o caderno. Por favor, tente novamente.");
-        setIsLoading(false);
-      }
-    } catch (error) {
-      console.error("Erro geral ao iniciar a conversão:", error);
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao gerar o caderno. Por favor, tente novamente.",
-        variant: "destructive",
-      });
-      setIsLoading(false);
-    }
-  };
-
-  // Função para fechar o modal de caderno
-  const handleCloseNotebookModal = () => {
-    console.log("Fechando modal do caderno a pedido do usuário");
-    setNotebookModalOpen(false);
-    // Limpar o conteúdo apenas após o modal estar fechado
-    setTimeout(() => {
-      setNotebookContent("");
-      setConversionError(false);
-    }, 300);
-  };
-
+const EscreverNoCaderno: React.FC<EscreverNoCadernoProps> = ({ onClick }) => {
   return (
-    <>
-      <div className="space-y-4 text-white">
-        <div className="flex items-start space-x-3">
-          <div className="bg-green-600 p-2 rounded-full">
-            <PenLine className="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <h3 className="text-lg font-medium text-white">Escrever no Caderno</h3>
-            <p className="text-indigo-200 text-sm">
-              Transforme este conteúdo em um formato de caderno digital com resumos e pontos-chave para seus estudos
-            </p>
-          </div>
-        </div>
-
-        <div className="border border-indigo-800/50 rounded-lg p-4 bg-indigo-950/30">
-          <div className="flex items-center mb-3">
-            <FileText className="h-4 w-4 mr-2 text-indigo-300" />
-            <h4 className="text-sm font-medium text-indigo-300">Como funciona?</h4>
-          </div>
-          <p className="text-sm text-indigo-200">
-            Este assistente transformará o conteúdo em um formato de caderno digital com:
-          </p>
-          <ul className="text-sm text-indigo-200 mt-2 space-y-1 list-disc list-inside">
-            <li>Resumo dos pontos principais</li>
-            <li>Tópicos e subtópicos organizados</li>
-            <li>Palavras-chave destacadas</li>
-            <li>Fórmulas e conceitos importantes</li>
-            <li>Layout de fácil leitura no estilo de caderno</li>
-          </ul>
-        </div>
-
-        <div className="flex justify-end space-x-2 pt-2">
-          <Button 
-            variant="ghost" 
-            onClick={closeModal}
-            className="text-indigo-200 hover:text-white hover:bg-indigo-800"
-            disabled={isLoading}
-          >
-            Cancelar
-          </Button>
-          <Button 
-            onClick={handleGerarCaderno}
-            className="bg-green-600 hover:bg-green-700 text-white"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Gerando...
-              </>
-            ) : (
-              "Gerar Caderno"
-            )}
-          </Button>
-        </div>
+    <button
+      onClick={onClick}
+      className="flex items-start space-x-3 p-3 rounded-lg transition-all hover:bg-[#2A3645]/70 border border-[#3A4B5C]/30 hover:border-[#FF6B00]/30 group w-full"
+    >
+      <div className="bg-[#1E293B]/70 rounded-full p-2 group-hover:bg-[#0D23A0]/20">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-green-500 dark:text-green-400">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
       </div>
-
-      {/* Modal do caderno - sempre sob controle do usuário */}
-      <NotebookModal
-        isOpen={notebookModalOpen}
-        onClose={handleCloseNotebookModal}
-        content={notebookContent}
-        isLoading={isLoading}
-      />
-    </>
+      <div className="flex-1 text-left">
+        <h3 className="font-medium text-white group-hover:text-[#FF6B00]">
+          Escrever no Caderno
+        </h3>
+        <p className="text-xs text-white/60 mt-1">
+          Salve este conteúdo em seu caderno de estudos
+        </p>
+      </div>
+    </button>
   );
 };
 
