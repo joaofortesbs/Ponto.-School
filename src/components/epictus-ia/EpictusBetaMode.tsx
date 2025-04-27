@@ -26,25 +26,23 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { v4 as uuidv4 } from 'uuid';
 import { generateAIResponse, addMessageToHistory, createMessage } from "@/services/epictusIAService";
 import { toast } from "@/components/ui/use-toast";
-import TypewriterEffect from '@/components/ui/typewriter-effect'; 
+import TypewriterEffect from '@/components/ui/typewriter-effect'; // Added import
 import WelcomeMessage from './welcome-message/WelcomeMessage';
-import { NotebookModal } from './notebook-simulation';
-import { convertToNotebookFormat } from '@/services/aiChatService';
 
 interface Message {
   id: string;
-  sender: "user" | "ia" | "assistant";
+  sender: "user" | "ia";
   content: string;
   timestamp: Date;
   isEdited?: boolean;
   feedback?: 'positive' | 'negative';
   needsImprovement?: boolean; 
-  showTools?: boolean; 
+  showTools?: boolean; // Added showTools property
 }
 
 import HeaderIcons from "./modoepictusiabeta/header/icons/HeaderIcons";
 import HistoricoConversasModal from "./modals/HistoricoConversasModal";
-import MessageToolsDropdown from "./message-tools/MessageToolsDropdown"; 
+import MessageToolsDropdown from "./message-tools/MessageToolsDropdown"; // Import the new component
 
 
 const EpictusBetaMode: React.FC = () => {
@@ -78,7 +76,7 @@ const EpictusBetaMode: React.FC = () => {
       sender: "ia",
       content: "Olá, João! Eu sou o Epicus IA, seu assistente para aprendizado e programação. Como posso te ajudar hoje?",
       timestamp: new Date(),
-      showTools: false 
+      showTools: false // Added showTools property
     }];
   });
 
@@ -95,9 +93,7 @@ const EpictusBetaMode: React.FC = () => {
   const [sessionId] = useState(() => localStorage.getItem('epictus_beta_session_id') || uuidv4());
   const [isReformulating, setIsReformulating] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
-  const [showNotebookModal, setShowNotebookModal] = useState(false);
-  const [notebookContent, setNotebookContent] = useState('');
-
+  
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -201,7 +197,7 @@ const EpictusBetaMode: React.FC = () => {
 
     if (isTyping) return;
 
-    
+    // Ocultar mensagem de boas-vindas quando o usuário envia uma mensagem
     if (showWelcome) {
       setShowWelcome(false);
     }
@@ -233,7 +229,7 @@ const EpictusBetaMode: React.FC = () => {
           sender: "ia",
           content: response,
           timestamp: new Date(),
-          showTools: false 
+          showTools: false // Added showTools property
         };
 
         setMessages(prev => [...prev, aiMessage]);
@@ -245,7 +241,7 @@ const EpictusBetaMode: React.FC = () => {
           sender: "ia",
           content: "Desculpe, encontrei um problema ao processar sua solicitação. Por favor, tente novamente em alguns instantes.",
           timestamp: new Date(),
-          showTools: false 
+          showTools: false // Added showTools property
         };
 
         setMessages(prev => [...prev, errorMessage]);
@@ -274,12 +270,12 @@ const EpictusBetaMode: React.FC = () => {
       sender: "ia",
       content: "Olá, João! Eu sou o Epicus IA, seu assistente para aprendizado e programação. Como posso te ajudar hoje?",
       timestamp: new Date(),
-      showTools: false 
+      showTools: false // Added showTools property
     };
 
     setMessages([initialMessage]);
     setIsConfirmOpen(false);
-    
+    // Mostrar novamente a mensagem de boas-vindas quando o chat for limpo
     setShowWelcome(true);
   };
 
@@ -600,7 +596,7 @@ const EpictusBetaMode: React.FC = () => {
     sender: "ia",
     content: responseMessage,
     timestamp: new Date(),
-    showTools: false 
+    showTools: false // Added showTools property
   };
 
   setMessages(prev => [...prev, botMessage]);
@@ -640,7 +636,7 @@ const EpictusBetaMode: React.FC = () => {
         const reformulatedResponse = await generateAIResponse(`Reformule a seguinte resposta de forma mais detalhada: ${messageToReformulate.content}`, sessionId);
         const updatedMessages = messages.map(msg =>
           msg.id === messageId
-            ? {...msg, content: reformulatedResponse, isEdited: true, needsImprovement: false, showTools: false } 
+            ? {...msg, content: reformulatedResponse, isEdited: true, needsImprovement: false, showTools: false } // Added showTools
             : msg
         );
         setMessages(updatedMessages);
@@ -665,7 +661,7 @@ const EpictusBetaMode: React.FC = () => {
         const summarizedResponse = await generateAIResponse(`Resuma a seguinte resposta de forma mais concisa: ${messageToSummarize.content}`, sessionId);
         const updatedMessages = messages.map(msg =>
           msg.id === messageId
-            ? { ...msg, content: summarizedResponse, isEdited: true, needsImprovement: false, showTools: false } 
+            ? { ...msg, content: summarizedResponse, isEdited: true, needsImprovement: false, showTools: false } // Added showTools
             : msg
         );
         setMessages(updatedMessages);
@@ -692,7 +688,7 @@ const EpictusBetaMode: React.FC = () => {
     setShowHistoricoModal(false);
   };
 
-  
+  // Função para editar mensagem
   const handleEditMessage = (messageId: string) => {
     const messageToEdit = messages.find((msg) => msg.id === messageId);
     if (messageToEdit) {
@@ -701,7 +697,7 @@ const EpictusBetaMode: React.FC = () => {
     }
   };
 
-  
+  // Função para alternar a exibição de ferramentas para uma mensagem
   const toggleMessageTools = (messageId: string) => {
     setMessages(prevMessages => 
       prevMessages.map(msg => ({
@@ -715,7 +711,7 @@ const EpictusBetaMode: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
-  
+  // Fechar todos os menus de ferramentas ao clicar fora
   useEffect(() => {
     const handleGlobalClick = () => {
       setMessages(prevMessages => 
@@ -733,54 +729,8 @@ const EpictusBetaMode: React.FC = () => {
     };
   }, []);
 
-  // Manipula o evento de transformação para caderno
-  useEffect(() => {
-    const handleTransformToNotebook = async (event: CustomEvent) => {
-      if (event.detail && event.detail.content) {
-        setIsLoading(true);
-        try {
-          const content = await convertToNotebookFormat(
-            event.detail.content,
-            'epictus_beta_session',
-            { intelligenceLevel: 'advanced', languageStyle: 'didactic' }
-          );
-
-          setNotebookContent(content);
-          setShowNotebookModal(true);
-
-          
-          setMessages(prev => [
-            ...prev,
-            {
-              id: Date.now(),
-              sender: 'assistant',
-              content: "📝 **Conteúdo transformado em caderno de anotações!**\n\nGerei um resumo do conteúdo em formato de caderno para facilitar seus estudos. Você pode exportar esse conteúdo para revisão futura.",
-              timestamp: new Date()
-            }
-          ]);
-        } catch (error) {
-          console.error("Erro ao converter para formato de caderno:", error);
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    document.addEventListener('transform-to-notebook', handleTransformToNotebook as EventListener);
-
-    return () => {
-      document.removeEventListener('transform-to-notebook', handleTransformToNotebook as EventListener);
-    };
-  }, []);
-
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-[#141E30] to-[#243B55] text-white">
-      {/* Modal do Caderno */}
-      <NotebookModal 
-        open={showNotebookModal} 
-        onOpenChange={setShowNotebookModal} 
-        content={notebookContent} 
-      />
+    <div className="flex flex-col h-full">
       <TurboHeader profileOptions={profileOptions} initialProfileIcon={profileIcon} initialProfileName={profileName} />
 
       <div className="flex-1 flex flex-col items-center justify-between p-4 overflow-hidden bg-transparent">
@@ -972,7 +922,7 @@ const EpictusBetaMode: React.FC = () => {
                           <div className="flex items-center gap-1 mr-2">
                             <button 
                               onClick={() => {
-                                
+                                // Implementar edição de mensagem do usuário futuramente
                                 toast({
                                   title: "Editar mensagem",
                                   description: "Esta funcionalidade será implementada em breve",
