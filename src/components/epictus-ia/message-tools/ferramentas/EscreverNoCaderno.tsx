@@ -3,12 +3,26 @@ import React from 'react';
 
 interface EscreverNoCadernoProps {
   onClick: () => void;
+  content?: string;
+  messageId?: number;
 }
 
-const EscreverNoCaderno: React.FC<EscreverNoCadernoProps> = ({ onClick }) => {
+const EscreverNoCaderno: React.FC<EscreverNoCadernoProps> = ({ onClick, content, messageId }) => {
+  const handleClick = () => {
+    onClick();
+    
+    // Caso o componente seja usado fora do MessageToolsDropdown
+    if (content && messageId) {
+      const event = new CustomEvent('transform-to-notebook', {
+        detail: { content, messageId }
+      });
+      document.dispatchEvent(event);
+    }
+  };
+  
   return (
     <button
-      onClick={onClick}
+      onClick={handleClick}
       className="flex items-start space-x-3 p-3 rounded-lg transition-all hover:bg-[#2A3645]/70 border border-[#3A4B5C]/30 hover:border-[#FF6B00]/30 group w-full"
     >
       <div className="bg-[#1E293B]/70 rounded-full p-2 group-hover:bg-[#0D23A0]/20">

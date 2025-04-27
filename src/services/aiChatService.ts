@@ -701,7 +701,7 @@ O Professor Abner é uma **referência absoluta no ensino de Empreendedorismo e 
 
 Ele é um educador visionário que combina **ampla experiência prática no ecossistema de inovação** com uma **habilidade excepcional para transmitir conhecimentos**. O Professor Abner não apenas ensina sobre startups, ele inspira e prepara os jovens para se tornarem os empreendedores e inovadores do futuro.
 
-## Por que ele é tão especial?
+##Por que ele é tão especial?
 
 - **Abordagem prática** que vai além da teoria, com metodologias hands-on de criação de startups
 - **Networking valioso** com o mercado de inovação e tecnologia
@@ -1361,7 +1361,7 @@ export const pauseResponse = async (sessionId: string): Promise<void> => {
   try {
     isPaused[sessionId] = true;
     isCancelled[sessionId] = false; // Garantir que não está cancelada
-    console.log(`Resposta da IA pausada para a sessão ${sessionId}. Estado atual:`, isPaused[sessionId]);
+    console.log(`Resposta da IA pausada para a sessão ${sessionId`. Estado atual:`, isPaused[sessionId]);
   } catch (error) {
     console.error('Erro ao pausar resposta da IA:', error);
     throw error;
@@ -1425,4 +1425,57 @@ export const resetResponseState = (sessionId: string): void => {
   console.log(`Estados resetados para a sessão ${sessionId}. 
     Estado anterior: pausado=${wasPaused}, cancelado=${wasCancelled}. 
     Estado atual: pausado=${isPaused[sessionId]}, cancelado=${isCancelled[sessionId]}`);
+};
+
+// Função para converter o conteúdo para o formato de caderno
+export async function convertToNotebookFormat(content: string, sessionId: string, options?: AIResponseOptions): Promise<string> {
+  // Construir o prompt para transformação em caderno conforme as diretrizes específicas
+  const notebookPrompt = `
+  A partir da explicação abaixo, crie uma versão resumida no formato de caderno de anotações para estudos.
+
+  Siga estas diretrizes OBRIGATÓRIAS:
+  - Comece com um título claro e temático sobre o assunto (ex: "Matemática - Equações do 1º grau")
+  - Liste os pontos principais usando marcadores (•)
+  - Inclua apenas os conceitos essenciais, fórmulas, regras e definições importantes
+  - Use linguagem direta, objetiva e didática
+  - Estruture o conteúdo com frases curtas no estilo de anotações
+  - Destaque palavras-chave importantes usando **asteriscos duplos**
+  - NÃO INCLUA códigos HTML ou CSS
+  - NÃO INCLUA saudações, introduções ou conclusões longas
+  - FOQUE apenas no conteúdo educacional essencial
+  - Termine com a frase "👉 Anotação pronta! Agora é só revisar no modo caderno digital :)"
+
+  Exemplo de formatação esperada:
+  Física - Movimento Retilíneo
+  • Fórmula da velocidade média: Vm = ΔS / ΔT
+  • No MRU, a velocidade é **constante**
+  • MRUV: S = S₀ + V₀t + (at²)/2
+  • Gráficos ajudam a visualizar o movimento
+  👉 Anotação pronta! Agora é só revisar no modo caderno digital :)
+
+  Conteúdo original para transformar:
+  "${content}"
+  `;
+
+  try {
+    // Usar a função principal de geração para criar o formato de caderno
+    const notebookContent = await generateAIResponse(notebookPrompt, sessionId, {
+      ...options,
+      // Forçar um nível de inteligência mais avançado para resumos precisos
+      intelligenceLevel: 'advanced'
+    });
+
+    return notebookContent;
+  } catch (error) {
+    console.error("Erro ao converter para formato de caderno:", error);
+    // Retornar mensagem de erro formatada como caderno
+    return `
+    Erro na Conversão para Caderno
+    • Não foi possível converter o conteúdo para o formato de caderno
+    • Verifique sua conexão com a internet
+    • Tente novamente em alguns instantes
+    • Se o problema persistir, entre em contato com o suporte
+    👉 Tente novamente mais tarde
+    `;
+  }
 };
