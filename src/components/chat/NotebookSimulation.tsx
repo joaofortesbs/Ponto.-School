@@ -98,23 +98,23 @@ export const NotebookSimulation: React.FC<NotebookSimulationProps> = ({ content 
   };
 
   return (
-    <div className="notebook-simulation p-4">
+    <div className="notebook-simulation">
       <div 
-        className="w-full text-gray-800 dark:text-gray-200 whitespace-pre-line leading-loose px-3"
+        className="w-full text-gray-800 dark:text-gray-200 whitespace-pre-line leading-loose px-5"
         style={{
-          backgroundImage: 'linear-gradient(#aaa 1px, transparent 1px)',
+          backgroundImage: 'linear-gradient(rgba(170,170,170,0.5) 1px, transparent 1px)',
           backgroundSize: '100% 28px',
           lineHeight: '28px',
-          fontFamily: "'Architects Daughter', cursive, system-ui",
-          letterSpacing: '0.5px',
-          fontSize: '1.05rem',
+          fontFamily: "'Architects Daughter', 'Comic Sans MS', cursive, system-ui",
+          letterSpacing: '0.7px',
+          fontSize: '1.1rem',
           textShadow: '0px 0px 0.3px rgba(0,0,0,0.3)'
         }}
         dangerouslySetInnerHTML={{ 
           __html: processNotebookContent(content)
-            .replace(/^•\s+/gm, '<span class="text-[#FF6B00] text-lg mr-1">✎</span> ')
+            .replace(/^•\s+/gm, '<span class="text-[#FF6B00] text-lg mr-1.5">✎</span> ')
             .replace(/(\*\*|__)([^*_]+)(\*\*|__)/g, '<span class="underline decoration-wavy decoration-[#FF6B00]/70 font-bold">$2</span>')
-            .replace(/(^|\n)([A-Z][^:\n]+:?)/g, '$1<span class="text-[#3a86ff] dark:text-[#4cc9f0] font-bold text-xl">$2</span>')
+            .replace(/(^|\n)([A-Z][^:\n]+:?)/g, '$1<span class="text-[#3a86ff] dark:text-[#4cc9f0] font-bold text-xl leading-10">$2</span>')
             .replace(/👉([^<]*)/g, '<span class="text-[#FF6B00] font-semibold">👉$1</span>')
             .replace(/IMPORTANTE/gi, '<span class="uppercase font-bold text-red-500 dark:text-red-400">IMPORTANTE</span>')
             .replace(/DICA/gi, '<span class="uppercase font-bold text-green-500 dark:text-green-400">DICA</span>')
