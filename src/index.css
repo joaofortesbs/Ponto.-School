@@ -1391,48 +1391,5 @@ textarea:hover,
   height: 500px;
   margin: 0 auto;
   z-index: 10;
-}
-
-/* Animações extras para o sistema solar */
-@keyframes spin-very-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes spin-slow-reverse {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(-360deg); }
-}
-
-@keyframes pulse-custom {
-  0% { opacity: 0.6; transform: scale(0.98); }
-  50% { opacity: 1; transform: scale(1.02); }
-  100% { opacity: 0.6; transform: scale(0.98); }
-}
-
-@keyframes pulse-slow {
-  0% { opacity: 0.6; transform: scale(0.96); }
-  50% { opacity: 1; transform: scale(1.04); }
-  100% { opacity: 0.6; transform: scale(0.96); }
-}
-
-.animate-pulse-custom {
-  animation: pulse-custom 3s ease-in-out infinite;
-}
-
-.animate-pulse-slow {
-  animation: pulse-slow 4s ease-in-out infinite;
-}
-
-.animate-spin-very-slow {
-  animation: spin-very-slow 30s linear infinite;
-}
-
-.animate-spin-slow-reverse {
-  animation: spin-slow-reverse 25s linear infinite;
-}
-
-/* Gradiente cônico para órbitas */
-.bg-gradient-conic {
-  background-image: conic-gradient(var(--tw-gradient-stops));
+  overflow: visible;
 }
