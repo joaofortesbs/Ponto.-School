@@ -1381,3 +1381,13 @@ textarea:hover,
 .animate-fadeOut {
   animation: fadeOut 0.3s ease-in-out forwards;
 }
+/* Estilo para centralizar o sistema solar */
+.solar-system-container {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 500px;
+  max-height: 500px;
+  margin: 0 auto;
+}
