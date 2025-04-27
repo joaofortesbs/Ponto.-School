@@ -1,34 +1,147 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { ClipboardEdit, FileText, Check, Copy } from 'lucide-react';
+import { generateAIResponse } from '@/services/aiChatService';
+import NotebookSimulation from '@/components/chat/NotebookSimulation';
+import { useToast } from '@/components/ui/use-toast';
 
 interface EscreverNoCadernoProps {
-  onClick: () => void;
+  messageContent: string;
+  closeModal: () => void;
 }
 
-const EscreverNoCaderno: React.FC<EscreverNoCadernoProps> = ({ onClick }) => {
+const EscreverNoCaderno: React.FC<EscreverNoCadernoProps> = ({ messageContent, closeModal }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [notebookContent, setNotebookContent] = useState<string>('');
+  const [copied, setCopied] = useState(false);
+  const { toast } = useToast();
+
+  const handleTransformToNotebook = async () => {
+    setIsLoading(true);
+
+    try {
+      const notebookPrompt = `
+        A partir da explicação completa a seguir, gere uma versão resumida no formato de caderno de anotações.
+        
+        Siga estas diretrizes OBRIGATÓRIAS:
+        - Comece com um título direto sobre o tema
+        - Liste os pontos principais usando marcadores (•)
+        - Destaque palavras-chave com **asteriscos duplos**
+        - Use linguagem resumida, direta e didática
+        - Inclua apenas os pontos mais importantes para revisar depois
+        - Inclua fórmulas, regras, dicas de memorização e conceitos-chave
+        - NÃO INCLUA TAGS HTML
+        - NÃO USE EXPLICAÇÕES LONGAS OU REPETIÇÕES
+        - FOQUE APENAS NO CONTEÚDO EDUCACIONAL
+        
+        Conteúdo original:
+        "${messageContent}"
+        
+        Formato exemplo:
+        MATEMÁTICA - EQUAÇÃO DO 2º GRAU
+        • Forma geral: ax² + bx + c = 0
+        • Δ = b² - 4ac
+        • Bhaskara: x = (-b ± √Δ) / 2a
+        • Se Δ < 0 → sem raízes reais
+        • Se Δ = 0 → uma raiz real
+        • Se Δ > 0 → duas raízes reais
+
+        👉 Anotação pronta! Agora é só revisar no modo caderno digital :)
+      `;
+      
+      const result = await generateAIResponse(notebookPrompt, 'notebook_session', {
+        intelligenceLevel: 'advanced',
+        languageStyle: 'direct'
+      });
+      
+      setNotebookContent(result);
+    } catch (error) {
+      console.error("Erro ao transformar em caderno:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível transformar o conteúdo em caderno.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const copyToClipboard = () => {
+    if (notebookContent) {
+      navigator.clipboard.writeText(notebookContent);
+      setCopied(true);
+      toast({
+        title: "Copiado!",
+        description: "Conteúdo do caderno copiado para a área de transferência.",
+      });
+      
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   return (
-    <button
-      onClick={onClick}
-      className="flex items-start space-x-3 p-3 rounded-lg transition-all hover:bg-[#2A3645]/70 border border-[#3A4B5C]/30 hover:border-[#FF6B00]/30 group w-full"
-    >
-      <div className="bg-[#1E293B]/70 rounded-full p-2 group-hover:bg-[#0D23A0]/20">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-green-500 dark:text-green-400">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-          <polyline points="14 2 14 8 20 8"></polyline>
-          <line x1="16" y1="13" x2="8" y2="13"></line>
-          <line x1="16" y1="17" x2="8" y2="17"></line>
-          <polyline points="10 9 9 9 8 9"></polyline>
-        </svg>
+    <div className="p-4 space-y-4">
+      <div className="flex items-center space-x-2 mb-4">
+        <FileText className="h-5 w-5 text-green-500" />
+        <h3 className="text-lg font-medium">Escrever no Caderno</h3>
       </div>
-      <div className="flex-1 text-left">
-        <h3 className="font-medium text-white group-hover:text-[#FF6B00]">
-          Escrever no Caderno
-        </h3>
-        <p className="text-xs text-white/60 mt-1">
-          Salve este conteúdo em seu caderno de estudos
-        </p>
-      </div>
-    </button>
+      
+      <p className="text-sm text-gray-500 dark:text-gray-400">
+        Transforme este conteúdo em formato de caderno de anotações para facilitar seus estudos.
+      </p>
+      
+      {!notebookContent ? (
+        <Button 
+          onClick={handleTransformToNotebook} 
+          className="w-full bg-green-600 hover:bg-green-700"
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <>
+              <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+              Transformando...
+            </>
+          ) : (
+            <>
+              <ClipboardEdit className="mr-2 h-4 w-4" />
+              Transformar em caderno
+            </>
+          )}
+        </Button>
+      ) : (
+        <div className="space-y-4">
+          <div className="border rounded-lg overflow-hidden">
+            <ScrollArea className="h-[300px] p-4">
+              <NotebookSimulation content={notebookContent} />
+            </ScrollArea>
+          </div>
+          
+          <div className="flex space-x-2">
+            <Button 
+              onClick={copyToClipboard} 
+              variant="outline" 
+              className="flex-1"
+            >
+              {copied ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+              {copied ? "Copiado!" : "Copiar texto"}
+            </Button>
+            
+            <Button 
+              onClick={handleTransformToNotebook} 
+              variant="outline" 
+              className="flex-1"
+              disabled={isLoading}
+            >
+              <ClipboardEdit className="mr-2 h-4 w-4" />
+              Regenerar
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

@@ -93,7 +93,7 @@ const EpictusBetaMode: React.FC = () => {
   const [sessionId] = useState(() => localStorage.getItem('epictus_beta_session_id') || uuidv4());
   const [isReformulating, setIsReformulating] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
-  
+
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -610,7 +610,7 @@ const EpictusBetaMode: React.FC = () => {
 
   const handleFeedback = (messageId: string, feedbackType: 'positive' | 'negative') => {
     setMessages(prev => prev.map(msg => {
-      if (msg.id === messageId) {
+      if (msg.id=== messageId) {
         const newFeedback = msg.feedback === feedbackType ? undefined : feedbackType;
 
         if (newFeedback) {
@@ -834,7 +834,7 @@ const EpictusBetaMode: React.FC = () => {
                                   <PenLine size={12} />
                                 </button>
                                 <MessageToolsDropdown 
-                                  messageId={parseInt(message.id)}
+                                  messageId={message.id}
                                   content={message.content}
                                   showTools={message.showTools || false}
                                   onToggleTools={(e) => {

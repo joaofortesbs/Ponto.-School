@@ -96,6 +96,7 @@ const NotebookSimulation: React.FC<NotebookSimulationProps> = ({ content }) => {
             .replace(/•/g, '<span class="text-[#FF6B00] text-lg">✎</span>')
             .replace(/(\*\*|__)([^*_]+)(\*\*|__)/g, '<span class="underline decoration-wavy decoration-[#FF6B00]/70 font-bold">$2</span>')
             .replace(/(^|\n)([A-Z][^:\n]+:)/g, '$1<span class="text-[#3a86ff] dark:text-[#4cc9f0] font-bold">$2</span>')
+            .replace(/👉 Anotação pronta!.*/g, '<span class="text-green-500 font-bold mt-4 block">👉 Anotação pronta! Agora é só revisar no modo caderno digital :)</span>')
         }}
       />
     </div>

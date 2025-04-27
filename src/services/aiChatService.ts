@@ -1426,3 +1426,52 @@ export const resetResponseState = (sessionId: string): void => {
     Estado anterior: pausado=${wasPaused}, cancelado=${wasCancelled}. 
     Estado atual: pausado=${isPaused[sessionId]}, cancelado=${isCancelled[sessionId]}`);
 };
+
+// Função para converter conteúdo para formato de caderno
+export const convertToNotebookFormat = async (
+  content: string,
+  sessionId: string = 'default_session',
+  options: AIResponseOptions = {}
+): Promise<string> => {
+  try {
+    const notebookPrompt = `
+      A partir da explicação completa a seguir, gere uma versão resumida no formato de caderno de anotações.
+
+      Siga estas diretrizes OBRIGATÓRIAS:
+      - Comece com um título direto sobre o tema
+      - Liste os pontos principais usando marcadores (•)
+      - Destaque palavras-chave com **asteriscos duplos**
+      - Use linguagem resumida, direta e didática
+      - Inclua apenas os pontos mais importantes para revisar depois
+      - Inclua fórmulas, regras, dicas de memorização e conceitos-chave
+      - NÃO INCLUA TAGS HTML
+      - NÃO USE EXPLICAÇÕES LONGAS OU REPETIÇÕES
+      - FOQUE APENAS NO CONTEÚDO EDUCACIONAL
+
+      Conteúdo original:
+      "${content}"
+
+      Formato exemplo:
+      MATEMÁTICA - EQUAÇÃO DO 2º GRAU
+      • Forma geral: ax² + bx + c = 0
+      • Δ = b² - 4ac
+      • Bhaskara: x = (-b ± √Δ) / 2a
+      • Se Δ < 0 → sem raízes reais
+      • Se Δ = 0 → uma raiz real
+      • Se Δ > 0 → duas raízes reais
+
+      👉 Anotação pronta! Agora é só revisar no modo caderno digital :)
+    `;
+
+    return await generateAIResponse(notebookPrompt, sessionId, {
+      intelligenceLevel: 'advanced',
+      languageStyle: 'direct',
+      ...options
+    });
+  } catch (error) {
+    console.error("Erro ao converter para formato de caderno:", error);
+    throw error;
+  }
+};
+
+// Exporta as funções para uso em outros componentes
