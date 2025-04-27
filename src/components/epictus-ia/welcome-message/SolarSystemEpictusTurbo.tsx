@@ -243,7 +243,6 @@ const SolarSystemEpictusTurbo: React.FC<SolarSystemEpictusTurboProps> = ({
           <h2 className="text-base font-bold bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">
             Epictus IA
           </h2>
-          <p className="text-xs text-white/70 -mt-0.5">BETA</p>
         </div>
       </motion.div>
 
