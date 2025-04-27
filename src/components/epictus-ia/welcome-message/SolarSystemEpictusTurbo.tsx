@@ -62,51 +62,51 @@ const SolarSystemEpictusTurbo: React.FC<SolarSystemEpictusTurboProps> = ({
   // Definindo os planetas/funcionalidades com tamanhos reduzidos
   const planets = [
     { 
-      icon: <Brain className="w-6 h-6 text-indigo-400" />, 
+      icon: <Brain className="w-5 h-5 text-indigo-400" />, 
       name: "Assistente IA", 
-      orbitSize: 110, 
+      orbitSize: 90, 
       duration: 28, 
       delay: 0 
     },
     { 
-      icon: <BookOpen className="w-6 h-6 text-cyan-400" />, 
+      icon: <BookOpen className="w-5 h-5 text-cyan-400" />, 
       name: "Resumos", 
-      orbitSize: 140, 
+      orbitSize: 115, 
       duration: 35, 
       delay: 2 
     },
     { 
-      icon: <BarChart className="w-6 h-6 text-emerald-400" />, 
+      icon: <BarChart className="w-5 h-5 text-emerald-400" />, 
       name: "Análises", 
-      orbitSize: 170, 
+      orbitSize: 140, 
       duration: 42, 
       delay: 4 
     },
     { 
-      icon: <Lightbulb className="w-6 h-6 text-amber-400" />, 
+      icon: <Lightbulb className="w-5 h-5 text-amber-400" />, 
       name: "Ideias", 
-      orbitSize: 200, 
+      orbitSize: 165, 
       duration: 48, 
       delay: 6 
     },
     { 
-      icon: <FileText className="w-6 h-6 text-rose-400" />, 
+      icon: <FileText className="w-5 h-5 text-rose-400" />, 
       name: "Escrita", 
-      orbitSize: 230, 
+      orbitSize: 190, 
       duration: 55, 
       delay: 8 
     },
     { 
-      icon: <Rocket className="w-6 h-6 text-purple-400" />, 
+      icon: <Rocket className="w-5 h-5 text-purple-400" />, 
       name: "Simulador", 
-      orbitSize: 260, 
+      orbitSize: 215, 
       duration: 60, 
       delay: 10 
     }
   ];
 
   return (
-    <div className="solar-system-container relative w-full h-[70vh] flex items-center justify-center overflow-hidden">
+    <div className="relative w-full h-[70vh] flex items-center justify-center overflow-hidden">
       {/* Partículas de fundo aprimoradas */}
       <div className="absolute inset-0 -z-1">
         <Particles
@@ -196,7 +196,7 @@ const SolarSystemEpictusTurbo: React.FC<SolarSystemEpictusTurboProps> = ({
       {/* Gradiente de fundo circular */}
       <div className="absolute w-full h-full bg-gradient-radial from-indigo-900/10 via-blue-900/5 to-transparent"></div>
 
-      {/* Centro - Sol (Epictus IA) - Design aprimorado */}
+      {/* Centro - Sol (Epictus IA) - Design aprimorado (tamanho reduzido) */}
       <motion.div
         className="absolute z-10 flex flex-col items-center justify-center"
         animate={{
@@ -209,13 +209,13 @@ const SolarSystemEpictusTurbo: React.FC<SolarSystemEpictusTurboProps> = ({
           repeatType: "reverse",
         }}
       >
-        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8F40] flex items-center justify-center shadow-lg shadow-orange-500/30 border border-orange-400/40 relative">
-          <Bot className="h-10 w-10 text-white" />
+        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#FF6B00] to-[#FF8F40] flex items-center justify-center shadow-lg shadow-orange-500/30 border border-orange-400/40 relative">
+          <Bot className="h-8 w-8 text-white" />
           <div className="absolute inset-0 rounded-full bg-orange-500/20 animate-pulse"></div>
           <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-orange-400/20 to-amber-300/20 blur-sm"></div>
         </div>
-        <div className="absolute -bottom-9 text-center">
-          <h2 className="text-lg font-bold bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">
+        <div className="absolute -bottom-8 text-center">
+          <h2 className="text-base font-bold bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">
             Epictus IA
           </h2>
           <p className="text-xs text-white/70 -mt-0.5">BETA</p>
@@ -279,9 +279,9 @@ const SolarSystemEpictusTurbo: React.FC<SolarSystemEpictusTurboProps> = ({
       ))}
 
       {/* Efeitos de luz aprimorados */}
-      <div className="absolute w-72 h-72 bg-indigo-500/5 rounded-full filter blur-3xl"></div>
-      <div className="absolute w-48 h-48 bg-blue-500/5 rounded-full filter blur-3xl"></div>
-      <div className="absolute w-36 h-36 bg-orange-500/10 rounded-full filter blur-xl"></div>
+      <div className="absolute w-60 h-60 bg-indigo-500/5 rounded-full filter blur-3xl"></div>
+      <div className="absolute w-40 h-40 bg-blue-500/5 rounded-full filter blur-3xl"></div>
+      <div className="absolute w-32 h-32 bg-orange-500/10 rounded-full filter blur-xl"></div>
     </div>
   );
 };
