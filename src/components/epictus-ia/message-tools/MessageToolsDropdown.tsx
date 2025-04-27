@@ -457,7 +457,6 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
                   try {
                     // Se temos uma função externa para manipular a escrita no caderno
                     if (onWriteToNotebook) {
-                      console.log("Chamando onWriteToNotebook do componente pai");
                       // Chamar serviço para converter conteúdo
                       generateAIResponse(notebookPrompt, 'notebook_conversion_session', {
                         intelligenceLevel: 'advanced',
@@ -467,6 +466,11 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
                         if (!notebookContent) {
                           throw new Error("Conteúdo vazio recebido do serviço");
                         }
+                        
+                        // Detém a propagação de eventos que podem interferir
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
                         // Usar a função passada pelo componente pai
                         onWriteToNotebook(notebookContent);
                       })

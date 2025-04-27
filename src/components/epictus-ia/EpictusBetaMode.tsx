@@ -736,18 +736,18 @@ setMessages(prev => prev.map(msg => {
   }, []);
 
   const handleWriteToNotebook = (content: string) => {
-    console.log("handleWriteToNotebook chamado com conteúdo:", content.substring(0, 50) + "...");
+    // Atualiza o estado com o conteúdo completo
     setNotebookContent(content);
+    
+    // Força a abertura do caderno
     setShowNotebook(true);
     
-    // Pequeno atraso para garantir que o estado seja atualizado antes de mostrar o toast
-    setTimeout(() => {
-      toast({
-        title: "Caderno aberto",
-        description: "O conteúdo foi transferido para o caderno de anotações",
-        duration: 3000,
-      });
-    }, 100);
+    // Toast de confirmação
+    toast({
+      title: "Caderno aberto",
+      description: "O conteúdo foi transferido para o caderno de anotações",
+      duration: 3000,
+    });
   };
 
   return (
@@ -1152,19 +1152,23 @@ setMessages(prev => prev.map(msg => {
       )}
 
       {/* Notebook Modal */}
-      <Dialog open={showNotebook} onOpenChange={setShowNotebook}>
-        <DialogContent className="sm:max-w-[80%] max-h-[80vh] overflow-y-auto">
+      <Dialog 
+        open={showNotebook} 
+        onOpenChange={setShowNotebook}
+        modal={true}
+      >
+        <DialogContent className="sm:max-w-[80%] max-h-[80vh] overflow-y-auto bg-white dark:bg-[#1A2634] border border-gray-300 dark:border-gray-700">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-2 text-black dark:text-white">
               <BookOpen className="h-5 w-5 text-[#FF6B00]" />
               Caderno de Anotações
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-gray-600 dark:text-gray-300">
               Conteúdo otimizado para seus estudos
             </DialogDescription>
           </DialogHeader>
 
-          <div className="mt-4 overflow-y-auto max-h-[60vh]">
+          <div className="mt-4 overflow-y-auto max-h-[60vh] bg-[#fffdf0] dark:bg-[#1a1d2d] p-4 rounded-md border border-gray-200 dark:border-gray-700">
             <NotebookSimulation content={notebookContent} />
           </div>
 
@@ -1172,11 +1176,12 @@ setMessages(prev => prev.map(msg => {
             <Button 
               variant="outline"
               onClick={() => setShowNotebook(false)}
+              className="bg-transparent border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               Fechar
             </Button>
             <Button 
-              className="bg-[#FF6B00] hover:bg-[#FF6B00]/90"
+              className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
               onClick={() => {
                 navigator.clipboard.writeText(notebookContent);
                 toast({
