@@ -6,77 +6,77 @@ interface NotebookSimulationProps {
 
 const NotebookSimulation: React.FC<NotebookSimulationProps> = ({ content }) => {
   // Clean up the content to remove platform references, links, greetings and common phrases
-  const cleanContent = (originalContent: string) => {
-    let cleaned = originalContent;
+    const cleanContent = (originalContent: string) => {
+      let cleaned = originalContent;
 
-    // Remove links using regex (matches markdown links and URLs)
-    cleaned = cleaned.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1');
-    cleaned = cleaned.replace(/(https?:\/\/[^\s]+)/g, '');
+      // Remove links using regex (matches markdown links and URLs)
+      cleaned = cleaned.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1');
+      cleaned = cleaned.replace(/(https?:\/\/[^\s]+)/g, '');
 
-    // Remove all types of greetings, salutations and casual phrases
-    const phrasesToRemove = [
-      // Greetings and salutations - expanded pattern
-      /(?:olá|oi|hey|hello|hi|bom dia|boa tarde|boa noite|e aí|tudo bem|tudo certo|tudo sussa|como vai|tranquilo|beleza|e então)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
-      /(?:atenciosamente|abraços|saudações|cumprimentos|até mais|até logo|até breve|fique bem|até a próxima)/gi,
+      // Remove all types of greetings, salutations and casual phrases
+      const phrasesToRemove = [
+        // Greetings and salutations - expanded pattern
+        /(?:olá|oi|hey|hello|hi|bom dia|boa tarde|boa noite|e aí|tudo bem|tudo certo|tudo sussa|como vai|tranquilo|beleza|e então)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
+        /(?:atenciosamente|abraços|saudações|cumprimentos|até mais|até logo|até breve|fique bem|até a próxima)/gi,
 
-      // Emoji patterns - expanded to catch more emojis
-      /[\uD800-\uDBFF][\uDC00-\uDFFF]|[\u2600-\u27FF]|😉|😊|🙂|😄|😃|👋|✌️|👏|👍/g,
+        // Emoji patterns - expanded to catch more emojis
+        /[\uD800-\uDBFF][\uDC00-\uDFFF]|[\u2600-\u27FF]|😉|😊|🙂|😄|😃|👋|✌️|👏|👍/g,
 
-      // Understanding phrases
-      /(?:compreend(?:i|endo)|entend(?:i|endo)|analise(?:i|ando)|segue|conforme|de acordo|baseado|com base|segundo)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
+        // Understanding phrases
+        /(?:compreend(?:i|endo)|entend(?:i|endo)|analise(?:i|ando)|segue|conforme|de acordo|baseado|com base|segundo)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
 
-      // Platform integration mentions
-      /(?:se liga|mesmo não podendo|você pode|poderia|na plataforma|no sistema|no ambiente|no site|na interface)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
+        // Platform integration mentions
+        /(?:se liga|mesmo não podendo|você pode|poderia|na plataforma|no sistema|no ambiente|no site|na interface)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
 
-      // Additional resources
-      /(?:recursos adicionais|para mais|para saber mais|para aprofundar|veja também|consulte|recomendo)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
+        // Additional resources
+        /(?:recursos adicionais|para mais|para saber mais|para aprofundar|veja também|consulte|recomendo)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
 
-      // Engagement and summary phrases
-      /(?:espero|desejo|tomara|que|isso|ajude|ajudei|auxilie|contribua|dúvidas|perguntar|contato|feedback|curtiu)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
+        // Engagement and summary phrases
+        /(?:espero|desejo|tomara|que|isso|ajude|ajudei|auxilie|contribua|dúvidas|perguntar|contato|feedback|curtiu)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
 
-      // Opening sentences patterns
-      /(?:^|\n)(?:recebi seu pedido|preparei um resumo|dá uma olhada|aqui está|segue abaixo|conforme solicitado|bora nessa|tipo|umas anotações de caderno|né|sem problemas)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
+        // Opening sentences patterns
+        /(?:^|\n)(?:recebi seu pedido|preparei um resumo|dá uma olhada|aqui está|segue abaixo|conforme solicitado|bora nessa|tipo|umas anotações de caderno|né|sem problemas)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
 
-      // Farewell patterns
-      /(?:^|\n)(?:e aí, curtiu|se precisar|só chamar|até mais|até a próxima|até logo|até breve|tchau|adeus)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
+        // Farewell patterns
+        /(?:^|\n)(?:e aí, curtiu|se precisar|só chamar|até mais|até a próxima|até logo|até breve|tchau|adeus)(?:\s+[^,\.!?]*?)(?:[,\.!?])/gi,
 
-      // Casual expressions
-      /(?:super|hiper|mega|ultra|clean|maneiro|legal|bacana|show|top|incrível)/gi
-    ];
+        // Casual expressions
+        /(?:super|hiper|mega|ultra|clean|maneiro|legal|bacana|show|top|incrível)/gi
+      ];
 
-    phrasesToRemove.forEach(pattern => {
-      cleaned = cleaned.replace(pattern, '');
-    });
+      phrasesToRemove.forEach(pattern => {
+        cleaned = cleaned.replace(pattern, '');
+      });
 
-    // Remove references to the platform
-    cleaned = cleaned.replace(/ponto\.school|ponto school|plataforma|site|ambiente|interface|sistema/gi, '');
+      // Remove references to the platform
+      cleaned = cleaned.replace(/ponto\.school|ponto school|plataforma|site|ambiente|interface|sistema/gi, '');
 
-    // Additional cleaning for specific greeting patterns
-    cleaned = cleaned.replace(/e aí! tudo sussa\?/gi, '');
-    cleaned = cleaned.replace(/tipo umas anotações de caderno, né\? sem problemas, bora nessa!/gi, '');
-    cleaned = cleaned.replace(/## e aí, curtiu\?/gi, '');
-    cleaned = cleaned.replace(/se precisar de mais alguma coisa, é só chamar!/gi, '');
+      // Additional cleaning for specific greeting patterns
+      cleaned = cleaned.replace(/e aí! tudo sussa\?/gi, '');
+      cleaned = cleaned.replace(/tipo umas anotações de caderno, né\? sem problemas, bora nessa!/gi, '');
+      cleaned = cleaned.replace(/## e aí, curtiu\?/gi, '');
+      cleaned = cleaned.replace(/se precisar de mais alguma coisa, é só chamar!/gi, '');
 
-    // Trim any extra whitespace created by the removals
-    cleaned = cleaned.replace(/\n\s*\n\s*\n/g, '\n\n');
+      // Trim any extra whitespace created by the removals
+      cleaned = cleaned.replace(/\n\s*\n\s*\n/g, '\n\n');
 
-    // Remove leading/trailing whitespace from each line
-    cleaned = cleaned.split('\n').map(line => line.trim()).join('\n');
+      // Remove leading/trailing whitespace from each line
+      cleaned = cleaned.split('\n').map(line => line.trim()).join('\n');
 
-    // Ensure content starts with a title (usually in uppercase)
-    const lines = cleaned.split('\n').filter(line => line.trim() !== '');
-    if (lines.length > 0 && !/^[A-Z\s]+/.test(lines[0])) {
-      // Remove any text before the first title-like line
-      const titleLineIndex = lines.findIndex(line => /^[A-Z\s]+/.test(line));
-      if (titleLineIndex > 0) {
-        cleaned = lines.slice(titleLineIndex).join('\n');
+      // Ensure content starts with a title (usually in uppercase)
+      const lines = cleaned.split('\n').filter(line => line.trim() !== '');
+      if (lines.length > 0 && !/^[A-Z\s]+/.test(lines[0])) {
+        // Remove any text before the first title-like line
+        const titleLineIndex = lines.findIndex(line => /^[A-Z\s]+/.test(line));
+        if (titleLineIndex > 0) {
+          cleaned = lines.slice(titleLineIndex).join('\n');
+        }
       }
-    }
 
-    cleaned = cleaned.trim();
+      cleaned = cleaned.trim();
 
-    return cleaned;
-  };
+      return cleaned;
+    };
 
   return (
     <div className="notebook-simulation p-4">

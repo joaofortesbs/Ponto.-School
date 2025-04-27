@@ -59,15 +59,6 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
       description: "Convertendo conteúdo para formato de caderno...",
       duration: 2000,
     });
-    
-    // Disparar evento personalizado para transformação em caderno
-    const event = new CustomEvent('transform-to-notebook', {
-      detail: { content, messageId }
-    });
-    document.dispatchEvent(event);
-    
-    // Fechar o menu de ferramentas
-    onToggleTools();
   };
   
   const handleSimularApresentacao = (e: React.MouseEvent) => {
@@ -155,8 +146,6 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
         open={modalOpen} 
         onOpenChange={setModalOpen}
         onAprofundarClick={handleAprofundarClick}
-        content={content}
-        messageId={messageId}
       />
 
       {/* Modal de funcionalidade em desenvolvimento */}
