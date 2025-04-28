@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -77,83 +76,24 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
   onOpenChange 
 }) => {
   // Estados
-  const [pastas, setPastas] = useState<Pasta[]>([
-    { id: "p1", nome: "História", cor: "#F5C542", contagem: 3 },
-    { id: "p2", nome: "Matemática", cor: "#42C5F5", contagem: 4 },
-    { id: "p3", nome: "Biologia", cor: "#4CAF50", contagem: 2 },
-    { id: "p4", nome: "Literatura", cor: "#9C27B0", contagem: 1 },
-    { id: "p5", nome: "Provas Finais", cor: "#F44336", contagem: 5 },
-  ]);
-  
-  const [anotacoes, setAnotacoes] = useState<Anotacao[]>([
-    { 
-      id: "a1", 
-      titulo: "Revolução Francesa", 
-      conteudo: "# Revolução Francesa\n\n## Contexto Histórico\nA Revolução Francesa (1789-1799) foi um período de mudança social e política radical na França que teve um impacto profundo na história moderna.\n\n## Causas Principais\n- Crise financeira do estado\n- Desigualdade social (sistema de estados)\n- Influência do Iluminismo\n- Exemplo da Revolução Americana\n\n## Eventos Importantes\n1. Queda da Bastilha (14 de julho de 1789)\n2. Declaração dos Direitos do Homem e do Cidadão\n3. Período do Terror\n4. Ascensão de Napoleão Bonaparte", 
-      resumo: "Análise completa da Revolução Francesa, suas causas, eventos principais e consequências históricas.",
-      pastaId: "p1",
-      data: new Date("2023-10-15"),
-      modelo: "Estudo Completo",
-      favorito: true,
-      ultimaEdicao: new Date("2023-11-20"),
-      tags: ["História", "Europa", "Revolução", "Iluminismo"],
-      visualizacoes: 42
-    },
-    { 
-      id: "a2", 
-      titulo: "Teorema de Pitágoras", 
-      conteudo: "# Teorema de Pitágoras\n\n## Definição\nEm um triângulo retângulo, o quadrado da hipotenusa é igual à soma dos quadrados dos catetos.\n\n## Fórmula\na² = b² + c²\n\nOnde:\n- a é a hipotenusa\n- b e c são os catetos\n\n## Exemplos de Aplicação\n1. Triângulo 3-4-5\n   - 5² = 3² + 4²\n   - 25 = 9 + 16 ✓\n\n2. Triângulo 5-12-13\n   - 13² = 5² + 12²\n   - 169 = 25 + 144 ✓", 
-      resumo: "Explicação detalhada do Teorema de Pitágoras, suas aplicações e exemplos práticos.",
-      pastaId: "p2",
-      data: new Date("2023-11-20"),
-      modelo: "Revisão Rápida",
-      favorito: false,
-      ultimaEdicao: new Date("2023-12-01"),
-      tags: ["Matemática", "Geometria", "Teorema", "Triângulos"],
-      visualizacoes: 27
-    },
-    { 
-      id: "a3", 
-      titulo: "Fotossíntese", 
-      conteudo: "# Fotossíntese\n\n## O que é\nProcesso bioquímico realizado pelas plantas, algas e algumas bactérias para converter energia luminosa em energia química.\n\n## Equação Química\n6CO₂ + 6H₂O + Energia Luminosa → C₆H₁₂O₆ + 6O₂\n\n## Fases da Fotossíntese\n1. **Fase Clara (Fotoquímica)**\n   - Ocorre nas membranas dos tilacoides\n   - Depende diretamente da luz\n   - Produção de ATP e NADPH\n\n2. **Fase Escura (Ciclo de Calvin)**\n   - Ocorre no estroma dos cloroplastos\n   - Não depende diretamente da luz\n   - Utiliza o CO₂ para produzir glicose", 
-      resumo: "Estudo detalhado sobre o processo de fotossíntese, suas fases e importância biológica.",
-      pastaId: "p3",
-      data: new Date("2023-12-05"),
-      modelo: "Estudo Completo",
-      favorito: true,
-      ultimaEdicao: new Date("2023-12-20"),
-      tags: ["Biologia", "Botânica", "Bioquímica", "Energia"],
-      visualizacoes: 38
-    },
-    { 
-      id: "a4", 
-      titulo: "Funções Logarítmicas", 
-      conteudo: "# Funções Logarítmicas\n\n## Definição\nUma função logarítmica é definida como f(x) = log_a(x), onde a > 0 e a ≠ 1.\n\n## Propriedades Importantes\n- log_a(1) = 0\n- log_a(a) = 1\n- log_a(x·y) = log_a(x) + log_a(y)\n- log_a(x/y) = log_a(x) - log_a(y)\n- log_a(x^n) = n·log_a(x)\n\n## Aplicações\n1. Problemas de crescimento e decaimento\n2. Escala Richter (terremotos)\n3. Escala de pH\n4. Decibéis (intensidade sonora)", 
-      resumo: "Estudo detalhado sobre funções logarítmicas, suas propriedades e aplicações no mundo real.",
-      pastaId: "p2",
-      data: new Date("2024-01-10"),
-      modelo: "Estudo Completo",
-      favorito: false,
-      ultimaEdicao: new Date("2024-01-15"),
-      tags: ["Matemática", "Funções", "Logaritmo", "Álgebra"],
-      visualizacoes: 19
-    },
-  ]);
-  
+  const [pastas, setPastas] = useState<Pasta[]>([]);
+
+  const [anotacoes, setAnotacoes] = useState<Anotacao[]>([]);
+
   const [loading, setLoading] = useState(false);
-  
+
   // Carregar pastas e anotações do Supabase
   const carregarPastas = async () => {
     try {
       const userId = localStorage.getItem('user_id') || 'anonymous';
-      
+
       const { data, error } = await supabase
         .from('apostila_pastas')
         .select('*')
         .eq('user_id', userId);
-        
+
       if (error) throw error;
-      
+
       if (data && data.length > 0) {
         // Converter dados do banco para o formato da interface Pasta
         const pastasFromDB = data.map(pasta => ({
@@ -164,10 +104,10 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
           descricao: pasta.descricao,
           data_criacao: new Date(pasta.data_criacao)
         }));
-        
+
         // Mesclar as pastas demo com as do banco
         setPastas([...pastasFromDB]);
-        
+
         // Se tiver pastas, selecionar a primeira
         if (pastasFromDB.length > 0 && !pastaSelecionada) {
           setPastaSelecionada(pastasFromDB[0].id);
@@ -177,19 +117,19 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
       console.error('Erro ao carregar pastas:', error);
     }
   };
-  
+
   const carregarAnotacoes = async () => {
     try {
       setLoading(true);
       const userId = localStorage.getItem('user_id') || 'anonymous';
-      
+
       const { data, error } = await supabase
         .from('apostila_anotacoes')
         .select('*')
         .eq('user_id', userId);
-        
+
       if (error) throw error;
-      
+
       if (data && data.length > 0) {
         // Converter dados do banco para o formato da interface Anotacao
         const anotacoesFromDB = data.map(anotacao => {
@@ -197,7 +137,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
           const resumo = anotacao.conteudo.length > 150 
             ? anotacao.conteudo.substring(0, 150) + '...' 
             : anotacao.conteudo;
-            
+
           return {
             id: anotacao.id,
             titulo: anotacao.titulo,
@@ -214,7 +154,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
             user_id: anotacao.user_id
           };
         });
-        
+
         // Mesclar as anotações demo com as do banco
         // Aqui você pode decidir se quer manter as demo ou só mostrar as do banco
         setAnotacoes([...anotacoesFromDB]);
@@ -225,13 +165,13 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
       setLoading(false);
     }
   };
-  
+
   // Carregar dados quando o modal abrir
   useEffect(() => {
     if (open) {
       carregarPastas();
       carregarAnotacoes();
-      
+
       // Configurar listeners para atualizações em tempo real
       const pastasChannel = supabase
         .channel('apostila_pastas_changes')
@@ -240,7 +180,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
           () => carregarPastas()
         )
         .subscribe();
-        
+
       const anotacoesChannel = supabase
         .channel('apostila_anotacoes_changes')
         .on('postgres_changes', 
@@ -248,7 +188,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
           () => carregarAnotacoes()
         )
         .subscribe();
-        
+
       // Limpar listeners quando o modal fechar
       return () => {
         supabase.removeChannel(pastasChannel);
@@ -256,9 +196,9 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
       };
     }
   }, [open]);
-  
-  const [pastaSelecionada, setPastaSelecionada] = useState<string | null>("p1");
-  const [anotacaoSelecionada, setAnotacaoSelecionada] = useState<string | null>("a1");
+
+  const [pastaSelecionada, setPastaSelecionada] = useState<string | null>(null);
+  const [anotacaoSelecionada, setAnotacaoSelecionada] = useState<string | null>(null);
   const [pesquisa, setPesquisa] = useState("");
   const [criandoPasta, setCriandoPasta] = useState(false);
   const [novaPasta, setNovaPasta] = useState({ nome: "", cor: "#42C5F5" });
@@ -267,7 +207,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
   const [showTagsFilter, setShowTagsFilter] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  
+
   // Animação ao abrir
   useEffect(() => {
     if (open) {
@@ -283,9 +223,9 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
   // Funções auxiliares
   const getAnotacoesDaPasta = () => {
     if (!pastaSelecionada) return [];
-    
+
     let filteredAnotacoes = anotacoes.filter(a => a.pastaId === pastaSelecionada);
-    
+
     // Aplicar pesquisa
     if (pesquisa !== "") {
       filteredAnotacoes = filteredAnotacoes.filter(a => 
@@ -293,14 +233,14 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
         a.resumo.toLowerCase().includes(pesquisa.toLowerCase())
       );
     }
-    
+
     // Aplicar filtro de tags
     if (selectedTags.length > 0) {
       filteredAnotacoes = filteredAnotacoes.filter(a => 
         a.tags?.some(tag => selectedTags.includes(tag))
       );
     }
-    
+
     // Aplicar ordenação
     switch (sortBy) {
       case "recentes":
@@ -313,17 +253,17 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
         return filteredAnotacoes;
     }
   };
-  
+
   const getAnotacaoSelecionada = () => {
     return anotacoes.find(a => a.id === anotacaoSelecionada);
   };
-  
+
   const handleCriarPasta = async () => {
     if (novaPasta.nome.trim() === "") return;
-    
+
     try {
       const userId = localStorage.getItem('user_id') || 'anonymous';
-      
+
       // Inserir a nova pasta no banco
       const { data, error } = await supabase
         .from('apostila_pastas')
@@ -337,9 +277,9 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
         ])
         .select()
         .single();
-        
+
       if (error) throw error;
-      
+
       // Adicionar ao estado local
       const novaPastaObj: Pasta = {
         id: data.id,
@@ -349,12 +289,12 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
         user_id: userId,
         data_criacao: new Date()
       };
-      
+
       setPastas([...pastas, novaPastaObj]);
       setNovaPasta({ nome: "", cor: "#42C5F5" });
       setCriandoPasta(false);
       setPastaSelecionada(novaPastaObj.id);
-      
+
       // Registrar atividade
       await supabase
         .from('user_activity_logs')
@@ -365,12 +305,12 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
             detalhes: `Criou pasta "${novaPasta.nome}"`
           }
         ]);
-        
+
       toast({
         title: "Pasta criada!",
         description: `A pasta "${novaPasta.nome}" foi criada com sucesso.`
       });
-      
+
     } catch (error) {
       console.error('Erro ao criar pasta:', error);
       toast({
@@ -380,39 +320,39 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
       });
     }
   };
-  
+
   const handleExcluirPasta = async (id: string) => {
     try {
       // Confirmar se existem anotações nesta pasta
       const anotacoesDaPasta = anotacoes.filter(a => a.pastaId === id);
-      
+
       if (anotacoesDaPasta.length > 0) {
         const confirmar = window.confirm(
           `Esta pasta contém ${anotacoesDaPasta.length} anotação(ões). Tem certeza que deseja excluí-la?`
         );
-        
+
         if (!confirmar) return;
       }
-      
+
       const userId = localStorage.getItem('user_id') || 'anonymous';
-      
+
       // Deletar a pasta no banco
       const { error } = await supabase
         .from('apostila_pastas')
         .delete()
         .eq('id', id)
         .eq('user_id', userId);
-        
+
       if (error) throw error;
-      
+
       // Atualizar o estado local
       const novasPastas = pastas.filter(p => p.id !== id);
       setPastas(novasPastas);
-      
+
       if (pastaSelecionada === id) {
         setPastaSelecionada(novasPastas.length > 0 ? novasPastas[0].id : null);
       }
-      
+
       // Registrar atividade
       const pastaExcluida = pastas.find(p => p.id === id);
       await supabase
@@ -424,12 +364,12 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
             detalhes: `Excluiu pasta "${pastaExcluida?.nome}"`
           }
         ]);
-        
+
       toast({
         title: "Pasta excluída!",
         description: `A pasta "${pastaExcluida?.nome}" foi excluída com sucesso.`
       });
-      
+
     } catch (error) {
       console.error('Erro ao excluir pasta:', error);
       toast({
@@ -439,31 +379,31 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
       });
     }
   };
-  
+
   const handleFavoritar = async (id: string) => {
     try {
       const anotacao = anotacoes.find(a => a.id === id);
       if (!anotacao) return;
-      
+
       const novoStatus = !anotacao.favorito;
       const userId = localStorage.getItem('user_id') || 'anonymous';
-      
+
       // Atualizar no banco de dados
       const { error } = await supabase
         .from('apostila_anotacoes')
         .update({ favorito: novoStatus })
         .eq('id', id)
         .eq('user_id', userId);
-        
+
       if (error) throw error;
-      
+
       // Atualizar no estado local
       setAnotacoes(
         anotacoes.map(a => 
           a.id === id ? { ...a, favorito: novoStatus } : a
         )
       );
-      
+
       // Registrar atividade
       await supabase
         .from('user_activity_logs')
@@ -475,7 +415,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
             detalhes: `${novoStatus ? 'Adicionou' : 'Removeu'} "${anotacao.titulo}" ${novoStatus ? 'aos' : 'dos'} favoritos`
           }
         ]);
-        
+
     } catch (error) {
       console.error('Erro ao favoritar/desfavoritar:', error);
       toast({
@@ -509,7 +449,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
   };
-  
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
@@ -549,7 +489,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
             </Button>
           </div>
         </DialogHeader>
-        
+
         <div className="flex flex-1 overflow-hidden">
           {/* Barra Lateral Esquerda (Pastas) */}
           <div className="w-[260px] border-r border-gray-800 bg-[#0D0D0D] flex flex-col">
@@ -577,7 +517,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                   </Tooltip>
                 </TooltipProvider>
               </div>
-              
+
               {criandoPasta && (
                 <div className="mb-4 bg-[#111111] p-3 rounded-xl animate-in fade-in-50 slide-in-from-left duration-300 border border-gray-800">
                   <Input 
@@ -621,7 +561,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                 </div>
               )}
             </div>
-            
+
             <ScrollArea className="flex-1 py-2">
               <div className="flex flex-col gap-1 px-2">
                 {pastas.map(pasta => (
@@ -658,7 +598,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
-                      
+
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -682,14 +622,14 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                 ))}
               </div>
             </ScrollArea>
-            
+
             <div className="p-4 border-t border-gray-800">
               <Button className="w-full bg-[#42C5F5] hover:bg-[#3BABDB] gap-2">
                 <Plus size={16} /> Nova Anotação
               </Button>
             </div>
           </div>
-          
+
           {/* Área Central (Lista de Anotações) */}
           <div className="w-[350px] border-r border-gray-800 bg-[#0D0D0D] flex flex-col">
             {/* Cabeçalho da área central */}
@@ -717,7 +657,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                  
+
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -736,7 +676,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                   </TooltipProvider>
                 </div>
               </div>
-              
+
               <div className="relative mb-3">
                 <Search size={15} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
                 <Input 
@@ -746,7 +686,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                   onChange={(e) => setPesquisa(e.target.value)}
                 />
               </div>
-              
+
               {/* Filtros e ordenação */}
               <div className="flex justify-between items-center gap-2 mb-2">
                 <div className="flex gap-1">
@@ -767,7 +707,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                  
+
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -787,10 +727,10 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                     </Tooltip>
                   </TooltipProvider>
                 </div>
-                
+
                 <span className="text-xs text-gray-500">{getAnotacoesDaPasta().length} anotações</span>
               </div>
-              
+
               {/* Filtro de tags */}
               {showTagsFilter && (
                 <div className="bg-[#151515] rounded-lg p-2 mb-3 border border-gray-800 animate-in slide-in-from-top duration-200">
@@ -810,7 +750,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                 </div>
               )}
             </div>
-            
+
             {/* Lista de anotações */}
             <ScrollArea className="flex-1">
               <div className={`p-2 ${visualMode === "grid" ? "grid grid-cols-2 gap-2" : "flex flex-col gap-2"}`}>
@@ -854,11 +794,11 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                           </TooltipProvider>
                         </div>
                       </div>
-                      
+
                       <p className={`text-xs text-gray-400 line-clamp-${visualMode === "grid" ? "3" : "2"} flex-grow`}>
                         {anotacao.resumo}
                       </p>
-                      
+
                       {visualMode === "grid" && (
                         <div className="mt-auto">
                           {anotacao.tags && (
@@ -867,7 +807,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                                 <Badge 
                                   key={index} 
                                   variant="outline" 
-                                  className="text-xs py-0 px-1.5 bg-[#1A1A1A] text-gray-400 border-gray-700"
+                                  className="text-xs py-0 px1.5 bg-[#1A1A1A] text-gray-400 border-gray-700"
                                 >
                                   {tag}
                                 </Badge>
@@ -884,7 +824,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                           )}
                         </div>
                       )}
-                      
+
                       <div className="flex justify-between items-center mt-2 text-xs">
                         <span className="flex items-center gap-1 text-gray-500 text-[10px]">
                           <Clock size={10} />
@@ -900,7 +840,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                           {anotacao.modelo}
                         </span>
                       </div>
-                      
+
                       <div className="flex gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button variant="ghost" size="sm" className="h-7 px-2 hover:bg-gray-700 text-gray-300 text-xs">
                           <Eye size={12} className="mr-1"/> Ver
@@ -924,7 +864,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
               </div>
             </ScrollArea>
           </div>
-          
+
           {/* Área Direita (Visualização e Ações) */}
           <div className="flex-1 bg-[#0D0D0D] flex flex-col">
             {anotacaoSelecionada && getAnotacaoSelecionada() ? (
@@ -937,7 +877,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                         <Star size={16} className="text-amber-400" fill="currentColor" />
                       )}
                     </div>
-                    
+
                     <div className="flex gap-1.5">
                       <TooltipProvider>
                         <Tooltip>
@@ -951,7 +891,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
-                      
+
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -964,7 +904,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
-                      
+
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -977,7 +917,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
-                      
+
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -992,7 +932,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                       </TooltipProvider>
                     </div>
                   </div>
-                  
+
                   <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm mb-2">
                     <div className="flex items-center gap-1">
                       <FolderOpen size={14} className="text-gray-400" />
@@ -1020,7 +960,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                       <span className="text-gray-400">{getAnotacaoSelecionada()?.visualizacoes || 0} visualizações</span>
                     </div>
                   </div>
-                  
+
                   {getAnotacaoSelecionada()?.tags && (
                     <div className="flex flex-wrap gap-1.5 mt-3">
                       {getAnotacaoSelecionada()?.tags?.map((tag, index) => (
@@ -1034,7 +974,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                     </div>
                   )}
                 </div>
-                
+
                 <Tabs defaultValue="conteudo" className="flex-1 flex flex-col">
                   <div className="px-6 py-2 border-b border-gray-800 bg-[#0a0a0a]">
                     <TabsList className="bg-[#151515] p-1">
@@ -1049,7 +989,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                       </TabsTrigger>
                     </TabsList>
                   </div>
-                  
+
                   <TabsContent value="conteudo" className="flex-1 p-0 m-0">
                     <ScrollArea className="flex-1 h-full custom-scrollbar p-6">
                       <div className="max-w-4xl mx-auto prose prose-invert prose-headings:font-display prose-headings:font-bold">
@@ -1102,7 +1042,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                       </div>
                     </ScrollArea>
                   </TabsContent>
-                  
+
                   <TabsContent value="historico" className="flex-1 p-0 m-0">
                     <div className="flex items-center justify-center h-full text-gray-400">
                       <div className="text-center">
@@ -1114,7 +1054,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                       </div>
                     </div>
                   </TabsContent>
-                  
+
                   <TabsContent value="estatisticas" className="flex-1 p-0 m-0">
                     <div className="flex items-center justify-center h-full text-gray-400">
                       <div className="text-center">
