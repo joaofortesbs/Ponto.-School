@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { X, BookOpen, Folder, Plus, Tag, Check } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/utils/supabaseClient'; // Assuming supabase client is imported
 
 interface ExportModalProps {
   open: boolean;
@@ -37,7 +37,7 @@ const ExportModal: React.FC<ExportModalProps> = ({
     { id: "p4", nome: "Literatura", cor: "#9C27B0" },
     { id: "p5", nome: "Provas Finais", cor: "#F44336" },
   ]);
-  
+
   // Estado para controlar os dados do formulário
   const [titulo, setTitulo] = useState(initialTitle || "");
   const [pastaId, setPastaId] = useState<string>("");
@@ -47,7 +47,7 @@ const ExportModal: React.FC<ExportModalProps> = ({
   const [tags, setTags] = useState<string[]>([]);
   const [isExporting, setIsExporting] = useState(false);
   const [modelo, setModelo] = useState<string>("estudo geral");
-  
+
   // Preencher os dados iniciais quando o modal abrir
   useEffect(() => {
     if (open) {
@@ -55,14 +55,14 @@ const ExportModal: React.FC<ExportModalProps> = ({
       // Se tiver tags na anotação original, adicioná-las aqui
     }
   }, [open, initialTitle]);
-  
+
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
       setTags([...tags, tagInput.trim()]);
       setTagInput("");
     }
   };
-  
+
   const handleRemoveTag = (tag: string) => {
     setTags(tags.filter(t => t !== tag));
   };
@@ -87,13 +87,13 @@ const ExportModal: React.FC<ExportModalProps> = ({
     setPastaId(newPasta.id);
     setCriandoPasta(false);
     setNovaPasta({ nome: "", cor: "#42C5F5" });
-    
+
     toast({
       title: "Pasta criada!",
       description: `A pasta "${newPasta.nome}" foi criada com sucesso.`,
     });
   };
-  
+
   const handleExportClick = async () => {
     if (!titulo.trim()) {
       toast({
@@ -115,10 +115,46 @@ const ExportModal: React.FC<ExportModalProps> = ({
 
     try {
       setIsExporting(true);
+      let finalPastaId = pastaId;
+
+      // Se estiver criando nova pasta, criá-la primeiro
+      if (criandoPasta && novaPasta.nome.trim()) {
+        const userId = localStorage.getItem('user_id') || 'anonymous';
+
+        // Criar nova pasta no Supabase
+        const { data: pastaCriada, error: pastaError } = await supabase
+          .from('apostila_pastas')
+          .insert([
+            {
+              user_id: userId,
+              nome: novaPasta.nome,
+              cor: novaPasta.cor,
+              descricao: ""
+            }
+          ])
+          .select()
+          .single();
+
+        if (pastaError) throw pastaError;
+
+        finalPastaId = pastaCriada.id;
+
+        // Registrar criação de pasta
+        await supabase
+          .from('user_activity_logs')
+          .insert([
+            {
+              user_id: userId,
+              acao: 'criou pasta',
+              detalhes: `Criou pasta "${novaPasta.nome}" durante exportação`
+            }
+          ]);
+      }
+
       await onExport({
         titulo,
         conteudo: initialContent,
-        pastaId,
+        pastaId: finalPastaId,
         tags,
         modelo
       });

@@ -105,16 +105,52 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
           data_criacao: new Date(pasta.data_criacao)
         }));
 
-        // Mesclar as pastas demo com as do banco
-        setPastas([...pastasFromDB]);
+        setPastas(pastasFromDB);
 
         // Se tiver pastas, selecionar a primeira
         if (pastasFromDB.length > 0 && !pastaSelecionada) {
           setPastaSelecionada(pastasFromDB[0].id);
         }
       }
+      
+      // Se não houver pastas, criar uma pasta padrão
+      else if (data && data.length === 0) {
+        const { data: novaPasta, error: erroNovaPasta } = await supabase
+          .from('apostila_pastas')
+          .insert([
+            {
+              user_id: userId,
+              nome: "Minhas Anotações",
+              cor: "#42C5F5",
+              descricao: "Pasta padrão para suas anotações"
+            }
+          ])
+          .select()
+          .single();
+          
+        if (erroNovaPasta) throw erroNovaPasta;
+        
+        if (novaPasta) {
+          const pastaCriada = {
+            id: novaPasta.id,
+            nome: novaPasta.nome,
+            cor: novaPasta.cor,
+            user_id: novaPasta.user_id,
+            descricao: novaPasta.descricao,
+            data_criacao: new Date(novaPasta.data_criacao)
+          };
+          
+          setPastas([pastaCriada]);
+          setPastaSelecionada(pastaCriada.id);
+        }
+      }
     } catch (error) {
       console.error('Erro ao carregar pastas:', error);
+      toast({
+        title: "Erro ao carregar pastas",
+        description: "Não foi possível carregar suas pastas. Tente novamente.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -123,14 +159,18 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
       setLoading(true);
       const userId = localStorage.getItem('user_id') || 'anonymous';
 
+      // Buscar anotações no Supabase, ordenadas pela data de criação mais recente
       const { data, error } = await supabase
         .from('apostila_anotacoes')
         .select('*')
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .order('data_criacao', { ascending: false });
 
       if (error) throw error;
 
       if (data && data.length > 0) {
+        console.log("Anotações carregadas do banco:", data.length);
+        
         // Converter dados do banco para o formato da interface Anotacao
         const anotacoesFromDB = data.map(anotacao => {
           // Criar um resumo do conteúdo para exibição
@@ -140,27 +180,33 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
 
           return {
             id: anotacao.id,
-            titulo: anotacao.titulo,
-            conteudo: anotacao.conteudo,
+            titulo: anotacao.titulo || "Anotação sem título",
+            conteudo: anotacao.conteudo || "",
             resumo: resumo,
             pastaId: anotacao.pasta_id,
             data: new Date(anotacao.data_criacao),
             modelo: anotacao.modelo_anotacao || "Estudo Completo",
-            favorito: false, // por padrão não é favorito
-            ultimaEdicao: anotacao.data_exportacao ? new Date(anotacao.data_exportacao) : undefined,
+            favorito: anotacao.favorito || false,
+            ultimaEdicao: anotacao.data_exportacao ? new Date(anotacao.data_exportacao) : new Date(anotacao.data_criacao),
             tags: anotacao.tags || [],
-            visualizacoes: 0,
-            origem: anotacao.origem,
+            visualizacoes: anotacao.visualizacoes || 0,
+            origem: anotacao.origem || 'criado_na_apostila',
             user_id: anotacao.user_id
           };
         });
 
-        // Mesclar as anotações demo com as do banco
-        // Aqui você pode decidir se quer manter as demo ou só mostrar as do banco
-        setAnotacoes([...anotacoesFromDB]);
+        setAnotacoes(anotacoesFromDB);
+      } else {
+        console.log("Nenhuma anotação encontrada para o usuário:", userId);
+        setAnotacoes([]);
       }
     } catch (error) {
       console.error('Erro ao carregar anotações:', error);
+      toast({
+        title: "Erro ao carregar anotações",
+        description: "Não foi possível carregar suas anotações. Tente novamente.",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -169,15 +215,30 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
   // Carregar dados quando o modal abrir
   useEffect(() => {
     if (open) {
-      carregarPastas();
-      carregarAnotacoes();
+      console.log("Modal Apostila Inteligente aberto, carregando dados...");
+      
+      // Sequência de carregamento: primeiro pastas, depois anotações
+      const carregarDados = async () => {
+        try {
+          await carregarPastas();
+          await carregarAnotacoes();
+          console.log("Carregamento de dados da Apostila Inteligente concluído");
+        } catch (error) {
+          console.error("Erro no carregamento de dados:", error);
+        }
+      };
+      
+      carregarDados();
 
       // Configurar listeners para atualizações em tempo real
       const pastasChannel = supabase
         .channel('apostila_pastas_changes')
         .on('postgres_changes', 
           { event: '*', schema: 'public', table: 'apostila_pastas' }, 
-          () => carregarPastas()
+          (payload) => {
+            console.log("Mudança detectada em pastas:", payload);
+            carregarPastas();
+          }
         )
         .subscribe();
 
@@ -185,12 +246,16 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
         .channel('apostila_anotacoes_changes')
         .on('postgres_changes', 
           { event: '*', schema: 'public', table: 'apostila_anotacoes' }, 
-          () => carregarAnotacoes()
+          (payload) => {
+            console.log("Mudança detectada em anotações:", payload);
+            carregarAnotacoes();
+          }
         )
         .subscribe();
 
       // Limpar listeners quando o modal fechar
       return () => {
+        console.log("Removendo channels do Supabase");
         supabase.removeChannel(pastasChannel);
         supabase.removeChannel(anotacoesChannel);
       };

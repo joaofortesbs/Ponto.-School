@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import ModelosNotebookModal from './ModelosNotebookModal';
 import ExportModal from './ExportModal'; // Added import for the export modal
+import { supabase } from '@/lib/supabase';
 
 
 interface NotebookModalProps {
@@ -351,17 +352,14 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
   }) => {
     try {
       setIsExporting(true);
+      const userId = localStorage.getItem('user_id') || 'anonymous';
 
-      // Placeholder for Supabase interaction - Replace with your actual Supabase client
-      const supabase = { from: () => ({ insert: () => ({ select: () => ({ single: async () => ({ data: { id: 'newId' } }) }) }) }) };
-
-
-      // 1. Salvar a anotação no caderno_anotacoes (se ainda não estiver salva)
+      // 1. Salvar a anotação no caderno_anotacoes
       const { data: cadernoInsertData, error: cadernoError } = await supabase
         .from('caderno_anotacoes')
         .insert([
           {
-            user_id: localStorage.getItem('user_id') || 'anonymous',
+            user_id: userId,
             titulo: data.titulo,
             conteudo: data.conteudo,
             modelo_anotacao: data.modelo,
@@ -372,31 +370,41 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
         .select('id')
         .single();
 
-      if (cadernoError) throw cadernoError;
+      if (cadernoError) {
+        console.error('Erro ao salvar no caderno_anotacoes:', cadernoError);
+        throw cadernoError;
+      }
 
       // 2. Salvar na apostila_anotacoes
-      const { error: apostilaError } = await supabase
+      const { data: apostilaData, error: apostilaError } = await supabase
         .from('apostila_anotacoes')
         .insert([
           {
-            user_id: localStorage.getItem('user_id') || 'anonymous',
+            user_id: userId,
             pasta_id: data.pastaId,
             titulo: data.titulo,
             conteudo: data.conteudo,
             modelo_anotacao: data.modelo,
             tags: data.tags,
-            origem: 'caderno'
+            origem: 'caderno',
+            data_criacao: new Date().toISOString(),
+            data_exportacao: new Date().toISOString()
           }
-        ]);
+        ])
+        .select()
+        .single();
 
-      if (apostilaError) throw apostilaError;
+      if (apostilaError) {
+        console.error('Erro ao salvar na apostila_anotacoes:', apostilaError);
+        throw apostilaError;
+      }
 
       // 3. Registrar a atividade no log
       await supabase
         .from('user_activity_logs')
         .insert([
           {
-            user_id: localStorage.getItem('user_id') || 'anonymous',
+            user_id: userId,
             acao: 'exportou anotação',
             anotacao_id: cadernoInsertData?.id,
             detalhes: `Exportou para pasta ${data.pastaId}`
