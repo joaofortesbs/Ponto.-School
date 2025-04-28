@@ -3,8 +3,8 @@ import React, { useState, useEffect } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { FerramentasEmDesenvolvimentoModal } from "./index";
 import { FerramentasModal } from "./ferramentas";
-import { NotebookModal } from "@/components/epictus-ia/notebook-simulation";
-import { transformContentWithAI } from "@/services/notebookService";
+import { NotebookModal, ModelosNotebookModal } from "@/components/epictus-ia/notebook-simulation";
+import { transformContentWithAI, applyContentToTemplate } from "@/services/notebookService";
 
 interface MessageToolsDropdownProps {
   messageId: number;
@@ -22,6 +22,7 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
   const [modalOpen, setModalOpen] = useState(false);
   const [showDevModal, setShowDevModal] = useState(false);
   const [notebookModalOpen, setNotebookModalOpen] = useState(false);
+  const [modelosModalOpen, setModelosModalOpen] = useState(false);
   const [notebookContent, setNotebookContent] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -64,6 +65,67 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
     
     setIsProcessing(true);
     
+    // Mostrar modal de seleção de modelos
+    setModelosModalOpen(true);
+  };
+  
+  // Processa o conteúdo com base no modelo selecionado
+  const handleSelectTemplate = async (templateContent: string) => {
+    if (templateContent.includes('[TEMA]') || templateContent.includes('[TEMA CENTRAL]')) {
+      // É um template pré-definido, vamos identificar o tipo
+      let templateType = '';
+      
+      if (templateContent.includes('📖 ESTUDO COMPLETO:')) {
+        templateType = 'estudoCompleto';
+      } else if (templateContent.includes('✨ MAPA CONCEITUAL:')) {
+        templateType = 'mapaConceitual';
+      } else if (templateContent.includes('⏱️ REVISÃO RÁPIDA:')) {
+        templateType = 'revisaoRapida';
+      } else if (templateContent.includes('📘 FICHAMENTO:')) {
+        templateType = 'fichamento';
+      }
+      
+      if (templateType) {
+        toast({
+          title: "Aplicando modelo",
+          description: "Organizando conteúdo no formato selecionado...",
+          duration: 2000,
+        });
+        
+        try {
+          // Aplicar o conteúdo ao modelo selecionado
+          const transformedContent = await applyContentToTemplate(content, templateType);
+          setNotebookContent(transformedContent);
+          
+          // Abrir o modal do caderno
+          setNotebookModalOpen(true);
+        } catch (error) {
+          console.error("Erro ao aplicar modelo de anotação:", error);
+          toast({
+            title: "Erro",
+            description: "Não foi possível aplicar o modelo selecionado.",
+            variant: "destructive",
+            duration: 3000,
+          });
+          
+          // Fallback para o formato padrão
+          handleBasicTransformation();
+        }
+      } else {
+        // Se não conseguir identificar o modelo, usar transformação padrão
+        handleBasicTransformation();
+      }
+    } else {
+      // Se o conteúdo do template não for reconhecido, só usar como está
+      setNotebookContent(templateContent);
+      setNotebookModalOpen(true);
+    }
+    
+    setIsProcessing(false);
+  };
+  
+  // Transformação básica sem modelo específico
+  const handleBasicTransformation = async () => {
     toast({
       title: "Caderno de Anotações",
       description: "Convertendo conteúdo para formato de caderno...",
@@ -183,6 +245,13 @@ const MessageToolsDropdown: React.FC<MessageToolsDropdownProps> = ({
       <FerramentasEmDesenvolvimentoModal 
         open={showDevModal} 
         onClose={() => setShowDevModal(false)} 
+      />
+
+      {/* Modal para seleção de modelos de anotação */}
+      <ModelosNotebookModal
+        open={modelosModalOpen}
+        onOpenChange={setModelosModalOpen}
+        onSelectTemplate={handleSelectTemplate}
       />
 
       {/* Modal para exibir o conteúdo em formato de caderno */}
