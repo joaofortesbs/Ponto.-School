@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { X, Plus, FolderPlus, Tag, Save, FileText } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/supabase';
 
 interface ExportarParaApostilaModalProps {
   open: boolean;
@@ -41,7 +41,7 @@ const ExportarParaApostilaModal: React.FC<ExportarParaApostilaModalProps> = ({
     { id: "p4", nome: "Literatura", cor: "#9C27B0" },
     { id: "p5", nome: "Provas Finais", cor: "#F44336" },
   ]);
-
+  
   // Estado para controlar os dados do formulário
   const [titulo, setTitulo] = useState(anotacaoTitulo || "");
   const [pastaId, setPastaId] = useState<string>("");
@@ -50,7 +50,7 @@ const ExportarParaApostilaModal: React.FC<ExportarParaApostilaModalProps> = ({
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [isExporting, setIsExporting] = useState(false);
-
+  
   // Preencher os dados iniciais quando o modal abrir
   useEffect(() => {
     if (open) {
@@ -58,18 +58,18 @@ const ExportarParaApostilaModal: React.FC<ExportarParaApostilaModalProps> = ({
       // Se tiver tags na anotação original, adicioná-las aqui
     }
   }, [open, anotacaoTitulo]);
-
+  
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
       setTags([...tags, tagInput.trim()]);
       setTagInput("");
     }
   };
-
+  
   const handleRemoveTag = (tag: string) => {
     setTags(tags.filter(t => t !== tag));
   };
-
+  
   const handleCriarPasta = () => {
     if (novaPasta.nome.trim()) {
       const novaPastaObj = {
@@ -77,14 +77,14 @@ const ExportarParaApostilaModal: React.FC<ExportarParaApostilaModalProps> = ({
         nome: novaPasta.nome,
         cor: novaPasta.cor
       };
-
+      
       setPastas([...pastas, novaPastaObj]);
       setPastaId(novaPastaObj.id);
       setCriandoPasta(false);
       setNovaPasta({ nome: "", cor: "#42C5F5" });
     }
   };
-
+  
   const handleExport = async () => {
     if (!titulo.trim()) {
       toast({
@@ -94,7 +94,7 @@ const ExportarParaApostilaModal: React.FC<ExportarParaApostilaModalProps> = ({
       });
       return;
     }
-
+    
     if (!pastaId) {
       toast({
         title: "Atenção",
@@ -103,180 +103,36 @@ const ExportarParaApostilaModal: React.FC<ExportarParaApostilaModalProps> = ({
       });
       return;
     }
-
+    
     try {
       setIsExporting(true);
-
-      // Criar elemento para animação de transferência
-      const animationContainer = document.createElement('div');
-      animationContainer.className = 'anotacao-transfer-animation';
-      document.body.appendChild(animationContainer);
       
-      // Posição inicial (dialog)
-      const dialogRect = document.querySelector('.max-w-\\[600px\\]')?.getBoundingClientRect();
-      if (dialogRect) {
-        animationContainer.style.top = `${dialogRect.top + 100}px`;
-        animationContainer.style.left = `${dialogRect.left + 100}px`;
-        
-        // Adicionar ícone de anotação
-        const icon = document.createElement('div');
-        icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-text text-white"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>`;
-        animationContainer.appendChild(icon);
-        
-        // Iniciar animação
-        setTimeout(() => {
-          animationContainer.classList.add('animate-transfer');
-          
-          // Remover elemento após animação
-          setTimeout(() => {
-            document.body.removeChild(animationContainer);
-          }, 1000);
-        }, 100);
-      }
-
-      // Validar e garantir que os dados estejam no formato correto
-      const conteudoValidado = typeof anotacaoContent === 'string' ? anotacaoContent : '';
-      const tituloValidado = titulo.trim().substring(0, 255); // Limitar tamanho do título
-      const tagsValidadas = Array.isArray(tags) ? tags : [];
-      const modeloValidado = anotacaoModelo || 'Estudo Completo';
-
-      console.log("Iniciando exportação de anotação:", {
-        titulo: tituloValidado,
-        tamanhoConteudo: conteudoValidado.length,
+      await onExport({
+        titulo,
+        conteudo: anotacaoContent,
         pastaId,
-        tags: tagsValidadas,
-        modelo: modeloValidado
+        tags,
+        modelo: anotacaoModelo
       });
-
-      // Verificar se o usuário autenticado está disponível
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError || !userData?.user) {
-        throw new Error("Usuário não autenticado. Por favor, faça login novamente.");
-      }
       
-      const userId = userData.user.id;
-      
-      // Verificar se a pasta existe antes de prosseguir
-      const { data: pastaData, error: pastaError } = await supabase
-        .from('apostila_pastas')
-        .select('id, nome')
-        .eq('id', pastaId)
-        .single();
-        
-      if (pastaError) {
-        // Se a pasta não existe, verificar se há problema com a tabela
-        if (pastaError.message && pastaError.message.includes('does not exist')) {
-          throw new Error("A estrutura do banco de dados precisa ser atualizada. Use a opção 'Corrigir Relação Apostila' no menu Workflows.");
-        }
-        
-        console.error("Erro ao verificar pasta:", pastaError);
-        
-        // Tentar criar a pasta como fallback
-        try {
-          const { data: novaPasta, error: novaPastaError } = await supabase
-            .from('apostila_pastas')
-            .insert([
-              { nome: 'Anotações Gerais', cor: '#42C5F5', user_id: userId }
-            ])
-            .select();
-            
-          if (novaPastaError) {
-            throw new Error("Não foi possível criar uma pasta padrão: " + novaPastaError.message);
-          }
-          
-          console.log("Pasta padrão criada:", novaPasta[0]);
-          // Usar a função setter do useState para atualizar o pastaId
-          setPastaId(novaPasta[0].id);
-        } catch (err) {
-          throw new Error("Erro ao criar pasta padrão. Tente usar a opção 'Corrigir Relação Apostila' no menu Workflows.");
-        }
-      }
-      
-      // Adicionar anotação ao banco de dados
-      const { data: anotacaoData, error: anotacaoError } = await supabase
-        .from('apostila_anotacoes')
-        .insert([
-          {
-            titulo: tituloValidado,
-            conteudo: conteudoValidado,
-            pasta_id: pastaId,
-            tags: tagsValidadas,
-            modelo_anotacao: modeloValidado,
-            user_id: userId,
-            data_exportacao: new Date().toISOString()
-          }
-        ])
-        .select();
-        
-      if (anotacaoError) {
-        // Se houver erro de estrutura da tabela
-        if (anotacaoError.message && anotacaoError.message.includes('does not exist')) {
-          throw new Error("A estrutura do banco de dados precisa ser atualizada. Use a opção 'Corrigir Relação Apostila' no menu Workflows.");
-        }
-        
-        throw new Error("Erro ao salvar anotação: " + anotacaoError.message);
-      }
-      
-      console.log("Anotação salva com sucesso:", anotacaoData);
-      
-      // Registrar ação no log de atividades (opcional)
-      try {
-        await supabase.from('user_activity_logs').insert({
-          user_id: userId,
-          acao: 'exportou anotação',
-          anotacao_id: anotacaoData?.[0]?.id,
-          timestamp: new Date().toISOString(),
-          detalhes: `Anotação "${tituloValidado}" exportada para a pasta "${pastas.find(p => p.id === pastaId)?.nome}"`,
-        });
-      } catch (logError) {
-        console.warn("Não foi possível registrar log:", logError);
-        // Não falhar a operação principal se o log falhar
-      }
-
-      // Disparar evento para notificar o modal da Apostila
-      const apostilaModalEvent = new CustomEvent('apostila-anotacao-adicionada', {
-        detail: { 
-          pastaId: pastaId,
-          anotacaoId: anotacaoData?.[0]?.id 
-        }
-      });
-      window.dispatchEvent(apostilaModalEvent);
-
       toast({
         title: "Sucesso!",
         description: "Anotação exportada com sucesso para a Apostila Inteligente.",
       });
-
-      console.log("Exportação concluída com sucesso");
+      
       onOpenChange(false);
     } catch (error) {
       console.error("Erro ao exportar anotação:", error);
-      
-      // Verificar se é um erro relacionado à estrutura do banco de dados
-      const errorMessage = error.message || "";
-      if (
-        errorMessage.includes("does not exist") || 
-        errorMessage.includes("relation") || 
-        errorMessage.includes("estrutura do banco de dados")
-      ) {
-        toast({
-          title: "Erro na estrutura do banco de dados",
-          description: "A estrutura do banco de dados precisa ser atualizada. Use a opção 'Corrigir Relação Apostila' no menu Workflows.",
-          variant: "destructive",
-          duration: 8000
-        });
-      } else {
-        toast({
-          title: "Erro",
-          description: errorMessage || "Não foi possível exportar a anotação. Tente novamente.",
-          variant: "destructive"
-        });
-      }
+      toast({
+        title: "Erro",
+        description: "Não foi possível exportar a anotação. Tente novamente.",
+        variant: "destructive"
+      });
     } finally {
       setIsExporting(false);
     }
   };
-
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[600px] bg-[#0D0D0D] text-white border-gray-800 rounded-xl">
@@ -288,7 +144,7 @@ const ExportarParaApostilaModal: React.FC<ExportarParaApostilaModalProps> = ({
             Exportar para Apostila Inteligente
           </DialogTitle>
         </DialogHeader>
-
+        
         <div className="space-y-4 py-2">
           <div className="space-y-2">
             <Label htmlFor="titulo">Título da anotação</Label>
@@ -300,7 +156,7 @@ const ExportarParaApostilaModal: React.FC<ExportarParaApostilaModalProps> = ({
               className="bg-[#151515] border-gray-700"
             />
           </div>
-
+          
           <div className="space-y-2">
             <Label>Escolha uma pasta</Label>
             {criandoPasta ? (
@@ -380,7 +236,7 @@ const ExportarParaApostilaModal: React.FC<ExportarParaApostilaModalProps> = ({
               </>
             )}
           </div>
-
+          
           <div className="space-y-2">
             <Label>Adicionar tags (opcional)</Label>
             <div className="flex gap-2">
@@ -405,7 +261,7 @@ const ExportarParaApostilaModal: React.FC<ExportarParaApostilaModalProps> = ({
                 <Plus size={16} className="mr-1" /> Adicionar
               </Button>
             </div>
-
+            
             {tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
                 {tags.map(tag => (
@@ -426,7 +282,7 @@ const ExportarParaApostilaModal: React.FC<ExportarParaApostilaModalProps> = ({
               </div>
             )}
           </div>
-
+          
           <div className="space-y-2">
             <Label>Prévia do conteúdo</Label>
             <div className="bg-[#151515] border border-gray-700 rounded-lg p-3 max-h-[150px] overflow-y-auto text-sm text-gray-300">
@@ -435,7 +291,7 @@ const ExportarParaApostilaModal: React.FC<ExportarParaApostilaModalProps> = ({
             </div>
           </div>
         </div>
-
+        
         <DialogFooter className="mt-2">
           <Button
             variant="outline"

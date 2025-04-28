@@ -1,786 +1,1087 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from '@/components/ui/badge';
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
-  FolderOpen, Search, Plus, Tag, CalendarDays, 
-  BookOpen, Clock, Edit, Trash2, FileText,
-  ChevronRight, FolderPlus, AlertCircle, RefreshCw, X, MoreHorizontal, ArrowLeft
-} from 'lucide-react';
-import { supabase } from '@/lib/supabase';
-import { toast } from '@/components/ui/use-toast';
-import '@/styles/apostila-modal.css';
+  Search, 
+  Plus, 
+  FolderPlus, 
+  Pencil, 
+  Trash2, 
+  Eye, 
+  Download, 
+  Share2, 
+  FolderOpen, 
+  X,
+  Filter,
+  Star,
+  Clock,
+  History,
+  ArrowLeft,
+  ArrowRight,
+  BookOpen,
+  SlidersHorizontal,
+  FileText,
+  CheckCircle,
+  ChevronDown,
+  Shuffle,
+  LayoutGrid,
+  ListFilter,
+  CalendarDays,
+  Maximize2,
+  Minimize2
+} from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { toast } from "@/components/ui/use-toast";
 
-interface Anotacao {
-  id: string;
-  titulo: string;
-  conteudo: string;
-  tags: string[];
-  data_exportacao: string;
-  pasta_id: string | null;
-  modelo_anotacao: string;
-  user_id: string;
-  apostila_pastas?: {
-    id: string;
-    nome: string;
-    cor?: string;
-  } | null;
-  pasta?: { // Added for compatibility with the new query
-    id: string;
-    nome: string;
-    cor?: string;
-  } | null;
+interface ApostilaInteligenteModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 interface Pasta {
   id: string;
   nome: string;
   cor: string;
-  user_id: string;
+  contagem?: number;
+  user_id?: string;
+  descricao?: string;
+  data_criacao?: Date;
 }
 
-interface ApostilaInteligenteModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onClose: () => void; // Added onClose prop
+interface Anotacao {
+  id: string;
+  titulo: string;
+  conteudo: string;
+  resumo: string;
+  pastaId: string;
+  data: Date;
+  modelo: string;
+  favorito: boolean;
+  ultimaEdicao?: Date;
+  tags?: string[];
+  visualizacoes?: number;
+  origem?: 'caderno' | 'criado_na_apostila';
+  user_id?: string;
+  modelo_anotacao?: string;
+  data_exportacao?: Date;
 }
 
-const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
-  open,
-  onOpenChange,
-  onClose
+const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({ 
+  open, 
+  onOpenChange 
 }) => {
-  const [anotacoes, setAnotacoes] = useState<Anotacao[]>([]);
+  // Estados
   const [pastas, setPastas] = useState<Pasta[]>([]);
-  const [pastaSelecionada, setPastaSelecionada] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
-  const [loading, setLoading] = useState(false); // Added loading state
-  const [filtroAtual, setFiltroAtual] = useState('todas'); // Added filter state
 
+  const [anotacoes, setAnotacoes] = useState<Anotacao[]>([]);
 
-  useEffect(() => {
-    if (open) {
-      carregarAnotacoes();
-    }
-  }, [open]);
+  const [loading, setLoading] = useState(false);
 
-
-  // Função para verificar se uma anotação é nova (menos de 24 horas)
-  const isNewAnotacao = (dataExportacao: string | null): boolean => {
-    if (!dataExportacao) return false;
-    const now = new Date();
-    const exportDate = new Date(dataExportacao);
-    const diffHours = (now.getTime() - exportDate.getTime()) / (1000 * 60 * 60);
-    return diffHours < 24;
-  };
-
-  // Configurar Supabase Realtime para atualizações automáticas
-  useEffect(() => {
-    let subscription;
-
-    if (open) {
-      // Carregar anotações ao abrir o modal
-      carregarAnotacoes();
-
-      // Configurar escuta de mudanças em tempo real
-      const channel = supabase
-        .channel('apostila_changes')
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'apostila_anotacoes',
-          filter: `user_id=eq.${supabase.auth.getUser()?.data?.user?.id}`
-        }, (payload) => {
-          console.log('Nova anotação detectada:', payload.new);
-
-          // Buscar informações da pasta se necessário
-          const processarNovaAnotacao = async () => {
-            try {
-              if (payload.new.pasta_id) {
-                const { data: pastaData } = await supabase
-                  .from('apostila_pastas')
-                  .select('id, nome, cor')
-                  .eq('id', payload.new.pasta_id)
-                  .single();
-
-                const novaAnotacao = {
-                  ...payload.new,
-                  pasta: pastaData,
-                  apostila_pastas: pastaData // Mantendo compatibilidade
-                };
-
-                // Adicionar à lista de anotações
-                setAnotacoes(prev => [novaAnotacao, ...prev]);
-              } else {
-                // Adicionar anotação sem pasta
-                setAnotacoes(prev => [
-                  {
-                    ...payload.new,
-                    pasta: null,
-                    apostila_pastas: null
-                  }, 
-                  ...prev
-                ]);
-              }
-
-              // Notificar o usuário
-              toast({
-                title: "Nova anotação adicionada!",
-                description: `"${payload.new.titulo}" foi adicionada à sua Apostila.`,
-                duration: 3000,
-              });
-            } catch (error) {
-              console.error('Erro ao processar nova anotação:', error);
-            }
-          };
-
-          processarNovaAnotacao();
-        })
-        .subscribe();
-
-      // Configurar escuta para evento personalizado (quando uma anotação é exportada)
-      const handleAnotacaoAdicionada = (event) => {
-        console.log('Evento de anotação adicionada detectado:', event.detail);
-        // Recarregar anotações para garantir que tudo está atualizado
-        carregarAnotacoes();
-      };
-
-      window.addEventListener('apostila-anotacao-adicionada', handleAnotacaoAdicionada);
-
-      // Limpar subscrição
-      return () => {
-        supabase.removeChannel(channel);
-        window.removeEventListener('apostila-anotacao-adicionada', handleAnotacaoAdicionada);
-      };
-    }
-  }, [open]);
-
-  // Carregar anotações do usuário
-  const carregarAnotacoes = async (retries = 3, delayMs = 500) => {
-    let tentativaAtual = 0;
-    let ultimoErro = null;
-
-    while (tentativaAtual < retries) {
-      tentativaAtual++;
-      try {
-        setLoading(true);
-        setError(null);
-
-        const { data: user } = await supabase.auth.getUser();
-        const userId = user?.user?.id;
-
-        if (!userId) {
-          throw new Error('Usuário não autenticado');
-        }
-
-        // Primeiro, vamos verificar se há problema com as tabelas
-        try {
-          // Tenta executar uma consulta para verificar as tabelas
-          const { data: tablesExist, error: tablesError } = await supabase.rpc('execute_sql', {
-            sql_statement: `
-              SELECT
-                (SELECT EXISTS (
-                  SELECT FROM information_schema.tables 
-                  WHERE table_schema = 'public' 
-                  AND table_name = 'apostila_pastas'
-                )) as pastas_exists,
-                (SELECT EXISTS (
-                  SELECT FROM information_schema.tables 
-                  WHERE table_schema = 'public' 
-                  AND table_name = 'apostila_anotacoes'
-                )) as anotacoes_exists;
-            `
-          });
-
-          if (tablesError) {
-            console.warn('Erro ao verificar existência das tabelas:', tablesError);
-          } else if (tablesExist && (!tablesExist[0].pastas_exists || !tablesExist[0].anotacoes_exists)) {
-            console.error('Uma ou ambas as tabelas da Apostila não existem');
-            throw new Error('A estrutura do banco de dados precisa ser atualizada. Use a opção "Corrigir Relação Apostila" no menu Workflows.');
-          }
-        } catch (checkError) {
-          console.warn('Erro ao tentar verificar tabelas:', checkError);
-          // Continua o fluxo tentando carregar normalmente
-        }
-
-        // Primeiro, carregar pastas
-        const { data: pastasData, error: pastasError } = await supabase
-          .from('apostila_pastas')
-          .select('*')
-          .eq('user_id', userId)
-          .order('nome');
-
-        if (pastasError) {
-          // Se for erro de tabela não existente, personalizar a mensagem
-          if (pastasError.message && pastasError.message.includes('does not exist')) {
-            throw new Error('A estrutura do banco de dados precisa ser atualizada. Use a opção "Corrigir Relação Apostila" no menu Workflows.');
-          }
-          
-          console.warn('Aviso ao carregar pastas:', pastasError);
-        } else {
-          setPastas(pastasData || []);
-          console.log("Pastas carregadas:", pastasData?.length || 0);
-        }
-
-        // Abordagem robusta: tentar diferentes estratégias para carregar anotações
-        let anotacoesCarregadas = false;
-        let anotacoesProcessadas = [];
-
-        // Estratégia 1: Com join explícito usando pasta:apostila_pastas(*)
-        if (!anotacoesCarregadas) {
-          try {
-            const { data: anotacoesRaw, error: anotacoesError } = await supabase
-              .from('apostila_anotacoes')
-              .select('*, pasta:apostila_pastas(*)')
-              .eq('user_id', userId)
-              .order('data_exportacao', { ascending: false });
-
-            if (!anotacoesError && anotacoesRaw) {
-              anotacoesProcessadas = anotacoesRaw.map(anotacao => ({
-                ...anotacao,
-                apostila_pastas: anotacao.pasta // Manter compatibilidade
-              }));
-              console.log('Anotações carregadas (estratégia 1):', anotacoesProcessadas.length);
-              anotacoesCarregadas = true;
-            } else if (anotacoesError && anotacoesError.message.includes('does not exist')) {
-              throw new Error('A estrutura do banco de dados precisa ser atualizada. Use a opção "Corrigir Relação Apostila" no menu Workflows.');
-            }
-          } catch (err) {
-            console.warn('Falha na estratégia 1:', err);
-          }
-        }
-
-        // Estratégia 2: Com join usando função SQL
-        if (!anotacoesCarregadas) {
-          try {
-            const { data: joinResult, error: joinError } = await supabase.rpc('execute_sql', {
-              sql_statement: `
-                SELECT a.*, 
-                  jsonb_build_object(
-                    'id', p.id,
-                    'nome', p.nome,
-                    'cor', p.cor
-                  ) as pasta
-                FROM apostila_anotacoes a
-                LEFT JOIN apostila_pastas p ON a.pasta_id = p.id
-                WHERE a.user_id = '${userId}'
-                ORDER BY a.data_exportacao DESC;
-              `
-            });
-
-            if (!joinError && joinResult) {
-              anotacoesProcessadas = joinResult.map(row => ({
-                ...row,
-                apostila_pastas: row.pasta // Manter compatibilidade
-              }));
-              console.log('Anotações carregadas (estratégia 2):', anotacoesProcessadas.length);
-              anotacoesCarregadas = true;
-            }
-          } catch (err) {
-            console.warn('Falha na estratégia 2:', err);
-          }
-        }
-
-        // Estratégia 3: Carregar anotações e pastas separadamente
-        if (!anotacoesCarregadas) {
-          try {
-            const { data: anotacoesSemJoin, error: erroSemJoin } = await supabase
-              .from('apostila_anotacoes')
-              .select('*')
-              .eq('user_id', userId)
-              .order('data_exportacao', { ascending: false });
-
-            if (erroSemJoin) {
-              if (erroSemJoin.message && erroSemJoin.message.includes('does not exist')) {
-                throw new Error('A estrutura do banco de dados precisa ser atualizada. Use a opção "Corrigir Relação Apostila" no menu Workflows.');
-              }
-              throw erroSemJoin;
-            }
-
-            // Montar um mapa de pastas para lookup rápido
-            const pastasMap = {};
-            (pastasData || []).forEach(pasta => {
-              pastasMap[pasta.id] = pasta;
-            });
-
-            // Associar pastas às anotações
-            anotacoesProcessadas = (anotacoesSemJoin || []).map(anotacao => {
-              const pasta = anotacao.pasta_id ? pastasMap[anotacao.pasta_id] : null;
-              return {
-                ...anotacao,
-                pasta: pasta,
-                apostila_pastas: pasta // Manter compatibilidade
-              };
-            });
-            
-            console.log('Anotações carregadas (estratégia 3):', anotacoesProcessadas.length);
-            anotacoesCarregadas = true;
-          } catch (err) {
-            console.warn('Falha na estratégia 3:', err);
-            throw err; // Propagar o erro se todas as estratégias falharem
-          }
-        }
-
-        // Atualizar estado com as anotações processadas
-        setAnotacoes(anotacoesProcessadas || []);
-        setFiltroAtual('todas');
-        setLoading(false);
-        return; // Sair da função se chegou até aqui com sucesso
-
-      } catch (error) {
-        console.error(`Erro ao carregar dados (tentativa ${tentativaAtual}/${retries}):`, error);
-        ultimoErro = error;
-
-        // Se não for a última tentativa, esperar antes de tentar novamente
-        if (tentativaAtual < retries) {
-          await new Promise(resolve => setTimeout(resolve, delayMs));
-        }
-      } finally {
-        if (tentativaAtual === retries) {
-          setLoading(false);
-        }
-      }
-    }
-
-    // Se chegou aqui, todas as tentativas falharam
-    let mensagemErro = ultimoErro?.message || 'Erro ao carregar anotações';
-    
-    // Personalizar a mensagem de erro para o usuário
-    if (mensagemErro.includes('does not exist') || mensagemErro.includes('relationship')) {
-      mensagemErro = 'A estrutura do banco de dados precisa ser atualizada. Use a opção "Corrigir Relação Apostila" no menu Workflows.';
-    } else if (mensagemErro.includes('não autenticado')) {
-      mensagemErro = 'Você precisa estar logado para acessar suas anotações.';
-    }
-    
-    setError(mensagemErro);
-    setLoading(false);
-
-    // Se não há anotações, mostrar estado vazio em vez de erro
-    if (!anotacoes.length) {
-      setAnotacoes([]);
-    }
-  };
-
+  // Carregar pastas e anotações do Supabase
   const carregarPastas = async () => {
     try {
-      setIsLoading(true);
-      // Tenta obter o ID do usuário de várias fontes
-      let userId = localStorage.getItem('user_id');
-
-      // Se não encontrar, tenta outras possíveis fontes
-      if (!userId) {
-        // Tenta obter do sessionStorage como fallback
-        userId = sessionStorage.getItem('user_id');
-
-        // Se ainda não encontrou, tenta buscar do localStorage com outros formatos comuns
-        if (!userId) {
-          // Verifica se existe alguma chave no localStorage que contenha 'user' e 'id'
-          for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && (key.includes('user') || key.includes('userId') || key.includes('user_id'))) {
-              const potentialId = localStorage.getItem(key);
-              if (potentialId && potentialId.length > 5) {
-                console.log('Encontrado possível ID alternativo:', key, potentialId);
-                userId = potentialId;
-                // Salva no formato correto para futuras consultas
-                localStorage.setItem('user_id', userId);
-                break;
-              }
-            }
-          }
-        }
-      }
-
-      // Se ainda não encontrou o ID do usuário
-      if (!userId) {
-        console.error('ID de usuário não encontrado em nenhum local de armazenamento');
-        setError('ID de usuário não encontrado. Por favor, faça login novamente.');
-        return;
-      }
-
-      console.log('Carregando pastas com ID de usuário:', userId);
-      let tentativas = 0;
-      let dados = null;
-      let ultimoErro = null;
-
-      while (tentativas < 3 && !dados) {
-        try {
-          const { data, error } = await supabase
-            .from('apostila_pastas')
-            .select('*')
-            .eq('user_id', userId)
-            .order('nome');
-
-          if (error) {
-            throw error;
-          }
-
-          dados = data;
-        } catch (err: any) {
-          tentativas++;
-          ultimoErro = err;
-          console.error(`Erro ao carregar pastas (tentativa ${tentativas}/3):`, err);
-          // Aguardar antes da próxima tentativa
-          await new Promise(r => setTimeout(r, 500));
-        }
-      }
-
-      if (!dados) {
-        console.error('Falha após todas as tentativas de carregar pastas:', ultimoErro);
-        setError('Não foi possível carregar suas pastas. Algumas funcionalidades podem estar limitadas.');
-
-        // Tentar criar uma pasta padrão se necessário
-        try {
-          const { data: novaPasta, error: novaPastaError } = await supabase
-            .from('apostila_pastas')
-            .insert([
-              {
-                nome: "Minhas Anotações",
-                cor: "#4285F4",
-                user_id: userId
-              }
-            ])
-            .select();
-
-          if (novaPastaError) {
-            throw novaPastaError;
-          }
-
-          if (novaPasta && novaPasta.length > 0) {
-            setPastas(novaPasta);
-            setPastaSelecionada(novaPasta[0].id);
-            console.log('Pasta padrão criada com sucesso');
-          }
-        } catch (err) {
-          console.error('Erro ao criar pasta padrão:', err);
-        }
-
-        return;
-      }
-
-      setPastas(dados);
-
-      // Se tiver pastas e nenhuma estiver selecionada, seleciona a primeira
-      if (dados && dados.length > 0 && !pastaSelecionada) {
-        setPastaSelecionada(dados[0].id);
-      }
-    } catch (err) {
-      console.error('Erro ao carregar pastas:', err);
-      setError('Ocorreu um erro ao carregar suas pastas.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Função auxiliar para recuperar a propriedade de anotação nova 
-  // (usando a função já definida acima)
-
-  const anotacoesFiltradas = anotacoes.filter(anotacao => {
-    const matchesPasta = pastaSelecionada ? anotacao.pasta_id === pastaSelecionada : true;
-    const matchesSearch = anotacao.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      anotacao.conteudo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (anotacao.tags && anotacao.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())));
-
-    return matchesPasta && matchesSearch;
-  });
-
-  const handleRetry = () => {
-    setRetryCount(prev => prev + 1);
-    carregarAnotacoes();
-  };
-
-  const handleCriarPasta = async () => {
-    const nomePasta = prompt("Nome da nova pasta:");
-    if (!nomePasta) return;
-
-    const corPasta = [
-      "#42C5F5", "#F5C542", "#4CAF50", "#F44336", 
-      "#9C27B0", "#FF9800", "#607D8B", "#E91E63"
-    ][Math.floor(Math.random() * 8)];
-
-    try {
-      // Tenta obter o ID do usuário de várias fontes
-      let userId = localStorage.getItem('user_id');
-
-      // Se não encontrar, tenta outras possíveis fontes
-      if (!userId) {
-        // Tenta obter do sessionStorage como fallback
-        userId = sessionStorage.getItem('user_id');
-
-        // Se ainda não encontrou, tenta buscar do localStorage com outros formatos comuns
-        if (!userId) {
-          // Verifica se existe alguma chave no localStorage que contenha 'user' e 'id'
-          for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && (key.includes('user') || key.includes('userId') || key.includes('user_id'))) {
-              const potentialId = localStorage.getItem(key);
-              if (potentialId && potentialId.length > 5) {
-                console.log('Encontrado possível ID alternativo:', key, potentialId);
-                userId = potentialId;
-                // Salva no formato correto para futuras consultas
-                localStorage.setItem('user_id', userId);
-                break;
-              }
-            }
-          }
-        }
-      }
-
-      // Se ainda não encontrou o ID do usuário
-      if (!userId) {
-        console.error('ID de usuário não encontrado em nenhum local de armazenamento');
-        throw new Error('ID de usuário não encontrado. Por favor, faça login novamente.');
-      }
+      const userId = localStorage.getItem('user_id') || 'anonymous';
 
       const { data, error } = await supabase
         .from('apostila_pastas')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        // Converter dados do banco para o formato da interface Pasta
+        const pastasFromDB = data.map(pasta => ({
+          id: pasta.id,
+          nome: pasta.nome,
+          cor: pasta.cor || "#42C5F5", // cor padrão se não tiver
+          user_id: pasta.user_id,
+          descricao: pasta.descricao,
+          data_criacao: new Date(pasta.data_criacao)
+        }));
+
+        // Mesclar as pastas demo com as do banco
+        setPastas([...pastasFromDB]);
+
+        // Se tiver pastas, selecionar a primeira
+        if (pastasFromDB.length > 0 && !pastaSelecionada) {
+          setPastaSelecionada(pastasFromDB[0].id);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar pastas:', error);
+    }
+  };
+
+  const carregarAnotacoes = async () => {
+    try {
+      setLoading(true);
+      const userId = localStorage.getItem('user_id') || 'anonymous';
+
+      const { data, error } = await supabase
+        .from('apostila_anotacoes')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        // Converter dados do banco para o formato da interface Anotacao
+        const anotacoesFromDB = data.map(anotacao => {
+          // Criar um resumo do conteúdo para exibição
+          const resumo = anotacao.conteudo.length > 150 
+            ? anotacao.conteudo.substring(0, 150) + '...' 
+            : anotacao.conteudo;
+
+          return {
+            id: anotacao.id,
+            titulo: anotacao.titulo,
+            conteudo: anotacao.conteudo,
+            resumo: resumo,
+            pastaId: anotacao.pasta_id,
+            data: new Date(anotacao.data_criacao),
+            modelo: anotacao.modelo_anotacao || "Estudo Completo",
+            favorito: false, // por padrão não é favorito
+            ultimaEdicao: anotacao.data_exportacao ? new Date(anotacao.data_exportacao) : undefined,
+            tags: anotacao.tags || [],
+            visualizacoes: 0,
+            origem: anotacao.origem,
+            user_id: anotacao.user_id
+          };
+        });
+
+        // Mesclar as anotações demo com as do banco
+        // Aqui você pode decidir se quer manter as demo ou só mostrar as do banco
+        setAnotacoes([...anotacoesFromDB]);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar anotações:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Carregar dados quando o modal abrir
+  useEffect(() => {
+    if (open) {
+      carregarPastas();
+      carregarAnotacoes();
+
+      // Configurar listeners para atualizações em tempo real
+      const pastasChannel = supabase
+        .channel('apostila_pastas_changes')
+        .on('postgres_changes', 
+          { event: '*', schema: 'public', table: 'apostila_pastas' }, 
+          () => carregarPastas()
+        )
+        .subscribe();
+
+      const anotacoesChannel = supabase
+        .channel('apostila_anotacoes_changes')
+        .on('postgres_changes', 
+          { event: '*', schema: 'public', table: 'apostila_anotacoes' }, 
+          () => carregarAnotacoes()
+        )
+        .subscribe();
+
+      // Limpar listeners quando o modal fechar
+      return () => {
+        supabase.removeChannel(pastasChannel);
+        supabase.removeChannel(anotacoesChannel);
+      };
+    }
+  }, [open]);
+
+  const [pastaSelecionada, setPastaSelecionada] = useState<string | null>(null);
+  const [anotacaoSelecionada, setAnotacaoSelecionada] = useState<string | null>(null);
+  const [pesquisa, setPesquisa] = useState("");
+  const [criandoPasta, setCriandoPasta] = useState(false);
+  const [novaPasta, setNovaPasta] = useState({ nome: "", cor: "#42C5F5" });
+  const [visualMode, setVisualMode] = useState<"grid" | "list">("list");
+  const [sortBy, setSortBy] = useState<"recentes" | "az" | "favoritos">("recentes");
+  const [showTagsFilter, setShowTagsFilter] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Animação ao abrir
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [open]);
+
+  // Funções auxiliares
+  const getAnotacoesDaPasta = () => {
+    if (!pastaSelecionada) return [];
+
+    let filteredAnotacoes = anotacoes.filter(a => a.pastaId === pastaSelecionada);
+
+    // Aplicar pesquisa
+    if (pesquisa !== "") {
+      filteredAnotacoes = filteredAnotacoes.filter(a => 
+        a.titulo.toLowerCase().includes(pesquisa.toLowerCase()) || 
+        a.resumo.toLowerCase().includes(pesquisa.toLowerCase())
+      );
+    }
+
+    // Aplicar filtro de tags
+    if (selectedTags.length > 0) {
+      filteredAnotacoes = filteredAnotacoes.filter(a => 
+        a.tags?.some(tag => selectedTags.includes(tag))
+      );
+    }
+
+    // Aplicar ordenação
+    switch (sortBy) {
+      case "recentes":
+        return filteredAnotacoes.sort((a, b) => b.ultimaEdicao!.getTime() - a.ultimaEdicao!.getTime());
+      case "az":
+        return filteredAnotacoes.sort((a, b) => a.titulo.localeCompare(b.titulo));
+      case "favoritos":
+        return filteredAnotacoes.sort((a, b) => (b.favorito ? 1 : 0) - (a.favorito ? 1 : 0));
+      default:
+        return filteredAnotacoes;
+    }
+  };
+
+  const getAnotacaoSelecionada = () => {
+    return anotacoes.find(a => a.id === anotacaoSelecionada);
+  };
+
+  const handleCriarPasta = async () => {
+    if (novaPasta.nome.trim() === "") return;
+
+    try {
+      const userId = localStorage.getItem('user_id') || 'anonymous';
+
+      // Inserir a nova pasta no banco
+      const { data, error } = await supabase
+        .from('apostila_pastas')
         .insert([
-          { nome: nomePasta, cor: corPasta, user_id: userId }
+          {
+            user_id: userId,
+            nome: novaPasta.nome,
+            cor: novaPasta.cor,
+            descricao: ""
+          }
         ])
         .select()
         .single();
 
-      if (error) {
-        console.error('Erro ao criar pasta:', error);
-        toast({
-          title: "Erro ao criar pasta",
-          description: "Não foi possível criar a pasta. Tente novamente.",
-          variant: "destructive",
-        });
-        return;
-      }
+      if (error) throw error;
 
-      // Adicionar a nova pasta ao estado
-      setPastas(prev => [...prev, data]);
-      setPastaSelecionada(data.id);
+      // Adicionar ao estado local
+      const novaPastaObj: Pasta = {
+        id: data.id,
+        nome: novaPasta.nome,
+        cor: novaPasta.cor,
+        contagem: 0,
+        user_id: userId,
+        data_criacao: new Date()
+      };
+
+      setPastas([...pastas, novaPastaObj]);
+      setNovaPasta({ nome: "", cor: "#42C5F5" });
+      setCriandoPasta(false);
+      setPastaSelecionada(novaPastaObj.id);
+
+      // Registrar atividade
+      await supabase
+        .from('user_activity_logs')
+        .insert([
+          {
+            user_id: userId,
+            acao: 'criou pasta',
+            detalhes: `Criou pasta "${novaPasta.nome}"`
+          }
+        ]);
 
       toast({
         title: "Pasta criada!",
-        description: `A pasta "${nomePasta}" foi criada com sucesso.`,
+        description: `A pasta "${novaPasta.nome}" foi criada com sucesso.`
       });
-    } catch (err) {
-      console.error('Erro ao criar pasta:', err);
+
+    } catch (error) {
+      console.error('Erro ao criar pasta:', error);
       toast({
         title: "Erro ao criar pasta",
-        description: "Ocorreu um erro inesperado. Tente novamente.",
-        variant: "destructive",
+        description: "Não foi possível criar a pasta. Tente novamente.",
+        variant: "destructive"
       });
     }
   };
 
-  const handleVerDetalhesErro = () => {
-    // Exibir um modal ou toast com detalhes técnicos do erro
-    // apenas para administradores ou em ambiente de desenvolvimento
-    if (process.env.NODE_ENV === 'development') {
+  const handleExcluirPasta = async (id: string) => {
+    try {
+      // Confirmar se existem anotações nesta pasta
+      const anotacoesDaPasta = anotacoes.filter(a => a.pastaId === id);
+
+      if (anotacoesDaPasta.length > 0) {
+        const confirmar = window.confirm(
+          `Esta pasta contém ${anotacoesDaPasta.length} anotação(ões). Tem certeza que deseja excluí-la?`
+        );
+
+        if (!confirmar) return;
+      }
+
+      const userId = localStorage.getItem('user_id') || 'anonymous';
+
+      // Deletar a pasta no banco
+      const { error } = await supabase
+        .from('apostila_pastas')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      // Atualizar o estado local
+      const novasPastas = pastas.filter(p => p.id !== id);
+      setPastas(novasPastas);
+
+      if (pastaSelecionada === id) {
+        setPastaSelecionada(novasPastas.length > 0 ? novasPastas[0].id : null);
+      }
+
+      // Registrar atividade
+      const pastaExcluida = pastas.find(p => p.id === id);
+      await supabase
+        .from('user_activity_logs')
+        .insert([
+          {
+            user_id: userId,
+            acao: 'excluiu pasta',
+            detalhes: `Excluiu pasta "${pastaExcluida?.nome}"`
+          }
+        ]);
+
       toast({
-        title: "Detalhes técnicos do erro",
-        description: `Tentativas: ${retryCount}. Última resposta: ${error}`,
-        duration: 10000,
+        title: "Pasta excluída!",
+        description: `A pasta "${pastaExcluida?.nome}" foi excluída com sucesso.`
+      });
+
+    } catch (error) {
+      console.error('Erro ao excluir pasta:', error);
+      toast({
+        title: "Erro ao excluir pasta",
+        description: "Não foi possível excluir a pasta. Tente novamente.",
+        variant: "destructive"
       });
     }
+  };
+
+  const handleFavoritar = async (id: string) => {
+    try {
+      const anotacao = anotacoes.find(a => a.id === id);
+      if (!anotacao) return;
+
+      const novoStatus = !anotacao.favorito;
+      const userId = localStorage.getItem('user_id') || 'anonymous';
+
+      // Atualizar no banco de dados
+      const { error } = await supabase
+        .from('apostila_anotacoes')
+        .update({ favorito: novoStatus })
+        .eq('id', id)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      // Atualizar no estado local
+      setAnotacoes(
+        anotacoes.map(a => 
+          a.id === id ? { ...a, favorito: novoStatus } : a
+        )
+      );
+
+      // Registrar atividade
+      await supabase
+        .from('user_activity_logs')
+        .insert([
+          {
+            user_id: userId,
+            acao: novoStatus ? 'adicionou aos favoritos' : 'removeu dos favoritos',
+            anotacao_id: id,
+            detalhes: `${novoStatus ? 'Adicionou' : 'Removeu'} "${anotacao.titulo}" ${novoStatus ? 'aos' : 'dos'} favoritos`
+          }
+        ]);
+
+    } catch (error) {
+      console.error('Erro ao favoritar/desfavoritar:', error);
+      toast({
+        title: "Erro ao atualizar favoritos",
+        description: "Não foi possível atualizar o status de favorito. Tente novamente.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const getAllTags = () => {
+    const allTags: string[] = [];
+    anotacoes.forEach(anotacao => {
+      anotacao.tags?.forEach(tag => {
+        if (!allTags.includes(tag)) {
+          allTags.push(tag);
+        }
+      });
+    });
+    return allTags.sort();
+  };
+
+  const toggleTagSelection = (tag: string) => {
+    if (selectedTags.includes(tag)) {
+      setSelectedTags(selectedTags.filter(t => t !== tag));
+    } else {
+      setSelectedTags([...selectedTags, tag]);
+    }
+  };
+
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[800px] max-h-[600px] bg-[#0D0D0D] text-white border-gray-800 rounded-xl p-0 overflow-hidden">
-        <DialogHeader className="py-4 px-5 bg-gradient-to-r from-[#0A84FF] to-[#42C5F5] flex flex-row justify-between items-center">
-          <DialogTitle className="text-xl font-bold flex items-center gap-2">
-            <BookOpen className="h-5 w-5" />
-            Apostila Inteligente
+      <DialogContent 
+        className={`${isFullscreen ? 'max-w-[98vw] h-[98vh] max-h-[98vh]' : 'max-w-[90vw] w-[1400px] h-[85vh] max-h-[85vh]'} bg-[#0D0D0D] text-white rounded-2xl p-0 overflow-hidden flex flex-col transition-all duration-300 ease-in-out`}
+        style={{
+          boxShadow: '0 10px 50px rgba(0, 0, 0, 0.5), 0 0 80px rgba(66, 197, 245, 0.15)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.08)'
+        }}
+      >
+        <DialogHeader className="py-4 px-6 flex flex-row justify-between items-center border-b border-gray-800 bg-gradient-to-r from-[#0D0D0D] to-[#171717]">
+          <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#42C5F5] to-[#0A84FF] flex items-center justify-center shadow-lg">
+              <BookOpen size={20} className="text-white" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl text-white">Apostila Inteligente</span>
+              <span className="text-xs text-gray-400 font-normal">Organize suas anotações com IA</span>
+            </div>
           </DialogTitle>
-          <Button onClick={onClose} className="text-white bg-transparent hover:bg-gray-800 rounded-md p-1">
-            <X className="h-5 w-5"/>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="rounded-full h-9 w-9 hover:bg-gray-800 text-gray-400 hover:text-white"
+              onClick={toggleFullscreen}
+            >
+              {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => onOpenChange(false)} 
+              className="rounded-full h-9 w-9 hover:bg-gray-800 text-gray-400 hover:text-white"
+            >
+              <X size={18} />
+            </Button>
+          </div>
         </DialogHeader>
 
-        <div className="flex h-[calc(100%-60px)]">
-          {/* Sidebar de pastas */}
-          <div className="w-[220px] border-r border-gray-800 p-3 bg-[#111111]">
-            <Input 
-              placeholder="Buscar anotações..."
-              className="bg-[#1A1A1A] border-gray-700 mb-3"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              prefix={<Search className="h-4 w-4 text-gray-400" />}
-            />
+        <div className="flex flex-1 overflow-hidden">
+          {/* Barra Lateral Esquerda (Pastas) */}
+          <div className="w-[260px] border-r border-gray-800 bg-[#0D0D0D] flex flex-col">
+            <div className="p-4 border-b border-gray-800">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-base font-medium flex items-center gap-1.5">
+                  <FolderOpen size={15} className="text-gray-400" />
+                  <span>Minhas Pastas</span>
+                </h3>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="rounded-full h-7 w-7 hover:bg-[#1A1A1A] text-[#42C5F5]"
+                        onClick={() => setCriandoPasta(true)}
+                      >
+                        <FolderPlus size={15} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      <p>Criar nova pasta</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
 
-            <div className="flex items-center justify-between mb-2 mt-4">
-              <h3 className="text-sm font-medium text-gray-300">Minhas Pastas</h3>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="h-7 w-7 p-0 text-gray-400 hover:text-white hover:bg-gray-800"
-                onClick={handleCriarPasta}
-              >
-                <FolderPlus className="h-4 w-4" />
-              </Button>
+              {criandoPasta && (
+                <div className="mb-4 bg-[#111111] p-3 rounded-xl animate-in fade-in-50 slide-in-from-left duration-300 border border-gray-800">
+                  <Input 
+                    placeholder="Nome da pasta" 
+                    className="bg-[#1A1A1A] border-gray-700 mb-2 h-9 text-sm"
+                    value={novaPasta.nome}
+                    onChange={(e) => setNovaPasta({...novaPasta, nome: e.target.value})}
+                  />
+                  <div className="flex justify-between">
+                    <div className="flex gap-1">
+                      {["#42C5F5", "#F5C542", "#4CAF50", "#F44336", "#9C27B0", "#2196F3", "#FF9800"].map(cor => (
+                        <button
+                          key={cor}
+                          className={`w-5 h-5 rounded-full border ${novaPasta.cor === cor ? 'border-white shadow-glow' : 'border-gray-600'}`}
+                          style={{ 
+                            backgroundColor: cor,
+                            boxShadow: novaPasta.cor === cor ? `0 0 10px ${cor}80` : 'none'
+                          }}
+                          onClick={() => setNovaPasta({...novaPasta, cor})}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-7 px-2 hover:bg-gray-700 text-sm"
+                        onClick={() => setCriandoPasta(false)}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        className="h-7 px-3 bg-[#42C5F5] hover:bg-[#3BABDB] text-white text-sm"
+                        onClick={handleCriarPasta}
+                      >
+                        Criar
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
-            <ScrollArea className="h-[calc(100%-80px)] pr-2">
-              <Button
-                variant="ghost"
-                className={`w-full justify-start mb-1 px-2 py-1.5 h-auto ${pastaSelecionada === null ? 'bg-[#1A1A1A]' : 'hover:bg-[#1A1A1A]'}`}
-                onClick={() => setPastaSelecionada(null)}
-              >
-                <FolderOpen className="h-4 w-4 mr-2 text-blue-400" />
-                <span className="text-sm">Todas as Anotações</span>
-              </Button>
-
-              {pastas.map(pasta => (
-                <Button
-                  key={pasta.id}
-                  variant="ghost"
-                  className={`w-full justify-start mb-1 px-2 py-1.5 h-auto ${pastaSelecionada === pasta.id ? 'bg-[#1A1A1A]' : 'hover:bg-[#1A1A1A]'}`}
-                  onClick={() => setPastaSelecionada(pasta.id)}
-                >
+            <ScrollArea className="flex-1 py-2">
+              <div className="flex flex-col gap-1 px-2">
+                {pastas.map(pasta => (
                   <div 
-                    className="h-4 w-4 mr-2 rounded-sm" 
-                    style={{ backgroundColor: pasta.cor || '#42C5F5' }}
-                  />
-                  <span className="text-sm truncate">{pasta.nome}</span>
-                </Button>
-              ))}
+                    key={pasta.id}
+                    className={`px-3 py-2.5 rounded-lg flex items-center justify-between group cursor-pointer transition-all duration-200
+                    ${pastaSelecionada === pasta.id 
+                      ? 'bg-gradient-to-r from-[#171717] to-[#1c1c1c] border-l-4 pl-2' 
+                      : 'hover:bg-[#171717] border-l-4 border-transparent pl-2'}`}
+                    style={{
+                      borderLeftColor: pastaSelecionada === pasta.id ? pasta.cor : 'transparent'
+                    }}
+                    onClick={() => setPastaSelecionada(pasta.id)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: pasta.cor }}></div>
+                      <span className="truncate font-medium text-sm">{pasta.nome}</span>
+                      {pasta.contagem !== undefined && (
+                        <Badge variant="outline" className="ml-1 h-5 py-0 text-xs bg-[#1A1A1A] text-gray-400 hover:bg-[#1A1A1A]">
+                          {pasta.contagem}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button className="p-1 rounded hover:bg-gray-700 text-gray-400">
+                              <Pencil size={13} />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="right" className="text-xs">
+                            <p>Editar pasta</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button 
+                              className="p-1 rounded hover:bg-gray-700 text-gray-400"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleExcluirPasta(pasta.id);
+                              }}
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="right" className="text-xs">
+                            <p>Excluir pasta</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+
+            <div className="p-4 border-t border-gray-800">
+              <Button className="w-full bg-[#42C5F5] hover:bg-[#3BABDB] gap-2">
+                <Plus size={16} /> Nova Anotação
+              </Button>
+            </div>
+          </div>
+
+          {/* Área Central (Lista de Anotações) */}
+          <div className="w-[350px] border-r border-gray-800 bg-[#0D0D0D] flex flex-col">
+            {/* Cabeçalho da área central */}
+            <div className="p-4 border-b border-gray-800">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-base font-medium flex items-center gap-1.5">
+                  <FileText size={15} className="text-gray-400" />
+                  <span>Anotações</span>
+                </h3>
+                <div className="flex items-center gap-2">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => setVisualMode(visualMode === "list" ? "grid" : "list")}
+                          className="rounded-full h-7 w-7 hover:bg-[#1A1A1A]"
+                        >
+                          {visualMode === "list" ? <LayoutGrid size={15} /> : <ListFilter size={15} />}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="left">
+                        <p>Alternar visualização</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="rounded-full h-7 w-7 hover:bg-[#1A1A1A] text-[#42C5F5]"
+                        >
+                          <Plus size={15} />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="left">
+                        <p>Criar nova anotação</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </div>
+
+              <div className="relative mb-3">
+                <Search size={15} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                <Input 
+                  placeholder="Pesquisar anotações..." 
+                  className="pl-9 bg-[#151515] border-gray-800 h-9 text-sm focus-visible:ring-[#42C5F5]"
+                  value={pesquisa}
+                  onChange={(e) => setPesquisa(e.target.value)}
+                />
+              </div>
+
+              {/* Filtros e ordenação */}
+              <div className="flex justify-between items-center gap-2 mb-2">
+                <div className="flex gap-1">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className={`h-8 px-2 text-xs rounded-lg ${showTagsFilter ? 'bg-[#1A1A1A] text-[#42C5F5]' : 'text-gray-400'}`}
+                          onClick={() => setShowTagsFilter(!showTagsFilter)}
+                        >
+                          <Filter size={13} className="mr-1" /> Filtrar
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="text-xs">
+                        <p>Filtrar por tags</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 px-2 text-xs rounded-lg text-gray-400"
+                          onClick={() => setSortBy(sortBy === "recentes" ? "az" : sortBy === "az" ? "favoritos" : "recentes")}
+                        >
+                          <Shuffle size={13} className="mr-1" /> 
+                          {sortBy === "recentes" ? "Recentes" : sortBy === "az" ? "A-Z" : "Favoritos"}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="text-xs">
+                        <p>Alterar ordenação</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+
+                <span className="text-xs text-gray-500">{getAnotacoesDaPasta().length} anotações</span>
+              </div>
+
+              {/* Filtro de tags */}
+              {showTagsFilter && (
+                <div className="bg-[#151515] rounded-lg p-2 mb-3 border border-gray-800 animate-in slide-in-from-top duration-200">
+                  <div className="text-xs text-gray-400 mb-2">Filtrar por tags:</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {getAllTags().map(tag => (
+                      <Badge 
+                        key={tag}
+                        variant={selectedTags.includes(tag) ? "default" : "outline"}
+                        className={`cursor-pointer text-xs py-0 px-2 ${selectedTags.includes(tag) ? 'bg-[#42C5F5] hover:bg-[#3BABDB]' : 'hover:bg-gray-800'}`}
+                        onClick={() => toggleTagSelection(tag)}
+                      >
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Lista de anotações */}
+            <ScrollArea className="flex-1">
+              <div className={`p-2 ${visualMode === "grid" ? "grid grid-cols-2 gap-2" : "flex flex-col gap-2"}`}>
+                {getAnotacoesDaPasta().length > 0 ? (
+                  getAnotacoesDaPasta().map(anotacao => (
+                    <div 
+                      key={anotacao.id}
+                      className={`${visualMode === "grid" 
+                        ? "p-3 h-[180px] flex flex-col" 
+                        : "p-3"} 
+                        rounded-lg bg-gradient-to-b from-[#151515] to-[#121212] cursor-pointer group
+                        ${anotacaoSelecionada === anotacao.id 
+                          ? 'ring-1 ring-[#42C5F5] shadow-glow' 
+                          : 'hover:bg-[#171717] border border-gray-800 hover:border-gray-700'}
+                        transition-all duration-200 ease-in-out transform hover:-translate-y-0.5`}
+                      onClick={() => setAnotacaoSelecionada(anotacao.id)}
+                      style={{
+                        boxShadow: anotacaoSelecionada === anotacao.id ? '0 0 15px rgba(66, 197, 245, 0.15)' : 'none'
+                      }}
+                    >
+                      <div className="flex justify-between items-start mb-1.5">
+                        <h4 className="font-medium text-white truncate text-sm">{anotacao.titulo}</h4>
+                        <div className="flex gap-0.5">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button 
+                                  className={`p-1 rounded hover:bg-gray-700 ${anotacao.favorito ? 'text-amber-400' : 'text-gray-500'}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleFavoritar(anotacao.id);
+                                  }}
+                                >
+                                  <Star size={13} fill={anotacao.favorito ? "currentColor" : "none"} />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="left" className="text-xs">
+                                <p>{anotacao.favorito ? "Remover dos favoritos" : "Adicionar aos favoritos"}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      </div>
+
+                      <p className={`text-xs text-gray-400 line-clamp-${visualMode === "grid" ? "3" : "2"} flex-grow`}>
+                        {anotacao.resumo}
+                      </p>
+
+                      {visualMode === "grid" && (
+                        <div className="mt-auto">
+                          {anotacao.tags && (
+                            <div className="flex flex-wrap gap-1 mt-2 mb-1.5">
+                              {anotacao.tags.slice(0, 2).map((tag, index) => (
+                                <Badge 
+                                  key={index} 
+                                  variant="outline" 
+                                  className="text-xs py-0 px1.5 bg-[#1A1A1A] text-gray-400 border-gray-700"
+                                >
+                                  {tag}
+                                </Badge>
+                              ))}
+                              {anotacao.tags.length > 2 && (
+                                <Badge 
+                                  variant="outline" 
+                                  className="text-xs py-0 px-1.5 bg-[#1A1A1A] text-gray-400 border-gray-700"
+                                >
+                                  +{anotacao.tags.length - 2}
+                                </Badge>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="flex justify-between items-center mt-2 text-xs">
+                        <span className="flex items-center gap-1 text-gray-500 text-[10px]">
+                          <Clock size={10} />
+                          {anotacao.ultimaEdicao?.toLocaleDateString() || anotacao.data.toLocaleDateString()}
+                        </span>
+                        <span 
+                          className={`px-2 py-0.5 rounded text-[10px] font-medium ${
+                            anotacao.modelo === "Estudo Completo" 
+                              ? 'bg-[#42C5F5]/10 text-[#42C5F5]' 
+                              : 'bg-[#9C27B0]/10 text-[#D39EE2]'
+                          }`}
+                        >
+                          {anotacao.modelo}
+                        </span>
+                      </div>
+
+                      <div className="flex gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="sm" className="h-7 px-2 hover:bg-gray-700 text-gray-300 text-xs">
+                          <Eye size={12} className="mr-1"/> Ver
+                        </Button>
+                        <Button variant="ghost" size="sm" className="h-7 px-2 hover:bg-gray-700 text-gray-300 text-xs">
+                          <Pencil size={12} className="mr-1"/> Editar
+                        </Button>
+                        <Button variant="ghost" size="sm" className="h-7 px-2 hover:bg-gray-700 text-gray-300 text-xs">
+                          <Trash2 size={12} className="mr-1"/> Excluir
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-48 text-gray-400 p-4">
+                    <FileText size={40} className="mb-2 text-gray-600" />
+                    <p className="text-center text-sm mb-1">Nenhuma anotação encontrada</p>
+                    <p className="text-xs text-gray-500 text-center">Crie uma nova anotação ou altere seus filtros de busca</p>
+                  </div>
+                )}
+              </div>
             </ScrollArea>
           </div>
 
-          {/* Conteúdo principal */}
-          <div className="flex-1 overflow-hidden flex flex-col">
-            <div className="p-4 border-b border-gray-800">
-              <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold">
-                  {pastaSelecionada 
-                    ? pastas.find(p => p.id === pastaSelecionada)?.nome || 'Pasta Selecionada'
-                    : 'Todas as Anotações'}
-                </h2>
-                <div className="text-sm text-gray-400">
-                  {anotacoesFiltradas.length} {anotacoesFiltradas.length === 1 ? 'anotação' : 'anotações'}
-                </div>
-              </div>
-            </div>
-
-            <ScrollArea className="flex-1 p-4">
-              {loading ? (
-                <div className="flex flex-col justify-center items-center h-full py-8">
-                  <div className="animate-spin w-8 h-8 border-2 border-t-transparent border-blue-500 rounded-full mb-4"></div>
-                  <p className="text-gray-300">Carregando suas anotações...</p>
-                </div>
-              ) : error ? (
-                <div className="flex flex-col justify-center items-center h-full text-center px-4 py-8">
-                  <div className="bg-red-900/20 text-red-400 p-4 rounded-lg border border-red-800 mb-4 max-w-md">
-                    <div className="flex items-center mb-2">
-                      <AlertCircle className="h-5 w-5 mr-2 text-red-400" />
-                      <span className="font-medium">Erro ao carregar anotações</span>
-                    </div>
-                    <p className="text-sm">{error}</p>
-                  </div>
-
-                  <div className="flex gap-2 mt-1">
-                    <Button onClick={handleRetry} className="mt-2 bg-blue-600 hover:bg-blue-700">
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Tentar novamente
-                    </Button>
-
-                    {process.env.NODE_ENV === 'development' && (
-                      <Button onClick={handleVerDetalhesErro} variant="outline" className="mt-2 border-gray-700">
-                        Ver detalhes
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ) : anotacoesFiltradas.length === 0 ? (
-                <div className="flex flex-col justify-center items-center h-full text-center px-4 py-12">
-                  <FileText className="h-12 w-12 text-gray-600 mb-3" />
-                  <p className="text-gray-300 font-medium">Nenhuma anotação encontrada</p>
-                  <p className="text-gray-500 text-sm mt-1 max-w-xs">
-                    {searchTerm 
-                      ? "Tente usar termos de busca diferentes ou remover filtros"
-                      : pastaSelecionada 
-                        ? "Esta pasta ainda não tem anotações. Exporte anotações do Caderno para começar."
-                        : "Você ainda não tem anotações na Apostila Inteligente. Exporte anotações do Caderno para começar."}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {anotacoesFiltradas.map(anotacao => (
-                    <div 
-                      key={anotacao.id}
-                      className="bg-[#1A1A1A] rounded-lg p-4 hover:bg-[#222222] transition-colors cursor-pointer anotacao-card"
-                    >
-                      <div className="flex justify-between mb-2">
-                        <div className="flex items-center">
-                          <h3 className="font-medium text-white">
-                            {anotacao.titulo}
-                            {isNewAnotacao(anotacao.data_exportacao) && (
-                              <span className="ml-2 bg-green-500/20 text-green-300 text-xs px-1.5 py-0.5 rounded-sm font-medium">
-                                Novo!
-                              </span>
-                            )}
-                          </h3>
-                        </div>
-                        <div className="flex space-x-1">
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-gray-400 hover:text-white">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-gray-400 hover:text-white">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      <p className="text-gray-400 text-sm mb-3 line-clamp-2">
-                        {anotacao.conteudo}
-                      </p>
-
-                      <div className="flex flex-wrap gap-1 mb-3">
-                        {anotacao.tags && anotacao.tags.map((tag, index) => (
-                          <Badge 
-                            key={index} 
-                            variant="outline"
-                            className="bg-[#252525] text-blue-300 border-blue-900/20 text-xs"
-                          >
-                            <Tag className="h-3 w-3 mr-1" />
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-
-                      <div className="flex justify-between items-center text-xs text-gray-500">
-                        <div className="flex items-center">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {new Date(anotacao.data_exportacao).toLocaleDateString('pt-BR')}
-                        </div>
-                        <div className="flex items-center">
-                          <FileText className="h-3 w-3 mr-1" />
-                          {anotacao.modelo_anotacao}
-                        </div>
-                      </div>
-
-                      {anotacao.pasta_id && anotacao.apostila_pastas && (
-                        <div 
-                          className="mt-3 pt-2 border-t border-gray-800 text-xs flex items-center"
-                        >
-                          <div 
-                            className="h-2 w-2 mr-1 rounded-full" 
-                            style={{ 
-                              backgroundColor: anotacao.apostila_pastas.cor || '#42C5F4' 
-                            }}
-                          />
-                          <span className="text-gray-400">
-                            Pasta: {anotacao.apostila_pastas.nome}
-                          </span>
-                        </div>
+          {/* Área Direita (Visualização e Ações) */}
+          <div className="flex-1 bg-[#0D0D0D] flex flex-col">
+            {anotacaoSelecionada && getAnotacaoSelecionada() ? (
+              <>
+                <div className="px-6 py-4 border-b border-gray-800">
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center space-x-3">
+                      <h2 className="text-xl font-bold">{getAnotacaoSelecionada()?.titulo}</h2>
+                      {getAnotacaoSelecionada()?.favorito && (
+                        <Star size={16} className="text-amber-400" fill="currentColor" />
                       )}
                     </div>
-                  ))}
+
+                    <div className="flex gap-1.5">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-8 gap-1.5 bg-transparent border-gray-700 hover:bg-gray-800">
+                              <Pencil size={14} /> Editar
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom">
+                            <p>Editar anotação</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-8 gap-1.5 bg-transparent border-gray-700 hover:bg-gray-800">
+                              <ArrowRight size={14} /> Mover
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom">
+                            <p>Mover para outra pasta</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-8 gap-1.5 bg-transparent border-gray-700 hover:bg-gray-800">
+                              <Download size={14} /> Baixar
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom">
+                            <p>Baixar como PDF</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-8 gap-1.5 bg-transparent border-gray-700 hover:bg-gray-800">
+                              <Share2 size={14} /> Compartilhar
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom">
+                            <p>Compartilhar anotação</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm mb-2">
+                    <div className="flex items-center gap-1">
+                      <FolderOpen size={14} className="text-gray-400" />
+                      <span className="text-gray-400">
+                        {pastas.find(p => p.id === getAnotacaoSelecionada()?.pastaId)?.nome}
+                      </span>
+                    </div>
+                    <span className="text-gray-500">•</span>
+                    <div className="flex items-center gap-1">
+                      <CalendarDays size={14} className="text-gray-400" />
+                      <span className="text-gray-400">
+                        Criado em {getAnotacaoSelecionada()?.data.toLocaleDateString()}
+                      </span>
+                    </div>
+                    <span className="text-gray-500">•</span>
+                    <div className="flex items-center gap-1">
+                      <Clock size={14} className="text-gray-400" />
+                      <span className="text-gray-400">
+                        Editado em {getAnotacaoSelecionada()?.ultimaEdicao?.toLocaleDateString() || getAnotacaoSelecionada()?.data.toLocaleDateString()}
+                      </span>
+                    </div>
+                    <span className="text-gray-500">•</span>
+                    <div className="flex items-center gap-1">
+                      <Eye size={14} className="text-gray-400" />
+                      <span className="text-gray-400">{getAnotacaoSelecionada()?.visualizacoes || 0} visualizações</span>
+                    </div>
+                  </div>
+
+                  {getAnotacaoSelecionada()?.tags && (
+                    <div className="flex flex-wrap gap-1.5 mt-3">
+                      {getAnotacaoSelecionada()?.tags?.map((tag, index) => (
+                        <Badge 
+                          key={index} 
+                          className="bg-[#1A1A1A] hover:bg-[#222] text-gray-300 border-none"
+                        >
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
-            </ScrollArea>
+
+                <Tabs defaultValue="conteudo" className="flex-1 flex flex-col">
+                  <div className="px-6 py-2 border-b border-gray-800 bg-[#0a0a0a]">
+                    <TabsList className="bg-[#151515] p-1">
+                      <TabsTrigger value="conteudo" className="data-[state=active]:bg-[#42C5F5] data-[state=active]:text-white">
+                        Conteúdo
+                      </TabsTrigger>
+                      <TabsTrigger value="historico" className="data-[state=active]:bg-[#42C5F5] data-[state=active]:text-white">
+                        Histórico de Versões
+                      </TabsTrigger>
+                      <TabsTrigger value="estatisticas" className="data-[state=active]:bg-[#42C5F5] data-[state=active]:text-white">
+                        Estatísticas
+                      </TabsTrigger>
+                    </TabsList>
+                  </div>
+
+                  <TabsContent value="conteudo" className="flex-1 p-0 m-0">
+                    <ScrollArea className="flex-1 h-full custom-scrollbar p-6">
+                      <div className="max-w-4xl mx-auto prose prose-invert prose-headings:font-display prose-headings:font-bold">
+                        {getAnotacaoSelecionada()?.conteudo.split('\n').map((line, i) => {
+                          if (line.startsWith('# ')) {
+                            return (
+                              <h1 
+                                key={i} 
+                                className="text-3xl font-bold mt-6 mb-4 text-white pb-2 border-b border-gray-800"
+                              >
+                                {line.substring(2)}
+                              </h1>
+                            );
+                          } else if (line.startsWith('## ')) {
+                            return (
+                              <h2 
+                                key={i} 
+                                className="text-xl font-bold mt-6 mb-3 text-white group flex items-center"
+                              >
+                                <span className="bg-gradient-to-r from-[#42C5F5] to-[#3BABDB] w-1 h-6 rounded mr-2 opacity-80"></span>
+                                {line.substring(3)}
+                              </h2>
+                            );
+                          } else if (line.startsWith('- ')) {
+                            return (
+                              <li 
+                                key={i} 
+                                className="ml-5 my-1 text-gray-300"
+                              >
+                                {line.substring(2)}
+                              </li>
+                            );
+                          } else if (line.startsWith('1. ') || line.startsWith('2. ') || line.startsWith('3. ') || line.startsWith('4. ')) {
+                            const numberMatch = line.match(/^\d+\.\s/);
+                            const number = numberMatch ? numberMatch[0] : "";
+                            return (
+                              <div key={i} className="flex ml-3 my-2">
+                                <span className="w-6 h-6 rounded-full bg-[#1A1A1A] border border-gray-700 flex items-center justify-center mr-2 text-[#42C5F5] text-sm font-medium flex-shrink-0">
+                                  {number.replace('. ', '')}
+                                </span>
+                                <span className="text-gray-300">{line.substring(number.length)}</span>
+                              </div>
+                            );
+                          } else if (line === '') {
+                            return <p key={i}>&nbsp;</p>;
+                          } else {
+                            return <p key={i} className="my-2 text-gray-300">{line}</p>;
+                          }
+                        })}
+                      </div>
+                    </ScrollArea>
+                  </TabsContent>
+
+                  <TabsContent value="historico" className="flex-1 p-0 m-0">
+                    <div className="flex items-center justify-center h-full text-gray-400">
+                      <div className="text-center">
+                        <History size={40} className="mx-auto mb-4 text-gray-600" />
+                        <h3 className="text-lg font-medium mb-2">Histórico de Versões</h3>
+                        <p className="text-sm text-gray-500 max-w-md">
+                          Acompanhe as alterações feitas nesta anotação ao longo do tempo e restaure versões anteriores quando necessário.
+                        </p>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="estatisticas" className="flex-1 p-0 m-0">
+                    <div className="flex items-center justify-center h-full text-gray-400">
+                      <div className="text-center">
+                        <SlidersHorizontal size={40} className="mx-auto mb-4 text-gray-600" />
+                        <h3 className="text-lg font-medium mb-2">Estatísticas</h3>
+                        <p className="text-sm text-gray-500 max-w-md">
+                          Visualize estatísticas detalhadas sobre suas anotações, frequência de uso e sugestões de revisão.
+                        </p>
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#0D0D0D] to-[#1A1A1A] flex items-center justify-center mb-6 border border-gray-800">
+                  <BookOpen size={40} className="text-[#42C5F5] opacity-60" />
+                </div>
+                <h3 className="text-xl font-medium mb-2">Nenhuma anotação selecionada</h3>
+                <p className="text-gray-500 text-center max-w-md mb-6">
+                  Selecione uma anotação da lista para visualizar seu conteúdo ou crie uma nova anotação.
+                </p>
+                <Button className="px-5 py-6 h-auto bg-gradient-to-r from-[#42C5F5] to-[#0A84FF] hover:from-[#3BABDB] hover:to-[#0972DB] shadow-lg shadow-blue-900/20">
+                  <Plus size={18} className="mr-2" /> Criar Nova Anotação
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </DialogContent>

@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS public.caderno_anotacoes (
   user_id TEXT NOT NULL,
   titulo TEXT NOT NULL,
   conteudo TEXT NOT NULL,
-  modelo_anotacao TEXT DEFAULT 'Estudo Completo',
+  modelo_anotacao TEXT,
   tags TEXT[] DEFAULT '{}',
   data_criacao TIMESTAMPTZ DEFAULT NOW(),
   data_atualizacao TIMESTAMPTZ DEFAULT NOW(),
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS public.apostila_pastas (
   user_id TEXT NOT NULL,
   nome TEXT NOT NULL,
   cor TEXT DEFAULT '#42C5F5',
-  descricao TEXT DEFAULT '',
+  descricao TEXT,
   data_criacao TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -31,13 +31,13 @@ CREATE TABLE IF NOT EXISTS public.apostila_anotacoes (
   pasta_id UUID REFERENCES public.apostila_pastas(id) ON DELETE SET NULL,
   titulo TEXT NOT NULL,
   conteudo TEXT NOT NULL,
-  modelo_anotacao TEXT DEFAULT 'Estudo Completo',
+  modelo_anotacao TEXT,
   tags TEXT[] DEFAULT '{}',
   favorito BOOLEAN DEFAULT FALSE,
   data_criacao TIMESTAMPTZ DEFAULT NOW(),
   data_exportacao TIMESTAMPTZ DEFAULT NOW(),
   origem TEXT DEFAULT 'criado_na_apostila', -- 'caderno' ou 'criado_na_apostila'
-  visualizacoes INTEGER DEFAULT 0FAULT 0
+  visualizacoes INTEGER DEFAULT 0
 );
 
 -- Tabela para log de atividades
