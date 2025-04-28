@@ -9,6 +9,7 @@ import { toast } from '@/components/ui/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import ModelosNotebookModal from './ModelosNotebookModal';
 
 interface NotebookModalProps {
   open: boolean;
@@ -18,90 +19,114 @@ interface NotebookModalProps {
 
 // Templates para formatações comuns
 const contentTemplates = {
-  estudoCompleto: `📖 Título do Tema
+  estudoCompleto: `📖 ESTUDO COMPLETO: [TEMA]
 
-Uma breve introdução sobre o assunto que está sendo estudado.
+Uma breve introdução sobre o assunto que está sendo estudado, contextualizando sua
+importância e relevância para o aprendizado.
 
-🧠 Definição:
-• Ponto principal do conceito
-• Características importantes
-• Princípios fundamentais
+🧠 Definições Importantes:
+• Conceito principal: explicação clara e objetiva
+• Termos relacionados: significados e aplicações
+• Origem/contexto histórico: desenvolvimento ao longo do tempo
 
-⚙️ Fórmulas Importantes:
-• Fórmula 1
-• Fórmula 2
+⚙️ Desenvolvimento do Tema:
+1. Primeiro aspecto importante com explicação detalhada
+2. Segundo aspecto importante com exemplos práticos
+3. Terceiro aspecto relevante aplicado a situações reais
 
-🔍 Exemplos Práticos:
-1. Primeiro exemplo com solução
-2. Segundo exemplo com solução
+📊 Exemplos Práticos:
+• Exemplo 1: descrição e resolução passo a passo
+• Exemplo 2: variação do problema com solução completa
 
-💡 Dicas Importantes:
-• Dica 1
-• Dica 2
+💡 Pontos de Atenção:
+• Erros comuns a evitar
+• Dicas para memorização
+• Estratégias para resolução de problemas similares
 
 ✅ Resumo Final:
-Síntese dos principais pontos aprendidos.`,
+Síntese dos principais pontos estudados, reforçando os conceitos mais importantes
+e como eles se relacionam entre si.`,
 
-  mapaConceitual: `📑 MAPA CONCEITUAL: [TEMA]
+  mapaConceitual: `✨ MAPA CONCEITUAL: [TEMA CENTRAL]
 
-🔑 CONCEITO CENTRAL
-└── 📌 Subtema 1
-    ├── • Característica 1
-    ├── • Característica 2
-    └── • Exemplo prático
+🔍 CONCEITO PRINCIPAL
+  │
+  ├── 📌 Subtema 1
+  │    ├── • Característica principal
+  │    ├── • Elemento secundário
+  │    └── • Aplicação prática
+  │
+  ├── 📌 Subtema 2
+  │    ├── • Definição essencial
+  │    ├── • Fórmula/método
+  │    └── • Exemplo de uso
+  │
+  └── 📌 Subtema 3
+       ├── • Princípio fundamental
+       ├── • Variação importante
+       └── • Conexão com outros temas
 
-└── 📌 Subtema 2
-    ├── • Definição
-    ├── • Fórmula
-    └── • Aplicação
+📝 CONEXÕES IMPORTANTES:
+• Relação entre Subtema 1 e Subtema 3
+• Como Subtema 2 influencia o Conceito Principal
+• Aplicações interdisciplinares
 
-📝 OBSERVAÇÕES IMPORTANTES:
-• Ponto 1
-• Ponto 2
+⭐ PALAVRAS-CHAVE:
+termo1, termo2, termo3, termo4, termo5`,
 
-✅ PARA LEMBRAR:
-• Regra principal
-• Exceção`,
+  revisaoRapida: `⏱️ REVISÃO RÁPIDA: [TEMA]
 
-  revisao: `📚 REVISÃO RÁPIDA: [TEMA]
+🚀 PONTOS ESSENCIAIS:
+1. Conceito fundamental - definição concisa
+2. Elemento crítico - explicação direta
+3. Componente-chave - aplicação básica
 
-⏱️ Principais tópicos:
-1. Tópico 1
-2. Tópico 2
-3. Tópico 3
+📋 FÓRMULAS/REGRAS:
+• Fórmula 1: [fórmula com breve explicação]
+• Regra principal: [descrição clara e direta]
+• Exceção importante: [quando não se aplica]
 
-🧩 Conceitos-chave:
-• Conceito A: definição breve
-• Conceito B: definição breve
+🎯 CHECKLIST PRÉ-PROVA:
+□ Revisar conceito X
+□ Praticar exemplo do tipo Y
+□ Memorizar fórmula Z
 
 ⚠️ ATENÇÃO PARA:
-• Erro comum 1
-• Erro comum 2
+• Erro comum 1 - como evitar
+• Confusão frequente - como diferenciar
+• Pegadinha típica - o que observar
 
-✅ Checklist de revisão:
-□ Item 1
-□ Item 2
-□ Item 3`,
+💪 DICA FINAL: orientação estratégica para resolver questões sobre o tema`,
 
-  fichamento: `📘 FICHAMENTO: [LIVRO/TEXTO]
+  fichamento: `📘 FICHAMENTO: [TÍTULO DA OBRA/TEXTO]
 
-📝 Referência:
-Autor, A. (Ano). Título. Editora.
+📑 REFERÊNCIA COMPLETA:
+Autor, A. (Ano). Título. Editora. Páginas XX-XX.
 
-🔍 Ideias Principais:
-• Ideia 1
-• Ideia 2
-• Ideia 3
+💬 CITAÇÕES IMPORTANTES:
+"Trecho literal do texto que considero fundamental."
+(página XX)
+➤ Interpretação: minha explicação do que o autor quis dizer.
+➤ Reflexão: minha análise crítica sobre este trecho.
 
-💬 Citações Importantes:
-"Citação relevante do texto" (página)
+"Segunda citação relevante do material estudado."
+(página XX)
+➤ Interpretação: como entendo esta passagem.
+➤ Reflexão: por que isto é importante ou questionável.
 
-🧠 Análise Pessoal:
-Minhas observações e reflexões sobre o texto.
+🔍 IDEIAS PRINCIPAIS:
+• Conceito 1: resumo conciso da primeira ideia central.
+• Conceito 2: síntese da segunda ideia relevante.
+• Conceito 3: explicação breve da terceira ideia importante.
 
-🔄 Conexões com outros temas:
-• Conexão 1
-• Conexão 2`
+🧠 ANÁLISE CRÍTICA GERAL:
+Minha avaliação sobre o texto como um todo, considerando
+sua contribuição, limitações e relações com outros conhecimentos.
+
+🔄 CONEXÕES COM OUTROS TEMAS:
+• Relação com tema X estudado anteriormente
+• Como se aplica ao contexto Y
+• Contradições ou complementos com a teoria Z`
 };
 
 const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, content }) => {
@@ -110,6 +135,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
   const [isFavorite, setIsFavorite] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showTemplatePopover, setShowTemplatePopover] = useState(false);
+  const [showModelosModal, setShowModelosModal] = useState(false);
   
   // Atualiza o conteúdo do caderno quando props.content muda
   useEffect(() => {
@@ -120,6 +146,14 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
 
   // Contador de palavras
   const wordCount = editedContent.split(/\s+/).filter(word => word.length > 0).length;
+  
+  // Função para aplicar o modelo selecionado
+  const handleApplyTemplate = (templateContent: string) => {
+    setEditedContent(templateContent);
+    if (!isEditing) {
+      setIsEditing(true);
+    }
+  };
   
   const handleCopy = () => {
     navigator.clipboard.writeText(isEditing ? editedContent : content)
@@ -553,6 +587,13 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
           </div>
         </div>
         
+        {/* Modal de seleção de modelos */}
+        <ModelosNotebookModal 
+          open={showModelosModal} 
+          onOpenChange={setShowModelosModal} 
+          onSelectTemplate={handleApplyTemplate}
+        />
+        
         {/* Footer with stats and edit controls */}
         <div className="px-6 py-3 border-t border-amber-100 dark:border-amber-900/30 bg-gradient-to-r from-amber-50/80 to-amber-100/50 dark:from-amber-900/20 dark:to-amber-800/10 flex items-center justify-between">
           <div className="flex items-center text-amber-700 dark:text-amber-400 text-sm">
@@ -597,79 +638,15 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
                   Cancelar
                 </Button>
                 
-                <Popover open={showTemplatePopover} onOpenChange={setShowTemplatePopover}>
-                  <PopoverTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="border-amber-200 text-amber-700 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-400 dark:hover:bg-amber-900/20 transition-all duration-300 flex items-center"
-                    >
-                      <FileText className="h-4 w-4 mr-1.5" />
-                      Modelos
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent 
-                    className="w-80 p-0 bg-white dark:bg-gray-900 border border-amber-200 dark:border-amber-800/40"
-                    align="end"
-                  >
-                    <div className="py-2 px-3 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-100 dark:border-amber-800/20">
-                      <h4 className="text-sm font-medium text-amber-800 dark:text-amber-300">Modelos de Anotações</h4>
-                    </div>
-                    <div className="p-3 space-y-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start text-left text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-900/20"
-                        onClick={() => {
-                          setEditedContent(contentTemplates.estudoCompleto);
-                          setShowTemplatePopover(false);
-                        }}
-                      >
-                        <BookOpen className="h-4 w-4 mr-2" />
-                        Estudo Completo
-                      </Button>
-                      
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start text-left text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-900/20"
-                        onClick={() => {
-                          setEditedContent(contentTemplates.mapaConceitual);
-                          setShowTemplatePopover(false);
-                        }}
-                      >
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Mapa Conceitual
-                      </Button>
-                      
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start text-left text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-900/20"
-                        onClick={() => {
-                          setEditedContent(contentTemplates.revisao);
-                          setShowTemplatePopover(false);
-                        }}
-                      >
-                        <AlignLeft className="h-4 w-4 mr-2" />
-                        Revisão Rápida
-                      </Button>
-                      
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start text-left text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-900/20"
-                        onClick={() => {
-                          setEditedContent(contentTemplates.fichamento);
-                          setShowTemplatePopover(false);
-                        }}
-                      >
-                        <FileText className="h-4 w-4 mr-2" />
-                        Fichamento
-                      </Button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="border-amber-200 text-amber-700 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-400 dark:hover:bg-amber-900/20 transition-all duration-300 flex items-center"
+                  onClick={() => setShowModelosModal(true)}
+                >
+                  <FileText className="h-4 w-4 mr-1.5" />
+                  Modelos
+                </Button>
                 
                 <Button 
                   variant="default" 
@@ -682,15 +659,27 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
                 </Button>
               </div>
             ) : (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={startEditing}
-                className="border-amber-200 text-amber-700 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-400 dark:hover:bg-amber-900/20 transition-all duration-300"
-              >
-                <Pencil className="h-4 w-4 mr-1.5" />
-                Editar texto
-              </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setShowModelosModal(true)}
+                  className="border-amber-200 text-amber-700 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-400 dark:hover:bg-amber-900/20 transition-all duration-300"
+                >
+                  <FileText className="h-4 w-4 mr-1.5" />
+                  Modelos
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={startEditing}
+                  className="border-amber-200 text-amber-700 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-400 dark:hover:bg-amber-900/20 transition-all duration-300"
+                >
+                  <Pencil className="h-4 w-4 mr-1.5" />
+                  Editar texto
+                </Button>
+              </div>
             )}
           </div>
         </div>

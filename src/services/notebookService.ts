@@ -10,18 +10,21 @@ export const formatTextForNotebookLines = (text: string): string => {
   
   // Processar cada parágrafo
   const formattedParagraphs = paragraphs.map(paragraph => {
-    // Ignorar parágrafos que são cabeçalhos ou especiais
-    if (paragraph.startsWith('📖') || 
-        paragraph.startsWith('🧠') || 
-        paragraph.startsWith('⚙️') || 
-        paragraph.startsWith('🔍') || 
-        paragraph.startsWith('💡') ||
-        paragraph.startsWith('✅')) {
+    // Preservar formatação especial para os modelos de anotações
+    // Ignorar parágrafos que são cabeçalhos ou especiais com emojis
+    if (paragraph.match(/^[📖🧠⚙️🔍💡✅📑🔑📝⭐⏱️🚀📋🎯⚠️💪📘💬🔄]/)) {
+      return paragraph;
+    }
+
+    // Preservar linhas de estrutura visual de mapas conceituais
+    if (paragraph.includes('│') || paragraph.includes('├') || paragraph.includes('└') || paragraph.includes('─')) {
       return paragraph;
     }
 
     // Ignorar linhas que são marcadores de lista
-    if (paragraph.trim().startsWith('•') || /^\d+\./.test(paragraph.trim())) {
+    if (paragraph.trim().startsWith('•') || paragraph.trim().startsWith('□') || 
+        paragraph.trim().startsWith('➤') || paragraph.trim().startsWith('✓') || 
+        /^\d+\./.test(paragraph.trim())) {
       return paragraph;
     }
     
