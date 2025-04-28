@@ -407,3 +407,304 @@ const ExportModal: React.FC<ExportModalProps> = ({
 };
 
 export default ExportModal;
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { X, BookOpen, Folder, Tag, Save } from 'lucide-react';
+import { Combobox } from '@/components/ui/combobox';
+import { supabase } from '@/lib/supabase';
+import { toast } from '@/components/ui/use-toast';
+
+interface ExportModalProps {
+  open: boolean;
+  onClose: () => void;
+  onExport: (data: {
+    titulo: string;
+    conteudo: string;
+    pastaId: string;
+    tags: string[];
+    modelo: string;
+  }) => void;
+  initialTitle: string;
+  initialContent: string;
+}
+
+const ExportModal: React.FC<ExportModalProps> = ({
+  open,
+  onClose,
+  onExport,
+  initialTitle,
+  initialContent,
+}) => {
+  const [titulo, setTitulo] = useState(initialTitle || '');
+  const [conteudo] = useState(initialContent || '');
+  const [pastaId, setPastaId] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
+  const [pastas, setPastas] = useState<{ id: string; nome: string }[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [modelo, setModelo] = useState('padrão');
+
+  // Carregar pastas do usuário ao abrir o modal
+  useEffect(() => {
+    if (open) {
+      loadPastas();
+    }
+  }, [open]);
+
+  // Carregar pastas do Supabase
+  const loadPastas = async () => {
+    setIsLoading(true);
+    try {
+      const userId = localStorage.getItem('user_id');
+      
+      if (!userId) {
+        toast({
+          title: "Erro de autenticação",
+          description: "Não foi possível identificar seu usuário. Tente fazer login novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const { data, error } = await supabase
+        .from('apostila_pastas')
+        .select('id, nome')
+        .eq('user_id', userId)
+        .order('nome');
+        
+      if (error) {
+        console.error('Erro ao carregar pastas:', error);
+        toast({
+          title: "Erro ao carregar pastas",
+          description: "Não foi possível carregar suas pastas. Tente novamente mais tarde.",
+          variant: "destructive",
+        });
+      } else {
+        setPastas(data || []);
+        
+        // Se tiver pelo menos uma pasta, seleciona a primeira por padrão
+        if (data && data.length > 0) {
+          setPastaId(data[0].id);
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao buscar pastas:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAddTag = () => {
+    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
+      setTags([...tags, tagInput.trim()]);
+      setTagInput('');
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setTags(tags.filter(tag => tag !== tagToRemove));
+  };
+
+  const handleSubmit = () => {
+    if (!titulo.trim()) {
+      toast({
+        title: "Título obrigatório",
+        description: "Por favor, adicione um título para sua anotação.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!pastaId) {
+      toast({
+        title: "Selecione uma pasta",
+        description: "Por favor, selecione uma pasta para exportar a anotação.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    onExport({
+      titulo,
+      conteudo,
+      pastaId,
+      tags,
+      modelo,
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl bg-white dark:bg-[#121826] rounded-xl shadow-2xl border-0">
+        <DialogHeader className="px-6 py-4 border-b flex flex-row items-center justify-between">
+          <div className="flex items-center">
+            <div className="bg-blue-100 dark:bg-blue-900/30 rounded-full p-2 mr-3">
+              <BookOpen className="h-5 w-5 text-blue-500 dark:text-blue-400" />
+            </div>
+            <DialogTitle className="text-xl font-medium">
+              Exportar para Apostila Inteligente
+            </DialogTitle>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </DialogHeader>
+
+        <div className="p-6 space-y-4">
+          <div>
+            <label htmlFor="titulo" className="block text-sm font-medium mb-1">
+              Título da Anotação
+            </label>
+            <Input
+              id="titulo"
+              value={titulo}
+              onChange={(e) => setTitulo(e.target.value)}
+              placeholder="Adicione um título descritivo"
+              className="w-full"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="pasta" className="block text-sm font-medium mb-1">
+              Pasta de Destino
+            </label>
+            <div className="flex items-center space-x-2">
+              <div className="relative flex-1">
+                <Folder className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <select
+                  id="pasta"
+                  value={pastaId}
+                  onChange={(e) => setPastaId(e.target.value)}
+                  className="w-full pl-10 h-10 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#1a1f2c] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={isLoading}
+                >
+                  {pastas.length === 0 ? (
+                    <option value="">Nenhuma pasta encontrada</option>
+                  ) : (
+                    pastas.map((pasta) => (
+                      <option key={pasta.id} value={pasta.id}>{pasta.nome}</option>
+                    ))
+                  )}
+                </select>
+              </div>
+              {/* Botão para criar nova pasta - implementação futura */}
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => toast({
+                  title: "Funcionalidade em desenvolvimento",
+                  description: "Criar nova pasta estará disponível em breve.",
+                })}
+              >
+                Nova Pasta
+              </Button>
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="tags" className="block text-sm font-medium mb-1">
+              Tags (opcional)
+            </label>
+            <div className="flex items-center space-x-2">
+              <div className="relative flex-1">
+                <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  id="tags"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddTag();
+                    }
+                  }}
+                  placeholder="Adicione tags e pressione Enter"
+                  className="w-full pl-10"
+                />
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleAddTag}
+              >
+                Adicionar
+              </Button>
+            </div>
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {tags.map((tag) => (
+                  <div 
+                    key={tag} 
+                    className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs px-2 py-1 rounded-full flex items-center"
+                  >
+                    {tag}
+                    <button 
+                      onClick={() => handleRemoveTag(tag)}
+                      className="ml-1 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-200"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="modelo" className="block text-sm font-medium mb-1">
+              Modelo de Anotação
+            </label>
+            <select
+              id="modelo"
+              value={modelo}
+              onChange={(e) => setModelo(e.target.value)}
+              className="w-full h-10 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#1a1f2c] focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="padrão">Padrão</option>
+              <option value="estudo">Estudo Completo</option>
+              <option value="mapa-conceitual">Mapa Conceitual</option>
+              <option value="revisão">Revisão Rápida</option>
+              <option value="fichamento">Fichamento</option>
+            </select>
+          </div>
+
+          <div className="pt-2">
+            <div className="bg-blue-50 dark:bg-blue-900/10 p-3 rounded-md border border-blue-100 dark:border-blue-900/20">
+              <h4 className="text-sm font-medium text-blue-700 dark:text-blue-400 mb-1">Prévia de Conteúdo</h4>
+              <div className="max-h-24 overflow-y-auto text-sm text-gray-600 dark:text-gray-300">
+                {conteudo.slice(0, 150)}...
+              </div>
+              <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                {conteudo.length} caracteres | {conteudo.split(/\s+/).filter(word => word.length > 0).length} palavras
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t flex justify-end space-x-2">
+          <Button 
+            variant="outline" 
+            onClick={onClose}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleSubmit}
+            className="bg-blue-500 hover:bg-blue-600 text-white"
+            disabled={isLoading}
+          >
+            <Save className="h-4 w-4 mr-2" /> Exportar para Apostila
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default ExportModal;
