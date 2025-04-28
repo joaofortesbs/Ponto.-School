@@ -148,26 +148,81 @@ const ExportarParaApostilaModal: React.FC<ExportarParaApostilaModalProps> = ({
       });
 
       // Verificar se o usuário autenticado está disponível
-      const user = await supabase.auth.getUser();
-      if (!user.data?.user) {
-        throw new Error("Usuário não autenticado");
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData?.user) {
+        throw new Error("Usuário não autenticado. Por favor, faça login novamente.");
       }
       
-      // Adicionar user_id explicitamente ao objeto de exportação
-      await onExport({
-        titulo: tituloValidado,
-        conteudo: conteudoValidado,
-        pastaId,
-        tags: tagsValidadas,
-        modelo: modeloValidado,
-        user_id: user.data.user.id // Garantir que o user_id seja incluído
-      });
-
+      const userId = userData.user.id;
+      
+      // Verificar se a pasta existe antes de prosseguir
+      const { data: pastaData, error: pastaError } = await supabase
+        .from('apostila_pastas')
+        .select('id, nome')
+        .eq('id', pastaId)
+        .single();
+        
+      if (pastaError) {
+        // Se a pasta não existe, verificar se há problema com a tabela
+        if (pastaError.message && pastaError.message.includes('does not exist')) {
+          throw new Error("A estrutura do banco de dados precisa ser atualizada. Use a opção 'Corrigir Relação Apostila' no menu Workflows.");
+        }
+        
+        console.error("Erro ao verificar pasta:", pastaError);
+        
+        // Tentar criar a pasta como fallback
+        try {
+          const { data: novaPasta, error: novaPastaError } = await supabase
+            .from('apostila_pastas')
+            .insert([
+              { nome: 'Anotações Gerais', cor: '#42C5F5', user_id: userId }
+            ])
+            .select();
+            
+          if (novaPastaError) {
+            throw new Error("Não foi possível criar uma pasta padrão: " + novaPastaError.message);
+          }
+          
+          console.log("Pasta padrão criada:", novaPasta[0]);
+          pastaId = novaPasta[0].id;
+        } catch (err) {
+          throw new Error("Erro ao criar pasta padrão. Tente usar a opção 'Corrigir Relação Apostila' no menu Workflows.");
+        }
+      }
+      
+      // Adicionar anotação ao banco de dados
+      const { data: anotacaoData, error: anotacaoError } = await supabase
+        .from('apostila_anotacoes')
+        .insert([
+          {
+            titulo: tituloValidado,
+            conteudo: conteudoValidado,
+            pasta_id: pastaId,
+            tags: tagsValidadas,
+            modelo_anotacao: modeloValidado,
+            user_id: userId,
+            data_exportacao: new Date().toISOString()
+          }
+        ])
+        .select();
+        
+      if (anotacaoError) {
+        // Se houver erro de estrutura da tabela
+        if (anotacaoError.message && anotacaoError.message.includes('does not exist')) {
+          throw new Error("A estrutura do banco de dados precisa ser atualizada. Use a opção 'Corrigir Relação Apostila' no menu Workflows.");
+        }
+        
+        throw new Error("Erro ao salvar anotação: " + anotacaoError.message);
+      }
+      
+      console.log("Anotação salva com sucesso:", anotacaoData);
+      
       // Registrar ação no log de atividades (opcional)
       try {
         await supabase.from('user_activity_logs').insert({
-          user_id: user.data.user.id,
+          user_id: userId,
           acao: 'exportou anotação',
+          anotacao_id: anotacaoData?.[0]?.id,
           timestamp: new Date().toISOString(),
           detalhes: `Anotação "${tituloValidado}" exportada para a pasta "${pastas.find(p => p.id === pastaId)?.nome}"`,
         });
@@ -175,6 +230,15 @@ const ExportarParaApostilaModal: React.FC<ExportarParaApostilaModalProps> = ({
         console.warn("Não foi possível registrar log:", logError);
         // Não falhar a operação principal se o log falhar
       }
+
+      // Disparar evento para notificar o modal da Apostila
+      const apostilaModalEvent = new CustomEvent('apostila-anotacao-adicionada', {
+        detail: { 
+          pastaId: pastaId,
+          anotacaoId: anotacaoData?.[0]?.id 
+        }
+      });
+      window.dispatchEvent(apostilaModalEvent);
 
       toast({
         title: "Sucesso!",
@@ -185,11 +249,27 @@ const ExportarParaApostilaModal: React.FC<ExportarParaApostilaModalProps> = ({
       onOpenChange(false);
     } catch (error) {
       console.error("Erro ao exportar anotação:", error);
-      toast({
-        title: "Erro",
-        description: error.message || "Não foi possível exportar a anotação. Tente novamente.",
-        variant: "destructive"
-      });
+      
+      // Verificar se é um erro relacionado à estrutura do banco de dados
+      const errorMessage = error.message || "";
+      if (
+        errorMessage.includes("does not exist") || 
+        errorMessage.includes("relation") || 
+        errorMessage.includes("estrutura do banco de dados")
+      ) {
+        toast({
+          title: "Erro na estrutura do banco de dados",
+          description: "A estrutura do banco de dados precisa ser atualizada. Use a opção 'Corrigir Relação Apostila' no menu Workflows.",
+          variant: "destructive",
+          duration: 8000
+        });
+      } else {
+        toast({
+          title: "Erro",
+          description: errorMessage || "Não foi possível exportar a anotação. Tente novamente.",
+          variant: "destructive"
+        });
+      }
     } finally {
       setIsExporting(false);
     }

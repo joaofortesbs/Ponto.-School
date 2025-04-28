@@ -179,144 +179,160 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
           throw new Error('Usuário não autenticado');
         }
 
-        // Verificar primeiro se a tabela apostila_pastas existe
+        // Primeiro, vamos verificar se há problema com as tabelas
         try {
-          // Tenta executar uma consulta simples para verificar se a tabela existe
-          const { error: checkError } = await supabase
-            .from('apostila_pastas')
-            .select('count')
-            .limit(1);
+          // Tenta executar uma consulta para verificar as tabelas
+          const { data: tablesExist, error: tablesError } = await supabase.rpc('execute_sql', {
+            sql_statement: `
+              SELECT
+                (SELECT EXISTS (
+                  SELECT FROM information_schema.tables 
+                  WHERE table_schema = 'public' 
+                  AND table_name = 'apostila_pastas'
+                )) as pastas_exists,
+                (SELECT EXISTS (
+                  SELECT FROM information_schema.tables 
+                  WHERE table_schema = 'public' 
+                  AND table_name = 'apostila_anotacoes'
+                )) as anotacoes_exists;
+            `
+          });
+
+          if (tablesError) {
+            console.warn('Erro ao verificar existência das tabelas:', tablesError);
+          } else if (tablesExist && (!tablesExist[0].pastas_exists || !tablesExist[0].anotacoes_exists)) {
+            console.error('Uma ou ambas as tabelas da Apostila não existem');
+            throw new Error('A estrutura do banco de dados precisa ser atualizada. Use a opção "Corrigir Relação Apostila" no menu Workflows.');
+          }
+        } catch (checkError) {
+          console.warn('Erro ao tentar verificar tabelas:', checkError);
+          // Continua o fluxo tentando carregar normalmente
+        }
+
+        // Primeiro, carregar pastas
+        const { data: pastasData, error: pastasError } = await supabase
+          .from('apostila_pastas')
+          .select('*')
+          .eq('user_id', userId)
+          .order('nome');
+
+        if (pastasError) {
+          // Se for erro de tabela não existente, personalizar a mensagem
+          if (pastasError.message && pastasError.message.includes('does not exist')) {
+            throw new Error('A estrutura do banco de dados precisa ser atualizada. Use a opção "Corrigir Relação Apostila" no menu Workflows.');
+          }
           
-          if (checkError && checkError.message.includes('does not exist')) {
-            console.error('Tabela apostila_pastas não existe, tentando criar via script...');
-            
-            // Tente executar o script fix-apostila-relation.js diretamente
-            // Este é um fallback e talvez não funcione no ambiente do cliente
-            try {
-              // Apenas para logging - na prática isso deve ser feito via API ou script pré-executado
-              console.warn('É necessário executar o script de correção da relação. Use o menu Workflows > Corrigir Relação Apostila');
-            } catch (scriptError) {
-              console.error('Não foi possível executar o script:', scriptError);
+          console.warn('Aviso ao carregar pastas:', pastasError);
+        } else {
+          setPastas(pastasData || []);
+          console.log("Pastas carregadas:", pastasData?.length || 0);
+        }
+
+        // Abordagem robusta: tentar diferentes estratégias para carregar anotações
+        let anotacoesCarregadas = false;
+        let anotacoesProcessadas = [];
+
+        // Estratégia 1: Com join explícito usando pasta:apostila_pastas(*)
+        if (!anotacoesCarregadas) {
+          try {
+            const { data: anotacoesRaw, error: anotacoesError } = await supabase
+              .from('apostila_anotacoes')
+              .select('*, pasta:apostila_pastas(*)')
+              .eq('user_id', userId)
+              .order('data_exportacao', { ascending: false });
+
+            if (!anotacoesError && anotacoesRaw) {
+              anotacoesProcessadas = anotacoesRaw.map(anotacao => ({
+                ...anotacao,
+                apostila_pastas: anotacao.pasta // Manter compatibilidade
+              }));
+              console.log('Anotações carregadas (estratégia 1):', anotacoesProcessadas.length);
+              anotacoesCarregadas = true;
+            } else if (anotacoesError && anotacoesError.message.includes('does not exist')) {
+              throw new Error('A estrutura do banco de dados precisa ser atualizada. Use a opção "Corrigir Relação Apostila" no menu Workflows.');
             }
-            
-            // Como não conseguimos criar a tabela aqui, tentamos uma abordagem alternativa
-            throw new Error('Tabela de pastas não encontrada. Carregando apenas anotações sem informações de pastas.');
+          } catch (err) {
+            console.warn('Falha na estratégia 1:', err);
           }
-        } catch (checkTableError) {
-          console.warn('Erro ao verificar tabela:', checkTableError);
-          // Continua o fluxo e tenta carregar o que for possível
         }
 
-        // Tenta carregar pastas (se a tabela existir)
-        try {
-          const { data: pastasData, error: pastasError } = await supabase
-            .from('apostila_pastas')
-            .select('*')
-            .eq('user_id', userId)
-            .order('nome');
+        // Estratégia 2: Com join usando função SQL
+        if (!anotacoesCarregadas) {
+          try {
+            const { data: joinResult, error: joinError } = await supabase.rpc('execute_sql', {
+              sql_statement: `
+                SELECT a.*, 
+                  jsonb_build_object(
+                    'id', p.id,
+                    'nome', p.nome,
+                    'cor', p.cor
+                  ) as pasta
+                FROM apostila_anotacoes a
+                LEFT JOIN apostila_pastas p ON a.pasta_id = p.id
+                WHERE a.user_id = '${userId}'
+                ORDER BY a.data_exportacao DESC;
+              `
+            });
 
-          if (pastasError) {
-            console.warn('Aviso ao carregar pastas:', pastasError);
-            // Não impede o fluxo de continuar, apenas continua sem pastas
-          } else {
-            setPastas(pastasData || []);
-            console.log("Pastas carregadas:", pastasData?.length || 0);
+            if (!joinError && joinResult) {
+              anotacoesProcessadas = joinResult.map(row => ({
+                ...row,
+                apostila_pastas: row.pasta // Manter compatibilidade
+              }));
+              console.log('Anotações carregadas (estratégia 2):', anotacoesProcessadas.length);
+              anotacoesCarregadas = true;
+            }
+          } catch (err) {
+            console.warn('Falha na estratégia 2:', err);
           }
-        } catch (pastasLoadError) {
-          console.warn('Erro ao carregar pastas:', pastasLoadError);
-          // Continua o fluxo
         }
 
-        // Abordagem robusta: primeiro tenta fazer a consulta com join, se falhar, tenta sem join
-        try {
-          // Usar LEFT JOIN para carregar anotações com pastas
-          const { data: anotacoesRaw, error: anotacoesError } = await supabase
-            .from('apostila_anotacoes')
-            .select('*, pasta:apostila_pastas(*)')
-            .eq('user_id', userId)
-            .order('data_exportacao', { ascending: false });
+        // Estratégia 3: Carregar anotações e pastas separadamente
+        if (!anotacoesCarregadas) {
+          try {
+            const { data: anotacoesSemJoin, error: erroSemJoin } = await supabase
+              .from('apostila_anotacoes')
+              .select('*')
+              .eq('user_id', userId)
+              .order('data_exportacao', { ascending: false });
 
-          // Se sucesso, processa os dados normalmente
-          if (!anotacoesError) {
-            const anotacoesProcessadas = (anotacoesRaw || []).map(anotacao => ({
-              ...anotacao,
-              apostila_pastas: anotacao.pasta // Manter compatibilidade com o restante do código
-            }));
-
-            console.log('Anotações carregadas com join:', anotacoesProcessadas?.length || 0);
-            setAnotacoes(anotacoesProcessadas || []);
-            setLoading(false);
-            return; // Sai da função se o primeiro método funcionou
-          }
-          
-          // Se falhou por causa de erro de relacionamento, cai para o método alternativo
-          if (anotacoesError.message.includes('relationship') || anotacoesError.message.includes('does not exist')) {
-            console.warn('Erro de relacionamento ou tabela inexistente, usando método alternativo');
-            throw anotacoesError; // Força o catch abaixo a ser executado
-          } else {
-            // Se foi outro tipo de erro, reporta e sai
-            console.error('Erro ao carregar anotações:', anotacoesError);
-            throw new Error(`Erro ao carregar anotações: ${anotacoesError.message}`);
-          }
-        } catch (joinError) {
-          // Método alternativo: carregar apenas anotações, sem join
-          console.warn('Usando método alternativo para carregar anotações', joinError);
-          
-          const { data: anotacoesSemJoin, error: erroSemJoin } = await supabase
-            .from('apostila_anotacoes')
-            .select('*')
-            .eq('user_id', userId)
-            .order('data_exportacao', { ascending: false });
-
-          if (erroSemJoin) {
-            console.error('Erro na consulta alternativa:', erroSemJoin);
-            throw new Error(`Não foi possível carregar suas anotações: ${erroSemJoin.message}`);
-          }
-
-          // Para cada anotação com pasta_id, tenta buscar dados da pasta se a tabela existir
-          const anotacoesProcessadas = await Promise.all(
-            (anotacoesSemJoin || []).map(async (anotacao) => {
-              if (anotacao.pasta_id) {
-                try {
-                  // Buscar pasta para esta anotação
-                  const { data: pastaData, error: pastaError } = await supabase
-                    .from('apostila_pastas')
-                    .select('id, nome, cor')
-                    .eq('id', anotacao.pasta_id)
-                    .eq('user_id', userId)
-                    .single();
-
-                  if (!pastaError && pastaData) {
-                    return {
-                      ...anotacao,
-                      pasta: pastaData,
-                      apostila_pastas: pastaData // Manter compatibilidade
-                    };
-                  }
-                } catch (e) {
-                  console.warn('Erro ao buscar pasta individual:', e);
-                }
+            if (erroSemJoin) {
+              if (erroSemJoin.message && erroSemJoin.message.includes('does not exist')) {
+                throw new Error('A estrutura do banco de dados precisa ser atualizada. Use a opção "Corrigir Relação Apostila" no menu Workflows.');
               }
-              
-              // Se não conseguiu dados da pasta, retorna só a anotação
+              throw erroSemJoin;
+            }
+
+            // Montar um mapa de pastas para lookup rápido
+            const pastasMap = {};
+            (pastasData || []).forEach(pasta => {
+              pastasMap[pasta.id] = pasta;
+            });
+
+            // Associar pastas às anotações
+            anotacoesProcessadas = (anotacoesSemJoin || []).map(anotacao => {
+              const pasta = anotacao.pasta_id ? pastasMap[anotacao.pasta_id] : null;
               return {
                 ...anotacao,
-                pasta: null,
-                apostila_pastas: null
+                pasta: pasta,
+                apostila_pastas: pasta // Manter compatibilidade
               };
-            })
-          );
-
-          console.log('Anotações carregadas (método alternativo):', anotacoesProcessadas?.length || 0);
-          setAnotacoes(anotacoesProcessadas || []);
+            });
+            
+            console.log('Anotações carregadas (estratégia 3):', anotacoesProcessadas.length);
+            anotacoesCarregadas = true;
+          } catch (err) {
+            console.warn('Falha na estratégia 3:', err);
+            throw err; // Propagar o erro se todas as estratégias falharem
+          }
         }
 
-        // Selecionar todas as pastas inicialmente
+        // Atualizar estado com as anotações processadas
+        setAnotacoes(anotacoesProcessadas || []);
         setFiltroAtual('todas');
         setLoading(false);
-        
-        // Se chegou aqui, alguma operação foi bem-sucedida
-        return;
+        return; // Sair da função se chegou até aqui com sucesso
+
       } catch (error) {
         console.error(`Erro ao carregar dados (tentativa ${tentativaAtual}/${retries}):`, error);
         ultimoErro = error;
@@ -336,7 +352,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
     let mensagemErro = ultimoErro?.message || 'Erro ao carregar anotações';
     
     // Personalizar a mensagem de erro para o usuário
-    if (mensagemErro.includes('does not exist')) {
+    if (mensagemErro.includes('does not exist') || mensagemErro.includes('relationship')) {
       mensagemErro = 'A estrutura do banco de dados precisa ser atualizada. Use a opção "Corrigir Relação Apostila" no menu Workflows.';
     } else if (mensagemErro.includes('não autenticado')) {
       mensagemErro = 'Você precisa estar logado para acessar suas anotações.';
