@@ -1,0 +1,121 @@
+Modal de Apostila de Anotações – Estrutura Completa
+1. Gatilho de Abertura
+Ícone de Apostila 📚 no topo ou em local estratégico da interface do Epictus IA.
+
+Ao clicar ➔ Abre um Modal Grande, elegante e centralizado.
+
+Modal com design clean, bordas arredondadas (2xl), sombra suave, animações de abertura/fechamento fluidas.
+
+2. Layout Principal do Modal
+Dividido em três seções:
+
+a) Barra Lateral Esquerda (Menu de Pastas)
+Botão "Criar Nova Pasta" ➕
+
+Lista de Pastas criadas (ex: "História", "Matemática", "Provas de Final de Ano", etc.)
+
+Ícones para:
+➔ Editar Nome da Pasta ✏️
+➔ Excluir Pasta 🗑️
+
+Ordenação: Arrastar e soltar pastas para organizar.
+
+Pastas podem ter cor personalizável (ex: azul para exatas, verde para biológicas, etc.)
+
+b) Área Central (Lista de Anotações da Pasta Selecionada)
+Mostra todos os Cadernos/Anotações da pasta atual.
+
+Cada anotação exibida como um Card Compacto:
+
+Título da anotação.
+
+Mini descrição/resumo automático (primeiras linhas do texto).
+
+Ícones rápidos:
+➔ Abrir/Visualizar 👁️
+➔ Editar ✏️
+➔ Excluir 🗑️
+
+Botão "Nova Anotação" ➕ direto dentro da pasta.
+
+c) Área Direita (Pré-visualização e Ações)
+Quando clicar numa anotação ➔ abre na lateral direita:
+
+Pré-visualização completa da anotação.
+
+Botões:
+➔ Editar
+➔ Duplicar
+➔ Baixar como PDF
+➔ Compartilhar link privado (opcional)
+➔ Mover para outra pasta
+
+3. Funcionalidades Extras e Sofisticadas
+✏️ Criar/Editar Anotações
+Editor de Texto integrado super completo:
+
+Negrito, itálico, sublinhado.
+
+Inserir imagens.
+
+Inserir tabelas.
+
+Inserir fluxogramas (opcional, com integração React Flow que você já está usando!).
+
+🔍 Barra de Pesquisa
+Pesquisa ultra-rápida para encontrar pastas e anotações.
+
+Filtrar por:
+
+Nome
+
+Data de criação
+
+Modelo de anotação (Estudo Completo, Revisão Rápida etc.)
+
+🧹 Organização Automática (Sugestão Inteligente)
+Sistema sugere pastas com base no conteúdo da anotação.
+
+Ex: Se o título for "Revolução Francesa", a IA pode sugerir "História".
+
+⏳ Histórico de Versões
+Cada vez que o usuário editar uma anotação, guarda uma versão anterior.
+
+Pode voltar a versões antigas se quiser.
+
+🖨️ Exportação Avançada
+Exportar toda a apostila:
+
+PDF unificado (todas as anotações)
+
+Arquivos individuais
+
+Personalizar: capa da apostila, índice automático, numeração de páginas.
+
+🎨 Personalização Visual
+O usuário pode escolher:
+
+Tema claro ou escuro para a apostila.
+
+Layout de exibição: lista ou grade (grid).
+
+🎯 Fluxo de Funcionamento (Resumo Visual)
+Usuário clica no 📚 ícone ➔ Abre o Modal Apostila.
+
+Na esquerda: vê as Pastas ➔ Pode criar, renomear, excluir, ordenar.
+
+Na área central: vê suas anotações ➔ Pode criar nova, editar, excluir.
+
+Na direita: pré-visualização da anotação ➔ Pode editar, duplicar, mover, baixar.
+
+Ações adicionais: pesquisar, exportar apostila, restaurar versões.
+
+💡 Algumas Ideias Bônus (se quiser ir além):
+Tags nas Anotações (ex: "Importante", "Para Revisar", "Prova").
+
+Favoritar Anotações ⭐.
+
+Sincronizar com Google Drive (futuramente?).
+
+Notificações inteligentes: IA sugere "Hora de revisar suas anotações de História!".
+
