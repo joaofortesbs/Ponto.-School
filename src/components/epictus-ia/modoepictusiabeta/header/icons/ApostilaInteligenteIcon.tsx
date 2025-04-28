@@ -2,13 +2,17 @@ import React, { useState } from "react";
 import HeaderIcon from "./HeaderIcon";
 import { ApostilaInteligenteModal } from "../../apostila-inteligente";
 
-
 interface ApostilaInteligenteIconProps {
   onClick?: () => void;
 }
 
 const ApostilaInteligenteIcon: React.FC<ApostilaInteligenteIconProps> = ({ onClick }) => {
   const [showModal, setShowModal] = useState(false);
+
+  const handleClick = () => {
+    setShowModal(true);
+    if (onClick) onClick();
+  };
 
   return (
     <>
@@ -34,10 +38,11 @@ const ApostilaInteligenteIcon: React.FC<ApostilaInteligenteIconProps> = ({ onCli
             <rect x="8" y="14" width="2" height="2" />
           </svg>
         }
-        onClick={() => setShowModal(true)}
+        onClick={handleClick}
         label="Apostila Inteligente"
       />
 
+      {/* Renderizar o modal independentemente do estado do componente pai */}
       <ApostilaInteligenteModal open={showModal} onOpenChange={setShowModal} />
     </>
   );

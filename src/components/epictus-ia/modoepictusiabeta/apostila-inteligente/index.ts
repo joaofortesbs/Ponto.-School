@@ -1,6 +1,2 @@
 
-import ApostilaInteligenteModal from './ApostilaInteligenteModal';
-
-export {
-  ApostilaInteligenteModal
-};
+export { ApostilaInteligenteModal } from './ApostilaInteligenteModal';
