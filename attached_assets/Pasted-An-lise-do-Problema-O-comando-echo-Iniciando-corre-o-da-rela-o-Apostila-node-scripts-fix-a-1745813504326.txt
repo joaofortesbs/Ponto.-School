@@ -1,0 +1,197 @@
+Análise do Problema
+O comando echo "Iniciando correção da relação Apostila..." && node scripts/fix-apostila-relation.js é composto por duas partes:
+
+echo "Iniciando correção da relação Apostila..." : Exibe uma mensagem no terminal.
+node scripts/fix-apostila-relation.js : Executa um script Node.js para corrigir a relação Apostila.
+O fato de o comando não estar funcionando pode ser causado por um dos seguintes problemas:
+
+Erro no Ambiente de Execução :
+O Node.js pode não estar instalado ou não estar no PATH do sistema.
+O comando pode estar sendo executado em um terminal ou sistema operacional que não suporta sintaxe (ex.: PowerShell no Windows, que usa uma sintaxe diferente para comandos encadeados).
+Script fix-apostila-relation.js Ausente ou com Problemas :
+O arquivo scripts/fix-apostila-relation.js pode não existir nenhum diretório especificado.
+O script pode ter erros de sintaxe, dependências ausentes (ex.: @supabase/supabase-js ou dotenv ), ou problemas de configuração (ex.: variáveis ​​de ambiente não definidas).
+Permissões ou Caminho Incorreto :
+O diretório scripts/ pode não existir ou estar no caminho errado.
+Pode haver problemas de permissão para executar o script.
+Erro no Comando ou Terminal :
+O operador && pode não ser interpretado corretamente dependendo do terminal (ex.: no PowerShell, o equivalente seria ; -and ).
+O comando pode estar sendo executado no caminho errado (não na raiz do projeto).
+Solução Proposta
+Vamos corrigir o comando, garantir que o ambiente de execução esteja configurado corretamente, verificar a existência do script fix-apostila-relation.js e criar ou corrigir o script se necessário. Também vamos adicionar validações para garantir que a Correção funcione e que o Modal da Apostila Inteligente volte a funcionar.
+
+1. Verifique o Ambiente de Execução
+Ação : Confirme se o Node.js está instalado e se o comando está sendo executado no terminal correto.
+Passos :
+Verifique se o Node.js está instalado:
+festança
+
+Copiar
+node --version
+Se o Node.js não estiver instalado, instale-o:
+No Windows/Mac/Linux, baixe e instale em nodejs.org .
+Você também pode usar um gerenciador de pacotes como nvm (Node Version Manager).
+Confirme o terminal utilizado:
+No Windows, use o Git Bash , WSL , ou o CMD (evite o PowerShell, pois a sintaxe && pode não funcionar diretamente).
+No Mac/Linux, use o terminal padrão (ex.: Bash, Zsh).
+Certifique-se de estar no diretório raiz do projeto:
+festança
+
+Copiar
+cd /caminho/para/o/projeto
+2. Testar o Comando em Partes
+Ação : Execute os dois comandos separadamente para identificar onde está o erro.
+Passos :
+Teste ou eco :
+festança
+
+Copiar
+echo "Iniciando correção da relação Apostila..."
+Você deve ver a mensagem "Iniciando correção da relação Apostila..." no terminal.
+Teste o nó :
+festança
+
+Copiar
+node scripts/fix-apostila-relation.js
+Se esse comando falhar, o problema está no script ou no ambiente.
+3. Verifique a existência do script fix-apostila-relation.js
+Ação : Confirme se o arquivo scripts/fix-apostila-relation.js existe e não está no caminho correto.
+Passos :
+Navegue até o diretório raiz do projeto e verifique se o diretório scripts/ existe:
+festança
+
+Copiar
+ls scripts/
+Confirme se o arquivo fix-apostila-relation.js está presente.
+Se o arquivo não existir, crie-o (veja o próximo passo).
+Se o arquivo existir, abra-o e verifique se há erros de sintaxe ou dependências ausentes.
+4. Crie ou corrija o script fix-apostila-relation.js
+Ação : Crie ou corrija o script para garantir que ele funcione corretamente.
+Proposta de script : Crie o arquivo scripts/fix-apostila-relation.js com o seguinte conteúdo:
+JavaScript
+
+Copiar
+const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config();
+
+// Inicializar o cliente do Supabase
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Erro: Variáveis de ambiente SUPABASE_URL e SUPABASE_KEY devem ser definidas no arquivo .env');
+  process.exit(1);
+}
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+async function fixApostilaRelation() {
+  console.log('Iniciando correção da relação Apostila...');
+
+  try {
+    // 1. Criar tabela apostila_pastas se não existir
+    const { error: pastasError } = await supabase.rpc('execute_sql', {
+      sql_statement: `
+        CREATE TABLE IF NOT EXISTS public.apostila_pastas (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          user_id UUID NOT NULL,
+          nome TEXT NOT NULL,
+          descricao TEXT,
+          data_criacao TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+        );
+
+        ALTER TABLE apostila_pastas ENABLE ROW LEVEL SECURITY;
+
+        CREATE POLICY "Usuários só podem ver suas pastas" ON apostila_pastas
+        FOR SELECT
+        USING (auth.uid() = user_id);
+
+        CREATE POLICY "Usuários podem inserir suas pastas" ON apostila_pastas
+        FOR INSERT
+        WITH CHECK (auth.uid() = user_id);
+
+        CREATE POLICY "Usuários podem atualizar suas pastas" ON apostila_pastas
+        FOR UPDATE
+        USING (auth.uid() = user_id);
+      `,
+    });
+
+    if (pastasError) {
+      throw new Error(`Erro ao criar tabela apostila_pastas: ${pastasError.message}`);
+    }
+
+    // 2. Criar tabela apostila_anotacoes se não existir
+    const { error: anotacoesError } = await supabase.rpc('execute_sql', {
+      sql_statement: `
+        CREATE TABLE IF NOT EXISTS public.apostila_anotacoes (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          user_id UUID NOT NULL,
+          pasta_id UUID,
+          titulo TEXT NOT NULL,
+          conteudo TEXT NOT NULL,
+          modelo_anotacao TEXT,
+          tags TEXT[],
+          data_criacao TIMESTAMP WITH TIME ZONE NOT NULL,
+          data_exportacao TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          origem TEXT NOT NULL,
+          CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE,
+          CONSTRAINT fk_pasta_id FOREIGN KEY (pasta_id) REFERENCES apostila_pastas(id) ON DELETE SET NULL
+        );
+
+        ALTER TABLE apostila_anotacoes ENABLE ROW LEVEL SECURITY;
+
+        CREATE POLICY "Usuários só podem ver suas anotações" ON apostila_anotacoes
+        FOR SELECT
+        USING (auth.uid() = user_id);
+
+        CREATE POLICY "Usuários podem inserir suas anotações" ON apostila_anotacoes
+        FOR INSERT
+        WITH CHECK (auth.uid() = user_id);
+
+        CREATE POLICY "Usuários podem atualizar suas anotações" ON apostila_anotacoes
+        FOR UPDATE
+        USING (auth.uid() = user_id);
+      `,
+    });
+
+    if (anotacoesError) {
+      throw new Error(`Erro ao criar tabela apostila_anotacoes: ${anotacoesError.message}`);
+    }
+
+    console.log('Relação Apostila corrigida com sucesso!');
+  } catch (error) {
+    console.error('Erro ao corrigir relação Apostila:', error.message);
+    process.exit(1);
+  }
+}
+
+// Executar a função
+fixApostilaRelation();
+Dependências Necessárias : Certifique-se de que as dependências @supabase/supabase-js e dotenv estão instaladas:
+festança
+
+Copiar
+npm install @supabase/supabase-js dotenv
+Configurar Variáveis ​​de Ambiente : Crie ou edite o arquivo .env na raiz do projeto com as credenciais do Supabase:
+texto
+
+Copiar
+SUPABASE_URL=<sua_url_do_supabase>
+SUPABASE_KEY=<sua_chave_do_supabase>
+Substitua <sua_url_do_supabase> e <sua_chave_do_supabase> pelas credenciais do seu projeto Supabase (encontradas em Configurações > API no painel do Supabase).
+5. Adaptar o Comando para Terminais Diferentes
+Ação : Ajuste do comando para operar em diferentes sistemas operacionais e terminais.
+Comando para Bash (Linux/Mac/Git Bash) :
+festança
+
+Copiar
+echo "Iniciando correção da relação Apostila..." && node scripts/fix-apostila-relation.js
+Comando para CMD (Windows) :
+comando
+
+Copiar
+echo Iniciando correção da relação Apostila... && node scripts\fix-apostila-relation.js
+Comando para PowerShell (Windows) :
+PowerShell
+
+Copiar
+Write-Output "Iniciando correção da relação Apostila..."; node scripts\fix-apostila-relation.js

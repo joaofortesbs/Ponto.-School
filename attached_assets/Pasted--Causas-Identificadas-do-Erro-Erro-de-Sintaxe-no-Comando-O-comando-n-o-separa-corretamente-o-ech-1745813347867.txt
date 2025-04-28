@@ -1,0 +1,156 @@
+🔍 Causas Identificadas do Erro
+
+Erro de Sintaxe no Comando:
+O comando não separa corretamente o echo do node , causando falha na execução.
+Script fix-apostila-relation.js Ausente ou com Problemas:
+O script não pode existir no diretório scripts/ .
+O script pode ter erros de sintaxe, dependências ausentes ou não estar configurado corretamente para interagir com o Supabase.
+✅ Objetivo e Resultado Esperado
+
+Corrigir o comando para executar o echo e o nó corretamente.
+Crie ou corrija o script fix-apostila-relation.js para que ele crie as tabelas apostila_pastas e apostila_anotacoes com as relações e políticas de RLS corretas.
+Certifique-se de que o script seja atualizado e que as dependências necessárias sejam instaladas.
+Validar que, após a execução do roteiro, o Modal da Apostila Inteligente funciona corretamente, exibindo as anotações sem erros.
+🛠️ Instruções para Correção
+
+1. Corrigir o Comando
+O comando preciso de um operador para separar o eco do node . Vamos usar o operador && para garantir que o segundo comando só seja executado se o primeiro for bem-sucedido.
+
+Comando Corrigido:
+festança
+
+Copiar
+echo "Iniciando correção da relação Apostila..." && node scripts/fix-apostila-relation.js
+Validação:
+
+Execute o comando no terminal e confirme que a mensagem "Iniciando correção da relação Apostila..." é exibida, seguida da execução do script (se ele existir).
+2. Verifique e crie o script fix-apostila-relation.js
+-se de que o script existe e está funcionando corretamente. Se ele não existir, crie-o com a lógica necessária para corrigir a relação Apostila.
+
+Passo 1: Verifique a existência do script:
+Navegue até o diretório scripts/ no projeto.
+Confirme se o arquivo fix-apostila-relation.js existe.
+Passo 2: Crie o script se ele não existir:
+Crie o arquivo scripts/fix-apostila-relation.js com o seguinte conteúdo:
+JavaScript
+
+Copiar
+const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config();
+
+// Inicializar o cliente do Supabase
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+async function fixApostilaRelation() {
+  console.log('Iniciando correção da relação Apostila...');
+
+  try {
+    // 1. Criar tabela apostila_pastas se não existir
+    const { error: pastasError } = await supabase.rpc('execute_sql', {
+      sql_statement: `
+        CREATE TABLE IF NOT EXISTS public.apostila_pastas (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          user_id UUID NOT NULL,
+          nome TEXT NOT NULL,
+          descricao TEXT,
+          data_criacao TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+        );
+
+        ALTER TABLE apostila_pastas ENABLE ROW LEVEL SECURITY;
+
+        CREATE POLICY "Usuários só podem ver suas pastas" ON apostila_pastas
+        FOR SELECT
+        USING (auth.uid() = user_id);
+
+        CREATE POLICY "Usuários podem inserir suas pastas" ON apostila_pastas
+        FOR INSERT
+        WITH CHECK (auth.uid() = user_id);
+
+        CREATE POLICY "Usuários podem atualizar suas pastas" ON apostila_pastas
+        FOR UPDATE
+        USING (auth.uid() = user_id);
+      `,
+    });
+
+    if (pastasError) {
+      throw new Error(`Erro ao criar tabela apostila_pastas: ${pastasError.message}`);
+    }
+
+    // 2. Criar tabela apostila_anotacoes se não existir
+    const { error: anotacoesError } = await supabase.rpc('execute_sql', {
+      sql_statement: `
+        CREATE TABLE IF NOT EXISTS public.apostila_anotacoes (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          user_id UUID NOT NULL,
+          pasta_id UUID,
+          titulo TEXT NOT NULL,
+          conteudo TEXT NOT NULL,
+          modelo_anotacao TEXT,
+          tags TEXT[],
+          data_criacao TIMESTAMP WITH TIME ZONE NOT NULL,
+          data_exportacao TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          origem TEXT NOT NULL,
+          CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE,
+          CONSTRAINT fk_pasta_id FOREIGN KEY (pasta_id) REFERENCES apostila_pastas(id) ON DELETE SET NULL
+        );
+
+        ALTER TABLE apostila_anotacoes ENABLE ROW LEVEL SECURITY;
+
+        CREATE POLICY "Usuários só podem ver suas anotações" ON apostila_anotacoes
+        FOR SELECT
+        USING (auth.uid() = user_id);
+
+        CREATE POLICY "Usuários podem inserir suas anotações" ON apostila_anotacoes
+        FOR INSERT
+        WITH CHECK (auth.uid() = user_id);
+
+        CREATE POLICY "Usuários podem atualizar suas anotações" ON apostila_anotacoes
+        FOR UPDATE
+        USING (auth.uid() = user_id);
+      `,
+    });
+
+    if (anotacoesError) {
+      throw new Error(`Erro ao criar tabela apostila_anotacoes: ${anotacoesError.message}`);
+    }
+
+    console.log('Relação Apostila corrigida com sucesso!');
+  } catch (error) {
+    console.error('Erro ao corrigir relação Apostila:', error.message);
+    process.exit(1);
+  }
+}
+
+// Executar a função
+fixApostilaRelation();
+Passo 3: Instale as dependências de necessidade:
+Certifique-se de que as dependências @supabase/supabase-js e dotenv estão instaladas:
+festança
+
+Copiar
+npm install @supabase/supabase-js dotenv
+Passo 4: Configure as variáveis ​​de ambiente:
+Crie ou edite o arquivo .env na raiz do projeto com as credenciais do Supabase:
+texto
+
+Copiar
+SUPABASE_URL=<sua_url_do_supabase>
+SUPABASE_KEY=<sua_chave_do_supabase>
+Substitua <sua_url_do_supabase> e <sua_chave_do_supabase> pelas credenciais do seu projeto Supabase (encontradas em Configurações > API no painel do Supabase).
+Validação:
+
+Execute o comando corrigido:
+festança
+
+Copiar
+echo "Iniciando correção da relação Apostila..." && node scripts/fix-apostila-relation.js
+Confirme que o terminal exibe:
+texto
+
+Copiar
+Iniciando correção da relação Apostila...
+Relação Apostila corrigida com sucesso!
+Verifique no painel do Supabase (no Table Editor ) que as tabelas apostila_pastas e apostila_anotacoes foram criadas com as estruturas e políticas de RLS corretas.

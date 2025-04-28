@@ -1,0 +1,162 @@
+3. Atualizar o Schema Cache do Supabase
+Ação : Forçar o Supabase a atualizar o esquema cache para considerar tabelas e relações.
+Passos :
+No painel do Supabase, vá para Settings > API .
+Clique em Atualizar documentação da API .
+Se o problema persistir, vá para Configurações > Geral e clique em Reiniciar Projeto .
+Reinicie o aplicativo para recarregar o esquema no cliente do Supabase.
+Validação :
+Execute uma consulta manual:
+sql
+
+Copiar
+SELECT * FROM apostila_anotacoes
+LEFT JOIN apostila_pastas ON apostila_anotacoes.pasta_id = apostila_pastas.id
+LIMIT 1;
+4. Implementar a Função "Corrigir Relação Apostila"
+Ação : Caso a opção "Corrigir Relação Apostila" não exista ou não tenha funcionado, implemente-a no menu Workflow.
+Código : Adicione a seguinte função para corrigir a estrutura do banco de dados:
+JavaScript
+
+Copiar
+async function corrigirRelacaoApostila() {
+  try {
+    // 1. Criar tabela apostila_pastas se não existir
+    await supabase.rpc('execute_sql', {
+      sql_statement: `
+        CREATE TABLE IF NOT EXISTS public.apostila_pastas (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          user_id UUID NOT NULL,
+          nome TEXT NOT NULL,
+          descricao TEXT,
+          data_criacao TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+        );
+
+        ALTER TABLE apostila_pastas ENABLE ROW LEVEL SECURITY;
+
+        CREATE POLICY "Usuários só podem ver suas pastas" ON apostila_pastas
+        FOR SELECT
+        USING (auth.uid() = user_id);
+
+        CREATE POLICY "Usuários podem inserir suas pastas" ON apostila_pastas
+        FOR INSERT
+        WITH CHECK (auth.uid() = user_id);
+
+        CREATE POLICY "Usuários podem atualizar suas pastas" ON apostila_pastas
+        FOR UPDATE
+        USING (auth.uid() = user_id);
+      `,
+    });
+
+    // 2. Criar tabela apostila_anotacoes se não existir
+    await supabase.rpc('execute_sql', {
+      sql_statement: `
+        CREATE TABLE IF NOT EXISTS public.apostila_anotacoes (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          user_id UUID NOT NULL,
+          pasta_id UUID,
+          titulo TEXT NOT NULL,
+          conteudo TEXT NOT NULL,
+          modelo_anotacao TEXT,
+          tags TEXT[],
+          data_criacao TIMESTAMP WITH TIME ZONE NOT NULL,
+          data_exportacao TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          origem TEXT NOT NULL,
+          CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE,
+          CONSTRAINT fk_pasta_id FOREIGN KEY (pasta_id) REFERENCES apostila_pastas(id) ON DELETE SET NULL
+        );
+
+        ALTER TABLE apostila_anotacoes ENABLE ROW LEVEL SECURITY;
+
+        CREATE POLICY "Usuários só podem ver suas anotações" ON apostila_anotacoes
+        FOR SELECT
+        USING (auth.uid() = user_id);
+
+        CREATE POLICY "Usuários podem inserir suas anotações" ON apostila_anotacoes
+        FOR INSERT
+        WITH CHECK (auth.uid() = user_id);
+
+        CREATE POLICY "Usuários podem atualizar suas anotações" ON apostila_anotacoes
+        FOR UPDATE
+        USING (auth.uid() = user_id);
+      `,
+    });
+
+    showNotification('Relação Apostila corrigida com sucesso!', { type: 'success' });
+  } catch (err) {
+    console.error('Erro ao corrigir relação Apostila:', err.message);
+    showError('Erro ao corrigir a relação Apostila. Contate o suporte.');
+  }
+}
+Adicionar ao Menu Workflow : Nenhum componente do menu Workflow, adicione um botão para executar a função:
+jsx
+
+Copiar
+<button onClick={corrigirRelacaoApostila}>Corrigir Relação Apostila</button>
+Validação :
+Execute a função e confirme que as tabelas foram criadas ou ajustadas.
+Teste o Modal da Apostila Inteligente novamente para verificar se o erro foi resolvido.
+5. Ajustar a Consulta no Código
+Ação : Atualize a consulta para carregar as anotações, garantindo que ela funcione mesmo se pasta_id for null .
+Código Atualizado :
+JavaScript
+
+Copiar
+async function carregarAnotacoesApostila() {
+  try {
+    const { data: anotacoes, error } = await supabase
+      .from('apostila_anotacoes')
+      .select(`
+        id,
+        user_id,
+        pasta_id,
+        titulo,
+        conteudo,
+        modelo_anotacao,
+        tags,
+        data_criacao,
+        data_exportacao,
+        origem,
+        apostila_pastas!left (
+          id,
+          nome
+        )
+      `)
+      .eq('user_id', auth.currentUser.uid)
+      .order('data_exportacao', { ascending: false });
+
+    if (error) {
+      console.error('Erro ao carregar anotações:', error.message);
+      if (error.message.includes('A estrutura do banco de dados precisa ser atualizada')) {
+        showError('A estrutura do banco de dados precisa ser atualizada. Use a opção "Corrigir Relação Apostila" no menu Workflow.');
+      } else if (error.code === 'PGRST116') {
+        showMessage('Nenhuma anotação encontrada. Exporte anotações do Caderno para começar.');
+      } else if (error.code === '42501') {
+        showError('Permissão negada. Verifique suas credenciais e tente novamente.');
+      } else {
+        showError(`Erro ao carregar anotações: ${error.message}`);
+      }
+      return [];
+    }
+
+    if (!anotacoes || anotacoes.length === 0) {
+      showMessage('Nenhuma anotação encontrada. Exporte anotações do Caderno para começar.');
+      return [];
+    }
+
+    const anotacoesFormatadas = anotacoes.map(anotacao => ({
+      ...anotacao,
+      apostila_pastas: anotacao.apostila_pastas || null,
+    }));
+
+    updateApostilaModal(anotacoesFormatadas);
+    return anotacoesFormatadas;
+  } catch (err) {
+    console.error('Erro inesperado ao carregar anotações:', err.message);
+    showError('Erro inesperado ao carregar anotações. Tente novamente.');
+    return [];
+  }
+}
+Validação :
+Teste a função e confirme se as anotações estão exibidas corretamente.

@@ -1,0 +1,60 @@
+5. Testar o Modal da Apostila Inteligente
+Ação : Após executar o script, teste novamente o Modal da Apostila Inteligente para confirmar que o erro foi resolvido.
+Passos :
+Abra o Modal da Apostila Inteligente na aplicação.
+Verifique se as anotações são mostradas corretamente, incluindo o nome da pasta associada (se pasta_id não for null ).
+Teste com uma anotação sem pasta ( pasta_id: null ) para garantir que não há erros.
+Prompt Super Detalhado para IA de Vibe Code
+🛠️ Prompt para IA Vibe Code - Correção de Erro no Comando e Script de Correção da Relação Apostila
+
+Título:
+
+ Correção de Erro no Comando e Implementação do Script fix-apostila-relation.js para Corrigir a Relação Apostila
+
+Contexto e Problema:
+
+ Em nossa plataforma, enfrentamos um problema ao tentar corrigir a estrutura do banco de dados para o Modal da Apostila Inteligente. O comando que deveria executar o script de correção está falhando:
+
+texto
+
+Copiar
+echo "Iniciando correção da relação Apostila..." node scripts/fix-apostila-relation.js
+O erro ocorre porque o comando está mal estruturado, faltando um operador para separar os dois comandos ( echo e node ). Além disso, não temos certeza se o script fix-apostila-relation.js existe ou está funcionando corretamente. Este script é responsável por corrigir a estrutura do banco de dados no Supabase, criando as tabelas apostila_pastas e apostila_anotacoes com as relações e políticas de RLS corretas. O objetivo deste prompt é corrigir o comando, garantir que o script fix-apostila-relation.js exista e funcione corretamente, e validar que a correção resolva o problema no Modal da Apostila Inteligente.
+
+🧩 Detalhamento do Ambiente Técnico
+
+Estrutura do Banco de Dados (Supabase):
+
+ As tabelas esperadas são:
+
+Tabela apostila_pastas :
+identificação (UUID)
+user_id (UUID do usuário autenticado)
+nome (string)
+descrição (string, opcional)
+data_criacao (carimbo de data/hora)
+Tabela apostila_anotacoes :
+identificação (UUID)
+user_id (UUID do usuário autenticado)
+pasta_id (UUID, null se não estiver associado a uma pasta)
+título (string)
+conteudo (texto)
+modelo_anotacao (string)
+tags (matriz de strings)
+data_criacao (carimbo de data/hora)
+data_exportacao (carimbo de data/hora)
+origem (string: "caderno" ou "criado_na_apostila")
+Configurações do Supabase:
+
+O Supabase está configurado com Row-Level Security (RLS) ativado.
+O Supabase Realtime está sendo usado para atualizar o Modal da Apostila automaticamente.
+Comando Problemático:
+
+texto
+
+Copiar
+echo "Iniciando correção da relação Apostila..." node scripts/fix-apostila-relation.js
+Problema Identificado:
+
+O comando está mal estruturado, faltando um operador ( && ou ; ) para separar o echo do node .
+O script fix-apostila-relation.js pode não existir, ou pode ter erros de sintaxe ou dependências ausentes.
