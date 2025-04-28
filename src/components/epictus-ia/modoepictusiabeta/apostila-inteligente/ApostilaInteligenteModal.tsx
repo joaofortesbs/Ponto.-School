@@ -36,6 +36,8 @@ import {
   Maximize2,
   Minimize2
 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { toast } from "@/components/ui/use-toast";
 
 interface ApostilaInteligenteModalProps {
   open: boolean;
@@ -47,6 +49,9 @@ interface Pasta {
   nome: string;
   cor: string;
   contagem?: number;
+  user_id?: string;
+  descricao?: string;
+  data_criacao?: Date;
 }
 
 interface Anotacao {
@@ -61,6 +66,10 @@ interface Anotacao {
   ultimaEdicao?: Date;
   tags?: string[];
   visualizacoes?: number;
+  origem?: 'caderno' | 'criado_na_apostila';
+  user_id?: string;
+  modelo_anotacao?: string;
+  data_exportacao?: Date;
 }
 
 const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({ 
@@ -131,6 +140,123 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
     },
   ]);
   
+  const [loading, setLoading] = useState(false);
+  
+  // Carregar pastas e anotações do Supabase
+  const carregarPastas = async () => {
+    try {
+      const userId = localStorage.getItem('user_id') || 'anonymous';
+      
+      const { data, error } = await supabase
+        .from('apostila_pastas')
+        .select('*')
+        .eq('user_id', userId);
+        
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        // Converter dados do banco para o formato da interface Pasta
+        const pastasFromDB = data.map(pasta => ({
+          id: pasta.id,
+          nome: pasta.nome,
+          cor: pasta.cor || "#42C5F5", // cor padrão se não tiver
+          user_id: pasta.user_id,
+          descricao: pasta.descricao,
+          data_criacao: new Date(pasta.data_criacao)
+        }));
+        
+        // Mesclar as pastas demo com as do banco
+        setPastas([...pastasFromDB]);
+        
+        // Se tiver pastas, selecionar a primeira
+        if (pastasFromDB.length > 0 && !pastaSelecionada) {
+          setPastaSelecionada(pastasFromDB[0].id);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar pastas:', error);
+    }
+  };
+  
+  const carregarAnotacoes = async () => {
+    try {
+      setLoading(true);
+      const userId = localStorage.getItem('user_id') || 'anonymous';
+      
+      const { data, error } = await supabase
+        .from('apostila_anotacoes')
+        .select('*')
+        .eq('user_id', userId);
+        
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        // Converter dados do banco para o formato da interface Anotacao
+        const anotacoesFromDB = data.map(anotacao => {
+          // Criar um resumo do conteúdo para exibição
+          const resumo = anotacao.conteudo.length > 150 
+            ? anotacao.conteudo.substring(0, 150) + '...' 
+            : anotacao.conteudo;
+            
+          return {
+            id: anotacao.id,
+            titulo: anotacao.titulo,
+            conteudo: anotacao.conteudo,
+            resumo: resumo,
+            pastaId: anotacao.pasta_id,
+            data: new Date(anotacao.data_criacao),
+            modelo: anotacao.modelo_anotacao || "Estudo Completo",
+            favorito: false, // por padrão não é favorito
+            ultimaEdicao: anotacao.data_exportacao ? new Date(anotacao.data_exportacao) : undefined,
+            tags: anotacao.tags || [],
+            visualizacoes: 0,
+            origem: anotacao.origem,
+            user_id: anotacao.user_id
+          };
+        });
+        
+        // Mesclar as anotações demo com as do banco
+        // Aqui você pode decidir se quer manter as demo ou só mostrar as do banco
+        setAnotacoes([...anotacoesFromDB]);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar anotações:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Carregar dados quando o modal abrir
+  useEffect(() => {
+    if (open) {
+      carregarPastas();
+      carregarAnotacoes();
+      
+      // Configurar listeners para atualizações em tempo real
+      const pastasChannel = supabase
+        .channel('apostila_pastas_changes')
+        .on('postgres_changes', 
+          { event: '*', schema: 'public', table: 'apostila_pastas' }, 
+          () => carregarPastas()
+        )
+        .subscribe();
+        
+      const anotacoesChannel = supabase
+        .channel('apostila_anotacoes_changes')
+        .on('postgres_changes', 
+          { event: '*', schema: 'public', table: 'apostila_anotacoes' }, 
+          () => carregarAnotacoes()
+        )
+        .subscribe();
+        
+      // Limpar listeners quando o modal fechar
+      return () => {
+        supabase.removeChannel(pastasChannel);
+        supabase.removeChannel(anotacoesChannel);
+      };
+    }
+  }, [open]);
+  
   const [pastaSelecionada, setPastaSelecionada] = useState<string | null>("p1");
   const [anotacaoSelecionada, setAnotacaoSelecionada] = useState<string | null>("a1");
   const [pesquisa, setPesquisa] = useState("");
@@ -192,37 +318,172 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
     return anotacoes.find(a => a.id === anotacaoSelecionada);
   };
   
-  const handleCriarPasta = () => {
+  const handleCriarPasta = async () => {
     if (novaPasta.nome.trim() === "") return;
     
-    const novaPastaObj: Pasta = {
-      id: `p${pastas.length + 1}`,
-      nome: novaPasta.nome,
-      cor: novaPasta.cor,
-      contagem: 0
-    };
-    
-    setPastas([...pastas, novaPastaObj]);
-    setNovaPasta({ nome: "", cor: "#42C5F5" });
-    setCriandoPasta(false);
-    setPastaSelecionada(novaPastaObj.id);
-  };
-  
-  const handleExcluirPasta = (id: string) => {
-    const novasPastas = pastas.filter(p => p.id !== id);
-    setPastas(novasPastas);
-    
-    if (pastaSelecionada === id) {
-      setPastaSelecionada(novasPastas.length > 0 ? novasPastas[0].id : null);
+    try {
+      const userId = localStorage.getItem('user_id') || 'anonymous';
+      
+      // Inserir a nova pasta no banco
+      const { data, error } = await supabase
+        .from('apostila_pastas')
+        .insert([
+          {
+            user_id: userId,
+            nome: novaPasta.nome,
+            cor: novaPasta.cor,
+            descricao: ""
+          }
+        ])
+        .select()
+        .single();
+        
+      if (error) throw error;
+      
+      // Adicionar ao estado local
+      const novaPastaObj: Pasta = {
+        id: data.id,
+        nome: novaPasta.nome,
+        cor: novaPasta.cor,
+        contagem: 0,
+        user_id: userId,
+        data_criacao: new Date()
+      };
+      
+      setPastas([...pastas, novaPastaObj]);
+      setNovaPasta({ nome: "", cor: "#42C5F5" });
+      setCriandoPasta(false);
+      setPastaSelecionada(novaPastaObj.id);
+      
+      // Registrar atividade
+      await supabase
+        .from('user_activity_logs')
+        .insert([
+          {
+            user_id: userId,
+            acao: 'criou pasta',
+            detalhes: `Criou pasta "${novaPasta.nome}"`
+          }
+        ]);
+        
+      toast({
+        title: "Pasta criada!",
+        description: `A pasta "${novaPasta.nome}" foi criada com sucesso.`
+      });
+      
+    } catch (error) {
+      console.error('Erro ao criar pasta:', error);
+      toast({
+        title: "Erro ao criar pasta",
+        description: "Não foi possível criar a pasta. Tente novamente.",
+        variant: "destructive"
+      });
     }
   };
   
-  const handleFavoritar = (id: string) => {
-    setAnotacoes(
-      anotacoes.map(a => 
-        a.id === id ? { ...a, favorito: !a.favorito } : a
-      )
-    );
+  const handleExcluirPasta = async (id: string) => {
+    try {
+      // Confirmar se existem anotações nesta pasta
+      const anotacoesDaPasta = anotacoes.filter(a => a.pastaId === id);
+      
+      if (anotacoesDaPasta.length > 0) {
+        const confirmar = window.confirm(
+          `Esta pasta contém ${anotacoesDaPasta.length} anotação(ões). Tem certeza que deseja excluí-la?`
+        );
+        
+        if (!confirmar) return;
+      }
+      
+      const userId = localStorage.getItem('user_id') || 'anonymous';
+      
+      // Deletar a pasta no banco
+      const { error } = await supabase
+        .from('apostila_pastas')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId);
+        
+      if (error) throw error;
+      
+      // Atualizar o estado local
+      const novasPastas = pastas.filter(p => p.id !== id);
+      setPastas(novasPastas);
+      
+      if (pastaSelecionada === id) {
+        setPastaSelecionada(novasPastas.length > 0 ? novasPastas[0].id : null);
+      }
+      
+      // Registrar atividade
+      const pastaExcluida = pastas.find(p => p.id === id);
+      await supabase
+        .from('user_activity_logs')
+        .insert([
+          {
+            user_id: userId,
+            acao: 'excluiu pasta',
+            detalhes: `Excluiu pasta "${pastaExcluida?.nome}"`
+          }
+        ]);
+        
+      toast({
+        title: "Pasta excluída!",
+        description: `A pasta "${pastaExcluida?.nome}" foi excluída com sucesso.`
+      });
+      
+    } catch (error) {
+      console.error('Erro ao excluir pasta:', error);
+      toast({
+        title: "Erro ao excluir pasta",
+        description: "Não foi possível excluir a pasta. Tente novamente.",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  const handleFavoritar = async (id: string) => {
+    try {
+      const anotacao = anotacoes.find(a => a.id === id);
+      if (!anotacao) return;
+      
+      const novoStatus = !anotacao.favorito;
+      const userId = localStorage.getItem('user_id') || 'anonymous';
+      
+      // Atualizar no banco de dados
+      const { error } = await supabase
+        .from('apostila_anotacoes')
+        .update({ favorito: novoStatus })
+        .eq('id', id)
+        .eq('user_id', userId);
+        
+      if (error) throw error;
+      
+      // Atualizar no estado local
+      setAnotacoes(
+        anotacoes.map(a => 
+          a.id === id ? { ...a, favorito: novoStatus } : a
+        )
+      );
+      
+      // Registrar atividade
+      await supabase
+        .from('user_activity_logs')
+        .insert([
+          {
+            user_id: userId,
+            acao: novoStatus ? 'adicionou aos favoritos' : 'removeu dos favoritos',
+            anotacao_id: id,
+            detalhes: `${novoStatus ? 'Adicionou' : 'Removeu'} "${anotacao.titulo}" ${novoStatus ? 'aos' : 'dos'} favoritos`
+          }
+        ]);
+        
+    } catch (error) {
+      console.error('Erro ao favoritar/desfavoritar:', error);
+      toast({
+        title: "Erro ao atualizar favoritos",
+        description: "Não foi possível atualizar o status de favorito. Tente novamente.",
+        variant: "destructive"
+      });
+    }
   };
 
   const getAllTags = () => {

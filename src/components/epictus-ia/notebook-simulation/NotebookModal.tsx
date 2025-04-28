@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import NotebookSimulation from '@/components/chat/NotebookSimulation';
@@ -10,6 +9,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import ModelosNotebookModal from './ModelosNotebookModal';
+import ExportModal from './ExportModal'; // Added import for the export modal
+
 
 interface NotebookModalProps {
   open: boolean;
@@ -136,7 +137,10 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showTemplatePopover, setShowTemplatePopover] = useState(false);
   const [showModelosModal, setShowModelosModal] = useState(false);
-  
+  const [anotacaoTitulo, setAnotacaoTitulo] = useState(''); // State for suggested title
+  const [exportModalOpen, setExportModalOpen] = useState(false); // State for export modal
+  const [isExporting, setIsExporting] = useState(false); //State for exporting
+
   // Atualiza o conteúdo do caderno quando props.content muda
   useEffect(() => {
     if (content && !isEditing) {
@@ -146,7 +150,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
 
   // Contador de palavras
   const wordCount = editedContent.split(/\s+/).filter(word => word.length > 0).length;
-  
+
   // Função para aplicar o modelo selecionado
   const handleApplyTemplate = (templateContent: string) => {
     setEditedContent(templateContent);
@@ -154,7 +158,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
       setIsEditing(true);
     }
   };
-  
+
   const handleCopy = () => {
     navigator.clipboard.writeText(isEditing ? editedContent : content)
       .then(() => {
@@ -179,18 +183,18 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
     // Create a blob from the content
     const blob = new Blob([isEditing ? editedContent : content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
-    
+
     // Create a link element and trigger download
     const a = document.createElement('a');
     a.href = url;
     a.download = 'anotacoes-caderno.txt';
     document.body.appendChild(a);
     a.click();
-    
+
     // Clean up
     URL.revokeObjectURL(url);
     document.body.removeChild(a);
-    
+
     toast({
       title: "Download iniciado!",
       description: "Suas anotações foram baixadas como arquivo de texto.",
@@ -259,14 +263,14 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
   const saveChanges = () => {
     setIsEditing(false);
     setShowSuggestions(true);
-    
+
     // Aqui você poderia adicionar lógica para salvar as alterações no backend
     toast({
       title: "Alterações salvas!",
       description: "Suas edições no caderno foram salvas com sucesso.",
       duration: 2000,
     });
-    
+
     // Simulação de uma animação de escrita finalizada
     setTimeout(() => {
       setShowSuggestions(false);
@@ -285,7 +289,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setEditedContent(e.target.value);
-    
+
     // Exemplo mais robusto de auto-correção com regex para identificar palavras inteiras
     const correctedText = e.target.value
       .replace(/\b(nao)\b/gi, "não")
@@ -296,20 +300,131 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
       .replace(/\b(q)\b/gi, "que")
       .replace(/\b(qdo)\b/gi, "quando")
       .replace(/\b(pq)\b/gi, "porque");
-    
+
     if (correctedText !== e.target.value) {
       setEditedContent(correctedText);
     }
-    
+
     // Ajusta automaticamente a altura do textarea baseado no conteúdo
     const textarea = e.target as HTMLTextAreaElement;
     textarea.style.height = 'auto';
     textarea.style.height = `${Math.min(textarea.scrollHeight, window.innerHeight * 0.65)}px`;
   };
 
+  const handleSaveToLocal = () => {
+    localStorage.setItem('saved_notebook_content', editedContent);
+    setIsEditing(false);
+    toast({
+      title: "Anotação salva!",
+      description: "Seu conteúdo foi salvo localmente com sucesso.",
+    });
+  };
+
+  // Extrair título do conteúdo para usar como sugestão de título
+  useEffect(() => {
+    if (editedContent) {
+      // Tentar extrair o título do conteúdo
+      const lines = editedContent.split('\n');
+      for (const line of lines) {
+        if (line.trim().length > 0 && line.trim().length < 100) {
+          setAnotacaoTitulo(line.trim());
+          break;
+        }
+      }
+    }
+  }, [editedContent]);
+
+  const handleExportToApostila = () => {
+    // Salvar localmente primeiro
+    localStorage.setItem('saved_notebook_content', editedContent);
+
+    // Abrir modal de exportação
+    setExportModalOpen(true);
+  };
+
+  const handleExportComplete = async (data: {
+    titulo: string;
+    conteudo: string;
+    pastaId: string;
+    tags: string[];
+    modelo: string;
+  }) => {
+    try {
+      setIsExporting(true);
+
+      // Placeholder for Supabase interaction - Replace with your actual Supabase client
+      const supabase = { from: () => ({ insert: () => ({ select: () => ({ single: async () => ({ data: { id: 'newId' } }) }) }) }) };
+
+
+      // 1. Salvar a anotação no caderno_anotacoes (se ainda não estiver salva)
+      const { data: cadernoInsertData, error: cadernoError } = await supabase
+        .from('caderno_anotacoes')
+        .insert([
+          {
+            user_id: localStorage.getItem('user_id') || 'anonymous',
+            titulo: data.titulo,
+            conteudo: data.conteudo,
+            modelo_anotacao: data.modelo,
+            tags: data.tags,
+            status: 'exportado'
+          }
+        ])
+        .select('id')
+        .single();
+
+      if (cadernoError) throw cadernoError;
+
+      // 2. Salvar na apostila_anotacoes
+      const { error: apostilaError } = await supabase
+        .from('apostila_anotacoes')
+        .insert([
+          {
+            user_id: localStorage.getItem('user_id') || 'anonymous',
+            pasta_id: data.pastaId,
+            titulo: data.titulo,
+            conteudo: data.conteudo,
+            modelo_anotacao: data.modelo,
+            tags: data.tags,
+            origem: 'caderno'
+          }
+        ]);
+
+      if (apostilaError) throw apostilaError;
+
+      // 3. Registrar a atividade no log
+      await supabase
+        .from('user_activity_logs')
+        .insert([
+          {
+            user_id: localStorage.getItem('user_id') || 'anonymous',
+            acao: 'exportou anotação',
+            anotacao_id: cadernoInsertData?.id,
+            detalhes: `Exportou para pasta ${data.pastaId}`
+          }
+        ]);
+
+      toast({
+        title: "Exportação concluída!",
+        description: "Sua anotação foi exportada para a Apostila Inteligente.",
+      });
+
+    } catch (error) {
+      console.error('Erro ao exportar para Apostila:', error);
+      toast({
+        title: "Erro ao exportar",
+        description: "Não foi possível exportar para a Apostila Inteligente. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
+      setExportModalOpen(false); // Close the modal after export
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl h-[85vh] p-0 bg-white dark:bg-[#121826] overflow-hidden flex flex-col rounded-xl border-0 shadow-2xl">
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-5xl h-[85vh] p-0 bg-white dark:bg-[#121826] overflow-hidden flex flex-col rounded-xl border-0 shadow-2xl">
         <DialogHeader className="px-6 py-4 border-b border-amber-100 dark:border-amber-900/30 bg-gradient-to-r from-amber-50/80 to-amber-100/50 dark:from-amber-900/20 dark:to-amber-800/10 backdrop-blur-sm flex flex-row items-center justify-between sticky top-0 z-10">
           <div className="flex items-center">
             <div className="bg-amber-100 dark:bg-amber-700/30 rounded-full p-2 mr-3">
@@ -359,7 +474,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            
+
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -377,7 +492,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            
+
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -395,7 +510,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            
+
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -413,7 +528,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            
+
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -433,13 +548,13 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
             </TooltipProvider>
           </div>
         </DialogHeader>
-        
+
         <div className="flex-1 overflow-auto p-8 bg-gradient-to-b from-amber-50/50 to-amber-100/30 dark:from-amber-900/10 dark:to-[#1a1f2c]/95">
           <div className="relative max-w-4xl mx-auto">
             {/* Decorative elements */}
             <div className="absolute -left-6 top-4 w-3 h-[95%] bg-amber-200 dark:bg-amber-700/40 rounded-r-md"></div>
             <div className="absolute -left-3 top-2 bottom-2 w-0.5 h-[98%] bg-red-400/60 dark:bg-red-500/40"></div>
-            
+
             {/* Paper effect with shadow */}
             <div className="bg-[#fffef5] dark:bg-[#161c26] rounded-md p-6 shadow-[0_5px_25px_rgba(0,0,0,0.1)] dark:shadow-[0_5px_25px_rgba(0,0,0,0.3)] relative before:absolute before:inset-0 before:bg-[url('/images/pattern-grid.svg')] before:opacity-[0.03] before:bg-repeat before:z-0">
               <div className="relative z-10">
@@ -532,13 +647,13 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
                           const textarea = e.currentTarget;
                           const cursorPosition = textarea.selectionStart;
                           const text = textarea.value;
-                          
+
                           // Encontrar o início da linha atual
                           let lineStart = cursorPosition;
                           while (lineStart > 0 && text[lineStart - 1] !== '\n') {
                             lineStart--;
                           }
-                          
+
                           // Verificar o comprimento da linha atual
                           const currentLineText = text.substring(lineStart, cursorPosition);
                           if (currentLineText.length > 58) {
@@ -557,13 +672,13 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
                   <NotebookSimulation content={isEditing ? editedContent : content} />
                 )}
               </div>
-              
+
               {/* Decorative pencil icon */}
               <div className="absolute -right-2 -bottom-2 bg-amber-100 dark:bg-amber-700/30 rounded-full p-2 shadow-md transform rotate-12">
                 <Pencil className="h-4 w-4 text-amber-600 dark:text-amber-400" />
               </div>
             </div>
-            
+
             {/* Suggestions after editing */}
             {showSuggestions && !isEditing && (
               <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-100 dark:border-blue-800/30 animate-fadeIn">
@@ -586,14 +701,14 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
             )}
           </div>
         </div>
-        
+
         {/* Modal de seleção de modelos */}
         <ModelosNotebookModal 
           open={showModelosModal} 
           onOpenChange={setShowModelosModal} 
           onSelectTemplate={handleApplyTemplate}
         />
-        
+
         {/* Footer with stats and edit controls */}
         <div className="px-6 py-3 border-t border-amber-100 dark:border-amber-900/30 bg-gradient-to-r from-amber-50/80 to-amber-100/50 dark:from-amber-900/20 dark:to-amber-800/10 flex items-center justify-between">
           <div className="flex items-center text-amber-700 dark:text-amber-400 text-sm">
@@ -610,7 +725,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            
+
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -625,7 +740,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
               </Tooltip>
             </TooltipProvider>
           </div>
-          
+
           <div>
             {isEditing ? (
               <div className="flex flex-wrap items-center gap-2">
@@ -637,7 +752,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
                 >
                   Cancelar
                 </Button>
-                
+
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -647,7 +762,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
                   <FileText className="h-4 w-4 mr-1.5" />
                   Modelos
                 </Button>
-                
+
                 <Button 
                   variant="default" 
                   size="sm" 
@@ -656,6 +771,13 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
                 >
                   <Save className="h-4 w-4 mr-1.5" />
                   Salvar alterações
+                </Button>
+                <Button 
+                  variant="ghost"
+                  onClick={handleExportToApostila}
+                  className="text-[#42C5F5] hover:text-white hover:bg-[#42C5F5]/20"
+                >
+                  <BookOpen size={16} className="mr-2" /> Exportar para Apostila
                 </Button>
               </div>
             ) : (
@@ -669,7 +791,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
                   <FileText className="h-4 w-4 mr-1.5" />
                   Modelos
                 </Button>
-                
+
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -685,6 +807,8 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
         </div>
       </DialogContent>
     </Dialog>
+    <ExportModal open={exportModalOpen} onClose={() => setExportModalOpen(false)} onExport={handleExportComplete} initialTitle={anotacaoTitulo} initialContent={editedContent}/>
+    </>
   );
 };
 

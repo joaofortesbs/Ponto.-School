@@ -139,7 +139,7 @@ const initializeApp = () => {
     // Renderizar imediatamente sem esperar por idle callback
     // para garantir carregamento rápido
     renderApp();
-    
+
     // Timeout reduzido para garantir que a UI não fique presa em carregamento
     setTimeout(() => {
       if (document.getElementById('initial-loader')) {

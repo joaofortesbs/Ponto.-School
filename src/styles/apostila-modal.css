@@ -1,0 +1,98 @@
+
+/* Estilos para a Apostila Inteligente */
+.apostila-card {
+  transition: all 0.2s ease-in-out;
+  transform-origin: center;
+}
+
+.apostila-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.apostila-card.selected {
+  border-color: #42C5F5 !important;
+  box-shadow: 0 0 0 2px rgba(66, 197, 245, 0.3);
+}
+
+.apostila-pasta {
+  transition: all 0.2s ease;
+}
+
+.apostila-pasta:hover {
+  background-color: rgba(66, 197, 245, 0.1);
+}
+
+.apostila-pasta.selected {
+  background-color: rgba(66, 197, 245, 0.15);
+  border-left-width: 4px;
+  padding-left: 0.5rem;
+}
+
+/* Animação para o modal */
+@keyframes apostila-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.apostila-modal-content {
+  animation: apostila-modal-in 0.2s ease-out;
+}
+
+/* Tag badges */
+.apostila-tag {
+  transition: all 0.2s ease;
+  background-color: rgba(66, 197, 245, 0.1);
+  color: #42C5F5;
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+}
+
+.apostila-tag:hover {
+  background-color: rgba(66, 197, 245, 0.2);
+}
+
+/* Markdown content styles */
+.apostila-markdown h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.apostila-markdown h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.apostila-markdown p {
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
+}
+
+.apostila-markdown ul, .apostila-markdown ol {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.apostila-markdown li {
+  margin-bottom: 0.25rem;
+}
+
+.apostila-markdown code {
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+  font-family: monospace;
+}
