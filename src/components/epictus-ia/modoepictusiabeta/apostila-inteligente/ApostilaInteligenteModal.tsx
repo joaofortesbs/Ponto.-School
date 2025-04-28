@@ -254,15 +254,30 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
     setIsFullscreen(!isFullscreen);
   };
   
+  // Forçar renderização correta
+  useEffect(() => {
+    if (open) {
+      // Força reflow/repaint para garantir que o modal seja renderizado corretamente
+      setTimeout(() => {
+        const element = document.querySelector('.apostila-modal');
+        if (element) {
+          element.classList.add('apostila-modal-active');
+        }
+      }, 50);
+    }
+  }, [open]);
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} modal={true}>
+    <Dialog open={open} onOpenChange={onOpenChange} modal={true} className="apostila-modal">
       <DialogContent 
-        className={`${isFullscreen ? 'max-w-[98vw] h-[98vh] max-h-[98vh]' : 'max-w-[90vw] w-[1400px] h-[85vh] max-h-[85vh]'} bg-[#0a0a0c] text-white rounded-3xl p-0 overflow-hidden flex flex-col transition-all duration-300 ease-in-out z-50`}
+        className={`${isFullscreen ? 'max-w-[98vw] h-[98vh] max-h-[98vh]' : 'max-w-[90vw] w-[1400px] h-[85vh] max-h-[85vh]'} bg-[#0a0a0c] text-white rounded-3xl p-0 overflow-hidden flex flex-col transition-all duration-300 ease-in-out`}
         style={{
           boxShadow: '0 10px 60px rgba(0, 0, 0, 0.6), 0 0 100px rgba(66, 197, 245, 0.2)',
           backdropFilter: 'blur(25px)',
           border: '1px solid rgba(255, 255, 255, 0.1)',
-          background: 'linear-gradient(180deg, rgba(13,13,15,0.98) 0%, rgba(17,17,23,0.98) 100%)'
+          background: 'linear-gradient(180deg, rgba(13,13,15,0.98) 0%, rgba(17,17,23,0.98) 100%)',
+          position: 'relative',
+          zIndex: 100
         }}
         onInteractOutside={(e) => {
           e.preventDefault(); // Previne interação externa
@@ -273,13 +288,15 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
           onOpenChange(false);
         }}
       >
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           <motion.div
+            key="main-content"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             transition={{ duration: 0.2 }}
             className="w-full h-full flex flex-col"
+            style={{ position: 'relative', zIndex: 10 }}
           >
             <DialogHeader className="py-4 px-6 flex flex-row justify-between items-center border-b border-[#1a1a24] bg-gradient-to-r from-[#0a0a0c] to-[#131320]">
               <DialogTitle className="text-2xl font-bold flex items-center gap-3">
@@ -325,10 +342,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                 </DialogClose>
               </div>
             </DialogHeader>
-          </motion.div>
-        </AnimatePresence>
-        
-        <div className="flex flex-1 overflow-hidden">
+          <div className="flex flex-1 overflow-hidden">
           {/* Barra Lateral Esquerda (Pastas) */}
           <div className="w-[280px] border-r border-[#1a1a24] bg-[#0a0a0c] flex flex-col">
             <div className="p-4 border-b border-[#1a1a24]">
@@ -1204,6 +1218,8 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
             </AnimatePresence>
           </div>
         </div>
+          </motion.div>
+        </AnimatePresence>
       </DialogContent>
     </Dialog>
   );
