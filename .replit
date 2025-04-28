@@ -99,6 +99,10 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
+args = "echo \"Verificando o ambiente para a correção da relação na Apostila...\""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
 args = "node scripts/fix-apostila-relation.js"
 
 [auth]
