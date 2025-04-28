@@ -1,0 +1,155 @@
+🔖 “Apostila Inteligente” – Modal dentro da Interface do Epictus IA
+📌 OBJETIVO:
+Permitir que o usuário acesse, organize e interaja com todas as anotações que ele salvou no seu Caderno, dentro de uma interface moderna, interativa e intuitiva. A experiência deve ser tão boa que o usuário queira usar isso como sua “biblioteca de aprendizado personalizada”.
+
+🧱 ACESSO AO MODAL:
+Ícone 📚 (livro ou apostila) fixado no header da interface do Epictus IA.
+
+Ao clicar, abre um modal com fundo escurecido (blur + escurecimento leve), trazendo a Apostila como um painel flutuante centralizado.
+
+🖼️ LAYOUT DO MODAL (dividido em 3 Áreas principais):
+1. 📂 Painel Lateral Esquerdo – Organização em Pastas
+Lista vertical com:
+
+📁 Pastas criadas pelo usuário
+
+🔍 Caixa de busca de pastas
+
+➕ Botão “Criar Nova Pasta” (abre input inline com animação)
+
+🧠 Sugestões automáticas de pastas baseadas em conteúdo (ex: “Matemática”, “Revisão Enem”)
+
+Cada pasta pode ser:
+
+Arrastada (drag & drop) para reorganizar
+
+Renomeada
+
+Duplicada
+
+Fixada no topo
+
+Excluída com confirmação
+
+2. 📑 Painel Central – Conteúdo das Pastas / Apostila
+Quando o usuário clica numa pasta, aparecem as anotações salvas dentro dela:
+
+Blocos de anotações com título, data e prévia do conteúdo
+
+Botões de ação em cada anotação:
+
+✏️ Editar
+
+💬 Ver Conversa Original (abre em nova aba do chat)
+
+🔄 Regerar com IA
+
+🎧 Ouvir (modo áudio)
+
+🎨 Transformar em imagem/fluxograma
+
+📤 Exportar (PDF, DOCX, PNG, etc.)
+
+Filtros avançados:
+
+📅 Filtrar por data
+
+📘 Tipo de conteúdo (Resumo, Fluxograma, Simulado, etc.)
+
+🌟 Favoritos
+
+🎯 Por habilidade BNCC
+
+Função “Selecionar várias” para aplicar ações em lote:
+
+Excluir
+
+Mover para pasta
+
+Exportar tudo como apostila completa
+
+3. 🛠️ Painel Lateral Direito (Oculto até o usuário clicar numa anotação)
+Mostra detalhes da anotação selecionada:
+
+💬 Conteúdo completo
+
+🔍 Palavras-chave detectadas
+
+🧠 Competências associadas (se aplicável)
+
+📝 Campo para adicionar observações pessoais
+
+🔁 Histórico de edições com opção de restaurar versões anteriores
+
+📎 Anexos adicionados pelo usuário (ex: PDFs, imagens, links)
+
+✨ Sugestões automáticas da IA com base na nota selecionada:
+
+“Gerar quiz a partir disso”
+
+“Revisar este conteúdo em 7 dias?”
+
+“Conectar com outra anotação?”
+
+🌟 FUNCIONALIDADES EXTRAS ULTRA SOFISTICADAS
+Busca Inteligente com IA (barra no topo do modal):
+
+O usuário pode digitar “Teorema de Pitágoras” e a IA traz todas as anotações relevantes, mesmo com nomes diferentes (graças à semântica).
+
+Pode buscar por data, tipo, disciplina, ou até “onde falei sobre limites em matemática?”.
+
+Gerar Apostila Completa Personalizada:
+
+Seleciona múltiplas anotações → botão “Gerar apostila” → IA monta apostila diagramada em PDF com sumário automático, capa, índice por disciplinas e habilidades BNCC.
+
+Agendamento Inteligente de Revisão:
+
+Botão: “Quero revisar isso depois”
+
+IA sugere melhores dias e horários com base no tempo de estudo
+
+Integra com Calendário do usuário (Google Calendar / Calendário interno)
+
+Compartilhar com Turma / Professor:
+
+Botão “Compartilhar”
+
+Pode ser por link, por email, ou por integração com grupos da plataforma
+
+Define nível de acesso (visualizar, comentar, editar)
+
+Estilo Visual do Modal:
+
+Fundo translúcido + blur (efeito vidro)
+
+Modal com cantos arredondados 2xl, sombra suave, animações com Framer Motion
+
+Divisões com abas deslizáveis, cards com hover inteligente
+
+Tema dark por padrão com switch para claro
+
+Responsivo para mobile: layout colapsado com botão flutuante
+
+🧑‍💻 TECNICAMENTE:
+Modal em React com Framer Motion
+
+Tailwind para responsividade e organização
+
+Dados armazenados com uso de IndexedDB ou cache local para experiência rápida + sincronização com backend
+
+Componentes:
+
+ModalApostila.tsx
+
+SidebarPastas.tsx
+
+ListaAnotacoes.tsx
+
+PainelAnotacaoDetalhe.tsx
+
+BarraBuscaSemantica.tsx
+
+ModalCriarApostila.tsx
+
+✅ RECAPITULANDO A EXPERIÊNCIA DO USUÁRIO:
+💡 O usuário clica no ícone da Apostila → Abre um modal elegante com pastas no lado esquerdo → Ele pode navegar, criar, editar ou agrupar anotações → Ao clicar em qualquer anotação, o painel direito se expande com todos os detalhes → Ele pode exportar, transformar, compartilhar ou agendar revisões → Ele sente que tem o controle total do próprio aprendizado.
