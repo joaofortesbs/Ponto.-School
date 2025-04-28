@@ -81,10 +81,8 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gradient-to-r from-[#0a1625]/70 to-[#182c4d]/70 text-gray-200 
                        rounded-lg border border-white/10 backdrop-blur-sm hover:bg-gradient-to-r 
                        hover:from-[#0D23A0]/40 hover:to-[#5B21BD]/40 hover:border-amber-500/30
-                       hover:text-white transition-all duration-300 flex-shrink-0 shadow-sm opacity-50 cursor-not-allowed"
-              onClick={() => {}}
-              disabled={true}
-              title="Em desenvolvimento"
+                       hover:text-white transition-all duration-300 flex-shrink-0 shadow-sm"
+              onClick={() => handleButtonClick('Biblioteca')}
             >
               <BookOpen size={14} className="text-amber-300" />
               <span>Biblioteca</span>
