@@ -139,11 +139,42 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
 
     while (tentativas < maxTentativas && !sucesso) {
       try {
-        const userId = localStorage.getItem('user_id');
+        // Tenta obter o ID do usuário de várias fontes
+        let userId = localStorage.getItem('user_id');
 
+        // Se não encontrar, tenta outras possíveis fontes
         if (!userId) {
-          throw new Error('ID de usuário não encontrado. Por favor, faça login novamente.');
+          // Tenta obter do sessionStorage como fallback
+          userId = sessionStorage.getItem('user_id');
+
+          // Se ainda não encontrou, tenta buscar do localStorage com outros formatos comuns
+          if (!userId) {
+            // Verifica se existe alguma chave no localStorage que contenha 'user' e 'id'
+            for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              if (key && (key.includes('user') || key.includes('userId') || key.includes('user_id'))) {
+                const potentialId = localStorage.getItem(key);
+                if (potentialId && potentialId.length > 5) {
+                  console.log('Encontrado possível ID alternativo:', key, potentialId);
+                  userId = potentialId;
+                  // Salva no formato correto para futuras consultas
+                  localStorage.setItem('user_id', userId);
+                  break;
+                }
+              }
+            }
+          }
         }
+
+        // Se ainda não encontrou o ID do usuário
+        if (!userId) {
+          console.error('ID de usuário não encontrado em nenhum local de armazenamento');
+          setError('ID de usuário não encontrado. Por favor, faça login novamente.');
+          return;
+        }
+
+        // Registra o ID encontrado para diagnóstico
+        console.log('Carregando anotações com ID de usuário:', userId);
 
         // Verificar se a pasta selecionada existe
         if (pastaSelecionada) {
@@ -223,14 +254,41 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
   const carregarPastas = async () => {
     try {
       setIsLoading(true);
-      const userId = localStorage.getItem('user_id');
+      // Tenta obter o ID do usuário de várias fontes
+      let userId = localStorage.getItem('user_id');
 
+      // Se não encontrar, tenta outras possíveis fontes
       if (!userId) {
-        console.error('ID de usuário não encontrado');
+        // Tenta obter do sessionStorage como fallback
+        userId = sessionStorage.getItem('user_id');
+
+        // Se ainda não encontrou, tenta buscar do localStorage com outros formatos comuns
+        if (!userId) {
+          // Verifica se existe alguma chave no localStorage que contenha 'user' e 'id'
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (key.includes('user') || key.includes('userId') || key.includes('user_id'))) {
+              const potentialId = localStorage.getItem(key);
+              if (potentialId && potentialId.length > 5) {
+                console.log('Encontrado possível ID alternativo:', key, potentialId);
+                userId = potentialId;
+                // Salva no formato correto para futuras consultas
+                localStorage.setItem('user_id', userId);
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      // Se ainda não encontrou o ID do usuário
+      if (!userId) {
+        console.error('ID de usuário não encontrado em nenhum local de armazenamento');
         setError('ID de usuário não encontrado. Por favor, faça login novamente.');
         return;
       }
 
+      console.log('Carregando pastas com ID de usuário:', userId);
       let tentativas = 0;
       let dados = null;
       let ultimoErro = null;
@@ -336,10 +394,39 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
     ][Math.floor(Math.random() * 8)];
 
     try {
-      const userId = localStorage.getItem('user_id');
+      // Tenta obter o ID do usuário de várias fontes
+      let userId = localStorage.getItem('user_id');
+
+      // Se não encontrar, tenta outras possíveis fontes
       if (!userId) {
-        throw new Error('ID de usuário não encontrado');
+        // Tenta obter do sessionStorage como fallback
+        userId = sessionStorage.getItem('user_id');
+
+        // Se ainda não encontrou, tenta buscar do localStorage com outros formatos comuns
+        if (!userId) {
+          // Verifica se existe alguma chave no localStorage que contenha 'user' e 'id'
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (key.includes('user') || key.includes('userId') || key.includes('user_id'))) {
+              const potentialId = localStorage.getItem(key);
+              if (potentialId && potentialId.length > 5) {
+                console.log('Encontrado possível ID alternativo:', key, potentialId);
+                userId = potentialId;
+                // Salva no formato correto para futuras consultas
+                localStorage.setItem('user_id', userId);
+                break;
+              }
+            }
+          }
+        }
       }
+
+      // Se ainda não encontrou o ID do usuário
+      if (!userId) {
+        console.error('ID de usuário não encontrado em nenhum local de armazenamento');
+        throw new Error('ID de usuário não encontrado. Por favor, faça login novamente.');
+      }
+
       const { data, error } = await supabase
         .from('apostila_pastas')
         .insert([

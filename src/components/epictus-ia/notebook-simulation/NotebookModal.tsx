@@ -360,12 +360,41 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
       while (!sucesso && tentativas < 3) { // Até 3 tentativas
         tentativas++;
         try {
-          const userId = localStorage.getItem('user_id') || '';
+          // Tenta obter o ID do usuário de várias fontes
+          let userId = localStorage.getItem('user_id');
+          
+          // Se não encontrar, tenta outras possíveis fontes
+          if (!userId) {
+            userId = sessionStorage.getItem('user_id');
+            
+            // Procura por outras chaves no localStorage que possam conter o ID
+            if (!userId) {
+              for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (key.includes('user') || key.includes('userId') || key.includes('user_id'))) {
+                  const potentialId = localStorage.getItem(key);
+                  if (potentialId && potentialId.length > 5) {
+                    console.log('Encontrado ID alternativo para exportação:', key, potentialId);
+                    userId = potentialId;
+                    // Salva no formato correto para futuras consultas
+                    localStorage.setItem('user_id', userId);
+                    break;
+                  }
+                }
+              }
+            }
+          }
+          
+          if (!userId) {
+            throw new Error('ID de usuário não encontrado. Por favor, faça login novamente antes de exportar.');
+          }
 
           // Verificar se os dados foram fornecidos corretamente
           if (!data.titulo || !data.conteudo || !data.pastaId) {
             throw new Error('Dados incompletos para exportação');
           }
+          
+          console.log('Exportando para Apostila com ID de usuário:', userId);
 
           console.log('Iniciando exportação para Apostila:', { 
             userId, 
