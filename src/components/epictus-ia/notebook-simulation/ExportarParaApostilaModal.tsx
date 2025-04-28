@@ -106,6 +106,33 @@ const ExportarParaApostilaModal: React.FC<ExportarParaApostilaModalProps> = ({
     try {
       setIsExporting(true);
 
+      // Criar elemento para animação de transferência
+      const animationContainer = document.createElement('div');
+      animationContainer.className = 'anotacao-transfer-animation';
+      document.body.appendChild(animationContainer);
+      
+      // Posição inicial (dialog)
+      const dialogRect = document.querySelector('.max-w-\\[600px\\]')?.getBoundingClientRect();
+      if (dialogRect) {
+        animationContainer.style.top = `${dialogRect.top + 100}px`;
+        animationContainer.style.left = `${dialogRect.left + 100}px`;
+        
+        // Adicionar ícone de anotação
+        const icon = document.createElement('div');
+        icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-text text-white"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>`;
+        animationContainer.appendChild(icon);
+        
+        // Iniciar animação
+        setTimeout(() => {
+          animationContainer.classList.add('animate-transfer');
+          
+          // Remover elemento após animação
+          setTimeout(() => {
+            document.body.removeChild(animationContainer);
+          }, 1000);
+        }, 100);
+      }
+
       // Validar e garantir que os dados estejam no formato correto
       const conteudoValidado = typeof anotacaoContent === 'string' ? anotacaoContent : '';
       const tituloValidado = titulo.trim().substring(0, 255); // Limitar tamanho do título
@@ -120,13 +147,34 @@ const ExportarParaApostilaModal: React.FC<ExportarParaApostilaModalProps> = ({
         modelo: modeloValidado
       });
 
+      // Verificar se o usuário autenticado está disponível
+      const user = await supabase.auth.getUser();
+      if (!user.data?.user) {
+        throw new Error("Usuário não autenticado");
+      }
+      
+      // Adicionar user_id explicitamente ao objeto de exportação
       await onExport({
         titulo: tituloValidado,
         conteudo: conteudoValidado,
         pastaId,
         tags: tagsValidadas,
-        modelo: modeloValidado
+        modelo: modeloValidado,
+        user_id: user.data.user.id // Garantir que o user_id seja incluído
       });
+
+      // Registrar ação no log de atividades (opcional)
+      try {
+        await supabase.from('user_activity_logs').insert({
+          user_id: user.data.user.id,
+          acao: 'exportou anotação',
+          timestamp: new Date().toISOString(),
+          detalhes: `Anotação "${tituloValidado}" exportada para a pasta "${pastas.find(p => p.id === pastaId)?.nome}"`,
+        });
+      } catch (logError) {
+        console.warn("Não foi possível registrar log:", logError);
+        // Não falhar a operação principal se o log falhar
+      }
 
       toast({
         title: "Sucesso!",
@@ -139,7 +187,7 @@ const ExportarParaApostilaModal: React.FC<ExportarParaApostilaModalProps> = ({
       console.error("Erro ao exportar anotação:", error);
       toast({
         title: "Erro",
-        description: "Não foi possível exportar a anotação. Tente novamente.",
+        description: error.message || "Não foi possível exportar a anotação. Tente novamente.",
         variant: "destructive"
       });
     } finally {

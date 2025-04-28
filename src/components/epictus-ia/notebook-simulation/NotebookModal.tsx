@@ -350,119 +350,155 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
     tags: string[];
     modelo: string;
   }) => {
-    try {
-      setIsExporting(true);
-      const userId = localStorage.getItem('user_id') || 'anonymous';
+    let sucesso = false;
+    let ultimoErro;
+    let tentativas = 0;
 
-      // Verificar se os dados foram fornecidos corretamente
-      if (!data.titulo || !data.conteudo || !data.pastaId) {
-        throw new Error('Dados incompletos para exportação');
-      }
-
-      console.log('Iniciando exportação para Apostila:', { 
-        userId, 
-        titulo: data.titulo,
-        pastaId: data.pastaId,
-        tamanhoConteudo: data.conteudo.length
-      });
-
-      // 1. Salvar a anotação no caderno_anotacoes
-      const { data: cadernoInsertData, error: cadernoError } = await supabase
-        .from('caderno_anotacoes')
-        .insert([
-          {
-            user_id: userId,
-            titulo: data.titulo,
-            conteudo: data.conteudo,
-            modelo_anotacao: data.modelo,
-            tags: data.tags,
-            status: 'exportado',
-            data_criacao: new Date().toISOString()
-          }
-        ])
-        .select('id')
-        .single();
-
-      if (cadernoError) {
-        console.error('Erro ao salvar no caderno_anotacoes:', cadernoError);
-        throw new Error(`Erro na tabela caderno_anotacoes: ${cadernoError.message}`);
-      }
-      
-      console.log('Anotação salva no caderno_anotacoes com ID:', cadernoInsertData?.id);
-
-      // 2. Salvar na apostila_anotacoes
-      const now = new Date().toISOString();
-      const { data: apostilaData, error: apostilaError } = await supabase
-        .from('apostila_anotacoes')
-        .insert([
-          {
-            user_id: userId,
-            pasta_id: data.pastaId,
-            titulo: data.titulo,
-            conteudo: data.conteudo,
-            modelo_anotacao: data.modelo,
-            tags: data.tags,
-            origem: 'caderno',
-            data_criacao: now,
-            data_exportacao: now
-          }
-        ])
-        .select()
-        .single();
-
-      if (apostilaError) {
-        console.error('Erro ao salvar na apostila_anotacoes:', apostilaError);
-        throw new Error(`Erro na tabela apostila_anotacoes: ${apostilaError.message}`);
-      }
-      
-      console.log('Anotação salva na apostila_anotacoes com ID:', apostilaData?.id);
-
-      // 3. Registrar a atividade no log
+    while (!sucesso && tentativas < 3) { // Até 3 tentativas
       try {
-        const { error: logError } = await supabase
-          .from('user_activity_logs')
+        setIsExporting(true);
+        const userId = localStorage.getItem('user_id') || 'anonymous';
+
+        // Verificar se os dados foram fornecidos corretamente
+        if (!data.titulo || !data.conteudo || !data.pastaId) {
+          throw new Error('Dados incompletos para exportação');
+        }
+
+        console.log('Iniciando exportação para Apostila:', { 
+          userId, 
+          titulo: data.titulo,
+          pastaId: data.pastaId,
+          tamanhoConteudo: data.conteudo.length
+        });
+
+        // 1. Salvar a anotação no caderno_anotacoes
+        const { data: cadernoInsertData, error: cadernoError } = await supabase
+          .from('caderno_anotacoes')
           .insert([
             {
               user_id: userId,
-              acao: 'exportou anotação',
-              anotacao_id: cadernoInsertData?.id,
-              detalhes: `Exportou para pasta ${data.pastaId}`
+              titulo: data.titulo,
+              conteudo: data.conteudo,
+              modelo_anotacao: data.modelo,
+              tags: data.tags,
+              status: 'exportado',
+              data_criacao: new Date().toISOString()
             }
-          ]);
+          ])
+          .select('id')
+          .single();
 
-        if (logError) {
-          console.warn('Erro ao registrar log de atividade:', logError);
-          // Não interromper por erro de log
+        if (cadernoError) {
+          console.error('Erro ao salvar no caderno_anotacoes:', cadernoError);
+          throw new Error(`Erro na tabela caderno_anotacoes: ${cadernoError.message}`);
         }
-      } catch (logError) {
-        console.warn('Exceção ao registrar log de atividade:', logError);
-        // Não interromper por erro de log
-      }
 
+        console.log('Anotação salva no caderno_anotacoes com ID:', cadernoInsertData?.id);
+        const result = cadernoInsertData;
+
+        // Se chegou aqui, a inserção no caderno foi bem-sucedida
+        sucesso = true;
+
+        // 2. Exportar para a apostila_anotacoes
+        const {
+          data: apostilaData,
+          error: apostilaError
+        } = await supabase
+          .from('apostila_anotacoes')
+          .insert([
+            {
+              user_id: userId,
+              pasta_id: data.pastaId,
+              titulo: data.titulo,
+              conteudo: data.conteudo,
+              modelo_anotacao: data.modelo,
+              tags: data.tags,
+              data_criacao: new Date().toISOString(),
+              data_exportacao: new Date().toISOString(),
+              origem: 'caderno'
+            }
+          ])
+          .select();
+
+        if (apostilaError) {
+          console.error('Erro ao exportar para Apostila:', apostilaError);
+
+          // Verificar se o erro está relacionado à permissão RLS
+          if (apostilaError.code === '42501') {
+            throw new Error('Erro de permissão: Verifique se você tem acesso para exportar anotações.');
+          } else {
+            throw new Error(`Erro ao exportar para Apostila: ${apostilaError.message}`);
+          }
+        }
+
+        // 3. Atualizar o status da anotação no caderno
+        if (result.data && result.data[0]) {
+          const { error: updateError } = await supabase
+            .from('caderno_anotacoes')
+            .update({ 
+              status: 'exportado',
+              data_atualizacao: new Date().toISOString()
+            })
+            .eq('id', result.data[0].id)
+            .eq('user_id', userId); // Garantir que atualize apenas as anotações do usuário
+
+          if (updateError) {
+            console.error('Erro ao atualizar status da anotação:', updateError);
+            // Não falhar o processo principal se apenas a atualização de status falhar
+          }
+        }
+
+        // 4. Registrar a atividade (opcional)
+        try {
+          await supabase.from('user_activity_logs').insert({
+            user_id: userId,
+            acao: 'exportou anotação',
+            anotacao_id: apostilaData?.[0]?.id,
+            timestamp: new Date().toISOString(),
+            detalhes: `Anotação "${data.titulo}" exportada para a Apostila Inteligente.`
+          });
+        } catch (logError) {
+          console.warn('Falha ao registrar log de atividade:', logError);
+          // Não falhar o processo principal por causa do log
+        }
+
+        console.log('Exportação concluída com sucesso');
+
+        toast({
+          title: "Exportado com sucesso!",
+          description: "Sua anotação foi exportada para a Apostila Inteligente.",
+        });
+
+      } catch (err) {
+        ultimoErro = err;
+        console.error(`Tentativa ${tentativas + 1} falhou:`, err);
+        // Esperar um tempo antes de tentar novamente (backoff exponencial)
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, tentativas) * 1000));
+        tentativas++;
+      }
+    }
+
+    if (!sucesso) {
+      // Se todas as tentativas falharam
+      console.error('Todas as tentativas de exportação falharam:', ultimoErro);
       toast({
-        title: "Exportação concluída!",
-        description: "Sua anotação foi exportada para a Apostila Inteligente com sucesso.",
+        title: "Erro ao exportar",
+        description: `Não foi possível exportar após várias tentativas: ${ultimoErro instanceof Error ? ultimoErro.message : 'Erro desconhecido'}`,
+        variant: "destructive"
       });
+    } else {
+        // Apenas fechar o modal após confirmar que tudo foi processado
+        setTimeout(() => {
+          setExportModalOpen(false);
+        }, 1000);
 
       // Atualizar as anotações no componente de Apostila se estiver aberto
       const apostilaModalEvent = new CustomEvent('apostila-anotacao-adicionada', {
         detail: { pastaId: data.pastaId }
       });
       window.dispatchEvent(apostilaModalEvent);
-
-      // Apenas fechar o modal após confirmar que tudo foi processado
-      setTimeout(() => {
-        setExportModalOpen(false);
-      }, 1000);
-
-    } catch (error) {
-      console.error('Erro ao exportar para Apostila:', error);
-      toast({
-        title: "Erro ao exportar",
-        description: `Não foi possível exportar: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
-        variant: "destructive"
-      });
-    } finally {
+    }
+    finally {
       setIsExporting(false);
     }
   };
@@ -734,7 +770,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
                     <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mr-2"></div>
                     <button className="text-sm hover:underline">Adicionar um resumo no final</button>
                   </li>
-                  <li className="flex items-center text-blue-600 dark:text-blue-300">
+                  <li className="flex itemscenter text-blue-600 dark:text-blue-300">
                     <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mr-2"></div>
                     <button className="text-sm hover:underline">Marcar como importante</button>
                   </li>
