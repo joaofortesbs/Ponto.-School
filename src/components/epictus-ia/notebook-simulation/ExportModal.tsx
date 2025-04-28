@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { X, BookOpen, Folder, Plus, Tag, Check } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
-import { supabase } from '@/utils/supabaseClient'; // Assuming supabase client is imported
+import { supabase } from '@/lib/supabase'; // Importing from correct path
 
 interface ExportModalProps {
   open: boolean;
