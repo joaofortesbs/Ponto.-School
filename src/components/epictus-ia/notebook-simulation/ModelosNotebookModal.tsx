@@ -2,8 +2,9 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
-import { BookOpen, Sparkles, AlignLeft, FileText, X } from 'lucide-react';
+import { BookOpen, Sparkles, AlignLeft, FileText, X, ChevronRight } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import { motion } from 'framer-motion';
 
 interface ModelosNotebookModalProps {
   open: boolean;
@@ -138,95 +139,90 @@ const ModelosNotebookModal: React.FC<ModelosNotebookModalProps> = ({
     });
   };
 
+  const cardVariants = {
+    initial: { opacity: 0, y: 10 },
+    animate: { opacity: 1, y: 0 },
+    hover: { scale: 1.02, boxShadow: "0 10px 30px rgba(0, 0, 0, 0.15)" }
+  };
+
+  const iconConfig = {
+    estudoCompleto: { icon: BookOpen, color: "text-amber-500 dark:text-amber-400", bgColor: "bg-amber-100 dark:bg-amber-800/30" },
+    mapaConceitual: { icon: Sparkles, color: "text-blue-500 dark:text-blue-400", bgColor: "bg-blue-100 dark:bg-blue-800/30" },
+    revisaoRapida: { icon: AlignLeft, color: "text-green-500 dark:text-green-400", bgColor: "bg-green-100 dark:bg-green-800/30" },
+    fichamento: { icon: FileText, color: "text-purple-500 dark:text-purple-400", bgColor: "bg-purple-100 dark:bg-purple-800/30" }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md p-0 bg-white dark:bg-[#121826] overflow-hidden flex flex-col rounded-xl border-0 shadow-2xl">
-        <DialogHeader className="px-6 py-4 border-b border-amber-100 dark:border-amber-900/30 bg-gradient-to-r from-amber-50/80 to-amber-100/50 dark:from-amber-900/20 dark:to-amber-800/10 backdrop-blur-sm sticky top-0 z-10 flex flex-row items-center justify-between">
+      <DialogContent className="max-w-md p-0 bg-gradient-to-br from-slate-900 to-slate-800 overflow-hidden flex flex-col rounded-xl border-0 shadow-2xl dark:shadow-amber-900/10">
+        <DialogHeader className="p-5 border-b border-amber-500/20 bg-gradient-to-r from-amber-600/20 to-amber-700/30 backdrop-blur-sm sticky top-0 z-10 flex flex-row items-center justify-between">
           <div className="flex items-center">
-            <div className="bg-amber-100 dark:bg-amber-700/30 rounded-full p-2 mr-3">
-              <BookOpen className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+            <div className="bg-amber-500/20 rounded-full p-2.5 mr-3 backdrop-blur-md">
+              <BookOpen className="h-5 w-5 text-amber-400" />
             </div>
-            <DialogTitle className="text-xl font-medium text-amber-800 dark:text-amber-300">
+            <DialogTitle className="text-xl font-semibold text-amber-300 tracking-tight">
               Modelos de Anotações
             </DialogTitle>
           </div>
           <Button 
             variant="ghost" 
-            size="sm" 
-            className="text-amber-700 hover:text-red-600 hover:bg-red-50 dark:text-amber-400 dark:hover:text-red-400 dark:hover:bg-red-900/20 transition-all duration-300"
+            size="icon" 
+            className="text-amber-400 hover:text-red-400 hover:bg-red-900/20 transition-all duration-300 rounded-full"
             onClick={() => onOpenChange(false)}
           >
             <X className="h-4 w-4" />
           </Button>
         </DialogHeader>
         
-        <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full justify-start text-left p-4 border-amber-200 hover:border-amber-400 transition-all duration-300 dark:border-amber-800/40 dark:hover:border-amber-700"
-            onClick={() => handleSelectTemplate('estudoCompleto')}
-          >
-            <BookOpen className="h-5 w-5 mr-3 text-amber-600 dark:text-amber-400" />
-            <div>
-              <p className="font-medium text-amber-800 dark:text-amber-300">Estudo Completo</p>
-              <p className="text-xs text-amber-600/80 dark:text-amber-400/70 mt-1">
-                Conteúdo completo e detalhado para aprendizado profundo
-              </p>
-            </div>
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full justify-start text-left p-4 border-amber-200 hover:border-amber-400 transition-all duration-300 dark:border-amber-800/40 dark:hover:border-amber-700"
-            onClick={() => handleSelectTemplate('mapaConceitual')}
-          >
-            <Sparkles className="h-5 w-5 mr-3 text-blue-500 dark:text-blue-400" />
-            <div>
-              <p className="font-medium text-amber-800 dark:text-amber-300">Mapa Conceitual</p>
-              <p className="text-xs text-amber-600/80 dark:text-amber-400/70 mt-1">
-                Visualização hierárquica de conceitos e suas relações
-              </p>
-            </div>
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full justify-start text-left p-4 border-amber-200 hover:border-amber-400 transition-all duration-300 dark:border-amber-800/40 dark:hover:border-amber-700"
-            onClick={() => handleSelectTemplate('revisaoRapida')}
-          >
-            <AlignLeft className="h-5 w-5 mr-3 text-green-500 dark:text-green-400" />
-            <div>
-              <p className="font-medium text-amber-800 dark:text-amber-300">Revisão Rápida</p>
-              <p className="text-xs text-amber-600/80 dark:text-amber-400/70 mt-1">
-                Resumo direto para revisão antes de provas e simulados
-              </p>
-            </div>
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full justify-start text-left p-4 border-amber-200 hover:border-amber-400 transition-all duration-300 dark:border-amber-800/40 dark:hover:border-amber-700"
-            onClick={() => handleSelectTemplate('fichamento')}
-          >
-            <FileText className="h-5 w-5 mr-3 text-purple-500 dark:text-purple-400" />
-            <div>
-              <p className="font-medium text-amber-800 dark:text-amber-300">Fichamento</p>
-              <p className="text-xs text-amber-600/80 dark:text-amber-400/70 mt-1">
-                Organiza citações, interpretações e análises críticas de textos
-              </p>
-            </div>
-          </Button>
+        <div className="p-6 space-y-4 max-h-[65vh] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+          {(Object.keys(notebookTemplates) as Array<keyof typeof notebookTemplates>).map((key, index) => {
+            const IconComponent = iconConfig[key].icon;
+            return (
+              <motion.div
+                key={key}
+                initial="initial"
+                animate="animate"
+                whileHover="hover"
+                variants={cardVariants}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+              >
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className={`group w-full justify-between text-left p-5 border border-transparent bg-slate-800/80 hover:bg-slate-700/80 hover:border-${iconConfig[key].color.split('-')[1]}-500/30 backdrop-blur-sm transition-all duration-300 rounded-xl relative overflow-hidden`}
+                  onClick={() => handleSelectTemplate(key)}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-slate-700/40 to-slate-800/90 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="flex items-start z-10 relative">
+                    <div className={`${iconConfig[key].bgColor} rounded-lg p-3 mr-4`}>
+                      <IconComponent className={`h-6 w-6 ${iconConfig[key].color}`} />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-white group-hover:text-amber-300 transition-colors duration-300">
+                        {key === 'estudoCompleto' ? 'Estudo Completo' : 
+                         key === 'mapaConceitual' ? 'Mapa Conceitual' : 
+                         key === 'revisaoRapida' ? 'Revisão Rápida' : 'Fichamento'}
+                      </p>
+                      <p className="text-sm text-gray-400 mt-1 pr-6 line-clamp-2">
+                        {key === 'estudoCompleto' ? 'Conteúdo completo e detalhado para aprendizado profundo' : 
+                         key === 'mapaConceitual' ? 'Visualização hierárquica de conceitos e suas relações' : 
+                         key === 'revisaoRapida' ? 'Resumo direto para revisão antes de provas e simulados' : 
+                         'Organiza citações, interpretações e análises críticas de textos'}
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-gray-500 group-hover:text-amber-400 shrink-0 transition-all duration-300 group-hover:translate-x-1" />
+                </Button>
+              </motion.div>
+            );
+          })}
         </div>
         
-        <div className="p-4 border-t border-amber-100 dark:border-amber-900/30 bg-gradient-to-r from-amber-50/80 to-amber-100/50 dark:from-amber-900/20 dark:to-amber-800/10 flex justify-end">
+        <div className="p-4 border-t border-amber-500/20 bg-gradient-to-r from-amber-600/10 to-amber-700/20 flex justify-end">
           <Button 
             variant="outline" 
             size="sm"
-            className="border-amber-200 text-amber-700 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-400 dark:hover:bg-amber-900/20 transition-all duration-300"
+            className="border-amber-700/30 bg-transparent text-amber-400 hover:bg-amber-500/10 hover:text-amber-300 transition-all duration-300"
             onClick={() => onOpenChange(false)}
           >
             Cancelar
