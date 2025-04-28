@@ -92,8 +92,9 @@ const FerramentasModal: React.FC<FerramentasModalProps> = ({
         handleBasicTransformation();
       }
     } else {
-      // Se o conteúdo do template não for reconhecido, só usar como está
-      setNotebookContent(templateContent);
+      // Se o conteúdo do template não for reconhecido, limpar marcações antes de usar
+      let cleanedContent = templateContent.replace(/<[^>]*>|notebook-[a-z-]+">|<\/[a-z]+>/g, '');
+      setNotebookContent(cleanedContent);
       setNotebookModalOpen(true);
     }
     

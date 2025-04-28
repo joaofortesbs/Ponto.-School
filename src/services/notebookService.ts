@@ -5,8 +5,11 @@ export const formatTextForNotebookLines = (text: string): string => {
   // Estimar comprimento médio ideal por linha (aproximadamente 55-60 caracteres)
   const targetLineLength = 58;
   
+  // Remover quaisquer tags HTML indesejadas que possam ter sido incluídas
+  let cleanedText = text.replace(/<[^>]*>|notebook-[a-z-]+">|<\/[a-z]+>/g, '');
+  
   // Dividir o texto em parágrafos
-  const paragraphs = text.split(/\n\s*\n/);
+  const paragraphs = cleanedText.split(/\n\s*\n/);
   
   // Processar cada parágrafo
   const formattedParagraphs = paragraphs.map(paragraph => {
@@ -338,12 +341,15 @@ export const applyContentToTemplate = async (content: string, templateType: stri
     if (!content || !templateType) {
       throw new Error('Conteúdo ou tipo de template não fornecidos');
     }
+    
+    // Limpar o conteúdo de possíveis tags HTML ou marcações internas
+    const cleanContent = content.replace(/<[^>]*>|notebook-[a-z-]+">|<\/[a-z]+>/g, '');
 
     // Extrair informações principais
-    const title = extractTitleFromContent(content);
-    const keyPoints = extractKeyPoints(content);
-    const sentences = content.split(/[.!?]/).filter(s => s.trim().length > 10);
-    const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+    const title = extractTitleFromContent(cleanContent);
+    const keyPoints = extractKeyPoints(cleanContent);
+    const sentences = cleanContent.split(/[.!?]/).filter(s => s.trim().length > 10);
+    const paragraphs = cleanContent.split(/\n\s*\n/).filter(p => p.trim().length > 0);
 
     // Selecionar o template base
     let template = notebookTemplates[templateType as keyof typeof notebookTemplates] || '';
@@ -1007,8 +1013,14 @@ const extractConnections = (content: string, keyPoints: string[]): string[] => {
 // to transform content intelligently
 export const transformContentWithAI = async (content: string): Promise<string> => {
   try {
+    // Limpar o conteúdo de possíveis tags HTML ou marcações indesejadas
+    const cleanContent = content.replace(/<[^>]*>|notebook-[a-z-]+">|<\/[a-z]+>/g, '');
+    
     // Primeiro converte para o formato básico do caderno
-    let transformedContent = await convertToNotebookFormat(content);
+    let transformedContent = await convertToNotebookFormat(cleanContent);
+    
+    // Verificar novamente se não há marcações HTML expostas
+    transformedContent = transformedContent.replace(/<[^>]*>|notebook-[a-z-]+">|<\/[a-z]+>/g, '');
     
     // Agora aplicar as regras de formatação para linhas do caderno
     transformedContent = formatTextForNotebookLines(transformedContent);
