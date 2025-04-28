@@ -1,0 +1,87 @@
+6. Melhorar Mensagens de Erro e Feedback Visual
+Mensagens de erro:
+Certifique-se de que as mensagens de erro são informativas:
+Quando não há anotações: "Nenhuma anotação encontrada. Exporte anotações do Caderno para começar."
+Quando há erro de permissão: "Permissão negada. Verifique suas credenciais e tente novamente."
+Quando a tabela apostila_pastas não existe: "Tabela de pastas não encontrada. Entre em contato com o suporte para corrigir o problema."
+Notificações de sucesso:
+Use uma biblioteca de notificações do sistema (ex.: react-toastify ) para exibir mensagens:
+JavaScript
+
+Copiar
+function showNotification(message, options = {}) {
+  toast(message, {
+    type: options.type || 'info',
+    position: 'top-right',
+    autoClose: 3000,
+    ...options,
+  });
+}
+
+function showError(message) {
+  showNotification(message, { type: 'error' });
+}
+
+function showMessage(message) {
+  showNotification(message, { type: 'info' });
+}
+Feedback Visual:
+Adicione um selo "Novo!" para anotações recentes:
+JavaScript
+
+Copiar
+function isNewAnotacao(dataExportacao) {
+  const now = new Date();
+  const exportDate = new Date(dataExportacao);
+  const diffHours = (now - exportDate) / (1000 * 60 * 60);
+  return diffHours < 24;
+}
+Nenhum componente de exibição:
+jsx
+
+Copiar
+{isNewAnotacao(anotacao.data_exportacao) && (
+  <span className="badge badge-new">Novo!</span>
+)}
+Validação:
+
+Confirme que mensagens de erro e sucesso são exibidas corretamente.
+Verifique se o selo "Novo!" aparece para anotações recentes.
+7. Testes Finais
+Teste 1: Criação de Pasta e Anotação
+Crie uma pasta em apostila_pastas e uma anotação em apostila_anotacoes associada a essa pasta. Confirme que o Modal da Apostila exibe a anotação com o nome da pasta.
+Teste 2: Anotações sem Pasta
+Crie uma anotação com pasta_id: null e confirme que ela é exibida sem erros.
+Teste 3: Atualização em Tempo Real
+Exporte uma nova anotação e confirme que o Modal da Apostila é atualizado automaticamente, com o nome da pasta (se aplicável).
+Teste 4: Tratamento de Erros
+Simule cenários de erro (ex.: desconectar a internet, usar um user_id inválido) e confirmar que mensagens são exibidas.
+Teste 5: RLS
+Tente acessar anotações/pastas de outro usuário e confirme que o RLS bloqueia o acesso.
+🎨 Extras para Melhorar a Experiência
+
+Carregando Estado:
+Enquanto as anotações estão sendo carregadas, exiba um spinner ou esqueleto carregando no Modal da Apostila:
+jsx
+
+Copiar
+{isLoading ? (
+  <div className="loading-spinner">Carregando...</div>
+) : (
+  renderAnotacoes()
+)}
+Botão de Detalhes do Erro:
+Adicione um botão "Ver Detalhes" ao lado da mensagem de erro, visível apenas no ambiente de desenvolvimento:
+jsx
+
+Copiar
+{process.env.NODE_ENV === 'development' && error && (
+  <button onClick={() => alert(error.message)}>Ver Detalhes</button>
+)}
+✅ Resultado Final Esperado
+
+A tabela apostila_pastas é criada no esquema público do Supabase, com RLS configurado.
+O Modal da Apostila Inteligente exibe todas as anotações exportadas, com o nome da pasta associada (se houver).
+Atualizações em tempo real funcionam corretamente, com notificações visuais (selo "Novo!" e notificações brinde).
+Erros são tratados de forma robusta, com mensagens úteis e logs para diagnóstico.
+Se precisar de mais informações ou registros para implementar essas correções, posso fornecer exemplos adicionais! 🚀✨

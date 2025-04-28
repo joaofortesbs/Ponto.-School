@@ -1,0 +1,85 @@
+Consulta Atual (Problemática):
+
+ A consulta atual no Modal da Apostila Inteligente é algo como:
+
+JavaScript
+
+Copiar
+const { data: anotacoes, error } = await supabase
+  .from('apostila_anotacoes')
+  .select(`
+    *,
+    apostila_pastas!left (
+      id,
+      nome
+    )
+  `)
+  .eq('user_id', auth.currentUser.uid)
+  .order('data_exportacao', { ascending: false });
+Essa consulta falha porque a tabela apostila_pastas não existe no esquema public .
+
+🔍 Causas Identificadas do Erro
+
+Tabela apostila_pastas Não Existe:
+A tabela apostila_pastas não foi criada no esquema público do Supabase, ou foi criada com um nome diferente (ex.: apostila_pasta ou pastas ).
+Consulta Referenciando Tabela Inexistente:
+A consulta tenta acessar apostila_pastas como parte de um LEFT JOIN implícito, mas como a tabela não existe, o Supabase retorna o erro.
+✅ Objetivo e Resultado Esperado
+
+Crie a tabela apostila_pastas no esquema público do Supabase, com a estrutura correta e políticas de RLS ajustadas.
+Ajustar a tabela apostila_anotacoes para incluir uma chave estrangeira que referencia apostila_pastas.id .
+Atualizar o esquema cache do Supabase para considerar a nova tabela.
+Ajustar a consulta para carregar as anotações, tratando casos em que pasta_id é nulo ou a tabela apostila_pastas está vazia.
+Garanta que o Modal da Apostila Inteligente exiba as anotações corretamente, com o nome da pasta associada (se houver).
+tratamento de erros robusto, com adicionar mensagens claras para o usuário.
+Garanta que o Supabase Realtime continue funcionando para atualizações automáticas no Modal da Apostila.
+🛠️ Instruções para Correção
+
+1. Criar a Tabela apostila_pastas no Supabase
+Precisamos criar a tabela apostila_pastas no esquema público com a estrutura correta e configurar as políticas de RLS para garantir a segurança dos dados.
+
+Passo 1: Acesse o painel do Supabase e vá para o SQL Editor .
+Passo 2: Execute o seguinte comando para criar a tabela:
+sql
+
+Copiar
+CREATE TABLE public.apostila_pastas (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL,
+  nome TEXT NOT NULL,
+  descricao TEXT,
+  data_criacao TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+);
+Passo 3: Ative o RLS e configure as políticas para garantir que apenas o usuário dono da pasta possa acessá-la:
+sql
+
+Copiar
+ALTER TABLE apostila_pastas ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Usuários só podem ver suas pastas" ON apostila_pastas
+FOR SELECT
+USING (auth.uid() = user_id);
+
+CREATE POLICY "Usuários podem inserir suas pastas" ON apostila_pastas
+FOR INSERT
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Usuários podem atualizar suas pastas" ON apostila_pastas
+FOR UPDATE
+USING (auth.uid() = user_id);
+Validação:
+
+Confirme no Table Editor que a tabela apostila_pastas foi criada no esquema public .
+Insira uma pasta de teste para verificar:
+sql
+
+Copiar
+INSERT INTO apostila_pastas (user_id, nome, descricao)
+VALUES ('<seu_user_id>', 'Pasta de Teste', 'Descrição de teste');
+Execute uma consulta para confirmar:
+sql
+
+Copiar
+SELECT * FROM apostila_pastas WHERE user_id = '<seu_user_id>';
+-se de que os dados são retornados corretamente.

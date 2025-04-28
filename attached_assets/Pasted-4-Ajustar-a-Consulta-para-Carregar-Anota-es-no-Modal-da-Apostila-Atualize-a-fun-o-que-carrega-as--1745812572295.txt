@@ -1,0 +1,150 @@
+4. Ajustar a Consulta para Carregar Anotações no Modal da Apostila
+Atualize a função que carrega as anotações no Modal da Apostila Inteligente para lidar corretamente com a nova tabela apostila_pastas , tratando casos em que pasta_id é null ou a tabela está vazia.
+
+Função Atualizada:
+Substitui a função carregarAnotacoesApostila pela seguinte:
+JavaScript
+
+Copiar
+async function carregarAnotacoesApostila() {
+  try {
+    // 1. Buscar anotações da Apostila com um LEFT JOIN implícito
+    const { data: anotacoes, error } = await supabase
+      .from('apostila_anotacoes')
+      .select(`
+        id,
+        user_id,
+        pasta_id,
+        titulo,
+        conteudo,
+        modelo_anotacao,
+        tags,
+        data_criacao,
+        data_exportacao,
+        origem,
+        apostila_pastas!left (
+          id,
+          nome
+        )
+      `)
+      .eq('user_id', auth.currentUser.uid)
+      .order('data_exportacao', { ascending: false });
+
+    if (error) {
+      console.error('Erro ao carregar anotações:', error.message);
+      if (error.message.includes('relation "public.apostila_pastas" does not exist')) {
+        showError('Tabela de pastas não encontrada. Contate o suporte para corrigir o problema.');
+      } else if (error.code === 'PGRST116') {
+        showMessage('Nenhuma anotação encontrada. Exporte anotações do Caderno para começar.');
+      } else if (error.code === '42501') {
+        showError('Permissão negada. Verifique suas credenciais e tente novamente.');
+      } else {
+        showError(`Erro ao carregar anotações: ${error.message}`);
+      }
+      return [];
+    }
+
+    if (!anotacoes || anotacoes.length === 0) {
+      showMessage('Nenhuma anotação encontrada. Exporte anotações do Caderno para começar.');
+      return [];
+    }
+
+    // 2. Ajustar o formato dos dados, garantindo que apostila_pastas seja null se não houver pasta
+    const anotacoesFormatadas = anotacoes.map(anotacao => ({
+      ...anotacao,
+      apostila_pastas: anotacao.apostila_pastas || null,
+    }));
+
+    // 3. Atualizar o estado do Modal com as anotações
+    updateApostilaModal(anotacoesFormatadas);
+    return anotacoesFormatadas;
+
+  } catch (err) {
+    console.error('Erro inesperado ao carregar anotações:', err.message);
+    showError('Erro inesperado ao carregar anotações. Tente novamente.');
+    return [];
+  }
+}
+Retry para Falhas Temporárias:
+Para lidar com possíveis falhas de conexão ou cache de esquema ainda não atualizado, implemente um mecanismo de retry:
+JavaScript
+
+Copiar
+async function carregarAnotacoesApostilaComRetry(retries = 3, delay = 1000) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const anotacoes = await carregarAnotacoesApostila();
+      return anotacoes;
+    } catch (err) {
+      if (i === retries - 1) {
+        console.error('Falha após todas as tentativas:', err.message);
+        showError('Não foi possível carregar as anotações. Verifique sua conexão e tente novamente.');
+        return [];
+      }
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+}
+Validação:
+
+Teste a função carregarAnotacoesApostila e confirme que as anotações são exibidas no Modal da Apostila, incluindo o nome da pasta (se pasta_id não for null ).
+Verifique se a mensagem "Nenhuma anotação encontrada" aparece corretamente quando não há anotações.
+Teste com uma anotação sem pasta ( pasta_id: null ) e confirme que a consulta não falha.
+5. Atualizar o Supabase Realtime para Lidar com a Nova Tabela
+O Supabase Realtime está sendo usado para atualizar o Modal da Apostila automaticamente. Atualize o ouvinte para garantir que ele também lida com a relação com apostila_pastas .
+
+Listener Atualizado:
+Ajuste a função configurarRealtimeApostila para incluir a relação com apostila_pastas :
+JavaScript
+
+Copiar
+function configurarRealtimeApostila() {
+  const channel = supabase
+    .channel('apostila_anotacoes_changes')
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'apostila_anotacoes',
+        filter: `user_id=eq.${auth.currentUser.uid}`,
+      },
+      async (payload) => {
+        console.log('Nova anotação adicionada:', payload.new);
+
+        // Buscar detalhes da pasta associada, se houver
+        let pasta = null;
+        if (payload.new.pasta_id) {
+          const { data, error } = await supabase
+            .from('apostila_pastas')
+            .select('id, nome')
+            .eq('id', payload.new.pasta_id)
+            .eq('user_id', auth.currentUser.uid)
+            .single();
+
+          if (error) {
+            console.error('Erro ao buscar pasta:', error.message);
+          } else {
+            pasta = data;
+          }
+        }
+
+        // Adicionar a nova anotação ao estado do Modal
+        const novaAnotacao = { ...payload.new, apostila_pastas: pasta };
+        updateApostilaModalWithNewAnotacao(novaAnotacao);
+
+        // Notificar o usuário
+        showNotification(`Nova anotação "${novaAnotacao.titulo}" adicionada!`, { type: 'success' });
+      }
+    )
+    .subscribe();
+
+  // Limpar o canal ao fechar o Modal
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+Validação:
+
+Exporte uma anotação do Caderno e confirme que o Modal da Apostila é atualizado automaticamente, incluindo o nome da pasta (se aplicável).
+Teste com uma anotação sem pasta ( pasta_id: null ) e confirme que o listener não falha.
