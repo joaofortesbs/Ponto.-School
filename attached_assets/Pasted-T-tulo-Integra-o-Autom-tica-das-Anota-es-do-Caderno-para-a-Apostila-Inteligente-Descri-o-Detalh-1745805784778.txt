@@ -1,0 +1,58 @@
+Título:
+Integração Automática das Anotações do Caderno para a Apostila Inteligente
+
+Descrição Detalhada:
+
+Sempre que o usuário finalizar uma anotação dentro do Modal de Anotações (Caderno), adicione um botão ou uma opção chamada "Salvar na Apostila Inteligente".
+
+Ao clicar nessa opção, a anotação deve ser:
+
+Copiada integralmente (incluindo formatações, modelo de anotação, tags, título e conteúdo).
+
+Salva automaticamente dentro do Modal da Apostila Inteligente, dentro de uma pasta padrão (ex: "Anotações Salvas") ou em uma pasta que o usuário escolher no momento da exportação.
+
+A anotação salva na Apostila deve ser totalmente editável pelo usuário posteriormente (abrindo a anotação pelo Modal da Apostila Inteligente e permitindo edição do título, texto, formatação, tags, etc).
+
+A conexão entre Caderno ➔ Apostila precisa:
+
+Manter o modelo de anotação original (por exemplo: Estudo Completo, Revisão Rápida, Mapa Mental).
+
+Manter as tags atribuídas (se houver).
+
+Incluir automaticamente a data de criação e data de exportação.
+
+Sincronia Visual:
+Ao abrir uma anotação salva no Modal da Apostila Inteligente, o layout de exibição deve respeitar o mesmo formato do Caderno, porém adaptado para visualização Premium, mais espaçada e sofisticada.
+
+🧠 Fluxo de funcionamento sugerido:
+Usuário escreve no Caderno.
+
+Quando terminar, vê a opção "Salvar na Apostila Inteligente".
+
+Modal aparece perguntando:
+
+Selecionar Pasta (ou criar nova pasta).
+
+Adicionar ou editar o Título da Anotação.
+
+Adicionar Tags (opcional).
+
+Clicando em "Salvar", a anotação é copiada e criada dentro da Apostila Inteligente.
+
+O usuário agora pode visualizar, editar, reorganizar e compilar suas anotações na Apostila.
+
+🎨 Extras para deixar ainda melhor:
+Quando o usuário salvar, pode aparecer uma animação breve tipo um “voo do caderno para a apostila” (efeito visual de transferência).
+
+Marcar as anotações recém-importadas com um selo de “Novo!” dentro da Apostila.
+
+Sistema de notificações internas (ex: "Anotação salva na pasta X com sucesso!").
+
+✅ Resultado desejado:
+O usuário terá uma experiência fluida, organizada e intuitiva, conseguindo:
+
+Criar anotações rápidas no Caderno.
+
+Exportar para a Apostila Inteligente sem retrabalho.
+
+Continuar editando e construindo sua apostila de estudos de forma contínua e elegante.
