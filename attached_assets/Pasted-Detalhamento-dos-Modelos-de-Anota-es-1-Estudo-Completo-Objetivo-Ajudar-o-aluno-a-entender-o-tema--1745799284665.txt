@@ -1,0 +1,114 @@
+Detalhamento dos Modelos de Anotações
+1. Estudo Completo
+Objetivo:
+Ajudar o aluno a entender o tema em profundidade, como uma aula completa escrita no caderno.
+
+Características:
+
+Introdução clara: contextualiza o tema para o aluno entender a importância do assunto.
+
+Desenvolvimento detalhado: explica o conteúdo de maneira progressiva, com exemplos práticos.
+
+Teoria + prática: alterna entre teoria e exemplos reais.
+
+Conclusão ou resumo: encerra retomando os pontos mais importantes.
+
+Organização:
+
+Títulos grandes e bem destacados.
+
+Subtítulos médios para dividir partes.
+
+Parágrafos curtos e alinhados com as linhas.
+
+Sugestão de ilustrações: diagramas, esquemas explicativos ou fluxogramas pequenos.
+
+Ideal para: Estudar para provas, entender matérias novas e montar material de revisão completo.
+
+2. Mapa Conceitual
+Objetivo:
+Visualizar a matéria de forma rápida, enxuta e conectada, focando em relações entre conceitos.
+
+Características:
+
+Tópicos e palavras-chave apenas (sem parágrafos longos).
+
+Conexões visuais: setas, ramificações, divisões.
+
+Hierarquia de ideias:
+
+Conceito central no topo ou no meio.
+
+Conceitos secundários em volta, ligados por setas.
+
+Organização:
+
+Sem textos corridos.
+
+Diagrama limpo e bem separado.
+
+Alinhado certinho dentro das linhas (ou caixas desenhadas).
+
+Sugestão de ilustrações: ícones pequenos, esquemas simples, gráficos de ligação.
+
+Ideal para: Memorizar temas, entender relações entre ideias, revisão rápida.
+
+3. Revisão Rápida
+Objetivo:
+Ter acesso apenas ao essencial para revisar rapidamente antes de provas ou simulados.
+
+Características:
+
+Resumos diretos: só pontos-chave, fórmulas, definições e conceitos centrais.
+
+Frases curtas: no máximo 2-3 linhas por ideia.
+
+Listas com marcadores: ✔️ ➔ ➔ ➔
+
+Sem textos longos: foco total na objetividade.
+
+Organização:
+
+Cada ideia respeitando as linhas.
+
+Espaçamento leve entre pontos para não poluir a leitura.
+
+Sugestão de ilustrações: tabelas-resumo, esquemas de fórmulas.
+
+Ideal para: Revisar no dia anterior à prova ou dar uma última passada no conteúdo.
+
+4. Fichamento
+Objetivo:
+Registrar as ideias principais de um texto, livro ou aula de forma crítica e resumida.
+
+Características:
+
+Dividido em três partes:
+
+Citação/trecho importante: (colocar entre aspas ou destacado).
+
+Resumo do trecho: interpretar o que foi dito com suas próprias palavras.
+
+Reflexão crítica: análise ou comentário pessoal sobre a importância daquele trecho.
+
+Organização:
+
+Títulos e subtítulos para cada parte.
+
+Espaçamento maior entre trechos para não confundir.
+
+Sugestão de ilustrações: ícones de citação, balões de fala, marcações de destaque.
+
+Ideal para: Trabalhos acadêmicos, resumos de livros, análises críticas.
+
+🛠️ Como aplicar dentro da IA:
+➔ Antes de gerar o conteúdo, a IA deve identificar qual modelo foi selecionado.
+➔ Aplicar automaticamente a estrutura e estilo descritos acima, respeitando:
+
+Tamanho dos títulos e espaçamento.
+
+Alinhamento com as linhas (sem texto cortado).
+
+Sugestão de ilustrações quando relevante.
+
+Organização visual impecável para cada caso.
