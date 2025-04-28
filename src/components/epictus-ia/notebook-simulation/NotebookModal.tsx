@@ -418,19 +418,24 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
       console.log('Anotação salva na apostila_anotacoes com ID:', apostilaData?.id);
 
       // 3. Registrar a atividade no log
-      const { error: logError } = await supabase
-        .from('user_activity_logs')
-        .insert([
-          {
-            user_id: userId,
-            acao: 'exportou anotação',
-            anotacao_id: cadernoInsertData?.id,
-            detalhes: `Exportou para pasta ${data.pastaId}`
-          }
-        ]);
+      try {
+        const { error: logError } = await supabase
+          .from('user_activity_logs')
+          .insert([
+            {
+              user_id: userId,
+              acao: 'exportou anotação',
+              anotacao_id: cadernoInsertData?.id,
+              detalhes: `Exportou para pasta ${data.pastaId}`
+            }
+          ]);
 
-      if (logError) {
-        console.warn('Erro ao registrar log de atividade:', logError);
+        if (logError) {
+          console.warn('Erro ao registrar log de atividade:', logError);
+          // Não interromper por erro de log
+        }
+      } catch (logError) {
+        console.warn('Exceção ao registrar log de atividade:', logError);
         // Não interromper por erro de log
       }
 
@@ -438,6 +443,12 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
         title: "Exportação concluída!",
         description: "Sua anotação foi exportada para a Apostila Inteligente com sucesso.",
       });
+
+      // Atualizar as anotações no componente de Apostila se estiver aberto
+      const apostilaModalEvent = new CustomEvent('apostila-anotacao-adicionada', {
+        detail: { pastaId: data.pastaId }
+      });
+      window.dispatchEvent(apostilaModalEvent);
 
       // Apenas fechar o modal após confirmar que tudo foi processado
       setTimeout(() => {

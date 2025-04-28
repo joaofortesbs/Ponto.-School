@@ -173,26 +173,56 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
 
         // Converter dados do banco para o formato da interface Anotacao
         const anotacoesFromDB = data.map(anotacao => {
-          // Criar um resumo do conteúdo para exibição
-          const resumo = anotacao.conteudo.length > 150 
-            ? anotacao.conteudo.substring(0, 150) + '...' 
-            : anotacao.conteudo;
+          try {
+            // Verificar se o conteúdo existe e é uma string válida
+            const conteudoSeguro = typeof anotacao.conteudo === 'string' ? anotacao.conteudo : '';
+            
+            // Criar um resumo do conteúdo para exibição, com verificação de segurança
+            const resumo = conteudoSeguro.length > 150 
+              ? conteudoSeguro.substring(0, 150) + '...' 
+              : conteudoSeguro;
 
-          return {
-            id: anotacao.id,
-            titulo: anotacao.titulo || "Anotação sem título",
-            conteudo: anotacao.conteudo || "",
-            resumo: resumo,
-            pastaId: anotacao.pasta_id,
-            data: new Date(anotacao.data_criacao),
-            modelo: anotacao.modelo_anotacao || "Estudo Completo",
-            favorito: anotacao.favorito || false,
-            ultimaEdicao: anotacao.data_exportacao ? new Date(anotacao.data_exportacao) : new Date(anotacao.data_criacao),
-            tags: anotacao.tags || [],
-            visualizacoes: anotacao.visualizacoes || 0,
-            origem: anotacao.origem || 'criado_na_apostila',
-            user_id: anotacao.user_id
-          };
+            // Garantir que as datas são válidas
+            const dataCriacao = anotacao.data_criacao ? new Date(anotacao.data_criacao) : new Date();
+            const dataExportacao = anotacao.data_exportacao ? new Date(anotacao.data_exportacao) : dataCriacao;
+            
+            // Verificar se tags é um array, caso contrário, criar array vazio
+            const tags = Array.isArray(anotacao.tags) ? anotacao.tags : [];
+
+            return {
+              id: anotacao.id,
+              titulo: anotacao.titulo || "Anotação sem título",
+              conteudo: conteudoSeguro,
+              resumo: resumo,
+              pastaId: anotacao.pasta_id || '',
+              data: dataCriacao,
+              modelo: anotacao.modelo_anotacao || "Estudo Completo",
+              favorito: Boolean(anotacao.favorito),
+              ultimaEdicao: dataExportacao,
+              tags: tags,
+              visualizacoes: Number(anotacao.visualizacoes) || 0,
+              origem: anotacao.origem || 'criado_na_apostila',
+              user_id: anotacao.user_id
+            };
+          } catch (itemError) {
+            console.error('Erro ao processar anotação individual:', itemError, anotacao);
+            // Retornar um objeto com valores padrão para não quebrar o mapeamento
+            return {
+              id: anotacao.id || 'erro-id',
+              titulo: "Anotação com erro",
+              conteudo: "Erro ao carregar conteúdo",
+              resumo: "Erro ao carregar conteúdo",
+              pastaId: '',
+              data: new Date(),
+              modelo: "Estudo Completo",
+              favorito: false,
+              ultimaEdicao: new Date(),
+              tags: [],
+              visualizacoes: 0,
+              origem: 'criado_na_apostila',
+              user_id: userId
+            };
+          }
         });
 
         setAnotacoes(anotacoesFromDB);
@@ -211,6 +241,28 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
       setLoading(false);
     }
   };
+
+  // Listener para evento de anotação adicionada de outros componentes
+  useEffect(() => {
+    const handleAnotacaoAdicionada = (evento: CustomEvent) => {
+      console.log("Evento de anotação adicionada recebido:", evento.detail);
+      if (open) {
+        carregarAnotacoes();
+        // Se tiver pastaId e for diferente da atual, selecionar esta pasta
+        if (evento.detail?.pastaId && pastaSelecionada !== evento.detail.pastaId) {
+          setPastaSelecionada(evento.detail.pastaId);
+        }
+      }
+    };
+
+    // Adicionar listener para o evento customizado
+    window.addEventListener('apostila-anotacao-adicionada', handleAnotacaoAdicionada as EventListener);
+    
+    // Remover listener quando o componente for desmontado
+    return () => {
+      window.removeEventListener('apostila-anotacao-adicionada', handleAnotacaoAdicionada as EventListener);
+    };
+  }, [open, pastaSelecionada]);
 
   // Carregar dados quando o modal abrir
   useEffect(() => {

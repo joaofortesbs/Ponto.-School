@@ -107,20 +107,26 @@ const ExportarParaApostilaModal: React.FC<ExportarParaApostilaModalProps> = ({
     try {
       setIsExporting(true);
       
+      // Validar e garantir que os dados estejam no formato correto
+      const conteudoValidado = typeof anotacaoContent === 'string' ? anotacaoContent : '';
+      const tituloValidado = titulo.trim().substring(0, 255); // Limitar tamanho do título
+      const tagsValidadas = Array.isArray(tags) ? tags : [];
+      const modeloValidado = anotacaoModelo || 'Estudo Completo';
+      
       console.log("Iniciando exportação de anotação:", {
-        titulo,
-        tamanhoConteudo: anotacaoContent.length,
+        titulo: tituloValidado,
+        tamanhoConteudo: conteudoValidado.length,
         pastaId,
-        tags,
-        modelo: anotacaoModelo
+        tags: tagsValidadas,
+        modelo: modeloValidado
       });
       
       await onExport({
-        titulo,
-        conteudo: anotacaoContent,
+        titulo: tituloValidado,
+        conteudo: conteudoValidado,
         pastaId,
-        tags,
-        modelo: anotacaoModelo
+        tags: tagsValidadas,
+        modelo: modeloValidado
       });
       
       toast({
