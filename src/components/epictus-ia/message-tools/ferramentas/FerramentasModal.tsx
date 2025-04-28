@@ -66,6 +66,12 @@ const FerramentasModal: React.FC<FerramentasModalProps> = ({
     }
   };
 
+  // Placeholder for the missing handleApplyTemplate function
+  const handleApplyTemplate = () => {
+    //Implementation for applying template would go here.
+    console.log("Apply Template function called -  needs implementation");
+  };
+
   return (
     <>
       <Dialog open={open} onOpenChange={handleOnOpenChange}>
@@ -101,7 +107,7 @@ const FerramentasModal: React.FC<FerramentasModalProps> = ({
               });
             }} />
 
-            <EscreverNoCaderno onClick={handleEscreverNoCaderno} />
+            <EscreverNoCaderno onClick={handleEscreverNoCaderno} isProcessing={isProcessing} onApplyTemplate={handleApplyTemplate} />
 
             <SimularApresentacao onClick={() => {
               onOpenChange(false);

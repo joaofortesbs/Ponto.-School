@@ -4,11 +4,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from '@/components/ui/button';
 import { BookOpen, Sparkles, AlignLeft, FileText, X } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import { formatTextForNotebookLines } from '@/services/notebookService';
 
 interface ModelosNotebookModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelectTemplate: (templateContent: string) => void;
+  originalContent?: string;
 }
 
 // Modelos de anotações definidos
@@ -126,14 +128,144 @@ sua contribuição, limitações e relações com outros conhecimentos.
 const ModelosNotebookModal: React.FC<ModelosNotebookModalProps> = ({ 
   open, 
   onOpenChange,
-  onSelectTemplate
+  onSelectTemplate,
+  originalContent = ""
 }) => {
+  // Função para adaptar o conteúdo original ao modelo selecionado
+  const adaptContentToTemplate = (templateKey: keyof typeof notebookTemplates) => {
+    // Se não houver conteúdo original, retorna o template padrão
+    if (!originalContent.trim()) {
+      return notebookTemplates[templateKey];
+    }
+    
+    const template = notebookTemplates[templateKey];
+    
+    try {
+      // Extrai o tema do conteúdo original (primeira linha ou primeiras palavras)
+      const lines = originalContent.split('\n');
+      const firstLine = lines[0];
+      const title = firstLine.length > 30 ? firstLine.substring(0, 30) + '...' : firstLine;
+      
+      // Identifica parágrafos principais do conteúdo original
+      const paragraphs = originalContent.split('\n\n').filter(p => p.trim().length > 0);
+      
+      let adaptedContent = '';
+      
+      switch (templateKey) {
+        case 'estudoCompleto':
+          adaptedContent = template.replace('[TEMA]', title);
+          
+          // Adiciona conteúdo original nas seções apropriadas
+          if (paragraphs.length >= 1) {
+            adaptedContent = adaptedContent.replace('Uma breve introdução sobre o assunto que está sendo estudado, contextualizando sua\nimportância e relevância para o aprendizado.', paragraphs[0]);
+          }
+          
+          // Adiciona definições e conceitos principais
+          if (paragraphs.length >= 2) {
+            const concepts = paragraphs[1].split('\n').map(line => `• ${line.trim()}`).join('\n');
+            adaptedContent = adaptedContent.replace('• Conceito principal: explicação clara e objetiva\n• Termos relacionados: significados e aplicações\n• Origem/contexto histórico: desenvolvimento ao longo do tempo', concepts);
+          }
+          
+          // Adiciona desenvolvimento do tema
+          if (paragraphs.length >= 3) {
+            const development = paragraphs.slice(2, 5).map((p, i) => `${i+1}. ${p.trim()}`).join('\n');
+            adaptedContent = adaptedContent.replace('1. Primeiro aspecto importante com explicação detalhada\n2. Segundo aspecto importante com exemplos práticos\n3. Terceiro aspecto relevante aplicado a situações reais', development);
+          }
+          break;
+          
+        case 'mapaConceitual':
+          adaptedContent = template.replace('[TEMA CENTRAL]', title);
+          
+          // Divide o conteúdo em subtemas
+          const subtemas = paragraphs.slice(0, 3);
+          
+          if (subtemas.length >= 1) {
+            adaptedContent = adaptedContent.replace('• Característica principal\n  │    ├── • Elemento secundário\n  │    └── • Aplicação prática', 
+              '• ' + subtemas[0].split('\n').slice(0, 3).join('\n• '));
+          }
+          
+          if (subtemas.length >= 2) {
+            adaptedContent = adaptedContent.replace('• Definição essencial\n  │    ├── • Fórmula/método\n  │    └── • Exemplo de uso', 
+              '• ' + subtemas[1].split('\n').slice(0, 3).join('\n• '));
+          }
+          
+          if (subtemas.length >= 3) {
+            adaptedContent = adaptedContent.replace('• Princípio fundamental\n       ├── • Variação importante\n       └── • Conexão com outros temas', 
+              '• ' + subtemas[2].split('\n').slice(0, 3).join('\n• '));
+          }
+          
+          // Extrair palavras-chave do conteúdo (primeiras palavras de cada parágrafo)
+          const keywords = paragraphs.map(p => {
+            const firstWords = p.split(' ').slice(0, 1).join(' ');
+            return firstWords.length > 10 ? firstWords.substring(0, 10) : firstWords;
+          }).join(', ');
+          
+          adaptedContent = adaptedContent.replace('termo1, termo2, termo3, termo4, termo5', keywords);
+          break;
+          
+        case 'revisaoRapida':
+          adaptedContent = template.replace('[TEMA]', title);
+          
+          // Adiciona pontos essenciais
+          if (paragraphs.length >= 1) {
+            const points = paragraphs[0].split('\n')
+              .filter(line => line.trim().length > 0)
+              .slice(0, 3)
+              .map((line, i) => `${i+1}. ${line.trim()} - explicação concisa`)
+              .join('\n');
+            
+            adaptedContent = adaptedContent.replace('1. Conceito fundamental - definição concisa\n2. Elemento crítico - explicação direta\n3. Componente-chave - aplicação básica', points);
+          }
+          
+          // Adiciona checklist de estudo
+          if (paragraphs.length >= 2) {
+            const checklist = paragraphs[1].split('\n')
+              .filter(line => line.trim().length > 0)
+              .slice(0, 3)
+              .map(line => `□ Revisar ${line.trim()}`)
+              .join('\n');
+            
+            adaptedContent = adaptedContent.replace('□ Revisar conceito X\n□ Praticar exemplo do tipo Y\n□ Memorizar fórmula Z', checklist);
+          }
+          break;
+          
+        case 'fichamento':
+          adaptedContent = template.replace('[TÍTULO DA OBRA/TEXTO]', title);
+          
+          // Se houver parágrafos, usar o primeiro como citação
+          if (paragraphs.length >= 1) {
+            adaptedContent = adaptedContent.replace('"Trecho literal do texto que considero fundamental."\n(página XX)\n➤ Interpretação: minha explicação do que o autor quis dizer.\n➤ Reflexão: minha análise crítica sobre este trecho.', 
+            `"${paragraphs[0]}"\n(página X)\n➤ Interpretação: Este trecho aborda os conceitos fundamentais do tema.\n➤ Reflexão: O autor apresenta uma visão interessante sobre o assunto.`);
+          }
+          
+          // Ideias principais
+          if (paragraphs.length >= 2) {
+            const ideas = paragraphs.slice(1, 4)
+              .map((p, i) => `• Conceito ${i+1}: ${p.slice(0, 50)}${p.length > 50 ? '...' : ''}`)
+              .join('\n');
+            
+            adaptedContent = adaptedContent.replace('• Conceito 1: resumo conciso da primeira ideia central.\n• Conceito 2: síntese da segunda ideia relevante.\n• Conceito 3: explicação breve da terceira ideia importante.', ideas);
+          }
+          break;
+          
+        default:
+          return template;
+      }
+      
+      return formatTextForNotebookLines(adaptedContent);
+    } catch (error) {
+      console.error("Erro ao adaptar conteúdo:", error);
+      return template;
+    }
+  };
+
   const handleSelectTemplate = (templateKey: keyof typeof notebookTemplates) => {
-    onSelectTemplate(notebookTemplates[templateKey]);
+    const adaptedContent = adaptContentToTemplate(templateKey);
+    onSelectTemplate(adaptedContent);
     onOpenChange(false);
     toast({
       title: "Modelo selecionado",
-      description: "O modelo foi aplicado ao caderno de anotações.",
+      description: "O conteúdo foi adaptado ao modelo e aplicado ao caderno.",
       duration: 2000,
     });
   };

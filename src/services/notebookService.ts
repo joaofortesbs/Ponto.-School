@@ -21,7 +21,18 @@ export const formatTextForNotebookLines = (text: string): string => {
       return paragraph;
     }
 
-    // Ignorar linhas que são marcadores de lista
+    // Preservar linhas com elementos estruturais importantes
+    if (paragraph.includes('CONCEITO PRINCIPAL') || 
+        paragraph.includes('PONTOS ESSENCIAIS') || 
+        paragraph.includes('REFERÊNCIA COMPLETA') ||
+        paragraph.includes('CITAÇÕES IMPORTANTES') ||
+        paragraph.includes('IDEIAS PRINCIPAIS') ||
+        paragraph.includes('ANÁLISE CRÍTICA') ||
+        paragraph.includes('CONEXÕES')) {
+      return paragraph;
+    }
+
+    // Ignorar linhas que são marcadores de lista ou têm formatação específica
     if (paragraph.trim().startsWith('•') || paragraph.trim().startsWith('□') || 
         paragraph.trim().startsWith('➤') || paragraph.trim().startsWith('✓') || 
         /^\d+\./.test(paragraph.trim())) {
@@ -54,6 +65,67 @@ export const formatTextForNotebookLines = (text: string): string => {
   
   // Juntar os parágrafos formatados
   return formattedParagraphs.join('\n\n');
+};
+
+/**
+ * Analisa o conteúdo e extrai possíveis seções para modelos de anotações
+ * @param content Conteúdo a ser analisado
+ */
+export const extractSectionsFromContent = (content: string): { 
+  title: string,
+  introduction: string,
+  keyPoints: string[],
+  concepts: string[],
+  examples: string[]
+} => {
+  // Dividir o conteúdo em linhas e parágrafos
+  const lines = content.split('\n');
+  const paragraphs = content.split('\n\n').filter(p => p.trim());
+  
+  // Tentar extrair um título
+  const title = lines[0]?.trim() || "Anotações";
+  
+  // Tentar extrair uma introdução (primeiro parágrafo ou primeiras linhas)
+  const introduction = paragraphs[0] || "";
+  
+  // Extrair potenciais pontos-chave (frases que parecem importantes)
+  const keyPoints = lines
+    .filter(line => {
+      const trimmed = line.trim();
+      return trimmed.length > 10 && 
+             trimmed.length < 100 && 
+             (trimmed.endsWith('.') || trimmed.endsWith(':') || 
+              trimmed.includes('importante') || trimmed.includes('fundamental') ||
+              trimmed.includes('essencial'));
+    })
+    .slice(0, 5);
+  
+  // Extrair potenciais conceitos (linhas com termos destacados)
+  const concepts = lines
+    .filter(line => {
+      const trimmed = line.trim();
+      return trimmed.length > 5 && 
+             trimmed.length < 80 && 
+             (trimmed.includes(':') || /^[A-Z][a-z]+/.test(trimmed));
+    })
+    .slice(0, 5);
+  
+  // Extrair potenciais exemplos (parágrafos que começam com palavras indicadoras)
+  const examples = paragraphs
+    .filter(p => 
+      p.toLowerCase().includes('exemplo') || 
+      p.toLowerCase().includes('aplicação') ||
+      p.toLowerCase().includes('caso') ||
+      p.toLowerCase().includes('ilustração'))
+    .slice(0, 3);
+  
+  return {
+    title,
+    introduction,
+    keyPoints,
+    concepts,
+    examples
+  };
 };
 
 

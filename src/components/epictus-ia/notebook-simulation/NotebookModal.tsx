@@ -592,6 +592,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
           open={showModelosModal} 
           onOpenChange={setShowModelosModal} 
           onSelectTemplate={handleApplyTemplate}
+          originalContent={content}
         />
         
         {/* Footer with stats and edit controls */}
