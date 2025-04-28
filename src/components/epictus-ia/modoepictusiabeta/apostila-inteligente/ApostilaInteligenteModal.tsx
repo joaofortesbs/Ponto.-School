@@ -32,7 +32,9 @@ import {
   Shuffle,
   LayoutGrid,
   ListFilter,
-  CalendarDays
+  CalendarDays,
+  Maximize2,
+  Minimize2
 } from "lucide-react";
 
 interface ApostilaInteligenteModalProps {
