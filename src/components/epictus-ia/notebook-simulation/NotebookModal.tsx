@@ -497,7 +497,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
         detail: { pastaId: data.pastaId }
       });
       window.dispatchEvent(apostilaModalEvent);
-    };
+    }
     finally {
       setIsExporting(false);
     }
