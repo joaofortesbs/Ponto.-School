@@ -135,12 +135,15 @@ const ExportModal: React.FC<ExportModalProps> = ({
           .select()
           .single();
 
-        if (pastaError) throw pastaError;
+        if (pastaError) {
+          console.error('Erro ao criar pasta:', pastaError);
+          throw new Error(`Erro ao criar pasta: ${pastaError.message}`);
+        }
 
         finalPastaId = pastaCriada.id;
 
         // Registrar criação de pasta
-        await supabase
+        const { error: logError } = await supabase
           .from('user_activity_logs')
           .insert([
             {
@@ -149,6 +152,16 @@ const ExportModal: React.FC<ExportModalProps> = ({
               detalhes: `Criou pasta "${novaPasta.nome}" durante exportação`
             }
           ]);
+          
+        if (logError) {
+          console.warn('Erro ao registrar log:', logError);
+          // Não interromper o fluxo por erro de log
+        }
+      }
+
+      // Verifica se o conteúdo está definido
+      if (!initialContent) {
+        throw new Error('Conteúdo da anotação está vazio');
       }
 
       await onExport({
@@ -158,11 +171,17 @@ const ExportModal: React.FC<ExportModalProps> = ({
         tags,
         modelo
       });
+      
+      toast({
+        title: "Exportação concluída!",
+        description: "Sua anotação foi exportada para a Apostila Inteligente com sucesso.",
+      });
+      
     } catch (error) {
       console.error("Erro ao exportar:", error);
       toast({
         title: "Erro ao exportar",
-        description: "Ocorreu um problema ao exportar sua anotação.",
+        description: "Não foi possível exportar para a Apostila Inteligente. Tente novamente.",
         variant: "destructive"
       });
     } finally {

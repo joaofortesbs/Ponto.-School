@@ -112,7 +112,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
           setPastaSelecionada(pastasFromDB[0].id);
         }
       }
-      
+
       // Se não houver pastas, criar uma pasta padrão
       else if (data && data.length === 0) {
         const { data: novaPasta, error: erroNovaPasta } = await supabase
@@ -127,9 +127,9 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
           ])
           .select()
           .single();
-          
+
         if (erroNovaPasta) throw erroNovaPasta;
-        
+
         if (novaPasta) {
           const pastaCriada = {
             id: novaPasta.id,
@@ -139,7 +139,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
             descricao: novaPasta.descricao,
             data_criacao: new Date(novaPasta.data_criacao)
           };
-          
+
           setPastas([pastaCriada]);
           setPastaSelecionada(pastaCriada.id);
         }
@@ -170,7 +170,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
 
       if (data && data.length > 0) {
         console.log("Anotações carregadas do banco:", data.length);
-        
+
         // Converter dados do banco para o formato da interface Anotacao
         const anotacoesFromDB = data.map(anotacao => {
           // Criar um resumo do conteúdo para exibição
@@ -216,7 +216,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
   useEffect(() => {
     if (open) {
       console.log("Modal Apostila Inteligente aberto, carregando dados...");
-      
+
       // Sequência de carregamento: primeiro pastas, depois anotações
       const carregarDados = async () => {
         try {
@@ -227,7 +227,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
           console.error("Erro no carregamento de dados:", error);
         }
       };
-      
+
       carregarDados();
 
       // Configurar listeners para atualizações em tempo real
@@ -828,7 +828,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                         : "p-3"} 
                         rounded-lg bg-gradient-to-b from-[#151515] to-[#121212] cursor-pointer group
                         ${anotacaoSelecionada === anotacao.id 
-                          ? 'ring-1 ring-[#42C5F5] shadow-glow' 
+                          ? 'ring1 ring-[#42C5F5] shadow-glow' 
                           : 'hover:bg-[#171717] border border-gray-800 hover:border-gray-700'}
                         transition-all duration-200 ease-in-out transform hover:-translate-y-0.5`}
                       onClick={() => setAnotacaoSelecionada(anotacao.id)}

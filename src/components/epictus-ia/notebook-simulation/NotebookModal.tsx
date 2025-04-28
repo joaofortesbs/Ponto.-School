@@ -354,6 +354,18 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
       setIsExporting(true);
       const userId = localStorage.getItem('user_id') || 'anonymous';
 
+      // Verificar se os dados foram fornecidos corretamente
+      if (!data.titulo || !data.conteudo || !data.pastaId) {
+        throw new Error('Dados incompletos para exportação');
+      }
+
+      console.log('Iniciando exportação para Apostila:', { 
+        userId, 
+        titulo: data.titulo,
+        pastaId: data.pastaId,
+        tamanhoConteudo: data.conteudo.length
+      });
+
       // 1. Salvar a anotação no caderno_anotacoes
       const { data: cadernoInsertData, error: cadernoError } = await supabase
         .from('caderno_anotacoes')
@@ -364,7 +376,8 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
             conteudo: data.conteudo,
             modelo_anotacao: data.modelo,
             tags: data.tags,
-            status: 'exportado'
+            status: 'exportado',
+            data_criacao: new Date().toISOString()
           }
         ])
         .select('id')
@@ -372,10 +385,13 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
 
       if (cadernoError) {
         console.error('Erro ao salvar no caderno_anotacoes:', cadernoError);
-        throw cadernoError;
+        throw new Error(`Erro na tabela caderno_anotacoes: ${cadernoError.message}`);
       }
+      
+      console.log('Anotação salva no caderno_anotacoes com ID:', cadernoInsertData?.id);
 
       // 2. Salvar na apostila_anotacoes
+      const now = new Date().toISOString();
       const { data: apostilaData, error: apostilaError } = await supabase
         .from('apostila_anotacoes')
         .insert([
@@ -387,8 +403,8 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
             modelo_anotacao: data.modelo,
             tags: data.tags,
             origem: 'caderno',
-            data_criacao: new Date().toISOString(),
-            data_exportacao: new Date().toISOString()
+            data_criacao: now,
+            data_exportacao: now
           }
         ])
         .select()
@@ -396,11 +412,13 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
 
       if (apostilaError) {
         console.error('Erro ao salvar na apostila_anotacoes:', apostilaError);
-        throw apostilaError;
+        throw new Error(`Erro na tabela apostila_anotacoes: ${apostilaError.message}`);
       }
+      
+      console.log('Anotação salva na apostila_anotacoes com ID:', apostilaData?.id);
 
       // 3. Registrar a atividade no log
-      await supabase
+      const { error: logError } = await supabase
         .from('user_activity_logs')
         .insert([
           {
@@ -411,21 +429,30 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
           }
         ]);
 
+      if (logError) {
+        console.warn('Erro ao registrar log de atividade:', logError);
+        // Não interromper por erro de log
+      }
+
       toast({
         title: "Exportação concluída!",
-        description: "Sua anotação foi exportada para a Apostila Inteligente.",
+        description: "Sua anotação foi exportada para a Apostila Inteligente com sucesso.",
       });
+
+      // Apenas fechar o modal após confirmar que tudo foi processado
+      setTimeout(() => {
+        setExportModalOpen(false);
+      }, 1000);
 
     } catch (error) {
       console.error('Erro ao exportar para Apostila:', error);
       toast({
         title: "Erro ao exportar",
-        description: "Não foi possível exportar para a Apostila Inteligente. Tente novamente.",
+        description: `Não foi possível exportar: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         variant: "destructive"
       });
     } finally {
       setIsExporting(false);
-      setExportModalOpen(false); // Close the modal after export
     }
   };
 
