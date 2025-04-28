@@ -202,7 +202,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
             pasta_id,
             modelo_anotacao,
             user_id,
-            apostila_pastas:pasta_id (
+            apostila_pastas(
               id,
               nome,
               cor

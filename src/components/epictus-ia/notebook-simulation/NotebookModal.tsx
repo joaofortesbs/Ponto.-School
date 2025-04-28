@@ -362,11 +362,11 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
         try {
           // Tenta obter o ID do usuário de várias fontes
           let userId = localStorage.getItem('user_id');
-          
+
           // Se não encontrar, tenta outras possíveis fontes
           if (!userId) {
             userId = sessionStorage.getItem('user_id');
-            
+
             // Procura por outras chaves no localStorage que possam conter o ID
             if (!userId) {
               for (let i = 0; i < localStorage.length; i++) {
@@ -384,7 +384,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
               }
             }
           }
-          
+
           if (!userId) {
             throw new Error('ID de usuário não encontrado. Por favor, faça login novamente antes de exportar.');
           }
@@ -393,7 +393,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
           if (!data.titulo || !data.conteudo || !data.pastaId) {
             throw new Error('Dados incompletos para exportação');
           }
-          
+
           console.log('Exportando para Apostila com ID de usuário:', userId);
 
           console.log('Iniciando exportação para Apostila:', { 
@@ -788,7 +788,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
             {showSuggestions && !isEditing && (
               <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-100 dark:border-blue-800/30 animate-fadeIn">
                 <h4 className="text-blue-700 dark:text-blue-300 font-medium mb-2">Sugestões para sua anotação:</h4>
-                <ul className="space-y-2">
+                <<ul className="space-y-2">
                   <li className="flex items-center text-blue-600 dark:text-blue-300">
                     <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mr-2"></div>
                     <button className="text-sm hover:underline">Adicionar um resumo no final</button>
