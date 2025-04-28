@@ -9,8 +9,19 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.
 // Verificar configurações
 if (!supabaseUrl || !supabaseServiceKey) {
   console.error('Erro: Credenciais do Supabase não definidas!');
-  console.error('Defina VITE_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no arquivo .env');
-  process.exit(1);
+  console.error('Defina VITE_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY ou VITE_SUPABASE_ANON_KEY no arquivo .env');
+  
+  // Tentar carregar do processo se estiverem disponíveis
+  const fallbackUrl = process.env.SUPABASE_URL;
+  const fallbackKey = process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY;
+  
+  if (fallbackUrl && fallbackKey) {
+    console.log('Usando credenciais alternativas encontradas no ambiente...');
+    supabaseUrl = fallbackUrl;
+    supabaseServiceKey = fallbackKey;
+  } else {
+    process.exit(1);
+  }
 }
 
 // Criar cliente Supabase
@@ -27,7 +38,7 @@ async function main() {
     
     // Verificar se a chave estrangeira já existe
     const { data: foreignKeys, error: fkError } = await supabase.rpc('execute_sql', {
-      sql_query: `
+      sql_statement: `
         SELECT
           tc.constraint_name, 
           tc.table_name, 
@@ -59,7 +70,7 @@ async function main() {
       
       // Adicionar a chave estrangeira
       const { data: addFkResult, error: addFkError } = await supabase.rpc('execute_sql', {
-        sql_query: `
+        sql_statement: `
           ALTER TABLE apostila_anotacoes
           ADD CONSTRAINT fk_apostila_pasta_id
           FOREIGN KEY (pasta_id)
@@ -90,7 +101,7 @@ async function main() {
       
       // Forçar recarga do esquema usando uma chamada para a função execute_sql com NOTIFY
       const { error: reloadError } = await supabase.rpc('execute_sql', {
-        sql_query: `
+        sql_statement: `
           SELECT pg_notify('pgrst', 'reload schema');
         `
       });
