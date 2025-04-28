@@ -1,0 +1,31 @@
+Fluxo Atual (Com Problema):
+
+O usuário cria uma anotação no Modal do Caderno e a salva (ela está inserida na tabela caderno_anotacoes com status: "rascunho" ).
+O usuário clicou em "Salvar na Apostila Inteligente":
+Um modal aparece para selecionar uma pasta (ou criar uma nova), editar o título e adicionar tags.
+A anotação é copiada para a tabela apostila_anotacoes , e o status da anotação original no caderno_anotacoes é atualizado para "exportado".
+O usuário acessa o Modal da Apostila Inteligente para visualizar as anotações exportadas:
+Aqui, a aplicação tenta carregar as anotações da tabela apostila_anotacoes , mas exibe o erro: "Erro ao carregar anotações. Não foi possível carregar suas anotações. Tente novamente."
+🔍 Possíveis Causas do Erro
+
+ Com base no contexto, as seguintes causas podem estar contribuindo para o erro:
+
+Erro na Consulta ao Supabase:
+Uma consulta para buscar as anotações da tabela apostila_anotacoes pode estar falhando (ex.: erro de sintaxe, filtro de user_id incorreto , ou tabela vazia).
+Problemas de segurança em nível de linha (RLS):
+As políticas de RLS podem bloquear o acesso às anotações porque o user_id do usuário autenticado não está sendo passado ou validado corretamente.
+Falha na Conexão com o Supabase:
+Pode haver problemas de conectividade, como chave de API inválida, rate limiting ou indisponibilidade temporária do Supabase.
+Erro no Fluxo de Exportação:
+A exportação da anotação pode estar falhando, não inserindo os dados corretamente na tabela apostila_anotacoes .
+Problemas com o Supabase Realtime:
+O listener do Realtime pode não estar funcionando corretamente, impedindo a atualização do Modal da Apostila.
+Erro no Front-End:
+O Modal da Apostila pode ser um problema de estado ou lógica de renderização, exibindo o erro mesmo que os dados existem no banco.
+✅ Objetivo e Resultado Esperado
+
+Corrigir o erro para que o Modal da Apostila Inteligente exiba corretamente todas as anotações exportadas do Caderno.
+Garantir que o fluxo de exportação (Caderno → Apostila) funcione sem falhas.
+Tratamento de erros robusto, com adicionar mensagens claras para o usuário (ex.: "Nenhuma anotação encontrada" em vez de um erro genérico).
+Implemente logs para facilitar o diagnóstico futuro de problemas.
+Garanta que o Supabase Realtime atualize o Modal da Apostila automaticamente quando uma nova anotação para exportação.

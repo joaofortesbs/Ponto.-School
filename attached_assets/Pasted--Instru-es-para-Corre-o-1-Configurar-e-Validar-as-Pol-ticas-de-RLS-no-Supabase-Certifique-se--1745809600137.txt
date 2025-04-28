@@ -1,0 +1,123 @@
+🛠️ Instruções para Correção
+
+1. Configurar e Validar as Políticas de RLS no Supabase
+Certifique-se de que as políticas de RLS estejam corretamente configuradas para todas as tabelas envolvidas ( caderno_anotacoes , apostila_anotacoes , apostila_pastas ).
+
+Política para apostila_anotacoes :
+Crie uma política que permita ao usuário ler apenas suas próprias anotações:
+sql
+
+Copiar
+CREATE POLICY "Usuários só podem ver suas anotações" ON apostila_anotacoes
+FOR SELECT
+USING (auth.uid() = user_id);
+Crie uma política para permitir inserções:
+sql
+
+Copiar
+CREATE POLICY "Usuários podem inserir suas anotações" ON apostila_anotacoes
+FOR INSERT
+WITH CHECK (auth.uid() = user_id);
+Crie uma política para atualizações:
+sql
+
+Copiar
+CREATE POLICY "Usuários podem atualizar suas anotações" ON apostila_anotacoes
+FOR UPDATE
+USING (auth.uid() = user_id);
+Política para caderno_anotacoes :
+Aplique políticas semelhantes para leitura, inserção e atualização, garantindo que apenas o user_id autenticado possa manipular seus dados.
+Política para apostila_pastas :
+Aplique políticas de RLS para garantir que o usuário acesse suas próprias pastas.
+Validação:
+
+Teste no painel do Supabase: Execute uma consulta como SELECT * FROM apostila_anotacoes WHERE user_id = <user_id> com o user_id do usuário autenticado e confirme que os dados são retornados.
+2. Revisar e Corrigir a Lógica de Exportação (Caderno → Apostila)
+Garanta que as anotações sejam corretamente exportadas do Caderno para a Apostila, com tratamento de erros adequado.
+
+Lógica de Exportação:
+Implemente a seguinte função para exportar uma anotação:
+JavaScript
+
+Copiar
+async function exportAnotacaoParaApostila(anotacaoId, selectedPastaId, updatedTitulo, updatedTags) {
+  try {
+    // 1. Buscar a anotação do Caderno
+    const { data: anotacao, error: fetchError } = await supabase
+      .from('caderno_anotacoes')
+      .select('*')
+      .eq('id', anotacaoId)
+      .eq('user_id', auth.currentUser.uid) // Garantir que o user_id seja do usuário autenticado
+      .single();
+
+    if (fetchError) {
+      console.error('Erro ao buscar anotação do Caderno:', fetchError.message);
+      showError('Erro ao buscar a anotação. Tente novamente.');
+      return;
+    }
+
+    if (!anotacao) {
+      showError('Anotação não encontrada.');
+      return;
+    }
+
+    // 2. Criar nova anotação na Apostila
+    const novaAnotacao = {
+      user_id: anotacao.user_id,
+      pasta_id: selectedPastaId || null,
+      titulo: updatedTitulo || anotacao.titulo,
+      conteudo: anotacao.conteudo,
+      modelo_anotacao: anotacao.modelo_anotacao,
+      tags: updatedTags || anotacao.tags,
+      data_criacao: anotacao.data_criacao,
+      data_exportacao: new Date().toISOString(),
+      origem: 'caderno',
+    };
+
+    const { data: insertedAnotacao, error: insertError } = await supabase
+      .from('apostila_anotacoes')
+      .insert([novaAnotacao])
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('Erro ao salvar na Apostila:', insertError.message);
+      showError('Erro ao salvar na Apostila. Tente novamente.');
+      return;
+    }
+
+    // 3. Atualizar o status da anotação original no Caderno
+    const { error: updateError } = await supabase
+      .from('caderno_anotacoes')
+      .update({ status: 'exportado', data_atualizacao: new Date().toISOString() })
+      .eq('id', anotacaoId)
+      .eq('user_id', auth.currentUser.uid);
+
+    if (updateError) {
+      console.error('Erro ao atualizar status no Caderno:', updateError.message);
+      showError('Erro ao atualizar o status da anotação. Tente novamente.');
+      return;
+    }
+
+    // 4. Registrar a ação no log de atividades
+    await supabase.from('user_activity_logs').insert({
+      user_id: auth.currentUser.uid,
+      acao: 'exportou anotação',
+      anotacao_id: insertedAnotacao.id,
+      timestamp: new Date().toISOString(),
+      detalhes: `Anotação "${novaAnotacao.titulo}" exportada para a Apostila.`,
+    });
+
+    // 5. Notificar o usuário
+    showNotification(`Anotação "${novaAnotacao.titulo}" salva com sucesso!`);
+
+  } catch (err) {
+    console.error('Erro geral na exportação:', err.message);
+    showError('Erro inesperado ao exportar a anotação. Tente novamente.');
+  }
+}
+Validação:
+
+Teste a função acima com uma anotação existente no Caderno.
+Confirme no painel do Supabase que a anotação foi inserida na tabela apostila_anotacoes e que o status em caderno_anotacoes foi atualizado para "exportado".
+Verifique se o log de atividade foi registrado em user_activity_logs .

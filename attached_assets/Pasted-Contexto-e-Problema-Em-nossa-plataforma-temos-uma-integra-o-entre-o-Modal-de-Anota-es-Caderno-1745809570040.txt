@@ -1,0 +1,52 @@
+Contexto e Problema:
+
+ Em nossa plataforma, temos uma integração entre o Modal de Anotações (Caderno) e o Modal da Apostila Inteligente. O fluxo atual permite que o usuário crie anotações no Caderno, como exportação para a Apostila Inteligente (salvando-as em uma pasta específica) e como visualização/edição no Modal da Apostila. No entanto, ao acessar o Modal da Apostila Inteligente para visualizar as anotações exportadas, está aparecendo o seguinte erro:
+
+"Erro ao carregar anotações. Não foi possível carregar suas anotações. Tente novamente."
+
+Esse erro indica que há um problema na recuperação das anotações da tabela apostila_anotacoes no banco de dados Supabase, ou no fluxo de exportação das anotações do Caderno para a Apostila. O objetivo deste prompt é corrigir esse erro, garantindo que as anotações sejam exibidas corretamente no Modal da Apostila Inteligente, com tratamento de erros adequado e feedback claro para o usuário.
+
+🧩 Detalhamento do Ambiente Técnico
+
+Estrutura do Banco de Dados (Supabase):
+
+ As anotações são gerenciadas em tabelas separadas para o Caderno e a Apostila Inteligente, conforme descrito abaixo:
+
+Tabela caderno_anotacoes :
+identificação (UUID)
+user_id (UUID do usuário autenticado)
+título (string)
+conteudo (texto)
+modelo_anotacao (string: ex.: "Estudo Completo", "Mapa Mental")
+tags (matriz de strings)
+data_criacao (carimbo de data/hora)
+data_atualização (carimbo de data/hora)
+status (string: ex.: "rascunho", "exportado")
+Tabela apostila_anotacoes :
+identificação (UUID)
+user_id (UUID do usuário autenticado)
+pasta_id (UUID, null se não estiver associado a uma pasta)
+título (string)
+conteudo (texto)
+modelo_anotacao (string)
+tags (matriz de strings)
+data_criacao (carimbo de data/hora)
+data_exportacao (carimbo de data/hora)
+origem (string: "caderno" ou "criado_na_apostila")
+Tabela apostila_pastas :
+identificação (UUID)
+user_id (UUID do usuário autenticado)
+nome (string)
+descrição (string, opcional)
+data_criacao (carimbo de data/hora)
+Tabela user_activity_logs (para registros de ações):
+identificação (UUID)
+ID do usuário (UUID)
+acao (string: ex.: "exportou anotação")
+anotacao_id (UUID)
+carimbo de data/hora (timestamp)
+detalhes (string, opcional)
+Configurações do Supabase:
+
+O Supabase está configurado com Row-Level Security (RLS) ativado. As políticas de RLS devem garantir que os usuários acessem seus próprios dados (com base em user_id ).
+O Supabase Realtime está sendo usado para atualizar o Modal da Apostila Inteligente automaticamente quando uma nova anotação é exportada.

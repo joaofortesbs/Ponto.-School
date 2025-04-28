@@ -1,0 +1,46 @@
+Feedback Visual:
+Adicione um selo "Novo!" às anotações recém-adicionadas (com menos de 24 horas):
+JavaScript
+
+Copiar
+function isNewAnotacao(dataExportacao) {
+  const now = new Date();
+  const exportDate = new Date(dataExportacao);
+  const diffHours = (now - exportDate) / (1000 * 60 * 60);
+  return diffHours < 24;
+}
+Nenhum componente de exibição das anotações:
+jsx
+
+Copiar
+{isNewAnotacao(anotacao.data_exportacao) && (
+  <span className="badge badge-new">Novo!</span>
+)}
+Validação:
+
+Confirme que as mensagens de erro são exibidas corretamente em diferentes cenários (sem anotações, erro de permissão, falha de conexão).
+Verifique se o selo "Novo!" aparece apenas para anotações recentes.
+6. Adicionar Índices para Melhorar Desempenho
+Índices no Supabase:
+Crie índices nas colunas frequentemente usadas em filtros e ordenações:
+sql
+
+Copiar
+CREATE INDEX idx_apostila_anotacoes_user_id ON apostila_anotacoes(user_id);
+CREATE INDEX idx_apostila_anotacoes_pasta_id ON apostila_anotacoes(pasta_id);
+CREATE INDEX idx_apostila_anotacoes_data_exportacao ON apostila_anotacoes(data_exportacao);
+CREATE INDEX idx_caderno_anotacoes_user_id ON caderno_anotacoes(user_id);
+Validação:
+
+Execute consultas no painel do Supabase e confirme que o tempo de resposta melhorou após adicionar os índices.
+7. Testes Finais
+Teste 1: Exportação de Anotação
+Crie uma anotação no Caderno, exporte-a para a Apostila e confirme que ela aparece no Modal da Apostila.
+Teste 2: Carregamento Inicial
+Abra o Modal da Apostila e verifique se todas as anotações exportadas estão exibidas corretamente, com detalhes da pasta (se associadas).
+Teste 3: Atualização em Tempo Real
+Exporte uma nova anotação e confirme que ela aparece no Modal da Apostila automaticamente, com uma notificação de sucesso.
+Teste 4: Tratamento de Erros
+Simule cenários de erro (ex.: desconectar a internet, usar um user_id inválido) e confirmar que mensagens são exibidas.
+Teste 5: Desempenho
+Exporte várias anotações (ex.: 50) e confirme que o Modal da Apostila carrega rapidamente, sem travamentos.

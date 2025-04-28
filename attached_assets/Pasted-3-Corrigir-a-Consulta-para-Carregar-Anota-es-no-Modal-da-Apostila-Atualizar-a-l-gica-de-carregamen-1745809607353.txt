@@ -1,0 +1,73 @@
+3. Corrigir a Consulta para Carregar Anotações no Modal da Apostila
+Atualizar a lógica de carregamento das anotações no Modal da Apostila Inteligente, com tratamento de erros robustos.
+
+Lógica de Carregamento:
+Implemente a seguinte função para carregar as anotações:
+JavaScript
+
+Copiar
+async function carregarAnotacoesApostila() {
+  try {
+    // 1. Buscar anotações da Apostila
+    const { data: anotacoes, error } = await supabase
+      .from('apostila_anotacoes')
+      .select(`
+        *,
+        apostila_pastas (
+          nome
+        )
+      `)
+      .eq('user_id', auth.currentUser.uid)
+      .order('data_exportacao', { ascending: false });
+
+    if (error) {
+      console.error('Erro ao carregar anotações:', error.message);
+      if (error.code === 'PGRST116') {
+        showMessage('Nenhuma anotação encontrada. Exporte anotações do Caderno para começar.');
+      } else if (error.code === '42501') {
+        showError('Permissão negada. Verifique suas credenciais e tente novamente.');
+      } else {
+        showError(`Erro ao carregar anotações: ${error.message}`);
+      }
+      return [];
+    }
+
+    if (!anotacoes || anotacoes.length === 0) {
+      showMessage('Nenhuma anotação encontrada. Exporte anotações do Caderno para começar.');
+      return [];
+    }
+
+    // 2. Atualizar o estado do Modal com as anotações
+    updateApostilaModal(anotacoes);
+    return anotacoes;
+
+  } catch (err) {
+    console.error('Erro inesperado ao carregar anotações:', err.message);
+    showError('Erro inesperado ao carregar anotações. Tente novamente.');
+    return [];
+  }
+}
+Adicionar Retry para Falhas Temporárias:
+Para lidar com falhas de conexão temporárias, implemente um mecanismo de retry:
+JavaScript
+
+Copiar
+async function carregarAnotacoesApostilaComRetry(retries = 3, delay = 1000) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const anotacoes = await carregarAnotacoesApostila();
+      return anotacoes;
+    } catch (err) {
+      if (i === retries - 1) {
+        console.error('Falha após todas as tentativas:', err.message);
+        showError('Não foi possível carregar as anotações. Verifique sua conexão e tente novamente.');
+        return [];
+      }
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+}
+Validação:
+
+Teste a função carregarAnotacoesApostila e confirme que as anotações são exibidas no Modal da Apostila.
+Verifique se as mensagens são mostradas quando não há anotações ou quando há erros de permissão.

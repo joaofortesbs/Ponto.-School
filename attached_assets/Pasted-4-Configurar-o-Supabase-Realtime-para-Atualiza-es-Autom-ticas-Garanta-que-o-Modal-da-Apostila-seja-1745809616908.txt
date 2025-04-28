@@ -1,0 +1,78 @@
+4. Configurar o Supabase Realtime para Atualizações Automáticas
+Garanta que o Modal da Apostila seja atualizado em tempo real quando uma nova anotação for exportada.
+
+Configuração do Listener:
+Implemente o seguinte listener no carregamento do Modal da Apostila:
+JavaScript
+
+Copiar
+function configurarRealtimeApostila() {
+  const channel = supabase
+    .channel('apostila_anotacoes_changes')
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'apostila_anotacoes',
+        filter: `user_id=eq.${auth.currentUser.uid}`,
+      },
+      async (payload) => {
+        console.log('Nova anotação adicionada:', payload.new);
+        // Buscar detalhes da pasta associada, se houver
+        const { data: pasta, error } = await supabase
+          .from('apostila_pastas')
+          .select('nome')
+          .eq('id', payload.new.pasta_id)
+          .single();
+
+        if (error) {
+          console.error('Erro ao buscar pasta:', error.message);
+        }
+
+        // Adicionar a nova anotação ao estado do Modal
+        const novaAnotacao = { ...payload.new, apostila_pastas: pasta || null };
+        updateApostilaModalWithNewAnotacao(novaAnotacao);
+
+        // Notificar o usuário
+        showNotification(`Nova anotação "${novaAnotacao.titulo}" adicionada!`, { type: 'success' });
+      }
+    )
+    .subscribe();
+
+  // Limpar o canal ao fechar o Modal
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+Validação:
+
+Exporte uma anotação do Caderno e confirme que o Modal da Apostila é atualizado automaticamente sem necessidade de atualização.
+Verifique se uma notificação de sucesso aparece.
+5. Melhorar mensagens de erro e feedback visual
+Mensagens de Erro:
+Atualize as mensagens para serem mais informativas:
+Quando não há anotações: "Nenhuma anotação encontrada. Exporte anotações do Caderno para começar."
+Quando há erro de permissão: "Permissão negada. Verifique suas credenciais e tente novamente."
+Quando há falha de conexão: "Não foi possível carregar as anotações. Verifique sua conexão e tente novamente."
+Notificações de sucesso:
+Use uma biblioteca de notificações do sistema (ex.: react-toastify ) para exibir mensagens de sucesso:
+JavaScript
+
+Copiar
+function showNotification(message, options = {}) {
+  toast(message, {
+    type: options.type || 'info',
+    position: 'top-right',
+    autoClose: 3000,
+    ...options,
+  });
+}
+
+function showError(message) {
+  showNotification(message, { type: 'error' });
+}
+
+function showMessage(message) {
+  showNotification(message, { type: 'info' });
+}
