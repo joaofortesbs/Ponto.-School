@@ -5,10 +5,6 @@ import "./index.css";
 import { BrowserRouter } from "react-router-dom";
 import './lib/username-initializer.ts'
 import { preInitializeWebNodes } from './lib/web-persistence.ts'
-import './styles/hide-scrollbar.css'
-import './styles/animations.css'
-import './styles/notebook.css'
-import './styles/apostila-modal.css'
 
 // PRIORIDADE MÁXIMA: Inicializar teias antes de qualquer outro código
 // Esta função é executada imediatamente, antes mesmo da montagem do React
@@ -143,7 +139,7 @@ const initializeApp = () => {
     // Renderizar imediatamente sem esperar por idle callback
     // para garantir carregamento rápido
     renderApp();
-
+    
     // Timeout reduzido para garantir que a UI não fique presa em carregamento
     setTimeout(() => {
       if (document.getElementById('initial-loader')) {
