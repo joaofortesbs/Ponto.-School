@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   FolderOpen, Search, Plus, Tag, CalendarDays, 
   BookOpen, Clock, Edit, Trash2, FileText,
-  ChevronRight, FolderPlus, AlertCircle, RefreshCw, X
+  ChevronRight, FolderPlus, AlertCircle, RefreshCw, X, MoreHorizontal, ArrowLeft
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/components/ui/use-toast';
@@ -28,6 +28,11 @@ interface Anotacao {
     nome: string;
     cor?: string;
   } | null;
+  pasta?: { // Added for compatibility with the new query
+    id: string;
+    nome: string;
+    cor: string;
+  } | null;
 }
 
 interface Pasta {
@@ -40,11 +45,13 @@ interface Pasta {
 interface ApostilaInteligenteModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onClose: () => void; // Added onClose prop
 }
 
 const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
   open,
-  onOpenChange
+  onOpenChange,
+  onClose
 }) => {
   const [anotacoes, setAnotacoes] = useState<Anotacao[]>([]);
   const [pastas, setPastas] = useState<Pasta[]>([]);
@@ -53,202 +60,232 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [loading, setLoading] = useState(false); // Added loading state
+  const [filtroAtual, setFiltroAtual] = useState('todas'); // Added filter state
+
 
   useEffect(() => {
     if (open) {
-      carregarAnotacoesComRetry();
-      carregarPastas();
+      carregarAnotacoes();
+    }
+  }, [open]);
 
-      // Configurar Realtime para atualizações automáticas
-      const channel = configurarRealtimeApostila();
 
-      // Limpar listener ao fechar o modal
+  // Função para verificar se uma anotação é nova (menos de 24 horas)
+  const isNewAnotacao = (dataExportacao) => {
+    if (!dataExportacao) return false;
+    const now = new Date();
+    const exportDate = new Date(dataExportacao);
+    const diffHours = (now.getTime() - exportDate.getTime()) / (1000 * 60 * 60);
+    return diffHours < 24;
+  };
+
+  // Configurar Supabase Realtime para atualizações automáticas
+  useEffect(() => {
+    let subscription;
+
+    if (open) {
+      // Carregar anotações ao abrir o modal
+      carregarAnotacoes();
+
+      // Configurar escuta de mudanças em tempo real
+      const channel = supabase
+        .channel('apostila_changes')
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'apostila_anotacoes',
+          filter: `user_id=eq.${supabase.auth.getUser()?.data?.user?.id}`
+        }, (payload) => {
+          console.log('Nova anotação detectada:', payload.new);
+
+          // Buscar informações da pasta se necessário
+          const processarNovaAnotacao = async () => {
+            try {
+              if (payload.new.pasta_id) {
+                const { data: pastaData } = await supabase
+                  .from('apostila_pastas')
+                  .select('id, nome, cor')
+                  .eq('id', payload.new.pasta_id)
+                  .single();
+
+                const novaAnotacao = {
+                  ...payload.new,
+                  pasta: pastaData,
+                  apostila_pastas: pastaData // Mantendo compatibilidade
+                };
+
+                // Adicionar à lista de anotações
+                setAnotacoes(prev => [novaAnotacao, ...prev]);
+              } else {
+                // Adicionar anotação sem pasta
+                setAnotacoes(prev => [
+                  {
+                    ...payload.new,
+                    pasta: null,
+                    apostila_pastas: null
+                  }, 
+                  ...prev
+                ]);
+              }
+
+              // Notificar o usuário
+              toast({
+                title: "Nova anotação adicionada!",
+                description: `"${payload.new.titulo}" foi adicionada à sua Apostila.`,
+                duration: 3000,
+              });
+            } catch (error) {
+              console.error('Erro ao processar nova anotação:', error);
+            }
+          };
+
+          processarNovaAnotacao();
+        })
+        .subscribe();
+
+      // Configurar escuta para evento personalizado (quando uma anotação é exportada)
+      const handleAnotacaoAdicionada = (event) => {
+        console.log('Evento de anotação adicionada detectado:', event.detail);
+        // Recarregar anotações para garantir que tudo está atualizado
+        carregarAnotacoes();
+      };
+
+      window.addEventListener('apostila-anotacao-adicionada', handleAnotacaoAdicionada);
+
+      // Limpar subscrição
       return () => {
-        if (channel) supabase.removeChannel(channel);
+        supabase.removeChannel(channel);
+        window.removeEventListener('apostila-anotacao-adicionada', handleAnotacaoAdicionada);
       };
     }
   }, [open]);
 
-  const configurarRealtimeApostila = () => {
-    try {
-      const channel = supabase
-        .channel('apostila_anotacoes_changes')
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'apostila_anotacoes',
-          },
-          async (payload) => {
-            console.log('Nova anotação adicionada:', payload.new);
+  // Carregar anotações do usuário
+  const carregarAnotacoes = async (retries = 3, delayMs = 500) => {
+    let tentativaAtual = 0;
+    let ultimoErro = null;
 
-            // Buscar detalhes da pasta associada, se houver
-            if (payload.new.pasta_id) {
-              const { data: pasta, error } = await supabase
-                .from('apostila_pastas')
-                .select('id, nome, cor')
-                .eq('id', payload.new.pasta_id)
-                .single();
-
-              if (!error && pasta) {
-                const novaAnotacao = { 
-                  ...payload.new, 
-                  apostila_pastas: pasta 
-                } as Anotacao;
-
-                // Adicionar a nova anotação ao estado
-                setAnotacoes(prev => [novaAnotacao, ...prev]);
-
-                // Notificar o usuário
-                toast({
-                  title: "Nova anotação adicionada!",
-                  description: `"${novaAnotacao.titulo}" foi adicionada à sua Apostila Inteligente.`,
-                  duration: 3000,
-                });
-              }
-            } else {
-              // Adicionar a nova anotação sem pasta
-              const novaAnotacao = { 
-                ...payload.new, 
-                apostila_pastas: null 
-              } as Anotacao;
-
-              setAnotacoes(prev => [novaAnotacao, ...prev]);
-            }
-          }
-        )
-        .subscribe();
-
-      return channel;
-    } catch (err) {
-      console.error('Erro ao configurar Realtime:', err);
-      return null;
-    }
-  };
-
-  // Função para tentar carregar anotações com retry automático
-  const carregarAnotacoesComRetry = async () => {
-    setIsLoading(true);
-    setError(null);
-    setRetryCount(0);
-
-    let tentativas = 0;
-    const maxTentativas = 3;
-    let sucesso = false;
-
-    while (tentativas < maxTentativas && !sucesso) {
+    while (tentativaAtual < retries) {
+      tentativaAtual++;
       try {
-        // Tenta obter o ID do usuário de várias fontes
-        let userId = localStorage.getItem('user_id');
+        setLoading(true);
+        setError(null);
 
-        // Se não encontrar, tenta outras possíveis fontes
+        const { data: user } = await supabase.auth.getUser();
+        const userId = user?.user?.id;
+
         if (!userId) {
-          // Tenta obter do sessionStorage como fallback
-          userId = sessionStorage.getItem('user_id');
-
-          // Se ainda não encontrou, tenta buscar do localStorage com outros formatos comuns
-          if (!userId) {
-            // Verifica se existe alguma chave no localStorage que contenha 'user' e 'id'
-            for (let i = 0; i < localStorage.length; i++) {
-              const key = localStorage.key(i);
-              if (key && (key.includes('user') || key.includes('userId') || key.includes('user_id'))) {
-                const potentialId = localStorage.getItem(key);
-                if (potentialId && potentialId.length > 5) {
-                  console.log('Encontrado possível ID alternativo:', key, potentialId);
-                  userId = potentialId;
-                  // Salva no formato correto para futuras consultas
-                  localStorage.setItem('user_id', userId);
-                  break;
-                }
-              }
-            }
-          }
+          throw new Error('Usuário não autenticado');
         }
 
-        // Se ainda não encontrou o ID do usuário
-        if (!userId) {
-          console.error('ID de usuário não encontrado em nenhum local de armazenamento');
-          setError('ID de usuário não encontrado. Por favor, faça login novamente.');
-          return;
+        // Carregar pastas primeiro
+        const { data: pastasData, error: pastasError } = await supabase
+          .from('apostila_pastas')
+          .select('*')
+          .eq('user_id', userId)
+          .order('nome');
+
+        if (pastasError) {
+          console.error('Erro ao carregar pastas:', pastasError);
+          throw new Error(`Erro ao carregar pastas: ${pastasError.message}`);
         }
 
-        // Registra o ID encontrado para diagnóstico
-        console.log('Carregando anotações com ID de usuário:', userId);
+        setPastas(pastasData || []);
+        console.log("Pastas carregadas:", pastasData?.length || 0);
 
-        // Verificar se a pasta selecionada existe
-        if (pastaSelecionada) {
-          const { data: pastaExiste, error: pastaError } = await supabase
-            .from('apostila_pastas')
-            .select('id')
-            .eq('id', pastaSelecionada)
-            .single();
-
-          if (pastaError && pastaError.code !== 'PGRST116') { // Ignora erro de não encontrado
-            console.warn('Pasta selecionada não existe:', pastaError);
-            // Continua mesmo assim, pois faremos uma query sem filtro de pasta
-          }
-        }
-
-        // Construir a query para buscar anotações
-        let query = supabase
+        // Usar LEFT JOIN para carregar anotações
+        // Isso resolve o problema do relacionamento
+        const { data: anotacoesRaw, error: anotacoesError } = await supabase
           .from('apostila_anotacoes')
-          .select(`
-            id,
-            titulo,
-            conteudo,
-            tags,
-            data_exportacao,
-            pasta_id,
-            modelo_anotacao,
-            user_id,
-            apostila_pastas(
-              id,
-              nome,
-              cor
-            )
-          `)
+          .select('*, pasta:apostila_pastas(*)')
           .eq('user_id', userId)
           .order('data_exportacao', { ascending: false });
 
-        // Filtrar por pasta se houver uma selecionada
-        if (pastaSelecionada) {
-          query = query.eq('pasta_id', pastaSelecionada);
+        // Se o erro específico for sobre o relacionamento, tentar uma consulta alternativa
+        if (anotacoesError && anotacoesError.message.includes('relationship between')) {
+          console.warn('Erro de relacionamento, tentando consulta alternativa');
+
+          // Consulta alternativa sem junção
+          const { data: anotacoesSemJoin, error: erroSemJoin } = await supabase
+            .from('apostila_anotacoes')
+            .select('*')
+            .eq('user_id', userId)
+            .order('data_exportacao', { ascending: false });
+
+          if (erroSemJoin) {
+            console.error('Erro na consulta alternativa:', erroSemJoin);
+            throw new Error(`Erro ao carregar anotações: ${erroSemJoin.message}`);
+          }
+
+          // Para cada anotação com pasta_id, buscar dados da pasta separadamente
+          const anotacoesProcessadas = await Promise.all(
+            (anotacoesSemJoin || []).map(async (anotacao) => {
+              if (anotacao.pasta_id) {
+                // Buscar pasta para esta anotação
+                const { data: pastaData } = await supabase
+                  .from('apostila_pastas')
+                  .select('id, nome, cor')
+                  .eq('id', anotacao.pasta_id)
+                  .eq('user_id', userId)
+                  .single();
+
+                return {
+                  ...anotacao,
+                  pasta: pastaData || null
+                };
+              }
+              return {
+                ...anotacao,
+                pasta: null
+              };
+            })
+          );
+
+          console.log('Anotações carregadas (método alternativo):', anotacoesProcessadas?.length || 0);
+          setAnotacoes(anotacoesProcessadas || []);
+        } else if (anotacoesError) {
+          console.error('Erro ao carregar anotações:', anotacoesError);
+          throw new Error(`Erro ao carregar anotações: ${anotacoesError.message}`);
+        } else {
+          // Processar dados da consulta normal se não houve erro
+          const anotacoesProcessadas = (anotacoesRaw || []).map(anotacao => ({
+            ...anotacao,
+            apostila_pastas: anotacao.pasta // Manter compatibilidade com o restante do código
+          }));
+
+          console.log('Anotações carregadas:', anotacoesProcessadas?.length || 0);
+          setAnotacoes(anotacoesProcessadas || []);
         }
 
-        // Filtrar por termo de busca, se houver
-        if (searchTerm) {
-          query = query.or(`titulo.ilike.%${searchTerm}%,conteudo.ilike.%${searchTerm}%`);
+        // Selecionar todas as pastas inicialmente
+        setFiltroAtual('todas');
+
+        // Se chegou aqui, operação foi bem-sucedida
+        return;
+      } catch (error) {
+        console.error(`Erro ao carregar dados (tentativa ${tentativaAtual}/${retries}):`, error);
+        ultimoErro = error;
+
+        // Se não for a última tentativa, esperar antes de tentar novamente
+        if (tentativaAtual < retries) {
+          await new Promise(resolve => setTimeout(resolve, delayMs));
         }
-
-        const { data, error } = await query;
-
-        if (error) {
-          throw error;
+      } finally {
+        if (tentativaAtual === retries) {
+          setLoading(false);
         }
-
-        // Verificar se temos dados válidos
-        if (!data) {
-          throw new Error('Nenhuma anotação encontrada');
-        }
-
-        setAnotacoes(data);
-        sucesso = true;
-      } catch (err: any) {
-        console.error(`Erro ao carregar anotações (tentativa ${tentativas + 1}/${maxTentativas}):`, err);
-        tentativas++;
-        setRetryCount(tentativas);
-
-        if (tentativas === maxTentativas) {
-          setError('Erro ao carregar anotações: ' + err.message);
-        }
-
-        // Esperar um pouco antes de tentar novamente
-        await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
 
-    setIsLoading(false);
+    // Se chegou aqui, todas as tentativas falharam
+    setError(ultimoErro?.message || 'Erro ao carregar anotações');
+    setLoading(false);
+
+    // Se não há anotações, mostrar estado vazio em vez de erro
+    if (!anotacoes.length) {
+      setAnotacoes([]);
+    }
   };
 
   const carregarPastas = async () => {
@@ -381,7 +418,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
 
   const handleRetry = () => {
     setRetryCount(prev => prev + 1);
-    carregarAnotacoesComRetry();
+    carregarAnotacoes();
   };
 
   const handleCriarPasta = async () => {
@@ -483,6 +520,9 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
             <BookOpen className="h-5 w-5" />
             Apostila Inteligente
           </DialogTitle>
+          <Button onClick={onClose} className="text-white bg-transparent hover:bg-gray-800 rounded-md p-1">
+            <X className="h-5 w-5"/>
+          </Button>
         </DialogHeader>
 
         <div className="flex h-[calc(100%-60px)]">
@@ -551,7 +591,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
             </div>
 
             <ScrollArea className="flex-1 p-4">
-              {isLoading ? (
+              {loading ? (
                 <div className="flex flex-col justify-center items-center h-full py-8">
                   <div className="animate-spin w-8 h-8 border-2 border-t-transparent border-blue-500 rounded-full mb-4"></div>
                   <p className="text-gray-300">Carregando suas anotações...</p>
@@ -600,12 +640,14 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                     >
                       <div className="flex justify-between mb-2">
                         <div className="flex items-center">
-                          <h3 className="font-medium text-white">{anotacao.titulo}</h3>
-                          {isNewAnotacao(anotacao.data_exportacao) && (
-                            <span className="ml-2 bg-green-500/20 text-green-300 text-xs px-1.5 py-0.5 rounded-sm font-medium">
-                              Novo!
-                            </span>
-                          )}
+                          <h3 className="font-medium text-white">
+                            {anotacao.titulo}
+                            {isNewAnotacao(anotacao.data_exportacao) && (
+                              <span className="ml-2 bg-green-500/20 text-green-300 text-xs px-1.5 py-0.5 rounded-sm font-medium">
+                                Novo!
+                              </span>
+                            )}
+                          </h3>
                         </div>
                         <div className="flex space-x-1">
                           <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-gray-400 hover:text-white">

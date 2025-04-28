@@ -390,7 +390,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
           }
 
           // Verificar se os dados foram fornecidos corretamente
-          if (!data.titulo || !data.conteudo || !data.pastaId) {
+          if (!data.titulo || !data.conteudo) {
             throw new Error('Dados incompletos para exportação');
           }
 
@@ -411,8 +411,8 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
                 user_id: userId,
                 titulo: data.titulo,
                 conteudo: data.conteudo,
-                modelo_anotacao: data.modelo,
-                tags: data.tags,
+                modelo_anotacao: data.modelo || 'padrao',
+                tags: data.tags || [],
                 status: 'exportado',
                 data_criacao: new Date().toISOString()
               }
@@ -426,65 +426,83 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
           }
 
           console.log('Anotação salva no caderno_anotacoes com ID:', cadernoInsertData?.id);
-          const result = cadernoInsertData;
-
-          // Se chegou aqui, a inserção no caderno foi bem-sucedida
-          sucesso = true;
-
-          // Verificar primeiro se a pasta existe
-          const { data: pastaData, error: pastaError } = await supabase
-            .from('apostila_pastas')
-            .select('id, nome')
-            .eq('id', data.pastaId)
-            .single();
-
-          // Se a pasta não existir, usar uma pasta padrão ou criar uma nova
-          let pastaFinalId = data.pastaId;
-
-          if (pastaError) {
-            console.log("Pasta não encontrada, criando pasta padrão:", pastaError);
-
-            // Criar pasta padrão "Minhas Anotações"
-            const { data: novaPasta, error: novaPastaError } = await supabase
+          
+          // Verificar pasta - permitir pasta_id null para anotações sem pasta
+          let pastaFinalId = null;
+          
+          if (data.pastaId) {
+            // Verificar se a pasta existe
+            const { data: pastaData, error: pastaError } = await supabase
               .from('apostila_pastas')
-              .insert([
-                {
-                  nome: "Minhas Anotações",
-                  cor: "#4285F4",
-                  user_id: userId
-                }
-              ])
-              .select('id')
+              .select('id, nome')
+              .eq('id', data.pastaId)
               .single();
 
-            if (novaPastaError) {
-              throw new Error(`Erro ao criar pasta padrão: ${novaPastaError.message}`);
-            }
+            // Se a pasta existir, usar seu ID
+            if (!pastaError && pastaData) {
+              pastaFinalId = pastaData.id;
+              console.log("Pasta encontrada:", pastaData.nome);
+            } else {
+              console.log("Pasta não encontrada, tentando criar pasta padrão:", pastaError);
 
-            pastaFinalId = novaPasta.id;
+              try {
+                // Criar pasta padrão "Minhas Anotações"
+                const { data: novaPasta, error: novaPastaError } = await supabase
+                  .from('apostila_pastas')
+                  .insert([
+                    {
+                      nome: "Minhas Anotações",
+                      cor: "#4285F4",
+                      user_id: userId
+                    }
+                  ])
+                  .select('id')
+                  .single();
+
+                if (novaPastaError) {
+                  console.error("Erro ao criar pasta padrão:", novaPastaError);
+                  // Continua sem pasta se não conseguir criar
+                } else if (novaPasta) {
+                  pastaFinalId = novaPasta.id;
+                  console.log("Pasta padrão criada com ID:", pastaFinalId);
+                }
+              } catch (err) {
+                console.error("Erro ao criar pasta padrão:", err);
+                // Continuar sem pasta se houver erro
+              }
+            }
           }
 
           // Criar anotação na Apostila Inteligente
-          const { data: anotacaoData, error: anotacaoError } = await supabase
+          const anotacaoData = {
+            titulo: data.titulo,
+            conteudo: data.conteudo,
+            tags: data.tags || [],
+            data_exportacao: new Date().toISOString(),
+            pasta_id: pastaFinalId, // Pode ser null, o que é válido
+            modelo_anotacao: data.modelo || 'padrao',
+            user_id: userId,
+            origem: 'caderno'
+          };
+
+          console.log("Inserindo anotação na apostila_anotacoes:", {
+            titulo: anotacaoData.titulo,
+            pasta_id: anotacaoData.pasta_id,
+            user_id: anotacaoData.user_id
+          });
+
+          const { data: insertedAnotacao, error: anotacaoError } = await supabase
             .from('apostila_anotacoes')
-            .insert([
-              {
-                titulo: data.titulo,
-                conteudo: data.conteudo,
-                tags: data.tags,
-                data_exportacao: new Date().toISOString(),
-                pasta_id: pastaFinalId,
-                modelo_anotacao: data.modelo,
-                user_id: userId
-              }
-            ])
-            .select('id')
+            .insert([anotacaoData])
+            .select('id, titulo, pasta_id')
             .single();
 
           if (anotacaoError) {
+            console.error("Erro detalhado ao inserir anotação:", anotacaoError);
             throw new Error(`Erro ao inserir anotação: ${anotacaoError.message}`);
           }
 
+          console.log("Anotação inserida com sucesso:", insertedAnotacao);
           sucesso = true;
 
           // Mostrar notificação de sucesso
@@ -495,9 +513,26 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
 
           // Disparar evento para o modal da Apostila atualizar
           const apostilaModalEvent = new CustomEvent('apostila-anotacao-adicionada', {
-            detail: { pastaId: pastaFinalId }
+            detail: { 
+              pastaId: pastaFinalId,
+              anotacaoId: insertedAnotacao?.id 
+            }
           });
           window.dispatchEvent(apostilaModalEvent);
+          
+          // Registrar atividade no log (opcional)
+          try {
+            await supabase.from('user_activity_logs').insert({
+              user_id: userId,
+              acao: 'exportou anotação',
+              anotacao_id: insertedAnotacao?.id,
+              timestamp: new Date().toISOString(),
+              detalhes: `Anotação "${data.titulo}" exportada para a Apostila Inteligente`
+            });
+          } catch (logError) {
+            console.warn("Não foi possível registrar log:", logError);
+            // Não falhar a operação principal se o log falhar
+          }
         } catch (error: any) {
           console.error("Erro ao exportar para apostila (tentativa " + tentativas + "):", error);
           ultimoErro = error;
@@ -514,7 +549,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
           variant: "destructive"
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro geral na exportação:", error);
       toast({
         title: "Erro na exportação",

@@ -92,6 +92,15 @@ mode = "sequential"
 task = "shell.exec"
 args = "node scripts/api-server.js"
 
+[[workflows.workflow]]
+name = "Corrigir Relação Apostila"
+author = 41255696
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node scripts/fix-apostila-relation.js"
+
 [auth]
 pageEnabled = false
 buttonEnabled = false
