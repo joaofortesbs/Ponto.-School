@@ -336,9 +336,237 @@ const ExportarParaApostilaModal: React.FC<ExportarParaApostilaModalProps> = ({
             )}
           </Button>
         </DialogFooter>
+      </Dconst handleRemoveTag = (tag: string) => {
+    setTags(tags.filter(t => t !== tag));
+  };
+  
+  const handleExport = async () => {
+    if (!titulo || !pastaId) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha o título e selecione uma pasta",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsExporting(true);
+    
+    try {
+      await onExport({
+        titulo,
+        conteudo: anotacaoContent,
+        pastaId,
+        tags,
+        modelo: anotacaoModelo
+      });
+      
+      onOpenChange(false);
+      
+      toast({
+        title: "Anotação exportada!",
+        description: "Sua anotação foi adicionada à Apostila Inteligente com sucesso",
+      });
+      
+    } catch (error) {
+      console.error("Erro ao exportar anotação:", error);
+      toast({
+        title: "Erro ao exportar",
+        description: "Não foi possível exportar sua anotação. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+  
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl p-0 overflow-hidden bg-white dark:bg-[#121826] rounded-xl border-0 shadow-2xl">
+        <DialogHeader className="px-6 py-4 border-b border-blue-100 dark:border-blue-900/30 bg-gradient-to-r from-blue-50/80 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-800/10 backdrop-blur-sm flex flex-row items-center justify-between">
+          <div className="flex items-center">
+            <div className="bg-blue-100 dark:bg-blue-700/30 rounded-full p-2 mr-3">
+              <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <DialogTitle className="text-xl font-medium text-blue-800 dark:text-blue-300">
+              Exportar para Apostila Inteligente
+            </DialogTitle>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-blue-700 hover:text-red-600 hover:bg-red-50 dark:text-blue-400 dark:hover:text-red-400 dark:hover:bg-red-900/20 ml-1 transition-all duration-300"
+            onClick={() => onOpenChange(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </DialogHeader>
+        
+        <div className="p-6">
+          <div className="mb-4">
+            <Label htmlFor="titulo" className="mb-1.5 block text-gray-700 dark:text-gray-300">Título da anotação</Label>
+            <Input 
+              id="titulo"
+              value={titulo}
+              onChange={(e) => setTitulo(e.target.value)}
+              className="w-full"
+              placeholder="Digite um título para sua anotação"
+            />
+          </div>
+          
+          <div className="mb-4">
+            <Label htmlFor="pasta" className="mb-1.5 block text-gray-700 dark:text-gray-300">Selecione uma pasta</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+              {pastas.map(pasta => (
+                <div
+                  key={pasta.id}
+                  className={`p-3 rounded-lg border cursor-pointer flex items-center gap-2 transition-all ${
+                    pastaId === pasta.id
+                      ? 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-700'
+                      : 'border-gray-200 hover:border-blue-200 dark:border-gray-700 dark:hover:border-blue-700'
+                  }`}
+                  onClick={() => setPastaId(pasta.id)}
+                >
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: pasta.cor }}
+                  />
+                  <span className="flex-1 text-sm">{pasta.nome}</span>
+                </div>
+              ))}
+            </div>
+            
+            {criandoPasta ? (
+              <div className="mt-2 p-3 border border-blue-200 dark:border-blue-800 rounded-lg bg-blue-50/50 dark:bg-blue-900/10">
+                <div className="flex items-center mb-2">
+                  <Label htmlFor="novaPasta" className="text-sm text-gray-700 dark:text-gray-300 mr-2">
+                    Nova pasta:
+                  </Label>
+                  <Input 
+                    id="novaPasta"
+                    value={novaPasta.nome}
+                    onChange={(e) => setNovaPasta({...novaPasta, nome: e.target.value})}
+                    className="flex-1 h-8 text-sm"
+                    placeholder="Nome da pasta"
+                  />
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <div className="flex gap-1">
+                    {["#42C5F5", "#F5C542", "#4CAF50", "#F44336", "#9C27B0"].map(cor => (
+                      <button
+                        key={cor}
+                        className={`w-4 h-4 rounded-full ${novaPasta.cor === cor ? 'ring-2 ring-offset-2 ring-blue-400' : ''}`}
+                        style={{ backgroundColor: cor }}
+                        onClick={() => setNovaPasta({...novaPasta, cor})}
+                        type="button"
+                      />
+                    ))}
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setCriandoPasta(false)}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      onClick={() => {
+                        // Simular a criação de pasta (em produção, chamar a API)
+                        const novaPastaObj = {
+                          id: `nova-${Date.now()}`,
+                          nome: novaPasta.nome || "Nova Pasta",
+                          cor: novaPasta.cor
+                        };
+                        setPastas([...pastas, novaPastaObj]);
+                        setPastaId(novaPastaObj.id);
+                        setCriandoPasta(false);
+                        setNovaPasta({ nome: "", cor: "#42C5F5" });
+                      }}
+                    >
+                      Criar
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-1"
+                onClick={() => setCriandoPasta(true)}
+              >
+                <Plus className="h-4 w-4 mr-1" /> Criar nova pasta
+              </Button>
+            )}
+          </div>
+          
+          <div className="mb-6">
+            <Label className="mb-1.5 block text-gray-700 dark:text-gray-300">Tags (opcional)</Label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {tags.map(tag => (
+                <Badge 
+                  key={tag} 
+                  variant="secondary"
+                  className="pl-2 pr-1 py-1 flex items-center gap-1"
+                >
+                  {tag}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-4 w-4 p-0 rounded-full ml-1 hover:bg-gray-200 dark:hover:bg-gray-700"
+                    onClick={() => handleRemoveTag(tag)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </Badge>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Input
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                className="flex-1"
+                placeholder="Adicionar tag"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddTag();
+                  }
+                }}
+              />
+              <Button
+                onClick={handleAddTag}
+                disabled={!tagInput.trim()}
+              >
+                Adicionar
+              </Button>
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-3 mt-6">
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleExport}
+              disabled={isExporting || !titulo || !pastaId}
+              className="gap-2"
+            >
+              {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookOpen className="h-4 w-4" />}
+              {isExporting ? "Exportando..." : "Exportar para Apostila"}
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
 };
 
-export default ExportarParaApostilaModal;
+export default ExportarParaApostilaModal;rt default ExportarParaApostilaModal;

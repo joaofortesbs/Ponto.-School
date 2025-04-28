@@ -77,9 +77,8 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
 }) => {
   // Estados
   const [pastas, setPastas] = useState<Pasta[]>([]);
-
+  const [pastaSelecionada, setPastaSelecionada] = useState<string | null>(null);
   const [anotacoes, setAnotacoes] = useState<Anotacao[]>([]);
-
   const [loading, setLoading] = useState(false);
 
   // Carregar pastas e anotações do Supabase
@@ -314,7 +313,6 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
     }
   }, [open]);
 
-  const [pastaSelecionada, setPastaSelecionada] = useState<string | null>(null);
   const [anotacaoSelecionada, setAnotacaoSelecionada] = useState<string | null>(null);
   const [pesquisa, setPesquisa] = useState("");
   const [criandoPasta, setCriandoPasta] = useState(false);
