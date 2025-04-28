@@ -353,13 +353,14 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
     let sucesso = false;
     let ultimoErro;
     let tentativas = 0;
-    
+
     try {
       setIsExporting(true);
-      
+
       while (!sucesso && tentativas < 3) { // Até 3 tentativas
+        tentativas++;
         try {
-          const userId = localStorage.getItem('user_id') || 'anonymous';
+          const userId = localStorage.getItem('user_id') || '';
 
           // Verificar se os dados foram fornecidos corretamente
           if (!data.titulo || !data.conteudo || !data.pastaId) {
@@ -401,112 +402,94 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
           // Se chegou aqui, a inserção no caderno foi bem-sucedida
           sucesso = true;
 
-          // 2. Exportar para a apostila_anotacoes
-          const {
-            data: apostilaData,
-            error: apostilaError
-          } = await supabase
+          // Verificar primeiro se a pasta existe
+          const { data: pastaData, error: pastaError } = await supabase
+            .from('apostila_pastas')
+            .select('id, nome')
+            .eq('id', data.pastaId)
+            .single();
+
+          // Se a pasta não existir, usar uma pasta padrão ou criar uma nova
+          let pastaFinalId = data.pastaId;
+
+          if (pastaError) {
+            console.log("Pasta não encontrada, criando pasta padrão:", pastaError);
+
+            // Criar pasta padrão "Minhas Anotações"
+            const { data: novaPasta, error: novaPastaError } = await supabase
+              .from('apostila_pastas')
+              .insert([
+                {
+                  nome: "Minhas Anotações",
+                  cor: "#4285F4",
+                  user_id: userId
+                }
+              ])
+              .select('id')
+              .single();
+
+            if (novaPastaError) {
+              throw new Error(`Erro ao criar pasta padrão: ${novaPastaError.message}`);
+            }
+
+            pastaFinalId = novaPasta.id;
+          }
+
+          // Criar anotação na Apostila Inteligente
+          const { data: anotacaoData, error: anotacaoError } = await supabase
             .from('apostila_anotacoes')
             .insert([
               {
-                user_id: userId,
-                pasta_id: data.pastaId,
                 titulo: data.titulo,
                 conteudo: data.conteudo,
-                modelo_anotacao: data.modelo,
                 tags: data.tags,
-                data_criacao: new Date().toISOString(),
                 data_exportacao: new Date().toISOString(),
-                origem: 'caderno'
+                pasta_id: pastaFinalId,
+                modelo_anotacao: data.modelo,
+                user_id: userId
               }
             ])
-            .select();
+            .select('id')
+            .single();
 
-          if (apostilaError) {
-            console.error('Erro ao exportar para Apostila:', apostilaError);
-
-            // Verificar se o erro está relacionado à permissão RLS
-            if (apostilaError.code === '42501') {
-              throw new Error('Erro de permissão: Verifique se você tem acesso para exportar anotações.');
-            } else {
-              throw new Error(`Erro ao exportar para Apostila: ${apostilaError.message}`);
-            }
+          if (anotacaoError) {
+            throw new Error(`Erro ao inserir anotação: ${anotacaoError.message}`);
           }
 
-          // 3. Atualizar o status da anotação no caderno
-          if (result.data && result.data[0]) {
-            const { error: updateError } = await supabase
-              .from('caderno_anotacoes')
-              .update({ 
-                status: 'exportado',
-                data_atualizacao: new Date().toISOString()
-              })
-              .eq('id', result.data[0].id)
-              .eq('user_id', userId); // Garantir que atualize apenas as anotações do usuário
+          sucesso = true;
 
-            if (updateError) {
-              console.error('Erro ao atualizar status da anotação:', updateError);
-              // Não falhar o processo principal se apenas a atualização de status falhar
-            }
-          }
-
-          // 4. Registrar a atividade (opcional)
-          try {
-            await supabase.from('user_activity_logs').insert({
-              user_id: userId,
-              acao: 'exportou anotação',
-              anotacao_id: apostilaData?.[0]?.id,
-              timestamp: new Date().toISOString(),
-              detalhes: `Anotação "${data.titulo}" exportada para a Apostila Inteligente.`
-            });
-          } catch (logError) {
-            console.warn('Falha ao registrar log de atividade:', logError);
-            // Não falhar o processo principal por causa do log
-          }
-
-          console.log('Exportação concluída com sucesso');
-
+          // Mostrar notificação de sucesso
           toast({
             title: "Exportado com sucesso!",
-            description: "Sua anotação foi exportada para a Apostila Inteligente.",
+            description: "Sua anotação foi adicionada à Apostila Inteligente.",
           });
 
-          break; // Sair do loop se for bem-sucedido
-          
-        } catch (err) {
-          ultimoErro = err;
-          console.error(`Tentativa ${tentativas + 1} falhou:`, err);
-          // Esperar um tempo antes de tentar novamente (backoff exponencial)
-          await new Promise(resolve => setTimeout(resolve, Math.pow(2, tentativas) * 1000));
-          tentativas++;
+          // Disparar evento para o modal da Apostila atualizar
+          const apostilaModalEvent = new CustomEvent('apostila-anotacao-adicionada', {
+            detail: { pastaId: pastaFinalId }
+          });
+          window.dispatchEvent(apostilaModalEvent);
+        } catch (error: any) {
+          console.error("Erro ao exportar para apostila (tentativa " + tentativas + "):", error);
+          ultimoErro = error;
+          // Pequeno delay antes da próxima tentativa
+          await new Promise(resolve => setTimeout(resolve, 500));
         }
       }
 
       if (!sucesso) {
-        // Se todas as tentativas falharam
-        console.error('Todas as tentativas de exportação falharam:', ultimoErro);
+        console.error("Falha após todas as tentativas:", ultimoErro);
         toast({
           title: "Erro ao exportar",
-          description: `Não foi possível exportar após várias tentativas: ${ultimoErro instanceof Error ? ultimoErro.message : 'Erro desconhecido'}`,
+          description: `Não foi possível exportar para a Apostila Inteligente: ${ultimoErro?.message || 'Erro desconhecido'}`,
           variant: "destructive"
         });
-      } else {
-        // Apenas fechar o modal após confirmar que tudo foi processado
-        setTimeout(() => {
-          setExportModalOpen(false);
-        }, 1000);
-
-        // Atualizar as anotações no componente de Apostila se estiver aberto
-        const apostilaModalEvent = new CustomEvent('apostila-anotacao-adicionada', {
-          detail: { pastaId: data.pastaId }
-        });
-        window.dispatchEvent(apostilaModalEvent);
       }
     } catch (error) {
-      console.error('Erro inesperado durante exportação:', error);
+      console.error("Erro geral na exportação:", error);
       toast({
-        title: "Erro ao exportar",
-        description: "Ocorreu um erro inesperado. Por favor, tente novamente.",
+        title: "Erro na exportação",
+        description: "Ocorreu um erro durante o processo de exportação.",
         variant: "destructive"
       });
     } finally {
@@ -787,8 +770,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
                   </li>
                   <li className="flex items-center text-blue-600 dark:text-blue-300">
                     <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mr-2"></div>
-                    <button className="text-sm hover:underline">Organizar em tópicos</button>
-                  </li>
+                    <button className="text-sm hover:underline">Organizar em tópicos</button></li>
                 </ul>
               </div>
             )}

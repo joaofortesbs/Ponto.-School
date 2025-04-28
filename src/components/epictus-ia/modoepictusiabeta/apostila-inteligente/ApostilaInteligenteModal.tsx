@@ -22,7 +22,9 @@ interface Anotacao {
   data_exportacao: string;
   pasta_id: string | null;
   modelo_anotacao: string;
+  user_id: string;
   apostila_pastas?: {
+    id: string;
     nome: string;
     cor?: string;
   } | null;
@@ -32,6 +34,7 @@ interface Pasta {
   id: string;
   nome: string;
   cor: string;
+  user_id: string;
 }
 
 interface ApostilaInteligenteModalProps {
@@ -84,7 +87,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
             if (payload.new.pasta_id) {
               const { data: pasta, error } = await supabase
                 .from('apostila_pastas')
-                .select('nome, cor')
+                .select('id, nome, cor')
                 .eq('id', payload.new.pasta_id)
                 .single();
 
@@ -125,102 +128,179 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
   };
 
   // Função para tentar carregar anotações com retry automático
-  const carregarAnotacoesComRetry = async (maxRetries = 3) => {
+  const carregarAnotacoesComRetry = async () => {
     setIsLoading(true);
     setError(null);
+    setRetryCount(0);
 
-    for (let tentativa = 0; tentativa <= maxRetries; tentativa++) {
+    let tentativas = 0;
+    const maxTentativas = 3;
+    let sucesso = false;
+
+    while (tentativas < maxTentativas && !sucesso) {
       try {
-        const resultado = await carregarAnotacoes();
-        if (resultado) {
-          // Sucesso na carga, resetar contador de tentativas
-          setRetryCount(0);
-          return;
+        const userId = localStorage.getItem('user_id');
+
+        if (!userId) {
+          throw new Error('ID de usuário não encontrado. Por favor, faça login novamente.');
         }
 
-        // Se chegou aqui, houve um problema
-        if (tentativa < maxRetries) {
-          // Aguardar antes de tentar novamente (backoff exponencial)
-          const espera = Math.pow(2, tentativa) * 1000;
-          await new Promise(resolve => setTimeout(resolve, espera));
-          console.log(`Tentativa ${tentativa + 1} de ${maxRetries} falhou, tentando novamente...`);
+        // Verificar se a pasta selecionada existe
+        if (pastaSelecionada) {
+          const { data: pastaExiste, error: pastaError } = await supabase
+            .from('apostila_pastas')
+            .select('id')
+            .eq('id', pastaSelecionada)
+            .single();
+
+          if (pastaError && pastaError.code !== 'PGRST116') { // Ignora erro de não encontrado
+            console.warn('Pasta selecionada não existe:', pastaError);
+            // Continua mesmo assim, pois faremos uma query sem filtro de pasta
+          }
         }
-      } catch (error) {
-        console.error(`Erro na tentativa ${tentativa + 1}:`, error);
-        if (tentativa >= maxRetries) {
-          setError('Erro ao carregar anotações. Não foi possível carregar suas anotações. Tente novamente.');
-          setIsLoading(false);
-          setRetryCount(tentativa + 1);
+
+        // Construir a query para buscar anotações
+        let query = supabase
+          .from('apostila_anotacoes')
+          .select(`
+            id,
+            titulo,
+            conteudo,
+            tags,
+            data_exportacao,
+            pasta_id,
+            modelo_anotacao,
+            user_id,
+            apostila_pastas:pasta_id (
+              id,
+              nome,
+              cor
+            )
+          `)
+          .eq('user_id', userId)
+          .order('data_exportacao', { ascending: false });
+
+        // Filtrar por pasta se houver uma selecionada
+        if (pastaSelecionada) {
+          query = query.eq('pasta_id', pastaSelecionada);
         }
+
+        // Filtrar por termo de busca, se houver
+        if (searchTerm) {
+          query = query.or(`titulo.ilike.%${searchTerm}%,conteudo.ilike.%${searchTerm}%`);
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+          throw error;
+        }
+
+        // Verificar se temos dados válidos
+        if (!data) {
+          throw new Error('Nenhuma anotação encontrada');
+        }
+
+        setAnotacoes(data);
+        sucesso = true;
+      } catch (err: any) {
+        console.error(`Erro ao carregar anotações (tentativa ${tentativas + 1}/${maxTentativas}):`, err);
+        tentativas++;
+        setRetryCount(tentativas);
+
+        if (tentativas === maxTentativas) {
+          setError('Erro ao carregar anotações: ' + err.message);
+        }
+
+        // Esperar um pouco antes de tentar novamente
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
 
     setIsLoading(false);
   };
 
-  const carregarAnotacoes = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('apostila_anotacoes')
-        .select(`
-          *,
-          apostila_pastas (
-            nome,
-            cor
-          )
-        `)
-        .order('data_exportacao', { ascending: false });
-
-      if (error) {
-        console.error('Erro ao carregar anotações:', error);
-        if (error.code === 'PGRST116') {
-          setError('Nenhuma anotação encontrada. Exporte anotações do Caderno para começar.');
-        } else if (error.code === '42501') {
-          setError('Permissão negada. Verifique suas credenciais e tente novamente.');
-        } else {
-          setError(`Erro ao carregar anotações: ${error.message}`);
-        }
-        return false;
-      }
-
-      if (!data || data.length === 0) {
-        setError('Nenhuma anotação encontrada. Exporte anotações do Caderno para começar.');
-        setAnotacoes([]);
-        return true;
-      }
-
-      setAnotacoes(data);
-      return true;
-    } catch (err) {
-      console.error('Erro ao carregar anotações:', err);
-      setError('Erro inesperado ao carregar anotações. Tente novamente.');
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const carregarPastas = async () => {
     try {
-      const { data, error } = await supabase
-        .from('apostila_pastas')
-        .select('*')
-        .order('nome');
+      setIsLoading(true);
+      const userId = localStorage.getItem('user_id');
 
-      if (error) {
-        console.error('Erro ao carregar pastas:', error);
-        toast({
-          title: "Erro ao carregar pastas",
-          description: "Não foi possível carregar suas pastas. Algumas funcionalidades podem estar limitadas.",
-          variant: "destructive",
-          duration: 5000,
-        });
+      if (!userId) {
+        console.error('ID de usuário não encontrado');
+        setError('ID de usuário não encontrado. Por favor, faça login novamente.');
         return;
       }
 
-      setPastas(data || []);
+      let tentativas = 0;
+      let dados = null;
+      let ultimoErro = null;
+
+      while (tentativas < 3 && !dados) {
+        try {
+          const { data, error } = await supabase
+            .from('apostila_pastas')
+            .select('*')
+            .eq('user_id', userId)
+            .order('nome');
+
+          if (error) {
+            throw error;
+          }
+
+          dados = data;
+        } catch (err: any) {
+          tentativas++;
+          ultimoErro = err;
+          console.error(`Erro ao carregar pastas (tentativa ${tentativas}/3):`, err);
+          // Aguardar antes da próxima tentativa
+          await new Promise(r => setTimeout(r, 500));
+        }
+      }
+
+      if (!dados) {
+        console.error('Falha após todas as tentativas de carregar pastas:', ultimoErro);
+        setError('Não foi possível carregar suas pastas. Algumas funcionalidades podem estar limitadas.');
+
+        // Tentar criar uma pasta padrão se necessário
+        try {
+          const { data: novaPasta, error: novaPastaError } = await supabase
+            .from('apostila_pastas')
+            .insert([
+              {
+                nome: "Minhas Anotações",
+                cor: "#4285F4",
+                user_id: userId
+              }
+            ])
+            .select();
+
+          if (novaPastaError) {
+            throw novaPastaError;
+          }
+
+          if (novaPasta && novaPasta.length > 0) {
+            setPastas(novaPasta);
+            setPastaSelecionada(novaPasta[0].id);
+            console.log('Pasta padrão criada com sucesso');
+          }
+        } catch (err) {
+          console.error('Erro ao criar pasta padrão:', err);
+        }
+
+        return;
+      }
+
+      setPastas(dados);
+
+      // Se tiver pastas e nenhuma estiver selecionada, seleciona a primeira
+      if (dados && dados.length > 0 && !pastaSelecionada) {
+        setPastaSelecionada(dados[0].id);
+      }
     } catch (err) {
       console.error('Erro ao carregar pastas:', err);
+      setError('Ocorreu um erro ao carregar suas pastas.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -256,10 +336,14 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
     ][Math.floor(Math.random() * 8)];
 
     try {
+      const userId = localStorage.getItem('user_id');
+      if (!userId) {
+        throw new Error('ID de usuário não encontrado');
+      }
       const { data, error } = await supabase
         .from('apostila_pastas')
         .insert([
-          { nome: nomePasta, cor: corPasta }
+          { nome: nomePasta, cor: corPasta, user_id: userId }
         ])
         .select()
         .single();
@@ -481,7 +565,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
                           <div 
                             className="h-2 w-2 mr-1 rounded-full" 
                             style={{ 
-                              backgroundColor: anotacao.apostila_pastas.cor || '#42C5F5' 
+                              backgroundColor: anotacao.apostila_pastas.cor || '#42C5F4' 
                             }}
                           />
                           <span className="text-gray-400">
