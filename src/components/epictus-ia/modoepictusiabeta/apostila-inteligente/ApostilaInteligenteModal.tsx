@@ -72,7 +72,7 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
 
 
   // Função para verificar se uma anotação é nova (menos de 24 horas)
-  const isNewAnotacao = (dataExportacao) => {
+  const isNewAnotacao = (dataExportacao: string | null): boolean => {
     if (!dataExportacao) return false;
     const now = new Date();
     const exportDate = new Date(dataExportacao);
@@ -399,13 +399,8 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
     }
   };
 
-  // Função auxiliar para verificar se uma anotação é nova (menos de 24h)
-  const isNewAnotacao = (dataExportacao: string) => {
-    const now = new Date();
-    const exportDate = new Date(dataExportacao);
-    const diffHours = (now.getTime() - exportDate.getTime()) / (1000 * 60 * 60);
-    return diffHours < 24;
-  };
+  // Função auxiliar para recuperar a propriedade de anotação nova 
+  // (usando a função já definida acima)
 
   const anotacoesFiltradas = anotacoes.filter(anotacao => {
     const matchesPasta = pastaSelecionada ? anotacao.pasta_id === pastaSelecionada : true;
