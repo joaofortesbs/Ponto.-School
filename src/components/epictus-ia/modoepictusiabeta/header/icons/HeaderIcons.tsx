@@ -6,7 +6,7 @@ import ModoFantasmaIcon from "./ModoFantasmaIcon";
 import GaleriaIcon from "./GaleriaIcon";
 import PerfilIcon from "./PerfilIcon";
 import HistoricoConversasModal from "../../../modals/HistoricoConversasModal";
-import { ApostilaInteligenteModal } from "../../apostila-inteligente"; // Import from the correct path
+import { ApostilaInteligenteModal } from "../../apostila-inteligente";
 
 interface HeaderIconsProps {
   currentContext?: string;
@@ -29,7 +29,7 @@ const HeaderIcons: React.FC<HeaderIconsProps> = ({
 }) => {
   const [modoFantasmaAtivo, setModoFantasmaAtivo] = useState(false);
   const [isHistoricoModalOpen, setIsHistoricoModalOpen] = useState(false);
-  const [isApostilaInteligenteModalOpen, setIsApostilaInteligenteModalOpen] = useState(false); // State for the new modal
+  const [isApostilaInteligenteModalOpen, setIsApostilaInteligenteModalOpen] = useState(false);
 
   const handleModoFantasmaClick = () => {
     setModoFantasmaAtivo(!modoFantasmaAtivo);
@@ -43,19 +43,19 @@ const HeaderIcons: React.FC<HeaderIconsProps> = ({
   };
 
   const handleApostilaInteligenteClick = () => {
-    setIsApostilaInteligenteModalOpen(true); // Open the new modal
+    setIsApostilaInteligenteModalOpen(true);
   };
 
   return (
     <div className="flex items-center justify-center z-10 relative gap-3">
       <HistoricoIcon onClick={handleHistoricoClick} />
       <EspacoAprendizagemIcon onClick={onEspacoAprendizagemClick} />
-      <ApostilaInteligenteIcon onClick={handleApostilaInteligenteClick} /> {/* Updated onClick handler */}
+      <ApostilaInteligenteIcon onClick={handleApostilaInteligenteClick} />
       <ModoFantasmaIcon onClick={handleModoFantasmaClick} active={modoFantasmaAtivo} />
       <GaleriaIcon onClick={onGaleriaClick} />
       <PerfilIcon onClick={onPerfilClick} />
       <HistoricoConversasModal open={isHistoricoModalOpen} onOpenChange={setIsHistoricoModalOpen} />
-      <ApostilaInteligenteModal open={isApostilaInteligenteModalOpen} onOpenChange={setIsApostilaInteligenteModalOpen} /> {/* Render the new modal */}
+      <ApostilaInteligenteModal open={isApostilaInteligenteModalOpen} onOpenChange={setIsApostilaInteligenteModalOpen} />
     </div>
   );
 };
