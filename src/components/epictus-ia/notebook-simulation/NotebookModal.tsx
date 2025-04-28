@@ -788,12 +788,12 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
             {showSuggestions && !isEditing && (
               <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-100 dark:border-blue-800/30 animate-fadeIn">
                 <h4 className="text-blue-700 dark:text-blue-300 font-medium mb-2">Sugestões para sua anotação:</h4>
-                <<ul className="space-y-2">
+                <ul className="space-y-2">
                   <li className="flex items-center text-blue-600 dark:text-blue-300">
                     <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mr-2"></div>
                     <button className="text-sm hover:underline">Adicionar um resumo no final</button>
                   </li>
-                  <li className="flex itemscenter text-blue-600 dark:text-blue-300">
+                  <li className="flex items-center text-blue-600 dark:text-blue-300">
                     <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mr-2"></div>
                     <button className="text-sm hover:underline">Marcar como importante</button>
                   </li>
