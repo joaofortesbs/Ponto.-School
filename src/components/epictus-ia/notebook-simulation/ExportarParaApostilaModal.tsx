@@ -107,6 +107,14 @@ const ExportarParaApostilaModal: React.FC<ExportarParaApostilaModalProps> = ({
     try {
       setIsExporting(true);
       
+      console.log("Iniciando exportação de anotação:", {
+        titulo,
+        tamanhoConteudo: anotacaoContent.length,
+        pastaId,
+        tags,
+        modelo: anotacaoModelo
+      });
+      
       await onExport({
         titulo,
         conteudo: anotacaoContent,
@@ -120,6 +128,7 @@ const ExportarParaApostilaModal: React.FC<ExportarParaApostilaModalProps> = ({
         description: "Anotação exportada com sucesso para a Apostila Inteligente.",
       });
       
+      console.log("Exportação concluída com sucesso");
       onOpenChange(false);
     } catch (error) {
       console.error("Erro ao exportar anotação:", error);
