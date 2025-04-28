@@ -6,7 +6,7 @@ import ModoFantasmaIcon from "./ModoFantasmaIcon";
 import GaleriaIcon from "./GaleriaIcon";
 import PerfilIcon from "./PerfilIcon";
 import HistoricoConversasModal from "../../../modals/HistoricoConversasModal";
-import ApostilaInteligenteModal from "../../../modals/ApostilaInteligenteModal"; // Import the new modal component
+import { ApostilaInteligenteModal } from "../../apostila-inteligente"; // Import from the correct path
 
 interface HeaderIconsProps {
   currentContext?: string;
