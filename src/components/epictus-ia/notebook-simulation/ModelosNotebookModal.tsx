@@ -2,9 +2,8 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
-import { BookOpen, Sparkles, AlignLeft, FileText, X, ChevronRight } from 'lucide-react';
+import { BookOpen, Sparkles, AlignLeft, FileText, X } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
-import { motion } from 'framer-motion';
 
 interface ModelosNotebookModalProps {
   open: boolean;
@@ -139,186 +138,95 @@ const ModelosNotebookModal: React.FC<ModelosNotebookModalProps> = ({
     });
   };
 
-  // Variantes para animações
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1,
-      transition: { 
-        staggerChildren: 0.1,
-        delayChildren: 0.2
-      } 
-    }
-  };
-  
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { 
-      y: 0, 
-      opacity: 1,
-      transition: { 
-        type: "spring", 
-        stiffness: 100,
-        damping: 12
-      }
-    },
-    hover: {
-      scale: 1.02,
-      boxShadow: "0 8px 30px rgba(0, 0, 0, 0.12)",
-      transition: { type: "spring", stiffness: 400, damping: 10 }
-    }
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md p-0 overflow-hidden flex flex-col rounded-2xl border-0 shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] bg-gradient-to-b from-[#111827] to-[#0c1018]">
-        <DialogHeader className="sticky top-0 z-10 px-6 py-4 border-b border-gray-800/60 backdrop-blur-md bg-black/30">
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center">
-              <div className="relative mr-3 flex items-center justify-center">
-                <div className="absolute inset-0 rounded-full bg-amber-500/10 blur-sm"></div>
-                <BookOpen className="h-4 w-4 text-amber-400" />
-              </div>
-              <div>
-                <DialogTitle className="text-lg font-medium text-white">
-                  Modelos de Anotações
-                </DialogTitle>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  Selecione um template para suas anotações
-                </p>
-              </div>
+      <DialogContent className="max-w-md p-0 bg-white dark:bg-[#121826] overflow-hidden flex flex-col rounded-xl border-0 shadow-2xl">
+        <DialogHeader className="px-6 py-4 border-b border-amber-100 dark:border-amber-900/30 bg-gradient-to-r from-amber-50/80 to-amber-100/50 dark:from-amber-900/20 dark:to-amber-800/10 backdrop-blur-sm sticky top-0 z-10 flex flex-row items-center justify-between">
+          <div className="flex items-center">
+            <div className="bg-amber-100 dark:bg-amber-700/30 rounded-full p-2 mr-3">
+              <BookOpen className="h-5 w-5 text-amber-600 dark:text-amber-400" />
             </div>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="rounded-full h-7 w-7 text-gray-400 hover:text-white hover:bg-gray-800/40 transition-all duration-300"
-              onClick={() => onOpenChange(false)}
-            >
-              <X className="h-3.5 w-3.5" />
-            </Button>
+            <DialogTitle className="text-xl font-medium text-amber-800 dark:text-amber-300">
+              Modelos de Anotações
+            </DialogTitle>
           </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-amber-700 hover:text-red-600 hover:bg-red-50 dark:text-amber-400 dark:hover:text-red-400 dark:hover:bg-red-900/20 transition-all duration-300"
+            onClick={() => onOpenChange(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </DialogHeader>
         
-        <motion.div 
-          className="p-5 space-y-3 max-h-[60vh] overflow-y-auto custom-scrollbar"
-          initial="hidden"
-          animate="visible"
-          variants={containerVariants}
-        >
-          <motion.div 
-            variants={itemVariants}
-            whileHover="hover"
-            className="relative overflow-hidden group"
+        <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+          <Button
+            variant="outline"
+            size="lg"
+            className="w-full justify-start text-left p-4 border-amber-200 hover:border-amber-400 transition-all duration-300 dark:border-amber-800/40 dark:hover:border-amber-700"
+            onClick={() => handleSelectTemplate('estudoCompleto')}
           >
-            <Button
-              variant="outline"
-              onClick={() => handleSelectTemplate('estudoCompleto')}
-              className="w-full justify-start text-left p-4 rounded-xl border border-gray-800/30 bg-gray-900/40 backdrop-blur-sm hover:bg-gray-800/40 transition-all duration-300"
-            >
-              <div className="flex items-center w-full">
-                <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-gray-800 mr-3">
-                  <BookOpen className="h-3.5 w-3.5 text-amber-400" />
-                </div>
-                
-                <div className="flex-1">
-                  <p className="font-medium text-white text-sm">Estudo Completo</p>
-                  <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
-                    Conteúdo completo e detalhado para aprendizado profundo
-                  </p>
-                </div>
-                
-                <ChevronRight className="h-4 w-4 text-gray-500 group-hover:text-gray-300 transition-all duration-300 ml-2" />
-              </div>
-            </Button>
-          </motion.div>
+            <BookOpen className="h-5 w-5 mr-3 text-amber-600 dark:text-amber-400" />
+            <div>
+              <p className="font-medium text-amber-800 dark:text-amber-300">Estudo Completo</p>
+              <p className="text-xs text-amber-600/80 dark:text-amber-400/70 mt-1">
+                Conteúdo completo e detalhado para aprendizado profundo
+              </p>
+            </div>
+          </Button>
           
-          <motion.div 
-            variants={itemVariants}
-            whileHover="hover"
-            className="relative overflow-hidden group"
+          <Button
+            variant="outline"
+            size="lg"
+            className="w-full justify-start text-left p-4 border-amber-200 hover:border-amber-400 transition-all duration-300 dark:border-amber-800/40 dark:hover:border-amber-700"
+            onClick={() => handleSelectTemplate('mapaConceitual')}
           >
-            <Button
-              variant="outline"
-              onClick={() => handleSelectTemplate('mapaConceitual')}
-              className="w-full justify-start text-left p-4 rounded-xl border border-gray-800/30 bg-gray-900/40 backdrop-blur-sm hover:bg-gray-800/40 transition-all duration-300"
-            >
-              <div className="flex items-center w-full">
-                <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-gray-800 mr-3">
-                  <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-                </div>
-                
-                <div className="flex-1">
-                  <p className="font-medium text-white text-sm">Mapa Conceitual</p>
-                  <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
-                    Visualização hierárquica de conceitos e suas relações
-                  </p>
-                </div>
-                
-                <ChevronRight className="h-4 w-4 text-gray-500 group-hover:text-gray-300 transition-all duration-300 ml-2" />
-              </div>
-            </Button>
-          </motion.div>
+            <Sparkles className="h-5 w-5 mr-3 text-blue-500 dark:text-blue-400" />
+            <div>
+              <p className="font-medium text-amber-800 dark:text-amber-300">Mapa Conceitual</p>
+              <p className="text-xs text-amber-600/80 dark:text-amber-400/70 mt-1">
+                Visualização hierárquica de conceitos e suas relações
+              </p>
+            </div>
+          </Button>
           
-          <motion.div 
-            variants={itemVariants}
-            whileHover="hover"
-            className="relative overflow-hidden group"
+          <Button
+            variant="outline"
+            size="lg"
+            className="w-full justify-start text-left p-4 border-amber-200 hover:border-amber-400 transition-all duration-300 dark:border-amber-800/40 dark:hover:border-amber-700"
+            onClick={() => handleSelectTemplate('revisaoRapida')}
           >
-            <Button
-              variant="outline"
-              onClick={() => handleSelectTemplate('revisaoRapida')}
-              className="w-full justify-start text-left p-4 rounded-xl border border-gray-800/30 bg-gray-900/40 backdrop-blur-sm hover:bg-gray-800/40 transition-all duration-300"
-            >
-              <div className="flex items-center w-full">
-                <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-gray-800 mr-3">
-                  <AlignLeft className="h-3.5 w-3.5 text-amber-400" />
-                </div>
-                
-                <div className="flex-1">
-                  <p className="font-medium text-white text-sm">Revisão Rápida</p>
-                  <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
-                    Resumo direto para revisão antes de provas e simulados
-                  </p>
-                </div>
-                
-                <ChevronRight className="h-4 w-4 text-gray-500 group-hover:text-gray-300 transition-all duration-300 ml-2" />
-              </div>
-            </Button>
-          </motion.div>
+            <AlignLeft className="h-5 w-5 mr-3 text-green-500 dark:text-green-400" />
+            <div>
+              <p className="font-medium text-amber-800 dark:text-amber-300">Revisão Rápida</p>
+              <p className="text-xs text-amber-600/80 dark:text-amber-400/70 mt-1">
+                Resumo direto para revisão antes de provas e simulados
+              </p>
+            </div>
+          </Button>
           
-          <motion.div 
-            variants={itemVariants}
-            whileHover="hover"
-            className="relative overflow-hidden group"
+          <Button
+            variant="outline"
+            size="lg"
+            className="w-full justify-start text-left p-4 border-amber-200 hover:border-amber-400 transition-all duration-300 dark:border-amber-800/40 dark:hover:border-amber-700"
+            onClick={() => handleSelectTemplate('fichamento')}
           >
-            <Button
-              variant="outline"
-              onClick={() => handleSelectTemplate('fichamento')}
-              className="w-full justify-start text-left p-4 rounded-xl border border-gray-800/30 bg-gray-900/40 backdrop-blur-sm hover:bg-gray-800/40 transition-all duration-300"
-            >
-              <div className="flex items-center w-full">
-                <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-gray-800 mr-3">
-                  <FileText className="h-3.5 w-3.5 text-amber-400" />
-                </div>
-                
-                <div className="flex-1">
-                  <p className="font-medium text-white text-sm">Fichamento</p>
-                  <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
-                    Organiza citações, interpretações e análises críticas de textos
-                  </p>
-                </div>
-                
-                <ChevronRight className="h-4 w-4 text-gray-500 group-hover:text-gray-300 transition-all duration-300 ml-2" />
-              </div>
-            </Button>
-          </motion.div>
-        </motion.div>
+            <FileText className="h-5 w-5 mr-3 text-purple-500 dark:text-purple-400" />
+            <div>
+              <p className="font-medium text-amber-800 dark:text-amber-300">Fichamento</p>
+              <p className="text-xs text-amber-600/80 dark:text-amber-400/70 mt-1">
+                Organiza citações, interpretações e análises críticas de textos
+              </p>
+            </div>
+          </Button>
+        </div>
         
-        <div className="p-4 backdrop-blur-md border-t border-gray-800/30 bg-black/20 flex justify-end">
+        <div className="p-4 border-t border-amber-100 dark:border-amber-900/30 bg-gradient-to-r from-amber-50/80 to-amber-100/50 dark:from-amber-900/20 dark:to-amber-800/10 flex justify-end">
           <Button 
             variant="outline" 
             size="sm"
-            className="rounded-lg bg-transparent border border-gray-700/50 text-gray-300 hover:bg-gray-800/30 hover:text-white transition-all duration-300"
+            className="border-amber-200 text-amber-700 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-400 dark:hover:bg-amber-900/20 transition-all duration-300"
             onClick={() => onOpenChange(false)}
           >
             Cancelar
