@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { X, Plus, FolderPlus, Tag, Save, FileText } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/lib/supabase';
 
 interface ExportarParaApostilaModalProps {
   open: boolean;
@@ -184,7 +185,8 @@ const ExportarParaApostilaModal: React.FC<ExportarParaApostilaModalProps> = ({
           }
           
           console.log("Pasta padrão criada:", novaPasta[0]);
-          pastaId = novaPasta[0].id;
+          // Usar a função setter do useState para atualizar o pastaId
+          setPastaId(novaPasta[0].id);
         } catch (err) {
           throw new Error("Erro ao criar pasta padrão. Tente usar a opção 'Corrigir Relação Apostila' no menu Workflows.");
         }
