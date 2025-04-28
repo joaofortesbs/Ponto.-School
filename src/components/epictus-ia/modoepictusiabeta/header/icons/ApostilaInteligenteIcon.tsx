@@ -1,18 +1,6 @@
 import React, { useState } from "react";
 import HeaderIcon from "./HeaderIcon";
-
-// Placeholder for the missing ApostilaInteligenteModal component
-const ApostilaInteligenteModal = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) => {
-  if (!open) return null;
-  return (
-    <div className="modal">
-      <div className="modal-content">
-        <h1>Apostila Inteligente</h1>
-        <button onClick={() => onOpenChange(false)}>Fechar</button>
-      </div>
-    </div>
-  );
-};
+import { ApostilaInteligenteModal } from "../../apostila-inteligente";
 
 
 interface ApostilaInteligenteIconProps {
