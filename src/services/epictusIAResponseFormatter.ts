@@ -4,81 +4,101 @@ import { EpictusIABehavior } from '../config/epictusIABehavior';
 export class EpictusIAResponseFormatter {
   private behavior = EpictusIABehavior;
 
-  formatResponse(content: string, userProfile: string, context: any = {}) {
+  formatResponse(content: string, userProfile: string = 'student', context: any = {}) {
+    // Formata a resposta com elementos visuais ricos
+    const formattedContent = this.addVisualElements(content);
     const response = {
-      introduction: this.createIntroduction(content, context),
-      mainContent: this.formatMainContent(content),
+      greeting: this.createGreeting(),
+      mainContent: this.formatMainContent(formattedContent),
       conclusion: this.createConclusion(content),
-      proactiveActions: this.getProactiveActions(),
       visualElements: this.suggestVisualElements(content)
     };
 
-    return this.adaptToUserProfile(response, userProfile);
+    return this.wrapInMarkdown(this.adaptToUserProfile(response, userProfile));
   }
 
-  private createIntroduction(content: string, context: any) {
-    // Implementação da lógica de introdução
-    return {
-      context: context,
-      welcomeMessage: this.generateWelcomeMessage(),
-      briefOverview: this.generateOverview(content)
-    };
+  private createGreeting() {
+    const greetings = [
+      "👋 Oi! Que bom te ver por aqui!",
+      "✨ Olá! Pronto para mais uma sessão de estudos?",
+      "🌟 Oi! Vamos aprender juntos hoje?"
+    ];
+    return greetings[Math.floor(Math.random() * greetings.length)];
   }
 
   private formatMainContent(content: string) {
-    // Implementação da formatação do conteúdo principal
-    return {
-      topics: this.organizeIntoTopics(content),
-      examples: this.extractExamples(content),
-      explanations: this.createExplanations(content)
-    };
+    const sections = this.splitIntoSections(content);
+    return sections.map(section => this.formatSection(section)).join('\n\n');
+  }
+
+  private splitIntoSections(content: string) {
+    // Divide o conteúdo em seções lógicas
+    return content.split('\n\n').filter(Boolean);
+  }
+
+  private formatSection(section: string) {
+    // Adiciona elementos visuais e formatação rica
+    const formattedSection = this.addEmphasis(section);
+    return this.addVisualContainers(formattedSection);
+  }
+
+  private addEmphasis(text: string) {
+    // Adiciona negrito, itálico e emojis contextuais
+    return text.replace(/\b(importante|nota|dica|exemplo)\b/gi, match => {
+      const icons = {
+        importante: '⚠️',
+        nota: '📝',
+        dica: '💡',
+        exemplo: '✨'
+      };
+      return `**${icons[match.toLowerCase()]} ${match.toUpperCase()}**`;
+    });
+  }
+
+  private addVisualContainers(content: string) {
+    // Adiciona containers visuais como tabelas, cards e caixas de destaque
+    if (content.includes('lista') || content.includes('passos')) {
+      return this.createChecklist(content);
+    }
+    if (content.includes('compare') || content.includes('versus')) {
+      return this.createComparisonTable(content);
+    }
+    return this.createInfoCard(content);
+  }
+
+  private createChecklist(content: string) {
+    const items = content.split('\n').map(item => item.trim());
+    return items.map(item => `✅ ${item}`).join('\n');
+  }
+
+  private createComparisonTable(content: string) {
+    // Cria uma tabela de comparação formatada
+    return `| 📊 Comparação | Detalhes |\n|-------------|----------|\n${content}`;
+  }
+
+  private createInfoCard(content: string) {
+    // Cria um card informativo com bordas e destaque
+    return `\`\`\`\n💡 ${content}\n\`\`\``;
   }
 
   private createConclusion(content: string) {
-    // Implementação da conclusão
-    return {
-      summary: this.generateSummary(content),
-      nextSteps: this.suggestNextSteps(content),
-      proactiveQuestions: this.getRandomProactiveQuestion()
-    };
+    const motivationalMessages = [
+      "💪 Agora é com você! Me chama se precisar de mais ajuda!",
+      "🎯 Você está no caminho certo! Continue assim!",
+      "✨ Juntos vamos mais longe! Conte comigo sempre!"
+    ];
+    return motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
   }
 
-  private getProactiveActions() {
-    return this.behavior.proactiveFeatures.suggestedActions;
-  }
-
-  private suggestVisualElements(content: string) {
-    // Implementação da sugestão de elementos visuais
-    return {
-      tables: this.shouldIncludeTable(content),
-      graphs: this.shouldIncludeGraph(content),
-      flowcharts: this.shouldIncludeFlowchart(content)
-    };
+  private wrapInMarkdown(response: any) {
+    return `${response.greeting}\n\n${response.mainContent}\n\n${response.conclusion}`;
   }
 
   private adaptToUserProfile(response: any, userProfile: string) {
     const profileSettings = this.behavior.adaptiveBehavior.userProfiles[userProfile];
-    // Adapta a resposta de acordo com o perfil do usuário
     return {
       ...response,
-      focus: profileSettings?.focus,
-      tone: profileSettings?.tone
+      tone: profileSettings?.tone || 'casual'
     };
   }
-
-  // Métodos auxiliares
-  private generateWelcomeMessage() { /* implementação */ }
-  private generateOverview(content: string) { /* implementação */ }
-  private organizeIntoTopics(content: string) { /* implementação */ }
-  private extractExamples(content: string) { /* implementação */ }
-  private createExplanations(content: string) { /* implementação */ }
-  private generateSummary(content: string) { /* implementação */ }
-  private suggestNextSteps(content: string) { /* implementação */ }
-  private getRandomProactiveQuestion() {
-    const questions = this.behavior.proactiveFeatures.followUpQuestions;
-    return questions[Math.floor(Math.random() * questions.length)];
-  }
-  private shouldIncludeTable(content: string) { /* implementação */ }
-  private shouldIncludeGraph(content: string) { /* implementação */ }
-  private shouldIncludeFlowchart(content: string) { /* implementação */ }
 }
