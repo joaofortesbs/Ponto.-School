@@ -348,7 +348,11 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
         throw new Error('Conteúdo ou título não podem estar vazios');
       }
 
-      const userId = localStorage.getItem('user_id') || sessionStorage.getItem('user_id');
+      // Verificar autenticação em múltiplas fontes
+      const userId = localStorage.getItem('user_id') || 
+                    sessionStorage.getItem('user_id') || 
+                    localStorage.getItem('sb-auth-token');
+
       if (!userId) {
         toast({
           title: "Erro de autenticação",
@@ -356,6 +360,12 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
           variant: "destructive",
           duration: 4000
         });
+        
+        // Redirecionar para página de login se necessário
+        setTimeout(() => {
+          window.location.href = '/auth/login';
+        }, 2000);
+        
         return;
       }
 
