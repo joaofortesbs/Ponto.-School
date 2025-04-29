@@ -360,12 +360,12 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
           variant: "destructive",
           duration: 4000
         });
-        
+
         // Redirecionar para página de login se necessário
         setTimeout(() => {
           window.location.href = '/auth/login';
         }, 2000);
-        
+
         return;
       }
 
@@ -389,7 +389,7 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
 
       await indexedDBManager.saveAnotacao(userId, anotacao);
       setExportModalOpen(true);
-      
+
       toast({
         title: "Sucesso",
         description: "Anotação exportada para a Apostila Inteligente",
