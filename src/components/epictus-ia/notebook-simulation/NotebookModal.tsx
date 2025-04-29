@@ -334,12 +334,40 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
     }
   }, [editedContent]);
 
-  const handleExportToApostila = () => {
-    // Salvar localmente primeiro
-    localStorage.setItem('saved_notebook_content', editedContent);
+  const handleExportToApostila = async () => {
+    try {
+      const userId = localStorage.getItem('user_id') || 'anonymous';
+      const expirationDays = await indexedDBManager.getExpirationDays(userId);
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + expirationDays);
 
-    // Abrir modal de exportação
-    setExportModalOpen(true);
+      const anotacao = {
+        id: generateUUID(),
+        titulo: anotacaoTitulo,
+        conteudo: editedContent,
+        modelo_anotacao: "Estudo Completo",
+        tags: [],
+        data_criacao: new Date().toISOString(),
+        data_exportacao: null,
+        origem: 'caderno',
+        pasta_id: null,
+        expires_at: expiresAt.toISOString()
+      };
+
+      await indexedDBManager.saveAnotacao(userId, anotacao);
+      setExportModalOpen(true);
+      
+      toast({
+        title: "Sucesso",
+        description: "Anotação salva localmente"
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar a anotação",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleExportComplete = async (data: {

@@ -86,13 +86,23 @@ const ApostilaInteligenteModal: React.FC<ApostilaInteligenteModalProps> = ({
   const carregarPastas = async () => {
     try {
       const userId = localStorage.getItem('user_id') || 'anonymous';
+      const pastas = await indexedDBManager.getPastas(userId);
+      
+      // Convert IndexedDB data to expected format
+      const pastasFormatted = pastas.map(pasta => ({
+        id: pasta.id,
+        nome: pasta.nome,
+        cor: pasta.cor || "#42C5F5",
+        user_id: pasta.user_id,
+        descricao: pasta.descricao,
+        data_criacao: new Date(pasta.data_criacao)
+      }));
 
-      const { data, error } = await supabase
-        .from('apostila_pastas')
-        .select('*')
-        .eq('user_id', userId);
+      setPastas(pastasFormatted);
 
-      if (error) throw error;
+      if (pastasFormatted.length > 0 && !pastaSelecionada) {
+        setPastaSelecionada(pastasFormatted[0].id);
+      }
 
       if (data && data.length > 0) {
         // Converter dados do banco para o formato da interface Pasta
