@@ -130,6 +130,14 @@ sua contribuição, limitações e relações com outros conhecimentos.
 • Contradições ou complementos com a teoria Z`
 };
 
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, content }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(content);
@@ -336,10 +344,18 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
 
   const handleExportToApostila = async () => {
     try {
-      const userId = localStorage.getItem('user_id') || 'anonymous';
+      if (!editedContent || !anotacaoTitulo) {
+        throw new Error('Conteúdo ou título não podem estar vazios');
+      }
+
+      const userId = localStorage.getItem('user_id');
+      if (!userId) {
+        throw new Error('Usuário não identificado');
+      }
+
       const expirationDays = await indexedDBManager.getExpirationDays(userId);
       const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + expirationDays);
+      expiresAt.setDate(expiresAt.getDate() + (expirationDays || 90)); // fallback para 90 dias
 
       const anotacao = {
         id: generateUUID(),
@@ -348,10 +364,11 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
         modelo_anotacao: "Estudo Completo",
         tags: [],
         data_criacao: new Date().toISOString(),
-        data_exportacao: null,
+        data_exportacao: new Date().toISOString(),
         origem: 'caderno',
         pasta_id: null,
-        expires_at: expiresAt.toISOString()
+        expires_at: expiresAt.toISOString(),
+        user_id: userId
       };
 
       await indexedDBManager.saveAnotacao(userId, anotacao);
@@ -359,13 +376,16 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
       
       toast({
         title: "Sucesso",
-        description: "Anotação salva localmente"
+        description: "Anotação exportada para a Apostila Inteligente",
+        duration: 3000
       });
     } catch (error) {
+      console.error('Erro ao exportar:', error);
       toast({
-        title: "Erro",
-        description: "Não foi possível salvar a anotação",
-        variant: "destructive"
+        title: "Erro ao exportar",
+        description: error instanceof Error ? error.message : "Não foi possível salvar a anotação",
+        variant: "destructive",
+        duration: 4000
       });
     }
   };

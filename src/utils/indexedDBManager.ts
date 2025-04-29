@@ -19,8 +19,18 @@ const indexedDBManager = {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-      request.onerror = () => reject(new Error('Erro ao abrir o IndexedDB'));
-      request.onsuccess = () => resolve(request.result);
+      request.onerror = (event) => {
+        console.error('Erro ao abrir IndexedDB:', event);
+        reject(new Error('Erro ao abrir o IndexedDB'));
+      };
+      
+      request.onsuccess = () => {
+        const db = request.result;
+        db.onerror = (event) => {
+          console.error('Erro no IndexedDB:', event);
+        };
+        resolve(db);
+      };
 
       request.onupgradeneeded = (event: any) => {
         const db = event.target.result;
