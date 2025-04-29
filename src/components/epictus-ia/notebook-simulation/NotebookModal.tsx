@@ -348,9 +348,15 @@ const NotebookModal: React.FC<NotebookModalProps> = ({ open, onOpenChange, conte
         throw new Error('Conteúdo ou título não podem estar vazios');
       }
 
-      const userId = localStorage.getItem('user_id');
+      const userId = localStorage.getItem('user_id') || sessionStorage.getItem('user_id');
       if (!userId) {
-        throw new Error('Usuário não identificado');
+        toast({
+          title: "Erro de autenticação",
+          description: "Por favor, faça login novamente para exportar suas anotações",
+          variant: "destructive",
+          duration: 4000
+        });
+        return;
       }
 
       const expirationDays = await indexedDBManager.getExpirationDays(userId);
