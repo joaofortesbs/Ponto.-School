@@ -43,7 +43,7 @@ const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, isAI = fal
             <blockquote className="border-l-4 border-orange-500 dark:border-orange-400 pl-4 my-4 italic text-gray-700 dark:text-gray-300" {...props} />
           ),
           strong: ({ node, ...props }) => (
-            <strong className="font-semibold text-orange-600 dark:text-orange-400" {...props} />
+            <strong className="font-bold text-[#FF6B00] dark:text-[#FF8C40] bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 dark:from-[#FF6B00]/20 dark:to-[#FF8C40]/20 px-1 py-0.5 rounded-sm" {...props} />
           ),
           h1: ({ node, ...props }) => (
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4 mt-6 pb-2 border-b border-gray-200 dark:border-gray-700" {...props} />
