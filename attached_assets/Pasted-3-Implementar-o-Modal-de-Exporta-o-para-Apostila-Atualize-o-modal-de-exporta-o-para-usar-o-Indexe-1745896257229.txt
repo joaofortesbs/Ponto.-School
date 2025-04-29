@@ -1,0 +1,127 @@
+3. Implementar o Modal de Exportação para Apostila
+Atualize o modal de exportação para usar o IndexedDB com o tempo de expiração configurável.
+
+Arquivo: src/components/ExportToApostilaModal.js
+Código:
+JavaScript
+
+Copiar
+import React, { useState, useEffect } from 'react';
+import indexedDBManager from '../utils/indexedDBManager';
+import { toast } from 'react-toastify';
+
+const ExportToApostilaModal = ({ userId, anotacao, onClose, onExport }) => {
+  const [pastas, setPastas] = useState([]);
+  const [selectedPastaId, setSelectedPastaId] = useState('');
+  const [novaPastaNome, setNovaPastaNome] = useState('');
+  const [novaPastaDescricao, setNovaPastaDescricao] = useState('');
+
+  useEffect(() => {
+    const fetchPastas = async () => {
+      const pastasSalvas = await indexedDBManager.getPastas(userId);
+      setPastas(pastasSalvas);
+    };
+    fetchPastas();
+  }, [userId]);
+
+  const generateUUID = () => {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  };
+
+  const handleCreatePasta = async () => {
+    try {
+      const expirationDays = await indexedDBManager.getExpirationDays(userId);
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + expirationDays);
+
+      const novaPasta = {
+        id: generateUUID(),
+        user_id: userId,
+        nome: novaPastaNome,
+        descricao: novaPastaDescricao,
+        data_criacao: new Date().toISOString(),
+        expires_at: expiresAt.toISOString()
+      };
+
+      await indexedDBManager.savePasta(userId, novaPasta);
+      const updatedPastas = await indexedDBManager.getPastas(userId);
+      setPastas(updatedPastas);
+      setSelectedPastaId(novaPasta.id);
+
+      toast.success('Pasta criada com sucesso!');
+      setNovaPastaNome('');
+      setNovaPastaDescricao('');
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const expirationDays = await indexedDBManager.getExpirationDays(userId);
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + expirationDays);
+
+      const anotacaoAtualizada = {
+        ...anotacao,
+        data_exportacao: new Date().toISOString(),
+        pasta_id: selectedPastaId || null,
+        expires_at: expiresAt.toISOString() // Atualiza o expires_at ao exportar
+      };
+
+      await indexedDBManager.saveAnotacao(userId, anotacaoAtualizada);
+
+      toast.success('Anotação exportada para a Apostila Inteligente!');
+      onExport(anotacaoAtualizada);
+      onClose();
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  return (
+    <div className="modal">
+      <h2>Exportar para Apostila Inteligente</h2>
+      <h3>Selecionar Pasta</h3>
+      <select
+        value={selectedPastaId}
+        onChange={(e) => setSelectedPastaId(e.target.value)}
+      >
+        <option value="">Sem pasta</option>
+        {pastas.map(pasta => (
+          <option key={pasta.id} value={pasta.id}>{pasta.nome}</option>
+        ))}
+      </select>
+
+      <h3>Criar Nova Pasta</h3>
+      <input
+        type="text"
+        placeholder="Nome da pasta"
+        value={novaPastaNome}
+        onChange={(e) => setNovaPastaNome(e.target.value)}
+      />
+      <input
+        type="text"
+        placeholder="Descrição (opcional)"
+        value={novaPastaDescricao}
+        onChange={(e) => setNovaPastaDescricao(e.target.value)}
+      />
+      <button onClick={handleCreatePasta}>Criar Pasta</button>
+
+      <button onClick={handleExport}>Exportar Anotação</button>
+      <button onClick={onClose}>Cancelar</button>
+    </div>
+  );
+};
+
+export default ExportToApostilaModal;
+
+Mostrar na barra lateral
+Validação:
+
+No Modal de Anotações em Caderno, clique em "Salvar na Apostila Inteligente".
+Confirme que o modal de exportação aparece e permite criar uma nova pasta ou selecionar uma existente.
+Exporte uma anotação e verifique se ela está atualizada no IndexedDB com data_exportacao , pasta_id , e expires_at ajustado para o tempo configurado (padrão: 90 dias).

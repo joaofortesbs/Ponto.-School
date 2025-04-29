@@ -1,0 +1,250 @@
+🛠️ Instruções para Implementação
+
+1. Crie funções de gerenciamento do IndexedDB
+C um módulo para gerenciar anotações, pas      e preferências no IndexedDB .   
+
+Arquivo: src/utils/indexedDBManager.js
+Código:
+JavaScript
+
+Copiar
+const DB_NAME = 'anotacoes_db';
+const DB_VERSION = 1;
+const ANOTACOES_STORE = 'anotacoes';
+const PASTAS_STORE = 'pastas';
+const PREFERENCIAS_STORE = 'preferencias';
+
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+const indexedDBManager = {
+  // Abrir o banco de dados
+  async openDB() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+      request.onerror = () => reject(new Error('Erro ao abrir o IndexedDB'));
+
+      request.onsuccess = () => resolve(request.result);
+
+      request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+
+        // Criar object store para anotações
+        if (!db.objectStoreNames.contains(ANOTACOES_STORE)) {
+          const anotacoesStore = db.createObjectStore(ANOTACOES_STORE, { keyPath: 'id' });
+          anotacoesStore.createIndex('user_id', 'user_id', { unique: false });
+        }
+
+        // Criar object store para pastas
+        if (!db.objectStoreNames.contains(PASTAS_STORE)) {
+          const pastasStore = db.createObjectStore(PASTAS_STORE, { keyPath: 'id' });
+          pastasStore.createIndex('user_id', 'user_id', { unique: false });
+        }
+
+        // Criar object store para preferências
+        if (!db.objectStoreNames.contains(PREFERENCIAS_STORE)) {
+          db.createObjectStore(PREFERENCIAS_STORE, { keyPath: 'user_id' });
+        }
+      };
+    });
+  },
+
+  // Obter o tempo de expiração do usuário (padrão: 90 dias)
+  async getExpirationDays(userId) {
+    try {
+      const db = await this.openDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction(PREFERENCIAS_STORE, 'readonly');
+        const store = transaction.objectStore(PREFERENCIAS_STORE);
+        const request = store.get(userId);
+
+        request.onerror = () => reject(new Error('Erro ao carregar preferências do IndexedDB'));
+        request.onsuccess = () => {
+          const preferencia = request.result;
+          db.close();
+          resolve(preferencia ? preferencia.expiration_days : 90); // Padrão: 90 dias
+        };
+      });
+    } catch (error) {
+      console.error('Erro ao carregar preferências:', error.message);
+      return 90; // Padrão em caso de erro
+    }
+  },
+
+  // Salvar o tempo de expiração do usuário
+  async saveExpirationDays(userId, expirationDays) {
+    try {
+      const db = await this.openDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction(PREFERENCIAS_STORE, 'readwrite');
+        const store = transaction.objectStore(PREFERENCIAS_STORE);
+        const preferencia = { user_id: userId, expiration_days: expirationDays };
+        const request = store.put(preferencia);
+
+        request.onerror = () => reject(new Error('Erro ao salvar preferências no IndexedDB'));
+        request.onsuccess = () => {
+          db.close();
+          resolve();
+        };
+      });
+    } catch (error) {
+      throw new Error('Não foi possível salvar as preferências: ' + error.message);
+    }
+  },
+
+  // Obter anotações do usuário
+  async getAnotacoes(userId) {
+    try {
+      const db = await this.openDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction(ANOTACOES_STORE, 'readwrite');
+        const store = transaction.objectStore(ANOTACOES_STORE);
+        const index = store.index('user_id');
+        const request = index.getAll(userId);
+
+        request.onerror = () => reject(new Error('Erro ao carregar anotações do IndexedDB'));
+
+        request.onsuccess = () => {
+          let anotacoes = request.result || [];
+
+          // Filtrar anotações expiradas
+          const now = new Date().toISOString();
+          anotacoes = anotacoes.filter(anotacao => {
+            if (!anotacao.expires_at) return true;
+            return anotacao.expires_at > now;
+          });
+
+          // Remover anotações expiradas do IndexedDB
+          const deleteExpired = anotacoes.filter(a => a.expires_at && a.expires_at <= now);
+          deleteExpired.forEach(anotacao => store.delete(anotacao.id));
+
+          db.close();
+          resolve(anotacoes);
+        };
+      });
+    } catch (error) {
+      console.error('Erro ao carregar anotações:', error.message);
+      return [];
+    }
+  },
+
+  // Salvar uma anotação
+  async saveAnotacao(userId, anotacao) {
+    try {
+      const db = await this.openDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction(ANOTACOES_STORE, 'readwrite');
+        const store = transaction.objectStore(ANOTACOES_STORE);
+        const request = store.put(anotacao);
+
+        request.onerror = () => reject(new Error('Erro ao salvar anotação no IndexedDB'));
+        request.onsuccess = () => {
+          db.close();
+          resolve();
+        };
+      });
+    } catch (error) {
+      throw new Error('Não foi possível salvar a anotação: ' + error.message);
+    }
+  },
+
+  // Obter pastas do usuário
+  async getPastas(userId) {
+    try {
+      const db = await this.openDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction(PASTAS_STORE, 'readwrite');
+        const store = transaction.objectStore(PASTAS_STORE);
+        const index = store.index('user_id');
+        const request = index.getAll(userId);
+
+        request.onerror = () => reject(new Error('Erro ao carregar pastas do IndexedDB'));
+
+        request.onsuccess = () => {
+          let pastas = request.result || [];
+
+          // Filtrar pastas expiradas
+          const now = new Date().toISOString();
+          pastas = pastas.filter(pasta => {
+            if (!pasta.expires_at) return true;
+            return pasta.expires_at > now;
+          });
+
+          // Remover pastas expiradas do IndexedDB
+          const deleteExpired = pastas.filter(p => p.expires_at && p.expires_at <= now);
+          deleteExpired.forEach(pasta => store.delete(pasta.id));
+
+          db.close();
+          resolve(pastas);
+        };
+      });
+    } catch (error) {
+      console.error('Erro ao carregar pastas:', error.message);
+      return [];
+    }
+  },
+
+  // Salvar uma pasta
+  async savePasta(userId, pasta) {
+    try {
+      const db = await this.openDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction(PASTAS_STORE, 'readwrite');
+        const store = transaction.objectStore(PASTAS_STORE);
+        const request = store.put(pasta);
+
+        request.onerror = () => reject(new Error('Erro ao salvar pasta no IndexedDB'));
+        request.onsuccess = () => {
+          db.close();
+          resolve();
+        };
+      });
+    } catch (error) {
+      throw new Error('Não foi possível salvar a pasta: ' + error.message);
+    }
+  },
+
+  // Limpar dados do usuário
+  async clearData(userId) {
+    try {
+      const db = await this.openDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([ANOTACOES_STORE, PASTAS_STORE, PREFERENCIAS_STORE], 'readwrite');
+        const anotacoesStore = transaction.objectStore(ANOTACOES_STORE);
+        const pastasStore = transaction.objectStore(PASTAS_STORE);
+        const preferenciasStore = transaction.objectStore(PREFERENCIAS_STORE);
+
+        const anotacoesIndex = anotacoesStore.index('user_id');
+        const pastasIndex = pastasStore.index('user_id');
+
+        const deleteAnotacoes = anotacoesIndex.getAll(userId);
+        deleteAnotacoes.onsuccess = () => {
+          deleteAnotacoes.result.forEach(anotacao => anotacoesStore.delete(anotacao.id));
+        };
+
+        const deletePastas = pastasIndex.getAll(userId);
+        deletePastas.onsuccess = () => {
+          deletePastas.result.forEach(pasta => pastasStore.delete(pasta.id));
+        };
+
+        const deletePreferencias = preferenciasStore.delete(userId);
+        deletePreferencias.onerror = () => reject(new Error('Erro ao limpar preferências do IndexedDB'));
+
+        transaction.oncomplete = () => {
+          db.close();
+          resolve();
+        };
+        transaction.onerror = () => reject(new Error('Erro ao limpar dados do IndexedDB'));
+      });
+    } catch (error) {
+      throw new Error('Não foi possível limpar os dados temporários: ' + error.message);
+    }
+  }
+};
+
+export default indexedDBManager;
