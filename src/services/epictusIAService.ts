@@ -93,20 +93,36 @@ export const generateAIResponse = async (message: string, sessionId?: string): P
     const history = sessionId ? getChatHistory(sessionId) : [];
     const historyContext = history.map(m => `${m.sender === 'user' ? 'Usuário' : 'Assistente'}: ${m.content}`).join('\n\n');
 
-    // Preparar o prompt para a API Gemini
-    const prompt = `Você é o Epictus IA, um assistente educacional avançado da plataforma Ponto.School. 
-Seu objetivo é ajudar os estudantes com dúvidas sobre matérias escolares, organização de estudos, 
-preparação para provas e qualquer tema relacionado à educação.
+    // Preparar o prompt para a API Gemini com as novas diretrizes avançadas
+    const prompt = `Você é o Epictus IA, uma inteligência artificial educacional de mais alta qualidade do mercado.
+Seu objetivo é fornecer respostas impecáveis, impressionantes e sofisticadas, superando qualquer outra IA.
 
-IMPORTANTE: Sempre comece suas respostas com "Eai" e NUNCA com "Olá", "Oi" ou qualquer outra saudação.
+REGRAS CRUCIAIS:
+1. SEMPRE comece suas respostas com "Eai" e NUNCA com outra saudação.
+2. Siga uma estrutura clara com: introdução, desenvolvimento em tópicos, exemplos práticos e conclusão.
+3. Use linguagem moderna, didática e encorajadora.
+4. Adicione elementos visuais como emojis, formatação rica e destaque para conceitos-chave.
+5. Sempre ofereça próximos passos proativos no final da resposta.
+6. Mantenha um tom positivo e motivador.
+7. Seja transparente sobre limitações quando necessário.
 
-Seja amigável, didático e detalhado em suas respostas. Use uma linguagem apropriada para o contexto 
-educacional, incluindo formatação rica com markdown quando necessário para melhorar a compreensão.
+ESTRUTURA DE RESPOSTA:
+- Começo: saudação com "Eai" + contextualização breve.
+- Meio: explicação didática organizada em seções com títulos.
+- Exemplos: casos práticos destacados.
+- Fim: resumo + sugestões proativas de próximos passos + frase motivacional.
+
+FORMATAÇÃO AVANÇADA:
+- Use markdown para enriquecer a resposta.
+- Destaque conceitos importantes com **negrito**.
+- Utilize emojis contextuais para tornar a resposta visualmente atraente.
+- Crie seções com ### para organizar o conteúdo.
+- Use > para destacar exemplos e informações importantes.
 
 HISTÓRICO DA CONVERSA PARA CONTEXTO:
 ${historyContext}
 
-Responda à seguinte pergunta de forma educativa, detalhada e amigável, sempre começando com "Eai": ${message}`;
+Responda à seguinte pergunta seguindo todas as diretrizes acima: ${message}`;
 
     // Fazer a requisição para a API Gemini
     const response = await fetch(`${GEMINI_BASE_URL}?key=${GEMINI_API_KEY}`, {
@@ -134,7 +150,13 @@ Responda à seguinte pergunta de forma educativa, detalhada e amigável, sempre 
     const data = await response.json();
     
     // Extrair a resposta da IA
-    const aiResponse = data.candidates[0].content.parts[0].text;
+    let aiResponse = data.candidates[0].content.parts[0].text;
+    
+    // Garantir que a resposta comece com "Eai"
+    if (!aiResponse.startsWith("Eai")) {
+      aiResponse = aiResponse.replace(/^(olá|oi|hello|hey|hi|bom dia|boa tarde|boa noite)[\s,.!]*/i, '');
+      aiResponse = `Eai! ${aiResponse}`;
+    }
 
     // Adicionar resposta ao histórico se tiver sessionId
     if (sessionId) {

@@ -1,9 +1,13 @@
 
-import React from 'react';
-import { User, Bot } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
+import { Copy, Check, MessageCircle, Info } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 interface EpictusIAChatMessageProps {
   message: {
@@ -15,81 +19,134 @@ interface EpictusIAChatMessageProps {
   isLatestMessage?: boolean;
 }
 
-const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({ 
-  message, 
-  isLatestMessage = false 
-}) => {
-  const isAI = message.sender === 'ai' || message.sender === 'system';
+export default function EpictusIAChatMessage({ message, isLatestMessage = false }: EpictusIAChatMessageProps) {
+  const [copied, setCopied] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [isHighlighted, setIsHighlighted] = useState(false);
+  const { sender, content } = message;
   
-  // Define animation variants
-  const messageVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
+  // Determina se a mensagem da IA deve ter seções colapsáveis
+  const isLongMessage = sender === 'ai' && content.length > 500;
+  const hasMultipleSections = sender === 'ai' && (content.match(/###/g) || []).length >= 2;
+  
+  // Animação para destacar a última mensagem
+  useEffect(() => {
+    if (isLatestMessage) {
+      setIsHighlighted(true);
+      const timer = setTimeout(() => {
+        setIsHighlighted(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isLatestMessage]);
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
-  
+
+  const toggleExpand = () => {
+    setExpanded(!expanded);
+  };
+
+  const messageStyle = sender === 'user' ? {
+    background: 'bg-blue-50 dark:bg-blue-950',
+    text: 'text-blue-900 dark:text-blue-100',
+    border: 'border-blue-200 dark:border-blue-800'
+  } : {
+    background: 'bg-orange-50 dark:bg-orange-950',
+    text: 'text-orange-900 dark:text-orange-100',
+    border: 'border-orange-200 dark:border-orange-800'
+  };
+
+  // Processar conteúdo para melhorar a apresentação visual
+  const processContent = (content: string) => {
+    // Se for mensagem de IA e for longa/com seções, mostrar versão colapsada se não estiver expandida
+    if (sender === 'ai' && (isLongMessage || hasMultipleSections) && !expanded) {
+      // Extrair primeira seção ou primeiros parágrafos
+      const sections = content.split(/(?=###)/);
+      if (sections.length > 1) {
+        // Se tem seções com ###, mostrar apenas a primeira
+        return sections[0] + '\n\n...';
+      } else {
+        // Caso contrário, mostrar apenas os primeiros parágrafos
+        const paragraphs = content.split('\n\n');
+        return paragraphs.slice(0, 2).join('\n\n') + '\n\n...';
+      }
+    }
+    return content;
+  };
+
+  const displayContent = processContent(content);
+
   return (
     <motion.div
-      className={`flex ${isAI ? 'justify-start' : 'justify-end'} mb-4`}
-      initial="hidden"
-      animate="visible"
-      variants={messageVariants}
+      className={cn(
+        `p-4 my-2 rounded-lg border ${messageStyle.background} ${messageStyle.border}`,
+        isHighlighted && 'ring-2 ring-blue-400 dark:ring-blue-500'
+      )}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
     >
-      <div className={`flex max-w-[80%] ${isAI ? 'flex-row' : 'flex-row-reverse'}`}>
-        <div className={`flex-shrink-0 ${isAI ? 'mr-3' : 'ml-3'}`}>
-          <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
-            isAI ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300' : 
-                  'bg-blue-500 text-white'
-          }`}>
-            {isAI ? <Bot size={20} /> : <User size={20} />}
-          </div>
-        </div>
+      <div className="flex items-start space-x-3">
+        <Avatar className="h-8 w-8">
+          {sender === 'user' ? (
+            <>
+              <AvatarImage src="/images/tempo-image-20250329T033126386Z.png" />
+              <AvatarFallback>US</AvatarFallback>
+            </>
+          ) : (
+            <>
+              <AvatarImage src="/images/tempo-image-20250329T020810290Z.png" />
+              <AvatarFallback>AI</AvatarFallback>
+            </>
+          )}
+        </Avatar>
         
-        <div className={`rounded-xl p-3 ${
-          isAI ? 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100' : 
-                'bg-blue-500 text-white'
-        }`}>
-          <div className="markdown-content">
+        <div className={`flex-1 ${messageStyle.text}`}>
+          <div className="font-medium text-sm mb-1">
+            {sender === 'user' ? 'Você' : 'Epictus IA'}
+            {message.timestamp && (
+              <span className="text-xs opacity-70 ml-2">
+                {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
+          </div>
+          
+          <div className="prose prose-sm dark:prose-invert max-w-none">
             <ReactMarkdown 
-              remarkPlugins={[remarkGfm]}
-              components={{
-                // Customiza componentes markdown para estilização
-                h1: ({node, ...props}) => <h1 className="text-xl font-bold my-2" {...props} />,
-                h2: ({node, ...props}) => <h2 className="text-lg font-bold my-2" {...props} />,
-                h3: ({node, ...props}) => <h3 className="text-md font-bold my-1" {...props} />,
-                p: ({node, ...props}) => <p className="mb-2" {...props} />,
-                ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-2" {...props} />,
-                ol: ({node, ...props}) => <ol className="list-decimal pl-5 mb-2" {...props} />,
-                li: ({node, ...props}) => <li className="mb-1" {...props} />,
-                blockquote: ({node, ...props}) => (
-                  <blockquote className="border-l-4 border-gray-300 dark:border-gray-600 pl-3 italic my-2" {...props} />
-                ),
-                code: ({node, ...props}) => (
-                  <code className={`${
-                    isAI ? 'bg-gray-200 dark:bg-gray-700' : 'bg-blue-600'
-                  } px-1 rounded`} {...props} />
-                ),
-                pre: ({node, ...props}) => (
-                  <pre className={`${
-                    isAI ? 'bg-gray-200 dark:bg-gray-700' : 'bg-blue-600'
-                  } p-2 rounded my-2 overflow-auto`} {...props} />
-                ),
-              }}
+              remarkPlugins={[remarkGfm]} 
+              rehypePlugins={[rehypeRaw]} 
+              className="break-words"
             >
-              {message.content}
+              {displayContent}
             </ReactMarkdown>
           </div>
           
-          {message.timestamp && (
-            <div className={`text-xs mt-1 ${
-              isAI ? 'text-gray-500 dark:text-gray-400' : 'text-blue-100'
-            }`}>
-              {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </div>
+          {(isLongMessage || hasMultipleSections) && (
+            <button 
+              onClick={toggleExpand} 
+              className="text-xs text-blue-600 dark:text-blue-400 mt-2 flex items-center hover:underline"
+            >
+              <Info size={12} className="mr-1" /> 
+              {expanded ? 'Mostrar menos' : 'Mostrar mais'}
+            </button>
           )}
         </div>
+        
+        {sender === 'ai' && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="opacity-50 hover:opacity-100 transition-opacity" 
+            onClick={copyToClipboard}
+          >
+            {copied ? <Check size={16} /> : <Copy size={16} />}
+          </Button>
+        )}
       </div>
     </motion.div>
   );
-};
-
-export default EpictusIAChatMessage;
+}
