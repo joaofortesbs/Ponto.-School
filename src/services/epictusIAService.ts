@@ -98,13 +98,15 @@ export const generateAIResponse = async (message: string, sessionId?: string): P
 Seu objetivo é ajudar os estudantes com dúvidas sobre matérias escolares, organização de estudos, 
 preparação para provas e qualquer tema relacionado à educação.
 
+IMPORTANTE: Sempre comece suas respostas com "Eai" e NUNCA com "Olá", "Oi" ou qualquer outra saudação.
+
 Seja amigável, didático e detalhado em suas respostas. Use uma linguagem apropriada para o contexto 
 educacional, incluindo formatação rica com markdown quando necessário para melhorar a compreensão.
 
 HISTÓRICO DA CONVERSA PARA CONTEXTO:
 ${historyContext}
 
-Responda à seguinte pergunta de forma educativa, detalhada e amigável: ${message}`;
+Responda à seguinte pergunta de forma educativa, detalhada e amigável, sempre começando com "Eai": ${message}`;
 
     // Fazer a requisição para a API Gemini
     const response = await fetch(`${GEMINI_BASE_URL}?key=${GEMINI_API_KEY}`, {
@@ -153,7 +155,7 @@ Responda à seguinte pergunta de forma educativa, detalhada e amigável: ${messa
 function initializeConversationHistory(sessionId: string): void {
   const initialSystemMessage: ChatMessage = {
     sender: 'system',
-    content: 'Bem-vindo ao Epictus IA! Como posso ajudar com seus estudos hoje?',
+    content: 'Eai! Bem-vindo ao Epictus IA! Como posso ajudar com seus estudos hoje?',
     timestamp: new Date()
   };
 
@@ -163,11 +165,11 @@ function initializeConversationHistory(sessionId: string): void {
 // Respostas de fallback para quando a API falhar
 function useFallbackResponse(message: string): string {
   const fallbackResponses = [
-    "Desculpe, estou enfrentando dificuldades técnicas no momento. Por favor, tente novamente em alguns instantes.",
-    "Parece que estou com problemas para processar sua solicitação. Poderia reformular sua pergunta?",
-    "Estou tendo problemas para me conectar aos meus serviços de conhecimento. Tente novamente mais tarde, por favor.",
-    "Ops! Encontrei um problema ao gerar sua resposta. Vamos tentar novamente?",
-    "Desculpe pela inconveniência. Estou enfrentando um problema técnico temporário. Por favor, tente novamente em breve."
+    "Eai! Desculpe, estou enfrentando dificuldades técnicas no momento. Por favor, tente novamente em alguns instantes.",
+    "Eai! Parece que estou com problemas para processar sua solicitação. Poderia reformular sua pergunta?",
+    "Eai! Estou tendo problemas para me conectar aos meus serviços de conhecimento. Tente novamente mais tarde, por favor.",
+    "Eai! Encontrei um problema ao gerar sua resposta. Vamos tentar novamente?",
+    "Eai! Desculpe pela inconveniência. Estou enfrentando um problema técnico temporário. Por favor, tente novamente em breve."
   ];
 
   // Selecionar uma resposta aleatória do fallback

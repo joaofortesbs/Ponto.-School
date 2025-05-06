@@ -19,9 +19,9 @@ export class EpictusIAResponseFormatter {
 
   private createGreeting() {
     const greetings = [
-      "👋 Oi! Que bom te ver por aqui!",
-      "✨ Olá! Pronto para mais uma sessão de estudos?",
-      "🌟 Oi! Vamos aprender juntos hoje?"
+      "Eai! Que bom te ver por aqui!",
+      "Eai! Pronto para mais uma sessão de estudos?",
+      "Eai! Vamos aprender juntos hoje?"
     ];
     return greetings[Math.floor(Math.random() * greetings.length)];
   }
@@ -53,6 +53,11 @@ export class EpictusIAResponseFormatter {
       };
       return `**${icons[match.toLowerCase()]} ${match.toUpperCase()}**`;
     });
+  }
+
+  private addVisualElements(content: string) {
+    // Substitui possíveis saudações iniciais para garantir o padrão "Eai"
+    return content.replace(/^(olá|oi|hello|hey|hi)\b/i, 'Eai');
   }
 
   private addVisualContainers(content: string) {
@@ -88,6 +93,26 @@ export class EpictusIAResponseFormatter {
       "✨ Juntos vamos mais longe! Conte comigo sempre!"
     ];
     return motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
+  }
+
+  private suggestVisualElements(content: string) {
+    // Analisa o conteúdo para sugerir elementos visuais apropriados
+    const suggestions = [];
+    
+    if (content.toLowerCase().includes('matemática') || content.toLowerCase().includes('fórmula')) {
+      suggestions.push('gráfico');
+      suggestions.push('equação');
+    }
+    
+    if (content.toLowerCase().includes('história') || content.toLowerCase().includes('cronologia')) {
+      suggestions.push('linha do tempo');
+    }
+    
+    if (content.toLowerCase().includes('processo') || content.toLowerCase().includes('passo')) {
+      suggestions.push('fluxograma');
+    }
+    
+    return suggestions;
   }
 
   private wrapInMarkdown(response: any) {
