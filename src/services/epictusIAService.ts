@@ -74,7 +74,7 @@ const GEMINI_API_KEY = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 // Função para gerar resposta da IA usando a API Gemini
-export const generateAIResponse = async (message: string, sessionId?: string): Promise<string> => {
+export const generateAIResponse = async (message: string, sessionId?: string, options?: any): Promise<string> => {
   try {
     console.log("Gerando resposta com Gemini para:", message);
 
@@ -92,6 +92,12 @@ export const generateAIResponse = async (message: string, sessionId?: string): P
     // Obter o histórico para contexto
     const history = sessionId ? getChatHistory(sessionId) : [];
     const historyContext = history.map(m => `${m.sender === 'user' ? 'Usuário' : 'Assistente'}: ${m.content}`).join('\n\n');
+
+    // Extrair informações do perfil do usuário a partir do histórico
+    const userProfile = extractUserProfile(history);
+    
+    // Identificar o contexto do pedido atual
+    const requestContext = analyzeRequestContext(message, history);
 
     // Preparar o prompt para a API Gemini com as novas diretrizes avançadas
     const prompt = `Você é o Epictus IA, uma inteligência artificial educacional de mais alta qualidade do mercado.
@@ -118,6 +124,22 @@ FORMATAÇÃO AVANÇADA:
 - Utilize emojis contextuais para tornar a resposta visualmente atraente.
 - Crie seções com ### para organizar o conteúdo.
 - Use > para destacar exemplos e informações importantes.
+
+PODERES AVANÇADOS - USE TODOS ESTES RECURSOS:
+1. Adapte o estilo de escrita ao contexto (formal acadêmico, moderno/dinâmico, ou corporativo/profissional).
+2. Use frases curtas, palavras claras e exemplos relevantes.
+3. Crie elementos visuais quando apropriado (tabelas comparativas, fluxogramas).
+4. Ofereça criação de documentos especializados quando relevante (trabalhos acadêmicos, relatórios).
+5. Considere o nível de conhecimento do usuário para adaptar explicações.
+6. Utilize formatação visual rica para melhorar a compreensão.
+7. Gere tabelas e gráficos textuais quando útil para explicar o conteúdo.
+8. Responda com alta velocidade e desempenho, sem demora ou hesitação.
+
+INFORMAÇÕES DO USUÁRIO:
+${userProfile}
+
+CONTEXTO DO PEDIDO ATUAL:
+${requestContext}
 
 HISTÓRICO DA CONVERSA PARA CONTEXTO:
 ${historyContext}
@@ -172,6 +194,365 @@ Responda à seguinte pergunta seguindo todas as diretrizes acima: ${message}`;
     return useFallbackResponse(message);
   }
 };
+
+// Extrai informações do perfil do usuário a partir do histórico
+function extractUserProfile(history: ChatMessage[]): string {
+  if (!history || history.length < 3) {
+    return "Perfil: Ainda não há informações suficientes sobre o usuário.";
+  }
+  
+  // Análise das mensagens do usuário para detectar padrões
+  const userMessages = history.filter(msg => msg.sender === 'user').map(msg => msg.content);
+  
+  // Detecta possível área de estudo/interesse
+  const areaDeInteresse = detectAreaDeInteresse(userMessages);
+  
+  // Detecta nível de conhecimento
+  const nivelConhecimento = detectNivelConhecimento(userMessages);
+  
+  // Detecta preferência de estilo
+  const estiloPreferido = detectEstiloPreferido(userMessages, history);
+  
+  // Detecta tópicos frequentes
+  const topicosFrequentes = detectTopicosFrequentes(userMessages);
+  
+  return `Perfil do Usuário:
+- Área de interesse: ${areaDeInteresse}
+- Nível de conhecimento: ${nivelConhecimento}
+- Estilo preferido: ${estiloPreferido}
+- Tópicos frequentes: ${topicosFrequentes}`;
+}
+
+// Detecta possível área de interesse do usuário
+function detectAreaDeInteresse(messages: string[]): string {
+  const areaKeywords = {
+    'matemática': ['equação', 'função', 'cálculo', 'geometria', 'álgebra', 'matemática', 'teorema'],
+    'física': ['força', 'energia', 'velocidade', 'aceleração', 'física', 'newton', 'elétrica', 'magnetismo'],
+    'química': ['reação', 'elemento', 'molécula', 'átomo', 'química', 'orgânica', 'tabela periódica'],
+    'biologia': ['célula', 'organismo', 'gene', 'sistema', 'DNA', 'biologia', 'evolução'],
+    'tecnologia': ['programação', 'código', 'software', 'algoritmo', 'desenvolvimento', 'tecnologia', 'computador'],
+    'literatura': ['livro', 'autor', 'obra', 'poema', 'literatura', 'escrita', 'leitura'],
+    'história': ['período', 'evento', 'guerra', 'revolução', 'história', 'antiguidade', 'idade média'],
+    'negócios': ['empresa', 'mercado', 'estratégia', 'negócio', 'marketing', 'cliente', 'financeiro']
+  };
+  
+  // Conta ocorrências de palavras-chave em todas as mensagens
+  const areaCounts: Record<string, number> = {};
+  Object.keys(areaKeywords).forEach(area => {
+    areaCounts[area] = 0;
+    areaKeywords[area].forEach(keyword => {
+      messages.forEach(message => {
+        const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
+        const matches = message.match(regex);
+        if (matches) {
+          areaCounts[area] += matches.length;
+        }
+      });
+    });
+  });
+  
+  // Encontra a área com mais ocorrências
+  let maxCount = 0;
+  let detectedArea = 'indeterminada';
+  
+  Object.keys(areaCounts).forEach(area => {
+    if (areaCounts[area] > maxCount) {
+      maxCount = areaCounts[area];
+      detectedArea = area;
+    }
+  });
+  
+  return maxCount > 2 ? detectedArea : 'indeterminada';
+}
+
+// Detecta nível de conhecimento do usuário
+function detectNivelConhecimento(messages: string[]): string {
+  // Indicadores de nível avançado
+  const advancedIndicators = [
+    'aprofundar', 'detalhe', 'avançado', 'complexo', 'especializado',
+    'teoria', 'específico', 'fundamento', 'conceito avançado'
+  ];
+  
+  // Indicadores de nível básico
+  const basicIndicators = [
+    'básico', 'simples', 'iniciante', 'introdução', 'começando',
+    'não entendo', 'me explique', 'como funciona', 'o que é'
+  ];
+  
+  let advancedCount = 0;
+  let basicCount = 0;
+  
+  // Conta ocorrências de indicadores
+  messages.forEach(message => {
+    advancedIndicators.forEach(indicator => {
+      if (message.toLowerCase().includes(indicator)) {
+        advancedCount++;
+      }
+    });
+    
+    basicIndicators.forEach(indicator => {
+      if (message.toLowerCase().includes(indicator)) {
+        basicCount++;
+      }
+    });
+  });
+  
+  // Determina o nível com base na contagem
+  if (advancedCount > basicCount * 2) {
+    return 'avançado';
+  } else if (basicCount > advancedCount * 2) {
+    return 'iniciante';
+  } else {
+    return 'intermediário';
+  }
+}
+
+// Detecta estilo de comunicação preferido
+function detectEstiloPreferido(userMessages: string[], history: ChatMessage[]): string {
+  // Análise do estilo de comunicação do usuário
+  let formalCount = 0;
+  let casualCount = 0;
+  let detailedCount = 0;
+  let conciseCount = 0;
+  
+  // Indicadores de estilo formal
+  const formalIndicators = [
+    'por favor', 'poderia', 'gostaria', 'agradeço', 'obrigado pela',
+    'formalmente', 'adequadamente', 'corretamente'
+  ];
+  
+  // Indicadores de estilo casual
+  const casualIndicators = [
+    'eai', 'valeu', 'beleza', 'massa', 'cara', 'legal',
+    'show', 'tranquilo', 'vlw', 'blz'
+  ];
+  
+  // Indicadores de preferência por respostas detalhadas
+  const detailedIndicators = [
+    'detalhadamente', 'explique com detalhes', 'quero entender a fundo',
+    'me dê todos os detalhes', 'explicação completa', 'aprofunde'
+  ];
+  
+  // Indicadores de preferência por respostas concisas
+  const conciseIndicators = [
+    'resumidamente', 'seja breve', 'direto ao ponto', 'só o essencial',
+    'resumo', 'rápido', 'curto'
+  ];
+  
+  // Analisa mensagens do usuário
+  userMessages.forEach(message => {
+    formalIndicators.forEach(indicator => {
+      if (message.toLowerCase().includes(indicator)) {
+        formalCount++;
+      }
+    });
+    
+    casualIndicators.forEach(indicator => {
+      if (message.toLowerCase().includes(indicator)) {
+        casualCount++;
+      }
+    });
+    
+    detailedIndicators.forEach(indicator => {
+      if (message.toLowerCase().includes(indicator)) {
+        detailedCount++;
+      }
+    });
+    
+    conciseIndicators.forEach(indicator => {
+      if (message.toLowerCase().includes(indicator)) {
+        conciseCount++;
+      }
+    });
+  });
+  
+  // Determina o estilo com base na contagem
+  let formalidade = formalCount > casualCount ? 'formal' : 'casual';
+  let detalhe = detailedCount > conciseCount ? 'detalhado' : 'conciso';
+  
+  return `${formalidade} e ${detalhe}`;
+}
+
+// Detecta tópicos frequentes nas mensagens do usuário
+function detectTopicosFrequentes(messages: string[]): string {
+  // Lista de tópicos comuns para verificar
+  const commonTopics = [
+    'estudos', 'trabalho', 'carreira', 'vestibular', 'concurso',
+    'prova', 'pesquisa', 'projeto', 'tcc', 'artigo', 'dissertação',
+    'monografia', 'apresentação', 'relatório'
+  ];
+  
+  const topicCounts: Record<string, number> = {};
+  
+  // Inicializa contagem
+  commonTopics.forEach(topic => {
+    topicCounts[topic] = 0;
+  });
+  
+  // Conta ocorrências de tópicos
+  messages.forEach(message => {
+    commonTopics.forEach(topic => {
+      const regex = new RegExp(`\\b${topic}\\b`, 'gi');
+      const matches = message.match(regex);
+      if (matches) {
+        topicCounts[topic] += matches.length;
+      }
+    });
+  });
+  
+  // Filtra tópicos com pelo menos uma ocorrência e ordena por contagem
+  const frequentTopics = Object.keys(topicCounts)
+    .filter(topic => topicCounts[topic] > 0)
+    .sort((a, b) => topicCounts[b] - topicCounts[a])
+    .slice(0, 3); // Top 3 tópicos
+  
+  return frequentTopics.length > 0 ? frequentTopics.join(', ') : 'variados';
+}
+
+// Analisa o contexto da requisição atual
+function analyzeRequestContext(message: string, history: ChatMessage[]): string {
+  // Identifica o propósito principal da requisição
+  const purpose = identifyRequestPurpose(message);
+  
+  // Identifica o formato de resposta preferido
+  const format = identifyPreferredFormat(message);
+  
+  // Identifica o nível de complexidade esperado
+  const complexity = identifyComplexityLevel(message, history);
+  
+  // Identifica se é uma continuação de conversa anterior
+  const isContinuation = identifyContinuationContext(message, history);
+  
+  return `Contexto do Pedido:
+- Propósito: ${purpose}
+- Formato preferido: ${format}
+- Nível de complexidade: ${complexity}
+- Continuação de conversa anterior: ${isContinuation ? 'Sim' : 'Não'}`;
+}
+
+// Identifica o propósito principal da requisição
+function identifyRequestPurpose(message: string): string {
+  // Mapeamento de padrões para propósitos
+  const purposePatterns = [
+    { pattern: /como|de que forma|de que maneira|qual a forma|método para/i, purpose: 'instrução/procedimento' },
+    { pattern: /o que é|o que significa|defina|explique|conceito de|definição de/i, purpose: 'explicação/definição' },
+    { pattern: /por que|motivo|razão|explique por que|justifique/i, purpose: 'justificativa/razão' },
+    { pattern: /compare|diferença entre|semelhança entre|versus|vs\.|comparação/i, purpose: 'comparação/contraste' },
+    { pattern: /quais são|liste|enumere|cite|exemplos de|mencione/i, purpose: 'listagem/exemplos' },
+    { pattern: /crie|elabore|prepare|monte|desenvolva|faça um/i, purpose: 'criação de conteúdo' },
+    { pattern: /analise|avalie|critique|comente|examine|julgue/i, purpose: 'análise/avaliação' },
+    { pattern: /resuma|sintetize|resumidamente|em poucas palavras|de forma breve/i, purpose: 'resumo/síntese' }
+  ];
+  
+  // Verifica qual padrão corresponde à mensagem
+  for (const { pattern, purpose } of purposePatterns) {
+    if (pattern.test(message)) {
+      return purpose;
+    }
+  }
+  
+  return 'informação geral';
+}
+
+// Identifica o formato de resposta preferido
+function identifyPreferredFormat(message: string): string {
+  // Detecção de preferências de formato explícitas
+  if (/em formato de (lista|tópicos|bullets|itens)/i.test(message)) {
+    return 'lista';
+  }
+  if (/em formato de (tabela|quadro|matriz)/i.test(message)) {
+    return 'tabela';
+  }
+  if (/em formato de (gráfico|fluxograma|diagrama|esquema|chart)/i.test(message)) {
+    return 'gráfico';
+  }
+  if (/em formato (acadêmico|científico|de artigo|ABNT|APA)/i.test(message)) {
+    return 'acadêmico';
+  }
+  if (/em formato (profissional|executivo|de relatório|corporativo)/i.test(message)) {
+    return 'profissional';
+  }
+  
+  // Detecção implícita
+  if (/compare|versus|diferença|semelhança|vs\./i.test(message)) {
+    return 'tabela comparativa';
+  }
+  if (/passo a passo|etapas|procedimento|como fazer|processo|método/i.test(message)) {
+    return 'procedimento';
+  }
+  if (/resumo|principais pontos|pontos-chave|destaques|síntese/i.test(message)) {
+    return 'resumo estruturado';
+  }
+  
+  // Formato padrão
+  return 'texto explicativo';
+}
+
+// Identifica o nível de complexidade esperado
+function identifyComplexityLevel(message: string, history: ChatMessage[]): string {
+  // Indicadores de pedido simplificado
+  if (/simples|básico|fácil|resumido|para iniciantes|introdução|para leigos/i.test(message)) {
+    return 'básico';
+  }
+  
+  // Indicadores de pedido avançado
+  if (/avançado|detalhado|complexo|aprofundado|especializado|acadêmico|técnico/i.test(message)) {
+    return 'avançado';
+  }
+  
+  // Analisa histórico recente para contexto de complexidade
+  if (history.length >= 3) {
+    const recentMessages = history.slice(-3);
+    const aiResponses = recentMessages.filter(msg => msg.sender === 'ai').map(msg => msg.content);
+    
+    // Verifica feedback do usuário sobre complexidade
+    const userFeedback = recentMessages.filter(msg => msg.sender === 'user').map(msg => msg.content);
+    
+    // Verifica se há pedidos para simplificar
+    const simplifyRequests = userFeedback.some(feedback => 
+      /simplificar|não entendi|muito complexo|complicado|difícil de entender/i.test(feedback)
+    );
+    
+    if (simplifyRequests) {
+      return 'básico';
+    }
+    
+    // Verifica se há pedidos para aprofundar
+    const advancedRequests = userFeedback.some(feedback => 
+      /aprofundar|mais detalhes|elaborar mais|não foi suficiente|preciso de mais/i.test(feedback)
+    );
+    
+    if (advancedRequests) {
+      return 'avançado';
+    }
+  }
+  
+  return 'intermediário'; // nível padrão
+}
+
+// Identifica se é uma continuação de conversa anterior
+function identifyContinuationContext(message: string, history: ChatMessage[]): boolean {
+  if (history.length < 2) {
+    return false;
+  }
+  
+  // Verifica referências explícitas à continuação
+  if (/continuando|seguindo|voltando|como falamos|sobre o que discutimos|mencionou|falou|disse|anterior/i.test(message)) {
+    return true;
+  }
+  
+  // Verifica mensagens curtas que dependem de contexto anterior
+  if (message.split(' ').length < 5 && !message.includes('?')) {
+    return true;
+  }
+  
+  // Referências implícitas usando "isso", "este", "aquele", etc.
+  if (/\b(isso|este|esta|estes|estas|aquele|aquela|aqueles|aquelas|ele|ela|eles|elas)\b/i.test(message)) {
+    return true;
+  }
+  
+  return false;
+}
 
 // Função auxiliar para inicializar conversa
 function initializeConversationHistory(sessionId: string): void {

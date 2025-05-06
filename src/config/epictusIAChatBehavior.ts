@@ -27,7 +27,34 @@ export const EpictusIAChatBehavior = {
       "beleza",
       "tranquilo",
       "valeu"
-    ]
+    ],
+    // Novos estilos de escrita personalizados
+    writingStyles: {
+      academicFormal: {
+        sentences: 'long',
+        vocabulary: 'advanced',
+        structures: ['introduction', 'development', 'conclusion'],
+        citations: true,
+        tone: 'serious',
+        examples: 'academic'
+      },
+      modernDynamic: {
+        sentences: 'short',
+        vocabulary: 'simple',
+        structures: ['keypoints', 'examples', 'tips'],
+        citations: false,
+        tone: 'energetic',
+        examples: 'everyday'
+      },
+      corporateProfessional: {
+        sentences: 'medium',
+        vocabulary: 'professional',
+        structures: ['context', 'analysis', 'recommendations'],
+        citations: true,
+        tone: 'confident',
+        examples: 'business'
+      }
+    }
   },
   
   responseStructure: {
@@ -39,7 +66,34 @@ export const EpictusIAChatBehavior = {
     maxParagraphsPerResponse: 5,
     addVisualCues: true,
     addActionSuggestions: true,
-    addMotivationalConclusion: true
+    addMotivationalConclusion: true,
+    // Novas estruturas automáticas de resposta
+    autoStructureTypes: {
+      list: {
+        trigger: ['passo', 'etapa', 'item', 'razão', 'fator', 'elemento', 'característica', 'dica'],
+        format: 'numbered',
+        maxItems: 7,
+        addIcons: true
+      },
+      comparison: {
+        trigger: ['comparação', 'diferença', 'versus', 'vs', 'contraste', 'semelhança'],
+        format: 'twoColumn',
+        highlightDifferences: true,
+        addHeaders: true
+      },
+      flowchart: {
+        trigger: ['processo', 'fluxo', 'sequência', 'ciclo', 'funcionamento', 'como funciona'],
+        format: 'directional',
+        maxSteps: 8,
+        addConnectors: true
+      },
+      keypoints: {
+        trigger: ['principais', 'essencial', 'fundamental', 'crucial', 'destaque', 'lembre-se'],
+        format: 'highlighted',
+        maxPoints: 5,
+        addEmphasis: true
+      }
+    }
   },
   
   adaptiveBehavior: {
@@ -52,6 +106,24 @@ export const EpictusIAChatBehavior = {
       considerContext: true,
       identifyRealObjective: true,
       clarifyWhenAmbiguous: true
+    },
+    // Nova memória de perfil avançada
+    profileMemory: {
+      trackStudyAreas: true,
+      trackKnowledgeLevel: true,
+      trackPreferredStyle: true,
+      trackCommonTopics: true,
+      trackEngagementPatterns: true,
+      adaptResponseLevel: true,
+      adaptTechnicalTerms: true,
+      suggestRelatedTopics: true
+    },
+    // Velocidade e desempenho
+    performance: {
+      responseTime: 'instant',
+      chunkResponses: true,
+      optimizeForLength: true,
+      prioritizeCriticalContent: true
     }
   },
   
@@ -84,6 +156,14 @@ export const EpictusIAChatBehavior = {
       "Posso gerar uma questão de prova para você praticar. Deseja?",
       "Quer que eu crie um fluxograma ou uma tabela comparativa sobre esse tema?",
       "Posso elaborar exemplos práticos para fixar esse conteúdo. Interesse?"
+    ],
+    // Novas sugestões para criação de documentos
+    documentCreationSuggestions: [
+      "Deseja que eu transforme isso em um PDF pronto para impressão?",
+      "Posso organizar este conteúdo em formato ABNT para seu trabalho acadêmico.",
+      "Quer que eu prepare este material em um formato de apresentação de slides?",
+      "Posso criar um resumo esquematizado deste conteúdo para seus estudos.",
+      "Deseja que eu formate isso como um relatório profissional?"
     ]
   },
   
@@ -119,6 +199,21 @@ export const EpictusIAChatBehavior = {
       offerActionableSteps: true,
       considerUserContext: true,
       provideOptions: true
+    },
+    // Novos tipos de consulta
+    documentPreparation: {
+      style: "estruturado e formatado",
+      followStandards: true,
+      offerTemplates: true,
+      suggestFormatting: true,
+      includeCitations: true
+    },
+    visualContentRequest: {
+      style: "ilustrativo e organizado",
+      suggestVisualFormats: true,
+      prioritizeClarity: true,
+      balanceTextAndVisuals: true,
+      useConsistentTheme: true
     }
   },
   
@@ -170,6 +265,63 @@ export const EpictusIAChatBehavior = {
         tipBox: "> 💎",
         quoteBox: "> 📝"
       }
+    },
+    // Novos elementos visuais avançados
+    advancedVisuals: {
+      tables: {
+        formats: ['comparison', 'data', 'checklist', 'timeline', 'matrix'],
+        styling: {
+          headers: true,
+          borders: 'clean',
+          alternatingRows: true,
+          alignment: 'center'
+        },
+        auto: {
+          suggestWhenRelevant: true,
+          maxColumns: 5,
+          maxRows: 10
+        }
+      },
+      charts: {
+        types: ['bar', 'pie', 'line', 'timeline', 'venn', 'flowchart', 'mindmap'],
+        styling: {
+          colorScheme: 'modern',
+          labels: true,
+          legend: 'when-needed',
+          size: 'medium'
+        },
+        auto: {
+          detectDataPatterns: true,
+          suggestAppropriateType: true,
+          simplifyComplexData: true
+        }
+      },
+      infographics: {
+        elements: ['icons', 'data-points', 'brief-text', 'arrows', 'containers'],
+        styling: {
+          arrangement: 'logical-flow',
+          density: 'balanced',
+          emphasis: 'key-points'
+        },
+        auto: {
+          convertComplexConcepts: true,
+          highlightRelationships: true,
+          ensureAccessibility: true
+        }
+      },
+      flowcharts: {
+        elements: ['nodes', 'connections', 'decision-points', 'start-end'],
+        styling: {
+          nodeShape: 'rounded',
+          connectionStyle: 'arrow',
+          layout: 'top-down' 
+        },
+        auto: {
+          detectProcesses: true,
+          simplifySteps: true,
+          highlightDecisions: true
+        }
+      }
     }
   },
   
@@ -181,12 +333,52 @@ export const EpictusIAChatBehavior = {
       procedureExplanation: "como fazer algo",
       opinionSeeking: "busca por análise ou perspectivas",
       problemSolving: "resolução de problemas",
-      validationSeeking: "busca por confirmação ou validação"
+      validationSeeking: "busca por confirmação ou validação",
+      // Novos tipos de intenção
+      documentCreation: "criação de documento específico",
+      visualRepresentation: "representação visual de informação",
+      quickReference: "referência rápida para consulta",
+      deepDive: "exploração aprofundada de tópico",
+      practicalApplication: "aplicação prática de conceito"
     },
     detectAmbiguity: {
       askForClarification: true,
       offerPossibleInterpretations: true,
       defaultToMostLikelyIntent: true
+    },
+    contextAwareness: {
+      rememberPreviousTopics: true,
+      buildOnPriorKnowledge: true,
+      recognizeUserExpertise: true,
+      adaptToSituation: true
+    }
+  },
+  
+  // Novos formatos de documentos
+  documentFormats: {
+    academic: {
+      standards: ['ABNT', 'APA', 'MLA', 'Chicago', 'Vancouver'],
+      sections: ['capa', 'resumo', 'introdução', 'desenvolvimento', 'conclusão', 'referências'],
+      features: ['citações', 'notas de rodapé', 'formatação de parágrafos', 'numeração de páginas'],
+      suggestWhen: ['TCC', 'artigo', 'monografia', 'dissertação', 'tese', 'relatório científico']
+    },
+    professional: {
+      standards: ['corporativo', 'técnico', 'relatório executivo', 'proposta comercial'],
+      sections: ['sumário executivo', 'contexto', 'análise', 'recomendações', 'próximos passos'],
+      features: ['dados destacados', 'gráficos', 'tabelas', 'listas numeradas'],
+      suggestWhen: ['relatório', 'apresentação', 'análise', 'proposta', 'plano de negócios']
+    },
+    educational: {
+      standards: ['plano de aula', 'apostila', 'material didático', 'avaliação'],
+      sections: ['objetivos', 'conteúdo', 'atividades', 'avaliação', 'referências'],
+      features: ['exemplos práticos', 'exercícios', 'notas explicativas', 'recursos visuais'],
+      suggestWhen: ['aula', 'curso', 'treinamento', 'workshop', 'tutorial']
+    },
+    presentation: {
+      standards: ['slides executivos', 'apresentação acadêmica', 'pitch', 'workshop'],
+      sections: ['título', 'agenda', 'conteúdo principal', 'conclusão', 'referências'],
+      features: ['concisão', 'pontos-chave', 'recursos visuais', 'notas do apresentador'],
+      suggestWhen: ['slides', 'apresentação', 'palestra', 'seminário', 'defesa']
     }
   }
 };

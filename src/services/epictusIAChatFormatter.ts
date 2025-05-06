@@ -6,18 +6,30 @@ export class EpictusIAChatFormatter {
   private chatBehavior = EpictusIAChatBehavior;
   private generalBehavior = EpictusIABehavior;
 
-  formatChatResponse(content: string, userProfile: string = 'student'): string {
+  formatChatResponse(content: string, userProfile: string = 'student', context: any = {}): string {
     // Garante que a resposta comece com "Eai"
     let formattedContent = this.ensureGreetingFormat(content);
     
+    // Identifica o tipo de conteúdo e contexto
+    const contentType = this.identifyContentType(formattedContent, context);
+    
+    // Adapta estilo de escrita baseado no contexto
+    formattedContent = this.adaptWritingStyle(formattedContent, contentType, userProfile);
+    
     // Aplica formatação avançada ao conteúdo
-    formattedContent = this.applyAdvancedFormatting(formattedContent);
+    formattedContent = this.applyAdvancedFormatting(formattedContent, contentType);
     
     // Estrutura o conteúdo em seções
     formattedContent = this.structureIntoSections(formattedContent);
     
+    // Adiciona elementos visuais automáticos quando apropriado
+    formattedContent = this.addAutomaticVisuals(formattedContent, contentType);
+    
     // Adiciona sugestões de ação proativas
-    formattedContent = this.addProactiveSuggestions(formattedContent);
+    formattedContent = this.addProactiveSuggestions(formattedContent, contentType);
+    
+    // Adiciona sugestões de documento quando apropriado
+    formattedContent = this.suggestDocumentCreation(formattedContent, contentType);
     
     // Adiciona conclusão motivacional
     formattedContent = this.addMotivationalConclusion(formattedContent);
@@ -443,6 +455,486 @@ export class EpictusIAChatFormatter {
       (match, summaryText) => `\n> 📌 **RESUMO:** ${summaryText}\n`);
     
     return enhanced;
+  }
+  
+  // Identifica o tipo de conteúdo e contexto da resposta
+  private identifyContentType(content: string, context: any = {}): any {
+    // Objeto para armazenar metadados do tipo de conteúdo
+    const contentType = {
+      purpose: 'informational', // default
+      domain: 'general',
+      complexity: 'medium',
+      formality: 'neutral',
+      visualsRequired: false,
+      structureType: 'default',
+      documentSuggestion: false
+    };
+    
+    // Identifica domínio acadêmico
+    if (content.toLowerCase().includes('tcc') || 
+        content.toLowerCase().includes('artigo') || 
+        content.toLowerCase().includes('monografia') ||
+        content.toLowerCase().includes('dissertação') ||
+        content.toLowerCase().includes('bibliografia') ||
+        content.toLowerCase().includes('referências') ||
+        content.toLowerCase().includes('citação')) {
+      contentType.domain = 'academic';
+      contentType.formality = 'formal';
+      contentType.documentSuggestion = true;
+    }
+    
+    // Identifica domínio profissional/corporativo
+    else if (content.toLowerCase().includes('relatório') ||
+             content.toLowerCase().includes('apresentação') ||
+             content.toLowerCase().includes('proposta') ||
+             content.toLowerCase().includes('empresa') ||
+             content.toLowerCase().includes('negócio') ||
+             content.toLowerCase().includes('cliente') ||
+             content.toLowerCase().includes('mercado')) {
+      contentType.domain = 'professional';
+      contentType.formality = 'formal';
+      contentType.documentSuggestion = true;
+    }
+    
+    // Identifica necessidade de representações visuais
+    if (content.toLowerCase().includes('gráfico') ||
+        content.toLowerCase().includes('tabela') ||
+        content.toLowerCase().includes('diagrama') ||
+        content.toLowerCase().includes('fluxograma') ||
+        content.toLowerCase().includes('visual') ||
+        content.toLowerCase().includes('compare') ||
+        content.toLowerCase().includes('diferença') ||
+        content.toLowerCase().includes('versus') ||
+        content.toLowerCase().includes('vs')) {
+      contentType.visualsRequired = true;
+    }
+    
+    // Identifica tipo de estrutura necessária
+    if (content.toLowerCase().includes('passo') ||
+        content.toLowerCase().includes('etapa') ||
+        content.toLowerCase().includes('método') ||
+        content.toLowerCase().includes('como fazer')) {
+      contentType.structureType = 'procedure';
+    } 
+    else if (content.toLowerCase().includes('comparar') ||
+             content.toLowerCase().includes('diferença') ||
+             content.toLowerCase().includes('versus') ||
+             content.toLowerCase().includes('vs') ||
+             content.toLowerCase().includes('contraste')) {
+      contentType.structureType = 'comparison';
+    } 
+    else if (content.toLowerCase().includes('resumo') ||
+             content.toLowerCase().includes('pontos principais') ||
+             content.toLowerCase().includes('principais aspectos')) {
+      contentType.structureType = 'summary';
+    }
+    
+    // Identifica complexidade
+    if (content.toLowerCase().includes('simples') ||
+        content.toLowerCase().includes('básico') ||
+        content.toLowerCase().includes('introdução') ||
+        content.toLowerCase().includes('iniciante')) {
+      contentType.complexity = 'basic';
+    }
+    else if (content.toLowerCase().includes('avançado') ||
+             content.toLowerCase().includes('complexo') ||
+             content.toLowerCase().includes('aprofundar') ||
+             content.toLowerCase().includes('detalhe')) {
+      contentType.complexity = 'advanced';
+    }
+    
+    return contentType;
+  }
+
+  // Adapta estilo de escrita baseado no tipo de conteúdo e perfil
+  private adaptWritingStyle(content: string, contentType: any, userProfile: string): string {
+    let styledContent = content;
+    const { domain, formality, complexity } = contentType;
+    
+    // Seleciona estilo de escrita baseado no domínio
+    let styleToApply = this.chatBehavior.toneAndStyle.writingStyles.modernDynamic; // default
+    
+    if (domain === 'academic' && formality === 'formal') {
+      styleToApply = this.chatBehavior.toneAndStyle.writingStyles.academicFormal;
+    } 
+    else if (domain === 'professional') {
+      styleToApply = this.chatBehavior.toneAndStyle.writingStyles.corporateProfessional;
+    }
+    
+    // Aplica transformações de estilo
+    if (styleToApply.sentences === 'short') {
+      // Divide sentenças longas
+      styledContent = this.shortenSentences(styledContent);
+    }
+    
+    // Ajusta vocabulário
+    if (styleToApply.vocabulary === 'simple') {
+      styledContent = this.simplifyVocabulary(styledContent);
+    } 
+    else if (styleToApply.vocabulary === 'advanced' && complexity !== 'basic') {
+      styledContent = this.enhanceVocabulary(styledContent);
+    }
+    
+    return styledContent;
+  }
+  
+  // Divide sentenças longas em mais curtas
+  private shortenSentences(content: string): string {
+    // Identificar sentenças longas (mais de 20 palavras)
+    return content.replace(/([^.!?]+[.!?])/g, (sentence) => {
+      const words = sentence.split(' ');
+      if (words.length > 20) {
+        // Tenta encontrar conjunções para dividir
+        const middleIndex = Math.floor(words.length / 2);
+        let splitIndex = words.findIndex((word, index) => {
+          return index > middleIndex / 2 && index < middleIndex * 1.5 && 
+                 /\b(e|mas|porém|contudo|entretanto|portanto|assim|pois)\b/i.test(word);
+        });
+        
+        if (splitIndex === -1) {
+          splitIndex = middleIndex;
+        }
+        
+        const firstPart = words.slice(0, splitIndex).join(' ');
+        const secondPart = words.slice(splitIndex).join(' ');
+        
+        return `${firstPart}. ${secondPart}`;
+      }
+      return sentence;
+    });
+  }
+  
+  // Simplifica vocabulário para termos mais acessíveis
+  private simplifyVocabulary(content: string): string {
+    const complexToSimple = {
+      'utilizar': 'usar',
+      'realizar': 'fazer',
+      'efetuar': 'fazer',
+      'adquirir': 'comprar',
+      'implementar': 'aplicar',
+      'visualizar': 'ver',
+      'compreender': 'entender',
+      'demonstrar': 'mostrar',
+      'estabelecer': 'criar',
+      'desenvolver': 'criar',
+      'requisito': 'necessidade',
+      'conceito': 'ideia',
+      'metodologia': 'método',
+      'consolidar': 'juntar',
+      'potencializar': 'melhorar',
+      'otimizar': 'melhorar',
+      'fundamental': 'importante',
+      'concepção': 'ideia',
+      'perspectiva': 'visão',
+      'procedimento': 'processo'
+    };
+    
+    let simplified = content;
+    Object.entries(complexToSimple).forEach(([complex, simple]) => {
+      const regex = new RegExp(`\\b${complex}\\b`, 'gi');
+      simplified = simplified.replace(regex, simple);
+    });
+    
+    return simplified;
+  }
+  
+  // Aprimora vocabulário para termos mais sofisticados
+  private enhanceVocabulary(content: string): string {
+    const simpleToComplex = {
+      'usar': 'utilizar',
+      'fazer': 'realizar',
+      'comprar': 'adquirir',
+      'aplicar': 'implementar',
+      'ver': 'visualizar',
+      'entender': 'compreender',
+      'mostrar': 'demonstrar',
+      'criar': 'desenvolver',
+      'precisa': 'necessita',
+      'ideia': 'conceito',
+      'método': 'metodologia',
+      'juntar': 'consolidar',
+      'melhorar': 'otimizar',
+      'importante': 'fundamental',
+      'grande': 'significativo',
+      'bom': 'favorável',
+      'ruim': 'desfavorável',
+      'processo': 'procedimento'
+    };
+    
+    let enhanced = content;
+    Object.entries(simpleToComplex).forEach(([simple, complex]) => {
+      // Não substituir tudo para não ficar artificial
+      if (Math.random() > 0.7) {
+        const regex = new RegExp(`\\b${simple}\\b`, 'gi');
+        enhanced = enhanced.replace(regex, complex);
+      }
+    });
+    
+    return enhanced;
+  }
+  
+  // Adiciona elementos visuais automáticos quando apropriado
+  private addAutomaticVisuals(content: string, contentType: any): string {
+    if (!contentType.visualsRequired) {
+      return content;
+    }
+    
+    let enhancedContent = content;
+    
+    // Identifica se precisa de tabela comparativa
+    if (contentType.structureType === 'comparison') {
+      enhancedContent = this.addComparisonTable(enhancedContent);
+    }
+    
+    // Identifica se precisa de fluxograma
+    else if (contentType.structureType === 'procedure') {
+      enhancedContent = this.addFlowchart(enhancedContent);
+    }
+    
+    // Identifica se precisa de resumo visual
+    else if (contentType.structureType === 'summary') {
+      enhancedContent = this.addVisualSummary(enhancedContent);
+    }
+    
+    return enhancedContent;
+  }
+  
+  // Cria tabela comparativa
+  private addComparisonTable(content: string): string {
+    // Procura por padrões de comparação no texto
+    const comparisonMatch = content.match(/(?:comparando|comparação entre|diferenças? (?:entre|de)|semelhanças? (?:entre|de))\s+([^.]+)\s+e\s+([^.]+)/i);
+    
+    if (!comparisonMatch) {
+      return content;
+    }
+    
+    const item1 = comparisonMatch[1].trim();
+    const item2 = comparisonMatch[2].trim();
+    
+    // Extrai características/atributos de cada item
+    const characteristics = this.extractCharacteristics(content, item1, item2);
+    
+    if (characteristics.length === 0) {
+      return content;
+    }
+    
+    // Cria tabela markdown
+    let table = `\n\n### 📊 Comparação: ${item1} vs ${item2}\n\n`;
+    table += `| Característica | ${item1} | ${item2} |\n`;
+    table += `|---------------|${'-'.repeat(item1.length + 2)}|${'-'.repeat(item2.length + 2)}|\n`;
+    
+    characteristics.forEach(char => {
+      table += `| **${char.name}** | ${char.item1Value} | ${char.item2Value} |\n`;
+    });
+    
+    // Insere a tabela após o parágrafo introdutório
+    const paragraphs = content.split('\n\n');
+    let insertIndex = 1; // geralmente após o primeiro parágrafo
+    
+    if (paragraphs.length > 3) {
+      // Procura pelo parágrafo mais adequado para inserir
+      for (let i = 0; i < paragraphs.length; i++) {
+        if (paragraphs[i].includes(item1) && paragraphs[i].includes(item2)) {
+          insertIndex = i + 1;
+          break;
+        }
+      }
+    }
+    
+    paragraphs.splice(insertIndex, 0, table);
+    return paragraphs.join('\n\n');
+  }
+  
+  // Extrai características para comparação
+  private extractCharacteristics(content: string, item1: string, item2: string): any[] {
+    const characteristics = [];
+    
+    // Padrões comuns que indicam características
+    const patterns = [
+      // Padrão: "X é mais/menos A que Y"
+      new RegExp(`${item1}\\s+(?:é|possui|tem|apresenta)\\s+(?:mais|menos)\\s+([^\\s]+)\\s+(?:que|do que)\\s+${item2}`, 'gi'),
+      // Padrão: "Y é mais/menos A que X"
+      new RegExp(`${item2}\\s+(?:é|possui|tem|apresenta)\\s+(?:mais|menos)\\s+([^\\s]+)\\s+(?:que|do que)\\s+${item1}`, 'gi'),
+      // Padrão: "X tem/possui A, enquanto Y tem/possui B"
+      new RegExp(`${item1}\\s+(?:tem|possui|apresenta)\\s+([^,]+),\\s+(?:enquanto|enquanto que|ao passo que)\\s+${item2}\\s+(?:tem|possui|apresenta)\\s+([^.]+)`, 'gi')
+    ];
+    
+    // Lista de características comuns para comparação
+    const commonCharacteristics = [
+      'vantagens', 'desvantagens', 'aplicação', 'uso', 'custo',
+      'eficiência', 'complexidade', 'tempo', 'praticidade', 'benefícios'
+    ];
+    
+    // Procura por padrões no texto
+    patterns.forEach(pattern => {
+      const matches = content.matchAll(pattern);
+      for (const match of matches) {
+        if (match.length > 2) {
+          characteristics.push({
+            name: match[1].trim(),
+            item1Value: '✅',
+            item2Value: '❌'
+          });
+        }
+      }
+    });
+    
+    // Se não encontrou características específicas, usa as comuns
+    if (characteristics.length === 0) {
+      commonCharacteristics.forEach(char => {
+        // Verifica se a característica é mencionada no texto
+        if (content.toLowerCase().includes(char)) {
+          characteristics.push({
+            name: char.charAt(0).toUpperCase() + char.slice(1),
+            item1Value: '?',
+            item2Value: '?'
+          });
+        }
+      });
+      
+      // Adiciona pelo menos 3 características padrão se nada for encontrado
+      if (characteristics.length === 0) {
+        characteristics.push(
+          { name: 'Principais características', item1Value: '-', item2Value: '-' },
+          { name: 'Vantagens', item1Value: '-', item2Value: '-' },
+          { name: 'Aplicações', item1Value: '-', item2Value: '-' }
+        );
+      }
+    }
+    
+    return characteristics;
+  }
+  
+  // Cria um fluxograma textual para procedimentos
+  private addFlowchart(content: string): string {
+    // Busca padrões de passos ou etapas
+    const stepsMatches = content.match(/(?:passo|etapa|fase)s?(?:\s+\d+)?(?::|\.)?\s+([^\n.]+)/gi);
+    
+    if (!stepsMatches || stepsMatches.length < 2) {
+      return content;
+    }
+    
+    // Cria representação de fluxograma
+    let flowchart = '\n\n### ⚙️ Fluxograma do Processo\n\n';
+    flowchart += '```\n';
+    
+    stepsMatches.forEach((step, index) => {
+      const cleanStep = step.replace(/(?:passo|etapa|fase)s?\s+\d+(?::|\.)?\s+/gi, '').trim();
+      const stepNumber = index + 1;
+      
+      // Adiciona formato de fluxograma
+      flowchart += `[${stepNumber}] ${cleanStep}\n`;
+      
+      // Adiciona conectores exceto no último passo
+      if (index < stepsMatches.length - 1) {
+        flowchart += '   |\n   ▼\n';
+      }
+    });
+    
+    flowchart += '```\n';
+    
+    // Adiciona o fluxograma após o parágrafo que menciona "passos" ou "etapas"
+    const paragraphs = content.split('\n\n');
+    let insertIndex = paragraphs.findIndex(p => 
+      /passos?|etapas?|fases?|processo|método|como fazer/i.test(p)
+    );
+    
+    if (insertIndex === -1) {
+      insertIndex = 1; // após o primeiro parágrafo se não encontrar posição ideal
+    } else {
+      insertIndex += 1; // após o parágrafo que menciona passos
+    }
+    
+    paragraphs.splice(insertIndex, 0, flowchart);
+    return paragraphs.join('\n\n');
+  }
+  
+  // Cria um resumo visual para pontos principais
+  private addVisualSummary(content: string): string {
+    // Procura por pontos-chave, características ou aspectos importantes
+    const keyPoints = [];
+    
+    // Padrões para extração de pontos-chave
+    const patterns = [
+      /principais?\s+(?:pontos?|aspectos?|características?|elementos?):?(?:\s+incluem)?([^.]+)/i,
+      /(?:destacam-se|destacamos?)\s+(?:os seguintes|as seguintes)?([^.]+)/i,
+      /(?:é importante|importante|essencial)\s+(?:lembrar|considerar|observar)([^.]+)/i
+    ];
+    
+    // Extrai pontos-chave do conteúdo
+    patterns.forEach(pattern => {
+      const match = content.match(pattern);
+      if (match && match[1]) {
+        const points = match[1].split(/,|;|\be\b/).map(p => p.trim()).filter(Boolean);
+        keyPoints.push(...points);
+      }
+    });
+    
+    // Se não encontrou pontos específicos, extrai de frases com indicadores
+    if (keyPoints.length === 0) {
+      const sentences = content.match(/[^.!?]+[.!?]+/g) || [];
+      sentences.forEach(sentence => {
+        if (/importante|essencial|crucial|fundamental|lembre-se|destac[a-z-]+|principais?/i.test(sentence)) {
+          keyPoints.push(sentence.trim());
+        }
+      });
+    }
+    
+    // Limita a quantidade de pontos
+    const limitedPoints = keyPoints.slice(0, 5);
+    
+    if (limitedPoints.length === 0) {
+      return content;
+    }
+    
+    // Cria resumo visual
+    let summary = '\n\n### 📌 Resumo Visual dos Pontos Principais\n\n';
+    
+    limitedPoints.forEach((point, index) => {
+      summary += `> **${index + 1}.** ${point}\n>\n`;
+    });
+    
+    // Adiciona o resumo visual antes da conclusão
+    const paragraphs = content.split('\n\n');
+    let insertIndex = paragraphs.length - 2; // antes do último parágrafo, assumindo que seja a conclusão
+    
+    if (insertIndex < 1) {
+      insertIndex = paragraphs.length; // ao final se não tiver parágrafos suficientes
+    }
+    
+    paragraphs.splice(insertIndex, 0, summary);
+    return paragraphs.join('\n\n');
+  }
+  
+  // Sugere criação de documento quando apropriado
+  private suggestDocumentCreation(content: string, contentType: any): string {
+    if (!contentType.documentSuggestion) {
+      return content;
+    }
+    
+    let suggestions = '';
+    const { domain } = contentType;
+    
+    if (domain === 'academic') {
+      const formats = this.chatBehavior.documentFormats.academic;
+      const randomFormat = formats.standards[Math.floor(Math.random() * formats.standards.length)];
+      
+      suggestions = `\n\n### 📄 Criação de Documento Acadêmico\n\n`;
+      suggestions += `> Posso organizar este conteúdo em formato **${randomFormat}** para seu trabalho acadêmico, com todas as seções e formatações necessárias. Deseja que eu prepare este material?`;
+    }
+    else if (domain === 'professional') {
+      const formats = this.chatBehavior.documentFormats.professional;
+      const randomFormat = formats.standards[Math.floor(Math.random() * formats.standards.length)];
+      
+      suggestions = `\n\n### 📊 Documento Profissional\n\n`;
+      suggestions += `> Posso transformar este conteúdo em um **${randomFormat}** profissional, com todos os elementos e formatação apropriados. Deseja que eu prepare este material?`;
+    }
+    
+    if (suggestions) {
+      return content + suggestions;
+    }
+    
+    return content;
   }
   
   private adaptToneForUserProfile(content: string, userProfile: string): string {
