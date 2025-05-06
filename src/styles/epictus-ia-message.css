@@ -1,0 +1,179 @@
+
+/* Estilos para as mensagens da Epictus IA */
+
+/* Estilos para tabelas */
+.table-container {
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.table-header {
+  font-weight: bold;
+  background-color: rgba(var(--primary-rgb), 0.1);
+}
+
+/* Estilos para fluxogramas */
+.flowchart-container {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.05), rgba(var(--primary-rgb), 0.1));
+  border-radius: 12px;
+  border: 1px solid rgba(var(--primary-rgb), 0.1);
+  font-family: monospace;
+}
+
+/* Estilos para itens de checklist */
+.checklist-item {
+  display: flex;
+  align-items: center;
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.checklist-item:hover {
+  background-color: rgba(var(--primary-rgb), 0.05);
+}
+
+.checklist-item.checked {
+  color: var(--green-600);
+}
+
+.checklist-item.unchecked {
+  color: var(--orange-600);
+}
+
+/* Estilos para caixas informativas */
+.info-box, .warning-box, .summary-box {
+  margin: 1.25rem 0;
+  padding: 1rem;
+  border-radius: 8px;
+  position: relative;
+}
+
+.info-box {
+  background: linear-gradient(to right, rgba(var(--blue-500-rgb), 0.1), rgba(var(--blue-500-rgb), 0.05));
+  border-left: 4px solid var(--blue-500);
+}
+
+.warning-box {
+  background: linear-gradient(to right, rgba(var(--amber-500-rgb), 0.1), rgba(var(--amber-500-rgb), 0.05));
+  border-left: 4px solid var(--amber-500);
+}
+
+.summary-box {
+  background: linear-gradient(to right, rgba(var(--green-500-rgb), 0.1), rgba(var(--green-500-rgb), 0.05));
+  border-left: 4px solid var(--green-500);
+}
+
+/* Estilos para títulos de blocos de conteúdo */
+.content-block-title {
+  display: flex;
+  align-items: center;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 1.5rem 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(var(--primary-rgb), 0.1);
+  color: var(--primary);
+}
+
+.content-block-icon {
+  font-size: 1.5rem;
+  margin-right: 0.5rem;
+}
+
+.content-block-text {
+  flex: 1;
+}
+
+/* Emojis destacados no texto */
+.emoji-highlight {
+  font-size: 1.2em;
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 0.1em;
+}
+
+/* Estilos para passos numerados */
+.numbered-step {
+  display: flex;
+  margin: 0.75rem 0;
+  padding: 0.5rem;
+  background-color: rgba(var(--primary-rgb), 0.03);
+  border-radius: 8px;
+  align-items: center;
+}
+
+.step-number {
+  background-color: var(--primary);
+  color: white;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+}
+
+.step-content {
+  flex: 1;
+}
+
+/* Animação para elementos que merecem destaque */
+@keyframes gentle-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.pulse-animate {
+  animation: gentle-pulse 2s infinite;
+}
+
+/* Estilos para o bloco de conteúdo */
+.content-block {
+  padding: 0.5rem 0;
+  margin-bottom: 0.5rem;
+}
+
+.content-block:not(:first-child) {
+  border-top: 1px solid rgba(var(--primary-rgb), 0.1);
+  padding-top: 1.5rem;
+}
+
+/* Estilos para pergunta final */
+.final-question {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: linear-gradient(to right, rgba(var(--primary-rgb), 0.05), rgba(var(--primary-rgb), 0.1));
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.final-question-icon {
+  font-size: 1.5rem;
+  color: var(--primary);
+}
+
+.final-question-text {
+  font-weight: 500;
+  color: var(--primary);
+  flex: 1;
+}
+

@@ -38,14 +38,34 @@ export const EpictusIAChatBehavior = {
   greeting: {
     prefix: "Eai!",
     variations: [
-      " Que bom te ver por aqui!",
-      " Pronto para mais uma sessão de estudos?",
-      " Vamos aprender juntos hoje?",
-      " Tudo bem? Como posso te ajudar hoje?",
-      " Espero que esteja tendo um ótimo dia. Como posso ajudar?",
-      " Animado para aprender algo novo?",
-      " Ótimo te ver novamente. Como posso ser útil?"
-    ]
+      " Que bom te ver por aqui! 📚",
+      " Pronto para mais uma sessão de estudos? 🚀",
+      " Vamos aprender juntos hoje? ✨",
+      " Tudo bem? Como posso te ajudar hoje? 💭",
+      " Espero que esteja tendo um ótimo dia. Como posso ajudar? 🌟",
+      " Animado para aprender algo novo? 🧠",
+      " Ótimo te ver novamente. Como posso ser útil? 🔍",
+      " Vamos juntos nessa jornada de aprendizado? 🌱",
+      " Que tal explorarmos novos conhecimentos hoje? 🔭",
+      " Preparado para expandir seus horizontes? 🌈",
+      " Que legal ter você aqui! Vamos nessa! 👋",
+      " Pronto para desvendar novos conhecimentos? 🔎"
+    ],
+    openingStyles: [
+      "visual-card", // Abertura com card visual destacado
+      "emoji-highlight", // Usar emojis destacados na abertura
+      "animated-text", // Texto com efeito animado sutil
+      "motivational-quote", // Iniciar com citação motivacional
+      "question-engagement" // Iniciar com pergunta engajadora
+    ],
+    stylingOptions: {
+      useEmojis: true,
+      useBoldText: true,
+      useGradient: true,
+      useIconPrefix: true,
+      useWarmTone: true,
+      usePersonalTouch: true
+    }
   },
   
   toneAndStyle: {
@@ -101,31 +121,58 @@ export const EpictusIAChatBehavior = {
     addVisualCues: true,
     addActionSuggestions: true,
     addMotivationalConclusion: true,
+    // Configurações de elemento visuais aprimoradas
+    visualEnhancements: {
+      useBlockDesign: true, // Dividir resposta em blocos visuais distintos
+      useColoredBoxes: true, // Usar caixas coloridas para destaques
+      useIcons: true, // Adicionar ícones contextuais
+      useAnimatedElements: true, // Permitir animações em elementos importantes
+      tableEnhancements: true, // Tornar tabelas mais elaboradas visualmente
+      useChecklists: true, // Usar checklists interativas quando apropriado
+      useProgressBars: true, // Usar barras de progresso para representar avanços
+      useSummaryCards: true, // Adicionar cards de resumo visual ao final
+      useColorScheme: 'modern' // Esquema de cores usado para elementos visuais
+    },
     // Novas estruturas automáticas de resposta
     autoStructureTypes: {
       list: {
         trigger: ['passo', 'etapa', 'item', 'razão', 'fator', 'elemento', 'característica', 'dica'],
-        format: 'numbered',
+        format: 'interactive', // Formato mais interativo com checkboxes
         maxItems: 7,
-        addIcons: true
+        addIcons: true,
+        visualStyle: 'card' // Apresentar como cards visuais
       },
       comparison: {
         trigger: ['comparação', 'diferença', 'versus', 'vs', 'contraste', 'semelhança'],
-        format: 'twoColumn',
+        format: 'visualTable', // Tabela com elementos visuais avançados
         highlightDifferences: true,
-        addHeaders: true
+        addHeaders: true,
+        useColorCoding: true, // Usar códigos de cores para facilitar comparação
+        addLegend: true, // Adicionar legenda explicativa
       },
       flowchart: {
         trigger: ['processo', 'fluxo', 'sequência', 'ciclo', 'funcionamento', 'como funciona'],
-        format: 'directional',
+        format: 'boxedFlow', // Fluxograma com caixas visualmente distintas
         maxSteps: 8,
-        addConnectors: true
+        addConnectors: true,
+        useNumbering: true, // Numerar passos do fluxograma
+        addConclusion: true, // Adicionar conclusão após o fluxograma
       },
       keypoints: {
         trigger: ['principais', 'essencial', 'fundamental', 'crucial', 'destaque', 'lembre-se'],
-        format: 'highlighted',
+        format: 'card', // Formato de cartões visuais para pontos-chave
         maxPoints: 5,
-        addEmphasis: true
+        addEmphasis: true,
+        useIcons: true, // Adicionar ícones contextualmente relevantes
+        addCheckbox: true, // Adicionar boxes para verificação mental
+      },
+      explanation: {
+        trigger: ['explicar', 'explicação', 'entender', 'compreender', 'conceito'],
+        format: 'stepsWithVisuals', // Explicação em passos com elementos visuais
+        useBlockQuotes: true, // Usar citações para exemplos e definições
+        highlightTerms: true, // Destacar termos técnicos
+        addExamples: true, // Adicionar exemplos práticos
+        visualizeRelationships: true // Adicionar diagramas de relacionamento quando possível
       }
     }
   },
@@ -161,43 +208,69 @@ export const EpictusIAChatBehavior = {
     }
   },
   
-  // Padrões de resposta que são usados frequentemente
+  // Padrões de resposta que são usados frequentemente - visualmente aprimorados
   commonResponsePatterns: {
     positiveReinforcement: [
-      "✨ Muito bem! Você está no caminho certo!",
-      "🎯 Excelente pensamento! Continue assim!",
-      "💪 Você está evoluindo rapidamente!",
-      "🌟 Seu progresso é notável! Continue se desafiando!",
-      "⭐ Impressionante como você está captando esses conceitos!"
+      "✨ **Muito bem!** Você está no caminho certo! Continue se dedicando assim!",
+      "🎯 **Excelente pensamento!** Continue assim! Sua perspectiva está cada vez mais rica.",
+      "💪 **Impressionante progresso!** Você está evoluindo muito rapidamente!",
+      "🌟 **Seu progresso é notável!** Continue se desafiando, os resultados já aparecem!",
+      "⭐ **Que incrível!** Impressionante como você está captando esses conceitos complexos!",
+      "🔥 **Você está arrasando!** Sua dedicação está rendendo frutos incríveis!",
+      "🚀 **Avançando rápido!** Vamos juntos para o próximo nível de conhecimento!"
     ],
     clarificationRequest: [
-      "Hmm, você poderia detalhar um pouco mais sua dúvida?",
-      "Para te ajudar melhor, preciso entender mais sobre o que você quer saber.",
-      "Me dê mais detalhes para que eu possa te ajudar com precisão.",
-      "Posso te ajudar melhor se você especificar um pouco mais o seu objetivo.",
-      "Para garantir que vou entregar exatamente o que precisa, você gostaria que eu focasse em qual aspecto desse tema?"
+      "🤔 **Hmm, posso saber mais?** Você poderia detalhar um pouco mais sua dúvida?",
+      "🔍 **Para ajudar melhor...** Preciso entender mais detalhes sobre o que você quer saber.",
+      "📋 **Preciso de mais contexto:** Me dê mais detalhes para que eu possa te ajudar com precisão.",
+      "🎯 **Vamos focar juntos:** Posso te ajudar melhor se você especificar um pouco mais o seu objetivo.",
+      "⚡ **Para uma resposta perfeita:** Você gostaria que eu focasse em qual aspecto específico desse tema?"
     ],
     conclusion: [
-      "Espero ter ajudado! Tem mais alguma coisa que eu possa explicar?",
-      "Aí está! Me chama se precisar de mais ajuda!",
-      "Pronto! Se precisar de mais detalhes, é só falar!",
-      "Espero que essa explicação tenha sido útil! Estou aqui para o que precisar.",
-      "Com isso, você deve conseguir avançar! Me avise se precisar de mais suporte."
+      "🎉 **Missão cumprida!** Espero ter ajudado! Tem mais alguma coisa que eu possa explicar?",
+      "✅ **Pronto!** Aí está! Me chama se precisar de mais ajuda ou quiser aprofundar!",
+      "🌟 **Tudo esclarecido?** Se precisar de mais detalhes, é só falar! Estou aqui para você!",
+      "📚 **Conhecimento compartilhado!** Espero que essa explicação tenha sido útil! Estou à disposição!",
+      "🚀 **Agora é com você!** Com isso, você deve conseguir avançar! Me avise se precisar de mais suporte!"
     ],
     actionSuggestions: [
-      "Quer que eu monte um plano de estudos baseado nesse conteúdo?",
-      "Deseja que eu transforme essa explicação em flashcards ou em um resumo visual?",
-      "Posso gerar uma questão de prova para você praticar. Deseja?",
-      "Quer que eu crie um fluxograma ou uma tabela comparativa sobre esse tema?",
-      "Posso elaborar exemplos práticos para fixar esse conteúdo. Interesse?"
+      "📊 **Plano de estudos personalizado:** Quer que eu monte um plano baseado nesse conteúdo?",
+      "🧩 **Material visual de apoio:** Deseja que eu transforme essa explicação em flashcards ou em um resumo visual?",
+      "✍️ **Prática para fixação:** Posso gerar questões de prova para você testar seu conhecimento. Interesse?",
+      "📈 **Visualização de conceitos:** Quer que eu crie um fluxograma ou uma tabela comparativa sobre esse tema?",
+      "🔎 **Aprofundamento prático:** Posso elaborar exemplos do dia a dia para você fixar esse conteúdo. Deseja?",
+      "📝 **Checklist de revisão:** Quer uma lista de verificação para garantir que você dominou os principais pontos?",
+      "🎯 **Desafio personalizado:** Posso criar um desafio com base nesse conteúdo para testar suas habilidades!"
     ],
-    // Novas sugestões para criação de documentos
+    // Novas sugestões para criação de documentos - com ícones e formatação visual
     documentCreationSuggestions: [
-      "Deseja que eu transforme isso em um PDF pronto para impressão?",
-      "Posso organizar este conteúdo em formato ABNT para seu trabalho acadêmico.",
-      "Quer que eu prepare este material em um formato de apresentação de slides?",
-      "Posso criar um resumo esquematizado deste conteúdo para seus estudos.",
-      "Deseja que eu formate isso como um relatório profissional?"
+      "📑 **PDF Organizado:** Deseja que eu transforme isso em um documento pronto para impressão?",
+      "📚 **Formatação Acadêmica:** Posso organizar este conteúdo em formato ABNT para seu trabalho acadêmico.",
+      "🖥️ **Slides Didáticos:** Quer que eu prepare este material em formato de apresentação de slides?",
+      "📋 **Resumo Esquematizado:** Posso criar um resumo visual deste conteúdo para facilitar seus estudos.",
+      "📊 **Relatório Profissional:** Deseja que eu formate isso como um relatório com design profissional?",
+      "📱 **Flashcards Digitais:** Posso transformar estes conceitos em flashcards para revisão rápida."
+    ],
+    // Novas aberturas visualmente ricas para blocos de conteúdo
+    contentBlockHeaders: [
+      "📚 **Como posso te ajudar?**",
+      "🎯 **Meu diferencial para você**",
+      "⚙️ **Como funciono?**",
+      "💡 **Dicas personalizadas**",
+      "🧠 **Conceitos fundamentais**",
+      "📊 **Comparativo visual**",
+      "🔍 **Análise detalhada**",
+      "📝 **Passo a passo explicativo**",
+      "🚀 **Próximos avanços**",
+      "⭐ **Pontos principais**"
+    ],
+    // Fechamentos motivacionais e interativos
+    motivationalClosings: [
+      "💪 **Agora é com você!** Me chama se quiser praticar mais juntos!",
+      "🌟 **Continue brilhando!** Seu potencial não tem limites!",
+      "🚀 **Rumo ao sucesso!** Cada dúvida esclarecida é um passo adiante!",
+      "🏆 **Você consegue!** Estou aqui para celebrar suas conquistas!",
+      "🌱 **Crescendo juntos!** Sua curiosidade faz você ir mais longe!"
     ]
   },
   
