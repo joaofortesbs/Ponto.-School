@@ -12,6 +12,7 @@ interface EpictusIAChatMessageProps {
   onCaderno?: (content: string) => void;
   isPremium?: boolean;
   messageContext?: any; // Novo: contexto adicional para personalização
+  enhanceFinalQuestion?: boolean; // Nova propriedade para destacar pergunta final
 }
 
 export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
@@ -22,13 +23,15 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
   onAprofundar,
   onCaderno,
   isPremium = false,
-  messageContext
+  messageContext,
+  enhanceFinalQuestion = true
 }) => {
   const [isHovering, setIsHovering] = useState(false);
   const [renderedContent, setRenderedContent] = useState(content);
   const [hasTable, setHasTable] = useState(false);
   const [hasFlowchart, setHasFlowchart] = useState(false);
   const [highlightedTerms, setHighlightedTerms] = useState<string[]>([]);
+  const [finalQuestion, setFinalQuestion] = useState<string | null>(null);
 
   // Detecta elementos especiais no conteúdo
   useEffect(() => {
@@ -43,6 +46,29 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
       // Identifica termos destacados
       const boldTerms = content.match(/\*\*(.*?)\*\*/g)?.map(term => term.replace(/\*\*/g, '')) || [];
       setHighlightedTerms(boldTerms);
+      
+      // Detecta pergunta final engajadora
+      const questionPatterns = [
+        /\*\*(Gostaria que eu criasse.*?)\*\*$/,
+        /\*\*(Deseja que eu resuma.*?)\*\*$/,
+        /\*\*(Quer que eu monte.*?)\*\*$/,
+        /\*\*(Posso transformar.*?)\*\*$/,
+        /\*\*(Quer que eu explore.*?)\*\*$/,
+        /\*\*(Gostaria de ver.*?)\*\*$/,
+        /\*\*(Posso preparar.*?)\*\*$/
+      ];
+      
+      // Procura pela pergunta final no conteúdo
+      for (const pattern of questionPatterns) {
+        const match = content.match(pattern);
+        if (match && match[1]) {
+          setFinalQuestion(match[1]);
+          // Remove a pergunta do conteúdo principal para exibi-la separadamente
+          const contentWithoutQuestion = content.replace(pattern, '').trim();
+          setRenderedContent(enhanceContent(contentWithoutQuestion));
+          return;
+        }
+      }
 
       // Processa conteúdo avançado
       setRenderedContent(enhanceContent(content));
@@ -100,6 +126,21 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
           ) : (
             <>
               <ReactMarkdown>{renderedContent}</ReactMarkdown>
+
+              {/* Pergunta final engajadora destacada */}
+              {sender === 'ai' && finalQuestion && enhanceFinalQuestion && (
+                <motion.div 
+                  className="mt-4 pt-3 border-t border-primary/20"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.3 }}
+                >
+                  <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-lg">
+                    <span className="text-primary text-lg">💡</span>
+                    <p className="font-medium text-primary">{finalQuestion}</p>
+                  </div>
+                </motion.div>
+              )}
 
               {/* Termos destacados (como referência rápida) */}
               {sender === 'ai' && highlightedTerms.length > 0 && (

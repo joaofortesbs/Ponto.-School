@@ -272,7 +272,16 @@ export class EpictusIAChatFormatter {
     const { conclusion } = this.chatBehavior.commonResponsePatterns;
     const selectedConclusion = conclusion[Math.floor(Math.random() * conclusion.length)];
     
-    return `${content}\n\n${selectedConclusion}`;
+    // Adiciona a pergunta final engajadora conforme as diretrizes da Parte 3
+    const { finalQuestion } = this.chatBehavior.coreGuidelines;
+    let enhancedContent = `${content}\n\n${selectedConclusion}`;
+    
+    if (finalQuestion.alwaysInclude) {
+      const randomQuestion = finalQuestion.variations[Math.floor(Math.random() * finalQuestion.variations.length)];
+      enhancedContent += `\n\n**${randomQuestion}**`;
+    }
+    
+    return enhancedContent;
   }
   
   private addEmphasisToKeyPoints(content: string): string {
