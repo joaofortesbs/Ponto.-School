@@ -112,11 +112,13 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
         <div className="flex items-center gap-2">
           <AddButton 
             onFileUpload={(files) => {
-              // Aqui você pode implementar a lógica para lidar com os arquivos enviados
+              // Lógica para lidar com os arquivos enviados
               toast({
                 title: `${files.length} arquivo(s) enviado(s) com sucesso`,
                 description: "Os arquivos serão processados em breve.",
               });
+              // Aqui você pode implementar o processamento dos arquivos
+              console.log("Arquivos para processar:", files);
             }} 
           />
 

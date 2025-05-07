@@ -1,23 +1,26 @@
 
 import React, { useState, useRef } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Upload, File, X } from "lucide-react";
 import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Upload, File, X, Cloud, Clock, ChevronRight, FolderOpen } from "lucide-react";
+import { Google, Microsoft } from 'lucide-react';
 
 interface UploadModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  isOpen: boolean;
+  onClose: () => void;
   onUpload?: (files: File[]) => void;
+  position: { top: number; left: number };
 }
 
 const UploadModal: React.FC<UploadModalProps> = ({
-  open,
-  onOpenChange,
+  isOpen,
+  onClose,
   onUpload,
+  position,
 }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("upload");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,7 +56,7 @@ const UploadModal: React.FC<UploadModalProps> = ({
     if (onUpload && files.length > 0) {
       onUpload(files);
       setFiles([]);
-      onOpenChange(false);
+      onClose();
     }
   };
 
@@ -63,107 +66,183 @@ const UploadModal: React.FC<UploadModalProps> = ({
     }
   };
 
+  const handleOptionClick = (option: string) => {
+    switch (option) {
+      case "google":
+        console.log("Conectar com Google Drive");
+        // Implementar integração com Google Drive
+        break;
+      case "onedrive":
+        console.log("Conectar com Microsoft OneDrive");
+        // Implementar integração com OneDrive
+        break;
+      case "upload":
+        setActiveTab("upload");
+        openFileDialog();
+        break;
+      case "recent":
+        setActiveTab("recent");
+        // Implementar carregamento de arquivos recentes
+        break;
+      default:
+        break;
+    }
+  };
+
+  if (!isOpen) return null;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-gradient-to-b from-[#0c1c36] to-[#0a1625] border border-blue-500/20 text-white rounded-xl shadow-xl">
-        <div className="flex flex-col gap-4">
-          <div className="text-center">
-            <h3 className="font-medium text-lg bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              Carregar Arquivos
-            </h3>
-            <p className="text-gray-400 text-sm mt-1">
-              Selecione ou arraste os arquivos para upload
-            </p>
-          </div>
-
-          <div
-            className={`border-2 border-dashed rounded-lg p-6 transition-all ${
-              isDragging
-                ? "border-blue-500 bg-blue-500/10"
-                : "border-gray-600 hover:border-blue-500/50 hover:bg-blue-500/5"
-            }`}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            onClick={openFileDialog}
+    <AnimatePresence>
+      {isOpen && (
+        <div 
+          className="fixed inset-0 z-50 pointer-events-auto"
+          onClick={(e) => e.target === e.currentTarget && onClose()}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="fixed z-50 pointer-events-auto"
+            style={{ 
+              top: `${position.top}px`, 
+              left: `${position.left}px` 
+            }}
+            onClick={(e) => e.stopPropagation()}
           >
-            <input
-              type="file"
-              ref={fileInputRef}
-              className="hidden"
-              onChange={handleFileChange}
-              multiple
-            />
-            <div className="flex flex-col items-center gap-2 cursor-pointer">
-              <motion.div
-                className="p-2 rounded-full bg-blue-500/20"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Upload className="h-6 w-6 text-blue-400" />
-              </motion.div>
-              <p className="text-sm font-medium text-gray-300">
-                Clique ou arraste arquivos para esta área
-              </p>
-              <p className="text-xs text-gray-500">
-                Suporta PDFs, imagens, documentos e mais
-              </p>
-            </div>
-          </div>
-
-          {files.length > 0 && (
-            <div className="mt-2">
-              <p className="text-sm text-gray-300 mb-2">
-                Arquivos selecionados ({files.length})
-              </p>
-              <div className="max-h-32 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
-                {files.map((file, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between bg-gray-800/50 p-2 rounded-md text-sm"
+            <div className="bg-gradient-to-b from-[#0c1c36] to-[#0a1625] border border-blue-500/20 text-white rounded-xl shadow-xl w-64 overflow-hidden">
+              <div className="p-3">
+                <h3 className="text-sm font-medium text-gray-200 mb-2">Selecione uma opção</h3>
+                
+                <div className="space-y-1">
+                  {/* Google Drive Option */}
+                  <button 
+                    onClick={() => handleOptionClick("google")}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 transition-all"
+                  >
+                    <div className="w-6 h-6 flex items-center justify-center rounded-full bg-blue-700/20 text-blue-400">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2.66669 10L5.33335 5.33333L8.00002 10H2.66669Z" fill="#4285F4"/>
+                        <path d="M5.33335 5.33333L8.00002 0.666666L10.6667 5.33333H5.33335Z" fill="#EA4335"/>
+                        <path d="M8.00002 10L10.6667 5.33333L13.3334 10H8.00002Z" fill="#FBBC05"/>
+                        <path d="M2.66669 10L5.33335 15.3333L8.00002 10H2.66669Z" fill="#34A853"/>
+                        <path d="M8.00002 10L10.6667 15.3333L13.3334 10H8.00002Z" fill="#188038"/>
+                      </svg>
+                    </div>
+                    <span className="text-sm">Conectar com Google Drive</span>
+                  </button>
+                  
+                  {/* Microsoft OneDrive Option */}
+                  <button 
+                    onClick={() => handleOptionClick("onedrive")}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 transition-all"
+                  >
+                    <div className="w-6 h-6 flex items-center justify-center rounded-full bg-blue-600/20 text-blue-400">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6.53335 5.33333C6.53335 3.86056 7.72724 2.66667 9.20002 2.66667C10.6728 2.66667 11.8667 3.86056 11.8667 5.33333C11.8667 6.80611 10.6728 8 9.20002 8C7.72724 8 6.53335 6.80611 6.53335 5.33333Z" fill="#0364B8"/>
+                        <path d="M3.86669 9.33333C3.86669 8.22876 4.75879 7.33333 5.86335 7.33333C6.96792 7.33333 7.86002 8.22876 7.86002 9.33333C7.86002 10.4379 6.96792 11.3333 5.86335 11.3333C4.75879 11.3333 3.86669 10.4379 3.86669 9.33333Z" fill="#0078D4"/>
+                        <path d="M10.1333 9.66667C10.1333 8.93029 10.7303 8.33333 11.4667 8.33333C12.203 8.33333 12.8 8.93029 12.8 9.66667C12.8 10.403 12.203 11 11.4667 11C10.7303 11 10.1333 10.403 10.1333 9.66667Z" fill="#1490DF"/>
+                        <path d="M2.66669 12C2.66669 11.2636 3.26364 10.6667 4.00002 10.6667H11.3334C12.0697 10.6667 12.6667 11.2636 12.6667 12C12.6667 12.7364 12.0697 13.3333 11.3334 13.3333H4.00002C3.26364 13.3333 2.66669 12.7364 2.66669 12Z" fill="#28A8EA"/>
+                      </svg>
+                    </div>
+                    <span className="text-sm">Conectar com OneDrive</span>
+                  </button>
+                  
+                  {/* Upload Files Option */}
+                  <button 
+                    onClick={() => handleOptionClick("upload")}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 transition-all"
+                  >
+                    <div className="w-6 h-6 flex items-center justify-center rounded-full bg-purple-700/20 text-purple-400">
+                      <Upload size={14} />
+                    </div>
+                    <span className="text-sm">Carregar arquivos</span>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      onChange={handleFileChange}
+                      multiple
+                    />
+                  </button>
+                  
+                  {/* Recent Files Option */}
+                  <button 
+                    onClick={() => handleOptionClick("recent")}
+                    className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg hover:bg-white/5 transition-all"
                   >
                     <div className="flex items-center gap-2">
-                      <File className="h-4 w-4 text-blue-400" />
-                      <span className="truncate max-w-[200px]">
-                        {file.name}
-                      </span>
+                      <div className="w-6 h-6 flex items-center justify-center rounded-full bg-amber-700/20 text-amber-400">
+                        <Clock size={14} />
+                      </div>
+                      <span className="text-sm">Recentes</span>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 text-gray-400 hover:text-red-400 hover:bg-red-500/10"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveFile(index);
-                      }}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
+                    <ChevronRight size={14} className="text-gray-400" />
+                  </button>
+                </div>
+                
+                {activeTab === "upload" && files.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-gray-700/50">
+                    <p className="text-xs text-gray-400 mb-2">
+                      Arquivos selecionados ({files.length})
+                    </p>
+                    <div className="max-h-32 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                      {files.map((file, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between bg-gray-800/50 p-2 rounded-md text-xs"
+                        >
+                          <div className="flex items-center gap-2">
+                            <File className="h-3 w-3 text-blue-400" />
+                            <span className="truncate max-w-[140px]">
+                              {file.name}
+                            </span>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-5 w-5 text-gray-400 hover:text-red-400 hover:bg-red-500/10"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveFile(index);
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-3 flex justify-end">
+                      <Button 
+                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-xs py-1 h-8 px-3"
+                        onClick={handleUpload}
+                      >
+                        Enviar
+                      </Button>
+                    </div>
                   </div>
-                ))}
+                )}
+                
+                {activeTab === "recent" && (
+                  <div className="mt-3 pt-3 border-t border-gray-700/50">
+                    <p className="text-xs text-gray-400 mb-2">
+                      Arquivos recentes
+                    </p>
+                    <div className="text-center py-3 text-xs text-gray-500">
+                      Nenhum arquivo recente disponível
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-          )}
-
-          <div className="flex justify-end gap-2 mt-2">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="text-gray-300 border-gray-700 hover:bg-gray-800"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleUpload}
-              disabled={files.length === 0}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
-            >
-              Enviar
-            </Button>
-          </div>
+          </motion.div>
+          <div
+            className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-40"
+            onClick={onClose}
+          />
         </div>
-      </DialogContent>
-    </Dialog>
+      )}
+    </AnimatePresence>
   );
 };
 

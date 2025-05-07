@@ -10,12 +10,22 @@ interface AddButtonProps {
 
 const AddButton: React.FC<AddButtonProps> = ({ onFileUpload }) => {
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
+
+  const handleClick = (e: React.MouseEvent) => {
+    const button = e.currentTarget;
+    const rect = button.getBoundingClientRect();
+    setModalPosition({
+      top: rect.bottom + window.scrollY,
+      left: rect.left + window.scrollX
+    });
+    setShowUploadModal(true);
+  };
 
   const handleUpload = (files: File[]) => {
     if (onFileUpload) {
       onFileUpload(files);
     }
-    console.log("Arquivos enviados:", files);
   };
 
   return (
@@ -25,15 +35,16 @@ const AddButton: React.FC<AddButtonProps> = ({ onFileUpload }) => {
                  flex items-center justify-center shadow-lg text-white"
         whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
         whileTap={{ scale: 0.95 }}
-        onClick={() => setShowUploadModal(true)}
+        onClick={handleClick}
       >
         <Plus size={18} />
       </motion.button>
 
       <UploadModal
-        open={showUploadModal}
-        onOpenChange={setShowUploadModal}
+        isOpen={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
         onUpload={handleUpload}
+        position={modalPosition}
       />
     </>
   );
