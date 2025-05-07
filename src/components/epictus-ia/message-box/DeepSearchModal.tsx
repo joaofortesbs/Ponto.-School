@@ -41,7 +41,6 @@ const DeepSearchModal: React.FC<DeepSearchModalProps> = ({
       return;
     }
 
-    onSearch(searchQuery, searchOptions);
     onClose();
   };
 
@@ -190,17 +189,11 @@ const DeepSearchModal: React.FC<DeepSearchModalProps> = ({
             </div>
           </div>
 
-          <div className="flex gap-2 mt-2">
-            <button
-              onClick={onClose}
-              className="flex-1 bg-[#1A2234] hover:bg-[#242e45] text-white font-medium py-2 rounded-md transition-colors border border-[#2A3548]"
-            >
-              Cancelar
-            </button>
+          <div className="flex justify-end mt-2">
             <button
               onClick={handleSearch}
               disabled={!searchOptions.webGlobal && !searchOptions.academico && !searchOptions.social}
-              className={`flex-1 flex items-center justify-center gap-1 text-white font-medium py-2 rounded-md transition-colors ${
+              className={`flex items-center justify-center gap-1 text-white font-medium py-2 px-6 rounded-md transition-colors ${
                 searchOptions.webGlobal || searchOptions.academico || searchOptions.social
                   ? "bg-blue-600 hover:bg-blue-700" 
                   : "bg-blue-600/50 cursor-not-allowed"

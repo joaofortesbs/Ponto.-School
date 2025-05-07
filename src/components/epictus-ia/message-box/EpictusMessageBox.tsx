@@ -211,30 +211,8 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
         isOpen={isDeepSearchModalOpen}
         onClose={() => setIsDeepSearchModalOpen(false)}
         onSearch={(query, options) => {
-          // Fechar o modal
+          // Simplesmente fechar o modal
           setIsDeepSearchModalOpen(false);
-          
-          // Construir a mensagem de busca avançada
-          let searchMessage = `🔍 DeepSearch: "${query}"`;
-          
-          // Adicionar fontes selecionadas
-          const fontes = [];
-          if (options.webGlobal) fontes.push("Web Global");
-          if (options.academico) fontes.push("Acadêmico");
-          if (options.social) fontes.push("Social");
-          searchMessage += ` [Fontes: ${fontes.join(", ")}]`;
-          
-          // Adicionar profundidade da busca
-          searchMessage += ` [Profundidade: ${options.searchDepth}]`;
-          
-          // Definir a mensagem no campo de input
-          setInputMessage(searchMessage);
-          
-          // Enviar a mensagem automaticamente
-          setTimeout(() => {
-            handleButtonClick('Buscar');
-            handleSendMessage();
-          }, 100);
         }}
       />
     </motion.div>
