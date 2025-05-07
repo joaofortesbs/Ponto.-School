@@ -95,7 +95,7 @@ const EpictusBetaMode: React.FC = () => {
   const [sessionId] = useState(() => localStorage.getItem('epictus_beta_session_id') || uuidv4());
   const [isReformulating, setIsReformulating] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
-  
+
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -203,20 +203,20 @@ const EpictusBetaMode: React.FC = () => {
     if (showWelcome) {
       setShowWelcome(false);
     }
-    
+
     // Verificar se é uma busca DeepSearch
     const isDeepSearch = trimmedMessage.startsWith("🔍 DeepSearch:");
-    
+
     let enhancedMessage = trimmedMessage;
-    
+
     // Adicionar contexto para o modelo de IA se for uma busca avançada
     if (isDeepSearch) {
       const searchQuery = trimmedMessage.match(/DeepSearch: "(.*?)"/)?.[1] || "";
       const sourceOptions = trimmedMessage.match(/\[Fontes: (.*?)\]/)?.[1] || "";
-      
+
       // Adicionar instruções especiais para a IA sobre como processar a busca
       enhancedMessage = `Realize uma pesquisa detalhada sobre "${searchQuery}" utilizando as seguintes fontes: ${sourceOptions}.
-      
+
       Regras para a sua resposta:
       1. Estruture a resposta de forma acadêmica e bem formatada
       2. Cite as possíveis fontes de onde essas informações poderiam vir
@@ -224,7 +224,7 @@ const EpictusBetaMode: React.FC = () => {
       4. Inclua perspectivas diferentes sobre o tema, quando aplicável
       5. Priorize dados atualizados e relevantes
       6. Inclua referências quando possível
-      
+
       Query original: ${searchQuery}`;
     }
 
@@ -239,7 +239,7 @@ const EpictusBetaMode: React.FC = () => {
     setInputMessage("");
     setCharCount(0);
     setIsTyping(true);
-    
+
     // Se for DeepSearch, adicionar mensagem de loading diferenciada
     if (isDeepSearch) {
       setTimeout(() => {
@@ -250,7 +250,7 @@ const EpictusBetaMode: React.FC = () => {
           timestamp: new Date(),
           showTools: false
         };
-        
+
         setMessages(prev => [...prev, searchingMessage]);
       }, 500);
     }
@@ -268,7 +268,7 @@ const EpictusBetaMode: React.FC = () => {
             setMessages(prev => prev.filter(msg => !msg.content.includes("Realizando busca avançada...")));
           }, 1500);
         }
-        
+
         console.log("Enviando mensagem para Gemini:", isDeepSearch ? enhancedMessage : trimmedMessage);
         const response = await generateAIResponse(
           isDeepSearch ? enhancedMessage : trimmedMessage, 
@@ -282,7 +282,7 @@ const EpictusBetaMode: React.FC = () => {
           // Adicionar cabeçalho especial para resultados da busca
           const searchQuery = trimmedMessage.match(/DeepSearch: "(.*?)"/)?.[1] || "";
           formattedResponse = `# 🔍 Resultados da DeepSearch™
-          
+
 ## Consulta: "${searchQuery}"
 
 ${response}
@@ -389,7 +389,7 @@ ${response}
       setIsPromptModalOpen(true);
       return;
     }
-    
+
     if (action === 'Inspiracao') {
       // Sugerir temas para o usuário
       const inspirationMessage: Message = {
@@ -399,7 +399,7 @@ ${response}
         timestamp: new Date(),
         showTools: false
       };
-      
+
       setMessages(prev => [...prev, inspirationMessage]);
       return;
     }
