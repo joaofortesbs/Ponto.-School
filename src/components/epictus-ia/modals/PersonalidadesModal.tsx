@@ -37,8 +37,13 @@ const PersonalidadesModal: React.FC<PersonalidadesModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="sm:max-w-[550px] max-h-[85vh] flex flex-col border border-white/10 dark:border-slate-700/40 rounded-xl shadow-xl personalidades-modal backdrop-blur-md bg-white/90 dark:bg-slate-900/85"
-        style={{ zIndex: 100001, boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.18)" }}
+        className="sm:max-w-[550px] max-h-[85vh] flex flex-col rounded-xl personalidades-modal backdrop-blur-xl bg-white/80 dark:bg-slate-900/80 border border-blue-200/30 dark:border-blue-500/20"
+        style={{ 
+          zIndex: 100001, 
+          boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.15)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)"
+        }}
       >
         <DialogHeader className="pb-0">
           <DialogTitle className="text-xl font-semibold flex items-center text-slate-800 dark:text-slate-100">
@@ -59,13 +64,13 @@ const PersonalidadesModal: React.FC<PersonalidadesModalProps> = ({
                 key={personalidade.id}
                 className={`relative p-4 rounded-lg cursor-pointer transition-all duration-300 
                   ${personalidade.ativa 
-                    ? 'bg-blue-50/90 dark:bg-blue-900/30 border border-blue-500 dark:border-blue-400 backdrop-blur-sm'
-                    : 'bg-white/70 hover:bg-gray-50/90 dark:bg-slate-800/60 dark:hover:bg-slate-700/70 border border-gray-100/80 dark:border-slate-700/50 backdrop-blur-sm'
+                    ? 'bg-blue-50/90 dark:bg-blue-900/40 border border-blue-400 dark:border-blue-400/60 backdrop-blur-sm'
+                    : 'bg-white/60 hover:bg-slate-50/90 dark:bg-slate-800/50 dark:hover:bg-slate-700/60 border border-slate-200/80 dark:border-slate-700/50 backdrop-blur-sm'
                   }`}
                 onClick={() => onPersonalidadeSelect?.(personalidade.id)}
                 whileHover={{ 
                   scale: 1.02, 
-                  boxShadow: "0 8px 20px rgba(0, 0, 0, 0.1)" 
+                  boxShadow: "0 10px 25px rgba(0, 0, 0, 0.08)" 
                 }}
                 transition={{ duration: 0.2 }}
               >
@@ -73,8 +78,8 @@ const PersonalidadesModal: React.FC<PersonalidadesModalProps> = ({
                   <div className="flex items-center">
                     <div className={`flex items-center justify-center p-2 rounded-full 
                       ${personalidade.ativa 
-                        ? 'bg-blue-100 dark:bg-blue-800/40 text-blue-600 dark:text-blue-400 shadow-sm shadow-blue-400/20' 
-                        : 'bg-gray-100/80 dark:bg-slate-700/80 text-gray-600 dark:text-slate-400'
+                        ? 'bg-blue-100 dark:bg-blue-800/60 text-blue-600 dark:text-blue-300 shadow-sm shadow-blue-400/20' 
+                        : 'bg-slate-100/80 dark:bg-slate-700/70 text-slate-600 dark:text-slate-300'
                       } mr-3 w-10 h-10 backdrop-blur-sm`}
                     >
                       {personalidade.icone}
@@ -90,7 +95,7 @@ const PersonalidadesModal: React.FC<PersonalidadesModalProps> = ({
                   </div>
                   {personalidade.ativa && (
                     <div className="flex-shrink-0 ml-2">
-                      <div className="bg-blue-500 text-white rounded-full p-1 shadow-sm">
+                      <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full p-1 shadow-md shadow-blue-600/20">
                         <Check className="h-4 w-4" />
                       </div>
                     </div>
@@ -101,7 +106,7 @@ const PersonalidadesModal: React.FC<PersonalidadesModalProps> = ({
           </div>
         </div>
 
-        <DialogFooter className="mt-6 pt-4 border-t border-gray-100/80 dark:border-slate-700/60">
+        <DialogFooter className="mt-6 pt-4 border-t border-slate-200/50 dark:border-slate-700/40">
           <Button 
             onClick={() => onOpenChange(false)}
             className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:opacity-90 hover:shadow-lg hover:shadow-blue-500/20 text-white rounded-lg px-5 py-2 text-sm font-medium transition-all duration-300"
