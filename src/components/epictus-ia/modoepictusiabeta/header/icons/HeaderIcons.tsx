@@ -49,14 +49,12 @@ const HeaderIcons: React.FC<HeaderIconsProps> = ({
 
   const handlePersonalidadesClick = () => {
     console.log("Personalidades clicado");
-    // Dropdown agora é gerenciado pelo próprio componente
+    // Funcionalidade inativa conforme solicitado
   };
 
   return (
     <div className="flex items-center justify-center z-10 relative gap-3">
-      <div className="mr-2">
-        <PersonalidadesIcon onClick={handlePersonalidadesClick} />
-      </div>
+      <PersonalidadesIcon onClick={handlePersonalidadesClick} />
       <HistoricoIcon onClick={handleHistoricoClick} />
       <EspacoAprendizagemIcon onClick={onEspacoAprendizagemClick} />
       <ApostilaInteligenteIcon onClick={handleApostilaInteligenteClick} />

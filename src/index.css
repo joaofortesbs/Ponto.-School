@@ -100,58 +100,8 @@
 .personalidades-dropdown,
 .group:hover .personalidades-dropdown,
 [role="menu"].personalidades-dropdown {
-  z-index: 100000 !important;
-  position: absolute !important;
-  width: 100% !important;
-  min-width: 200px !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
-  animation: fadeIn 0.2s ease-out;
-  transform-origin: top center;
-  pointer-events: auto !important;
-}
-
-/* Camada de isolamento para o dropdown de personalidades */
-.personalidades-root {
+  z-index: 999999 !important;
   position: relative !important;
-  isolation: isolate !important;
-  z-index: 9999999 !important;
-}
-
-/* Container do dropdown precisa estar por cima de tudo */
-.personalidades-button {
-  position: relative !important;
-  z-index: 9999998 !important;
-}
-
-/* Garantir que o dropdown esteja visível e clicável */
-.personalidades-dropdown button {
-  position: relative !important;
-  z-index: 9999999 !important;
-  width: 100% !important;
-  cursor: pointer !important;
-  opacity: 1 !important;
-  pointer-events: auto !important;
-}
-
-/* Resolver conflitos de camadas com outros componentes */
-.personalidades-dropdown::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-}
-
-/* Suporte para portais do Radix UI */
-[data-radix-popper-content-wrapper] {
-  z-index: 9999999 !important;
-}
-
-/* Garantir que todos os botões são clicáveis */
-.personalidades-dropdown button {
-  width: 100% !important;
-  cursor: pointer !important;
-  border-radius: 2px !important;
-  margin: 2px 0 !important;
 }
 
 /* Corrigir posicionamento dos elementos dropdown */
@@ -168,8 +118,7 @@ div[data-radix-popper-content-wrapper] {
 
 /* Regras adicionais para garantir que o dropdown de personalidades fique por cima */
 .personalidades-button,
-.personalidades-container,
-.personalidades-dropdown {
+.personalidades-container {
   position: relative !important;
   z-index: 999999 !important;
 }
@@ -486,54 +435,6 @@ svg.neural-connections {
 .dark .glass-effect {
   background: rgba(10, 37, 64, 0.5);
 }
-
-/* Regras específicas para resolver conflito do modal com o chat */
-.epictus-chat-container,
-.chat-message-container,
-.message-content {
-  z-index: 1 !important; /* Força baixo z-index para o chat */
-}
-
-/* Forçar modal de personalidades por cima de TUDO */
-.personalidades-root {
-  position: relative !important;
-  z-index: 100000 !important;
-  isolation: isolate !important;
-}
-
-.personalidades-dropdown {
-  position: absolute !important;
-  z-index: 100000 !important;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.7) !important;
-}
-
-/* Desabilitar eventos de mouse em elementos de chat quando dropdown aberto */
-.personalidades-root[data-state="open"] ~ * {
-  pointer-events: none !important;
-}
-
-/* Garantir que o dropdown seja clicável */
-.personalidades-dropdown button,
-.personalidades-dropdown a {
-  position: relative !important;
-  z-index: 100001 !important;
-  pointer-events: auto !important;
-}
-
-/* Camada especial para forçar dropdown por cima de outros elementos */
-:root::after {
-  content: '';
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 99999;
-  pointer-events: none;
-}
-
-.personalidades-root:hover ~ :root::after {
-  display: block;
-}
-
 
 /* Efeito de borda brilhante */
 .glowing-border {
