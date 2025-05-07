@@ -1387,3 +1387,41 @@ textarea:hover,
   margin: 0 auto;
   z-index: 10;
 }
+
+.dark .glass-effect {
+  background: rgba(10, 37, 64, 0.5);
+}
+
+/* Regras específicas para resolver conflito do modal com o chat */
+.epictus-chat-container,
+.chat-message-container,
+.message-content {
+  z-index: 1 !important; /* Força baixo z-index para o chat */
+}
+
+/* Forçar modal de personalidades por cima de TUDO */
+.personalidades-root {
+  position: relative !important;
+  z-index: 100000 !important;
+  isolation: isolate !important;
+}
+
+/* Estilos para o modal de personalidades */
+[role="dialog"].personalidades-modal {
+  position: fixed !important;
+  z-index: 999999 !important;
+}
+
+/* Garantir que o Radix UI Dialog seja exibido corretamente */
+[data-radix-popper-content-wrapper] {
+  z-index: 999999 !important;
+}
+
+/* Estilos para o backdrop do modal */
+.personalidades-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 999990 !important;
+}

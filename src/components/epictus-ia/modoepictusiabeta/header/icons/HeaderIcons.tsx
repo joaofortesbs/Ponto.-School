@@ -7,7 +7,7 @@ import GaleriaIcon from "./GaleriaIcon";
 import PerfilIcon from "./PerfilIcon";
 import PersonalidadesIcon from "./personalidadescabeçalhomodoepictusbeta";
 import HistoricoConversasModal from "../../../modals/HistoricoConversasModal";
-import { ApostilaInteligenteModal } from "../../apostila-inteligente";
+import { ApostilaInteligenteModal } from "../../apostila-inteligente";;
 
 interface HeaderIconsProps {
   currentContext?: string;
