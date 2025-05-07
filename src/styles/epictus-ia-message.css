@@ -435,3 +435,104 @@
   font-weight: 500;
 }
 
+/* Animação de fadeIn para entrada de mensagens suave */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Estilos adaptados do chat de suporte flutuante */
+.message-content {
+  line-height: 1.6;
+}
+
+.message-content h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 1.25rem;
+  margin-bottom: 0.75rem;
+  color: #333;
+}
+
+.message-content h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  color: #444;
+}
+
+.message-content h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 0.75rem;
+  margin-bottom: 0.5rem;
+  color: #555;
+}
+
+.dark .message-content h1,
+.dark .message-content h2,
+.dark .message-content h3 {
+  color: #f0f0f0;
+}
+
+.message-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+.message-content table th {
+  background-color: #f5f5f5;
+  padding: 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  border: 1px solid #e0e0e0;
+}
+
+.message-content table td {
+  padding: 0.75rem;
+  border: 1px solid #e0e0e0;
+}
+
+.dark .message-content table th {
+  background-color: #2a2a2a;
+  border-color: #444;
+}
+
+.dark .message-content table td {
+  border-color: #444;
+}
+
+/* Adiciona estilos específicos para botões de feedback */
+.feedback-buttons {
+  display: flex;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.message-container:hover .feedback-buttons {
+  opacity: 1;
+}
+
+.feedback-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.feedback-button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.dark .feedback-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+

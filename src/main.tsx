@@ -6,6 +6,16 @@ import { BrowserRouter } from "react-router-dom";
 import './lib/username-initializer.ts'
 import { preInitializeWebNodes } from './lib/web-persistence.ts'
 import './styles/epictus-ia-message.css'
+import './styles/hide-scrollbar.css'
+import './styles/notebook.css'
+import './styles/header-animations.css'
+import './styles/apostila-modal.css'
+import './styles/modern-scanner.css'
+import './styles/typewriter-loader.css'
+import './styles/rotina-calendar.css'
+import './styles/carousel-effects.css'
+import './styles/animations.css' // Added this line
+
 
 // PRIORIDADE MÁXIMA: Inicializar teias antes de qualquer outro código
 // Esta função é executada imediatamente, antes mesmo da montagem do React

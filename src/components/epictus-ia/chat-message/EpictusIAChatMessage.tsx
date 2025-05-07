@@ -4,6 +4,8 @@ import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 import { MessageToolsDropdown } from '../message-tools';
 import { motion } from 'framer-motion';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Sparkles, ThumbsUp, ThumbsDown, Copy } from 'lucide-react';
 
 interface EpictusIAChatMessageProps {
   content: string;
@@ -38,6 +40,7 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
   const [finalQuestion, setFinalQuestion] = useState<string | null>(null);
   const [hasChart, setHasChart] = useState(false);
   const [hasColoredText, setHasColoredText] = useState(false);
+  const [feedback, setFeedback] = useState<'positive' | 'negative' | null>(null);
 
   // Detecta elementos especiais no conteúdo
   useEffect(() => {
@@ -197,24 +200,46 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
     return enhanced;
   };
 
+  const handleFeedback = (type: 'positive' | 'negative') => {
+    setFeedback(type);
+  };
+
+  const handleCopyToClipboard = () => {
+    navigator.clipboard.writeText(content).then(() => {
+      alert('Conteúdo copiado para a área de transferência!');
+    }).catch(err => {
+      console.error('Erro ao copiar texto: ', err);
+    });
+  };
+
   // Renderiza conteúdo de acordo com o remetente
   return (
-    <motion.div 
-      className={`flex ${sender === 'user' ? 'justify-end' : 'justify-start'} mb-6`}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
+    <div className={`flex ${sender === 'user' ? 'justify-end' : 'justify-start'} mb-6 group animate-fadeIn`}>
+      {sender === 'ai' && (
+        <div className="w-10 h-10 rounded-full overflow-hidden mr-2 flex-shrink-0">
+          <Avatar>
+            <AvatarImage src="/images/tempo-image-20250329T044440497Z.png" alt="Epictus IA" />
+            <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] text-white">
+              IA
+              <span className="absolute -right-1 -bottom-1 w-3.5 h-3.5 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800">
+                <Sparkles className="h-2 w-2 text-white" />
+              </span>
+            </AvatarFallback>
+          </Avatar>
+        </div>
+      )}
+
       <div 
-        className={`relative max-w-[90%] md:max-w-[80%] p-5 rounded-xl shadow-md 
-          ${sender === 'user' 
-            ? 'bg-primary/10 text-primary-foreground rounded-tr-none' 
-            : 'bg-gradient-to-br from-muted/40 to-muted/60 dark:from-muted/20 dark:to-muted/30 rounded-tl-none'}`}
+        className={`relative max-w-[75%] rounded-lg p-4 shadow-md ${
+          sender === 'user'
+            ? 'bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-tr-none ml-auto'
+            : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-none'
+        }`}
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
       >
         {/* Conteúdo da mensagem */}
-        <div className={`prose prose-sm dark:prose-invert max-w-none epictus-message-content
+        <div className={`message-content whitespace-pre-wrap prose prose-sm dark:prose-invert max-w-none epictus-message-content
           ${hasTable ? 'prose-table:border-collapse prose-table:w-full prose-td:border prose-td:p-3 prose-td:align-middle prose-th:bg-primary/10 prose-th:p-2 dark:prose-th:bg-primary/20 prose-thead:border-b-2 prose-thead:border-primary/30' : ''}
           ${hasFlowchart ? 'prose-code:text-primary prose-code:bg-transparent prose-code:p-4 prose-code:rounded' : ''}
           prose-headings:font-semibold prose-headings:mb-3 prose-p:mb-3
@@ -288,10 +313,49 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
                   </div>
                 </div>
               )}
+            </>
+          )}
+        </div>
 
+        {/* Tempo e ações de feedback - similar ao FloatingChatSupport */}
+        <div className="flex items-center justify-between mt-2">
+          <div className="text-xs opacity-80 flex items-center gap-1">
+            <span className={sender === 'user' ? "bg-white/20 px-1.5 py-0.5 rounded-sm" : ""}>
+              {new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
+          </div>
+
+          {/* Botões de feedback para mensagens da IA */}
+          {sender === 'ai' && !isTyping && (
+            <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <button 
+                onClick={() => handleFeedback('positive')}
+                className={`p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 ${feedback === 'positive' ? 'text-green-500' : 'text-gray-500'}`}
+                title="Resposta útil"
+              >
+                <ThumbsUp className="h-4 w-4" />
+              </button>
+              <button 
+                onClick={() => handleFeedback('negative')}
+                className={`p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 ${feedback === 'negative' ? 'text-red-500' : 'text-gray-500'}`}
+                title="Resposta não útil"
+              >
+                <ThumbsDown className="h-4 w-4" />
+              </button>
+              <button 
+                onClick={handleCopyToClipboard}
+                className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500"
+                title="Copiar mensagem"
+              >
+                <Copy className="h-4 w-4" />
+              </button>
+              
               {/* Ferramentas de mensagem para IA */}
-              {sender === 'ai' && showTools && (
-                <div className={`relative mt-3 ${isHovering ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}>
+              {showTools && (
+                <div className={`relative ${isHovering ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}>
                   <MessageToolsDropdown 
                     content={content}
                     onAprofundar={onAprofundar}
@@ -302,10 +366,10 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
                   />
                 </div>
               )}
-            </>
+            </div>
           )}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
