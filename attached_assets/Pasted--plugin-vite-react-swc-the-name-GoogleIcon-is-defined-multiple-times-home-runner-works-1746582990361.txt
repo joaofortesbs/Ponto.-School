@@ -1,0 +1,73 @@
+[plugin:vite:react-swc] × the name `GoogleIcon` is defined multiple times
+    ╭─[/home/runner/workspace/src/components/ui/upload-modal.tsx:3:1]
+  3 │ import { motion, AnimatePresence } from "framer-motion";
+  4 │ import { Button } from "@/components/ui/button";
+  5 │ import { Upload, File, X, Cloud, FolderOpen, ChevronRight } from "lucide-react";
+  6 │ import { GoogleIcon, MicrosoftIcon } from './icons';
+    ·          ─────┬────
+    ·               ╰── previous definition of `GoogleIcon` here
+  7 │ 
+  8 │ interface UploadModalPosition {
+  9 │   top: number;
+ 10 │   left: number;
+ 11 │ }
+ 12 │ 
+ 13 │ interface UploadModalProps {
+ 14 │   isOpen: boolean;
+ 15 │   onClose: () => void;
+ 16 │   position: UploadModalPosition;
+ 17 │   onUpload?: (files: File[]) => void;
+ 18 │ }
+ 19 │ 
+ 20 │ // Ícones personalizados para melhor aparência
+ 21 │ const GoogleIcon = () => (
+    ·       ─────┬────
+    ·            ╰── `GoogleIcon` redefined here
+ 22 │   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+ 23 │     <path d="M12 11V8L17 12L12 16V13H8V11H12Z" fill="#ea4335"/>
+ 24 │     <path d="M21.35 11.1H12.18V13.83H18.69C18.36 17.64 15.19 19.27 12.19 19.27C8.36003 19.27 5.23003 16.25 5.23003 12.27C5.23003 8.29 8.36003 5.27 12.19 5.27C15.68 5.27 17.53 7.53 17.53 7.53L19.42 5.71C19.42 5.71 16.86 3 12.15 3C6.47003 3 2.00003 7.56 2.00003 12.33C2.00003 17.1 6.47003 21.67 12.13 21.67C17.35 21.67 21.58 18.17 21.58 13.07C21.58 12.1 21.35 11.1 21.35 11.1Z" fill="#ea4335"/>
+    ╰────
+
+  × the name `MicrosoftIcon` is defined multiple times
+    ╭─[/home/runner/workspace/src/components/ui/upload-modal.tsx:3:1]
+  3 │ import { motion, AnimatePresence } from "framer-motion";
+  4 │ import { Button } from "@/components/ui/button";
+  5 │ import { Upload, File, X, Cloud, FolderOpen, ChevronRight } from "lucide-react";
+  6 │ import { GoogleIcon, MicrosoftIcon } from './icons';
+    ·                      ──────┬──────
+    ·                            ╰── previous definition of `MicrosoftIcon` here
+  7 │ 
+  8 │ interface UploadModalPosition {
+  9 │   top: number;
+ 10 │   left: number;
+ 11 │ }
+ 12 │ 
+ 13 │ interface UploadModalProps {
+ 14 │   isOpen: boolean;
+ 15 │   onClose: () => void;
+ 16 │   position: UploadModalPosition;
+ 17 │   onUpload?: (files: File[]) => void;
+ 18 │ }
+ 19 │ 
+ 20 │ // Ícones personalizados para melhor aparência
+ 21 │ const GoogleIcon = () => (
+ 22 │   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+ 23 │     <path d="M12 11V8L17 12L12 16V13H8V11H12Z" fill="#ea4335"/>
+ 24 │     <path d="M21.35 11.1H12.18V13.83H18.69C18.36 17.64 15.19 19.27 12.19 19.27C8.36003 19.27 5.23003 16.25 5.23003 12.27C5.23003 8.29 8.36003 5.27 12.19 5.27C15.68 5.27 17.53 7.53 17.53 7.53L19.42 5.71C19.42 5.71 16.86 3 12.15 3C6.47003 3 2.00003 7.56 2.00003 12.33C2.00003 17.1 6.47003 21.67 12.13 21.67C17.35 21.67 21.58 18.17 21.58 13.07C21.58 12.1 21.35 11.1 21.35 11.1Z" fill="#ea4335"/>
+ 25 │   </svg>
+ 26 │ );
+ 27 │ 
+ 28 │ const MicrosoftIcon = () => (
+    ·       ──────┬──────
+    ·             ╰── `MicrosoftIcon` redefined here
+ 29 │   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+ 30 │     <path d="M11.4 3H3V11.4H11.4V3Z" fill="#F25022"/>
+ 31 │     <path d="M11.4 12.6H3V21H11.4V12.6Z" fill="#00A4EF"/>
+    ╰────
+/home/runner/workspace/src/components/ui/upload-modal.tsx:3:1
+17 |    onUpload?: (files: File[]) => void;
+18 |  }
+19 |  
+   |  ^
+20 |  // Ícones personalizados para melhor aparência
+21 |  const GoogleIcon = () => (
