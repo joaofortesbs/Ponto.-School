@@ -323,7 +323,6 @@ const UploadModal: React.FC<UploadModalProps> = ({
 };
 
 export default UploadModal;
-
 import React, { useState, useRef } from "react";
 import { Plus } from "lucide-react";
 import { motion } from "framer-motion";
