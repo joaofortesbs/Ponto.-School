@@ -152,15 +152,16 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
                           rounded-xl border ${isTyping ? 'border-[#1230CC]/70' : 'border-white/10'} 
                           transition-all duration-300`}>
             {selectedFiles && selectedFiles.length > 0 && (
-              <div className="flex flex-wrap gap-2 p-2 border-b border-white/10">
+              <div className="flex flex-wrap gap-2 p-2 border-b border-white/10 bg-blue-500/10 rounded-t-lg">
                 {selectedFiles.map((file, index) => (
-                  <div key={index} className="flex items-center gap-1 bg-blue-500/20 rounded-lg px-2 py-1 text-xs">
+                  <div key={index} className="flex items-center gap-1 bg-blue-500/20 rounded-lg px-2 py-1 text-xs shadow-sm transition-all duration-300 hover:bg-blue-500/30">
                     <div className="flex-shrink-0 w-4 h-4 bg-blue-500/30 rounded-full flex items-center justify-center">
                       <FileText size={10} className="text-blue-300" />
                     </div>
-                    <span className="truncate max-w-[150px]">{file.name}</span>
+                    <span className="truncate max-w-[150px] text-white/90">{file.name}</span>
+                    <span className="text-xs text-white/50">({(file.size / 1024).toFixed(1)} KB)</span>
                     <button
-                      className="text-white/70 hover:text-white"
+                      className="text-white/70 hover:text-white hover:bg-red-500/20 rounded-full p-1 transition-colors"
                       onClick={(e) => {
                         e.preventDefault();
                         const newFiles = [...selectedFiles];

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
-import { Brain, Send, User, ThumbsUp, ThumbsDown, Copy, Sparkles } from "lucide-react";
+import { Brain, Send, User, ThumbsUp, ThumbsDown, Copy, Sparkles, FileText, X, Plus, Loader2 } from "lucide-react";
 import epictusIAService, { IAMessage } from "@/services/epictusIAService";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -242,16 +242,77 @@ export default function ChatEpictus() {
         </div>
       </ScrollArea>
 
-      {/* Input area (needs to be added back) */}
+      {/* Input area com suporte a arquivos */}
       <div className="p-4 border-t">
-        <div className="flex items-center gap-2">
-          <Input
-            placeholder="Digite sua mensagem..."
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-          />
-          <Button onClick={handleSendMessage}>Enviar</Button>
+        <div className="flex flex-col gap-2">
+          {/* Área de visualização dos arquivos selecionados */}
+          {selectedFiles.length > 0 && (
+            <div className="flex flex-wrap gap-2 p-2 border border-blue-500/20 rounded-lg bg-blue-500/10">
+              {selectedFiles.map((file, index) => (
+                <div 
+                  key={index} 
+                  className="flex items-center gap-1 bg-blue-500/20 rounded-lg px-2 py-1 text-xs"
+                >
+                  <div className="flex-shrink-0 w-4 h-4 bg-blue-500/30 rounded-full flex items-center justify-center">
+                    <FileText size={10} className="text-blue-300" />
+                  </div>
+                  <span className="truncate max-w-[150px]">{file.name}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 rounded-full hover:text-red-500"
+                    onClick={() => {
+                      const newFiles = [...selectedFiles];
+                      newFiles.splice(index, 1);
+                      setSelectedFiles(newFiles);
+                    }}
+                  >
+                    <X size={12} />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {/* Caixa de mensagem e botões */}
+          <div className="flex items-center gap-2">
+            <div className="relative flex-grow">
+              <Input
+                placeholder="Digite sua mensagem..."
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="pr-10"
+              />
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileChange} 
+                multiple 
+                className="hidden" 
+              />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 rounded-full"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Plus size={16} className="text-blue-500" />
+              </Button>
+            </div>
+            <Button 
+              onClick={handleSendMessage}
+              disabled={isTyping}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {isTyping ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send size={16} className="mr-2" />
+              )}
+              Enviar
+            </Button>
+          </div>
         </div>
       </div>
     </div>
