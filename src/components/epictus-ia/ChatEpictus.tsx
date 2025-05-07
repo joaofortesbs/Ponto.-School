@@ -56,20 +56,39 @@ export default function ChatEpictus() {
       files: processedFiles,
     };
 
-    // Salvar a mensagem atual para enviar para API
+    // Preparar os conteúdos de arquivo para análise da IA
+    // Em uma implementação completa, seria necessário ler o conteúdo dos arquivos
+    // ou processá-los para extração de texto/dados
     let currentMessage = inputMessage;
     if (selectedFiles.length > 0) {
-      const filesList = selectedFiles.map(file => `- ${file.name} (${file.type})`).join('\n');
+      // Adicionar informações detalhadas dos arquivos
+      const filesList = selectedFiles.map(file => {
+        return `- ${file.name} (Tipo: ${file.type}, Tamanho: ${(file.size / 1024).toFixed(2)} KB)`;
+      }).join('\n');
+      
       currentMessage += `\n\nArquivos anexados:\n${filesList}`;
+      
+      // Adicionar indicação de que arquivos foram incluídos para a IA processar
+      currentMessage += `\n\nObs: Estes arquivos foram anexados à conversa. Por favor, considere-os na sua resposta.`;
     }
 
+    // Adicionar mensagem do usuário ao histórico de mensagens
     setMessages((prev) => [...prev, userMessage]);
     setInputMessage("");
+    
+    // Armazenar os arquivos para processamento
+    const filesToProcess = [...selectedFiles];
+    
+    // Limpar arquivos selecionados após armazenar a cópia
     setSelectedFiles([]);
     setIsTyping(true);
 
     try {
-      // Buscar resposta da IA usando a API do Gemini
+      // Preparar os dados para envio
+      // Aqui poderíamos implementar um processamento mais avançado para 
+      // extrair conteúdo dos arquivos dependendo do tipo
+      
+      // Enviar a mensagem com indicação dos arquivos para a API
       const aiResponse = await epictusIAService.getResponse(currentMessage);
 
       // Adicionar resposta da IA

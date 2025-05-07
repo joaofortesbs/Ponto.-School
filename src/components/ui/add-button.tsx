@@ -30,12 +30,15 @@ const AddButton: React.FC<AddButtonProps> = ({
 
     if (onFilesSelected) {
       onFilesSelected(syntheticEvent);
+      console.log("Arquivos enviados ao componente pai:", files);
+    } else {
+      console.warn("Nenhuma função onFilesSelected fornecida.");
     }
 
     // Fechar o modal após enviar os arquivos
     setShowUploadModal(false);
 
-    console.log("Arquivos enviados:", files);
+    console.log("Arquivos processados pelo componente:", files);
 
     // Implementação do salvamento dos arquivos na lista de recentes
     if (files.length > 0) {
