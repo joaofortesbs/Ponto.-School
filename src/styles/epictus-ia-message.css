@@ -1,0 +1,59 @@
+/* Estilos para o chat da Epictus IA */
+
+/* Estilo para negrito com destaque laranja */
+.text-[#FF6B00] {
+  color: #FF6B00;
+}
+
+.dark .text-[#FF8C40] {
+  color: #FF8C40;
+}
+
+.bg-gradient-to-r.from-\[\#FF6B00\]\/10.to-\[\#FF8C40\]\/10 {
+  background: linear-gradient(to right, rgba(255, 107, 0, 0.1), rgba(255, 140, 64, 0.1));
+}
+
+.dark .from-\[\#FF6B00\]\/20.to-\[\#FF8C40\]\/20 {
+  background: linear-gradient(to right, rgba(255, 107, 0, 0.2), rgba(255, 140, 64, 0.2));
+}
+
+/* Estilo para tabelas */
+.table-container {
+  overflow-x: auto;
+  margin: 1rem 0;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.dark .table-container {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Estilos para listas */
+ul.list-disc, ol.list-decimal {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+li {
+  margin-bottom: 0.25rem;
+}
+
+/* Estilos para blockquotes */
+blockquote.border-l-4 {
+  margin: 1rem 0;
+  padding-left: 1rem;
+  font-style: italic;
+}
+
+/* Estilos para código inline */
+code {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.25rem;
+  font-family: monospace;
+}
+
+.dark code {
+  background-color: rgba(255, 255, 255, 0.1);
+}

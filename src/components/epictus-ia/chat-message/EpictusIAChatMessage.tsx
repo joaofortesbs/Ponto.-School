@@ -27,11 +27,46 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
   enhanceFinalQuestion = true
 }) => {
   const [isHovering, setIsHovering] = useState(false);
-  const [renderedContent, setRenderedContent] = useState(content);
+  const [renderedContent, setRenderedContent] = useState("");
   const [hasTable, setHasTable] = useState(false);
   const [hasFlowchart, setHasFlowchart] = useState(false);
   const [highlightedTerms, setHighlightedTerms] = useState<string[]>([]);
   const [finalQuestion, setFinalQuestion] = useState<string | null>(null);
+  const [processedHtmlContent, setProcessedHtmlContent] = useState("");
+
+  // Processa conteúdo Markdown para HTML com formatação aprimorada
+  const formatToHtml = (text: string): string => {
+    if (!text) return "";
+    
+    // Aplicar formatações avançadas
+    return text
+      // Headers
+      .replace(/^# (.*?)$/gm, '<h1 class="text-xl font-bold text-gray-900 dark:text-gray-100 border-b pb-1 border-gray-200 dark:border-gray-700">$1</h1>')
+      .replace(/^## (.*?)$/gm, '<h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mt-3">$1</h2>')
+      .replace(/^### (.*?)$/gm, '<h3 class="text-base font-medium text-gray-800 dark:text-gray-200">$1</h3>')
+
+      // Formatação de texto - NEGRITO DESTACADO
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-[#FF6B00] dark:text-[#FF8C40] bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 dark:from-[#FF6B00]/20 dark:to-[#FF8C40]/20 px-1 py-0.5 rounded-sm">$1</strong>')
+      .replace(/\_(.*?)\_/g, '<em class="text-gray-700 dark:text-gray-300 italic">$1</em>')
+      .replace(/\~\~(.*?)\~\~/g, '<del class="text-gray-500 dark:text-gray-400">$1</del>')
+      .replace(/\`(.*?)\`/g, '<code class="bg-gray-100 dark:bg-gray-800 text-orange-600 dark:text-orange-400 px-1.5 py-0.5 rounded text-sm font-mono">$1</code>')
+
+      // Listas
+      .replace(/^\- (.*?)$/gm, '<ul class="list-disc pl-5 my-2"><li>$1</li></ul>').replace(/<\/ul>\s?<ul class="list-disc pl-5 my-2">/g, '')
+      .replace(/^[0-9]+\. (.*?)$/gm, '<ol class="list-decimal pl-5 my-2"><li>$1</li></ol>').replace(/<\/ol>\s?<ol class="list-decimal pl-5 my-2">/g, '')
+
+      // Blockquotes
+      .replace(/^> (.*?)$/gm, '<blockquote class="border-l-4 border-orange-400 dark:border-orange-600 italic bg-orange-50 dark:bg-orange-900/20 py-1 px-2 rounded-r my-2 text-gray-700 dark:text-gray-300">$1</blockquote>')
+
+      // Separadores
+      .replace(/^---$/gm, '<hr class="border-t border-gray-200 dark:border-gray-700 my-3" />')
+
+      // Quebras de linha
+      .replace(/\n/g, '<br />')
+
+      // Links
+      .replace(/\[(.*?)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-orange-600 dark:text-orange-400 hover:underline inline-flex items-center gap-0.5">$1<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-0.5"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></a>');
+  };
 
   // Detecta elementos especiais no conteúdo
   useEffect(() => {
@@ -65,36 +100,20 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
           setFinalQuestion(match[1]);
           // Remove a pergunta do conteúdo principal para exibi-la separadamente
           const contentWithoutQuestion = content.replace(pattern, '').trim();
-          setRenderedContent(enhanceContent(contentWithoutQuestion));
+          setRenderedContent(contentWithoutQuestion);
+          setProcessedHtmlContent(formatToHtml(contentWithoutQuestion));
           return;
         }
       }
 
       // Processa conteúdo avançado
-      setRenderedContent(enhanceContent(content));
+      setRenderedContent(content);
+      setProcessedHtmlContent(formatToHtml(content));
     } else {
       setRenderedContent(content);
+      setProcessedHtmlContent(""); // Não processa HTML para mensagens do usuário
     }
   }, [content, sender]);
-
-  // Função para aprimorar o conteúdo com elementos visuais adicionais
-  const enhanceContent = (text: string): string => {
-    let enhanced = text;
-
-    // Melhora tabelas com classes CSS para estilo
-    if (hasTable) {
-      enhanced = enhanced.replace(/(\|[^\n]+\|)/g, 
-        '<div class="table-container">$1</div>');
-    }
-
-    // Melhora fluxogramas
-    if (hasFlowchart) {
-      enhanced = enhanced.replace(/```([\s\S]*?)```/g, 
-        '<div class="flowchart-container">```$1```</div>');
-    }
-
-    return enhanced;
-  };
 
   // Renderiza conteúdo de acordo com o remetente
   return (
@@ -125,7 +144,11 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
             </div>
           ) : (
             <>
-              <ReactMarkdown>{renderedContent}</ReactMarkdown>
+              {sender === 'ai' && processedHtmlContent ? (
+                <div dangerouslySetInnerHTML={{ __html: processedHtmlContent }} />
+              ) : (
+                <ReactMarkdown>{renderedContent}</ReactMarkdown>
+              )}
 
               {/* Pergunta final engajadora destacada */}
               {sender === 'ai' && finalQuestion && enhanceFinalQuestion && (
