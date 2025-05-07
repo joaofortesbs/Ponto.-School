@@ -82,7 +82,6 @@
     "react-router-dom": "^6.23.1",
     "react-tsparticles": "^2.12.2",
     "reactflow": "^11.11.4",
-    "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
     "starter": "file:",
     "tailwind-merge": "^2.3.0",

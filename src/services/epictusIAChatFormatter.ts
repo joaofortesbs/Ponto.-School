@@ -53,14 +53,7 @@ export class EpictusIAChatFormatter {
     const { prefix, variations } = this.chatBehavior.greeting;
     const randomVariation = variations[Math.floor(Math.random() * variations.length)];
     
-    // Adiciona emojis estilizados e formatação para maior impacto visual
-    const welcomeEmojis = ['👋', '✨', '🌟', '🚀', '📚', '💪', '🔍', '💡'];
-    const randomEmoji = welcomeEmojis[Math.floor(Math.random() * welcomeEmojis.length)];
-    
-    // Torna a saudação mais vibrante e visualmente atraente
-    const styledGreeting = `${randomEmoji} **${prefix}${randomVariation}**`;
-    
-    return `${styledGreeting}\n\n${processedContent}`;
+    return `${prefix}${randomVariation}\n\n${processedContent}`;
   }
 
   private applyAdvancedFormatting(content: string): string {
@@ -265,14 +258,7 @@ export class EpictusIAChatFormatter {
       }
     }
     
-    // Apresenta as sugestões em formato de cards para maior impacto visual
-    const formattedSuggestions = selectedSuggestions.map((suggestion, index) => {
-      const icons = ['🚀', '✨', '📚', '🧠', '💡', '📊', '📝'];
-      const icon = icons[index % icons.length];
-      return `> ${icon} **${suggestion}**`;
-    }).join('\n\n');
-    
-    return `${content}\n\n### 🚀 Próximos Passos\n\n${formattedSuggestions}`;
+    return `${content}\n\n### Próximos Passos\n\n${selectedSuggestions.join('\n')}`;
   }
   
   private addMotivationalConclusion(content: string): string {
@@ -303,49 +289,17 @@ export class EpictusIAChatFormatter {
       'importante', 'essencial', 'fundamental', 'crucial', 'lembre-se',
       'atenção', 'cuidado', 'destaque', 'nota', 'observação', 'dica',
       'conceito-chave', 'princípio', 'regra', 'teorema', 'lei',
-      'ponto central', 'fórmula', 'método', 'técnica', 'estratégia',
-      'não esqueça', 'relevante', 'significativo', 'primordial', 'vital',
-      'imprescindível', 'decisivo', 'crítico', 'indispensável'
+      'ponto central', 'fórmula', 'método', 'técnica', 'estratégia'
     ];
     
     let enhancedContent = content;
-    
-    // Destaca palavras-chave com formatação rica
     keywords.forEach(keyword => {
       const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
-      
-      // Adiciona formatação diferente baseada na importância do termo
-      if (['crucial', 'essencial', 'fundamental', 'imprescindível'].includes(keyword.toLowerCase())) {
-        // Destaque extra para termos ultra importantes
-        enhancedContent = enhancedContent.replace(regex, match => `**${match}** ⚠️`);
-      } else if (['lembre-se', 'atenção', 'não esqueça', 'cuidado'].includes(keyword.toLowerCase())) {
-        // Destaque com alerta visual
-        enhancedContent = enhancedContent.replace(regex, match => `**${match}** 🔔`);
-      } else if (['dica', 'método', 'técnica', 'estratégia'].includes(keyword.toLowerCase())) {
-        // Destaque com ícone de dica
-        enhancedContent = enhancedContent.replace(regex, match => `**${match}** 💡`);
-      } else {
-        // Destaque padrão para outros termos importantes
-        enhancedContent = enhancedContent.replace(regex, match => `**${match}**`);
-      }
+      enhancedContent = enhancedContent.replace(regex, match => `**${match}**`);
     });
     
-    // Destaca conceitos técnicos específicos com formatação aprimorada
+    // Destaca conceitos técnicos específicos
     enhancedContent = enhancedContent.replace(/\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\b(?=\s+é\s+um|\s+são\s+|:\s+)/g, "**$1**");
-    
-    // Adiciona caixas de destaque para conceitos-chave que tenham um parágrafo explicativo
-    const paragraphs = enhancedContent.split('\n\n');
-    for (let i = 0; i < paragraphs.length; i++) {
-      if (paragraphs[i].includes('conceito-chave') || 
-          paragraphs[i].includes('princípio') || 
-          paragraphs[i].includes('teorema') ||
-          paragraphs[i].includes('lei ')) {
-        // Transforma em caixa de destaque
-        paragraphs[i] = `> 💎 **CONCEITO-CHAVE:** ${paragraphs[i].replace(/^.*?conceito-chave|^.*?princípio|^.*?teorema|^.*?lei /i, '')}`;
-      }
-    }
-    
-    enhancedContent = paragraphs.join('\n\n');
     
     return enhancedContent;
   }
@@ -483,29 +437,12 @@ export class EpictusIAChatFormatter {
   }
   
   private formatExamples(content: string): string {
-    // Destaca exemplos com formatação especial e visual melhorada
+    // Destaca exemplos com formatação especial
     let enhanced = content;
     
-    // Adiciona blockquote estilizado para exemplos com design visual aprimorado
+    // Adiciona blockquote para exemplos
     enhanced = enhanced.replace(/(?:^|\n)(?:exemplo|por exemplo|como exemplo|a título de exemplo|ilustrando)[\s:]+([^\n]+(?:\n[^\n]+)*)/gi,
-      (match, exampleText) => `\n> ✨ **EXEMPLO PRÁTICO:** ${exampleText}\n`);
-    
-    // Adiciona exemplos interativos no formato sugerido
-    if (!enhanced.includes("💡 Exemplo:") && !enhanced.includes("EXEMPLO PRÁTICO")) {
-      const paragraphs = enhanced.split('\n\n');
-      if (paragraphs.length > 2) {
-        // Identifica parágrafos que parecem explicar conceitos e adiciona exemplos após eles
-        for (let i = 1; i < paragraphs.length - 1; i++) {
-          if (paragraphs[i].length > 100 && !paragraphs[i].includes('>') && 
-              !paragraphs[i].includes('#') && !paragraphs[i].includes('|')) {
-            // Adiciona um exemplo após esse parágrafo de explicação
-            paragraphs[i] += `\n\n> 💡 **EXEMPLO:** Veja na prática como aplicar este conceito...`;
-            break;
-          }
-        }
-        enhanced = paragraphs.join('\n\n');
-      }
-    }
+      (match, exampleText) => `\n> ✨ **EXEMPLO:** ${exampleText}\n`);
     
     return enhanced;
   }
@@ -771,7 +708,7 @@ export class EpictusIAChatFormatter {
     return enhancedContent;
   }
   
-  // Cria tabela comparativa visualmente rica
+  // Cria tabela comparativa
   private addComparisonTable(content: string): string {
     // Procura por padrões de comparação no texto
     const comparisonMatch = content.match(/(?:comparando|comparação entre|diferenças? (?:entre|de)|semelhanças? (?:entre|de))\s+([^.]+)\s+e\s+([^.]+)/i);
@@ -790,36 +727,14 @@ export class EpictusIAChatFormatter {
       return content;
     }
     
-    // Cria tabela markdown visualmente aprimorada
-    let table = `\n\n### 📊 Comparação Detalhada: ${item1} vs ${item2}\n\n`;
-    
-    // Cabeçalhos mais destacados
+    // Cria tabela markdown
+    let table = `\n\n### 📊 Comparação: ${item1} vs ${item2}\n\n`;
     table += `| Característica | ${item1} | ${item2} |\n`;
-    table += `|:---------------:|:---------------:|:---------------:|\n`;
+    table += `|---------------|${'-'.repeat(item1.length + 2)}|${'-'.repeat(item2.length + 2)}|\n`;
     
-    // Adiciona ícones visuais e formatação para comparação mais clara
     characteristics.forEach(char => {
-      // Determina ícones e formatação baseado em valores positivos/negativos
-      let item1Display = char.item1Value;
-      let item2Display = char.item2Value;
-      
-      if (char.item1Value === '✅') {
-        item1Display = `**${char.item1Value} Sim**`;
-      } else if (char.item1Value === '❌') {
-        item1Display = `${char.item1Value} Não`;
-      }
-      
-      if (char.item2Value === '✅') {
-        item2Display = `**${char.item2Value} Sim**`;
-      } else if (char.item2Value === '❌') {
-        item2Display = `${char.item2Value} Não`;
-      }
-      
-      table += `| **${char.name}** | ${item1Display} | ${item2Display} |\n`;
+      table += `| **${char.name}** | ${char.item1Value} | ${char.item2Value} |\n`;
     });
-    
-    // Adiciona nota explicativa para melhor compreensão
-    table += `\n> 💡 **NOTA:** Esta tabela destaca as principais diferenças entre ${item1} e ${item2}. Os elementos marcados com ✅ indicam presença/vantagem.`;
     
     // Insere a tabela após o parágrafo introdutório
     const paragraphs = content.split('\n\n');
@@ -899,7 +814,7 @@ export class EpictusIAChatFormatter {
     return characteristics;
   }
   
-  // Cria um fluxograma visual para procedimentos
+  // Cria um fluxograma textual para procedimentos
   private addFlowchart(content: string): string {
     // Busca padrões de passos ou etapas
     const stepsMatches = content.match(/(?:passo|etapa|fase)s?(?:\s+\d+)?(?::|\.)?\s+([^\n.]+)/gi);
@@ -908,29 +823,24 @@ export class EpictusIAChatFormatter {
       return content;
     }
     
-    // Cria representação de fluxograma com elementos visuais melhorados
-    let flowchart = '\n\n### ⚙️ Fluxograma Interativo do Processo\n\n';
+    // Cria representação de fluxograma
+    let flowchart = '\n\n### ⚙️ Fluxograma do Processo\n\n';
     flowchart += '```\n';
     
     stepsMatches.forEach((step, index) => {
       const cleanStep = step.replace(/(?:passo|etapa|fase)s?\s+\d+(?::|\.)?\s+/gi, '').trim();
       const stepNumber = index + 1;
       
-      // Adiciona formato de fluxograma com numeração e destaque visual
-      flowchart += `┌${'─'.repeat(cleanStep.length + 8)}┐\n`;
-      flowchart += `│  [${stepNumber}] ${cleanStep}  │\n`;
-      flowchart += `└${'─'.repeat(cleanStep.length + 8)}┘\n`;
+      // Adiciona formato de fluxograma
+      flowchart += `[${stepNumber}] ${cleanStep}\n`;
       
       // Adiciona conectores exceto no último passo
       if (index < stepsMatches.length - 1) {
-        flowchart += '       |\n       ▼\n';
+        flowchart += '   |\n   ▼\n';
       }
     });
     
     flowchart += '```\n';
-    
-    // Adiciona uma explicação interativa sobre o fluxograma
-    flowchart += '\n> 💡 **DICA DE ESTUDO:** Use este fluxograma como guia visual para memorizar a sequência do processo. Tente recriar mentalmente os passos antes de avançar para fixar melhor o conteúdo.';
     
     // Adiciona o fluxograma após o parágrafo que menciona "passos" ou "etapas"
     const paragraphs = content.split('\n\n');
@@ -986,28 +896,12 @@ export class EpictusIAChatFormatter {
       return content;
     }
     
-    // Cria resumo visual com checklist interativo para maior engajamento
-    let summary = '\n\n### 📌 Resumo Visual: Pontos-Chave\n\n';
+    // Cria resumo visual
+    let summary = '\n\n### 📌 Resumo Visual dos Pontos Principais\n\n';
     
-    // Testa se o conteúdo parece ser sobre um passo-a-passo ou lista de verificação
-    const isChecklistApplicable = /etapas?|passos?|verificar|checklist|lista de|conferir|não esqueça|lembrar de|importante/i.test(content);
-    
-    if (isChecklistApplicable) {
-      // Cria um checklist visual ao invés de simples bullet points
-      summary += "**Use esta checklist para verificar seu entendimento:**\n\n";
-      
-      limitedPoints.forEach((point, index) => {
-        summary += `- [ ] ${point}\n`;
-      });
-      
-      summary += "\n> 💡 **DICA:** Marque mentalmente os itens conforme você dominar cada conceito!";
-    } else {
-      // Usa cards visuais para pontos-chave
-      limitedPoints.forEach((point, index) => {
-        const emoji = ['🔑', '💡', '⭐', '📌', '🎯'][index % 5];
-        summary += `> **${emoji} Ponto ${index + 1}:** ${point}\n>\n`;
-      });
-    }
+    limitedPoints.forEach((point, index) => {
+      summary += `> **${index + 1}.** ${point}\n>\n`;
+    });
     
     // Adiciona o resumo visual antes da conclusão
     const paragraphs = content.split('\n\n');
