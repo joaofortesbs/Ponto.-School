@@ -17,8 +17,27 @@ const AddButton: React.FC<AddButtonProps> = ({ onFileUpload }) => {
     }
     console.log("Arquivos enviados:", files);
     
-    // Aqui você poderia implementar o salvamento dos arquivos na lista de recentes
-    // por exemplo, utilizando localStorage
+    // Implementação do salvamento dos arquivos na lista de recentes
+    if (files.length > 0) {
+      // Converter Files para objetos serializáveis
+      const recentFilesToSave = files.map(file => ({
+        name: file.name,
+        date: "Hoje",
+        type: file.type,
+        size: file.size
+      }));
+      
+      // Obter arquivos existentes
+      const existingFilesJson = localStorage.getItem('recentFiles');
+      let existingFiles = existingFilesJson ? JSON.parse(existingFilesJson) : [];
+      
+      // Adicionar novos arquivos no início da lista (mais recentes primeiro)
+      const updatedFiles = [...recentFilesToSave, ...existingFiles].slice(0, 10); // limitar a 10
+      
+      // Salvar no localStorage
+      localStorage.setItem('recentFiles', JSON.stringify(updatedFiles));
+      console.log("Arquivos recentes salvos no localStorage");
+    }
   };
 
   return (

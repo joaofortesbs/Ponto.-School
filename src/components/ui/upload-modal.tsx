@@ -42,35 +42,19 @@ const UploadModal: React.FC<UploadModalProps> = ({
   const [recentFiles, setRecentFiles] = useState<{ name: string, date: string, type: string, icon: React.ReactNode }[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Carregar arquivos recentes (simulação)
+  // Carregar arquivos recentes (deixando vazio por enquanto)
   useEffect(() => {
-    // Essa seria uma implementação real que buscaria do localStorage ou de uma API
-    setRecentFiles([
-      { 
-        name: "Relatório_Física.pdf", 
-        date: "Hoje, 14:30", 
-        type: "pdf",
-        icon: <File className="h-4 w-4 text-red-400" />
-      },
-      { 
-        name: "Imagem_Experimento.jpg", 
-        date: "Ontem, 10:15", 
-        type: "image",
-        icon: <File className="h-4 w-4 text-blue-400" />
-      },
-      { 
-        name: "Notas_Aula.docx", 
-        date: "3 dias atrás", 
-        type: "document",
-        icon: <File className="h-4 w-4 text-green-400" />
-      },
-      { 
-        name: "Apresentação_Final.pptx", 
-        date: "Semana passada", 
-        type: "presentation",
-        icon: <File className="h-4 w-4 text-orange-400" />
-      }
-    ]);
+    // Em uma implementação real, aqui seria o código para buscar
+    // arquivos recentes do localStorage ou de uma API
+    
+    // Por enquanto, deixamos a lista vazia até implementar a funcionalidade completa
+    setRecentFiles([]);
+    
+    // Exemplo de como seria com localStorage:
+    // const savedFiles = localStorage.getItem('recentFiles');
+    // if (savedFiles) {
+    //   setRecentFiles(JSON.parse(savedFiles));
+    // }
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
