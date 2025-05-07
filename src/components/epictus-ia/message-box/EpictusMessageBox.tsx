@@ -190,6 +190,14 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
             multiple 
             onChange={handleFileChange}
           />
+          
+          {/* Botão de adicionar arquivos */}
+          <AddButton 
+            onFilesSelected={handleFileChange}
+            fileInputRef={fileInputRef}
+            isDisabled={isTyping}
+          />
+          
           <div className={`relative flex-grow overflow-hidden 
                           bg-gradient-to-r from-[#0c2341]/30 to-[#0f3562]/30 
                           rounded-xl border ${isTyping ? 'border-[#1230CC]/70' : 'border-white/10'} 
