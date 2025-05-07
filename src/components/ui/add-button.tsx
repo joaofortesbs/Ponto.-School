@@ -31,6 +31,12 @@ const AddButton: React.FC<AddButtonProps> = ({
     if (onFilesSelected) {
       onFilesSelected(syntheticEvent);
       console.log("Arquivos enviados ao componente pai:", files);
+      
+      // Garantir que os arquivos estão sendo corretamente processados
+      if (files && files.length > 0) {
+        console.log("Tipos de arquivos selecionados:", files.map(f => f.type).join(", "));
+        console.log("Tamanho total dos arquivos:", files.reduce((acc, f) => acc + f.size, 0), "bytes");
+      }
     } else {
       console.warn("Nenhuma função onFilesSelected fornecida.");
     }

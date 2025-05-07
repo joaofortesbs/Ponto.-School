@@ -85,11 +85,16 @@ export default function ChatEpictus() {
 
     try {
       // Preparar os dados para envio
-      // Aqui poderíamos implementar um processamento mais avançado para 
-      // extrair conteúdo dos arquivos dependendo do tipo
+      // Criar objetos de arquivo processados para enviar para o serviço
+      const processedFilesForAPI = processedFiles.map(file => ({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        url: file.url
+      }));
       
-      // Enviar a mensagem com indicação dos arquivos para a API
-      const aiResponse = await epictusIAService.getResponse(currentMessage);
+      // Enviar a mensagem com os arquivos para a API
+      const aiResponse = await epictusIAService.getResponse(currentMessage, processedFilesForAPI);
 
       // Adicionar resposta da IA
       const assistantMessage: IAMessage = {

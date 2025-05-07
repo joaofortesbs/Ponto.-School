@@ -616,13 +616,17 @@ export interface IAMessage {
   files?: (File | ProcessedFile)[];
 }
 
-export const getResponse = async (message: string): Promise<string> => {
+export const getResponse = async (message: string, files?: ProcessedFile[]): Promise<string> => {
     try {
       // Simular uma chamada à API
       console.log("Enviando mensagem para a API:", message);
-
-      // Verificar se há menção a arquivos na mensagem
-      const hasAttachedFiles = message.includes("Arquivos anexados:");
+      
+      // Verificar se há arquivos anexados realmente
+      const hasAttachedFiles = files && files.length > 0;
+      
+      if (hasAttachedFiles) {
+        console.log("Arquivos enviados para a API:", files);
+      }
 
       // Aguardar um tempo simulando o processamento
       // Tempo maior se houver arquivos para simular processamento adicional
