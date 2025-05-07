@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { Send, Plus, Mic, Loader2, Brain, BookOpen, AlignJustify, RotateCw, Search, Image, Lightbulb, PenLine } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion"; // Added AnimatePresence import
+import { motion } from "framer-motion";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import QuickActionButton from "./QuickActionButton";
-import AddButton from "@/components/ui/add-button";
+import UploadModal from "@/components/ui/upload-modal";
 
 
 interface EpictusMessageBoxProps {
@@ -29,6 +29,8 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
   handleKeyDown,
   handleButtonClick
 }) => {
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [uploadModalPosition, setUploadModalPosition] = useState({ top: 0, left: 0 });
   return (
     <motion.div 
       className="relative w-[60%] h-auto mx-auto bg-transparent rounded-2xl shadow-xl 
@@ -110,17 +112,25 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
 
         {/* Área de input */}
         <div className="flex items-center gap-2">
-          <AddButton 
-            onFileUpload={(files) => {
-              // Lógica para lidar com os arquivos enviados
-              toast({
-                title: `${files.length} arquivo(s) enviado(s) com sucesso`,
-                description: "Os arquivos serão processados em breve.",
+          <motion.button
+            className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+                     flex items-center justify-center shadow-lg text-white"
+            whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+            whileTap={{ scale: 0.95 }}
+            onClick={(e) => {
+              const button = e.currentTarget;
+              const rect = button.getBoundingClientRect();
+              // Ajusta posição para considerar o scroll da página e posicionar acima do botão
+              setUploadModalPosition({ 
+                top: rect.top + window.scrollY - 10, 
+                left: rect.left + window.scrollX 
               });
-              // Aqui você pode implementar o processamento dos arquivos
-              console.log("Arquivos para processar:", files);
-            }} 
-          />
+              setUploadModalOpen(true);
+            }}
+            aria-label="Adicionar arquivos"
+          >
+            <Plus size={18} />
+          </motion.button>
 
           <div className={`relative flex-grow overflow-hidden 
                           bg-gradient-to-r from-[#0c2341]/30 to-[#0f3562]/30 
@@ -205,6 +215,13 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
           {/* Área de quick actions foi removida conforme solicitado */}
         </motion.div>
       </div>
+      
+      {/* Modal de upload sofisticado */}
+      <UploadModal 
+        isOpen={uploadModalOpen}
+        onClose={() => setUploadModalOpen(false)}
+        position={uploadModalPosition}
+      />
     </motion.div>
   );
 };
