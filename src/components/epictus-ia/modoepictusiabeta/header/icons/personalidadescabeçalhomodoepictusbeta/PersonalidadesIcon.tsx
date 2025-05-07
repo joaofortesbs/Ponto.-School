@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 
 const PersonalidadesIcon: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activePersonalidade, setActivePersonalidade] = useState("padrao");
+  const [activePersonalidade, setActivePersonalidade] = useState("estudante");
   
   const handleOpenModal = () => {
     setIsModalOpen(true);
@@ -41,36 +41,33 @@ const PersonalidadesIcon: React.FC = () => {
         onPersonalidadeSelect={handleSelectPersonalidade}
         personalidades={[
           {
-            id: "padrao",
-            nome: "Padrão",
-            descricao: "O assistente Epictus IA com comportamento padrão, equilibrando formalidade e conversação natural.",
-            ativa: activePersonalidade === "padrao",
-            icone: <User className="h-5 w-5" />
+            id: "estudante",
+            nome: "Estudante",
+            descricao: "Respostas didáticas e simplificadas, ideais para aprendizado e revisão de conteúdos acadêmicos.",
+            ativa: activePersonalidade === "estudante",
+            icone: <GraduationCap className="h-5 w-5" />
           },
           {
             id: "professor",
             nome: "Professor",
-            descricao: "Explicações didáticas e completas, focando em exemplos e analogias para facilitar o aprendizado.",
+            descricao: "Explicações detalhadas com exemplos práticos e acompanhamento pedagógico de alto nível.",
             ativa: activePersonalidade === "professor",
-            icone: <GraduationCap className="h-5 w-5" />
-          },
-          {
-            id: "cientista",
-            nome: "Cientista",
-            descricao: "Abordagem analítica e baseada em evidências, com referências a pesquisas e maior profundidade técnica.",
-            ativa: activePersonalidade === "cientista",
-            icone: <Brain className="h-5 w-5" />
+            icone: <BookOpen className="h-5 w-5" />
           },
           {
             id: "mentor",
             nome: "Mentor",
-            descricao: "Foco em orientação e desenvolvimento pessoal, com perguntas reflexivas e estímulo ao pensamento crítico.",
+            descricao: "Foco em desenvolvimento pessoal, orientação de carreira e apoio para tomada de decisões.",
             ativa: activePersonalidade === "mentor",
             icone: <Lightbulb className="h-5 w-5" />
           },
           {
-            id: "simplificador",
-            nome: "Simplificador",
+            id: "expert",
+            nome: "Expert",
+            descricao: "Abordagem técnica avançada com conhecimento especializado e termos específicos da área.",
+            ativa: activePersonalidade === "expert",
+            icone: <Award className="h-5 w-5" />
+          }: "Simplificador",
             descricao: "Explicações extremamente simplificadas e diretas, ideal para entendimento rápido de conceitos complexos.",
             ativa: activePersonalidade === "simplificador",
             icone: <Zap className="h-5 w-5" />
@@ -82,6 +79,6 @@ const PersonalidadesIcon: React.FC = () => {
 };
 
 // Importando os ícones necessários
-import { GraduationCap, Brain, Lightbulb, Zap } from "lucide-react";
+import { GraduationCap, BookOpen, Lightbulb, Award } from "lucide-react";
 
 export default PersonalidadesIcon;;
