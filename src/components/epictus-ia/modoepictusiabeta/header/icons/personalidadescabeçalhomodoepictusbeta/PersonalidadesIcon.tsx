@@ -1,4 +1,3 @@
-
 import React from "react";
 import HeaderIcon from "../HeaderIcon";
 import { motion } from "framer-motion";
@@ -12,30 +11,20 @@ const PersonalidadesIcon: React.FC<PersonalidadesIconProps> = ({ onClick }) => {
   return (
     <HeaderIcon
       icon={
-        <motion.div
-          className="relative h-5 w-5 flex items-center justify-center"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          {/* Brilho de fundo do ícone */}
+        <div className="flex items-center bg-[#0D23A0] px-3 py-1 rounded-full">
+          <User className="h-5 w-5 text-white mr-2" />
+          <span className="text-white text-sm">Personalidades</span>
           <motion.div 
-            className="absolute inset-0 rounded-full opacity-0 bg-gradient-to-r from-[#0D23A0]/30 to-[#4A0D9F]/30"
-            animate={{ 
-              opacity: [0, 0.5, 0], 
-              scale: [0.8, 1.1, 0.8],
-            }}
-            transition={{ 
-              duration: 2,
-              repeat: Infinity,
-              ease: "easeInOut" 
-            }}
-          />
-          
-          <User className="h-5 w-5 text-white relative z-10" />
-        </motion.div>
+            animate={{ rotate: [0, 180] }}
+            transition={{ duration: 0.5 }}
+            className="ml-1 text-white"
+          >
+            ▼
+          </motion.div>
+        </div>
       }
       onClick={onClick}
-      label="Personalidades"
+      label=""
     />
   );
 };
