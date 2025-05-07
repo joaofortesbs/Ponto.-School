@@ -117,6 +117,13 @@ const PersonalidadesModal: React.FC<PersonalidadesModalProps> = ({
 // Dados padrão das personalidades com ícones personalizados
 const defaultPersonalidades: Personalidade[] = [
   {
+    id: "nenhuma",
+    nome: "Personalidades",
+    descricao: "Sem personalidade específica. Interações padrão sem adaptação a um perfil particular.",
+    ativa: false,
+    icone: <User className="h-5 w-5" />
+  },
+  {
     id: "estudante",
     nome: "Estudante",
     descricao: "Respostas didáticas e simplificadas, ideais para aprendizado e revisão de conteúdos acadêmicos.",

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { User, ChevronDown } from "lucide-react";
+import { User, ChevronDown, RefreshCw } from "lucide-react";
 import PersonalidadesModal from "../../../../modals/PersonalidadesModal";
 import { motion } from "framer-motion";
 
@@ -11,25 +11,35 @@ const personalidadeNomes: Record<string, string> = {
   "estudante": "Estudante",
   "professor": "Professor",
   "mentor": "Mentor",
-  "expert": "Expert"
+  "expert": "Expert",
+  "nenhuma": "Personalidades" // Adicionando estado padrão
 };
 
 const PersonalidadesIcon: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activePersonalidade, setActivePersonalidade] = useState("estudante");
+  const [activePersonalidade, setActivePersonalidade] = useState("nenhuma");
   const [showPersonalityName, setShowPersonalityName] = useState(false);
+  const [isFirstVisit, setIsFirstVisit] = useState(true);
 
   // Carregar preferência salva, se existir
   useEffect(() => {
     const savedPersonalidade = localStorage.getItem("epictus-personalidade-ativa");
     const savedShowName = localStorage.getItem("epictus-mostrar-nome-personalidade");
+    const firstVisitCheck = localStorage.getItem("epictus-first-visit-check");
 
-    if (savedPersonalidade) {
+    if (savedPersonalidade && savedPersonalidade !== "nenhuma") {
       setActivePersonalidade(savedPersonalidade);
     }
 
     if (savedShowName === "true") {
       setShowPersonalityName(true);
+    }
+
+    if (firstVisitCheck) {
+      setIsFirstVisit(false);
+    } else {
+      // Marca que o usuário já visitou esta página
+      localStorage.setItem("epictus-first-visit-check", "true");
     }
   }, []);
 
@@ -47,6 +57,15 @@ const PersonalidadesIcon: React.FC = () => {
     // Opcional: fechar o modal após seleção
     // setIsModalOpen(false);
   };
+  
+  // Função para resetar a personalidade para o estado padrão
+  const resetPersonalidade = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Evita que o clique abra o modal
+    setActivePersonalidade("nenhuma");
+    localStorage.setItem("epictus-personalidade-ativa", "nenhuma");
+    console.log("Personalidade resetada para o estado padrão");
+  };);
+  };
 
   return (
     <>
@@ -63,8 +82,19 @@ const PersonalidadesIcon: React.FC = () => {
         <span className="text-white text-sm font-medium">
           {personalidadeNomes[activePersonalidade] || "Personalidades"}
         </span>
+        {activePersonalidade !== "nenhuma" && (
+          <motion.div 
+            className="ml-1.5 bg-white/10 hover:bg-white/20 p-1 rounded-full cursor-pointer"
+            onClick={resetPersonalidade}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            title="Reiniciar personalidade"
+          >
+            <RefreshCw className="h-3 w-3 text-white/90" />
+          </motion.div>
+        )}
         <ChevronDown className="h-3.5 w-3.5 ml-1.5 text-white/80" />
-      </motion.div>
+      </motion.div>on.div>
 
       <PersonalidadesModal 
         open={isModalOpen} 
