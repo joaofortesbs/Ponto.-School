@@ -1,0 +1,1421 @@
+[plugin:vite:react-swc] × the name `useState` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/ui/upload-modal.tsx:1:1]
+   1 │ import React, { useState, useRef, useEffect } from "react";
+     ·                 ────┬───
+     ·                     ╰── previous definition of `useState` here
+   2 │ import { motion, AnimatePresence } from "framer-motion";
+   3 │ import { Button } from "@/components/ui/button";
+   4 │ import { Upload, File, X, Cloud, FolderOpen, ChevronRight, Clock } from "lucide-react";
+   5 │ import { Dialog, DialogContent } from "@/components/ui/dialog";
+   6 │ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+   7 │ 
+   8 │ interface UploadModalProps {
+   9 │   open: boolean;
+  10 │   onOpenChange: (open: boolean) => void;
+  11 │   onUpload?: (files: File[]) => void;
+  12 │ }
+  13 │ 
+  14 │ // Componente para ícone do Google Drive
+  15 │ const GoogleIcon = () => (
+  16 │   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  17 │     <path d="M4.47295 21C3.71111 21 3.06637 20.7478 2.53872 20.2435C2.01107 19.7392 1.74725 19.1283 1.74725 18.4108C1.74725 17.6932 2.01107 17.0823 2.53872 16.578C3.06637 16.0737 3.71111 15.8215 4.47295 15.8215H19.5203C20.2821 15.8215 20.9269 16.0737 21.4545 16.578C21.9822 17.0823 22.246 17.6932 22.246 18.4108C22.246 19.1283 21.9822 19.7392 21.4545 20.2435C20.9269 20.7478 20.2821 21 19.5203 21H4.47295Z" fill="#4285F4"/>
+  18 │     <path d="M4.47295 15.8217L8.83159 8.7847L6.10589 4.21729C5.83222 3.77398 5.72499 3.31182 5.7842 2.83079C5.84341 2.34976 6.08048 1.9447 6.49541 1.6156C6.91034 1.2865 7.37249 1.12195 7.88187 1.12195C8.39125 1.12195 8.85341 1.2865 9.26834 1.6156L19.5203 15.8217H4.47295Z" fill="#EA4335"/>
+  19 │     <path d="M19.5203 15.8217L15.1617 8.7847L17.8874 4.21729C18.161 3.77398 18.2683 3.31182 18.2091 2.83079C18.1499 2.34976 17.9128 1.9447 17.4979 1.6156C17.0829 1.2865 16.6208 1.12195 16.1114 1.12195C15.602 1.12195 15.1399 1.2865 14.725 1.6156L4.47296 15.8217H19.5203Z" fill="#FBBC05"/>
+  20 │   </svg>
+  21 │ );
+  22 │ 
+  23 │ // Componente para ícone do Microsoft OneDrive
+  24 │ const MicrosoftIcon = () => (
+  25 │   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  26 │     <path d="M11.4286 1.5H1.5V11.4286H11.4286V1.5Z" fill="#F25022"/>
+  27 │     <path d="M22.5 1.5H12.5714V11.4286H22.5V1.5Z" fill="#7FBA00"/>
+  28 │     <path d="M11.4286 12.5714H1.5V22.5H11.4286V12.5714Z" fill="#00A4EF"/>
+  29 │     <path d="M22.5 12.5714H12.5714V22.5H22.5V12.5714Z" fill="#FFB900"/>
+  30 │   </svg>
+  31 │ );
+  32 │ 
+  33 │ const UploadModal: React.FC<UploadModalProps> = ({
+  34 │   open,
+  35 │   onOpenChange,
+  36 │   onUpload,
+  37 │ }) => {
+  38 │   const [files, setFiles] = useState<File[]>([]);
+  39 │   const [isDragging, setIsDragging] = useState(false);
+  40 │   const [activeTab, setActiveTab] = useState<string>("upload");
+  41 │   const [recentFiles, setRecentFiles] = useState<{ name: string, date: string, type: string, icon: React.ReactNode }[]>([]);
+  42 │   const fileInputRef = useRef<HTMLInputElement>(null);
+  43 │ 
+  44 │   // Carregar arquivos recentes (deixando vazio por enquanto)
+  45 │   useEffect(() => {
+  46 │     // Em uma implementação real, aqui seria o código para buscar
+  47 │     // arquivos recentes do localStorage ou de uma API
+  48 │ 
+  49 │     const savedFiles = localStorage.getItem('recentFiles');
+  50 │     if (savedFiles) {
+  51 │       const parsedFiles = JSON.parse(savedFiles);
+  52 │       //Convert parsedFiles to the correct type.  This assumes the structure from AddButton
+  53 │       const recentFilesArray: { name: string; date: string; type: string; icon: React.ReactNode }[] = parsedFiles.map(file => ({...file, icon: <File className="h-4 w-4 text-blue-400" />}))
+  54 │       setRecentFiles(recentFilesArray);
+  55 │     }
+  56 │ 
+  57 │   }, []);
+  58 │ 
+  59 │   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  60 │     if (e.target.files) {
+  61 │       const newFiles = Array.from(e.target.files);
+  62 │       setFiles((prev) => [...prev, ...newFiles]);
+  63 │     }
+  64 │   };
+  65 │ 
+  66 │   const handleDragOver = (e: React.DragEvent) => {
+  67 │     e.preventDefault();
+  68 │     setIsDragging(true);
+  69 │   };
+  70 │ 
+  71 │   const handleDragLeave = () => {
+  72 │     setIsDragging(false);
+  73 │   };
+  74 │ 
+  75 │   const handleDrop = (e: React.DragEvent) => {
+  76 │     e.preventDefault();
+  77 │     setIsDragging(false);
+  78 │     if (e.dataTransfer.files) {
+  79 │       const newFiles = Array.from(e.dataTransfer.files);
+  80 │       setFiles((prev) => [...prev, ...newFiles]);
+  81 │     }
+  82 │   };
+  83 │ 
+  84 │   const handleRemoveFile = (index: number) => {
+  85 │     setFiles((prev) => prev.filter((_, i) => i !== index));
+  86 │   };
+  87 │ 
+  88 │   const handleUpload = () => {
+  89 │     if (onUpload && files.length > 0) {
+  90 │       onUpload(files);
+  91 │       setFiles([]);
+  92 │       onOpenChange(false);
+  93 │ 
+  94 │       // Aqui seria onde você salvaria os arquivos na lista de recentes
+  95 │       // em uma implementação real
+  96 │       const recentFilesToSave = files.map(file => ({
+  97 │         name: file.name,
+  98 │         date: "Hoje",
+  99 │         type: file.type,
+ 100 │         size: file.size
+ 101 │       }));
+ 102 │ 
+ 103 │       const existingFilesJson = localStorage.getItem('recentFiles');
+ 104 │       let existingFiles = existingFilesJson ? JSON.parse(existingFilesJson) : [];
+ 105 │       const updatedFiles = [...recentFilesToSave, ...existingFiles].slice(0, 10);
+ 106 │       localStorage.setItem('recentFiles', JSON.stringify(updatedFiles));
+ 107 │     }
+ 108 │   };
+ 109 │ 
+ 110 │   const openFileDialog = () => {
+ 111 │     if (fileInputRef.current) {
+ 112 │       fileInputRef.current.click();
+ 113 │     }
+ 114 │   };
+ 115 │ 
+ 116 │   const handleUseRecentFile = (fileName: string) => {
+ 117 │     // Lógica para usar um arquivo recente
+ 118 │     // Em uma implementação real, você buscaria o arquivo de um cache ou storage
+ 119 │     console.log(`Usando arquivo recente: ${fileName}`);
+ 120 │     // Simular adição do arquivo à lista de arquivos selecionados
+ 121 │     const mockFile = new File([""], fileName, { type: "application/octet-stream" });
+ 122 │     setFiles(prev => [...prev, mockFile]);
+ 123 │   };
+ 124 │ 
+ 125 │   const handleConnectService = (service: string) => {
+ 126 │     // Implementação futura da conexão com serviços de cloud
+ 127 │     console.log(`Conectando com ${service}...`);
+ 128 │     // Esta seria uma implementação real de autenticação com o serviço
+ 129 │   };
+ 130 │ 
+ 131 │   return (
+ 132 │     <Dialog open={open} onOpenChange={onOpenChange}>
+ 133 │       <DialogContent className="sm:max-w-md bg-gradient-to-b from-[#0c1c36] to-[#0a1625] border border-blue-500/20 text-white rounded-xl shadow-xl">
+ 134 │         <div className="flex flex-col gap-4">
+ 135 │           <div className="text-center">
+ 136 │             <h3 className="font-medium text-lg bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+ 137 │               Carregar Arquivos
+ 138 │             </h3>
+ 139 │             <p className="text-gray-400 text-sm mt-1">
+ 140 │               Selecione ou arraste os arquivos para upload
+ 141 │             </p>
+ 142 │           </div>
+ 143 │ 
+ 144 │           <Tabs defaultValue="upload" value={activeTab} onValueChange={setActiveTab} className="w-full">
+ 145 │             <TabsList className="grid grid-cols-3 mb-4 bg-[#0c1c36]/50 border border-blue-900/30">
+ 146 │               <TabsTrigger value="upload" className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400">
+ 147 │                 Upload
+ 148 │               </TabsTrigger>
+ 149 │               <TabsTrigger value="recentes" className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400">
+ 150 │                 Recentes
+ 151 │               </TabsTrigger>
+ 152 │               <TabsTrigger value="servicos" className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400">
+ 153 │                 Serviços
+ 154 │               </TabsTrigger>
+ 155 │             </TabsList>
+ 156 │ 
+ 157 │             <TabsContent value="upload">
+ 158 │               <div
+ 159 │                 className={`border-2 border-dashed rounded-lg p-6 transition-all ${
+ 160 │                   isDragging
+ 161 │                     ? "border-blue-500 bg-blue-500/10"
+ 162 │                     : "border-gray-600 hover:border-blue-500/50 hover:bg-blue-500/5"
+ 163 │                 }`}
+ 164 │                 onDragOver={handleDragOver}
+ 165 │                 onDragLeave={handleDragLeave}
+ 166 │                 onDrop={handleDrop}
+ 167 │                 onClick={openFileDialog}
+ 168 │               >
+ 169 │                 <input
+ 170 │                   type="file"
+ 171 │                   ref={fileInputRef}
+ 172 │                   className="hidden"
+ 173 │                   onChange={handleFileChange}
+ 174 │                   multiple
+ 175 │                 />
+ 176 │                 <div className="flex flex-col items-center gap-2 cursor-pointer">
+ 177 │                   <motion.div
+ 178 │                     className="p-2 rounded-full bg-blue-500/20"
+ 179 │                     whileHover={{ scale: 1.05 }}
+ 180 │                     whileTap={{ scale: 0.95 }}
+ 181 │                   >
+ 182 │                     <Upload className="h-6 w-6 text-blue-400" />
+ 183 │                   </motion.div>
+ 184 │                   <p className="text-sm font-medium text-gray-300">
+ 185 │                     Clique ou arraste arquivos para esta área
+ 186 │                   </p>
+ 187 │                   <p className="text-xs text-gray-500">
+ 188 │                     Suporta PDFs, imagens, documentos e mais
+ 189 │                   </p>
+ 190 │                 </div>
+ 191 │               </div>
+ 192 │             </TabsContent>
+ 193 │ 
+ 194 │             <TabsContent value="recentes">
+ 195 │               <div className="border border-gray-700 rounded-lg bg-[#0c1c36]/50 p-2 max-h-60 overflow-y-auto">
+ 196 │                 {recentFiles.length > 0 ? (
+ 197 │                   <div className="space-y-2">
+ 198 │                     {recentFiles.map((file, index) => (
+ 199 │                       <div
+ 200 │                         key={index}
+ 201 │                         className="flex items-center justify-between bg-[#0c1d35]/70 hover:bg-[#0c1d35] p-3 rounded-md cursor-pointer transition-colors"
+ 202 │                         onClick={() => handleUseRecentFile(file.name)}
+ 203 │                       >
+ 204 │                         <div className="flex items-center gap-3">
+ 205 │                           <div className="p-2 rounded-full bg-blue-500/10">
+ 206 │                             {file.icon}
+ 207 │                           </div>
+ 208 │                           <div className="flex flex-col">
+ 209 │                             <span className="text-sm text-gray-200">{file.name}</span>
+ 210 │                             <span className="text-xs text-gray-400">{file.date}</span>
+ 211 │                           </div>
+ 212 │                         </div>
+ 213 │                         <Button
+ 214 │                           variant="ghost"
+ 215 │                           size="sm"
+ 216 │                           className="h-8 w-8 rounded-full hover:bg-blue-500/10"
+ 217 │                         >
+ 218 │                           <ChevronRight className="h-4 w-4 text-blue-400" />
+ 219 │                         </Button>
+ 220 │                       </div>
+ 221 │                     ))}
+ 222 │                   </div>
+ 223 │                 ) : (
+ 224 │                   <div className="flex flex-col items-center justify-center py-8 text-center">
+ 225 │                     <Clock className="h-10 w-10 text-gray-500 mb-2" />
+ 226 │                     <p className="text-gray-400 text-sm">Nenhum arquivo recente</p>
+ 227 │                     <p className="text-gray-500 text-xs mt-1">
+ 228 │                       Você ainda não importou nenhum arquivo
+ 229 │                     </p>
+ 230 │                     <p className="text-gray-500 text-xs mt-1">
+ 231 │                       Os arquivos que você enviar aparecerão aqui para acesso rápido
+ 232 │                     </p>
+ 233 │                   </div>
+ 234 │                 )}
+ 235 │               </div>
+ 236 │             </TabsContent>
+ 237 │ 
+ 238 │             <TabsContent value="servicos">
+ 239 │               <div className="grid grid-cols-1 gap-3">
+ 240 │                 <div 
+ 241 │                   className="flex items-center justify-between bg-[#0c1d35]/70 hover:bg-[#0c1d35] p-4 rounded-md cursor-pointer transition-colors"
+ 242 │                   onClick={() => handleConnectService("Google Drive")}
+ 243 │                 >
+ 244 │                   <div className="flex items-center gap-3">
+ 245 │                     <div className="p-2 rounded-full bg-blue-500/10">
+ 246 │                       <GoogleIcon />
+ 247 │                     </div>
+ 248 │                     <span className="text-gray-200">Conectar com o Google Drive</span>
+ 249 │                   </div>
+ 250 │                   <ChevronRight className="h-4 w-4 text-blue-400" />
+ 251 │                 </div>
+ 252 │ 
+ 253 │                 <div 
+ 254 │                   className="flex items-center justify-between bg-[#0c1d35]/70 hover:bg-[#0c1d35] p-4 rounded-md cursor-pointer transition-colors"
+ 255 │                   onClick={() => handleConnectService("Microsoft OneDrive")}
+ 256 │                 >
+ 257 │                   <div className="flex items-center gap-3">
+ 258 │                     <div className="p-2 rounded-full bg-blue-500/10">
+ 259 │                       <MicrosoftIcon />
+ 260 │                     </div>
+ 261 │                     <span className="text-gray-200">Conectar com o Microsoft OneDrive</span>
+ 262 │                   </div>
+ 263 │                   <ChevronRight className="h-4 w-4 text-blue-400" />
+ 264 │                 </div>
+ 265 │               </div>
+ 266 │             </TabsContent>
+ 267 │           </Tabs>
+ 268 │ 
+ 269 │           {files.length > 0 && (
+ 270 │             <div className="mt-2">
+ 271 │               <p className="text-sm text-gray-300 mb-2">
+ 272 │                 Arquivos selecionados ({files.length})
+ 273 │               </p>
+ 274 │               <div className="max-h-32 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+ 275 │                 {files.map((file, index) => (
+ 276 │                   <div
+ 277 │                     key={index}
+ 278 │                     className="flex items-center justify-between bg-gray-800/50 p-2 rounded-md text-sm"
+ 279 │                   >
+ 280 │                     <div className="flex items-center gap-2">
+ 281 │                       <File className="h-4 w-4 text-blue-400" />
+ 282 │                       <span className="truncate max-w-[200px]">
+ 283 │                         {file.name}
+ 284 │                       </span>
+ 285 │                     </div>
+ 286 │                     <Button
+ 287 │                       variant="ghost"
+ 288 │                       size="icon"
+ 289 │                       className="h-6 w-6 text-gray-400 hover:text-red-400 hover:bg-red-500/10"
+ 290 │                       onClick={(e) => {
+ 291 │                         e.stopPropagation();
+ 292 │                         handleRemoveFile(index);
+ 293 │                       }}
+ 294 │                     >
+ 295 │                       <X className="h-3 w-3" />
+ 296 │                     </Button>
+ 297 │                   </div>
+ 298 │                 ))}
+ 299 │               </div>
+ 300 │             </div>
+ 301 │           )}
+ 302 │ 
+ 303 │           <div className="flex justify-end gap-2 mt-2">
+ 304 │             <Button
+ 305 │               variant="outline"
+ 306 │               onClick={() => onOpenChange(false)}
+ 307 │               className="text-gray-300 border-gray-700 hover:bg-gray-800"
+ 308 │             >
+ 309 │               Cancelar
+ 310 │             </Button>
+ 311 │             <Button
+ 312 │               onClick={handleUpload}
+ 313 │               disabled={files.length === 0}
+ 314 │               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+ 315 │             >
+ 316 │               Enviar
+ 317 │             </Button>
+ 318 │           </div>
+ 319 │         </div>
+ 320 │       </DialogContent>
+ 321 │     </Dialog>
+ 322 │   );
+ 323 │ };
+ 324 │ 
+ 325 │ export default UploadModal;
+ 326 │ 
+ 327 │ import React, { useState, useRef } from "react";
+     ·                 ────┬───
+     ·                     ╰── `useState` redefined here
+ 328 │ import { Plus } from "lucide-react";
+ 329 │ import { motion } from "framer-motion";
+ 330 │ import UploadModal from "./upload-modal";
+     ╰────
+
+  × the name `useRef` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/ui/upload-modal.tsx:1:1]
+   1 │ import React, { useState, useRef, useEffect } from "react";
+     ·                           ───┬──
+     ·                              ╰── previous definition of `useRef` here
+   2 │ import { motion, AnimatePresence } from "framer-motion";
+   3 │ import { Button } from "@/components/ui/button";
+   4 │ import { Upload, File, X, Cloud, FolderOpen, ChevronRight, Clock } from "lucide-react";
+   5 │ import { Dialog, DialogContent } from "@/components/ui/dialog";
+   6 │ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+   7 │ 
+   8 │ interface UploadModalProps {
+   9 │   open: boolean;
+  10 │   onOpenChange: (open: boolean) => void;
+  11 │   onUpload?: (files: File[]) => void;
+  12 │ }
+  13 │ 
+  14 │ // Componente para ícone do Google Drive
+  15 │ const GoogleIcon = () => (
+  16 │   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  17 │     <path d="M4.47295 21C3.71111 21 3.06637 20.7478 2.53872 20.2435C2.01107 19.7392 1.74725 19.1283 1.74725 18.4108C1.74725 17.6932 2.01107 17.0823 2.53872 16.578C3.06637 16.0737 3.71111 15.8215 4.47295 15.8215H19.5203C20.2821 15.8215 20.9269 16.0737 21.4545 16.578C21.9822 17.0823 22.246 17.6932 22.246 18.4108C22.246 19.1283 21.9822 19.7392 21.4545 20.2435C20.9269 20.7478 20.2821 21 19.5203 21H4.47295Z" fill="#4285F4"/>
+  18 │     <path d="M4.47295 15.8217L8.83159 8.7847L6.10589 4.21729C5.83222 3.77398 5.72499 3.31182 5.7842 2.83079C5.84341 2.34976 6.08048 1.9447 6.49541 1.6156C6.91034 1.2865 7.37249 1.12195 7.88187 1.12195C8.39125 1.12195 8.85341 1.2865 9.26834 1.6156L19.5203 15.8217H4.47295Z" fill="#EA4335"/>
+  19 │     <path d="M19.5203 15.8217L15.1617 8.7847L17.8874 4.21729C18.161 3.77398 18.2683 3.31182 18.2091 2.83079C18.1499 2.34976 17.9128 1.9447 17.4979 1.6156C17.0829 1.2865 16.6208 1.12195 16.1114 1.12195C15.602 1.12195 15.1399 1.2865 14.725 1.6156L4.47296 15.8217H19.5203Z" fill="#FBBC05"/>
+  20 │   </svg>
+  21 │ );
+  22 │ 
+  23 │ // Componente para ícone do Microsoft OneDrive
+  24 │ const MicrosoftIcon = () => (
+  25 │   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  26 │     <path d="M11.4286 1.5H1.5V11.4286H11.4286V1.5Z" fill="#F25022"/>
+  27 │     <path d="M22.5 1.5H12.5714V11.4286H22.5V1.5Z" fill="#7FBA00"/>
+  28 │     <path d="M11.4286 12.5714H1.5V22.5H11.4286V12.5714Z" fill="#00A4EF"/>
+  29 │     <path d="M22.5 12.5714H12.5714V22.5H22.5V12.5714Z" fill="#FFB900"/>
+  30 │   </svg>
+  31 │ );
+  32 │ 
+  33 │ const UploadModal: React.FC<UploadModalProps> = ({
+  34 │   open,
+  35 │   onOpenChange,
+  36 │   onUpload,
+  37 │ }) => {
+  38 │   const [files, setFiles] = useState<File[]>([]);
+  39 │   const [isDragging, setIsDragging] = useState(false);
+  40 │   const [activeTab, setActiveTab] = useState<string>("upload");
+  41 │   const [recentFiles, setRecentFiles] = useState<{ name: string, date: string, type: string, icon: React.ReactNode }[]>([]);
+  42 │   const fileInputRef = useRef<HTMLInputElement>(null);
+  43 │ 
+  44 │   // Carregar arquivos recentes (deixando vazio por enquanto)
+  45 │   useEffect(() => {
+  46 │     // Em uma implementação real, aqui seria o código para buscar
+  47 │     // arquivos recentes do localStorage ou de uma API
+  48 │ 
+  49 │     const savedFiles = localStorage.getItem('recentFiles');
+  50 │     if (savedFiles) {
+  51 │       const parsedFiles = JSON.parse(savedFiles);
+  52 │       //Convert parsedFiles to the correct type.  This assumes the structure from AddButton
+  53 │       const recentFilesArray: { name: string; date: string; type: string; icon: React.ReactNode }[] = parsedFiles.map(file => ({...file, icon: <File className="h-4 w-4 text-blue-400" />}))
+  54 │       setRecentFiles(recentFilesArray);
+  55 │     }
+  56 │ 
+  57 │   }, []);
+  58 │ 
+  59 │   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  60 │     if (e.target.files) {
+  61 │       const newFiles = Array.from(e.target.files);
+  62 │       setFiles((prev) => [...prev, ...newFiles]);
+  63 │     }
+  64 │   };
+  65 │ 
+  66 │   const handleDragOver = (e: React.DragEvent) => {
+  67 │     e.preventDefault();
+  68 │     setIsDragging(true);
+  69 │   };
+  70 │ 
+  71 │   const handleDragLeave = () => {
+  72 │     setIsDragging(false);
+  73 │   };
+  74 │ 
+  75 │   const handleDrop = (e: React.DragEvent) => {
+  76 │     e.preventDefault();
+  77 │     setIsDragging(false);
+  78 │     if (e.dataTransfer.files) {
+  79 │       const newFiles = Array.from(e.dataTransfer.files);
+  80 │       setFiles((prev) => [...prev, ...newFiles]);
+  81 │     }
+  82 │   };
+  83 │ 
+  84 │   const handleRemoveFile = (index: number) => {
+  85 │     setFiles((prev) => prev.filter((_, i) => i !== index));
+  86 │   };
+  87 │ 
+  88 │   const handleUpload = () => {
+  89 │     if (onUpload && files.length > 0) {
+  90 │       onUpload(files);
+  91 │       setFiles([]);
+  92 │       onOpenChange(false);
+  93 │ 
+  94 │       // Aqui seria onde você salvaria os arquivos na lista de recentes
+  95 │       // em uma implementação real
+  96 │       const recentFilesToSave = files.map(file => ({
+  97 │         name: file.name,
+  98 │         date: "Hoje",
+  99 │         type: file.type,
+ 100 │         size: file.size
+ 101 │       }));
+ 102 │ 
+ 103 │       const existingFilesJson = localStorage.getItem('recentFiles');
+ 104 │       let existingFiles = existingFilesJson ? JSON.parse(existingFilesJson) : [];
+ 105 │       const updatedFiles = [...recentFilesToSave, ...existingFiles].slice(0, 10);
+ 106 │       localStorage.setItem('recentFiles', JSON.stringify(updatedFiles));
+ 107 │     }
+ 108 │   };
+ 109 │ 
+ 110 │   const openFileDialog = () => {
+ 111 │     if (fileInputRef.current) {
+ 112 │       fileInputRef.current.click();
+ 113 │     }
+ 114 │   };
+ 115 │ 
+ 116 │   const handleUseRecentFile = (fileName: string) => {
+ 117 │     // Lógica para usar um arquivo recente
+ 118 │     // Em uma implementação real, você buscaria o arquivo de um cache ou storage
+ 119 │     console.log(`Usando arquivo recente: ${fileName}`);
+ 120 │     // Simular adição do arquivo à lista de arquivos selecionados
+ 121 │     const mockFile = new File([""], fileName, { type: "application/octet-stream" });
+ 122 │     setFiles(prev => [...prev, mockFile]);
+ 123 │   };
+ 124 │ 
+ 125 │   const handleConnectService = (service: string) => {
+ 126 │     // Implementação futura da conexão com serviços de cloud
+ 127 │     console.log(`Conectando com ${service}...`);
+ 128 │     // Esta seria uma implementação real de autenticação com o serviço
+ 129 │   };
+ 130 │ 
+ 131 │   return (
+ 132 │     <Dialog open={open} onOpenChange={onOpenChange}>
+ 133 │       <DialogContent className="sm:max-w-md bg-gradient-to-b from-[#0c1c36] to-[#0a1625] border border-blue-500/20 text-white rounded-xl shadow-xl">
+ 134 │         <div className="flex flex-col gap-4">
+ 135 │           <div className="text-center">
+ 136 │             <h3 className="font-medium text-lg bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+ 137 │               Carregar Arquivos
+ 138 │             </h3>
+ 139 │             <p className="text-gray-400 text-sm mt-1">
+ 140 │               Selecione ou arraste os arquivos para upload
+ 141 │             </p>
+ 142 │           </div>
+ 143 │ 
+ 144 │           <Tabs defaultValue="upload" value={activeTab} onValueChange={setActiveTab} className="w-full">
+ 145 │             <TabsList className="grid grid-cols-3 mb-4 bg-[#0c1c36]/50 border border-blue-900/30">
+ 146 │               <TabsTrigger value="upload" className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400">
+ 147 │                 Upload
+ 148 │               </TabsTrigger>
+ 149 │               <TabsTrigger value="recentes" className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400">
+ 150 │                 Recentes
+ 151 │               </TabsTrigger>
+ 152 │               <TabsTrigger value="servicos" className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400">
+ 153 │                 Serviços
+ 154 │               </TabsTrigger>
+ 155 │             </TabsList>
+ 156 │ 
+ 157 │             <TabsContent value="upload">
+ 158 │               <div
+ 159 │                 className={`border-2 border-dashed rounded-lg p-6 transition-all ${
+ 160 │                   isDragging
+ 161 │                     ? "border-blue-500 bg-blue-500/10"
+ 162 │                     : "border-gray-600 hover:border-blue-500/50 hover:bg-blue-500/5"
+ 163 │                 }`}
+ 164 │                 onDragOver={handleDragOver}
+ 165 │                 onDragLeave={handleDragLeave}
+ 166 │                 onDrop={handleDrop}
+ 167 │                 onClick={openFileDialog}
+ 168 │               >
+ 169 │                 <input
+ 170 │                   type="file"
+ 171 │                   ref={fileInputRef}
+ 172 │                   className="hidden"
+ 173 │                   onChange={handleFileChange}
+ 174 │                   multiple
+ 175 │                 />
+ 176 │                 <div className="flex flex-col items-center gap-2 cursor-pointer">
+ 177 │                   <motion.div
+ 178 │                     className="p-2 rounded-full bg-blue-500/20"
+ 179 │                     whileHover={{ scale: 1.05 }}
+ 180 │                     whileTap={{ scale: 0.95 }}
+ 181 │                   >
+ 182 │                     <Upload className="h-6 w-6 text-blue-400" />
+ 183 │                   </motion.div>
+ 184 │                   <p className="text-sm font-medium text-gray-300">
+ 185 │                     Clique ou arraste arquivos para esta área
+ 186 │                   </p>
+ 187 │                   <p className="text-xs text-gray-500">
+ 188 │                     Suporta PDFs, imagens, documentos e mais
+ 189 │                   </p>
+ 190 │                 </div>
+ 191 │               </div>
+ 192 │             </TabsContent>
+ 193 │ 
+ 194 │             <TabsContent value="recentes">
+ 195 │               <div className="border border-gray-700 rounded-lg bg-[#0c1c36]/50 p-2 max-h-60 overflow-y-auto">
+ 196 │                 {recentFiles.length > 0 ? (
+ 197 │                   <div className="space-y-2">
+ 198 │                     {recentFiles.map((file, index) => (
+ 199 │                       <div
+ 200 │                         key={index}
+ 201 │                         className="flex items-center justify-between bg-[#0c1d35]/70 hover:bg-[#0c1d35] p-3 rounded-md cursor-pointer transition-colors"
+ 202 │                         onClick={() => handleUseRecentFile(file.name)}
+ 203 │                       >
+ 204 │                         <div className="flex items-center gap-3">
+ 205 │                           <div className="p-2 rounded-full bg-blue-500/10">
+ 206 │                             {file.icon}
+ 207 │                           </div>
+ 208 │                           <div className="flex flex-col">
+ 209 │                             <span className="text-sm text-gray-200">{file.name}</span>
+ 210 │                             <span className="text-xs text-gray-400">{file.date}</span>
+ 211 │                           </div>
+ 212 │                         </div>
+ 213 │                         <Button
+ 214 │                           variant="ghost"
+ 215 │                           size="sm"
+ 216 │                           className="h-8 w-8 rounded-full hover:bg-blue-500/10"
+ 217 │                         >
+ 218 │                           <ChevronRight className="h-4 w-4 text-blue-400" />
+ 219 │                         </Button>
+ 220 │                       </div>
+ 221 │                     ))}
+ 222 │                   </div>
+ 223 │                 ) : (
+ 224 │                   <div className="flex flex-col items-center justify-center py-8 text-center">
+ 225 │                     <Clock className="h-10 w-10 text-gray-500 mb-2" />
+ 226 │                     <p className="text-gray-400 text-sm">Nenhum arquivo recente</p>
+ 227 │                     <p className="text-gray-500 text-xs mt-1">
+ 228 │                       Você ainda não importou nenhum arquivo
+ 229 │                     </p>
+ 230 │                     <p className="text-gray-500 text-xs mt-1">
+ 231 │                       Os arquivos que você enviar aparecerão aqui para acesso rápido
+ 232 │                     </p>
+ 233 │                   </div>
+ 234 │                 )}
+ 235 │               </div>
+ 236 │             </TabsContent>
+ 237 │ 
+ 238 │             <TabsContent value="servicos">
+ 239 │               <div className="grid grid-cols-1 gap-3">
+ 240 │                 <div 
+ 241 │                   className="flex items-center justify-between bg-[#0c1d35]/70 hover:bg-[#0c1d35] p-4 rounded-md cursor-pointer transition-colors"
+ 242 │                   onClick={() => handleConnectService("Google Drive")}
+ 243 │                 >
+ 244 │                   <div className="flex items-center gap-3">
+ 245 │                     <div className="p-2 rounded-full bg-blue-500/10">
+ 246 │                       <GoogleIcon />
+ 247 │                     </div>
+ 248 │                     <span className="text-gray-200">Conectar com o Google Drive</span>
+ 249 │                   </div>
+ 250 │                   <ChevronRight className="h-4 w-4 text-blue-400" />
+ 251 │                 </div>
+ 252 │ 
+ 253 │                 <div 
+ 254 │                   className="flex items-center justify-between bg-[#0c1d35]/70 hover:bg-[#0c1d35] p-4 rounded-md cursor-pointer transition-colors"
+ 255 │                   onClick={() => handleConnectService("Microsoft OneDrive")}
+ 256 │                 >
+ 257 │                   <div className="flex items-center gap-3">
+ 258 │                     <div className="p-2 rounded-full bg-blue-500/10">
+ 259 │                       <MicrosoftIcon />
+ 260 │                     </div>
+ 261 │                     <span className="text-gray-200">Conectar com o Microsoft OneDrive</span>
+ 262 │                   </div>
+ 263 │                   <ChevronRight className="h-4 w-4 text-blue-400" />
+ 264 │                 </div>
+ 265 │               </div>
+ 266 │             </TabsContent>
+ 267 │           </Tabs>
+ 268 │ 
+ 269 │           {files.length > 0 && (
+ 270 │             <div className="mt-2">
+ 271 │               <p className="text-sm text-gray-300 mb-2">
+ 272 │                 Arquivos selecionados ({files.length})
+ 273 │               </p>
+ 274 │               <div className="max-h-32 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+ 275 │                 {files.map((file, index) => (
+ 276 │                   <div
+ 277 │                     key={index}
+ 278 │                     className="flex items-center justify-between bg-gray-800/50 p-2 rounded-md text-sm"
+ 279 │                   >
+ 280 │                     <div className="flex items-center gap-2">
+ 281 │                       <File className="h-4 w-4 text-blue-400" />
+ 282 │                       <span className="truncate max-w-[200px]">
+ 283 │                         {file.name}
+ 284 │                       </span>
+ 285 │                     </div>
+ 286 │                     <Button
+ 287 │                       variant="ghost"
+ 288 │                       size="icon"
+ 289 │                       className="h-6 w-6 text-gray-400 hover:text-red-400 hover:bg-red-500/10"
+ 290 │                       onClick={(e) => {
+ 291 │                         e.stopPropagation();
+ 292 │                         handleRemoveFile(index);
+ 293 │                       }}
+ 294 │                     >
+ 295 │                       <X className="h-3 w-3" />
+ 296 │                     </Button>
+ 297 │                   </div>
+ 298 │                 ))}
+ 299 │               </div>
+ 300 │             </div>
+ 301 │           )}
+ 302 │ 
+ 303 │           <div className="flex justify-end gap-2 mt-2">
+ 304 │             <Button
+ 305 │               variant="outline"
+ 306 │               onClick={() => onOpenChange(false)}
+ 307 │               className="text-gray-300 border-gray-700 hover:bg-gray-800"
+ 308 │             >
+ 309 │               Cancelar
+ 310 │             </Button>
+ 311 │             <Button
+ 312 │               onClick={handleUpload}
+ 313 │               disabled={files.length === 0}
+ 314 │               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+ 315 │             >
+ 316 │               Enviar
+ 317 │             </Button>
+ 318 │           </div>
+ 319 │         </div>
+ 320 │       </DialogContent>
+ 321 │     </Dialog>
+ 322 │   );
+ 323 │ };
+ 324 │ 
+ 325 │ export default UploadModal;
+ 326 │ 
+ 327 │ import React, { useState, useRef } from "react";
+     ·                           ───┬──
+     ·                              ╰── `useRef` redefined here
+ 328 │ import { Plus } from "lucide-react";
+ 329 │ import { motion } from "framer-motion";
+ 330 │ import UploadModal from "./upload-modal";
+     ╰────
+
+  × the name `motion` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/ui/upload-modal.tsx:1:1]
+   1 │ import React, { useState, useRef, useEffect } from "react";
+   2 │ import { motion, AnimatePresence } from "framer-motion";
+     ·          ───┬──
+     ·             ╰── previous definition of `motion` here
+   3 │ import { Button } from "@/components/ui/button";
+   4 │ import { Upload, File, X, Cloud, FolderOpen, ChevronRight, Clock } from "lucide-react";
+   5 │ import { Dialog, DialogContent } from "@/components/ui/dialog";
+   6 │ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+   7 │ 
+   8 │ interface UploadModalProps {
+   9 │   open: boolean;
+  10 │   onOpenChange: (open: boolean) => void;
+  11 │   onUpload?: (files: File[]) => void;
+  12 │ }
+  13 │ 
+  14 │ // Componente para ícone do Google Drive
+  15 │ const GoogleIcon = () => (
+  16 │   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  17 │     <path d="M4.47295 21C3.71111 21 3.06637 20.7478 2.53872 20.2435C2.01107 19.7392 1.74725 19.1283 1.74725 18.4108C1.74725 17.6932 2.01107 17.0823 2.53872 16.578C3.06637 16.0737 3.71111 15.8215 4.47295 15.8215H19.5203C20.2821 15.8215 20.9269 16.0737 21.4545 16.578C21.9822 17.0823 22.246 17.6932 22.246 18.4108C22.246 19.1283 21.9822 19.7392 21.4545 20.2435C20.9269 20.7478 20.2821 21 19.5203 21H4.47295Z" fill="#4285F4"/>
+  18 │     <path d="M4.47295 15.8217L8.83159 8.7847L6.10589 4.21729C5.83222 3.77398 5.72499 3.31182 5.7842 2.83079C5.84341 2.34976 6.08048 1.9447 6.49541 1.6156C6.91034 1.2865 7.37249 1.12195 7.88187 1.12195C8.39125 1.12195 8.85341 1.2865 9.26834 1.6156L19.5203 15.8217H4.47295Z" fill="#EA4335"/>
+  19 │     <path d="M19.5203 15.8217L15.1617 8.7847L17.8874 4.21729C18.161 3.77398 18.2683 3.31182 18.2091 2.83079C18.1499 2.34976 17.9128 1.9447 17.4979 1.6156C17.0829 1.2865 16.6208 1.12195 16.1114 1.12195C15.602 1.12195 15.1399 1.2865 14.725 1.6156L4.47296 15.8217H19.5203Z" fill="#FBBC05"/>
+  20 │   </svg>
+  21 │ );
+  22 │ 
+  23 │ // Componente para ícone do Microsoft OneDrive
+  24 │ const MicrosoftIcon = () => (
+  25 │   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  26 │     <path d="M11.4286 1.5H1.5V11.4286H11.4286V1.5Z" fill="#F25022"/>
+  27 │     <path d="M22.5 1.5H12.5714V11.4286H22.5V1.5Z" fill="#7FBA00"/>
+  28 │     <path d="M11.4286 12.5714H1.5V22.5H11.4286V12.5714Z" fill="#00A4EF"/>
+  29 │     <path d="M22.5 12.5714H12.5714V22.5H22.5V12.5714Z" fill="#FFB900"/>
+  30 │   </svg>
+  31 │ );
+  32 │ 
+  33 │ const UploadModal: React.FC<UploadModalProps> = ({
+  34 │   open,
+  35 │   onOpenChange,
+  36 │   onUpload,
+  37 │ }) => {
+  38 │   const [files, setFiles] = useState<File[]>([]);
+  39 │   const [isDragging, setIsDragging] = useState(false);
+  40 │   const [activeTab, setActiveTab] = useState<string>("upload");
+  41 │   const [recentFiles, setRecentFiles] = useState<{ name: string, date: string, type: string, icon: React.ReactNode }[]>([]);
+  42 │   const fileInputRef = useRef<HTMLInputElement>(null);
+  43 │ 
+  44 │   // Carregar arquivos recentes (deixando vazio por enquanto)
+  45 │   useEffect(() => {
+  46 │     // Em uma implementação real, aqui seria o código para buscar
+  47 │     // arquivos recentes do localStorage ou de uma API
+  48 │ 
+  49 │     const savedFiles = localStorage.getItem('recentFiles');
+  50 │     if (savedFiles) {
+  51 │       const parsedFiles = JSON.parse(savedFiles);
+  52 │       //Convert parsedFiles to the correct type.  This assumes the structure from AddButton
+  53 │       const recentFilesArray: { name: string; date: string; type: string; icon: React.ReactNode }[] = parsedFiles.map(file => ({...file, icon: <File className="h-4 w-4 text-blue-400" />}))
+  54 │       setRecentFiles(recentFilesArray);
+  55 │     }
+  56 │ 
+  57 │   }, []);
+  58 │ 
+  59 │   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  60 │     if (e.target.files) {
+  61 │       const newFiles = Array.from(e.target.files);
+  62 │       setFiles((prev) => [...prev, ...newFiles]);
+  63 │     }
+  64 │   };
+  65 │ 
+  66 │   const handleDragOver = (e: React.DragEvent) => {
+  67 │     e.preventDefault();
+  68 │     setIsDragging(true);
+  69 │   };
+  70 │ 
+  71 │   const handleDragLeave = () => {
+  72 │     setIsDragging(false);
+  73 │   };
+  74 │ 
+  75 │   const handleDrop = (e: React.DragEvent) => {
+  76 │     e.preventDefault();
+  77 │     setIsDragging(false);
+  78 │     if (e.dataTransfer.files) {
+  79 │       const newFiles = Array.from(e.dataTransfer.files);
+  80 │       setFiles((prev) => [...prev, ...newFiles]);
+  81 │     }
+  82 │   };
+  83 │ 
+  84 │   const handleRemoveFile = (index: number) => {
+  85 │     setFiles((prev) => prev.filter((_, i) => i !== index));
+  86 │   };
+  87 │ 
+  88 │   const handleUpload = () => {
+  89 │     if (onUpload && files.length > 0) {
+  90 │       onUpload(files);
+  91 │       setFiles([]);
+  92 │       onOpenChange(false);
+  93 │ 
+  94 │       // Aqui seria onde você salvaria os arquivos na lista de recentes
+  95 │       // em uma implementação real
+  96 │       const recentFilesToSave = files.map(file => ({
+  97 │         name: file.name,
+  98 │         date: "Hoje",
+  99 │         type: file.type,
+ 100 │         size: file.size
+ 101 │       }));
+ 102 │ 
+ 103 │       const existingFilesJson = localStorage.getItem('recentFiles');
+ 104 │       let existingFiles = existingFilesJson ? JSON.parse(existingFilesJson) : [];
+ 105 │       const updatedFiles = [...recentFilesToSave, ...existingFiles].slice(0, 10);
+ 106 │       localStorage.setItem('recentFiles', JSON.stringify(updatedFiles));
+ 107 │     }
+ 108 │   };
+ 109 │ 
+ 110 │   const openFileDialog = () => {
+ 111 │     if (fileInputRef.current) {
+ 112 │       fileInputRef.current.click();
+ 113 │     }
+ 114 │   };
+ 115 │ 
+ 116 │   const handleUseRecentFile = (fileName: string) => {
+ 117 │     // Lógica para usar um arquivo recente
+ 118 │     // Em uma implementação real, você buscaria o arquivo de um cache ou storage
+ 119 │     console.log(`Usando arquivo recente: ${fileName}`);
+ 120 │     // Simular adição do arquivo à lista de arquivos selecionados
+ 121 │     const mockFile = new File([""], fileName, { type: "application/octet-stream" });
+ 122 │     setFiles(prev => [...prev, mockFile]);
+ 123 │   };
+ 124 │ 
+ 125 │   const handleConnectService = (service: string) => {
+ 126 │     // Implementação futura da conexão com serviços de cloud
+ 127 │     console.log(`Conectando com ${service}...`);
+ 128 │     // Esta seria uma implementação real de autenticação com o serviço
+ 129 │   };
+ 130 │ 
+ 131 │   return (
+ 132 │     <Dialog open={open} onOpenChange={onOpenChange}>
+ 133 │       <DialogContent className="sm:max-w-md bg-gradient-to-b from-[#0c1c36] to-[#0a1625] border border-blue-500/20 text-white rounded-xl shadow-xl">
+ 134 │         <div className="flex flex-col gap-4">
+ 135 │           <div className="text-center">
+ 136 │             <h3 className="font-medium text-lg bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+ 137 │               Carregar Arquivos
+ 138 │             </h3>
+ 139 │             <p className="text-gray-400 text-sm mt-1">
+ 140 │               Selecione ou arraste os arquivos para upload
+ 141 │             </p>
+ 142 │           </div>
+ 143 │ 
+ 144 │           <Tabs defaultValue="upload" value={activeTab} onValueChange={setActiveTab} className="w-full">
+ 145 │             <TabsList className="grid grid-cols-3 mb-4 bg-[#0c1c36]/50 border border-blue-900/30">
+ 146 │               <TabsTrigger value="upload" className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400">
+ 147 │                 Upload
+ 148 │               </TabsTrigger>
+ 149 │               <TabsTrigger value="recentes" className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400">
+ 150 │                 Recentes
+ 151 │               </TabsTrigger>
+ 152 │               <TabsTrigger value="servicos" className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400">
+ 153 │                 Serviços
+ 154 │               </TabsTrigger>
+ 155 │             </TabsList>
+ 156 │ 
+ 157 │             <TabsContent value="upload">
+ 158 │               <div
+ 159 │                 className={`border-2 border-dashed rounded-lg p-6 transition-all ${
+ 160 │                   isDragging
+ 161 │                     ? "border-blue-500 bg-blue-500/10"
+ 162 │                     : "border-gray-600 hover:border-blue-500/50 hover:bg-blue-500/5"
+ 163 │                 }`}
+ 164 │                 onDragOver={handleDragOver}
+ 165 │                 onDragLeave={handleDragLeave}
+ 166 │                 onDrop={handleDrop}
+ 167 │                 onClick={openFileDialog}
+ 168 │               >
+ 169 │                 <input
+ 170 │                   type="file"
+ 171 │                   ref={fileInputRef}
+ 172 │                   className="hidden"
+ 173 │                   onChange={handleFileChange}
+ 174 │                   multiple
+ 175 │                 />
+ 176 │                 <div className="flex flex-col items-center gap-2 cursor-pointer">
+ 177 │                   <motion.div
+ 178 │                     className="p-2 rounded-full bg-blue-500/20"
+ 179 │                     whileHover={{ scale: 1.05 }}
+ 180 │                     whileTap={{ scale: 0.95 }}
+ 181 │                   >
+ 182 │                     <Upload className="h-6 w-6 text-blue-400" />
+ 183 │                   </motion.div>
+ 184 │                   <p className="text-sm font-medium text-gray-300">
+ 185 │                     Clique ou arraste arquivos para esta área
+ 186 │                   </p>
+ 187 │                   <p className="text-xs text-gray-500">
+ 188 │                     Suporta PDFs, imagens, documentos e mais
+ 189 │                   </p>
+ 190 │                 </div>
+ 191 │               </div>
+ 192 │             </TabsContent>
+ 193 │ 
+ 194 │             <TabsContent value="recentes">
+ 195 │               <div className="border border-gray-700 rounded-lg bg-[#0c1c36]/50 p-2 max-h-60 overflow-y-auto">
+ 196 │                 {recentFiles.length > 0 ? (
+ 197 │                   <div className="space-y-2">
+ 198 │                     {recentFiles.map((file, index) => (
+ 199 │                       <div
+ 200 │                         key={index}
+ 201 │                         className="flex items-center justify-between bg-[#0c1d35]/70 hover:bg-[#0c1d35] p-3 rounded-md cursor-pointer transition-colors"
+ 202 │                         onClick={() => handleUseRecentFile(file.name)}
+ 203 │                       >
+ 204 │                         <div className="flex items-center gap-3">
+ 205 │                           <div className="p-2 rounded-full bg-blue-500/10">
+ 206 │                             {file.icon}
+ 207 │                           </div>
+ 208 │                           <div className="flex flex-col">
+ 209 │                             <span className="text-sm text-gray-200">{file.name}</span>
+ 210 │                             <span className="text-xs text-gray-400">{file.date}</span>
+ 211 │                           </div>
+ 212 │                         </div>
+ 213 │                         <Button
+ 214 │                           variant="ghost"
+ 215 │                           size="sm"
+ 216 │                           className="h-8 w-8 rounded-full hover:bg-blue-500/10"
+ 217 │                         >
+ 218 │                           <ChevronRight className="h-4 w-4 text-blue-400" />
+ 219 │                         </Button>
+ 220 │                       </div>
+ 221 │                     ))}
+ 222 │                   </div>
+ 223 │                 ) : (
+ 224 │                   <div className="flex flex-col items-center justify-center py-8 text-center">
+ 225 │                     <Clock className="h-10 w-10 text-gray-500 mb-2" />
+ 226 │                     <p className="text-gray-400 text-sm">Nenhum arquivo recente</p>
+ 227 │                     <p className="text-gray-500 text-xs mt-1">
+ 228 │                       Você ainda não importou nenhum arquivo
+ 229 │                     </p>
+ 230 │                     <p className="text-gray-500 text-xs mt-1">
+ 231 │                       Os arquivos que você enviar aparecerão aqui para acesso rápido
+ 232 │                     </p>
+ 233 │                   </div>
+ 234 │                 )}
+ 235 │               </div>
+ 236 │             </TabsContent>
+ 237 │ 
+ 238 │             <TabsContent value="servicos">
+ 239 │               <div className="grid grid-cols-1 gap-3">
+ 240 │                 <div 
+ 241 │                   className="flex items-center justify-between bg-[#0c1d35]/70 hover:bg-[#0c1d35] p-4 rounded-md cursor-pointer transition-colors"
+ 242 │                   onClick={() => handleConnectService("Google Drive")}
+ 243 │                 >
+ 244 │                   <div className="flex items-center gap-3">
+ 245 │                     <div className="p-2 rounded-full bg-blue-500/10">
+ 246 │                       <GoogleIcon />
+ 247 │                     </div>
+ 248 │                     <span className="text-gray-200">Conectar com o Google Drive</span>
+ 249 │                   </div>
+ 250 │                   <ChevronRight className="h-4 w-4 text-blue-400" />
+ 251 │                 </div>
+ 252 │ 
+ 253 │                 <div 
+ 254 │                   className="flex items-center justify-between bg-[#0c1d35]/70 hover:bg-[#0c1d35] p-4 rounded-md cursor-pointer transition-colors"
+ 255 │                   onClick={() => handleConnectService("Microsoft OneDrive")}
+ 256 │                 >
+ 257 │                   <div className="flex items-center gap-3">
+ 258 │                     <div className="p-2 rounded-full bg-blue-500/10">
+ 259 │                       <MicrosoftIcon />
+ 260 │                     </div>
+ 261 │                     <span className="text-gray-200">Conectar com o Microsoft OneDrive</span>
+ 262 │                   </div>
+ 263 │                   <ChevronRight className="h-4 w-4 text-blue-400" />
+ 264 │                 </div>
+ 265 │               </div>
+ 266 │             </TabsContent>
+ 267 │           </Tabs>
+ 268 │ 
+ 269 │           {files.length > 0 && (
+ 270 │             <div className="mt-2">
+ 271 │               <p className="text-sm text-gray-300 mb-2">
+ 272 │                 Arquivos selecionados ({files.length})
+ 273 │               </p>
+ 274 │               <div className="max-h-32 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+ 275 │                 {files.map((file, index) => (
+ 276 │                   <div
+ 277 │                     key={index}
+ 278 │                     className="flex items-center justify-between bg-gray-800/50 p-2 rounded-md text-sm"
+ 279 │                   >
+ 280 │                     <div className="flex items-center gap-2">
+ 281 │                       <File className="h-4 w-4 text-blue-400" />
+ 282 │                       <span className="truncate max-w-[200px]">
+ 283 │                         {file.name}
+ 284 │                       </span>
+ 285 │                     </div>
+ 286 │                     <Button
+ 287 │                       variant="ghost"
+ 288 │                       size="icon"
+ 289 │                       className="h-6 w-6 text-gray-400 hover:text-red-400 hover:bg-red-500/10"
+ 290 │                       onClick={(e) => {
+ 291 │                         e.stopPropagation();
+ 292 │                         handleRemoveFile(index);
+ 293 │                       }}
+ 294 │                     >
+ 295 │                       <X className="h-3 w-3" />
+ 296 │                     </Button>
+ 297 │                   </div>
+ 298 │                 ))}
+ 299 │               </div>
+ 300 │             </div>
+ 301 │           )}
+ 302 │ 
+ 303 │           <div className="flex justify-end gap-2 mt-2">
+ 304 │             <Button
+ 305 │               variant="outline"
+ 306 │               onClick={() => onOpenChange(false)}
+ 307 │               className="text-gray-300 border-gray-700 hover:bg-gray-800"
+ 308 │             >
+ 309 │               Cancelar
+ 310 │             </Button>
+ 311 │             <Button
+ 312 │               onClick={handleUpload}
+ 313 │               disabled={files.length === 0}
+ 314 │               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+ 315 │             >
+ 316 │               Enviar
+ 317 │             </Button>
+ 318 │           </div>
+ 319 │         </div>
+ 320 │       </DialogContent>
+ 321 │     </Dialog>
+ 322 │   );
+ 323 │ };
+ 324 │ 
+ 325 │ export default UploadModal;
+ 326 │ 
+ 327 │ import React, { useState, useRef } from "react";
+ 328 │ import { Plus } from "lucide-react";
+ 329 │ import { motion } from "framer-motion";
+     ·          ───┬──
+     ·             ╰── `motion` redefined here
+ 330 │ import UploadModal from "./upload-modal";
+ 331 │ 
+ 332 │ interface AddButtonProps {
+     ╰────
+
+  × the name `UploadModal` is defined multiple times
+     ╭─[/home/runner/workspace/src/components/ui/upload-modal.tsx:30:1]
+  30 │   </svg>
+  31 │ );
+  32 │ 
+  33 │ const UploadModal: React.FC<UploadModalProps> = ({
+     ·       ─────┬─────
+     ·            ╰── previous definition of `UploadModal` here
+  34 │   open,
+  35 │   onOpenChange,
+  36 │   onUpload,
+  37 │ }) => {
+  38 │   const [files, setFiles] = useState<File[]>([]);
+  39 │   const [isDragging, setIsDragging] = useState(false);
+  40 │   const [activeTab, setActiveTab] = useState<string>("upload");
+  41 │   const [recentFiles, setRecentFiles] = useState<{ name: string, date: string, type: string, icon: React.ReactNode }[]>([]);
+  42 │   const fileInputRef = useRef<HTMLInputElement>(null);
+  43 │ 
+  44 │   // Carregar arquivos recentes (deixando vazio por enquanto)
+  45 │   useEffect(() => {
+  46 │     // Em uma implementação real, aqui seria o código para buscar
+  47 │     // arquivos recentes do localStorage ou de uma API
+  48 │ 
+  49 │     const savedFiles = localStorage.getItem('recentFiles');
+  50 │     if (savedFiles) {
+  51 │       const parsedFiles = JSON.parse(savedFiles);
+  52 │       //Convert parsedFiles to the correct type.  This assumes the structure from AddButton
+  53 │       const recentFilesArray: { name: string; date: string; type: string; icon: React.ReactNode }[] = parsedFiles.map(file => ({...file, icon: <File className="h-4 w-4 text-blue-400" />}))
+  54 │       setRecentFiles(recentFilesArray);
+  55 │     }
+  56 │ 
+  57 │   }, []);
+  58 │ 
+  59 │   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  60 │     if (e.target.files) {
+  61 │       const newFiles = Array.from(e.target.files);
+  62 │       setFiles((prev) => [...prev, ...newFiles]);
+  63 │     }
+  64 │   };
+  65 │ 
+  66 │   const handleDragOver = (e: React.DragEvent) => {
+  67 │     e.preventDefault();
+  68 │     setIsDragging(true);
+  69 │   };
+  70 │ 
+  71 │   const handleDragLeave = () => {
+  72 │     setIsDragging(false);
+  73 │   };
+  74 │ 
+  75 │   const handleDrop = (e: React.DragEvent) => {
+  76 │     e.preventDefault();
+  77 │     setIsDragging(false);
+  78 │     if (e.dataTransfer.files) {
+  79 │       const newFiles = Array.from(e.dataTransfer.files);
+  80 │       setFiles((prev) => [...prev, ...newFiles]);
+  81 │     }
+  82 │   };
+  83 │ 
+  84 │   const handleRemoveFile = (index: number) => {
+  85 │     setFiles((prev) => prev.filter((_, i) => i !== index));
+  86 │   };
+  87 │ 
+  88 │   const handleUpload = () => {
+  89 │     if (onUpload && files.length > 0) {
+  90 │       onUpload(files);
+  91 │       setFiles([]);
+  92 │       onOpenChange(false);
+  93 │ 
+  94 │       // Aqui seria onde você salvaria os arquivos na lista de recentes
+  95 │       // em uma implementação real
+  96 │       const recentFilesToSave = files.map(file => ({
+  97 │         name: file.name,
+  98 │         date: "Hoje",
+  99 │         type: file.type,
+ 100 │         size: file.size
+ 101 │       }));
+ 102 │ 
+ 103 │       const existingFilesJson = localStorage.getItem('recentFiles');
+ 104 │       let existingFiles = existingFilesJson ? JSON.parse(existingFilesJson) : [];
+ 105 │       const updatedFiles = [...recentFilesToSave, ...existingFiles].slice(0, 10);
+ 106 │       localStorage.setItem('recentFiles', JSON.stringify(updatedFiles));
+ 107 │     }
+ 108 │   };
+ 109 │ 
+ 110 │   const openFileDialog = () => {
+ 111 │     if (fileInputRef.current) {
+ 112 │       fileInputRef.current.click();
+ 113 │     }
+ 114 │   };
+ 115 │ 
+ 116 │   const handleUseRecentFile = (fileName: string) => {
+ 117 │     // Lógica para usar um arquivo recente
+ 118 │     // Em uma implementação real, você buscaria o arquivo de um cache ou storage
+ 119 │     console.log(`Usando arquivo recente: ${fileName}`);
+ 120 │     // Simular adição do arquivo à lista de arquivos selecionados
+ 121 │     const mockFile = new File([""], fileName, { type: "application/octet-stream" });
+ 122 │     setFiles(prev => [...prev, mockFile]);
+ 123 │   };
+ 124 │ 
+ 125 │   const handleConnectService = (service: string) => {
+ 126 │     // Implementação futura da conexão com serviços de cloud
+ 127 │     console.log(`Conectando com ${service}...`);
+ 128 │     // Esta seria uma implementação real de autenticação com o serviço
+ 129 │   };
+ 130 │ 
+ 131 │   return (
+ 132 │     <Dialog open={open} onOpenChange={onOpenChange}>
+ 133 │       <DialogContent className="sm:max-w-md bg-gradient-to-b from-[#0c1c36] to-[#0a1625] border border-blue-500/20 text-white rounded-xl shadow-xl">
+ 134 │         <div className="flex flex-col gap-4">
+ 135 │           <div className="text-center">
+ 136 │             <h3 className="font-medium text-lg bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+ 137 │               Carregar Arquivos
+ 138 │             </h3>
+ 139 │             <p className="text-gray-400 text-sm mt-1">
+ 140 │               Selecione ou arraste os arquivos para upload
+ 141 │             </p>
+ 142 │           </div>
+ 143 │ 
+ 144 │           <Tabs defaultValue="upload" value={activeTab} onValueChange={setActiveTab} className="w-full">
+ 145 │             <TabsList className="grid grid-cols-3 mb-4 bg-[#0c1c36]/50 border border-blue-900/30">
+ 146 │               <TabsTrigger value="upload" className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400">
+ 147 │                 Upload
+ 148 │               </TabsTrigger>
+ 149 │               <TabsTrigger value="recentes" className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400">
+ 150 │                 Recentes
+ 151 │               </TabsTrigger>
+ 152 │               <TabsTrigger value="servicos" className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400">
+ 153 │                 Serviços
+ 154 │               </TabsTrigger>
+ 155 │             </TabsList>
+ 156 │ 
+ 157 │             <TabsContent value="upload">
+ 158 │               <div
+ 159 │                 className={`border-2 border-dashed rounded-lg p-6 transition-all ${
+ 160 │                   isDragging
+ 161 │                     ? "border-blue-500 bg-blue-500/10"
+ 162 │                     : "border-gray-600 hover:border-blue-500/50 hover:bg-blue-500/5"
+ 163 │                 }`}
+ 164 │                 onDragOver={handleDragOver}
+ 165 │                 onDragLeave={handleDragLeave}
+ 166 │                 onDrop={handleDrop}
+ 167 │                 onClick={openFileDialog}
+ 168 │               >
+ 169 │                 <input
+ 170 │                   type="file"
+ 171 │                   ref={fileInputRef}
+ 172 │                   className="hidden"
+ 173 │                   onChange={handleFileChange}
+ 174 │                   multiple
+ 175 │                 />
+ 176 │                 <div className="flex flex-col items-center gap-2 cursor-pointer">
+ 177 │                   <motion.div
+ 178 │                     className="p-2 rounded-full bg-blue-500/20"
+ 179 │                     whileHover={{ scale: 1.05 }}
+ 180 │                     whileTap={{ scale: 0.95 }}
+ 181 │                   >
+ 182 │                     <Upload className="h-6 w-6 text-blue-400" />
+ 183 │                   </motion.div>
+ 184 │                   <p className="text-sm font-medium text-gray-300">
+ 185 │                     Clique ou arraste arquivos para esta área
+ 186 │                   </p>
+ 187 │                   <p className="text-xs text-gray-500">
+ 188 │                     Suporta PDFs, imagens, documentos e mais
+ 189 │                   </p>
+ 190 │                 </div>
+ 191 │               </div>
+ 192 │             </TabsContent>
+ 193 │ 
+ 194 │             <TabsContent value="recentes">
+ 195 │               <div className="border border-gray-700 rounded-lg bg-[#0c1c36]/50 p-2 max-h-60 overflow-y-auto">
+ 196 │                 {recentFiles.length > 0 ? (
+ 197 │                   <div className="space-y-2">
+ 198 │                     {recentFiles.map((file, index) => (
+ 199 │                       <div
+ 200 │                         key={index}
+ 201 │                         className="flex items-center justify-between bg-[#0c1d35]/70 hover:bg-[#0c1d35] p-3 rounded-md cursor-pointer transition-colors"
+ 202 │                         onClick={() => handleUseRecentFile(file.name)}
+ 203 │                       >
+ 204 │                         <div className="flex items-center gap-3">
+ 205 │                           <div className="p-2 rounded-full bg-blue-500/10">
+ 206 │                             {file.icon}
+ 207 │                           </div>
+ 208 │                           <div className="flex flex-col">
+ 209 │                             <span className="text-sm text-gray-200">{file.name}</span>
+ 210 │                             <span className="text-xs text-gray-400">{file.date}</span>
+ 211 │                           </div>
+ 212 │                         </div>
+ 213 │                         <Button
+ 214 │                           variant="ghost"
+ 215 │                           size="sm"
+ 216 │                           className="h-8 w-8 rounded-full hover:bg-blue-500/10"
+ 217 │                         >
+ 218 │                           <ChevronRight className="h-4 w-4 text-blue-400" />
+ 219 │                         </Button>
+ 220 │                       </div>
+ 221 │                     ))}
+ 222 │                   </div>
+ 223 │                 ) : (
+ 224 │                   <div className="flex flex-col items-center justify-center py-8 text-center">
+ 225 │                     <Clock className="h-10 w-10 text-gray-500 mb-2" />
+ 226 │                     <p className="text-gray-400 text-sm">Nenhum arquivo recente</p>
+ 227 │                     <p className="text-gray-500 text-xs mt-1">
+ 228 │                       Você ainda não importou nenhum arquivo
+ 229 │                     </p>
+ 230 │                     <p className="text-gray-500 text-xs mt-1">
+ 231 │                       Os arquivos que você enviar aparecerão aqui para acesso rápido
+ 232 │                     </p>
+ 233 │                   </div>
+ 234 │                 )}
+ 235 │               </div>
+ 236 │             </TabsContent>
+ 237 │ 
+ 238 │             <TabsContent value="servicos">
+ 239 │               <div className="grid grid-cols-1 gap-3">
+ 240 │                 <div 
+ 241 │                   className="flex items-center justify-between bg-[#0c1d35]/70 hover:bg-[#0c1d35] p-4 rounded-md cursor-pointer transition-colors"
+ 242 │                   onClick={() => handleConnectService("Google Drive")}
+ 243 │                 >
+ 244 │                   <div className="flex items-center gap-3">
+ 245 │                     <div className="p-2 rounded-full bg-blue-500/10">
+ 246 │                       <GoogleIcon />
+ 247 │                     </div>
+ 248 │                     <span className="text-gray-200">Conectar com o Google Drive</span>
+ 249 │                   </div>
+ 250 │                   <ChevronRight className="h-4 w-4 text-blue-400" />
+ 251 │                 </div>
+ 252 │ 
+ 253 │                 <div 
+ 254 │                   className="flex items-center justify-between bg-[#0c1d35]/70 hover:bg-[#0c1d35] p-4 rounded-md cursor-pointer transition-colors"
+ 255 │                   onClick={() => handleConnectService("Microsoft OneDrive")}
+ 256 │                 >
+ 257 │                   <div className="flex items-center gap-3">
+ 258 │                     <div className="p-2 rounded-full bg-blue-500/10">
+ 259 │                       <MicrosoftIcon />
+ 260 │                     </div>
+ 261 │                     <span className="text-gray-200">Conectar com o Microsoft OneDrive</span>
+ 262 │                   </div>
+ 263 │                   <ChevronRight className="h-4 w-4 text-blue-400" />
+ 264 │                 </div>
+ 265 │               </div>
+ 266 │             </TabsContent>
+ 267 │           </Tabs>
+ 268 │ 
+ 269 │           {files.length > 0 && (
+ 270 │             <div className="mt-2">
+ 271 │               <p className="text-sm text-gray-300 mb-2">
+ 272 │                 Arquivos selecionados ({files.length})
+ 273 │               </p>
+ 274 │               <div className="max-h-32 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+ 275 │                 {files.map((file, index) => (
+ 276 │                   <div
+ 277 │                     key={index}
+ 278 │                     className="flex items-center justify-between bg-gray-800/50 p-2 rounded-md text-sm"
+ 279 │                   >
+ 280 │                     <div className="flex items-center gap-2">
+ 281 │                       <File className="h-4 w-4 text-blue-400" />
+ 282 │                       <span className="truncate max-w-[200px]">
+ 283 │                         {file.name}
+ 284 │                       </span>
+ 285 │                     </div>
+ 286 │                     <Button
+ 287 │                       variant="ghost"
+ 288 │                       size="icon"
+ 289 │                       className="h-6 w-6 text-gray-400 hover:text-red-400 hover:bg-red-500/10"
+ 290 │                       onClick={(e) => {
+ 291 │                         e.stopPropagation();
+ 292 │                         handleRemoveFile(index);
+ 293 │                       }}
+ 294 │                     >
+ 295 │                       <X className="h-3 w-3" />
+ 296 │                     </Button>
+ 297 │                   </div>
+ 298 │                 ))}
+ 299 │               </div>
+ 300 │             </div>
+ 301 │           )}
+ 302 │ 
+ 303 │           <div className="flex justify-end gap-2 mt-2">
+ 304 │             <Button
+ 305 │               variant="outline"
+ 306 │               onClick={() => onOpenChange(false)}
+ 307 │               className="text-gray-300 border-gray-700 hover:bg-gray-800"
+ 308 │             >
+ 309 │               Cancelar
+ 310 │             </Button>
+ 311 │             <Button
+ 312 │               onClick={handleUpload}
+ 313 │               disabled={files.length === 0}
+ 314 │               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+ 315 │             >
+ 316 │               Enviar
+ 317 │             </Button>
+ 318 │           </div>
+ 319 │         </div>
+ 320 │       </DialogContent>
+ 321 │     </Dialog>
+ 322 │   );
+ 323 │ };
+ 324 │ 
+ 325 │ export default UploadModal;
+ 326 │ 
+ 327 │ import React, { useState, useRef } from "react";
+ 328 │ import { Plus } from "lucide-react";
+ 329 │ import { motion } from "framer-motion";
+ 330 │ import UploadModal from "./upload-modal";
+     ·        ─────┬─────
+     ·             ╰── `UploadModal` redefined here
+ 331 │ 
+ 332 │ interface AddButtonProps {
+ 333 │   onFilesSelected?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+     ╰────
+
+  × the name `default` is exported multiple times
+     ╭─[/home/runner/workspace/src/components/ui/upload-modal.tsx:322:1]
+ 322 │   );
+ 323 │ };
+ 324 │ 
+ 325 │ export default UploadModal;
+     · ─────────────┬─────────────
+     ·              ╰── previous exported here
+ 326 │ 
+ 327 │ import React, { useState, useRef } from "react";
+ 328 │ import { Plus } from "lucide-react";
+ 329 │ import { motion } from "framer-motion";
+ 330 │ import UploadModal from "./upload-modal";
+ 331 │ 
+ 332 │ interface AddButtonProps {
+ 333 │   onFilesSelected?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+ 334 │   fileInputRef?: React.RefObject<HTMLInputElement>;
+ 335 │   isDisabled?: boolean;
+ 336 │ }
+ 337 │ 
+ 338 │ const AddButton: React.FC<AddButtonProps> = ({ onFilesSelected, fileInputRef, isDisabled }) => {
+ 339 │   const [showUploadModal, setShowUploadModal] = useState(false);
+ 340 │ 
+ 341 │   const handleUpload = (files: File[]) => {
+ 342 │     // Criar um evento sintético para simular uma seleção de arquivo
+ 343 │     const syntheticEvent = {
+ 344 │       target: {
+ 345 │         files: files
+ 346 │       }
+ 347 │     } as unknown as React.ChangeEvent<HTMLInputElement>;
+ 348 │ 
+ 349 │     if (onFilesSelected) {
+ 350 │       onFilesSelected(syntheticEvent);
+ 351 │     }
+ 352 │ 
+ 353 │     // Fechar o modal após enviar os arquivos
+ 354 │     setShowUploadModal(false);
+ 355 │ 
+ 356 │     console.log("Arquivos enviados:", files);
+ 357 │ 
+ 358 │     // Implementação do salvamento dos arquivos na lista de recentes
+ 359 │     if (files.length > 0) {
+ 360 │       // Converter Files para objetos serializáveis
+ 361 │       const recentFilesToSave = files.map(file => ({
+ 362 │         name: file.name,
+ 363 │         date: "Hoje",
+ 364 │         type: file.type,
+ 365 │         size: file.size
+ 366 │       }));
+ 367 │ 
+ 368 │       // Obter arquivos existentes
+ 369 │       const existingFilesJson = localStorage.getItem('recentFiles');
+ 370 │       let existingFiles = existingFilesJson ? JSON.parse(existingFilesJson) : [];
+ 371 │ 
+ 372 │       // Adicionar novos arquivos no início da lista (mais recentes primeiro)
+ 373 │       const updatedFiles = [...recentFilesToSave, ...existingFiles].slice(0, 10); // limitar a 10
+ 374 │ 
+ 375 │       // Salvar no localStorage
+ 376 │       localStorage.setItem('recentFiles', JSON.stringify(updatedFiles));
+ 377 │       console.log("Arquivos recentes salvos no localStorage");
+ 378 │     }
+ 379 │   };
+ 380 │ 
+ 381 │   return (
+ 382 │     <>
+ 383 │       <Button onClick={() => setShowUploadModal(true)} disabled={isDisabled}>
+ 384 │         <Plus className="h-4 w-4 mr-2" /> Adicionar Arquivos
+ 385 │       </Button>
+ 386 │       <AnimatePresence>
+ 387 │         {showUploadModal && (
+ 388 │           <UploadModal
+ 389 │             open={showUploadModal}
+ 390 │             onOpenChange={setShowUploadModal}
+ 391 │             onUpload={handleUpload}
+ 392 │           />
+ 393 │         )}
+ 394 │       </AnimatePresence>
+ 395 │     </>
+ 396 │   );
+ 397 │ };
+ 398 │ 
+ 399 │ export default AddButton;
+     · ────────────┬────────────
+     ·             ╰── exported more than once
+     ╰────
+
+Error: 
+  ☞ Exported identifiers must be unique
+/home/runner/workspace/src/components/ui/upload-modal.tsx:1:1
+1  |  import React, { useState, useRef, useEffect } from "react";
+   |   ^
+2  |  import { motion, AnimatePresence } from "framer-motion";
+3  |  import { Button } from "@/components/ui/button";
