@@ -100,11 +100,50 @@
 .personalidades-dropdown,
 .group:hover .personalidades-dropdown,
 [role="menu"].personalidades-dropdown {
-  z-index: 999999 !important;
+  z-index: 9999999 !important;
   position: absolute !important;
   width: 100% !important;
   min-width: 200px !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+  animation: fadeIn 0.2s ease-out;
+  transform-origin: top center;
+  pointer-events: auto !important;
+}
+
+/* Camada de isolamento para o dropdown de personalidades */
+.personalidades-root {
+  position: relative !important;
+  isolation: isolate !important;
+  z-index: 9999999 !important;
+}
+
+/* Container do dropdown precisa estar por cima de tudo */
+.personalidades-button {
+  position: relative !important;
+  z-index: 9999998 !important;
+}
+
+/* Garantir que o dropdown esteja visível e clicável */
+.personalidades-dropdown button {
+  position: relative !important;
+  z-index: 9999999 !important;
+  width: 100% !important;
+  cursor: pointer !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Resolver conflitos de camadas com outros componentes */
+.personalidades-dropdown::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+
+/* Suporte para portais do Radix UI */
+[data-radix-popper-content-wrapper] {
+  z-index: 9999999 !important;
 }
 
 /* Garantir que todos os botões são clicáveis */

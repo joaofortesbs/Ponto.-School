@@ -1,36 +1,64 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { User } from 'lucide-react';
+import PersonalidadesDropdown from './PersonalidadesDropdown';
 
-import React, { useState, useRef } from "react";
-import { User, ChevronDown } from "lucide-react";
-import PersonalidadesDropdown from "./PersonalidadesDropdown";
-
-interface PersonalidadesIconProps {
-  onClick?: () => void;
-}
-
-const PersonalidadesIcon: React.FC<PersonalidadesIconProps> = ({ onClick }) => {
+const PersonalidadesIcon: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [selectedPersonality, setSelectedPersonality] = useState('estudante');
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const handleClick = () => {
-    setIsDropdownOpen((prev) => !prev);
-    if (onClick) onClick();
+  const handleSelectPersonality = (personality: string) => {
+    setSelectedPersonality(personality);
+    setIsDropdownOpen(false);
   };
 
+  // Fechar o dropdown quando clicar fora dele
+  useEffect(() => {
+    if (!isDropdownOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current && 
+        buttonRef.current && 
+        !dropdownRef.current.contains(event.target as Node) && 
+        !buttonRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
+
   return (
-    <div className="relative" ref={containerRef}>
-      <div 
-        className="flex items-center bg-[#0D23A0] px-3 py-1.5 rounded-full cursor-pointer hover:bg-[#0A1C80] transition-colors"
-        onClick={handleClick}
+    <div className="relative dropdown-isolate personalidades-root" style={{ zIndex: 999998 }}>
+      <button
+        ref={buttonRef}
+        className="personalidades-button flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-md transition-colors"
+        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+        aria-expanded={isDropdownOpen}
+        aria-haspopup="menu"
       >
-        <User className="h-4 w-4 text-white mr-1.5" />
-        <span className="text-white text-sm font-medium">Personalidades</span>
-        <ChevronDown className="h-3.5 w-3.5 ml-1 text-white" />
-      </div>
-      
-      <div className="absolute left-0 transform">
-        <PersonalidadesDropdown 
-          isOpen={isDropdownOpen} 
-          onClose={() => setIsDropdownOpen(false)} 
+        <User className="h-5 w-5" />
+        <span>Personalidades</span>
+        <svg
+          className={`h-4 w-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      <div ref={dropdownRef}>
+        <PersonalidadesDropdown
+          isOpen={isDropdownOpen}
+          onSelectPersonality={handleSelectPersonality}
         />
       </div>
     </div>
@@ -38,3 +66,4 @@ const PersonalidadesIcon: React.FC<PersonalidadesIconProps> = ({ onClick }) => {
 };
 
 export default PersonalidadesIcon;
+export { PersonalidadesIcon };
