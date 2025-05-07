@@ -12,6 +12,16 @@ const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
+  files?: FileAttachment[];
+}
+
+// Interface para anexos de arquivo
+export interface FileAttachment {
+  name: string;
+  type: string;
+  size: number;
+  content?: string; // Conteúdo do arquivo em base64 ou texto
+  url?: string;     // URL para o arquivo (se disponível)
 }
 
 // Histórico de conversas
@@ -430,8 +440,68 @@ Lá você poderá atualizar seu telefone, localização e outras informações d
       initializeConversationHistory(sessionId, userContext);
     }
 
+    // Processar arquivos se existirem
+    let fileAttachments: FileAttachment[] = [];
+    
+    if (options?.files && options.files.length > 0) {
+      fileAttachments = await Promise.all(
+        options.files.map(async (file) => {
+          // Extrair informações básicas do arquivo
+          const attachment: FileAttachment = {
+            name: file.name,
+            type: file.type,
+            size: file.size
+          };
+          
+          // Processar conteúdo do arquivo se for texto ou imagem pequena
+          if (file.type.includes('text/') || file.size < 500000) { // Limitar a 500KB
+            try {
+              if (file.type.includes('text/')) {
+                // Ler conteúdo de texto
+                const text = await file.text();
+                attachment.content = text;
+              } else if (file.type.includes('image/')) {
+                // Converter imagem para base64
+                const reader = new FileReader();
+                const base64 = await new Promise<string>((resolve) => {
+                  reader.onload = () => resolve(reader.result as string);
+                  reader.readAsDataURL(file);
+                });
+                attachment.content = base64;
+              }
+            } catch (error) {
+              console.error("Erro ao processar conteúdo do arquivo:", error);
+            }
+          }
+          
+          return attachment;
+        })
+      );
+    }
+    
+    // Construir mensagem com informações sobre arquivos anexados
+    let userContent = message;
+    
+    if (fileAttachments.length > 0) {
+      // Adicionar informações sobre os arquivos à mensagem
+      userContent += `\n\n[Arquivos anexados (${fileAttachments.length})]:`;
+      
+      fileAttachments.forEach((file, index) => {
+        userContent += `\n${index + 1}. ${file.name} (${file.type}, ${Math.round(file.size / 1024)} KB)`;
+        
+        // Adicionar conteúdo do arquivo se disponível
+        if (file.content && file.type.includes('text/')) {
+          userContent += `\nConteúdo do arquivo: \n---\n${file.content.substring(0, 1500)}${file.content.length > 1500 ? '...' : ''}\n---`;
+        }
+      });
+    }
+
     // Adiciona a mensagem do usuário ao histórico
-    conversationHistory[sessionId].push({ role: 'user', content: message });
+    conversationHistory[sessionId].push({ 
+      role: 'user', 
+      content: userContent,
+      files: fileAttachments
+    });
 
     // Limita o histórico para evitar exceder os limites da API
     if (conversationHistory[sessionId].length > 10) {
@@ -919,7 +989,8 @@ export async function generateAIResponse(
     intelligenceLevel?: 'basic' | 'normal' | 'advanced',
     languageStyle?: 'casual' | 'formal' | 'technical',
     detailedResponse?: boolean,
-    maximumLength?: boolean
+    maximumLength?: boolean,
+    files?: File[]
   }
 ): Promise<string> {
   try {

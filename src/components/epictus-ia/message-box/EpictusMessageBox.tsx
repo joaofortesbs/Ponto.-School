@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Send, Plus, Mic, Loader2, Brain, BookOpen, AlignJustify, RotateCw, Search, Image, Lightbulb, PenLine } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { Send, Plus, Mic, Loader2, Brain, BookOpen, AlignJustify, RotateCw, Search, Image, Lightbulb, PenLine, FileIcon, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import AddButton from "@/components/ui/add-button";
 interface EpictusMessageBoxProps {
   inputMessage: string;
   setInputMessage: (value: string) => void;
-  handleSendMessage: () => void;
+  handleSendMessage: (message: string, files: File[]) => void; // Updated function signature
   isTyping: boolean;
   charCount: number;
   MAX_CHARS: number;
@@ -29,6 +29,56 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
   handleKeyDown,
   handleButtonClick
 }) => {
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSendMessage = () => {
+    if (inputMessage.trim() !== '' || selectedFiles.length > 0) {
+      handleSendMessage(inputMessage, selectedFiles);
+      setInputMessage('');
+      setSelectedFiles([]);
+
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+      }
+    }
+  };
+
+  const handleFileUpload = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      setSelectedFiles(prev => [...prev, ...files]);
+
+      // Limpar o input para permitir selecionar o mesmo arquivo novamente
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles(files => files.filter((_, i) => i !== index));
+  };
+
+  const getFileIcon = (file: File) => {
+    if (file.type.includes('image/')) {
+      return <Image className="h-4 w-4 text-blue-400" />;
+    } else if (file.type.includes('application/pdf')) {
+      return <FileIcon className="h-4 w-4 text-red-400" />;
+    } else if (file.type.includes('document') || file.type.includes('word')) {
+      return <FileIcon className="h-4 w-4 text-green-400" />;
+    } else {
+      return <FileIcon className="h-4 w-4 text-gray-400" />;
+    }
+  };
+
   return (
     <motion.div 
       className="relative w-[60%] h-auto mx-auto bg-transparent rounded-2xl shadow-xl 
@@ -110,16 +160,36 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
 
         {/* Área de input */}
         <div className="flex items-center gap-2">
-          <AddButton 
-            onFileUpload={(files) => {
-              // Aqui você pode implementar a lógica para lidar com os arquivos enviados
-              toast({
-                title: `${files.length} arquivo(s) enviado(s) com sucesso`,
-                description: "Os arquivos serão processados em breve.",
-              });
-            }} 
-          />
+          {/* Exibir arquivos selecionados */}
+          {selectedFiles.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2 mb-2">
+              {selectedFiles.map((file, index) => (
+                <div 
+                  key={index} 
+                  className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-xs"
+                >
+                  {getFileIcon(file)}
+                  <span className="max-w-[150px] truncate">{file.name}</span>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-4 w-4 p-0 hover:bg-red-100 dark:hover:bg-red-900/30"
+                    onClick={() => handleRemoveFile(index)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
 
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            className="hidden" 
+            multiple 
+            onChange={handleFileChange}
+          />
           <div className={`relative flex-grow overflow-hidden 
                           bg-gradient-to-r from-[#0c2341]/30 to-[#0f3562]/30 
                           rounded-xl border ${isTyping ? 'border-[#1230CC]/70' : 'border-white/10'} 

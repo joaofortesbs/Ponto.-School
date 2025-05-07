@@ -23,6 +23,7 @@ export default function ChatEpictus() {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
   // Scroll para o final das mensagens quando novas mensagens são adicionadas
   useEffect(() => {
@@ -33,8 +34,13 @@ export default function ChatEpictus() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUploadedFiles(Array.from(e.target.files || []));
+  };
+
+
   const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
+    if (!inputMessage.trim() && uploadedFiles.length === 0) return;
 
     // Adicionar mensagem do usuário
     const userMessage: IAMessage = {
@@ -42,18 +48,33 @@ export default function ChatEpictus() {
       content: inputMessage,
       role: "user",
       createdAt: new Date(),
+      files: uploadedFiles.length > 0 ? uploadedFiles.map(file => ({
+        name: file.name,
+        type: file.type,
+        size: file.size
+      })) : undefined
     };
 
     // Salvar a mensagem atual para enviar para API
     const currentMessage = inputMessage;
+    let messageWithFiles = currentMessage;
+
+    if (uploadedFiles.length > 0) {
+      messageWithFiles +=  messageWithFiles ? `\n\n` : '';
+      messageWithFiles += `Analisar os arquivos anexados (${uploadedFiles.length}):`;
+      uploadedFiles.forEach((file, index) => {
+        messageWithFiles += `\n${index + 1}. ${file.name} (${file.type})`;
+      });
+    }
 
     setMessages((prev) => [...prev, userMessage]);
     setInputMessage("");
+    setUploadedFiles([]);
     setIsTyping(true);
 
     try {
       // Buscar resposta da IA usando a API do Gemini
-      const aiResponse = await epictusIAService.getResponse(currentMessage);
+      const aiResponse = await generateAIResponse(messageWithFiles); // Placeholder function
 
       // Adicionar resposta da IA
       const assistantMessage: IAMessage = {
@@ -135,6 +156,10 @@ export default function ChatEpictus() {
             </p>
           </div>
         </div>
+        <input type="file" multiple onChange={handleFileChange} style={{display: 'none'}} id="fileInput"/>
+        <label htmlFor="fileInput" style={{cursor: 'pointer'}}>
+          <Button>Enviar Arquivo</Button>
+        </label>
       </div>
 
       {/* Área de mensagens */}
@@ -178,7 +203,13 @@ export default function ChatEpictus() {
                   }`}
                 >
                   {message.content}
-
+                  {message.files && (
+                    <ul>
+                      {message.files.map((file, index) => (
+                        <li key={index}>{file.name} ({file.type}, {file.size} bytes)</li>
+                      ))}
+                    </ul>
+                  )}
                   {message.role === "assistant" && (
                     <div className="mt-2 flex items-center justify-end gap-1.5">
                       <Button
@@ -217,3 +248,10 @@ export default function ChatEpictus() {
     </div>
   );
 }
+
+// Placeholder for the actual AI response generation function
+const generateAIResponse = async (message: string): Promise<string> => {
+  // Replace this with your actual AI service call
+  await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
+  return "Aqui está a resposta da IA para sua mensagem: " + message;
+};
