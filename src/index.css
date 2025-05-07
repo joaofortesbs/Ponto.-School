@@ -101,7 +101,18 @@
 .group:hover .personalidades-dropdown,
 [role="menu"].personalidades-dropdown {
   z-index: 999999 !important;
-  position: relative !important;
+  position: absolute !important;
+  width: 100% !important;
+  min-width: 200px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Garantir que todos os botões são clicáveis */
+.personalidades-dropdown button {
+  width: 100% !important;
+  cursor: pointer !important;
+  border-radius: 2px !important;
+  margin: 2px 0 !important;
 }
 
 /* Corrigir posicionamento dos elementos dropdown */
