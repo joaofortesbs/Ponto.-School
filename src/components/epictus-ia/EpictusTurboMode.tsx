@@ -11,37 +11,9 @@ const EpictusTurboMode: React.FC = () => {
   const { theme } = useTheme();
   const [isHovered, setIsHovered] = useState(false);
   const [animationComplete, setAnimationComplete] = useState(false);
-  // Perfil selecionado no dropdown de personalidades
-  const [profileIcon, setProfileIcon] = useState(
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-      <circle cx="12" cy="7" r="4"></circle>
-    </svg>
-  );
-  const [profileName, setProfileName] = useState("Personalidades");
-  const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
 
   // Adicionar estilos globais para garantir que o modal de personalidades fique por cima
-  useEffect(() => {
-    // Adicionar estilos CSS para os modais de personalidades
-    const style = document.createElement('style');
-    style.innerHTML = `
-      .personalidades-dropdown {
-        z-index: 9999 !important; 
-      }
-      [data-radix-popper-content-wrapper],
-      [role="dialog"],
-      .radix-dropdown-content,
-      .radix-dropdown-menu {
-        z-index: 9999 !important;
-      }
-    `;
-    document.head.appendChild(style);
-
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
+  // Removido código relacionado ao dropdown de personalidades
 
   useEffect(() => {
     // Trigger initial animation
@@ -245,37 +217,9 @@ const EpictusTurboMode: React.FC = () => {
             </div>
           </div>
 
-          {/* New header icons */}
+          {/* Header icons */}
           <div className="flex items-center justify-center z-10 relative gap-3">
-            {/* Personalidades dropdown */}
-            <div className="relative icon-container mr-5" style={{ zIndex: 99999, position: "relative" }}>
-              {/* Adicionando estado para controlar o dropdown */}
-              {useState && (() => {
-                const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-                
-                // Referência para detectar cliques fora do dropdown
-                const dropdownRef = React.useRef<HTMLDivElement>(null);
-                
-                // Fechar o dropdown apenas quando clicar fora dele
-                React.useEffect(() => {
-                  const handleClickOutside = (event: MouseEvent) => {
-                    if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                      setIsDropdownOpen(false);
-                    }
-                  };
-                  
-                  // Adicionando o evento apenas se o dropdown estiver aberto
-                  if (isDropdownOpen) {
-                    document.addEventListener('mousedown', handleClickOutside);
-                  }
-                  
-                  return () => {
-                    document.removeEventListener('mousedown', handleClickOutside);
-                  };
-                }, [dropdownRef, isDropdownOpen]);
-                
-                return (
-                  <div ref={dropdownRef}>
+            {/* Personalidades dropdown foi removido */}opdownRef}>
                     <motion.div
                       className="relative w-auto h-10 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#0055B8] flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-shadow px-3" 
                       whileHover={{ scale: 1.02 }}

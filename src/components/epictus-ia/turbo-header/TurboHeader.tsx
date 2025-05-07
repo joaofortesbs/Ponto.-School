@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import GlowingBackground from "./GlowingBackground";
 import LogoSection from "./LogoSection";
-import PersonalitiesDropdown from "./PersonalitiesDropdown";
 import { HeaderIcons } from "../modoepictusiabeta/header/icons";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -22,7 +21,7 @@ interface TurboHeaderProps {
 const TurboHeader: React.FC<TurboHeaderProps> = ({ 
   profileOptions,
   initialProfileIcon,
-  initialProfileName = "Personalidades" 
+  initialProfileName = "Epictus IA BETA" 
 }) => {
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
@@ -63,16 +62,11 @@ const TurboHeader: React.FC<TurboHeaderProps> = ({
         <LogoSection isHovered={isHovered} animationComplete={animationComplete} description="IA para geração de conversas impecáveis para o público estudantil!" />
 
         <div className="flex items-center justify-center z-10 relative gap-3">
-          <PersonalitiesDropdown 
-            profileIcon={profileIcon}
-            profileName={profileName}
-            profileOptions={profileOptions}
-          />
-
+          {/* PersonalitiesDropdown removed */}
           <HeaderIcons />
         </div>
       </motion.header>
-      
+
       <motion.button
         onClick={handleBackToEpictusIA}
         className="absolute left-6 z-20 p-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors flex items-center mt-2"
