@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -46,15 +45,15 @@ const UploadModal: React.FC<UploadModalProps> = ({
   useEffect(() => {
     // Em uma implementação real, aqui seria o código para buscar
     // arquivos recentes do localStorage ou de uma API
-    
-    // Por enquanto, deixamos a lista vazia até implementar a funcionalidade completa
-    setRecentFiles([]);
-    
-    // Exemplo de como seria com localStorage:
-    // const savedFiles = localStorage.getItem('recentFiles');
-    // if (savedFiles) {
-    //   setRecentFiles(JSON.parse(savedFiles));
-    // }
+
+    const savedFiles = localStorage.getItem('recentFiles');
+    if (savedFiles) {
+      const parsedFiles = JSON.parse(savedFiles);
+      //Convert parsedFiles to the correct type.  This assumes the structure from AddButton
+      const recentFilesArray: { name: string; date: string; type: string; icon: React.ReactNode }[] = parsedFiles.map(file => ({...file, icon: <File className="h-4 w-4 text-blue-400" />}))
+      setRecentFiles(recentFilesArray);
+    }
+
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,9 +90,20 @@ const UploadModal: React.FC<UploadModalProps> = ({
       onUpload(files);
       setFiles([]);
       onOpenChange(false);
-      
+
       // Aqui seria onde você salvaria os arquivos na lista de recentes
       // em uma implementação real
+      const recentFilesToSave = files.map(file => ({
+        name: file.name,
+        date: "Hoje",
+        type: file.type,
+        size: file.size
+      }));
+
+      const existingFilesJson = localStorage.getItem('recentFiles');
+      let existingFiles = existingFilesJson ? JSON.parse(existingFilesJson) : [];
+      const updatedFiles = [...recentFilesToSave, ...existingFiles].slice(0, 10);
+      localStorage.setItem('recentFiles', JSON.stringify(updatedFiles));
     }
   };
 
@@ -313,3 +323,77 @@ const UploadModal: React.FC<UploadModalProps> = ({
 };
 
 export default UploadModal;
+
+import React, { useState, useRef } from "react";
+import { Plus } from "lucide-react";
+import { motion } from "framer-motion";
+import UploadModal from "./upload-modal";
+
+interface AddButtonProps {
+  onFilesSelected?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  fileInputRef?: React.RefObject<HTMLInputElement>;
+  isDisabled?: boolean;
+}
+
+const AddButton: React.FC<AddButtonProps> = ({ onFilesSelected, fileInputRef, isDisabled }) => {
+  const [showUploadModal, setShowUploadModal] = useState(false);
+
+  const handleUpload = (files: File[]) => {
+    // Criar um evento sintético para simular uma seleção de arquivo
+    const syntheticEvent = {
+      target: {
+        files: files
+      }
+    } as unknown as React.ChangeEvent<HTMLInputElement>;
+
+    if (onFilesSelected) {
+      onFilesSelected(syntheticEvent);
+    }
+
+    // Fechar o modal após enviar os arquivos
+    setShowUploadModal(false);
+
+    console.log("Arquivos enviados:", files);
+
+    // Implementação do salvamento dos arquivos na lista de recentes
+    if (files.length > 0) {
+      // Converter Files para objetos serializáveis
+      const recentFilesToSave = files.map(file => ({
+        name: file.name,
+        date: "Hoje",
+        type: file.type,
+        size: file.size
+      }));
+
+      // Obter arquivos existentes
+      const existingFilesJson = localStorage.getItem('recentFiles');
+      let existingFiles = existingFilesJson ? JSON.parse(existingFilesJson) : [];
+
+      // Adicionar novos arquivos no início da lista (mais recentes primeiro)
+      const updatedFiles = [...recentFilesToSave, ...existingFiles].slice(0, 10); // limitar a 10
+
+      // Salvar no localStorage
+      localStorage.setItem('recentFiles', JSON.stringify(updatedFiles));
+      console.log("Arquivos recentes salvos no localStorage");
+    }
+  };
+
+  return (
+    <>
+      <Button onClick={() => setShowUploadModal(true)} disabled={isDisabled}>
+        <Plus className="h-4 w-4 mr-2" /> Adicionar Arquivos
+      </Button>
+      <AnimatePresence>
+        {showUploadModal && (
+          <UploadModal
+            open={showUploadModal}
+            onOpenChange={setShowUploadModal}
+            onUpload={handleUpload}
+          />
+        )}
+      </AnimatePresence>
+    </>
+  );
+};
+
+export default AddButton;

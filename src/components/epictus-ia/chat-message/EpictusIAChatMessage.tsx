@@ -208,63 +208,26 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
                 </div>
               )}
 
-              {/* Added file display section */}
               {files && files.length > 0 && (
                 <div className="mt-3 space-y-2">
                   {files.map((file, index) => (
-                    <div 
-                      key={index} 
-                      className={`flex items-center p-2 rounded-md ${
-                        sender === 'user' 
-                          ? 'bg-blue-500/20 hover:bg-blue-500/30' 
-                          : 'bg-gray-700/30 hover:bg-gray-700/40'
-                      } transition-colors`}
-                    >
-                      <div className="flex-shrink-0 mr-3 w-8 h-8 rounded-full bg-blue-500/30 flex items-center justify-center">
+                    <div key={index} className="flex items-center p-2 rounded-md bg-gray-100 hover:bg-gray-200 transition-colors">
+                      <div className="flex-shrink-0 mr-3 w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
                         {file.type.startsWith('image/') ? (
-                          <Image className="w-4 h-4 text-blue-300" />
+                          <Image className="w-4 h-4 text-gray-600" />
                         ) : file.type.startsWith('video/') ? (
-                          <Video className="w-4 h-4 text-purple-300" />
+                          <Video className="w-4 h-4 text-purple-600" />
                         ) : file.type.startsWith('audio/') ? (
-                          <Music className="w-4 h-4 text-green-300" />
+                          <Music className="w-4 h-4 text-green-600" />
                         ) : (
-                          <File className="w-4 h-4 text-amber-300" />
+                          <File className="w-4 h-4 text-amber-600" />
                         )}
                       </div>
-
                       <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-center">
-                          <span className="font-medium truncate">{file.name}</span>
-                          <span className="text-xs opacity-70 ml-2">
-                            {(file.size / 1024).toFixed(1)} KB
-                          </span>
-                        </div>
-
-                        {file.type.startsWith('image/') && (
-                          <div className="mt-2">
-                            <img 
-                              src={file.url} 
-                              alt={file.name}
-                              className="max-h-48 rounded-md object-contain"
-                            />
-                          </div>
-                        )}
-
-                        {file.type.startsWith('audio/') && (
-                          <audio 
-                            src={file.url} 
-                            controls 
-                            className="w-full h-8 mt-2"
-                          />
-                        )}
+                        <a href={URL.createObjectURL(file)} download={file.name} className="font-medium truncate hover:underline">{file.name}</a>
+                        <span className="text-xs opacity-70 ml-2">{(file.size / 1024).toFixed(1)} KB</span>
                       </div>
-
-                      <a 
-                        href={file.url} 
-                        download={file.name}
-                        className="ml-2 p-1.5 rounded-full bg-blue-500/20 hover:bg-blue-500/30 transition-colors"
-                        title="Baixar arquivo"
-                      >
+                      <a href={URL.createObjectURL(file)} download={file.name} className="ml-2 p-1.5 rounded-full bg-blue-500/20 hover:bg-blue-500/30 transition-colors">
                         <Download className="w-4 h-4" />
                       </a>
                     </div>

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
-import { Brain, Send, User, ThumbsUp, ThumbsDown, Copy, Sparkles } from "lucide-react";
+import { Brain, Send, User, ThumbsUp, ThumbsDown, Copy, Sparkles, FileText, X } from "lucide-react";
 import epictusIAService, { IAMessage } from "@/services/epictusIAService";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -195,13 +195,29 @@ export default function ChatEpictus() {
                   }`}
                 >
                   {message.content}
-                  {message.files && message.files.map((file, index) => (
-                    <div key={index}>
-                      <a href={URL.createObjectURL(file)} download={file.name} target="_blank" rel="noopener noreferrer">
-                        {file.name}
-                      </a>
+                  
+                  {message.files && message.files.length > 0 && (
+                    <div className="mt-2 border-t border-white/20 pt-2">
+                      <p className="text-xs opacity-70 mb-1">Arquivos anexados:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {message.files.map((file, index) => (
+                          <div key={index} className="bg-white/10 rounded px-2 py-1 text-xs flex items-center gap-1">
+                            <FileText className="h-3 w-3" />
+                            <a 
+                              href={URL.createObjectURL(file)} 
+                              download={file.name} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="hover:underline"
+                            >
+                              {file.name}
+                            </a>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  ))}
+                  )}
+                  
                   {message.role === "assistant" && (
                     <div className="mt-2 flex items-center justify-end gap-1.5">
                       <Button
@@ -236,9 +252,45 @@ export default function ChatEpictus() {
         </div>
       </ScrollArea>
 
-      {/* Input area (needs to be added back) */}
+      {/* Input area com arquivos selecionados */}
       <div className="p-4 border-t">
+        {selectedFiles.length > 0 && (
+          <div className="mb-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400">Arquivos anexados:</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {selectedFiles.map((file, index) => (
+                <div key={index} className="bg-blue-100 dark:bg-blue-900/30 rounded-lg px-2 py-1 text-xs flex items-center gap-1">
+                  <FileText className="h-3 w-3 text-blue-500" />
+                  <span className="truncate max-w-[150px]">{file.name}</span>
+                  <button
+                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    onClick={() => {
+                      const newFiles = [...selectedFiles];
+                      newFiles.splice(index, 1);
+                      setSelectedFiles(newFiles);
+                    }}
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
         <div className="flex items-center gap-2">
+          <div className="flex-shrink-0">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="h-10 w-10 rounded-full"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Plus className="h-5 w-5" />
+            </Button>
+          </div>
           <Input
             placeholder="Digite sua mensagem..."
             value={inputMessage}
