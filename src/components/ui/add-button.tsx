@@ -16,6 +16,9 @@ const AddButton: React.FC<AddButtonProps> = ({ onFileUpload }) => {
       onFileUpload(files);
     }
     console.log("Arquivos enviados:", files);
+    
+    // Aqui você poderia implementar o salvamento dos arquivos na lista de recentes
+    // por exemplo, utilizando localStorage
   };
 
   return (
