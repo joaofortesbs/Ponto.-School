@@ -69,7 +69,7 @@ const PersonalidadesIcon: React.FC = () => {
   return (
     <>
       <motion.div 
-        className="flex items-center bg-gradient-to-r from-blue-600 to-indigo-700 px-3.5 py-2 rounded-full cursor-pointer hover:shadow-md transition-all personalidades-root"
+        className="flex items-center bg-gradient-to-r from-[#0A2472] to-[#0D47A1] px-3.5 py-2 rounded-full cursor-pointer hover:shadow-md transition-all personalidades-root"
         onClick={handleOpenModal}
         style={{ zIndex: 100000 }}
         whileHover={{ scale: 1.03 }}
@@ -105,28 +105,28 @@ const PersonalidadesIcon: React.FC = () => {
             nome: "Estudante",
             descricao: "Respostas didáticas e simplificadas, ideais para aprendizado e revisão de conteúdos acadêmicos.",
             ativa: activePersonalidade === "estudante",
-            icone: <GraduationCap className="h-5 w-5" />
+            icone: <GraduationCap className="h-5 w-5 text-white" />
           },
           {
             id: "professor",
             nome: "Professor",
             descricao: "Explicações detalhadas com exemplos práticos e acompanhamento pedagógico de alto nível.",
             ativa: activePersonalidade === "professor",
-            icone: <BookOpen className="h-5 w-5" />
+            icone: <BookOpen className="h-5 w-5 text-white" />
           },
           {
             id: "mentor",
             nome: "Mentor",
             descricao: "Foco em desenvolvimento pessoal, orientação de carreira e apoio para tomada de decisões.",
             ativa: activePersonalidade === "mentor",
-            icone: <Lightbulb className="h-5 w-5" />
+            icone: <Lightbulb className="h-5 w-5 text-white" />
           },
           {
             id: "expert",
             nome: "Expert",
             descricao: "Abordagem técnica avançada com conhecimento especializado e termos específicos da área.",
             ativa: activePersonalidade === "expert",
-            icone: <Award className="h-5 w-5" />
+            icone: <Award className="h-5 w-5 text-white" />
           }
         ]}
       />

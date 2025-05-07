@@ -56,6 +56,27 @@
   flex-shrink: 0;
 }
 
+/* Estilos para o cabeçalho do modo Epictus IA Beta */
+.header-epictus-beta {
+  background: linear-gradient(to right, #051937, #004d7a);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Melhorias para os ícones do cabeçalho */
+.header-icon-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Ajuste para o tooltip */
+[data-radix-popper-content-wrapper] [role="tooltip"] {
+  background-color: #0F172A !important;
+  color: white !important;
+  border-color: #1E293B !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
+}
+
   }
 }
 
