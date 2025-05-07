@@ -49,7 +49,7 @@ const HeaderIcons: React.FC<HeaderIconsProps> = ({
 
   const handlePersonalidadesClick = () => {
     console.log("Personalidades clicado");
-    // Funcionalidade inativa conforme solicitado
+    // Dropdown agora é gerenciado pelo próprio componente
   };
 
   return (

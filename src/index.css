@@ -118,7 +118,8 @@ div[data-radix-popper-content-wrapper] {
 
 /* Regras adicionais para garantir que o dropdown de personalidades fique por cima */
 .personalidades-button,
-.personalidades-container {
+.personalidades-container,
+.personalidades-dropdown {
   position: relative !important;
   z-index: 999999 !important;
 }
