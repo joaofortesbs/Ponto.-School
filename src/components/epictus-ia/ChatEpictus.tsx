@@ -5,10 +5,9 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
-import { Brain, Send, User, ThumbsUp, ThumbsDown, Copy, Sparkles, File, Image, Video, Music, Download } from "lucide-react";
-import epictusIAService, { IAMessage, ProcessedFile } from "@/services/epictusIAService";
+import { Brain, Send, User, ThumbsUp, ThumbsDown, Copy, Sparkles } from "lucide-react";
+import epictusIAService, { IAMessage } from "@/services/epictusIAService";
 import { v4 as uuidv4 } from 'uuid';
-import EpictusMessageBox from "./message-box/EpictusMessageBox";
 
 export default function ChatEpictus() {
   const { theme } = useTheme();
@@ -40,17 +39,11 @@ export default function ChatEpictus() {
     if ((inputMessage.trim() === "" && selectedFiles.length === 0) || isTyping) return;
 
     // Processar arquivos para criar URLs
-    const processedFiles = selectedFiles.map(file => {
-      // Criar objeto URL para cada arquivo
-      const url = URL.createObjectURL(file);
-      return {
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        url: url,
-        lastModified: file.lastModified
-      };
-    });
+    const processedFiles = selectedFiles.map(file => ({
+      ...file,
+      url: URL.createObjectURL(file),
+      size: file.size
+    }));
 
     // Adicionar mensagem do usuário
     const userMessage: IAMessage = {
@@ -208,40 +201,13 @@ export default function ChatEpictus() {
                   }`}
                 >
                   {message.content}
-                  {message.files && message.files.length > 0 && (
-                    <div className="mt-2 space-y-2 border-t border-gray-200 dark:border-gray-700 pt-2">
-                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Arquivos anexados:</p>
-                      {message.files.map((file, index) => (
-                        <div key={index} className="flex items-center p-2 rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700">
-                          <div className="flex-shrink-0 mr-2 w-8 h-8 rounded-full bg-blue-500/30 flex items-center justify-center">
-                            {file.type?.startsWith('image/') ? (
-                              <Image className="h-4 w-4 text-blue-300" />
-                            ) : file.type?.startsWith('video/') ? (
-                              <Video className="h-4 w-4 text-purple-300" />
-                            ) : file.type?.startsWith('audio/') ? (
-                              <Music className="h-4 w-4 text-green-300" />
-                            ) : (
-                              <File className="h-4 w-4 text-amber-300" />
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <a 
-                              href={file.url || URL.createObjectURL(file)} 
-                              download={file.name} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline truncate"
-                            >
-                              {file.name}
-                            </a>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              {file.size ? `${(file.size / 1024).toFixed(1)} KB` : ''}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
+                  {message.files && message.files.map((file, index) => (
+                    <div key={index}>
+                      <a href={URL.createObjectURL(file)} download={file.name} target="_blank" rel="noopener noreferrer">
+                        {file.name}
+                      </a>
                     </div>
-                  )}
+                  ))}
                   {message.role === "assistant" && (
                     <div className="mt-2 flex items-center justify-end gap-1.5">
                       <Button
@@ -276,22 +242,17 @@ export default function ChatEpictus() {
         </div>
       </ScrollArea>
 
-      {/* Área de input com EpictusMessageBox */}
+      {/* Input area (needs to be added back) */}
       <div className="p-4 border-t">
-        <EpictusMessageBox
-          inputMessage={inputMessage}
-          setInputMessage={setInputMessage}
-          handleSendMessage={handleSendMessage}
-          isTyping={isTyping}
-          charCount={inputMessage.length}
-          MAX_CHARS={500}
-          handleKeyDown={handleKeyDown}
-          handleButtonClick={() => {}}
-          fileInputRef={fileInputRef}
-          handleFileChange={handleFileChange}
-          selectedFiles={selectedFiles}
-          setSelectedFiles={setSelectedFiles}
-        />
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder="Digite sua mensagem..."
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
+          />
+          <Button onClick={handleSendMessage}>Enviar</Button>
+        </div>
       </div>
     </div>
   );
