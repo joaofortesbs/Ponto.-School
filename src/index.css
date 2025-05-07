@@ -43,6 +43,19 @@
   100% {
     transform: scale(1.25);
     opacity: 0;
+
+/* Estilo para manter altura consistente nos botões do cabeçalho */
+.personalidades-root, .header-icon-button {
+  height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+/* Ajuste específico para o ícone de personalidades */
+.personalidades-root svg {
+  flex-shrink: 0;
+}
+
   }
 }
 
