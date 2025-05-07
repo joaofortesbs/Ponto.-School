@@ -183,27 +183,36 @@ const DeepSearchModal: React.FC<DeepSearchModalProps> = ({
             </div>
           </div>
 
-          <div>
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-sm text-orange-400">Profundidade da Busca</h3>
-              <span className="text-xs px-2 py-0.5 bg-orange-500/20 text-orange-400 rounded-full">
-                {searchOptions.searchDepth === "profunda" ? "Profunda" : "Padrão"}
-              </span>
+          <div className="mt-3">
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-orange-400">
+                  <path d="M12 2v8"></path><path d="m4.93 10.93 1.41 1.41"></path><path d="M2 18h2"></path><path d="M20 18h2"></path><path d="m19.07 10.93-1.41 1.41"></path><path d="M22 22H2"></path><path d="m16 6-4 4-4-4"></path><path d="M16 18a4 4 0 0 0-8 0"></path>
+                </svg>
+                <h3 className="font-medium text-sm text-gray-200">Profundidade</h3>
+              </div>
+              <div className="relative h-5 flex items-center">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-1.5">
+                  <span className={`text-[10px] font-medium transition-opacity duration-200 ${searchOptions.searchDepth === "padrão" ? "opacity-100" : "opacity-30"}`}>Padrão</span>
+                </div>
+                <Switch
+                  checked={searchOptions.searchDepth === "profunda"}
+                  onCheckedChange={toggleSearchDepth}
+                  className="mx-[52px] data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-orange-500 data-[state=checked]:to-amber-500 h-5 w-10"
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-1.5">
+                  <span className={`text-[10px] font-medium transition-opacity duration-200 ${searchOptions.searchDepth === "profunda" ? "opacity-100" : "opacity-30"}`}>Profunda</span>
+                </div>
+              </div>
             </div>
             
-            <div className="mt-2 flex items-center justify-between">
-              <span className="text-sm text-gray-400">Padrão</span>
-              <Switch
-                checked={searchOptions.searchDepth === "profunda"}
-                onCheckedChange={toggleSearchDepth}
-                className="data-[state=checked]:bg-orange-500"
-              />
-              <span className="text-sm text-gray-400">Profunda</span>
+            <div className={`mt-1 p-2 rounded-md bg-gradient-to-r ${searchOptions.searchDepth === "profunda" ? "from-orange-950/30 to-amber-950/30 border border-orange-800/20" : "from-gray-800/30 to-gray-900/30 border border-gray-700/20"} transition-all duration-300`}>
+              <p className="text-[11px] text-gray-400 leading-tight">
+                {searchOptions.searchDepth === "profunda" 
+                  ? "Análises aprofundadas com conexões complexas entre diferentes fontes de dados."
+                  : "Busca padrão com resultados confiáveis e rápidos para consultas comuns."}
+              </p>
             </div>
-            
-            <p className="text-xs text-gray-400 mt-2 italic">
-              A busca profunda analisa fontes extensas e realiza conexões complexas entre diferentes conteúdos.
-            </p>
           </div>
 
           <button
