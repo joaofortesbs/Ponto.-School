@@ -64,7 +64,6 @@ const PersonalidadesIcon: React.FC = () => {
     setActivePersonalidade("nenhuma");
     localStorage.setItem("epictus-personalidade-ativa", "nenhuma");
     console.log("Personalidade resetada para o estado padrão");
-  };);
   };
 
   return (
