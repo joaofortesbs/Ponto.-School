@@ -1409,19 +1409,62 @@ textarea:hover,
 /* Estilos para o modal de personalidades */
 [role="dialog"].personalidades-modal {
   position: fixed !important;
-  z-index: 999999 !important;
+  z-index: 100001 !important;
 }
 
 /* Garantir que o Radix UI Dialog seja exibido corretamente */
 [data-radix-popper-content-wrapper] {
-  z-index: 999999 !important;
+  z-index: 100001 !important;
 }
 
 /* Estilos para o backdrop do modal */
 .personalidades-modal-backdrop {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
-  z-index: 999990 !important;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  z-index: 100000 !important;
+}
+
+/* Estilos específicos para o componente de personalidades */
+.personalidades-list {
+  max-height: 60vh;
+  overflow-y: auto;
+  margin-right: -8px;
+  padding-right: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.personalidades-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.personalidades-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.personalidades-list::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.dark .personalidades-list::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Efeito de transição suave ao selecionar personalidades */
+.personalidades-modal [role="dialog"] {
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

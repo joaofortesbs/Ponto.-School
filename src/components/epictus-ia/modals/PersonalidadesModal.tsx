@@ -8,7 +8,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { motion } from "framer-motion";
 import { Check, User, Brain, Lightbulb, GraduationCap, Zap } from "lucide-react";
 
 interface Personalidade {
@@ -34,51 +34,77 @@ const PersonalidadesModal: React.FC<PersonalidadesModalProps> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] flex flex-col personalidades-modal" style={{ zIndex: 999999 }}>
-        <DialogHeader>
-          <DialogTitle className="text-xl font-semibold flex items-center">
-            <User className="h-5 w-5 mr-2 text-[#0D23A0]" />
+      <DialogContent 
+        className="sm:max-w-[550px] max-h-[85vh] flex flex-col bg-white dark:bg-slate-900 border-0 rounded-xl shadow-xl personalidades-modal"
+        style={{ zIndex: 100001 }}
+      >
+        <DialogHeader className="pb-0">
+          <DialogTitle className="text-xl font-semibold flex items-center text-slate-800 dark:text-slate-100">
+            <span className="mr-2 flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-r from-indigo-500 to-blue-600 text-white">
+              <User className="h-5 w-5" />
+            </span>
             Personalidades da IA
           </DialogTitle>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+            Selecione como você prefere que a IA se comporte durante suas interações
+          </p>
         </DialogHeader>
 
-        <ScrollArea className="flex-grow pr-4 mt-4 max-h-[60vh]">
-          <div className="space-y-4">
+        <div className="overflow-y-auto pr-1 mt-4 personalidades-list">
+          <div className="space-y-3">
             {personalidades.map((personalidade) => (
-              <div 
+              <motion.div 
                 key={personalidade.id}
-                className={`p-4 rounded-lg border transition-all cursor-pointer
+                className={`relative p-4 rounded-lg cursor-pointer transition-all duration-300 
                   ${personalidade.ativa 
-                    ? 'border-[#0D23A0] bg-[#0D23A0]/5' 
-                    : 'border-gray-200 hover:border-[#0D23A0]/50 dark:border-gray-700'
+                    ? 'bg-blue-50 dark:bg-blue-900/20 border-[1.5px] border-blue-500 dark:border-blue-500'
+                    : 'bg-white hover:bg-gray-50 dark:bg-slate-800 dark:hover:bg-slate-700/50 border-[1.5px] border-gray-100 dark:border-slate-700'
                   }`}
                 onClick={() => onPersonalidadeSelect?.(personalidade.id)}
+                whileHover={{ 
+                  scale: 1.01, 
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)" 
+                }}
+                transition={{ duration: 0.2 }}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <div className={`p-2 rounded-full ${personalidade.ativa ? 'bg-[#0D23A0]/10' : 'bg-gray-100 dark:bg-gray-800'} mr-3`}>
+                    <div className={`flex items-center justify-center p-2 rounded-full 
+                      ${personalidade.ativa 
+                        ? 'bg-blue-100 dark:bg-blue-800/30 text-blue-600 dark:text-blue-400' 
+                        : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400'
+                      } mr-3 w-10 h-10`}
+                    >
                       {personalidade.icone}
                     </div>
-                    <h3 className="font-medium text-lg">{personalidade.nome}</h3>
+                    <div>
+                      <h3 className="font-medium text-base text-gray-900 dark:text-white">
+                        {personalidade.nome}
+                      </h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">
+                        {personalidade.descricao}
+                      </p>
+                    </div>
                   </div>
                   {personalidade.ativa && (
-                    <div className="bg-[#0D23A0] text-white rounded-full p-1">
-                      <Check className="h-4 w-4" />
+                    <div className="flex-shrink-0 ml-2">
+                      <div className="bg-blue-500 text-white rounded-full p-1 shadow-sm">
+                        <Check className="h-4 w-4" />
+                      </div>
                     </div>
                   )}
                 </div>
-                <p className="text-gray-600 dark:text-gray-300 mt-2">{personalidade.descricao}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
-        </ScrollArea>
+        </div>
 
-        <DialogFooter className="mt-6">
+        <DialogFooter className="mt-6 pt-4 border-t border-gray-100 dark:border-slate-700">
           <Button 
             onClick={() => onOpenChange(false)}
-            className="bg-[#0D23A0] hover:bg-[#0A1C80] text-white"
+            className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:opacity-90 text-white rounded-lg px-5 py-2 text-sm font-medium"
           >
-            Fechar
+            Concluído
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -93,35 +119,35 @@ const defaultPersonalidades: Personalidade[] = [
     nome: "Padrão",
     descricao: "O assistente Epictus IA com comportamento padrão, equilibrando formalidade e conversação natural.",
     ativa: true,
-    icone: <User className="h-5 w-5 text-[#0D23A0]" />
+    icone: <User className="h-5 w-5" />
   },
   {
     id: "professor",
     nome: "Professor",
     descricao: "Explicações didáticas e completas, focando em exemplos e analogias para facilitar o aprendizado.",
     ativa: false,
-    icone: <GraduationCap className="h-5 w-5 text-[#0D23A0]" />
+    icone: <GraduationCap className="h-5 w-5" />
   },
   {
     id: "cientista",
     nome: "Cientista",
     descricao: "Abordagem analítica e baseada em evidências, com referências a pesquisas e maior profundidade técnica.",
     ativa: false,
-    icone: <Brain className="h-5 w-5 text-[#0D23A0]" />
+    icone: <Brain className="h-5 w-5" />
   },
   {
     id: "mentor",
     nome: "Mentor",
     descricao: "Foco em orientação e desenvolvimento pessoal, com perguntas reflexivas e estímulo ao pensamento crítico.",
     ativa: false,
-    icone: <Lightbulb className="h-5 w-5 text-[#0D23A0]" />
+    icone: <Lightbulb className="h-5 w-5" />
   },
   {
     id: "simplificador",
     nome: "Simplificador",
     descricao: "Explicações extremamente simplificadas e diretas, ideal para entendimento rápido de conceitos complexos.",
     ativa: false,
-    icone: <Zap className="h-5 w-5 text-[#0D23A0]" />
+    icone: <Zap className="h-5 w-5" />
   },
 ];
 
