@@ -1,0 +1,61 @@
+[plugin:vite:react-swc] × the name `PersonalidadesIcon` is defined multiple times
+   ╭─[/home/runner/workspace/src/components/epictus-ia/modoepictusiabeta/header/icons/personalidadescabeçalhomodoepictusbeta/index.ts:1:1]
+ 1 │ 
+ 2 │ import PersonalidadesIcon from "./PersonalidadesIcon";
+   ·        ─────────┬────────
+   ·                 ╰── previous definition of `PersonalidadesIcon` here
+ 3 │ 
+ 4 │ export default PersonalidadesIcon;
+ 5 │ export { PersonalidadesIcon };
+ 6 │ import PersonalidadesIcon from './PersonalidadesIcon';
+   ·        ─────────┬────────
+   ·                 ╰── `PersonalidadesIcon` redefined here
+ 7 │ 
+ 8 │ export default PersonalidadesIcon;
+ 9 │ export { PersonalidadesIcon };
+   ╰────
+
+  × the name `default` is exported multiple times
+   ╭─[/home/runner/workspace/src/components/epictus-ia/modoepictusiabeta/header/icons/personalidadescabeçalhomodoepictusbeta/index.ts:1:1]
+ 1 │ 
+ 2 │ import PersonalidadesIcon from "./PersonalidadesIcon";
+ 3 │ 
+ 4 │ export default PersonalidadesIcon;
+   · ─────────────────┬────────────────
+   ·                  ╰── previous exported here
+ 5 │ export { PersonalidadesIcon };
+ 6 │ import PersonalidadesIcon from './PersonalidadesIcon';
+ 7 │ 
+ 8 │ export default PersonalidadesIcon;
+   · ─────────────────┬────────────────
+   ·                  ╰── exported more than once
+ 9 │ export { PersonalidadesIcon };
+   ╰────
+
+Error: 
+  ☞ Exported identifiers must be unique
+
+  × the name `PersonalidadesIcon` is exported multiple times
+   ╭─[/home/runner/workspace/src/components/epictus-ia/modoepictusiabeta/header/icons/personalidadescabeçalhomodoepictusbeta/index.ts:2:1]
+ 2 │ import PersonalidadesIcon from "./PersonalidadesIcon";
+ 3 │ 
+ 4 │ export default PersonalidadesIcon;
+ 5 │ export { PersonalidadesIcon };
+   ·          ─────────┬────────
+   ·                   ╰── previous exported here
+ 6 │ import PersonalidadesIcon from './PersonalidadesIcon';
+ 7 │ 
+ 8 │ export default PersonalidadesIcon;
+ 9 │ export { PersonalidadesIcon };
+   ·          ─────────┬────────
+   ·                   ╰── exported more than once
+   ╰────
+
+Error: 
+  ☞ Exported identifiers must be unique
+/home/runner/workspace/src/components/epictus-ia/modoepictusiabeta/header/icons/personalidadescabeçalhomodoepictusbeta/index.ts:1:1
+1  |  
+2  |  import PersonalidadesIcon from "./PersonalidadesIcon";
+   |  ^
+3  |  
+4  |  export default PersonalidadesIcon;
