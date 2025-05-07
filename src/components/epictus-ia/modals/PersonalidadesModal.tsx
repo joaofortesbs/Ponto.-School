@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Check, User, Brain, Lightbulb, GraduationCap, Zap } from "lucide-react";
+import { Check, User, Brain, Lightbulb, GraduationCap, BookOpen, Award, Star } from "lucide-react";
 
 interface Personalidade {
   id: string;
@@ -115,40 +115,33 @@ const PersonalidadesModal: React.FC<PersonalidadesModalProps> = ({
 // Dados padrão das personalidades com ícones personalizados
 const defaultPersonalidades: Personalidade[] = [
   {
-    id: "padrao",
-    nome: "Padrão",
-    descricao: "O assistente Epictus IA com comportamento padrão, equilibrando formalidade e conversação natural.",
+    id: "estudante",
+    nome: "Estudante",
+    descricao: "Respostas didáticas e simplificadas, ideais para aprendizado e revisão de conteúdos acadêmicos.",
     ativa: true,
-    icone: <User className="h-5 w-5" />
+    icone: <GraduationCap className="h-5 w-5" />
   },
   {
     id: "professor",
     nome: "Professor",
-    descricao: "Explicações didáticas e completas, focando em exemplos e analogias para facilitar o aprendizado.",
+    descricao: "Explicações detalhadas com exemplos práticos e acompanhamento pedagógico de alto nível.",
     ativa: false,
-    icone: <GraduationCap className="h-5 w-5" />
-  },
-  {
-    id: "cientista",
-    nome: "Cientista",
-    descricao: "Abordagem analítica e baseada em evidências, com referências a pesquisas e maior profundidade técnica.",
-    ativa: false,
-    icone: <Brain className="h-5 w-5" />
+    icone: <BookOpen className="h-5 w-5" />
   },
   {
     id: "mentor",
     nome: "Mentor",
-    descricao: "Foco em orientação e desenvolvimento pessoal, com perguntas reflexivas e estímulo ao pensamento crítico.",
+    descricao: "Foco em desenvolvimento pessoal, orientação de carreira e apoio para tomada de decisões.",
     ativa: false,
     icone: <Lightbulb className="h-5 w-5" />
   },
   {
-    id: "simplificador",
-    nome: "Simplificador",
-    descricao: "Explicações extremamente simplificadas e diretas, ideal para entendimento rápido de conceitos complexos.",
+    id: "expert",
+    nome: "Expert",
+    descricao: "Abordagem técnica avançada com conhecimento especializado e termos específicos da área.",
     ativa: false,
-    icone: <Zap className="h-5 w-5" />
-  },
+    icone: <Award className="h-5 w-5" />
+  }
 ];
 
 export default PersonalidadesModal;
