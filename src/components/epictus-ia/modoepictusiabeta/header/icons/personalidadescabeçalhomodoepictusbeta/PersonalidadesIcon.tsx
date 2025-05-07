@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { User, ChevronDown, RefreshCw } from "lucide-react";
 import PersonalidadesModal from "../../../../modals/PersonalidadesModal";
 import { motion } from "framer-motion";
-import Button from "../../../../components/Button"; // Assuming Button component exists
+import { Button } from "@/components/ui/button";
 
 // Importando os ícones necessários
 import { GraduationCap, BookOpen, Lightbulb, Award } from "lucide-react";
