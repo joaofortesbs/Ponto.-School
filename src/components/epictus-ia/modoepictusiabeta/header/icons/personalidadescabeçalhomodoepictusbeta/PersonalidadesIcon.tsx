@@ -35,7 +35,7 @@ const PersonalidadesIcon: React.FC = () => {
   }, [isDropdownOpen]);
 
   return (
-    <div className="relative dropdown-isolate personalidades-root" style={{ zIndex: 999998 }}>
+    <div className="relative dropdown-isolate personalidades-root" style={{ zIndex: 100000 }}>
       <button
         ref={buttonRef}
         className="personalidades-button flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-md transition-colors"

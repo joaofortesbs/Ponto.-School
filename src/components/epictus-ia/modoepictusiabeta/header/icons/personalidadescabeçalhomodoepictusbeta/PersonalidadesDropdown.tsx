@@ -43,7 +43,7 @@ const PersonalidadesDropdown: React.FC<PersonalidadesDropdownProps> = ({
           ref={dropdownRef}
           className="fixed right-0 mt-2 w-48 bg-blue-900/95 backdrop-blur-md shadow-lg rounded-md py-1" 
           style={{ 
-            zIndex: 999999, 
+            zIndex: 100000, // Increased z-index
             position: 'absolute',
             boxShadow: '0 0 15px rgba(0, 0, 0, 0.3)'
           }}

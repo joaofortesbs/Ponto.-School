@@ -100,7 +100,7 @@
 .personalidades-dropdown,
 .group:hover .personalidades-dropdown,
 [role="menu"].personalidades-dropdown {
-  z-index: 9999999 !important;
+  z-index: 100000 !important;
   position: absolute !important;
   width: 100% !important;
   min-width: 200px !important;
@@ -486,6 +486,54 @@ svg.neural-connections {
 .dark .glass-effect {
   background: rgba(10, 37, 64, 0.5);
 }
+
+/* Regras específicas para resolver conflito do modal com o chat */
+.epictus-chat-container,
+.chat-message-container,
+.message-content {
+  z-index: 1 !important; /* Força baixo z-index para o chat */
+}
+
+/* Forçar modal de personalidades por cima de TUDO */
+.personalidades-root {
+  position: relative !important;
+  z-index: 100000 !important;
+  isolation: isolate !important;
+}
+
+.personalidades-dropdown {
+  position: absolute !important;
+  z-index: 100000 !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Desabilitar eventos de mouse em elementos de chat quando dropdown aberto */
+.personalidades-root[data-state="open"] ~ * {
+  pointer-events: none !important;
+}
+
+/* Garantir que o dropdown seja clicável */
+.personalidades-dropdown button,
+.personalidades-dropdown a {
+  position: relative !important;
+  z-index: 100001 !important;
+  pointer-events: auto !important;
+}
+
+/* Camada especial para forçar dropdown por cima de outros elementos */
+:root::after {
+  content: '';
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  pointer-events: none;
+}
+
+.personalidades-root:hover ~ :root::after {
+  display: block;
+}
+
 
 /* Efeito de borda brilhante */
 .glowing-border {
