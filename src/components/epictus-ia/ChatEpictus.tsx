@@ -38,14 +38,16 @@ export default function ChatEpictus() {
   const handleSendMessage = async () => {
     if ((inputMessage.trim() === "" && selectedFiles.length === 0) || isTyping) return;
 
-    // Processar arquivos para criar URLs
+    // Processar arquivos para criar URLs e garantir que sejam acessíveis
     const processedFiles = selectedFiles.map(file => ({
       ...file,
       url: URL.createObjectURL(file),
-      size: file.size
+      size: file.size,
+      name: file.name,
+      type: file.type
     }));
 
-    // Adicionar mensagem do usuário
+    // Adicionar mensagem do usuário com os arquivos
     const userMessage: IAMessage = {
       id: uuidv4(),
       content: inputMessage,
@@ -201,13 +203,30 @@ export default function ChatEpictus() {
                   }`}
                 >
                   {message.content}
-                  {message.files && message.files.map((file, index) => (
-                    <div key={index}>
-                      <a href={URL.createObjectURL(file)} download={file.name} target="_blank" rel="noopener noreferrer">
-                        {file.name}
-                      </a>
+                  {message.files && message.files.length > 0 && (
+                    <div className="mt-2 space-y-2">
+                      <p className="text-xs font-medium opacity-70">Arquivos anexados:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {message.files.map((file, index) => (
+                          <div 
+                            key={index} 
+                            className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-500/10 border border-blue-500/20"
+                          >
+                            <FileText className="h-3 w-3" />
+                            <a 
+                              href={file.url || URL.createObjectURL(file)} 
+                              download={file.name} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-xs hover:underline truncate max-w-[120px]"
+                            >
+                              {file.name}
+                            </a>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  ))}
+                  )}
                   {message.role === "assistant" && (
                     <div className="mt-2 flex items-center justify-end gap-1.5">
                       <Button
