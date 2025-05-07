@@ -43,6 +43,7 @@ interface Message {
 import HeaderIcons from "./modoepictusiabeta/header/icons/HeaderIcons";
 import HistoricoConversasModal from "./modals/HistoricoConversasModal";
 import MessageToolsDropdown from "./message-tools/MessageToolsDropdown"; // Import the new component
+import { motion } from "framer-motion";
 
 
 const EpictusBetaMode: React.FC = () => {
