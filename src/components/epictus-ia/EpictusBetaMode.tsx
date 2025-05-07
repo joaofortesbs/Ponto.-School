@@ -203,6 +203,30 @@ const EpictusBetaMode: React.FC = () => {
     if (showWelcome) {
       setShowWelcome(false);
     }
+    
+    // Verificar se é uma busca DeepSearch
+    const isDeepSearch = trimmedMessage.startsWith("🔍 DeepSearch:");
+    
+    let enhancedMessage = trimmedMessage;
+    
+    // Adicionar contexto para o modelo de IA se for uma busca avançada
+    if (isDeepSearch) {
+      const searchQuery = trimmedMessage.match(/DeepSearch: "(.*?)"/)?.[1] || "";
+      const sourceOptions = trimmedMessage.match(/\[Fontes: (.*?)\]/)?.[1] || "";
+      
+      // Adicionar instruções especiais para a IA sobre como processar a busca
+      enhancedMessage = `Realize uma pesquisa detalhada sobre "${searchQuery}" utilizando as seguintes fontes: ${sourceOptions}.
+      
+      Regras para a sua resposta:
+      1. Estruture a resposta de forma acadêmica e bem formatada
+      2. Cite as possíveis fontes de onde essas informações poderiam vir
+      3. Organize o conteúdo em seções claras
+      4. Inclua perspectivas diferentes sobre o tema, quando aplicável
+      5. Priorize dados atualizados e relevantes
+      6. Inclua referências quando possível
+      
+      Query original: ${searchQuery}`;
+    }
 
     const userMessage: Message = {
       id: uuidv4(),
@@ -215,6 +239,21 @@ const EpictusBetaMode: React.FC = () => {
     setInputMessage("");
     setCharCount(0);
     setIsTyping(true);
+    
+    // Se for DeepSearch, adicionar mensagem de loading diferenciada
+    if (isDeepSearch) {
+      setTimeout(() => {
+        const searchingMessage: Message = {
+          id: uuidv4(),
+          sender: "ia",
+          content: "🔍 **Realizando busca avançada...**\n\nPesquisando em múltiplas fontes e analisando dados relevantes. Por favor, aguarde um momento enquanto processo sua solicitação.",
+          timestamp: new Date(),
+          showTools: false
+        };
+        
+        setMessages(prev => [...prev, searchingMessage]);
+      }, 500);
+    }
 
     try {
       const typingTimeout = setTimeout(() => {
@@ -222,14 +261,40 @@ const EpictusBetaMode: React.FC = () => {
       }, 300);
 
       try {
-        console.log("Enviando mensagem para Gemini:", trimmedMessage);
-        const response = await generateAIResponse(trimmedMessage, sessionId);
+        // Se for DeepSearch, removemos a mensagem de "Pesquisando..."
+        if (isDeepSearch) {
+          // Remover a mensagem temporária de "Realizando busca avançada..."
+          setTimeout(() => {
+            setMessages(prev => prev.filter(msg => !msg.content.includes("Realizando busca avançada...")));
+          }, 1500);
+        }
+        
+        console.log("Enviando mensagem para Gemini:", isDeepSearch ? enhancedMessage : trimmedMessage);
+        const response = await generateAIResponse(
+          isDeepSearch ? enhancedMessage : trimmedMessage, 
+          sessionId
+        );
         console.log("Resposta recebida de Gemini");
+
+        // Formatação especial para respostas de DeepSearch
+        let formattedResponse = response;
+        if (isDeepSearch) {
+          // Adicionar cabeçalho especial para resultados da busca
+          const searchQuery = trimmedMessage.match(/DeepSearch: "(.*?)"/)?.[1] || "";
+          formattedResponse = `# 🔍 Resultados da DeepSearch™
+          
+## Consulta: "${searchQuery}"
+
+${response}
+
+---
+*Resultados obtidos utilizando tecnologia DeepSearch™ • Powered by advanced AI*`;
+        }
 
         const aiMessage: Message = {
           id: uuidv4(),
           sender: "ia",
-          content: response,
+          content: formattedResponse,
           timestamp: new Date(),
           showTools: false // Added showTools property
         };
@@ -322,6 +387,20 @@ const EpictusBetaMode: React.FC = () => {
   const handleButtonClick = (action: string) => {
     if (action === 'SugestaoPrompts') {
       setIsPromptModalOpen(true);
+      return;
+    }
+    
+    if (action === 'Inspiracao') {
+      // Sugerir temas para o usuário
+      const inspirationMessage: Message = {
+        id: uuidv4(),
+        sender: "ia",
+        content: "## 💡 Inspirações para sua pesquisa\n\n- **Tendências educacionais modernas**\n- **Metodologias de ensino inovadoras**\n- **Técnicas de estudo eficientes**\n- **Desenvolvimento de habilidades cognitivas**\n- **Tecnologias educacionais emergentes**\n- **Estratégias para aprendizado personalizado**\n\nClique em uma sugestão acima ou pergunte sobre qualquer outro tema de seu interesse!",
+        timestamp: new Date(),
+        showTools: false
+      };
+      
+      setMessages(prev => [...prev, inspirationMessage]);
       return;
     }
 

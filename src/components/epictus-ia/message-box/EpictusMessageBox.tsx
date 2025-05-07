@@ -1,21 +1,18 @@
-import React, { useState } from "react";
-import { Send, Plus, Mic, Loader2, Brain, BookOpen, AlignJustify, RotateCw, Search, Image, Lightbulb, PenLine } from "lucide-react";
-import { motion } from "framer-motion";
-import { Textarea } from "@/components/ui/textarea";
+import React, { useState, useRef, useEffect } from "react";
+import { Send, Zap, Sparkles, Search, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/use-toast";
+import { Textarea } from "@/components/ui/textarea";
 import QuickActionButton from "./QuickActionButton";
-import AddButton from "@/components/ui/add-button";
-
+import DeepSearchModal, { SearchOptions } from "./DeepSearchModal";
 
 interface EpictusMessageBoxProps {
   inputMessage: string;
-  setInputMessage: (value: string) => void;
+  setInputMessage: (message: string) => void;
   handleSendMessage: () => void;
-  isTyping: boolean;
+  handleKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   charCount: number;
   MAX_CHARS: number;
-  handleKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+  isTyping: boolean;
   handleButtonClick: (action: string) => void;
 }
 
@@ -23,187 +20,149 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
   inputMessage,
   setInputMessage,
   handleSendMessage,
-  isTyping,
+  handleKeyDown,
   charCount,
   MAX_CHARS,
-  handleKeyDown,
-  handleButtonClick
+  isTyping,
+  handleButtonClick,
 }) => {
+  const [showActions, setShowActions] = useState(false);
+  const actionsRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [showDeepSearchModal, setShowDeepSearchModal] = useState(false);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        actionsRef.current &&
+        buttonRef.current &&
+        !actionsRef.current.contains(event.target as Node) &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
+        setShowActions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleDeepSearch = (query: string, options: SearchOptions) => {
+    const optionsText = Object.entries(options)
+      .filter(([_, value]) => value)
+      .map(([key]) => {
+        switch(key) {
+          case 'webGlobal': return 'Web Global';
+          case 'academic': return 'Fontes Acadêmicas';
+          case 'social': return 'Redes Sociais';
+          case 'deepSearch': return 'Busca Profunda';
+          default: return key;
+        }
+      })
+      .join(', ');
+
+    // Construir mensagem de pesquisa para enviar
+    const searchMessage = `🔍 DeepSearch: "${query}" [Fontes: ${optionsText}]`;
+    setInputMessage(searchMessage);
+
+    // Opcional: enviar automaticamente após um breve atraso
+    setTimeout(() => {
+      handleSendMessage();
+    }, 100);
+  };
+
   return (
-    <motion.div 
-      className="relative w-[60%] h-auto mx-auto bg-transparent rounded-2xl shadow-xl 
-                border border-white/5 backdrop-blur-sm overflow-hidden flex-shrink-0"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      style={{ minHeight: '120px' }}
-    >
-      {/* Partículas de fundo */}
-      <div className="absolute inset-0 opacity-30 pointer-events-none">
-        <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
+    <div className="flex flex-col w-full space-y-2">
+      <div className="relative">
+        <Textarea
+          value={inputMessage}
+          onChange={(e) => setInputMessage(e.target.value)}
+          placeholder="Digite sua mensagem aqui..."
+          className="min-h-[60px] resize-none rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 pr-16 text-md"
+          onKeyDown={handleKeyDown}
+        />
+        <div className="absolute bottom-3 right-3">
+          <Button
+            type="submit"
+            size="icon"
+            className={`h-9 w-9 rounded-full ${
+              inputMessage.trim() === ""
+                ? "bg-gray-300 dark:bg-gray-700 text-gray-600 dark:text-gray-400 cursor-not-allowed"
+                : "bg-gradient-to-r from-[#3A7BD5] to-[#4A90E2] text-white hover:from-[#3A7BD5]/90 hover:to-[#4A90E2]/90"
+            }`}
+            disabled={inputMessage.trim() === "" || isTyping}
+            onClick={handleSendMessage}
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="absolute bottom-3 left-3 flex items-center space-x-1">
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            {charCount}/{MAX_CHARS}
+          </div>
+        </div>
       </div>
 
-      {/* Container principal */}
-      <div className="relative z-10 p-4">
-        {/* Opções superiores */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
-            <button 
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gradient-to-r from-[#0a1625]/70 to-[#182c4d]/70 text-gray-200 
-                       rounded-lg border border-white/10 backdrop-blur-sm hover:bg-gradient-to-r 
-                       hover:from-[#0D23A0]/40 hover:to-[#5B21BD]/40 hover:border-blue-500/30
-                       hover:text-white transition-all duration-300 flex-shrink-0 shadow-sm"
-              onClick={() => handleButtonClick('Buscar')}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <div className="relative">
+            <Button
+              ref={buttonRef}
+              variant="ghost"
+              size="sm"
+              className="text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg px-3 py-1 h-8 text-xs flex items-center gap-1.5"
+              onClick={() => setShowActions(!showActions)}
             >
-              <Search size={14} className="text-blue-300" />
-              <span>Buscar</span>
-            </button>
-            <button 
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gradient-to-r from-[#0a1625]/70 to-[#182c4d]/70 text-gray-200 
-                       rounded-lg border border-white/10 backdrop-blur-sm hover:bg-gradient-to-r 
-                       hover:from-[#0D23A0]/40 hover:to-[#5B21BD]/40 hover:border-purple-500/30
-                       hover:text-white transition-all duration-300 flex-shrink-0 shadow-sm"
-              onClick={() => handleButtonClick('Pensar')}
-            >
-              <Brain size={14} className="text-purple-300" />
-              <span>Pensar</span>
-            </button>
-            <button 
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gradient-to-r from-[#0a1625]/70 to-[#182c4d]/70 text-gray-200 
-                       rounded-lg border border-white/10 backdrop-blur-sm hover:bg-gradient-to-r 
-                       hover:from-[#0D23A0]/40 hover:to-[#5B21BD]/40 hover:border-emerald-500/30
-                       hover:text-white transition-all duration-300 flex-shrink-0 shadow-sm"
-              onClick={() => handleButtonClick('Gerar Imagem')}
-            >
-              <Image size={14} className="text-emerald-300" />
-              <span>Gerar Imagem</span>
-            </button>
-            <button 
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gradient-to-r from-[#0a1625]/70 to-[#182c4d]/70 text-gray-200 
-                       rounded-lg border border-white/10 backdrop-blur-sm hover:bg-gradient-to-r 
-                       hover:from-[#0D23A0]/40 hover:to-[#5B21BD]/40 hover:border-amber-500/30
-                       hover:text-white transition-all duration-300 flex-shrink-0 shadow-sm"
-              onClick={() => handleButtonClick('Biblioteca')}
-            >
-              <BookOpen size={14} className="text-amber-300" />
-              <span>Biblioteca</span>
-            </button>
+              <Sparkles className="h-3.5 w-3.5" />
+              Ações Rápidas
+            </Button>
+
+            {showActions && (
+              <div
+                ref={actionsRef}
+                className="absolute left-0 top-full mt-1 w-[300px] bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-2 z-10"
+              >
+                <div className="grid grid-cols-2 gap-2">
+                  <QuickActionButton
+                    icon={<Zap className="h-3.5 w-3.5 text-yellow-500" />}
+                    label="Sugestão Prompts"
+                    onClick={() => handleButtonClick("SugestaoPrompts")}
+                  />
+                  <QuickActionButton
+                    icon={<Sparkles className="h-3.5 w-3.5 text-blue-500" />}
+                    label="Prompt Aprimorado"
+                    onClick={() => handleButtonClick("PromptAprimorado")}
+                  />
+                  <QuickActionButton
+                    icon={<Lightbulb className="h-3.5 w-3.5 text-green-500" />}
+                    label="Inspiração"
+                    onClick={() => handleButtonClick("Inspiracao")}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Espaços de Aprendizagem no canto direito */}
-          <button 
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gradient-to-r from-[#001427] to-[#002447] text-gray-200 
-                    rounded-lg border border-white/10 backdrop-blur-sm hover:bg-gradient-to-r 
-                    hover:from-[#001e3b] hover:to-[#002e5c] hover:border-blue-500/30
-                    hover:text-white transition-all duration-300 flex-shrink-0 shadow-sm"
-            onClick={() => handleButtonClick('Espaços de Aprendizagem')}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg px-3 py-1 h-8 text-xs flex items-center gap-1.5"
+            onClick={() => setShowDeepSearchModal(true)}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-300">
-              <rect x="3" y="3" width="7" height="7"></rect>
-              <rect x="14" y="3" width="7" height="7"></rect>
-              <rect x="14" y="14" width="7" height="7"></rect>
-              <rect x="3" y="14" width="7" height="7"></rect>
-            </svg>
-            <span>Espaços de Aprendizagem</span>
-          </button>
+            <Search className="h-3.5 w-3.5 text-blue-500" />
+            Buscar
+          </Button>
         </div>
-
-        {/* Área de input */}
-        <div className="flex items-center gap-2">
-          <AddButton 
-            onFileUpload={(files) => {
-              // Aqui você pode implementar a lógica para lidar com os arquivos enviados
-              toast({
-                title: `${files.length} arquivo(s) enviado(s) com sucesso`,
-                description: "Os arquivos serão processados em breve.",
-              });
-            }} 
-          />
-
-          <div className={`relative flex-grow overflow-hidden 
-                          bg-gradient-to-r from-[#0c2341]/30 to-[#0f3562]/30 
-                          rounded-xl border ${isTyping ? 'border-[#1230CC]/70' : 'border-white/10'} 
-                          transition-all duration-300`}>
-            <Textarea
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Digite um comando ou pergunta para o Epictus Turbo..."
-              className="w-full bg-transparent text-white py-3 px-3 text-sm outline-none placeholder:text-gray-400"
-              disabled={isTyping}
-            />
-          </div>
-
-          {/* Botão de Prompt Aprimorado - visível apenas quando o usuário começar a digitar */}
-          {inputMessage.trim().length > 0 && (
-            <motion.button
-              className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
-                       flex items-center justify-center shadow-lg text-white"
-              whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => handleButtonClick('PromptAprimorado')}
-              title="Prompt Aprimorado com IA"
-            >
-              <PenLine size={16} />
-            </motion.button>
-          )}
-
-          {/* Botão de sugestão de prompts inteligentes - sempre visível */}
-          <motion.button
-            className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
-                     flex items-center justify-center shadow-lg text-white"
-            whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => handleButtonClick('SugestaoPrompts')}
-            title="Sugestão de Prompts Inteligentes"
-          >
-            <Lightbulb size={16} />
-          </motion.button>
-
-          {/* Botão de microfone (quando não há texto) */}
-          {!inputMessage.trim() ? (
-            <motion.button 
-              className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
-                       flex items-center justify-center shadow-lg text-white"
-              whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Mic size={16} />
-            </motion.button>
-          ) : (
-            /* Botão de enviar - Visível apenas quando há conteúdo no input */
-            <motion.button
-              className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
-                       flex items-center justify-center shadow-lg text-white"
-              whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
-              whileTap={{ scale: 0.95 }}
-              animate={{ 
-                boxShadow: ["0 0 0px rgba(13, 35, 160, 0)", "0 0 15px rgba(13, 35, 160, 0.5)", "0 0 0px rgba(13, 35, 160, 0)"],
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
-              onClick={handleSendMessage}
-              disabled={isTyping}
-            >
-              {isTyping ? (
-                <Loader2 className="h-4 w-4 animate-spin text-white" />
-              ) : (
-                <Send size={16} />
-              )}
-            </motion.button>
-          )}
-        </div>
-
-        {/* Ações rápidas */}
-        <motion.div 
-          className="quick-actions mt-2 pb-1 flex gap-1.5 overflow-x-auto scrollbar-hide"
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          transition={{ duration: 0.3 }}
-        >
-          {/* Área de quick actions foi removida conforme solicitado */}
-        </motion.div>
       </div>
-    </motion.div>
+
+      <DeepSearchModal
+        open={showDeepSearchModal}
+        onOpenChange={setShowDeepSearchModal}
+        onSearch={handleDeepSearch}
+      />
+    </div>
   );
 };
 
