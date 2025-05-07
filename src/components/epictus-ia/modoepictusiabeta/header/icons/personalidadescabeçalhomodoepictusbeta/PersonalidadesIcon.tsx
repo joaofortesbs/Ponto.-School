@@ -4,6 +4,9 @@ import { User, ChevronDown } from "lucide-react";
 import PersonalidadesModal from "../../../../modals/PersonalidadesModal";
 import { motion } from "framer-motion";
 
+// Importando os ícones necessários
+import { GraduationCap, BookOpen, Lightbulb, Award } from "lucide-react";
+
 const PersonalidadesIcon: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activePersonalidade, setActivePersonalidade] = useState("estudante");
@@ -67,18 +70,11 @@ const PersonalidadesIcon: React.FC = () => {
             descricao: "Abordagem técnica avançada com conhecimento especializado e termos específicos da área.",
             ativa: activePersonalidade === "expert",
             icone: <Award className="h-5 w-5" />
-          }: "Simplificador",
-            descricao: "Explicações extremamente simplificadas e diretas, ideal para entendimento rápido de conceitos complexos.",
-            ativa: activePersonalidade === "simplificador",
-            icone: <Zap className="h-5 w-5" />
-          },
+          }
         ]}
       />
     </>
   );
 };
 
-// Importando os ícones necessários
-import { GraduationCap, BookOpen, Lightbulb, Award } from "lucide-react";
-
-export default PersonalidadesIcon;;
+export default PersonalidadesIcon;
