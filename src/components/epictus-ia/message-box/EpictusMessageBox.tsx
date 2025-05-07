@@ -20,6 +20,7 @@ interface EpictusMessageBoxProps {
   handleFileChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   fileInputRef?: React.RefObject<HTMLInputElement>;
   selectedFiles?: any[];
+  setSelectedFiles?: (files: any[]) => void;
 }
 
 const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
@@ -166,17 +167,14 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
                         const newFiles = [...selectedFiles];
                         newFiles.splice(index, 1);
                         if (externalSelectedFiles) {
-                          // Se estiver usando props externa, encontre a função de set
-                          const parentSetSelectedFiles = (props as any).setSelectedFiles;
-                          if (parentSetSelectedFiles) {
-                            parentSetSelectedFiles(newFiles);
+                          // Se estiver usando props externa
+                          if (props.setSelectedFiles && typeof props.setSelectedFiles === 'function') {
+                            props.setSelectedFiles(newFiles);
                           } else {
                             // Tentar encontrar o setSelectedFiles em outro nível
-                            const setSelectedFilesFromParent = Object.entries(props)
-                              .find(([key, value]) => key.includes('setSelectedFiles') && typeof value === 'function')?.[1];
-                            
-                            if (setSelectedFilesFromParent) {
-                              setSelectedFilesFromParent(newFiles);
+                            const parentProps = props as any;
+                            if (parentProps.setSelectedFiles && typeof parentProps.setSelectedFiles === 'function') {
+                              parentProps.setSelectedFiles(newFiles);
                             }
                           }
                         } else {

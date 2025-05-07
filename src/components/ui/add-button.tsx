@@ -1,63 +1,38 @@
-
-import React, { useState } from "react";
+import React from "react";
 import { Plus } from "lucide-react";
 import { motion } from "framer-motion";
-import UploadModal from "./upload-modal";
 
 interface AddButtonProps {
-  onFileUpload?: (files: File[]) => void;
+  onFilesSelected: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  fileInputRef: React.RefObject<HTMLInputElement>;
+  isDisabled?: boolean;
 }
 
-const AddButton: React.FC<AddButtonProps> = ({ onFileUpload }) => {
-  const [showUploadModal, setShowUploadModal] = useState(false);
-
-  const handleUpload = (files: File[]) => {
-    if (onFileUpload) {
-      onFileUpload(files);
-    }
-    console.log("Arquivos enviados:", files);
-    
-    // Implementação do salvamento dos arquivos na lista de recentes
-    if (files.length > 0) {
-      // Converter Files para objetos serializáveis
-      const recentFilesToSave = files.map(file => ({
-        name: file.name,
-        date: "Hoje",
-        type: file.type,
-        size: file.size
-      }));
-      
-      // Obter arquivos existentes
-      const existingFilesJson = localStorage.getItem('recentFiles');
-      let existingFiles = existingFilesJson ? JSON.parse(existingFilesJson) : [];
-      
-      // Adicionar novos arquivos no início da lista (mais recentes primeiro)
-      const updatedFiles = [...recentFilesToSave, ...existingFiles].slice(0, 10); // limitar a 10
-      
-      // Salvar no localStorage
-      localStorage.setItem('recentFiles', JSON.stringify(updatedFiles));
-      console.log("Arquivos recentes salvos no localStorage");
+const AddButton: React.FC<AddButtonProps> = ({ 
+  onFilesSelected, 
+  fileInputRef,
+  isDisabled = false 
+}) => {
+  const handleClick = () => {
+    if (fileInputRef.current && !isDisabled) {
+      fileInputRef.current.click();
     }
   };
 
   return (
-    <>
-      <motion.button
-        className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
-                 flex items-center justify-center shadow-lg text-white"
-        whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setShowUploadModal(true)}
-      >
-        <Plus size={18} />
-      </motion.button>
-
-      <UploadModal
-        open={showUploadModal}
-        onOpenChange={setShowUploadModal}
-        onUpload={handleUpload}
-      />
-    </>
+    <motion.button
+      className={`flex-shrink-0 w-9 h-9 rounded-full bg-[#1230CC]/20 hover:bg-[#1230CC]/30
+                flex items-center justify-center shadow-sm 
+                ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+      whileHover={{ scale: isDisabled ? 1 : 1.05, backgroundColor: isDisabled ? "" : "rgba(18, 48, 204, 0.3)" }}
+      whileTap={{ scale: isDisabled ? 1 : 0.95 }}
+      onClick={handleClick}
+      disabled={isDisabled}
+      title="Adicionar arquivos"
+      type="button"
+    >
+      <Plus size={16} className="text-[#1230CC]" />
+    </motion.button>
   );
 };
 
