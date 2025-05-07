@@ -57,7 +57,7 @@ const PersonalidadesIcon: React.FC = () => {
     // Opcional: fechar o modal após seleção
     // setIsModalOpen(false);
   };
-  
+
   // Função para resetar a personalidade para o estado padrão
   const resetPersonalidade = (e: React.MouseEvent) => {
     e.stopPropagation(); // Evita que o clique abra o modal
@@ -93,7 +93,7 @@ const PersonalidadesIcon: React.FC = () => {
           </motion.div>
         )}
         <ChevronDown className="h-3.5 w-3.5 ml-1.5 text-white/80" />
-      </motion.div>on.div>
+      </motion.div>
 
       <PersonalidadesModal 
         open={isModalOpen} 
