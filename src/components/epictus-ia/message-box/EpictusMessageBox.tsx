@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Send, Plus, Mic, Loader2, Brain, BookOpen, AlignJustify, RotateCw, Search, Image, Lightbulb, PenLine } from "lucide-react";
 import { motion } from "framer-motion";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import QuickActionButton from "./QuickActionButton";
+import { UploadModal } from "@/components/ui/upload-modal";
 
 
 interface EpictusMessageBoxProps {
@@ -28,6 +29,17 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
   handleKeyDown,
   handleButtonClick
 }) => {
+  // Estados para o modal de upload
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [uploadModalPosition, setUploadModalPosition] = useState({ top: 0, left: 0 });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Função para simular o upload de arquivos
+  const handleUpload = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
   return (
     <motion.div 
       className="relative w-[60%] h-auto mx-auto bg-transparent rounded-2xl shadow-xl 
@@ -114,7 +126,12 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
                      flex items-center justify-center shadow-lg text-white"
             whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => {}}
+            onClick={(e) => {
+              const button = e.currentTarget;
+              const rect = button.getBoundingClientRect();
+              setUploadModalPosition({ top: rect.bottom + 10, left: rect.left });
+              setUploadModalOpen(true);
+            }}
           >
             <Plus size={18} />
           </motion.button>
@@ -202,6 +219,35 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
           {/* Área de quick actions foi removida conforme solicitado */}
         </motion.div>
       </div>
+      
+      {/* Input de arquivo oculto */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={(e) => {
+          if (e.target.files && e.target.files.length > 0) {
+            // Aqui você processaria os arquivos selecionados
+            toast({
+              title: "Arquivo selecionado",
+              description: `${e.target.files.length} arquivo(s) carregado(s) com sucesso.`,
+              duration: 3000,
+            });
+            // Limpa o input para permitir selecionar o mesmo arquivo novamente
+            e.target.value = '';
+          }
+        }}
+        style={{ display: 'none' }}
+        multiple
+        accept="image/*,application/pdf,text/plain,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      />
+      
+      {/* Modal de upload */}
+      <UploadModal
+        isOpen={uploadModalOpen}
+        onClose={() => setUploadModalOpen(false)}
+        onUpload={handleUpload}
+        position={uploadModalPosition}
+      />
     </motion.div>
   );
 };
