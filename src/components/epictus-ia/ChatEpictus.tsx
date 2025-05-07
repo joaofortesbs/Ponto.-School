@@ -38,13 +38,20 @@ export default function ChatEpictus() {
   const handleSendMessage = async () => {
     if ((inputMessage.trim() === "" && selectedFiles.length === 0) || isTyping) return;
 
+    // Processar arquivos para criar URLs
+    const processedFiles = selectedFiles.map(file => ({
+      ...file,
+      url: URL.createObjectURL(file),
+      size: file.size
+    }));
+
     // Adicionar mensagem do usuário
     const userMessage: IAMessage = {
       id: uuidv4(),
       content: inputMessage,
       role: "user",
       createdAt: new Date(),
-      files: selectedFiles,
+      files: processedFiles,
     };
 
     // Salvar a mensagem atual para enviar para API
@@ -53,7 +60,6 @@ export default function ChatEpictus() {
       const filesList = selectedFiles.map(file => `- ${file.name} (${file.type})`).join('\n');
       currentMessage += `\n\nArquivos anexados:\n${filesList}`;
     }
-
 
     setMessages((prev) => [...prev, userMessage]);
     setInputMessage("");

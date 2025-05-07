@@ -602,3 +602,16 @@ function useFallbackResponse(message: string): string {
   const randomIndex = Math.floor(Math.random() * fallbackResponses.length);
   return fallbackResponses[randomIndex];
 }
+
+export interface ProcessedFile extends File {
+  url: string;
+  size: number;
+}
+
+export interface IAMessage {
+  id: string;
+  content: string;
+  role: 'user' | 'assistant';
+  createdAt: Date;
+  files?: (File | ProcessedFile)[];
+}

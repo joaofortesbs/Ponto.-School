@@ -167,9 +167,17 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
                         newFiles.splice(index, 1);
                         if (externalSelectedFiles) {
                           // Se estiver usando props externa, encontre a função de set
-                          const setSelectedFiles = (props as any).setSelectedFiles;
-                          if (setSelectedFiles) {
-                            setSelectedFiles(newFiles);
+                          const parentSetSelectedFiles = (props as any).setSelectedFiles;
+                          if (parentSetSelectedFiles) {
+                            parentSetSelectedFiles(newFiles);
+                          } else {
+                            // Tentar encontrar o setSelectedFiles em outro nível
+                            const setSelectedFilesFromParent = Object.entries(props)
+                              .find(([key, value]) => key.includes('setSelectedFiles') && typeof value === 'function')?.[1];
+                            
+                            if (setSelectedFilesFromParent) {
+                              setSelectedFilesFromParent(newFiles);
+                            }
                           }
                         } else {
                           // Se estiver usando estado local
