@@ -53,14 +53,14 @@ const HeaderIcons: React.FC<HeaderIconsProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-center z-10 relative gap-4 px-4 py-1.5 rounded-full bg-gradient-to-r from-[#0A1E38] to-[#0F2542] shadow-lg border border-[#1E3A5F]/30 backdrop-blur-sm mx-2"> 
-      <PersonalidadesIcon onClick={handlePersonalidadesClick} />
-      <HistoricoIcon onClick={handleHistoricoClick} />
-      <EspacoAprendizagemIcon onClick={onEspacoAprendizagemClick} />
-      <ApostilaInteligenteIcon onClick={handleApostilaInteligenteClick} />
-      <ModoFantasmaIcon onClick={handleModoFantasmaClick} active={modoFantasmaAtivo} />
-      <GaleriaIcon onClick={onGaleriaClick} />
-      <PerfilIcon onClick={onPerfilClick} />
+    <div className="flex items-center justify-center z-10 relative gap-3" style={{ backgroundColor: "#212529" }}> {/* Added dark background */}
+      <PersonalidadesIcon onClick={handlePersonalidadesClick} style={{ filter: "brightness(0.8)" }} /> {/* Darker icon */}
+      <HistoricoIcon onClick={handleHistoricoClick} style={{ filter: "brightness(0.8)" }} /> {/* Darker icon */}
+      <EspacoAprendizagemIcon onClick={onEspacoAprendizagemClick} style={{ filter: "brightness(0.8)" }} /> {/* Darker icon */}
+      <ApostilaInteligenteIcon onClick={handleApostilaInteligenteClick} style={{ filter: "brightness(0.8)" }} /> {/* Darker icon */}
+      <ModoFantasmaIcon onClick={handleModoFantasmaClick} active={modoFantasmaAtivo} style={{ filter: "brightness(0.8)" }} /> {/* Darker icon */}
+      <GaleriaIcon onClick={onGaleriaClick} style={{ filter: "brightness(0.8)" }} /> {/* Darker icon */}
+      <PerfilIcon onClick={onPerfilClick} style={{ filter: "brightness(0.8)" }} /> {/* Darker icon */}
       <HistoricoConversasModal open={isHistoricoModalOpen} onOpenChange={setIsHistoricoModalOpen} />
       <ApostilaInteligenteModal open={isApostilaInteligenteModalOpen} onOpenChange={setIsApostilaInteligenteModalOpen} />
     </div>
