@@ -129,7 +129,11 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
             onClick={(e) => {
               const button = e.currentTarget;
               const rect = button.getBoundingClientRect();
-              setUploadModalPosition({ top: rect.bottom + 10, left: rect.left });
+              // Ajusta posição para considerar o scroll da página
+              setUploadModalPosition({ 
+                top: rect.bottom + window.scrollY, 
+                left: rect.left + window.scrollX 
+              });
               setUploadModalOpen(true);
             }}
           >

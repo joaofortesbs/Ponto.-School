@@ -29,7 +29,7 @@ export function UploadModal({
     <AnimatePresence>
       {isOpen && (
         <div 
-          className="fixed inset-0 z-50 flex items-start justify-center pointer-events-none"
+          className="fixed inset-0 z-50 pointer-events-auto"
           onClick={(e) => e.target === e.currentTarget && onClose()}
         >
           <motion.div
@@ -37,7 +37,7 @@ export function UploadModal({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="absolute z-50 pointer-events-auto"
+            className="fixed z-50 pointer-events-auto"
             style={{ 
               top: `${position.top}px`, 
               left: `${position.left}px` 
@@ -120,7 +120,7 @@ export function UploadModal({
             </div>
           </motion.div>
           <div
-            className="fixed inset-0 bg-black/10 backdrop-blur-[2px] z-40"
+            className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-40"
             onClick={onClose}
           />
         </div>
