@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { User, ChevronDown, RefreshCw } from "lucide-react";
 import PersonalidadesModal from "../../../../modals/PersonalidadesModal";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
 
 // Importando os ícones necessários
 import { GraduationCap, BookOpen, Lightbulb, Award } from "lucide-react";
@@ -69,48 +68,35 @@ const PersonalidadesIcon: React.FC = () => {
 
   return (
     <>
-      <Button
-        variant="ghost"
+      <motion.div 
+        className="flex items-center bg-gradient-to-r from-blue-600 to-indigo-700 px-3 py-1.5 rounded-full cursor-pointer hover:shadow-md transition-all personalidades-root"
         onClick={handleOpenModal}
-        className={`relative h-10 rounded-full px-4 flex items-center gap-1.5 ${
-          isModalOpen
-            ? "bg-[#102C51] text-[#4A9FFF] ring-2 ring-[#1E63B4]/50"
-            : "bg-[#0A1F38] text-[#7EB6F7] hover:bg-[#0F2A4F] hover:text-[#A9D2FF]"
-        } shadow-lg transition-all duration-200 header-icon-button backdrop-blur-sm`}
-        style={{
-          boxShadow: isModalOpen ? '0 0 10px rgba(28, 100, 242, 0.4)' : '0 4px 6px rgba(0, 0, 0, 0.15)',
-        }}
+        style={{ zIndex: 100000 }}
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
       >
-        <motion.div
-          className="flex items-center"
-          initial={{ scale: 1 }}
-          whileHover={{ scale: 1.03 }}
-        >
-          <span className="text-sm font-medium">{personalidadeNomes[activePersonalidade] || "Professor"}</span>
-          <motion.div
-            animate={{ rotate: isModalOpen ? 180 : 0 }}
-            transition={{ duration: 0.2 }}
+        <div className="bg-white/20 p-1 rounded-full mr-2">
+          <User className="h-3.5 w-3.5 text-white" />
+        </div>
+        <span className="text-white text-sm font-medium">
+          {personalidadeNomes[activePersonalidade] || "Personalidades"}
+        </span>
+        {activePersonalidade !== "nenhuma" && (
+          <motion.div 
+            className="ml-1.5 bg-white/10 hover:bg-white/20 p-1 rounded-full cursor-pointer"
+            onClick={resetPersonalidade}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            title="Reiniciar personalidade"
           >
-            <ChevronDown size={14} className="ml-1" />
+            <RefreshCw className="h-3 w-3 text-white/90" />
           </motion.div>
-          {isModalOpen && (
-            <motion.div
-              className="absolute top-0 left-0 right-0 bottom-0 rounded-full"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              style={{
-                background: "linear-gradient(45deg, rgba(28, 100, 242, 0.1), rgba(74, 159, 255, 0.1))",
-                zIndex: -1,
-                borderRadius: "9999px"
-              }}
-            />
-          )}
-        </motion.div>
-      </Button>
+        )}
+        <ChevronDown className="h-3.5 w-3.5 ml-1.5 text-white/80" />
+      </motion.div>
 
-      <PersonalidadesModal
-        open={isModalOpen}
+      <PersonalidadesModal 
+        open={isModalOpen} 
         onOpenChange={setIsModalOpen}
         onPersonalidadeSelect={handleSelectPersonalidade}
         personalidades={[
@@ -119,28 +105,28 @@ const PersonalidadesIcon: React.FC = () => {
             nome: "Estudante",
             descricao: "Respostas didáticas e simplificadas, ideais para aprendizado e revisão de conteúdos acadêmicos.",
             ativa: activePersonalidade === "estudante",
-            icone: <GraduationCap className="h-5 w-5 text-white" />
+            icone: <GraduationCap className="h-5 w-5" />
           },
           {
             id: "professor",
             nome: "Professor",
             descricao: "Explicações detalhadas com exemplos práticos e acompanhamento pedagógico de alto nível.",
             ativa: activePersonalidade === "professor",
-            icone: <BookOpen className="h-5 w-5 text-white" />
+            icone: <BookOpen className="h-5 w-5" />
           },
           {
             id: "mentor",
             nome: "Mentor",
             descricao: "Foco em desenvolvimento pessoal, orientação de carreira e apoio para tomada de decisões.",
             ativa: activePersonalidade === "mentor",
-            icone: <Lightbulb className="h-5 w-5 text-white" />
+            icone: <Lightbulb className="h-5 w-5" />
           },
           {
             id: "expert",
             nome: "Expert",
             descricao: "Abordagem técnica avançada com conhecimento especializado e termos específicos da área.",
             ativa: activePersonalidade === "expert",
-            icone: <Award className="h-5 w-5 text-white" />
+            icone: <Award className="h-5 w-5" />
           }
         ]}
       />

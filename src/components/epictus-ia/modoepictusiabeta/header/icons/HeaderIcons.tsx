@@ -53,7 +53,7 @@ const HeaderIcons: React.FC<HeaderIconsProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-center z-10 relative gap-4 px-4 py-1.5 rounded-full bg-gradient-to-r from-[#0A1E38] to-[#0F2542] shadow-lg border border-[#1E3A5F]/30 backdrop-blur-sm mx-2"> 
+    <div className="flex items-center justify-center z-10 relative gap-3">
       <PersonalidadesIcon onClick={handlePersonalidadesClick} />
       <HistoricoIcon onClick={handleHistoricoClick} />
       <EspacoAprendizagemIcon onClick={onEspacoAprendizagemClick} />
