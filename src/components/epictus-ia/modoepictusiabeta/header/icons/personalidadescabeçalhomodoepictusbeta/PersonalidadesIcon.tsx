@@ -27,10 +27,12 @@ const PersonalidadesIcon: React.FC<PersonalidadesIconProps> = ({ onClick }) => {
         <ChevronDown className="h-3.5 w-3.5 ml-1 text-white" />
       </div>
       
-      <PersonalidadesDropdown 
-        isOpen={isDropdownOpen} 
-        onClose={() => setIsDropdownOpen(false)} 
-      />
+      <div className="absolute left-1/2 transform -translate-x-1/2">
+        <PersonalidadesDropdown 
+          isOpen={isDropdownOpen} 
+          onClose={() => setIsDropdownOpen(false)} 
+        />
+      </div>
     </div>
   );
 };
