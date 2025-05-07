@@ -50,40 +50,6 @@
   animation: ping-slow 3s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 
-/* Estilo refinado para o modal de personalidades */
-.personalidades-modal {
-  --glass-opacity: 0.85;
-  --glass-border-opacity: 0.3;
-  --glass-blur: 12px;
-  
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-}
-
-.dark .personalidades-modal {
-  --glass-opacity: 0.75;
-  --glass-border-opacity: 0.2;
-}
-
-.personalidades-list::-webkit-scrollbar {
-  width: 3px;
-}
-
-.personalidades-list::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.personalidades-list::-webkit-scrollbar-thumb {
-  background-color: rgba(59, 130, 246, 0.3);
-  border-radius: 3px;
-}
-
-.dark .personalidades-list::-webkit-scrollbar-thumb {
-  background-color: rgba(96, 165, 250, 0.3);
-}
-
-
 /* Gradiente radial para efeitos de fundo */
 .bg-gradient-radial {
   background-image: radial-gradient(var(--tw-gradient-stops));

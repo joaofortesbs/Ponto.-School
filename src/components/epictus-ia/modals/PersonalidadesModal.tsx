@@ -37,17 +37,12 @@ const PersonalidadesModal: React.FC<PersonalidadesModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="sm:max-w-[550px] max-h-[85vh] flex flex-col rounded-xl personalidades-modal backdrop-blur-xl bg-white/80 dark:bg-slate-900/80 border border-blue-200/30 dark:border-blue-500/20"
-        style={{ 
-          zIndex: 100001, 
-          boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.15)",
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)"
-        }}
+        className="sm:max-w-[550px] max-h-[85vh] flex flex-col bg-white dark:bg-slate-900 border-0 rounded-xl shadow-xl personalidades-modal"
+        style={{ zIndex: 100001 }}
       >
         <DialogHeader className="pb-0">
           <DialogTitle className="text-xl font-semibold flex items-center text-slate-800 dark:text-slate-100">
-            <span className="mr-2 flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-r from-indigo-500 to-blue-600 text-white shadow-md shadow-blue-600/20">
+            <span className="mr-2 flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-r from-indigo-500 to-blue-600 text-white">
               <User className="h-5 w-5" />
             </span>
             Personalidades da IA
@@ -64,13 +59,13 @@ const PersonalidadesModal: React.FC<PersonalidadesModalProps> = ({
                 key={personalidade.id}
                 className={`relative p-4 rounded-lg cursor-pointer transition-all duration-300 
                   ${personalidade.ativa 
-                    ? 'bg-blue-50/90 dark:bg-blue-900/40 border border-blue-400 dark:border-blue-400/60 backdrop-blur-sm'
-                    : 'bg-white/60 hover:bg-slate-50/90 dark:bg-slate-800/50 dark:hover:bg-slate-700/60 border border-slate-200/80 dark:border-slate-700/50 backdrop-blur-sm'
+                    ? 'bg-blue-50 dark:bg-blue-900/20 border-[1.5px] border-blue-500 dark:border-blue-500'
+                    : 'bg-white hover:bg-gray-50 dark:bg-slate-800 dark:hover:bg-slate-700/50 border-[1.5px] border-gray-100 dark:border-slate-700'
                   }`}
                 onClick={() => onPersonalidadeSelect?.(personalidade.id)}
                 whileHover={{ 
-                  scale: 1.02, 
-                  boxShadow: "0 10px 25px rgba(0, 0, 0, 0.08)" 
+                  scale: 1.01, 
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)" 
                 }}
                 transition={{ duration: 0.2 }}
               >
@@ -78,9 +73,9 @@ const PersonalidadesModal: React.FC<PersonalidadesModalProps> = ({
                   <div className="flex items-center">
                     <div className={`flex items-center justify-center p-2 rounded-full 
                       ${personalidade.ativa 
-                        ? 'bg-blue-100 dark:bg-blue-800/60 text-blue-600 dark:text-blue-300 shadow-sm shadow-blue-400/20' 
-                        : 'bg-slate-100/80 dark:bg-slate-700/70 text-slate-600 dark:text-slate-300'
-                      } mr-3 w-10 h-10 backdrop-blur-sm`}
+                        ? 'bg-blue-100 dark:bg-blue-800/30 text-blue-600 dark:text-blue-400' 
+                        : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400'
+                      } mr-3 w-10 h-10`}
                     >
                       {personalidade.icone}
                     </div>
@@ -95,7 +90,7 @@ const PersonalidadesModal: React.FC<PersonalidadesModalProps> = ({
                   </div>
                   {personalidade.ativa && (
                     <div className="flex-shrink-0 ml-2">
-                      <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full p-1 shadow-md shadow-blue-600/20">
+                      <div className="bg-blue-500 text-white rounded-full p-1 shadow-sm">
                         <Check className="h-4 w-4" />
                       </div>
                     </div>
@@ -106,10 +101,10 @@ const PersonalidadesModal: React.FC<PersonalidadesModalProps> = ({
           </div>
         </div>
 
-        <DialogFooter className="mt-6 pt-4 border-t border-slate-200/50 dark:border-slate-700/40">
+        <DialogFooter className="mt-6 pt-4 border-t border-gray-100 dark:border-slate-700">
           <Button 
             onClick={() => onOpenChange(false)}
-            className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:opacity-90 hover:shadow-lg hover:shadow-blue-500/20 text-white rounded-lg px-5 py-2 text-sm font-medium transition-all duration-300"
+            className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:opacity-90 text-white rounded-lg px-5 py-2 text-sm font-medium"
           >
             Concluído
           </Button>
