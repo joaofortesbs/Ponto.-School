@@ -17,6 +17,9 @@ interface EpictusMessageBoxProps {
   MAX_CHARS: number;
   handleKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   handleButtonClick: (action: string) => void;
+  handleFileChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  fileInputRef?: React.RefObject<HTMLInputElement>;
+  selectedFiles?: any[];
 }
 
 const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
@@ -110,20 +113,48 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
 
         {/* Área de input */}
         <div className="flex items-center gap-2">
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            multiple 
+            onChange={handleFileChange}
+          />
+          
+          {/* Botão de adicionar arquivos */}
           <AddButton 
-            onFileUpload={(files) => {
-              // Aqui você pode implementar a lógica para lidar com os arquivos enviados
-              toast({
-                title: `${files.length} arquivo(s) enviado(s) com sucesso`,
-                description: "Os arquivos serão processados em breve.",
-              });
-            }} 
+            onFilesSelected={handleFileChange}
+            fileInputRef={fileInputRef}
+            isDisabled={isTyping}
           />
 
           <div className={`relative flex-grow overflow-hidden 
                           bg-gradient-to-r from-[#0c2341]/30 to-[#0f3562]/30 
                           rounded-xl border ${isTyping ? 'border-[#1230CC]/70' : 'border-white/10'} 
                           transition-all duration-300`}>
+            {selectedFiles && selectedFiles.length > 0 && (
+              <div className="flex flex-wrap gap-2 p-2 border-b border-white/10">
+                {selectedFiles.map((file, index) => (
+                  <div key={index} className="flex items-center gap-1 bg-blue-500/20 rounded-lg px-2 py-1 text-xs">
+                    <div className="flex-shrink-0 w-4 h-4 bg-blue-500/30 rounded-full flex items-center justify-center">
+                      <FileText size={10} className="text-blue-300" />
+                    </div>
+                    <span className="truncate max-w-[150px]">{file.name}</span>
+                    <button
+                      className="text-white/70 hover:text-white"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        const newFiles = [...selectedFiles];
+                        newFiles.splice(index, 1);
+                        setSelectedFiles(newFiles);
+                      }}
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
             <Textarea
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}

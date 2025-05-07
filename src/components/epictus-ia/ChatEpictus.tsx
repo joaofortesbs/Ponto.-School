@@ -23,6 +23,8 @@ export default function ChatEpictus() {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Scroll para o final das mensagens quando novas mensagens são adicionadas
   useEffect(() => {
@@ -34,7 +36,7 @@ export default function ChatEpictus() {
   };
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
+    if ((inputMessage.trim() === "" && selectedFiles.length === 0) || isTyping) return;
 
     // Adicionar mensagem do usuário
     const userMessage: IAMessage = {
@@ -42,13 +44,20 @@ export default function ChatEpictus() {
       content: inputMessage,
       role: "user",
       createdAt: new Date(),
+      files: selectedFiles,
     };
 
     // Salvar a mensagem atual para enviar para API
-    const currentMessage = inputMessage;
+    let currentMessage = inputMessage;
+    if (selectedFiles.length > 0) {
+      const filesList = selectedFiles.map(file => `- ${file.name} (${file.type})`).join('\n');
+      currentMessage += `\n\nArquivos anexados:\n${filesList}`;
+    }
+
 
     setMessages((prev) => [...prev, userMessage]);
     setInputMessage("");
+    setSelectedFiles([]);
     setIsTyping(true);
 
     try {
@@ -89,6 +98,13 @@ export default function ChatEpictus() {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      setSelectedFiles(prevFiles => [...prevFiles, ...filesArray]);
     }
   };
 
@@ -135,6 +151,7 @@ export default function ChatEpictus() {
             </p>
           </div>
         </div>
+        <input type="file" ref={fileInputRef} onChange={handleFileChange} multiple style={{ display: 'none' }} />
       </div>
 
       {/* Área de mensagens */}
@@ -178,7 +195,13 @@ export default function ChatEpictus() {
                   }`}
                 >
                   {message.content}
-
+                  {message.files && message.files.map((file, index) => (
+                    <div key={index}>
+                      <a href={URL.createObjectURL(file)} download={file.name} target="_blank" rel="noopener noreferrer">
+                        {file.name}
+                      </a>
+                    </div>
+                  ))}
                   {message.role === "assistant" && (
                     <div className="mt-2 flex items-center justify-end gap-1.5">
                       <Button
@@ -213,7 +236,18 @@ export default function ChatEpictus() {
         </div>
       </ScrollArea>
 
-      {/* A caixa de entrada de mensagens foi removida */}
+      {/* Input area (needs to be added back) */}
+      <div className="p-4 border-t">
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder="Digite sua mensagem..."
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
+          />
+          <Button onClick={handleSendMessage}>Enviar</Button>
+        </div>
+      </div>
     </div>
   );
 }
