@@ -101,22 +101,7 @@ const PersonalidadesModal: React.FC<PersonalidadesModalProps> = ({
           </div>
         </div>
 
-        <DialogFooter className="mt-6 pt-4 border-t border-gray-100 dark:border-slate-700 flex flex-col sm:flex-row gap-3 sm:justify-between w-full">
-          <div className="flex items-center space-x-2">
-            <Switch 
-              id="mostrar-personalidade"
-              checked={localStorage.getItem("epictus-mostrar-nome-personalidade") === "true"}
-              onCheckedChange={(checked) => {
-                localStorage.setItem("epictus-mostrar-nome-personalidade", checked.toString());
-                // Forçar recarregamento para atualizar a exibição
-                window.location.reload();
-              }}
-              className="data-[state=checked]:bg-blue-600"
-            />
-            <Label htmlFor="mostrar-personalidade" className="text-sm text-gray-600 dark:text-gray-300">
-              Exibir personalidade selecionada
-            </Label>
-          </div>
+        <DialogFooter className="mt-6 pt-4 border-t border-gray-100 dark:border-slate-700">
           <Button 
             onClick={() => onOpenChange(false)}
             className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:opacity-90 text-white rounded-lg px-5 py-2 text-sm font-medium"
