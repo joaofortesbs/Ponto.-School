@@ -3,7 +3,6 @@ import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Upload, File, X, Cloud, FolderOpen, ChevronRight } from "lucide-react";
-import { GoogleIcon, MicrosoftIcon } from './icons';
 
 interface UploadModalPosition {
   top: number;
