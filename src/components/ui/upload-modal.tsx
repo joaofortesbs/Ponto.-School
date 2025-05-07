@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -45,15 +46,15 @@ const UploadModal: React.FC<UploadModalProps> = ({
   useEffect(() => {
     // Em uma implementação real, aqui seria o código para buscar
     // arquivos recentes do localStorage ou de uma API
-
-    const savedFiles = localStorage.getItem('recentFiles');
-    if (savedFiles) {
-      const parsedFiles = JSON.parse(savedFiles);
-      //Convert parsedFiles to the correct type.  This assumes the structure from AddButton
-      const recentFilesArray: { name: string; date: string; type: string; icon: React.ReactNode }[] = parsedFiles.map(file => ({...file, icon: <File className="h-4 w-4 text-blue-400" />}))
-      setRecentFiles(recentFilesArray);
-    }
-
+    
+    // Por enquanto, deixamos a lista vazia até implementar a funcionalidade completa
+    setRecentFiles([]);
+    
+    // Exemplo de como seria com localStorage:
+    // const savedFiles = localStorage.getItem('recentFiles');
+    // if (savedFiles) {
+    //   setRecentFiles(JSON.parse(savedFiles));
+    // }
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,20 +91,9 @@ const UploadModal: React.FC<UploadModalProps> = ({
       onUpload(files);
       setFiles([]);
       onOpenChange(false);
-
+      
       // Aqui seria onde você salvaria os arquivos na lista de recentes
       // em uma implementação real
-      const recentFilesToSave = files.map(file => ({
-        name: file.name,
-        date: "Hoje",
-        type: file.type,
-        size: file.size
-      }));
-
-      const existingFilesJson = localStorage.getItem('recentFiles');
-      let existingFiles = existingFilesJson ? JSON.parse(existingFilesJson) : [];
-      const updatedFiles = [...recentFilesToSave, ...existingFiles].slice(0, 10);
-      localStorage.setItem('recentFiles', JSON.stringify(updatedFiles));
     }
   };
 

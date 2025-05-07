@@ -1,25 +1,23 @@
 import { v4 as uuidv4 } from 'uuid';
 
-// Interface de mensagem para o chat, incluindo arquivos
+// Interface de mensagem para o chat
 export interface ChatMessage {
   id?: string;
   sender: 'user' | 'ai' | 'system';
   content: string;
   timestamp?: Date;
-  files?: File[]; // Adicionando suporte para arquivos
 }
 
 // Histórico de conversas por sessão
 const conversationHistory: Record<string, ChatMessage[]> = {};
 
 // Função para criar uma nova mensagem
-export const createMessage = (content: string, sender: 'user' | 'ai' | 'system', files?: File[]): ChatMessage => {
+export const createMessage = (content: string, sender: 'user' | 'ai' | 'system'): ChatMessage => {
   return {
     id: uuidv4(),
     sender,
     content,
-    timestamp: new Date(),
-    files
+    timestamp: new Date()
   };
 };
 
@@ -75,7 +73,7 @@ const GEMINI_API_KEY = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 // Função para gerar resposta da IA usando a API Gemini
-export const generateAIResponse = async (message: string, sessionId?: string, files?: File[], options?: any): Promise<string> => {
+export const generateAIResponse = async (message: string, sessionId?: string, options?: any): Promise<string> => {
   try {
     console.log("Gerando resposta com Gemini para:", message);
 
@@ -86,7 +84,7 @@ export const generateAIResponse = async (message: string, sessionId?: string, fi
 
     // Adicionar mensagem ao histórico se tiver sessionId
     if (sessionId) {
-      const userMessage = createMessage(message, 'user', files);
+      const userMessage = createMessage(message, 'user');
       addMessageToHistory(sessionId, userMessage);
     }
 
@@ -603,4 +601,17 @@ function useFallbackResponse(message: string): string {
   // Selecionar uma resposta aleatória do fallback
   const randomIndex = Math.floor(Math.random() * fallbackResponses.length);
   return fallbackResponses[randomIndex];
+}
+
+export interface ProcessedFile extends File {
+  url: string;
+  size: number;
+}
+
+export interface IAMessage {
+  id: string;
+  content: string;
+  role: 'user' | 'assistant';
+  createdAt: Date;
+  files?: (File | ProcessedFile)[];
 }
