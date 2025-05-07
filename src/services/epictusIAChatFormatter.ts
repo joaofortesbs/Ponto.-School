@@ -428,8 +428,8 @@ export class EpictusIAChatFormatter {
       const mostLinesStartWithVerbs = lines.filter(line => actionVerbPattern.test(line)).length >= lines.length * 0.5;
       
       if (lines.length >= 3 && shortLines && mostLinesStartWithVerbs) {
-        // Converte para lista com Markdown padrão (usando - para listas)
-        paragraphs[i] = lines.map((line, index) => `- ${line}`).join('\n');
+        // Converte para lista com bullet points
+        paragraphs[i] = lines.map((line, index) => `• ${line}`).join('\n');
       }
     }
     
@@ -437,7 +437,7 @@ export class EpictusIAChatFormatter {
   }
   
   private formatExamples(content: string): string {
-    // Destaca exemplos com formatação especial usando Markdown
+    // Destaca exemplos com formatação especial
     let enhanced = content;
     
     // Adiciona blockquote para exemplos
@@ -448,7 +448,7 @@ export class EpictusIAChatFormatter {
   }
   
   private addHighlightBoxes(content: string): string {
-    // Adiciona caixas de destaque para informações importantes usando Markdown
+    // Adiciona caixas de destaque para informações importantes
     let enhanced = content;
     
     // Adiciona caixa para dicas importantes
@@ -462,100 +462,6 @@ export class EpictusIAChatFormatter {
     // Adiciona caixa para resumos/sínteses
     enhanced = enhanced.replace(/(?:^|\n)(?:em resumo|resumindo|sintetizando|em síntese|concluindo)[\s:]+([^\n]+(?:\n[^\n]+)*)/gi,
       (match, summaryText) => `\n> 📌 **RESUMO:** ${summaryText}\n`);
-    
-    // Adiciona blocos de código quando relevante
-    enhanced = enhanced.replace(/(?:^|\n)(?:código|script|programa|syntax|sintaxe)[\s:]+```(\w+)\n([^`]+)```/gi,
-      (match, language, codeText) => `\n\`\`\`${language}\n${codeText.trim()}\n\`\`\`\n`);
-    
-    return enhanced;
-  }
-  
-  // Adicionar método para criar tabelas em Markdown quando necessário
-  private createMarkdownTable(content: string): string {
-    // Verifica se já existem tabelas no formato Markdown
-    if (content.includes('|') && content.includes('---')) {
-      return content;
-    }
-    
-    let enhanced = content;
-    
-    // Padrão: Texto que sugere "Comparação entre X e Y"
-    const comparisonMatch = enhanced.match(/(?:comparação|comparando|diferenças?|semelhanças?)\s+(?:entre|de)\s+([^e\s]+(?:\s+[^e\s]+)*)\s+e\s+([^\s\.]+(?:\s+[^\s\.]+)*)/i);
-    
-    if (comparisonMatch) {
-      const item1 = comparisonMatch[1].trim();
-      const item2 = comparisonMatch[2].trim();
-      
-      // Busca por características que poderiam estar em uma tabela
-      const characteristics = [];
-      const possibleCharacteristics = [
-        'vantagens', 'desvantagens', 'características', 'aplicações', 
-        'uso', 'custo', 'eficiência', 'recursos', 'limitações'
-      ];
-      
-      for (const char of possibleCharacteristics) {
-        if (enhanced.toLowerCase().includes(char)) {
-          characteristics.push(char);
-        }
-      }
-      
-      // Se encontrou características suficientes, cria uma tabela
-      if (characteristics.length >= 2) {
-        let tableContent = `\n\n| Característica | ${item1} | ${item2} |\n`;
-        tableContent += `|---------------|${'-'.repeat(item1.length)}|${'-'.repeat(item2.length)}|\n`;
-        
-        // Adiciona linhas para cada característica (com conteúdo genérico)
-        for (const char of characteristics) {
-          const charCapitalized = char.charAt(0).toUpperCase() + char.slice(1);
-          tableContent += `| **${charCapitalized}** | - | - |\n`;
-        }
-        
-        // Insere a tabela após o parágrafo que menciona a comparação
-        enhanced = enhanced.replace(
-          new RegExp(`(${comparisonMatch[0]}[^\\n]*)`, 'i'), 
-          `$1\n\n${tableContent}`
-        );
-      }
-    }
-    
-    return enhanced;
-  }
-  
-  // Melhorar suporte para código
-  private addCodeFormatting(content: string): string {
-    let enhanced = content;
-    
-    // Destaca blocos de código existentes com fence de código Markdown
-    enhanced = enhanced.replace(/bloco de código(?:\s+\w+)?:?\s+\n+([^\n]+(?:\n[^\n]+)*)/gi, 
-      (match, codeBlock) => {
-        // Tentar identificar a linguagem pelo contexto
-        let language = 'text';
-        
-        if (codeBlock.includes('function') || codeBlock.includes('var ') || 
-            codeBlock.includes('const ') || codeBlock.includes('let ')) {
-          language = 'javascript';
-        } else if (codeBlock.includes('def ') || codeBlock.includes('import ') || 
-                   codeBlock.includes('print(')) {
-          language = 'python';
-        } else if (codeBlock.includes('<?php') || codeBlock.includes('echo ')) {
-          language = 'php';
-        } else if (codeBlock.includes('public class') || codeBlock.includes('private ') || 
-                   codeBlock.includes('System.out.println')) {
-          language = 'java';
-        }
-        
-        return `\n\`\`\`${language}\n${codeBlock.trim()}\n\`\`\`\n`;
-      }
-    );
-    
-    // Formata código inline com `
-    const codeTerms = ['função', 'método', 'variável', 'classe', 'objeto', 'tag', 'comando'];
-    for (const term of codeTerms) {
-      enhanced = enhanced.replace(
-        new RegExp(`${term}\\s+([\\w\\d_]+)`, 'gi'),
-        (match, codeTerm) => `${term} \`${codeTerm}\``
-      );
-    }
     
     return enhanced;
   }

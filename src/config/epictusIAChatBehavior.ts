@@ -1,3 +1,4 @@
+
 // Configuração específica para o comportamento do chat da Epictus IA
 export const EpictusIAChatBehavior = {
   // Diretrizes fundamentais - Resumo Final de como a IA deve agir em 100% das interações
@@ -33,7 +34,7 @@ export const EpictusIAChatBehavior = {
       experienceLevel: "superior a qualquer outra IA do mercado"
     }
   },
-
+  
   greeting: {
     prefix: "Eai!",
     variations: [
@@ -46,40 +47,7 @@ export const EpictusIAChatBehavior = {
       " Ótimo te ver novamente. Como posso ser útil?"
     ]
   },
-
-  markdownFormatting: {
-    // Configurações para uso avançado de Markdown
-    useBold: true,
-    useItalic: true,
-    useCode: true,
-    useBlockquotes: true,
-    useTables: true,
-    useLists: true,
-    useHeaders: true,
-    useEmojis: true,
-    useSyntaxHighlighting: true,
-    useAdvancedBlocks: true, // Para blocos visuais personalizados
-
-    // Padrões para headers
-    headerPatterns: {
-      introduction: "### 👋 ",
-      explanation: "### 📚 ",
-      examples: "### ✨ Exemplos",
-      summary: "### 📌 Resumo",
-      tips: "### 💡 Dicas",
-      warning: "### ⚠️ Atenção",
-      nextSteps: "### 🚀 Próximos Passos"
-    },
-
-    // Padrões para blocos especiais
-    specialBlocks: {
-      tip: "> 💡 **DICA:**",
-      warning: "> ⚠️ **ATENÇÃO:**",
-      example: "> ✨ **EXEMPLO:**",
-      note: "> 📝 **NOTA:**",
-      summary: "> 📌 **RESUMO:**"
-    }
-  },
+  
   toneAndStyle: {
     formal: false,
     emoji: true,
@@ -122,7 +90,7 @@ export const EpictusIAChatBehavior = {
       }
     }
   },
-
+  
   responseStructure: {
     allowMarkdown: true,
     useEmphasisForKeyPoints: true,
@@ -161,7 +129,7 @@ export const EpictusIAChatBehavior = {
       }
     }
   },
-
+  
   adaptiveBehavior: {
     studentFriendly: true,
     simplifyComplexConcepts: true,
@@ -192,7 +160,7 @@ export const EpictusIAChatBehavior = {
       prioritizeCriticalContent: true
     }
   },
-
+  
   // Padrões de resposta que são usados frequentemente
   commonResponsePatterns: {
     positiveReinforcement: [
@@ -232,7 +200,7 @@ export const EpictusIAChatBehavior = {
       "Deseja que eu formate isso como um relatório profissional?"
     ]
   },
-
+  
   // Comportamento para diferentes tipos de consultas
   queryTypeResponses: {
     factualQuestions: {
@@ -282,7 +250,7 @@ export const EpictusIAChatBehavior = {
       useConsistentTheme: true
     }
   },
-
+  
   // Elementos visuais a serem incorporados nas respostas
   visualElements: {
     emojis: {
@@ -390,7 +358,7 @@ export const EpictusIAChatBehavior = {
       }
     }
   },
-
+  
   // Diretrizes para interpretação profunda de perguntas
   questionInterpretation: {
     identifyIntent: {
@@ -419,7 +387,7 @@ export const EpictusIAChatBehavior = {
       adaptToSituation: true
     }
   },
-
+  
   // Novos formatos de documentos
   documentFormats: {
     academic: {
