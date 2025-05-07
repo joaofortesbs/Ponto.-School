@@ -5,7 +5,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import QuickActionButton from "./QuickActionButton";
-import UploadModal from "@/components/ui/upload-modal";
 
 
 interface EpictusMessageBoxProps {
@@ -29,8 +28,6 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
   handleKeyDown,
   handleButtonClick
 }) => {
-  const [uploadModalOpen, setUploadModalOpen] = useState(false);
-  const [uploadModalPosition, setUploadModalPosition] = useState({ top: 0, left: 0 });
   return (
     <motion.div 
       className="relative w-[60%] h-auto mx-auto bg-transparent rounded-2xl shadow-xl 
@@ -117,17 +114,7 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
                      flex items-center justify-center shadow-lg text-white"
             whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
             whileTap={{ scale: 0.95 }}
-            onClick={(e) => {
-              const button = e.currentTarget;
-              const rect = button.getBoundingClientRect();
-              // Ajusta posição para considerar o scroll da página e posicionar acima do botão
-              setUploadModalPosition({ 
-                top: rect.top + window.scrollY - 10, 
-                left: rect.left + window.scrollX 
-              });
-              setUploadModalOpen(true);
-            }}
-            aria-label="Adicionar arquivos"
+            onClick={() => {}}
           >
             <Plus size={18} />
           </motion.button>
@@ -215,13 +202,6 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
           {/* Área de quick actions foi removida conforme solicitado */}
         </motion.div>
       </div>
-      
-      {/* Modal de upload sofisticado */}
-      <UploadModal 
-        isOpen={uploadModalOpen}
-        onClose={() => setUploadModalOpen(false)}
-        position={uploadModalPosition}
-      />
     </motion.div>
   );
 };
