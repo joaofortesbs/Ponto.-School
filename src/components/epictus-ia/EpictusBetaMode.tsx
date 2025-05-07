@@ -49,6 +49,16 @@ const EpictusBetaMode: React.FC = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [animationComplete, setAnimationComplete] = useState(false);
   const [isHistoricoModalOpen, setIsHistoricoModalOpen] = useState(false);
+  const [profileName, setProfileName] = useState("Estudante");
+  const [selectedProfile, setSelectedProfile] = useState("Estudante");
+  const [profileIcon, setProfileIcon] = useState(
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+      <path d="M12 10v-2a2 2 0 0 0-2-2V4"></path>
+      <path d="M10 4H8a2 2 0 0 0-2 2v1a2 2 0 0 0-2 2v1"></path>
+      <path d="M14 4h2a2 2 0 0 1 2 2v1a2 2 0 0 1 2 2v1"></path>
+      <path d="M18 15v1a2 2 0 0 1-2 2h-1a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2h-1a2 2 0 0 1-2-2v-1a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2Z"></path>
+    </svg>
+  );
   const [messages, setMessages] = useState<Message[]>(() => {
     try {
       const savedMessages = localStorage.getItem('epictus_beta_chat');
