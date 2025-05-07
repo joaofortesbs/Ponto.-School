@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Upload, File, X, Cloud, Clock, ChevronRight, FolderOpen } from "lucide-react";
 import { Google, Microsoft } from 'lucide-react';

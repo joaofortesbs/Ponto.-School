@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Plus } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import UploadModal from "./upload-modal";
 
 interface AddButtonProps {
