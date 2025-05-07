@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { User, ChevronDown } from "lucide-react";
 import PersonalidadesModal from "../../../../modals/PersonalidadesModal";
@@ -7,10 +6,33 @@ import { motion } from "framer-motion";
 // Importando os ícones necessários
 import { GraduationCap, BookOpen, Lightbulb, Award } from "lucide-react";
 
+// Mapeamento de IDs para nomes exibidos
+const personalidadeNomes: Record<string, string> = {
+  "estudante": "Estudante",
+  "professor": "Professor",
+  "mentor": "Mentor",
+  "expert": "Expert"
+};
+
 const PersonalidadesIcon: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activePersonalidade, setActivePersonalidade] = useState("estudante");
-  
+  const [showPersonalityName, setShowPersonalityName] = useState(false);
+
+  // Carregar preferência salva, se existir
+  useEffect(() => {
+    const savedPersonalidade = localStorage.getItem("epictus-personalidade-ativa");
+    const savedShowName = localStorage.getItem("epictus-mostrar-nome-personalidade");
+
+    if (savedPersonalidade) {
+      setActivePersonalidade(savedPersonalidade);
+    }
+
+    if (savedShowName === "true") {
+      setShowPersonalityName(true);
+    }
+  }, []);
+
   const handleOpenModal = () => {
     setIsModalOpen(true);
   };
@@ -18,6 +40,10 @@ const PersonalidadesIcon: React.FC = () => {
   const handleSelectPersonalidade = (personalidadeId: string) => {
     console.log(`Personalidade selecionada: ${personalidadeId}`);
     setActivePersonalidade(personalidadeId);
+
+    // Salvar a preferência
+    localStorage.setItem("epictus-personalidade-ativa", personalidadeId);
+
     // Opcional: fechar o modal após seleção
     // setIsModalOpen(false);
   };
@@ -34,7 +60,9 @@ const PersonalidadesIcon: React.FC = () => {
         <div className="bg-white/20 p-1 rounded-full mr-2">
           <User className="h-3.5 w-3.5 text-white" />
         </div>
-        <span className="text-white text-sm font-medium">Personalidades</span>
+        <span className="text-white text-sm font-medium">
+          {personalidadeNomes[activePersonalidade] || "Personalidades"}
+        </span>
         <ChevronDown className="h-3.5 w-3.5 ml-1.5 text-white/80" />
       </motion.div>
 
