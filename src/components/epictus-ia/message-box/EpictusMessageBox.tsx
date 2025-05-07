@@ -1,5 +1,5 @@
-import React, { useState, useRef } from "react";
-import { Send, Plus, Mic, Loader2, Brain, BookOpen, AlignJustify, RotateCw, Search, Image, Lightbulb, PenLine, X, FileText } from "lucide-react";
+import React, { useState } from "react";
+import { Send, Plus, Mic, Loader2, Brain, BookOpen, AlignJustify, RotateCw, Search, Image, Lightbulb, PenLine } from "lucide-react";
 import { motion } from "framer-motion";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -17,9 +17,6 @@ interface EpictusMessageBoxProps {
   MAX_CHARS: number;
   handleKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   handleButtonClick: (action: string) => void;
-  handleFileChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  fileInputRef?: React.RefObject<HTMLInputElement>;
-  selectedFiles?: any[];
 }
 
 const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
@@ -30,27 +27,8 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
   charCount,
   MAX_CHARS,
   handleKeyDown,
-  handleButtonClick,
-  handleFileChange,
-  fileInputRef: externalFileInputRef,
-  selectedFiles: externalSelectedFiles
+  handleButtonClick
 }) => {
-  // Criar referência local se não for fornecida externamente
-  const localFileInputRef = useRef<HTMLInputElement>(null);
-  const fileInputRef = externalFileInputRef || localFileInputRef;
-  
-  // Criar estado local se não for fornecido externamente
-  const [localSelectedFiles, setLocalSelectedFiles] = useState<File[]>([]);
-  const selectedFiles = externalSelectedFiles || localSelectedFiles;
-  
-  // Função para lidar com mudanças de arquivo localmente se handleFileChange não for fornecido
-  const handleFileChangeInternal = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (handleFileChange) {
-      handleFileChange(e);
-    } else if (e.target.files) {
-      setLocalSelectedFiles(Array.from(e.target.files));
-    }
-  };
   return (
     <motion.div 
       className="relative w-[60%] h-auto mx-auto bg-transparent rounded-2xl shadow-xl 
@@ -132,66 +110,20 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
 
         {/* Área de input */}
         <div className="flex items-center gap-2">
-          <input
-            type="file"
-            ref={fileInputRef}
-            className="hidden"
-            multiple 
-            onChange={handleFileChange || handleFileChangeInternal}
-          />
-          
-          {/* Botão de adicionar arquivos */}
           <AddButton 
-            onFilesSelected={handleFileChange || handleFileChangeInternal}
-            fileInputRef={fileInputRef}
-            isDisabled={isTyping}
+            onFileUpload={(files) => {
+              // Aqui você pode implementar a lógica para lidar com os arquivos enviados
+              toast({
+                title: `${files.length} arquivo(s) enviado(s) com sucesso`,
+                description: "Os arquivos serão processados em breve.",
+              });
+            }} 
           />
 
           <div className={`relative flex-grow overflow-hidden 
                           bg-gradient-to-r from-[#0c2341]/30 to-[#0f3562]/30 
                           rounded-xl border ${isTyping ? 'border-[#1230CC]/70' : 'border-white/10'} 
                           transition-all duration-300`}>
-            {selectedFiles && selectedFiles.length > 0 && (
-              <div className="flex flex-wrap gap-2 p-2 border-b border-white/10 bg-blue-500/10 rounded-t-lg">
-                {selectedFiles.map((file, index) => (
-                  <div key={index} className="flex items-center gap-1 bg-blue-500/20 rounded-lg px-2 py-1 text-xs shadow-sm transition-all duration-300 hover:bg-blue-500/30">
-                    <div className="flex-shrink-0 w-4 h-4 bg-blue-500/30 rounded-full flex items-center justify-center">
-                      <FileText size={10} className="text-blue-300" />
-                    </div>
-                    <span className="truncate max-w-[150px] text-white/90">{file.name}</span>
-                    <span className="text-xs text-white/50">({(file.size / 1024).toFixed(1)} KB)</span>
-                    <button
-                      className="text-white/70 hover:text-white hover:bg-red-500/20 rounded-full p-1 transition-colors"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        const newFiles = [...selectedFiles];
-                        newFiles.splice(index, 1);
-                        if (externalSelectedFiles) {
-                          // Se estiver usando props externa, encontre a função de set
-                          const parentSetSelectedFiles = (props as any).setSelectedFiles;
-                          if (parentSetSelectedFiles) {
-                            parentSetSelectedFiles(newFiles);
-                          } else {
-                            // Tentar encontrar o setSelectedFiles em outro nível
-                            const setSelectedFilesFromParent = Object.entries(props)
-                              .find(([key, value]) => key.includes('setSelectedFiles') && typeof value === 'function')?.[1];
-                            
-                            if (setSelectedFilesFromParent) {
-                              setSelectedFilesFromParent(newFiles);
-                            }
-                          }
-                        } else {
-                          // Se estiver usando estado local
-                          setLocalSelectedFiles(newFiles);
-                        }
-                      }}
-                    >
-                      <X size={12} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
             <Textarea
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
