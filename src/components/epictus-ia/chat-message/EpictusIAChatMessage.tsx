@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 import { MessageToolsDropdown } from '../message-tools';
 import { motion } from 'framer-motion';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 interface EpictusIAChatMessageProps {
   content: string;
@@ -30,53 +34,36 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
   const [renderedContent, setRenderedContent] = useState("");
   const [hasTable, setHasTable] = useState(false);
   const [hasFlowchart, setHasFlowchart] = useState(false);
+  const [hasCodeBlock, setHasCodeBlock] = useState(false);
   const [highlightedTerms, setHighlightedTerms] = useState<string[]>([]);
   const [finalQuestion, setFinalQuestion] = useState<string | null>(null);
-  const [processedHtmlContent, setProcessedHtmlContent] = useState("");
-
-  // Processa conteúdo Markdown para HTML com formatação aprimorada
-  const formatToHtml = (text: string): string => {
-    if (!text) return "";
-    
-    // Aplicar formatações avançadas
-    return text
-      // Headers
-      .replace(/^# (.*?)$/gm, '<h1 class="text-xl font-bold text-gray-900 dark:text-gray-100 border-b pb-1 border-gray-200 dark:border-gray-700">$1</h1>')
-      .replace(/^## (.*?)$/gm, '<h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mt-3">$1</h2>')
-      .replace(/^### (.*?)$/gm, '<h3 class="text-base font-medium text-gray-800 dark:text-gray-200">$1</h3>')
-
-      // Formatação de texto - NEGRITO DESTACADO
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-[#FF6B00] dark:text-[#FF8C40] bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 dark:from-[#FF6B00]/20 dark:to-[#FF8C40]/20 px-1 py-0.5 rounded-sm">$1</strong>')
-      .replace(/\_(.*?)\_/g, '<em class="text-gray-700 dark:text-gray-300 italic">$1</em>')
-      .replace(/\~\~(.*?)\~\~/g, '<del class="text-gray-500 dark:text-gray-400">$1</del>')
-      .replace(/\`(.*?)\`/g, '<code class="bg-gray-100 dark:bg-gray-800 text-orange-600 dark:text-orange-400 px-1.5 py-0.5 rounded text-sm font-mono">$1</code>')
-
-      // Listas
-      .replace(/^\- (.*?)$/gm, '<ul class="list-disc pl-5 my-2"><li>$1</li></ul>').replace(/<\/ul>\s?<ul class="list-disc pl-5 my-2">/g, '')
-      .replace(/^[0-9]+\. (.*?)$/gm, '<ol class="list-decimal pl-5 my-2"><li>$1</li></ol>').replace(/<\/ol>\s?<ol class="list-decimal pl-5 my-2">/g, '')
-
-      // Blockquotes
-      .replace(/^> (.*?)$/gm, '<blockquote class="border-l-4 border-orange-400 dark:border-orange-600 italic bg-orange-50 dark:bg-orange-900/20 py-1 px-2 rounded-r my-2 text-gray-700 dark:text-gray-300">$1</blockquote>')
-
-      // Separadores
-      .replace(/^---$/gm, '<hr class="border-t border-gray-200 dark:border-gray-700 my-3" />')
-
-      // Quebras de linha
-      .replace(/\n/g, '<br />')
-
-      // Links
-      .replace(/\[(.*?)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-orange-600 dark:text-orange-400 hover:underline inline-flex items-center gap-0.5">$1<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-0.5"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></a>');
-  };
+  const [useMarkdownRenderer, setUseMarkdownRenderer] = useState(false);
 
   // Detecta elementos especiais no conteúdo
   useEffect(() => {
     if (sender === 'ai') {
       // Detecta se tem tabelas
-      setHasTable(content.includes('|') && content.includes('---'));
+      const containsTable = content.includes('|') && content.includes('---');
+      setHasTable(containsTable);
 
       // Detecta se tem fluxogramas
-      setHasFlowchart(content.includes('```') && 
-        (content.includes('[') && content.includes(']') && content.includes('▼')));
+      const containsFlowchart = content.includes('```') && 
+        (content.includes('[') && content.includes(']') && content.includes('▼'));
+      setHasFlowchart(containsFlowchart);
+      
+      // Detecta se tem blocos de código
+      const containsCodeBlock = content.includes('```');
+      setHasCodeBlock(containsCodeBlock);
+
+      // Determina se devemos usar o renderizador de Markdown completo
+      // ou o processador HTML personalizado
+      if (containsTable || containsFlowchart || containsCodeBlock || content.includes('`') || 
+          content.includes('> ') || content.includes('- ') || content.includes('* ') || 
+          content.includes('1. ')) {
+        setUseMarkdownRenderer(true);
+      } else {
+        setUseMarkdownRenderer(false);
+      }
 
       // Identifica termos destacados
       const boldTerms = content.match(/\*\*(.*?)\*\*/g)?.map(term => term.replace(/\*\*/g, '')) || [];
@@ -101,19 +88,125 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
           // Remove a pergunta do conteúdo principal para exibi-la separadamente
           const contentWithoutQuestion = content.replace(pattern, '').trim();
           setRenderedContent(contentWithoutQuestion);
-          setProcessedHtmlContent(formatToHtml(contentWithoutQuestion));
           return;
         }
       }
 
       // Processa conteúdo avançado
       setRenderedContent(content);
-      setProcessedHtmlContent(formatToHtml(content));
     } else {
       setRenderedContent(content);
-      setProcessedHtmlContent(""); // Não processa HTML para mensagens do usuário
+      setUseMarkdownRenderer(false);
     }
   }, [content, sender]);
+
+  // Componentes personalizados para o ReactMarkdown
+  const components = {
+    // Personaliza os blocos de código
+    code({node, inline, className, children, ...props}) {
+      const match = /language-(\w+)/.exec(className || '');
+      const language = match ? match[1] : '';
+      
+      return !inline && language ? (
+        <SyntaxHighlighter
+          style={vscDarkPlus}
+          language={language}
+          PreTag="div"
+          className="rounded-md my-3 overflow-x-auto"
+          {...props}
+        >
+          {String(children).replace(/\n$/, '')}
+        </SyntaxHighlighter>
+      ) : (
+        <code className="bg-gray-100 dark:bg-gray-800 text-orange-600 dark:text-orange-400 px-1.5 py-0.5 rounded text-sm font-mono" {...props}>
+          {children}
+        </code>
+      );
+    },
+    // Personaliza as tabelas
+    table({node, ...props}) {
+      return (
+        <div className="overflow-x-auto my-4">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-800 rounded-lg" {...props} />
+        </div>
+      );
+    },
+    thead({node, ...props}) {
+      return <thead className="bg-gray-50 dark:bg-gray-800" {...props} />;
+    },
+    tbody({node, ...props}) {
+      return <tbody className="divide-y divide-gray-200 dark:divide-gray-700" {...props} />;
+    },
+    tr({node, ...props}) {
+      return <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50" {...props} />;
+    },
+    th({node, ...props}) {
+      return <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" {...props} />;
+    },
+    td({node, ...props}) {
+      return <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" {...props} />;
+    },
+    // Personaliza citações (blockquote)
+    blockquote({node, ...props}) {
+      return (
+        <blockquote className="border-l-4 border-orange-400 dark:border-orange-600 italic bg-orange-50 dark:bg-orange-900/20 py-1 px-4 rounded-r my-4 text-gray-700 dark:text-gray-300" {...props} />
+      );
+    },
+    // Personaliza listas
+    ul({node, ...props}) {
+      return <ul className="list-disc pl-6 my-4 space-y-1" {...props} />;
+    },
+    ol({node, ...props}) {
+      return <ol className="list-decimal pl-6 my-4 space-y-1" {...props} />;
+    },
+    li({node, ...props}) {
+      return <li className="mb-1" {...props} />;
+    },
+    // Personaliza cabeçalhos
+    h1({node, ...props}) {
+      return <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 border-b pb-1 border-gray-200 dark:border-gray-700 mt-6 mb-4" {...props} />;
+    },
+    h2({node, ...props}) {
+      return <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mt-5 mb-3" {...props} />;
+    },
+    h3({node, ...props}) {
+      return <h3 className="text-base font-medium text-gray-800 dark:text-gray-200 mt-4 mb-2" {...props} />;
+    },
+    // Personaliza parágrafos
+    p({node, ...props}) {
+      return <p className="mb-4" {...props} />;
+    },
+    // Personaliza links
+    a({node, ...props}) {
+      return (
+        <a 
+          className="text-orange-600 dark:text-orange-400 hover:underline inline-flex items-center gap-0.5"
+          target="_blank"
+          rel="noopener noreferrer"
+          {...props}
+        >
+          {props.children}
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-0.5">
+            <path d="M7 7h10v10"/>
+            <path d="M7 17 17 7"/>
+          </svg>
+        </a>
+      );
+    },
+    // Personaliza ênfase (negrito/itálico)
+    strong({node, ...props}) {
+      return (
+        <strong className="font-semibold text-[#FF6B00] dark:text-[#FF8C40] bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 dark:from-[#FF6B00]/20 dark:to-[#FF8C40]/20 px-1 py-0.5 rounded-sm" {...props} />
+      );
+    },
+    em({node, ...props}) {
+      return <em className="text-gray-700 dark:text-gray-300 italic" {...props} />;
+    },
+    // Personaliza linha horizontal
+    hr({node, ...props}) {
+      return <hr className="border-t border-gray-200 dark:border-gray-700 my-6" {...props} />;
+    }
+  };
 
   // Renderiza conteúdo de acordo com o remetente
   return (
@@ -132,10 +225,7 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
         onMouseLeave={() => setIsHovering(false)}
       >
         {/* Conteúdo da mensagem */}
-        <div className={`prose prose-sm dark:prose-invert max-w-none 
-          ${hasTable ? 'prose-table:border-collapse prose-table:w-full prose-td:border prose-td:p-2 prose-th:bg-muted/30' : ''}
-          ${hasFlowchart ? 'prose-code:text-primary prose-code:bg-primary/10 prose-code:p-4 prose-code:rounded' : ''}
-        `}>
+        <div className="prose prose-sm dark:prose-invert max-w-none">
           {isTyping ? (
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]"></div>
@@ -144,10 +234,18 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
             </div>
           ) : (
             <>
-              {sender === 'ai' && processedHtmlContent ? (
-                <div dangerouslySetInnerHTML={{ __html: processedHtmlContent }} />
+              {sender === 'ai' && useMarkdownRenderer ? (
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]} 
+                  rehypePlugins={[rehypeRaw]}
+                  components={components}
+                >
+                  {renderedContent}
+                </ReactMarkdown>
               ) : (
-                <ReactMarkdown>{renderedContent}</ReactMarkdown>
+                <p className="whitespace-pre-wrap">
+                  {renderedContent}
+                </p>
               )}
 
               {/* Pergunta final engajadora destacada */}

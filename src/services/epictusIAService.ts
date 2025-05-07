@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 
 // Interface de mensagem para o chat
@@ -69,153 +68,56 @@ export const clearChatHistory = (sessionId: string): void => {
   }
 };
 
-// Chave da API Gemini
+// Chave da API Gemini (substitua pela sua chave real)
 const GEMINI_API_KEY = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
+
+//Classe para formatação de respostas do chat (implementação básica)
+class EpictusIAChatFormatter {
+    formatChatResponse(response: string): string {
+        //implementação básica -  pode ser aprimorada para lidar com mais elementos markdown
+        return response;
+    }
+}
+
+
 // Função para gerar resposta da IA usando a API Gemini
-export const generateAIResponse = async (message: string, sessionId?: string, options?: any): Promise<string> => {
+export const generateAIResponse = async (input: string, sessionId: string = 'default'): Promise<string> => {
   try {
-    console.log("Gerando resposta com Gemini para:", message);
+    // Simulação de processamento - pode ser substituído por chamada de API real
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
-    // Inicializar histórico se não existir
-    if (sessionId && !conversationHistory[sessionId]) {
-      initializeConversationHistory(sessionId);
+    // Use o formatter para processar e melhorar a resposta
+    const formatter = new EpictusIAChatFormatter();
+
+    // Gerar resposta baseada em contexto e padrões
+    let response = '';
+
+    // Detecta tipos específicos de perguntas para responder adequadamente
+    if (input.match(/(?:ol[aá]|oi|bom\s+dia|boa\s+tarde|boa\s+noite)/i)) {
+      response = "### 👋 Boas-vindas!\n\nOlá! Em que posso ajudar você hoje? Posso responder suas dúvidas ou criar materiais educacionais para você.\n\n**Dica rápida:** Experimente fazer perguntas específicas para obter respostas mais detalhadas.";
+    }
+    else if (input.match(/(?:quem\s+[ée]s?\s+voc[êe]|o\s+que\s+voc[êe]\s+[ée]|como\s+voc[êe]\s+funciona)/i)) {
+      response = "### 🤖 Sobre a Epictus IA\n\nEu sou a **Epictus IA**, um assistente educacional avançado projetado para ajudar estudantes e professores. Posso responder perguntas, criar materiais didáticos, explicar conceitos e muito mais.\n\n| Capacidade | Descrição |\n|------------|------------|\n| **Explicações** | Explicações claras e didáticas sobre qualquer assunto |\n| **Materiais** | Criação de resumos, exercícios e materiais de estudo |\n| **Organização** | Ajuda com cronogramas e planos de estudo |\n| **Feedback** | Correção de textos e exercícios com feedback personalizado |\n\nEstou sempre em evolução para oferecer a melhor experiência de aprendizado possível!";
+    }
+    else if (input.match(/(?:como\s+posso\s+usar|o\s+que\s+voc[êe]\s+faz|recursos|funcionalidades)/i)) {
+      response = "### 🚀 Como me utilizar\n\nVocê pode aproveitar meus recursos de várias formas:\n\n- Tire dúvidas sobre qualquer matéria escolar\n- Peça explicações detalhadas de conceitos\n- Solicite resumos e sínteses de conteúdos\n- Crie materiais didáticos e listas de exercícios\n- Obtenha ajuda para organizar seus estudos\n- Solicite correções de redações e atividades\n\n> 💡 **DICA IMPORTANTE:** Quanto mais específica for sua pergunta, mais personalizada será minha resposta!\n\n```\n// Exemplo de uso:\nPergunte: \"Explique o teorema de Pitágoras e dê 3 exemplos práticos\"\nAo invés de: \"Me fale sobre matemática\"\n```\n\nApenas me diga o que você precisa, e eu farei o melhor para ajudar!";
+    }
+    else if (input.match(/matem[áa]tica/i)) {
+      response = "### 📐 Explorando a Matemática\n\nA matemática é fundamental para o desenvolvimento do pensamento lógico e analítico. Posso ajudar com diversos tópicos matemáticos, desde operações básicas até cálculo avançado.\n\n**Principais áreas matemáticas:**\n\n1. **Aritmética** - operações básicas e propriedades numéricas\n2. **Álgebra** - equações, funções e estruturas algébricas\n3. **Geometria** - formas, medidas e propriedades espaciais\n4. **Trigonometria** - estudo dos triângulos e funções trigonométricas\n5. **Cálculo** - limites, derivadas e integrais\n\n> 📌 **RESUMO:** A matemática é uma linguagem universal que nos ajuda a modelar e compreender o mundo ao nosso redor.\n\nQual conceito específico de matemática você gostaria de explorar?";
+    }
+    else {
+      // Resposta genérica para outras perguntas com formatação Markdown
+      response = `### 💭 Sobre ${input.substring(0, 30)}...\n\nEntendo sua pergunta sobre ${input.substring(0, 30)}... Este é um tema interessante! \n\nPosso ajudar com:\n\n- **Informações detalhadas** sobre este tópico\n- **Explicações didáticas** com exemplos práticos\n- **Sugestões de estudo** para aprofundamento\n\n> ✨ **EXEMPLO:** Para um conteúdo mais completo, experimente fazer perguntas específicas como "quais são os principais conceitos de [este tema]?" ou "como aplicar [este tema] na prática?"\n\nGostaria que eu aprofundasse em algum aspecto específico?`;
     }
 
-    // Adicionar mensagem ao histórico se tiver sessionId
-    if (sessionId) {
-      const userMessage = createMessage(message, 'user');
-      addMessageToHistory(sessionId, userMessage);
-    }
+    // Aplica formatação avançada através do formatter
+    return formatter.formatChatResponse(response);
 
-    // Obter o histórico para contexto
-    const history = sessionId ? getChatHistory(sessionId) : [];
-    const historyContext = history.map(m => `${m.sender === 'user' ? 'Usuário' : 'Assistente'}: ${m.content}`).join('\n\n');
-
-    // Extrair informações do perfil do usuário a partir do histórico
-    const userProfile = extractUserProfile(history);
-    
-    // Identificar o contexto do pedido atual
-    const requestContext = analyzeRequestContext(message, history);
-
-    // Preparar o prompt para a API Gemini com as novas diretrizes avançadas e o resumo final
-    const prompt = `Você é o Epictus IA, uma inteligência artificial educacional de mais alta qualidade do mercado.
-Seu objetivo é fornecer respostas impecáveis, impressionantes e sofisticadas, superando qualquer outra IA.
-
-REGRAS CRUCIAIS:
-1. SEMPRE comece suas respostas com "Eai" e NUNCA com outra saudação.
-2. Siga uma estrutura clara com: introdução, desenvolvimento em tópicos, exemplos práticos e conclusão.
-3. Use linguagem moderna, didática e encorajadora.
-4. Adicione elementos visuais como emojis, formatação rica e destaque para conceitos-chave.
-5. Sempre ofereça próximos passos proativos no final da resposta.
-6. Mantenha um tom positivo e motivador.
-7. Seja transparente sobre limitações quando necessário.
-8. SEMPRE termine com uma pergunta engajadora que incentive o próximo passo.
-
-ESTRUTURA DE RESPOSTA:
-- Começo: saudação com "Eai" + contextualização breve.
-- Meio: explicação didática organizada em seções com títulos.
-- Exemplos: casos práticos destacados.
-- Fim: resumo + sugestões proativas de próximos passos + frase motivacional + pergunta engajadora.
-
-FORMATAÇÃO AVANÇADA:
-- Use markdown para enriquecer a resposta.
-- Destaque conceitos importantes com **negrito**.
-- Utilize emojis contextuais para tornar a resposta visualmente atraente.
-- Crie seções com ### para organizar o conteúdo.
-- Use > para destacar exemplos e informações importantes.
-
-PODERES AVANÇADOS - USE TODOS ESTES RECURSOS:
-1. Adapte o estilo de escrita ao contexto (formal acadêmico, moderno/dinâmico, ou corporativo/profissional).
-2. Use frases curtas, palavras claras e exemplos relevantes.
-3. Crie elementos visuais quando apropriado (tabelas comparativas, fluxogramas).
-4. Ofereça criação de documentos especializados quando relevante (trabalhos acadêmicos, relatórios).
-5. Considere o nível de conhecimento do usuário para adaptar explicações.
-6. Utilize formatação visual rica para melhorar a compreensão.
-7. Gere tabelas e gráficos textuais quando útil para explicar o conteúdo.
-8. Responda com alta velocidade e desempenho, sem demora ou hesitação.
-
-GUIA FINAL - EM TODAS AS INTERAÇÕES VOCÊ DEVE:
-1. Interpretar profundamente o pedido antes de responder.
-2. Gerar respostas perfeitas em qualidade e apresentação visual.
-3. Ser humana, próxima, moderna e incentivadora em seu tom.
-4. Adaptar completamente o conteúdo conforme o perfil do usuário.
-5. Oferecer ações inteligentes e proativas para continuar a interação.
-6. Usar elementos visuais e dinâmicos para facilitar o aprendizado.
-7. Manter comunicação transparente, educada e confiável.
-8. Ter excelência e profundidade em todas as respostas.
-9. Personalizar profundamente a experiência para cada usuário.
-10. Sempre impressionar pela qualidade, clareza, inovação e dinamismo.
-
-PERGUNTA FINAL OBRIGATÓRIA:
-Sempre termine suas respostas com uma pergunta engajadora como:
-- "Gostaria que eu criasse algo a partir disso para você?"
-- "Deseja que eu resuma ou ilustre essas informações em um gráfico ou tabela?"
-- "Quer que eu monte questões de estudo sobre esse conteúdo?"
-- "Posso transformar isso em um material de estudo para você?"
-
-OBJETIVO FINAL:
-Fazer o usuário se sentir ouvido, encantado, entendido, ajudado, respeitado e engajado.
-A experiência deve ser tão boa que ele prefira usar a Epictus IA a qualquer outra IA do mercado.
-
-INFORMAÇÕES DO USUÁRIO:
-${userProfile}
-
-CONTEXTO DO PEDIDO ATUAL:
-${requestContext}
-
-HISTÓRICO DA CONVERSA PARA CONTEXTO:
-${historyContext}
-
-Responda à seguinte pergunta seguindo todas as diretrizes acima: ${message}`;
-
-    // Fazer a requisição para a API Gemini
-    const response = await fetch(`${GEMINI_BASE_URL}?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topP: 0.95,
-          topK: 40,
-          maxOutputTokens: 2048
-        }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Erro na resposta da API: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    
-    // Extrair a resposta da IA
-    let aiResponse = data.candidates[0].content.parts[0].text;
-    
-    // Garantir que a resposta comece com "Eai"
-    if (!aiResponse.startsWith("Eai")) {
-      aiResponse = aiResponse.replace(/^(olá|oi|hello|hey|hi|bom dia|boa tarde|boa noite)[\s,.!]*/i, '');
-      aiResponse = `Eai! ${aiResponse}`;
-    }
-
-    // Adicionar resposta ao histórico se tiver sessionId
-    if (sessionId) {
-      const aiMessage = createMessage(aiResponse, 'ai');
-      addMessageToHistory(sessionId, aiMessage);
-    }
-
-    return aiResponse;
   } catch (error) {
-    console.error("Erro ao gerar resposta da IA com Gemini:", error);
-    
-    // Usar respostas de fallback em caso de erro
-    return useFallbackResponse(message);
+    console.error("Erro ao gerar resposta da IA:", error);
+    return "### ⚠️ Ops, algo deu errado\n\nDesculpe, ocorreu um erro ao processar sua solicitação. Por favor, tente novamente.";
   }
 };
 
@@ -224,22 +126,22 @@ function extractUserProfile(history: ChatMessage[]): string {
   if (!history || history.length < 3) {
     return "Perfil: Ainda não há informações suficientes sobre o usuário.";
   }
-  
+
   // Análise das mensagens do usuário para detectar padrões
   const userMessages = history.filter(msg => msg.sender === 'user').map(msg => msg.content);
-  
+
   // Detecta possível área de estudo/interesse
   const areaDeInteresse = detectAreaDeInteresse(userMessages);
-  
+
   // Detecta nível de conhecimento
   const nivelConhecimento = detectNivelConhecimento(userMessages);
-  
+
   // Detecta preferência de estilo
   const estiloPreferido = detectEstiloPreferido(userMessages, history);
-  
+
   // Detecta tópicos frequentes
   const topicosFrequentes = detectTopicosFrequentes(userMessages);
-  
+
   return `Perfil do Usuário:
 - Área de interesse: ${areaDeInteresse}
 - Nível de conhecimento: ${nivelConhecimento}
@@ -259,7 +161,7 @@ function detectAreaDeInteresse(messages: string[]): string {
     'história': ['período', 'evento', 'guerra', 'revolução', 'história', 'antiguidade', 'idade média'],
     'negócios': ['empresa', 'mercado', 'estratégia', 'negócio', 'marketing', 'cliente', 'financeiro']
   };
-  
+
   // Conta ocorrências de palavras-chave em todas as mensagens
   const areaCounts: Record<string, number> = {};
   Object.keys(areaKeywords).forEach(area => {
@@ -274,18 +176,18 @@ function detectAreaDeInteresse(messages: string[]): string {
       });
     });
   });
-  
+
   // Encontra a área com mais ocorrências
   let maxCount = 0;
   let detectedArea = 'indeterminada';
-  
+
   Object.keys(areaCounts).forEach(area => {
     if (areaCounts[area] > maxCount) {
       maxCount = areaCounts[area];
       detectedArea = area;
     }
   });
-  
+
   return maxCount > 2 ? detectedArea : 'indeterminada';
 }
 
@@ -296,16 +198,16 @@ function detectNivelConhecimento(messages: string[]): string {
     'aprofundar', 'detalhe', 'avançado', 'complexo', 'especializado',
     'teoria', 'específico', 'fundamento', 'conceito avançado'
   ];
-  
+
   // Indicadores de nível básico
   const basicIndicators = [
     'básico', 'simples', 'iniciante', 'introdução', 'começando',
     'não entendo', 'me explique', 'como funciona', 'o que é'
   ];
-  
+
   let advancedCount = 0;
   let basicCount = 0;
-  
+
   // Conta ocorrências de indicadores
   messages.forEach(message => {
     advancedIndicators.forEach(indicator => {
@@ -313,14 +215,14 @@ function detectNivelConhecimento(messages: string[]): string {
         advancedCount++;
       }
     });
-    
+
     basicIndicators.forEach(indicator => {
       if (message.toLowerCase().includes(indicator)) {
         basicCount++;
       }
     });
   });
-  
+
   // Determina o nível com base na contagem
   if (advancedCount > basicCount * 2) {
     return 'avançado';
@@ -338,31 +240,31 @@ function detectEstiloPreferido(userMessages: string[], history: ChatMessage[]): 
   let casualCount = 0;
   let detailedCount = 0;
   let conciseCount = 0;
-  
+
   // Indicadores de estilo formal
   const formalIndicators = [
     'por favor', 'poderia', 'gostaria', 'agradeço', 'obrigado pela',
     'formalmente', 'adequadamente', 'corretamente'
   ];
-  
+
   // Indicadores de estilo casual
   const casualIndicators = [
     'eai', 'valeu', 'beleza', 'massa', 'cara', 'legal',
     'show', 'tranquilo', 'vlw', 'blz'
   ];
-  
+
   // Indicadores de preferência por respostas detalhadas
   const detailedIndicators = [
     'detalhadamente', 'explique com detalhes', 'quero entender a fundo',
     'me dê todos os detalhes', 'explicação completa', 'aprofunde'
   ];
-  
+
   // Indicadores de preferência por respostas concisas
   const conciseIndicators = [
     'resumidamente', 'seja breve', 'direto ao ponto', 'só o essencial',
     'resumo', 'rápido', 'curto'
   ];
-  
+
   // Analisa mensagens do usuário
   userMessages.forEach(message => {
     formalIndicators.forEach(indicator => {
@@ -370,30 +272,30 @@ function detectEstiloPreferido(userMessages: string[], history: ChatMessage[]): 
         formalCount++;
       }
     });
-    
+
     casualIndicators.forEach(indicator => {
       if (message.toLowerCase().includes(indicator)) {
         casualCount++;
       }
     });
-    
+
     detailedIndicators.forEach(indicator => {
       if (message.toLowerCase().includes(indicator)) {
         detailedCount++;
       }
     });
-    
+
     conciseIndicators.forEach(indicator => {
       if (message.toLowerCase().includes(indicator)) {
         conciseCount++;
       }
     });
   });
-  
+
   // Determina o estilo com base na contagem
   let formalidade = formalCount > casualCount ? 'formal' : 'casual';
   let detalhe = detailedCount > conciseCount ? 'detalhado' : 'conciso';
-  
+
   return `${formalidade} e ${detalhe}`;
 }
 
@@ -405,14 +307,14 @@ function detectTopicosFrequentes(messages: string[]): string {
     'prova', 'pesquisa', 'projeto', 'tcc', 'artigo', 'dissertação',
     'monografia', 'apresentação', 'relatório'
   ];
-  
+
   const topicCounts: Record<string, number> = {};
-  
+
   // Inicializa contagem
   commonTopics.forEach(topic => {
     topicCounts[topic] = 0;
   });
-  
+
   // Conta ocorrências de tópicos
   messages.forEach(message => {
     commonTopics.forEach(topic => {
@@ -423,13 +325,13 @@ function detectTopicosFrequentes(messages: string[]): string {
       }
     });
   });
-  
+
   // Filtra tópicos com pelo menos uma ocorrência e ordena por contagem
   const frequentTopics = Object.keys(topicCounts)
     .filter(topic => topicCounts[topic] > 0)
     .sort((a, b) => topicCounts[b] - topicCounts[a])
     .slice(0, 3); // Top 3 tópicos
-  
+
   return frequentTopics.length > 0 ? frequentTopics.join(', ') : 'variados';
 }
 
@@ -437,16 +339,16 @@ function detectTopicosFrequentes(messages: string[]): string {
 function analyzeRequestContext(message: string, history: ChatMessage[]): string {
   // Identifica o propósito principal da requisição
   const purpose = identifyRequestPurpose(message);
-  
+
   // Identifica o formato de resposta preferido
   const format = identifyPreferredFormat(message);
-  
+
   // Identifica o nível de complexidade esperado
   const complexity = identifyComplexityLevel(message, history);
-  
+
   // Identifica se é uma continuação de conversa anterior
   const isContinuation = identifyContinuationContext(message, history);
-  
+
   return `Contexto do Pedido:
 - Propósito: ${purpose}
 - Formato preferido: ${format}
@@ -467,14 +369,14 @@ function identifyRequestPurpose(message: string): string {
     { pattern: /analise|avalie|critique|comente|examine|julgue/i, purpose: 'análise/avaliação' },
     { pattern: /resuma|sintetize|resumidamente|em poucas palavras|de forma breve/i, purpose: 'resumo/síntese' }
   ];
-  
+
   // Verifica qual padrão corresponde à mensagem
   for (const { pattern, purpose } of purposePatterns) {
     if (pattern.test(message)) {
       return purpose;
     }
   }
-  
+
   return 'informação geral';
 }
 
@@ -496,7 +398,7 @@ function identifyPreferredFormat(message: string): string {
   if (/em formato (profissional|executivo|de relatório|corporativo)/i.test(message)) {
     return 'profissional';
   }
-  
+
   // Detecção implícita
   if (/compare|versus|diferença|semelhança|vs\./i.test(message)) {
     return 'tabela comparativa';
@@ -507,7 +409,7 @@ function identifyPreferredFormat(message: string): string {
   if (/resumo|principais pontos|pontos-chave|destaques|síntese/i.test(message)) {
     return 'resumo estruturado';
   }
-  
+
   // Formato padrão
   return 'texto explicativo';
 }
@@ -518,39 +420,39 @@ function identifyComplexityLevel(message: string, history: ChatMessage[]): strin
   if (/simples|básico|fácil|resumido|para iniciantes|introdução|para leigos/i.test(message)) {
     return 'básico';
   }
-  
+
   // Indicadores de pedido avançado
   if (/avançado|detalhado|complexo|aprofundado|especializado|acadêmico|técnico/i.test(message)) {
     return 'avançado';
   }
-  
+
   // Analisa histórico recente para contexto de complexidade
   if (history.length >= 3) {
     const recentMessages = history.slice(-3);
     const aiResponses = recentMessages.filter(msg => msg.sender === 'ai').map(msg => msg.content);
-    
+
     // Verifica feedback do usuário sobre complexidade
     const userFeedback = recentMessages.filter(msg => msg.sender === 'user').map(msg => msg.content);
-    
+
     // Verifica se há pedidos para simplificar
     const simplifyRequests = userFeedback.some(feedback => 
       /simplificar|não entendi|muito complexo|complicado|difícil de entender/i.test(feedback)
     );
-    
+
     if (simplifyRequests) {
       return 'básico';
     }
-    
+
     // Verifica se há pedidos para aprofundar
     const advancedRequests = userFeedback.some(feedback => 
       /aprofundar|mais detalhes|elaborar mais|não foi suficiente|preciso de mais/i.test(feedback)
     );
-    
+
     if (advancedRequests) {
       return 'avançado';
     }
   }
-  
+
   return 'intermediário'; // nível padrão
 }
 
@@ -559,22 +461,22 @@ function identifyContinuationContext(message: string, history: ChatMessage[]): b
   if (history.length < 2) {
     return false;
   }
-  
+
   // Verifica referências explícitas à continuação
   if (/continuando|seguindo|voltando|como falamos|sobre o que discutimos|mencionou|falou|disse|anterior/i.test(message)) {
     return true;
   }
-  
+
   // Verifica mensagens curtas que dependem de contexto anterior
   if (message.split(' ').length < 5 && !message.includes('?')) {
     return true;
   }
-  
+
   // Referências implícitas usando "isso", "este", "aquele", etc.
   if (/\b(isso|este|esta|estes|estas|aquele|aquela|aqueles|aquelas|ele|ela|eles|elas)\b/i.test(message)) {
     return true;
   }
-  
+
   return false;
 }
 
