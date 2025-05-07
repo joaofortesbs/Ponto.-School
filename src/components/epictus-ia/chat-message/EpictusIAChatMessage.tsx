@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
+import remarkGfm from 'remark-gfm';
 import { MessageToolsDropdown } from '../message-tools';
 import { motion } from 'framer-motion';
 
@@ -11,8 +13,8 @@ interface EpictusIAChatMessageProps {
   onAprofundar?: () => void;
   onCaderno?: (content: string) => void;
   isPremium?: boolean;
-  messageContext?: any; // Novo: contexto adicional para personalização
-  enhanceFinalQuestion?: boolean; // Nova propriedade para destacar pergunta final
+  messageContext?: any; // Contexto adicional para personalização
+  enhanceFinalQuestion?: boolean; // Propriedade para destacar pergunta final
 }
 
 export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
@@ -35,6 +37,7 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
   const [highlightedTerms, setHighlightedTerms] = useState<string[]>([]);
   const [finalQuestion, setFinalQuestion] = useState<string | null>(null);
   const [hasChart, setHasChart] = useState(false);
+  const [hasColoredText, setHasColoredText] = useState(false);
 
   // Detecta elementos especiais no conteúdo
   useEffect(() => {
@@ -57,6 +60,11 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
         (content.includes('gráfico') || content.includes('chart') || 
          content.includes('comparação') || content.includes('evolução'));
       setHasChart(hasChartContent);
+
+      // Detecta se tem texto colorido
+      const hasColoredTextContent = content.includes('<span style="color:') || 
+                                    content.includes('<span class="text-');
+      setHasColoredText(hasColoredTextContent);
 
       // Identifica termos destacados
       const boldTerms = content.match(/\*\*(.*?)\*\*/g)?.map(term => term.replace(/\*\*/g, '')) || [];
@@ -105,6 +113,25 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
   const enhanceContent = (text: string): string => {
     let enhanced = text;
 
+    // Adiciona cores a palavras-chave
+    const keywordsColors: Record<string, string> = {
+      'importante': '#ff6b00',
+      'atenção': '#ff3b30',
+      'dica': '#34c759',
+      'exemplo': '#5856d6',
+      'conceito': '#007aff',
+      'fórmula': '#af52de',
+      'teoria': '#ff9500',
+      'prática': '#00c7be'
+    };
+
+    // Aplica cores às palavras-chave
+    Object.entries(keywordsColors).forEach(([keyword, color]) => {
+      const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
+      enhanced = enhanced.replace(regex, match => 
+        `<span style="color:${color};font-weight:bold;">${match}</span>`);
+    });
+
     // Melhora tabelas com classes CSS para estilo avançado
     if (hasTable) {
       enhanced = enhanced.replace(/(\|[^\n]+\|)/g, 
@@ -122,7 +149,7 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
     // Melhora fluxogramas com design visual
     if (hasFlowchart) {
       enhanced = enhanced.replace(/```([\s\S]*?)```/g, 
-        '<div class="flowchart-container bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-lg p-4 my-4 shadow-inner border border-blue-100 dark:border-blue-800">```$1```</div>');
+        '<div class="flowchart-container bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-lg p-4 my-4 shadow-inner border border-blue-100 dark:border-blue-800 overflow-x-auto">```$1```</div>');
     }
     
     // Melhora checklists com ícones visuais
@@ -142,6 +169,10 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
     
     enhanced = enhanced.replace(/> 📌 (.*?)(?:\n\n|$)/gs, 
       '<div class="summary-box bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950/40 dark:to-green-900/20 border-l-4 border-green-500 pl-4 py-2 my-3 rounded-r-md">📌 $1</div>');
+    
+    // Estiliza notas e avisos adicionais
+    enhanced = enhanced.replace(/> 💡 (.*?)(?:\n\n|$)/gs, 
+      '<div class="tip-box bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-950/40 dark:to-purple-900/20 border-l-4 border-purple-500 pl-4 py-2 my-3 rounded-r-md">💡 $1</div>');
 
     // Destaca títulos com ícones e estilo
     enhanced = enhanced.replace(/### (📚|🎯|⚙️|💡|🔍|📊|🚀|📝|🏆|⭐) (.*?)(?:\n)/g, 
@@ -154,6 +185,14 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
     // Destaca passos numerados
     enhanced = enhanced.replace(/(^|\n)(\d+)\.\s+(.*?)(?=\n|$)/g, 
       '$1<div class="numbered-step"><span class="step-number">$2</span><span class="step-content">$3</span></div>');
+    
+    // Adiciona cards para exemplos práticos
+    enhanced = enhanced.replace(/(^|\n)Exemplo prático:[\s\n]+(.*?)(?=\n\n|$)/gs,
+      '$1<div class="example-card"><div class="example-header">✨ Exemplo Prático</div><div class="example-content">$2</div></div>');
+    
+    // Estiliza definições e conceitos
+    enhanced = enhanced.replace(/(^|\n)Definição:[\s\n]+(.*?)(?=\n\n|$)/gs,
+      '$1<div class="definition-card"><div class="definition-header">📚 Definição</div><div class="definition-content">$2</div></div>');
     
     return enhanced;
   };
@@ -175,7 +214,7 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
         onMouseLeave={() => setIsHovering(false)}
       >
         {/* Conteúdo da mensagem */}
-        <div className={`prose prose-sm dark:prose-invert max-w-none 
+        <div className={`prose prose-sm dark:prose-invert max-w-none epictus-message-content
           ${hasTable ? 'prose-table:border-collapse prose-table:w-full prose-td:border prose-td:p-3 prose-td:align-middle prose-th:bg-primary/10 prose-th:p-2 dark:prose-th:bg-primary/20 prose-thead:border-b-2 prose-thead:border-primary/30' : ''}
           ${hasFlowchart ? 'prose-code:text-primary prose-code:bg-transparent prose-code:p-4 prose-code:rounded' : ''}
           prose-headings:font-semibold prose-headings:mb-3 prose-p:mb-3
@@ -204,12 +243,16 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1 * index, duration: 0.3 }}
                     >
-                      <ReactMarkdown>{block}</ReactMarkdown>
+                      <ReactMarkdown rehypePlugins={[rehypeRaw]} remarkPlugins={[remarkGfm]}>
+                        {block}
+                      </ReactMarkdown>
                     </motion.div>
                   ))}
                 </div>
               ) : (
-                <ReactMarkdown>{renderedContent}</ReactMarkdown>
+                <ReactMarkdown rehypePlugins={[rehypeRaw]} remarkPlugins={[remarkGfm]}>
+                  {renderedContent}
+                </ReactMarkdown>
               )}
 
               {/* Pergunta final engajadora com destaque visual */}
