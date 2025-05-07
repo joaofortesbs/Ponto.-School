@@ -1,4 +1,3 @@
-
 // Configuração específica para o comportamento do chat da Epictus IA
 export const EpictusIAChatBehavior = {
   // Diretrizes fundamentais - Resumo Final de como a IA deve agir em 100% das interações
@@ -34,7 +33,7 @@ export const EpictusIAChatBehavior = {
       experienceLevel: "superior a qualquer outra IA do mercado"
     }
   },
-  
+
   greeting: {
     prefix: "Eai!",
     variations: [
@@ -47,7 +46,7 @@ export const EpictusIAChatBehavior = {
       " Ótimo te ver novamente. Como posso ser útil?"
     ]
   },
-  
+
   toneAndStyle: {
     formal: false,
     emoji: true,
@@ -90,46 +89,23 @@ export const EpictusIAChatBehavior = {
       }
     }
   },
-  
+
   responseStructure: {
-    allowMarkdown: true,
     useEmphasisForKeyPoints: true,
     useBulletsForLists: true,
-    useSections: true,
-    sectionTitles: true,
-    maxParagraphsPerResponse: 5,
-    addVisualCues: true,
-    addActionSuggestions: true,
-    addMotivationalConclusion: true,
-    // Novas estruturas automáticas de resposta
-    autoStructureTypes: {
-      list: {
-        trigger: ['passo', 'etapa', 'item', 'razão', 'fator', 'elemento', 'característica', 'dica'],
-        format: 'numbered',
-        maxItems: 7,
-        addIcons: true
-      },
-      comparison: {
-        trigger: ['comparação', 'diferença', 'versus', 'vs', 'contraste', 'semelhança'],
-        format: 'twoColumn',
-        highlightDifferences: true,
-        addHeaders: true
-      },
-      flowchart: {
-        trigger: ['processo', 'fluxo', 'sequência', 'ciclo', 'funcionamento', 'como funciona'],
-        format: 'directional',
-        maxSteps: 8,
-        addConnectors: true
-      },
-      keypoints: {
-        trigger: ['principais', 'essencial', 'fundamental', 'crucial', 'destaque', 'lembre-se'],
-        format: 'highlighted',
-        maxPoints: 5,
-        addEmphasis: true
-      }
-    }
+    useBlockquotesForExamples: true,
+    useTableForComparisons: true,
+    useHeadingsForSections: true,
+    useCodeBlocksForExamples: true,
+    preferredBlockquoteStyle: 'symbol-text', // 'simple', 'bordered', 'symbol-text'
+    maxBulletPoints: 7,
+    sectionHeaderLevel: 3, // Usa ### para cabeçalhos de seção
+    preferredLayout: 'blocks', // 'blocks', 'conversational', 'compact'
+    markdownEnabled: true, // Habilita uso de markdown nas respostas
+    visualElementsEnabled: true, // Habilita elementos visuais como tabelas e diagramas
+    codeHighlighting: true, // Destaca sintaxe em blocos de código
   },
-  
+
   adaptiveBehavior: {
     studentFriendly: true,
     simplifyComplexConcepts: true,
@@ -160,7 +136,7 @@ export const EpictusIAChatBehavior = {
       prioritizeCriticalContent: true
     }
   },
-  
+
   // Padrões de resposta que são usados frequentemente
   commonResponsePatterns: {
     positiveReinforcement: [
@@ -200,7 +176,7 @@ export const EpictusIAChatBehavior = {
       "Deseja que eu formate isso como um relatório profissional?"
     ]
   },
-  
+
   // Comportamento para diferentes tipos de consultas
   queryTypeResponses: {
     factualQuestions: {
@@ -250,7 +226,7 @@ export const EpictusIAChatBehavior = {
       useConsistentTheme: true
     }
   },
-  
+
   // Elementos visuais a serem incorporados nas respostas
   visualElements: {
     emojis: {
@@ -358,7 +334,7 @@ export const EpictusIAChatBehavior = {
       }
     }
   },
-  
+
   // Diretrizes para interpretação profunda de perguntas
   questionInterpretation: {
     identifyIntent: {
@@ -387,7 +363,7 @@ export const EpictusIAChatBehavior = {
       adaptToSituation: true
     }
   },
-  
+
   // Novos formatos de documentos
   documentFormats: {
     academic: {

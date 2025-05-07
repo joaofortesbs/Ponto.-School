@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { MessageToolsDropdown } from '../message-tools';
 import { motion } from 'framer-motion';
 
@@ -32,41 +35,6 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
   const [hasFlowchart, setHasFlowchart] = useState(false);
   const [highlightedTerms, setHighlightedTerms] = useState<string[]>([]);
   const [finalQuestion, setFinalQuestion] = useState<string | null>(null);
-  const [processedHtmlContent, setProcessedHtmlContent] = useState("");
-
-  // Processa conteúdo Markdown para HTML com formatação aprimorada
-  const formatToHtml = (text: string): string => {
-    if (!text) return "";
-    
-    // Aplicar formatações avançadas
-    return text
-      // Headers
-      .replace(/^# (.*?)$/gm, '<h1 class="text-xl font-bold text-gray-900 dark:text-gray-100 border-b pb-1 border-gray-200 dark:border-gray-700">$1</h1>')
-      .replace(/^## (.*?)$/gm, '<h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mt-3">$1</h2>')
-      .replace(/^### (.*?)$/gm, '<h3 class="text-base font-medium text-gray-800 dark:text-gray-200">$1</h3>')
-
-      // Formatação de texto - NEGRITO DESTACADO
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-[#FF6B00] dark:text-[#FF8C40] bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 dark:from-[#FF6B00]/20 dark:to-[#FF8C40]/20 px-1 py-0.5 rounded-sm">$1</strong>')
-      .replace(/\_(.*?)\_/g, '<em class="text-gray-700 dark:text-gray-300 italic">$1</em>')
-      .replace(/\~\~(.*?)\~\~/g, '<del class="text-gray-500 dark:text-gray-400">$1</del>')
-      .replace(/\`(.*?)\`/g, '<code class="bg-gray-100 dark:bg-gray-800 text-orange-600 dark:text-orange-400 px-1.5 py-0.5 rounded text-sm font-mono">$1</code>')
-
-      // Listas
-      .replace(/^\- (.*?)$/gm, '<ul class="list-disc pl-5 my-2"><li>$1</li></ul>').replace(/<\/ul>\s?<ul class="list-disc pl-5 my-2">/g, '')
-      .replace(/^[0-9]+\. (.*?)$/gm, '<ol class="list-decimal pl-5 my-2"><li>$1</li></ol>').replace(/<\/ol>\s?<ol class="list-decimal pl-5 my-2">/g, '')
-
-      // Blockquotes
-      .replace(/^> (.*?)$/gm, '<blockquote class="border-l-4 border-orange-400 dark:border-orange-600 italic bg-orange-50 dark:bg-orange-900/20 py-1 px-2 rounded-r my-2 text-gray-700 dark:text-gray-300">$1</blockquote>')
-
-      // Separadores
-      .replace(/^---$/gm, '<hr class="border-t border-gray-200 dark:border-gray-700 my-3" />')
-
-      // Quebras de linha
-      .replace(/\n/g, '<br />')
-
-      // Links
-      .replace(/\[(.*?)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-orange-600 dark:text-orange-400 hover:underline inline-flex items-center gap-0.5">$1<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-0.5"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></a>');
-  };
 
   // Detecta elementos especiais no conteúdo
   useEffect(() => {
@@ -101,17 +69,14 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
           // Remove a pergunta do conteúdo principal para exibi-la separadamente
           const contentWithoutQuestion = content.replace(pattern, '').trim();
           setRenderedContent(contentWithoutQuestion);
-          setProcessedHtmlContent(formatToHtml(contentWithoutQuestion));
           return;
         }
       }
 
       // Processa conteúdo avançado
       setRenderedContent(content);
-      setProcessedHtmlContent(formatToHtml(content));
     } else {
       setRenderedContent(content);
-      setProcessedHtmlContent(""); // Não processa HTML para mensagens do usuário
     }
   }, [content, sender]);
 
@@ -132,9 +97,9 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
         onMouseLeave={() => setIsHovering(false)}
       >
         {/* Conteúdo da mensagem */}
-        <div className={`prose prose-sm dark:prose-invert max-w-none 
-          ${hasTable ? 'prose-table:border-collapse prose-table:w-full prose-td:border prose-td:p-2 prose-th:bg-muted/30' : ''}
-          ${hasFlowchart ? 'prose-code:text-primary prose-code:bg-primary/10 prose-code:p-4 prose-code:rounded' : ''}
+        <div className={`prose prose-sm dark:prose-invert max-w-none markdown-content
+          ${hasTable ? 'has-table' : ''}
+          ${hasFlowchart ? 'has-flowchart' : ''}
         `}>
           {isTyping ? (
             <div className="flex items-center space-x-2">
@@ -144,10 +109,93 @@ export const EpictusIAChatMessage: React.FC<EpictusIAChatMessageProps> = ({
             </div>
           ) : (
             <>
-              {sender === 'ai' && processedHtmlContent ? (
-                <div dangerouslySetInnerHTML={{ __html: processedHtmlContent }} />
+              {sender === 'ai' ? (
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  rehypePlugins={[rehypeRaw]}
+                  components={{
+                    // Estilização para títulos
+                    h1: ({node, ...props}) => <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 border-b pb-1 border-gray-200 dark:border-gray-700 mt-4 mb-3" {...props} />,
+                    h2: ({node, ...props}) => <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mt-4 mb-2" {...props} />,
+                    h3: ({node, ...props}) => <h3 className="text-base font-medium text-gray-800 dark:text-gray-200 mt-3 mb-2" {...props} />,
+                    
+                    // Estilização para texto em destaque
+                    strong: ({node, ...props}) => <strong className="font-semibold text-[#FF6B00] dark:text-[#FF8C40] bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 dark:from-[#FF6B00]/20 dark:to-[#FF8C40]/20 px-1 py-0.5 rounded-sm" {...props} />,
+                    em: ({node, ...props}) => <em className="text-gray-700 dark:text-gray-300 italic" {...props} />,
+                    del: ({node, ...props}) => <del className="text-gray-500 dark:text-gray-400" {...props} />,
+                    
+                    // Estilização para código
+                    code: ({node, inline, className, children, ...props}) => {
+                      const match = /language-(\w+)/.exec(className || '');
+                      return !inline ? (
+                        <SyntaxHighlighter
+                          language={match ? match[1] : 'text'}
+                          className="rounded-md my-4 text-sm overflow-auto"
+                          customStyle={{
+                            borderRadius: '0.375rem',
+                            padding: '1rem',
+                            backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                          }}
+                          {...props}
+                        >
+                          {String(children).replace(/\n$/, '')}
+                        </SyntaxHighlighter>
+                      ) : (
+                        <code className="bg-gray-100 dark:bg-gray-800 text-orange-600 dark:text-orange-400 px-1.5 py-0.5 rounded text-sm font-mono" {...props}>
+                          {children}
+                        </code>
+                      );
+                    },
+                    
+                    // Estilização para listas
+                    ul: ({node, ...props}) => <ul className="list-disc pl-5 my-2 space-y-1" {...props} />,
+                    ol: ({node, ...props}) => <ol className="list-decimal pl-5 my-2 space-y-1" {...props} />,
+                    li: ({node, ...props}) => <li className="mb-1" {...props} />,
+                    
+                    // Estilização para citações
+                    blockquote: ({node, ...props}) => (
+                      <blockquote className="border-l-4 border-orange-400 dark:border-orange-600 italic bg-orange-50 dark:bg-orange-900/20 py-1 px-3 rounded-r my-3 text-gray-700 dark:text-gray-300" {...props} />
+                    ),
+                    
+                    // Estilização para tabelas
+                    table: ({node, ...props}) => (
+                      <div className="overflow-x-auto my-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <table className="w-full border-collapse" {...props} />
+                      </div>
+                    ),
+                    thead: ({node, ...props}) => <thead className="bg-gray-50 dark:bg-gray-800" {...props} />,
+                    th: ({node, ...props}) => <th className="border border-gray-200 dark:border-gray-700 p-2 text-left font-medium" {...props} />,
+                    td: ({node, ...props}) => <td className="border border-gray-200 dark:border-gray-700 p-2" {...props} />,
+                    
+                    // Estilização para links
+                    a: ({node, ...props}) => (
+                      <a 
+                        className="text-orange-600 dark:text-orange-400 hover:underline inline-flex items-center gap-0.5" 
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        {...props}
+                      >
+                        {props.children}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-0.5">
+                          <path d="M7 7h10v10"/>
+                          <path d="M7 17 17 7"/>
+                        </svg>
+                      </a>
+                    ),
+                    
+                    // Estilização para divisores
+                    hr: ({node, ...props}) => <hr className="border-t border-gray-200 dark:border-gray-700 my-4" {...props} />,
+                    
+                    // Estilização para parágrafos
+                    p: ({node, ...props}) => <p className="mb-3 leading-relaxed" {...props} />,
+                  }}
+                >
+                  {renderedContent}
+                </ReactMarkdown>
               ) : (
-                <ReactMarkdown>{renderedContent}</ReactMarkdown>
+                <div className="break-words whitespace-pre-line">
+                  {renderedContent}
+                </div>
               )}
 
               {/* Pergunta final engajadora destacada */}

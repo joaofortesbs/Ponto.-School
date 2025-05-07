@@ -17,43 +17,194 @@
   background: linear-gradient(to right, rgba(255, 107, 0, 0.2), rgba(255, 140, 64, 0.2));
 }
 
-/* Estilo para tabelas */
-.table-container {
-  overflow-x: auto;
-  margin: 1rem 0;
-  border-radius: 0.5rem;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+/* Estilos para mensagens em markdown */
+.markdown-content {
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
-.dark .table-container {
+/* Quebras de parágrafo adequadas */
+.markdown-content p {
+  margin-bottom: 1rem;
+  white-space: pre-wrap;
+}
+
+.markdown-content h1, 
+.markdown-content h2, 
+.markdown-content h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.markdown-content h1 {
+  font-size: 1.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding-bottom: 0.5rem;
+}
+
+.dark .markdown-content h1 {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.markdown-content h2 {
+  font-size: 1.25rem;
+}
+
+.markdown-content h3 {
+  font-size: 1.125rem;
+}
+
+/* Estilo para tabelas */
+.markdown-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.5rem 0;
+  font-size: 0.9rem;
+}
+
+.markdown-content table thead {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.dark .markdown-content table thead {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.markdown-content table th,
+.markdown-content table td {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.dark .markdown-content table th,
+.dark .markdown-content table td {
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Estilos para listas */
-ul.list-disc, ol.list-decimal {
-  margin-left: 1.5rem;
-  margin-bottom: 1rem;
+.markdown-content .has-table {
+  overflow-x: auto;
 }
 
-li {
-  margin-bottom: 0.25rem;
+/* Estilos para listas */
+.markdown-content ul,
+.markdown-content ol {
+  margin: 1rem 0 1.5rem 1.5rem;
+  padding-left: 0.5rem;
+}
+
+.markdown-content li {
+  margin-bottom: 0.5rem;
+  padding-left: 0.25rem;
+}
+
+.markdown-content ul {
+  list-style-type: disc;
+}
+
+.markdown-content ol {
+  list-style-type: decimal;
 }
 
 /* Estilos para blockquotes */
-blockquote.border-l-4 {
-  margin: 1rem 0;
-  padding-left: 1rem;
+.markdown-content blockquote {
+  border-left: 4px solid #FF6B00;
+  margin: 1.5rem 0;
+  padding: 0.5rem 1rem;
+  background-color: rgba(255, 107, 0, 0.05);
+  border-radius: 0 0.25rem 0.25rem 0;
   font-style: italic;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.dark .markdown-content blockquote {
+  border-left-color: #FF8C40;
+  background-color: rgba(255, 140, 64, 0.1);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 /* Estilos para código inline */
-code {
+.markdown-content code {
   background-color: rgba(0, 0, 0, 0.05);
   padding: 0.1rem 0.3rem;
   border-radius: 0.25rem;
-  font-family: monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.9em;
+  color: #FF6B00;
 }
 
-.dark code {
+.dark .markdown-content code {
   background-color: rgba(255, 255, 255, 0.1);
+  color: #FF8C40;
+}
+
+/* Estilos para blocos de código */
+.markdown-content pre {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 0.375rem;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+
+.dark .markdown-content pre {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.markdown-content pre code {
+  background-color: transparent;
+  padding: 0;
+  color: inherit;
+  display: block;
+  line-height: 1.5;
+}
+
+/* Estilos para links */
+.markdown-content a {
+  color: #FF6B00;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.markdown-content a:hover {
+  text-decoration: underline;
+}
+
+.dark .markdown-content a {
+  color: #FF8C40;
+}
+
+/* Estilos para divisores horizontais */
+.markdown-content hr {
+  border: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  margin: 2rem 0;
+}
+
+.dark .markdown-content hr {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Suporte a fluxogramas */
+.markdown-content.has-flowchart pre {
+  background-color: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.dark .markdown-content.has-flowchart pre {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Espaçamento para emojis */
+.markdown-content .emoji {
+  display: inline-block;
+  margin: 0 0.1em;
+  vertical-align: -0.1em;
 }
