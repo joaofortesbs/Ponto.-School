@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import QuickActionButton from "./QuickActionButton";
 import AddButton from "@/components/ui/add-button";
+import DeepSearchModal from "./DeepSearchModal";
 
 
 interface EpictusMessageBoxProps {
@@ -29,6 +30,7 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
   handleKeyDown,
   handleButtonClick
 }) => {
+  const [isDeepSearchModalOpen, setIsDeepSearchModalOpen] = useState(false);
   return (
     <motion.div 
       className="relative w-[60%] h-auto mx-auto bg-transparent rounded-2xl shadow-xl 
@@ -53,7 +55,7 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
                        rounded-lg border border-white/10 backdrop-blur-sm hover:bg-gradient-to-r 
                        hover:from-[#0D23A0]/40 hover:to-[#5B21BD]/40 hover:border-blue-500/30
                        hover:text-white transition-all duration-300 flex-shrink-0 shadow-sm"
-              onClick={() => handleButtonClick('Buscar')}
+              onClick={() => setIsDeepSearchModalOpen(true)}
             >
               <Search size={14} className="text-blue-300" />
               <span>Buscar</span>
@@ -203,6 +205,38 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
           {/* Área de quick actions foi removida conforme solicitado */}
         </motion.div>
       </div>
+
+      {/* DeepSearch Modal */}
+      <DeepSearchModal 
+        isOpen={isDeepSearchModalOpen}
+        onClose={() => setIsDeepSearchModalOpen(false)}
+        onSearch={(query, options) => {
+          // Fechar o modal
+          setIsDeepSearchModalOpen(false);
+          
+          // Construir a mensagem de busca avançada
+          let searchMessage = `🔍 DeepSearch: "${query}"`;
+          
+          // Adicionar fontes selecionadas
+          const fontes = [];
+          if (options.webGlobal) fontes.push("Web Global");
+          if (options.academico) fontes.push("Acadêmico");
+          if (options.social) fontes.push("Social");
+          searchMessage += ` [Fontes: ${fontes.join(", ")}]`;
+          
+          // Adicionar profundidade da busca
+          searchMessage += ` [Profundidade: ${options.searchDepth}]`;
+          
+          // Definir a mensagem no campo de input
+          setInputMessage(searchMessage);
+          
+          // Enviar a mensagem automaticamente
+          setTimeout(() => {
+            handleButtonClick('Buscar');
+            handleSendMessage();
+          }, 100);
+        }}
+      />
     </motion.div>
   );
 };

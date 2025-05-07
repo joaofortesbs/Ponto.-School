@@ -95,7 +95,10 @@ const EpictusBetaMode: React.FC = () => {
   const [sessionId] = useState(() => localStorage.getItem('epictus_beta_session_id') || uuidv4());
   const [isReformulating, setIsReformulating] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
-  
+  const [isDeepSearch, setIsDeepSearch] = useState(false); // Added state for DeepSearch
+  const [enhancedMessage, setEnhancedMessage] = useState(''); // Added state for enhanced message
+
+
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -222,14 +225,37 @@ const EpictusBetaMode: React.FC = () => {
       }, 300);
 
       try {
-        console.log("Enviando mensagem para Gemini:", trimmedMessage);
-        const response = await generateAIResponse(trimmedMessage, sessionId);
+        // Remover mensagem de "Realizando busca avançada" se estiver presente
+        if (isDeepSearch) {
+          setTimeout(() => {
+            setMessages(prev => prev.filter(msg => !msg.content.includes("Realizando busca avançada...")));
+          }, 1500);
+        }
+
+        console.log("Enviando mensagem para Gemini:", isDeepSearch ? enhancedMessage : trimmedMessage);
+        const response = await generateAIResponse(
+          isDeepSearch ? enhancedMessage : trimmedMessage, 
+          sessionId
+        );
         console.log("Resposta recebida de Gemini");
+
+        let formattedResponse = response;
+
+        // Aplicar formatação especial para resultados de busca DeepSearch
+        if (isDeepSearch) {
+          // Adicionar cabeçalho especial para resultados da busca
+          const searchQuery = trimmedMessage.match(/DeepSearch: "(.*?)"/)?.[1] || "";
+          formattedResponse = `# 🔍 Resultados da DeepSearch™
+
+## Consulta: "${searchQuery}"
+
+${response}`;
+        }
 
         const aiMessage: Message = {
           id: uuidv4(),
           sender: "ia",
-          content: response,
+          content: formattedResponse,
           timestamp: new Date(),
           showTools: false // Added showTools property
         };
@@ -250,6 +276,7 @@ const EpictusBetaMode: React.FC = () => {
       } finally {
         clearTimeout(typingTimeout);
         setIsTyping(false);
+        setIsDeepSearch(false); // Reset DeepSearch state
       }
     } catch (err) {
       console.error("Erro no processo de envio de mensagem:", err);
@@ -575,6 +602,21 @@ const EpictusBetaMode: React.FC = () => {
 
     aprimorarPrompt();
 
+    return;
+  }
+
+  if (action === 'Buscar') {
+    setIsDeepSearch(true); // Set DeepSearch state to true
+    setEnhancedMessage(trimmedMessage); // Set the enhanced message
+    const deepSearchMessage: Message = {
+      id: uuidv4(),
+      sender: "ia",
+      content: "Realizando busca avançada...",
+      timestamp: new Date(),
+      showTools: false
+    };
+    setMessages(prev => [...prev, deepSearchMessage]);
+    handleSendMessage(); // Trigger the send message function with DeepSearch
     return;
   }
 
@@ -1133,5 +1175,26 @@ const EpictusBetaMode: React.FC = () => {
     </div>
   );
 };
+
+// Placeholder for DeepSearchModal component
+const DeepSearchModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+      {/* Modal content will go here */}
+      <div className="bg-white rounded-lg p-8">
+        <h2 className="text-xl font-bold mb-4">DeepSearch Results</h2>
+        <button onClick={onClose} className="absolute top-4 right-4">Close</button>
+        {/* Add your DeepSearch results display here. For example, a list of search results. */}
+        <ul>
+          <li>Result 1</li>
+          <li>Result 2</li>
+          <li>Result 3</li>
+        </ul>
+      </div>
+    </div>
+  );
+};
+
 
 export default EpictusBetaMode;
