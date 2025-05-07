@@ -32,15 +32,6 @@ const DeepSearchModal: React.FC<DeepSearchModalProps> = ({
   });
 
   const handleSearch = () => {
-    if (!searchQuery.trim()) {
-      toast({
-        title: "Pesquisa vazia",
-        description: "Por favor, digite algo para pesquisar.",
-        duration: 3000,
-      });
-      return;
-    }
-
     if (!searchOptions.webGlobal && !searchOptions.academico && !searchOptions.social) {
       toast({
         title: "Nenhuma fonte selecionada",
@@ -90,22 +81,6 @@ const DeepSearchModal: React.FC<DeepSearchModalProps> = ({
             >
               <X className="w-5 h-5" />
             </button>
-          </div>
-
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="O que você deseja pesquisar?"
-              className="w-full bg-[#1A2234] text-white placeholder-gray-400 rounded-md py-2 pl-10 pr-3 border border-[#2A3548] focus:outline-none focus:border-blue-500"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleSearch();
-                }
-              }}
-            />
           </div>
 
           <div>
@@ -224,7 +199,12 @@ const DeepSearchModal: React.FC<DeepSearchModalProps> = ({
             </button>
             <button
               onClick={handleSearch}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-md transition-colors flex items-center justify-center gap-1"
+              disabled={!searchOptions.webGlobal && !searchOptions.academico && !searchOptions.social}
+              className={`flex-1 flex items-center justify-center gap-1 text-white font-medium py-2 rounded-md transition-colors ${
+                searchOptions.webGlobal || searchOptions.academico || searchOptions.social
+                  ? "bg-blue-600 hover:bg-blue-700" 
+                  : "bg-blue-600/50 cursor-not-allowed"
+              }`}
             >
               Aplicar
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 ml-1">
