@@ -231,7 +231,10 @@ const UploadModal: React.FC<UploadModalProps> = ({
                     <Clock className="h-10 w-10 text-gray-500 mb-2" />
                     <p className="text-gray-400 text-sm">Nenhum arquivo recente</p>
                     <p className="text-gray-500 text-xs mt-1">
-                      Os arquivos carregados aparecerão aqui
+                      Você ainda não importou nenhum arquivo
+                    </p>
+                    <p className="text-gray-500 text-xs mt-1">
+                      Os arquivos que você enviar aparecerão aqui para acesso rápido
                     </p>
                   </div>
                 )}
