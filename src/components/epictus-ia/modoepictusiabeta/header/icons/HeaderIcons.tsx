@@ -8,6 +8,7 @@ import PerfilIcon from "./PerfilIcon";
 import PersonalidadesIcon from "./personalidadescabeçalhomodoepictusbeta";
 import HistoricoConversasModal from "../../../modals/HistoricoConversasModal";
 import { ApostilaInteligenteModal } from "../../apostila-inteligente";
+import PersonalidadesModal from "../../../modals/PersonalidadesModal";
 
 interface HeaderIconsProps {
   currentContext?: string;
@@ -31,6 +32,7 @@ const HeaderIcons: React.FC<HeaderIconsProps> = ({
   const [modoFantasmaAtivo, setModoFantasmaAtivo] = useState(false);
   const [isHistoricoModalOpen, setIsHistoricoModalOpen] = useState(false);
   const [isApostilaInteligenteModalOpen, setIsApostilaInteligenteModalOpen] = useState(false);
+  const [isPersonalidadesModalOpen, setIsPersonalidadesModalOpen] = useState(false);
 
   const handleModoFantasmaClick = () => {
     setModoFantasmaAtivo(!modoFantasmaAtivo);
@@ -48,8 +50,13 @@ const HeaderIcons: React.FC<HeaderIconsProps> = ({
   };
 
   const handlePersonalidadesClick = () => {
-    console.log("Personalidades clicado - componente inativo");
-    // Funcionalidade inativa conforme solicitado
+    setIsPersonalidadesModalOpen(true);
+  };
+
+  const handlePersonalidadeSelect = (personalidadeId: string) => {
+    // Aqui você pode implementar a lógica para ativar a personalidade selecionada
+    console.log(`Personalidade selecionada: ${personalidadeId}`);
+    setIsPersonalidadesModalOpen(false);
   };
 
   return (
@@ -63,6 +70,11 @@ const HeaderIcons: React.FC<HeaderIconsProps> = ({
       <PerfilIcon onClick={onPerfilClick} />
       <HistoricoConversasModal open={isHistoricoModalOpen} onOpenChange={setIsHistoricoModalOpen} />
       <ApostilaInteligenteModal open={isApostilaInteligenteModalOpen} onOpenChange={setIsApostilaInteligenteModalOpen} />
+      <PersonalidadesModal 
+        open={isPersonalidadesModalOpen} 
+        onOpenChange={setIsPersonalidadesModalOpen}
+        onPersonalidadeSelect={handlePersonalidadeSelect}
+      />
     </div>
   );
 };
