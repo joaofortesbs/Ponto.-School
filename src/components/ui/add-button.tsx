@@ -1,73 +1,64 @@
-import React, { useState, useRef } from "react";
-import { Plus, X, FileText, Image, FilePdf, File, UploadCloud } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+import React, { useState } from "react";
+import { Plus } from "lucide-react";
+import { motion } from "framer-motion";
 import UploadModal from "./upload-modal";
 
 interface AddButtonProps {
-  onFilesSelected: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  fileInputRef?: React.RefObject<HTMLInputElement>;
-  isDisabled?: boolean;
+  onFileUpload?: (files: File[]) => void;
 }
 
-export default function AddButton({ onFilesSelected, fileInputRef: externalFileInputRef, isDisabled = false }: AddButtonProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const localFileInputRef = useRef<HTMLInputElement>(null);
+const AddButton: React.FC<AddButtonProps> = ({ onFileUpload }) => {
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
-  // Usar referência externa se fornecida, senão usar a local
-  const fileInputRef = externalFileInputRef || localFileInputRef;
+  const handleUpload = (files: File[]) => {
+    if (onFileUpload) {
+      onFileUpload(files);
+    }
+    console.log("Arquivos enviados:", files);
+    
+    // Implementação do salvamento dos arquivos na lista de recentes
+    if (files.length > 0) {
+      // Converter Files para objetos serializáveis
+      const recentFilesToSave = files.map(file => ({
+        name: file.name,
+        date: "Hoje",
+        type: file.type,
+        size: file.size
+      }));
+      
+      // Obter arquivos existentes
+      const existingFilesJson = localStorage.getItem('recentFiles');
+      let existingFiles = existingFilesJson ? JSON.parse(existingFilesJson) : [];
+      
+      // Adicionar novos arquivos no início da lista (mais recentes primeiro)
+      const updatedFiles = [...recentFilesToSave, ...existingFiles].slice(0, 10); // limitar a 10
+      
+      // Salvar no localStorage
+      localStorage.setItem('recentFiles', JSON.stringify(updatedFiles));
+      console.log("Arquivos recentes salvos no localStorage");
+    }
+  };
 
   return (
     <>
       <motion.button
-        className={`w-9 h-9 rounded-full bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] flex items-center justify-center 
-                shadow-lg transition-all duration-300 hover:shadow-blue-500/30 hover:scale-105
-                ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-        whileHover={{ scale: isDisabled ? 1 : 1.05, boxShadow: isDisabled ? "none" : "0 0 15px rgba(13, 35, 160, 0.5)" }}
-        whileTap={{ scale: isDisabled ? 1 : 0.95 }}
-        onClick={() => !isDisabled && setIsOpen(true)}
-        aria-label="Adicionar conteúdo"
-        disabled={isDisabled}
+        className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+                 flex items-center justify-center shadow-lg text-white"
+        whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => setShowUploadModal(true)}
       >
-        <Plus className="h-5 w-5 text-white" />
+        <Plus size={18} />
       </motion.button>
 
-      <input type="file" ref={fileInputRef} onChange={onFilesSelected} multiple style={{display: "none"}}/>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-          >
-            <Dialog open onClose={() => setIsOpen(false)}>
-              <DialogContent className="p-4 sm:p-6 rounded-xl bg-white">
-                <Tabs defaultValue="upload">
-                  <TabsList className="flex gap-4">
-                    <TabsTrigger value="upload">Upload</TabsTrigger>
-                    <TabsTrigger value="recent">Recent</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="upload">
-                    <div className="flex flex-col gap-4">
-                      <Button onClick={() => fileInputRef.current?.click()}>Select Files</Button>
-                      {/* ...rest of the upload content */}
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="recent">
-                    {/* ...rest of the recent files content */}
-                  </TabsContent>
-                </Tabs>
-              </DialogContent>
-            </Dialog>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <UploadModal
+        open={showUploadModal}
+        onOpenChange={setShowUploadModal}
+        onUpload={handleUpload}
+      />
     </>
   );
-}
+};
+
+export default AddButton;

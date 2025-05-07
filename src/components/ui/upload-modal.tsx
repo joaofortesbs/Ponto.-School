@@ -42,51 +42,19 @@ const UploadModal: React.FC<UploadModalProps> = ({
   const [recentFiles, setRecentFiles] = useState<{ name: string, date: string, type: string, icon: React.ReactNode }[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Carregar arquivos recentes do localStorage
+  // Carregar arquivos recentes (deixando vazio por enquanto)
   useEffect(() => {
-    try {
-      const savedFiles = localStorage.getItem('recentFiles');
-      if (savedFiles) {
-        const parsedFiles = JSON.parse(savedFiles);
-        
-        // Converter para o formato esperado pelo componente
-        const formattedFiles = parsedFiles.map((file: any) => {
-          let iconElement;
-          
-          switch (file.icon) {
-            case 'image':
-              iconElement = <File className="h-4 w-4 text-blue-400" />;
-              break;
-            case 'pdf':
-              iconElement = <File className="h-4 w-4 text-red-400" />;
-              break;
-            case 'document':
-              iconElement = <File className="h-4 w-4 text-green-400" />;
-              break;
-            case 'spreadsheet':
-              iconElement = <File className="h-4 w-4 text-emerald-400" />;
-              break;
-            case 'presentation':
-              iconElement = <File className="h-4 w-4 text-orange-400" />;
-              break;
-            default:
-              iconElement = <File className="h-4 w-4 text-gray-400" />;
-          }
-          
-          return {
-            name: file.name,
-            date: file.date,
-            type: file.type,
-            icon: iconElement
-          };
-        });
-        
-        setRecentFiles(formattedFiles);
-      }
-    } catch (error) {
-      console.error("Erro ao carregar arquivos recentes:", error);
-      setRecentFiles([]);
-    }
+    // Em uma implementação real, aqui seria o código para buscar
+    // arquivos recentes do localStorage ou de uma API
+    
+    // Por enquanto, deixamos a lista vazia até implementar a funcionalidade completa
+    setRecentFiles([]);
+    
+    // Exemplo de como seria com localStorage:
+    // const savedFiles = localStorage.getItem('recentFiles');
+    // if (savedFiles) {
+    //   setRecentFiles(JSON.parse(savedFiles));
+    // }
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -124,41 +92,9 @@ const UploadModal: React.FC<UploadModalProps> = ({
       setFiles([]);
       onOpenChange(false);
       
-      // Salvar arquivos na lista de recentes
-      try {
-        // Converter Files para objetos serializáveis
-        const recentFilesToSave = files.map(file => ({
-          name: file.name,
-          date: new Date().toLocaleString(),
-          type: file.type,
-          size: file.size,
-          icon: getFileIcon(file.type)
-        }));
-        
-        // Obter arquivos existentes
-        const existingFilesJson = localStorage.getItem('recentFiles');
-        let existingFiles = existingFilesJson ? JSON.parse(existingFilesJson) : [];
-        
-        // Adicionar novos arquivos no início da lista (mais recentes primeiro)
-        const updatedFiles = [...recentFilesToSave, ...existingFiles].slice(0, 10); // limitar a 10
-        
-        // Salvar no localStorage
-        localStorage.setItem('recentFiles', JSON.stringify(updatedFiles));
-        console.log("Arquivos recentes salvos no localStorage");
-      } catch (error) {
-        console.error("Erro ao salvar arquivos recentes:", error);
-      }
+      // Aqui seria onde você salvaria os arquivos na lista de recentes
+      // em uma implementação real
     }
-  };
-
-  // Função para determinar o ícone com base no tipo de arquivo
-  const getFileIcon = (fileType: string) => {
-    if (fileType.includes('image')) return 'image';
-    if (fileType.includes('pdf')) return 'pdf';
-    if (fileType.includes('word') || fileType.includes('document')) return 'document';
-    if (fileType.includes('excel') || fileType.includes('spreadsheet')) return 'spreadsheet';
-    if (fileType.includes('presentation') || fileType.includes('powerpoint')) return 'presentation';
-    return 'file';
   };
 
   const openFileDialog = () => {
