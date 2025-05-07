@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { Send, Plus, Mic, Loader2, Brain, BookOpen, AlignJustify, RotateCw, Search, Image, Lightbulb, PenLine } from "lucide-react";
+import { Send, Plus, Mic, Loader2, Brain, BookOpen, AlignJustify, RotateCw, Search, Image, Lightbulb, PenLine, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import QuickActionButton from "./QuickActionButton";
 import AddButton from "@/components/ui/add-button";
+import UploadModal from "@/components/ui/upload-modal";
 
 
 interface EpictusMessageBoxProps {

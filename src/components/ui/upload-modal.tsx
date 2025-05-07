@@ -2,8 +2,8 @@
 import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Upload, File, X, Cloud, FolderOpen } from "lucide-react";
-import { Google, Microsoft } from 'lucide-react';
+import { Upload, File, X, Cloud, FolderOpen, ChevronRight } from "lucide-react";
+import { GoogleIcon, MicrosoftIcon } from './icons';
 
 interface UploadModalPosition {
   top: number;
@@ -16,6 +16,23 @@ interface UploadModalProps {
   position: UploadModalPosition;
   onUpload?: (files: File[]) => void;
 }
+
+// Ícones personalizados para melhor aparência
+const GoogleIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 11V8L17 12L12 16V13H8V11H12Z" fill="#ea4335"/>
+    <path d="M21.35 11.1H12.18V13.83H18.69C18.36 17.64 15.19 19.27 12.19 19.27C8.36003 19.27 5.23003 16.25 5.23003 12.27C5.23003 8.29 8.36003 5.27 12.19 5.27C15.68 5.27 17.53 7.53 17.53 7.53L19.42 5.71C19.42 5.71 16.86 3 12.15 3C6.47003 3 2.00003 7.56 2.00003 12.33C2.00003 17.1 6.47003 21.67 12.13 21.67C17.35 21.67 21.58 18.17 21.58 13.07C21.58 12.1 21.35 11.1 21.35 11.1Z" fill="#ea4335"/>
+  </svg>
+);
+
+const MicrosoftIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M11.4 3H3V11.4H11.4V3Z" fill="#F25022"/>
+    <path d="M11.4 12.6H3V21H11.4V12.6Z" fill="#00A4EF"/>
+    <path d="M21 3H12.6V11.4H21V3Z" fill="#7FBA00"/>
+    <path d="M21 12.6H12.6V21H21V12.6Z" fill="#FFB900"/>
+  </svg>
+);
 
 const UploadModal: React.FC<UploadModalProps> = ({
   isOpen,
@@ -93,7 +110,7 @@ const UploadModal: React.FC<UploadModalProps> = ({
               left: `${position.left}px` 
             }}
           >
-            <div className="w-[280px] rounded-xl overflow-hidden shadow-2xl bg-gradient-to-b from-[#0c1c36] to-[#0a1625] border border-blue-500/20 text-white">
+            <div className="w-[400px] rounded-xl overflow-hidden shadow-2xl bg-gradient-to-b from-[#0c1c36] to-[#0a1625] border border-blue-500/20 text-white">
               <div className="px-4 py-3 border-b border-blue-500/20 flex justify-between items-center">
                 <h3 className="font-medium text-base text-white">Carregar Arquivos</h3>
                 <button 
@@ -104,88 +121,89 @@ const UploadModal: React.FC<UploadModalProps> = ({
                 </button>
               </div>
               
-              <div className="p-4 space-y-3">
-                <div
-                  className={`border-2 border-dashed rounded-lg p-4 transition-all ${
-                    isDragging
-                      ? "border-blue-500 bg-blue-500/10"
-                      : "border-gray-600 hover:border-blue-500/50 hover:bg-blue-500/5"
-                  }`}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                  onClick={openFileDialog}
-                >
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    onChange={handleFileChange}
-                    multiple
-                  />
-                  <div className="flex flex-col items-center gap-1.5 cursor-pointer">
-                    <div className="p-2 rounded-full bg-blue-500/20">
-                      <Upload className="h-5 w-5 text-blue-400" />
-                    </div>
-                    <p className="text-sm font-medium text-center text-gray-300">
-                      Clique ou arraste arquivos para esta área
-                    </p>
-                    <p className="text-xs text-center text-gray-500">
-                      Suporta PDFs, imagens, documentos e mais
-                    </p>
-                  </div>
-                </div>
-                
-                {/* Opções de cloud storage */}
-                <div className="grid grid-cols-2 gap-2 mt-2">
+              <div className="p-4 space-y-4">
+                {/* Opções principais organizadas verticalmente */}
+                <div className="flex flex-col space-y-3">
+                  {/* Opção Google Drive */}
                   <Button
                     variant="outline"
-                    size="sm"
-                    className="flex items-center justify-center gap-2 bg-white/5 border-gray-700 hover:bg-white/10 text-gray-300"
+                    className="w-full flex items-center justify-between bg-white/5 border-gray-700 hover:bg-white/10 text-gray-300 py-3"
                     onClick={() => handleCloudService('Google Drive')}
                   >
-                    <Google className="h-4 w-4 text-red-400" />
-                    <span className="text-xs">Google Drive</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                        <GoogleIcon />
+                      </div>
+                      <span className="text-sm font-medium">Conectar com o Google Drive</span>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-gray-500" />
                   </Button>
+                  
+                  {/* Opção Microsoft OneDrive */}
                   <Button
                     variant="outline"
-                    size="sm"
-                    className="flex items-center justify-center gap-2 bg-white/5 border-gray-700 hover:bg-white/10 text-gray-300"
+                    className="w-full flex items-center justify-between bg-white/5 border-gray-700 hover:bg-white/10 text-gray-300 py-3"
                     onClick={() => handleCloudService('Microsoft OneDrive')}
                   >
-                    <Microsoft className="h-4 w-4 text-blue-400" />
-                    <span className="text-xs">OneDrive</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                        <MicrosoftIcon />
+                      </div>
+                      <span className="text-sm font-medium">Conectar com o Microsoft OneDrive</span>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-gray-500" />
+                  </Button>
+                  
+                  {/* Upload de Arquivos Locais */}
+                  <div
+                    className={`border-2 border-dashed rounded-lg p-4 transition-all cursor-pointer ${
+                      isDragging
+                        ? "border-blue-500 bg-blue-500/10"
+                        : "border-gray-600 hover:border-blue-500/50 hover:bg-blue-500/5"
+                    }`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={openFileDialog}
+                  >
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      onChange={handleFileChange}
+                      multiple
+                    />
+                    <div className="flex flex-col items-center gap-1.5">
+                      <div className="p-2 rounded-full bg-blue-500/20">
+                        <Upload className="h-5 w-5 text-blue-400" />
+                      </div>
+                      <p className="text-sm font-medium text-center text-gray-300">
+                        Clique ou arraste arquivos para esta área
+                      </p>
+                      <p className="text-xs text-center text-gray-500">
+                        Suporta PDFs, imagens, documentos e mais
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Visualização de arquivos recentes */}
+                  <Button
+                    variant="outline"
+                    className="w-full flex items-center justify-between bg-white/5 border-gray-700 hover:bg-white/10 text-gray-300 py-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                        <FolderOpen className="h-4 w-4 text-amber-400" />
+                      </div>
+                      <span className="text-sm font-medium">Recentes</span>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-gray-500" />
                   </Button>
                 </div>
 
-                {/* Visualização de arquivos recentes - Para implementação futura */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full flex items-center justify-between bg-white/5 border-gray-700 hover:bg-white/10 text-gray-300"
-                >
-                  <div className="flex items-center gap-2">
-                    <FolderOpen className="h-4 w-4 text-amber-400" />
-                    <span className="text-xs">Recentes</span>
-                  </div>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-4 w-4"
-                  >
-                    <polyline points="9 18 15 12 9 6"></polyline>
-                  </svg>
-                </Button>
-
+                {/* Lista de arquivos selecionados */}
                 {files.length > 0 && (
-                  <div className="mt-2">
+                  <div className="mt-3">
                     <p className="text-xs text-gray-400 mb-1">
                       Arquivos selecionados ({files.length})
                     </p>
@@ -197,7 +215,7 @@ const UploadModal: React.FC<UploadModalProps> = ({
                         >
                           <div className="flex items-center gap-1.5 overflow-hidden">
                             <File className="h-3 w-3 text-blue-400 flex-shrink-0" />
-                            <span className="truncate max-w-[150px]">
+                            <span className="truncate max-w-[280px]">
                               {file.name}
                             </span>
                           </div>
@@ -218,7 +236,8 @@ const UploadModal: React.FC<UploadModalProps> = ({
                   </div>
                 )}
 
-                <div className="flex justify-end gap-2 mt-2">
+                {/* Botões de ação */}
+                <div className="flex justify-end gap-2 mt-3">
                   <Button
                     variant="outline"
                     size="sm"
