@@ -33,7 +33,7 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSendMessage = () => {
+  const submitMessage = () => {
     if (inputMessage.trim() !== '' || selectedFiles.length > 0) {
       handleSendMessage(inputMessage, selectedFiles);
       setInputMessage('');
@@ -251,7 +251,7 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
                 boxShadow: ["0 0 0px rgba(13, 35, 160, 0)", "0 0 15px rgba(13, 35, 160, 0.5)", "0 0 0px rgba(13, 35, 160, 0)"],
               }}
               transition={{ duration: 2, repeat: Infinity }}
-              onClick={handleSendMessage}
+              onClick={submitMessage}
               disabled={isTyping}
             >
               {isTyping ? (
