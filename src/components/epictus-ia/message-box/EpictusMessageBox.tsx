@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Send, Plus, Mic, Loader2, Brain, BookOpen, AlignJustify, RotateCw, Search, Image, Lightbulb, PenLine } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { Send, Plus, Mic, Loader2, Brain, BookOpen, AlignJustify, RotateCw, Search, Image, Lightbulb, PenLine, X, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -30,8 +30,27 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
   charCount,
   MAX_CHARS,
   handleKeyDown,
-  handleButtonClick
+  handleButtonClick,
+  handleFileChange,
+  fileInputRef: externalFileInputRef,
+  selectedFiles: externalSelectedFiles
 }) => {
+  // Criar referência local se não for fornecida externamente
+  const localFileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = externalFileInputRef || localFileInputRef;
+  
+  // Criar estado local se não for fornecido externamente
+  const [localSelectedFiles, setLocalSelectedFiles] = useState<File[]>([]);
+  const selectedFiles = externalSelectedFiles || localSelectedFiles;
+  
+  // Função para lidar com mudanças de arquivo localmente se handleFileChange não for fornecido
+  const handleFileChangeInternal = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (handleFileChange) {
+      handleFileChange(e);
+    } else if (e.target.files) {
+      setLocalSelectedFiles(Array.from(e.target.files));
+    }
+  };
   return (
     <motion.div 
       className="relative w-[60%] h-auto mx-auto bg-transparent rounded-2xl shadow-xl 
@@ -118,12 +137,12 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
             ref={fileInputRef}
             className="hidden"
             multiple 
-            onChange={handleFileChange}
+            onChange={handleFileChange || handleFileChangeInternal}
           />
           
           {/* Botão de adicionar arquivos */}
           <AddButton 
-            onFilesSelected={handleFileChange}
+            onFilesSelected={handleFileChange || handleFileChangeInternal}
             fileInputRef={fileInputRef}
             isDisabled={isTyping}
           />
@@ -146,7 +165,16 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
                         e.preventDefault();
                         const newFiles = [...selectedFiles];
                         newFiles.splice(index, 1);
-                        setSelectedFiles(newFiles);
+                        if (externalSelectedFiles) {
+                          // Se estiver usando props externa, encontre a função de set
+                          const setSelectedFiles = (props as any).setSelectedFiles;
+                          if (setSelectedFiles) {
+                            setSelectedFiles(newFiles);
+                          }
+                        } else {
+                          // Se estiver usando estado local
+                          setLocalSelectedFiles(newFiles);
+                        }
                       }}
                     >
                       <X size={12} />
