@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -60,13 +59,17 @@ const GrupoEstudoCard: React.FC<GrupoEstudoCardProps> = ({ grupo, onClick }) => 
       <CardContent>
         <div className="space-y-4">
           <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center text-gray-600 dark:text-gray-300">
-              <Users className="h-4 w-4 mr-1" />
-              <span>{grupo.membros} membros</span>
+            <div className="flex items-center text-gray-600 dark:text-gray-300 interface-menu-item">
+              <span className="interface-menu-item-icon">
+                <Users className="h-4 w-4" />
+              </span>
+              <span className="interface-menu-item-text">{grupo.membros} membros</span>
             </div>
-            <div className="flex items-center text-gray-600 dark:text-gray-300">
-              <Calendar className="h-4 w-4 mr-1" />
-              <span>{grupo.proximaReuniao}</span>
+            <div className="flex items-center text-gray-600 dark:text-gray-300 interface-menu-item">
+              <span className="interface-menu-item-icon">
+                <Calendar className="h-4 w-4" />
+              </span>
+              <span className="interface-menu-item-text">{grupo.proximaReuniao}</span>
             </div>
           </div>
           <div className="space-y-1">
