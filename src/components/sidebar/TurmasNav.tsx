@@ -44,7 +44,7 @@ export default function TurmasNav() {
     estudos: 4,
   };
 
-  // Simulated study groups data (This data is not used after removing the button, but keeping it as it is to avoid unintended side effects)
+  // Simulated study groups data
   const studyGroups = [
     {
       id: "g1",
@@ -72,7 +72,7 @@ export default function TurmasNav() {
     },
   ];
 
-  // Simulated recommended groups (This data is not used after removing the button, but keeping it as it is to avoid unintended side effects)
+  // Simulated recommended groups
   const recommendedGroups = [
     {
       id: "rg1",

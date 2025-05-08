@@ -303,7 +303,7 @@ export function SidebarNav({
         },
         {
           name: "Grupos de Estudo",
-          path: "/turmas?view=grupos",
+          path: "/turmas?view=grupos-estudo",
           icon: <Users2 className="h-4 w-4 text-[#29335C]" />,
         },
         {

@@ -1,2 +1,5 @@
+import React from "react";
+import { Outlet, Route, Routes } from "react-router-dom";
+import GruposEstudoView from "@/components/turmas/minisecao-gruposdeestudo/GruposEstudoView";
 
-// This file is being deleted
+// ... rest of the routes configuration ...

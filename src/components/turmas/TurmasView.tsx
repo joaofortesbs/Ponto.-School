@@ -966,6 +966,7 @@ const TurmasView: React.FC = () => {
   const [filteredTurmas, setFilteredTurmas] = useState(turmasData);
   const [selectedTurma, setSelectedTurma] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("conteudo");
+  const [activeView, setActiveView] = useState("");
   const [expandedModules, setExpandedModules] = useState<string[]>(["m1"]);
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
 
@@ -985,6 +986,15 @@ const TurmasView: React.FC = () => {
       setFilteredTurmas(filtered);
     }
   };
+
+  // Check for view parameter in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const viewParam = params.get('view');
+    if (viewParam) {
+      setActiveView(viewParam);
+    }
+  }, []);
 
   // Toggle module expansion
   const toggleModule = (moduleId: string) => {
