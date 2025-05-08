@@ -1187,7 +1187,8 @@ export default function TurmasPage() {
                 <DesempenhoView />
               </TabsContent>
               <TabsContent value="grupos-estudo" className="mt-6">
-                <GruposEstudoView className="min-h-[60vh]" />
+                <GruposEstudoView className="mb-8" />
+                <TopicosEstudoView className="mb-8" />
               </TabsContent>
             </Tabs>
           </div>
