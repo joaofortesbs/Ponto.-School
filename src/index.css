@@ -97,6 +97,47 @@
 /* Ensure modals and dialogs are always on top */
 
 /* Garantir que o dropdown de Personalidades fique por cima de tudo */
+
+/* Animações para tópicos em destaque na seção de Grupos de Estudos */
+@keyframes pulse-border {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 0, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(255, 107, 0, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 0, 0);
+  }
+}
+
+.featured-topic.pulse-effect {
+  animation: pulse-border 1.5s ease-out;
+}
+
+/* Esconder a barra de rolagem mas manter a funcionalidade */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE e Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari e Opera */
+}
+
+/* Efeito de gradiente para textos */
+.text-gradient {
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-image: linear-gradient(to right, #FF6B00, #FF8C40);
+}
+
+/* Efeito de brilho para cards */
+.card-glow:hover {
+  box-shadow: 0 0 15px rgba(255, 107, 0, 0.3);
+}
+
 .personalidades-dropdown,
 .group:hover .personalidades-dropdown,
 [role="menu"].personalidades-dropdown {
