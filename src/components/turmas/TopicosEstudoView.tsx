@@ -400,66 +400,126 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                     initial={{ rotateY: 0 }}
                     whileHover={{ 
                       scale: 1.05,
-                      rotateY: 5,
-                      z: 10,
-                      boxShadow: `0 10px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.2), 0 0 15px ${topico.cor}30`
+                      rotateY: 15,
+                      z: 20,
+                      boxShadow: `0 20px 40px -10px rgba(0, 0, 0, 0.4), 0 10px 20px -5px rgba(0, 0, 0, 0.3), 0 0 25px ${topico.cor}40`
                     }}
                     transition={{ 
                       type: "spring", 
-                      stiffness: 300,
-                      damping: 15
+                      stiffness: 350,
+                      damping: 18
                     }}
-                    className={`profile-3d-element bg-gradient-to-b from-black/70 to-black/40 backdrop-blur-sm 
+                    className={`profile-3d-element bg-gradient-to-b from-[#121620]/90 to-[#0a0d14]/80 backdrop-blur-lg 
                       rounded-xl overflow-hidden cursor-pointer border border-white/10 
                       transition-all duration-300 relative h-full flex flex-col transform-gpu
-                      perspective-1000 shadow-md
-                      ${isTopicFeatured(topico) ? 'featured-topic border-[0.5px] border-[#FF6B00]/30' : ''}`}
+                      perspective-1000 shadow-xl
+                      ${isTopicFeatured(topico) ? 'featured-topic border-[0.5px] border-[#FF6B00]/40' : ''}`}
                     style={{
                       transformStyle: "preserve-3d",
                     }}
                   >
                     <div
-                      className="w-full h-28 flex flex-col justify-end p-3 relative overflow-hidden"
+                      className="w-full h-32 flex flex-col justify-end p-3 relative overflow-hidden"
                     >
-                      {/* Fundo com gradiente 3D baseado na cor do tópico */}
+                      {/* Fundo 3D com efeito de vidro e paralaxe */}
                       <div 
-                        className="absolute inset-0 opacity-15 z-0"
+                        className="absolute inset-0 z-0"
                         style={{ 
-                          background: `radial-gradient(circle at 30% 30%, ${topico.cor} 0%, transparent 70%)`,
-                          transform: "translateZ(-10px)",
+                          background: `radial-gradient(circle at 20% 20%, ${topico.cor}25 0%, transparent 70%), 
+                                      linear-gradient(135deg, ${topico.cor}05 0%, transparent 50%)`,
+                          transform: "translateZ(-20px) scale(1.1)",
+                          filter: "blur(1px)"
                         }}
                       />
                       
-                      {/* Efeito de profundidade */}
+                      {/* Efeito de profundidade avançado */}
                       <div className="absolute top-0 left-0 w-full h-full" 
                         style={{ 
-                          boxShadow: `inset 0 0 30px rgba(0,0,0,0.4)`,
-                          borderRadius: "inherit" 
+                          boxShadow: `inset 0 0 40px rgba(0,0,0,0.5)`,
+                          borderRadius: "inherit",
+                          background: `radial-gradient(circle at 70% 80%, rgba(255,255,255,0.03) 0%, transparent 50%)`
                         }} 
                       />
                       
-                      {/* Pequeno indicador de novidade no canto */}
+                      {/* Partículas flutuantes sutis (somente para tópicos em destaque) */}
+                      {isTopicFeatured(topico) && (
+                        <>
+                          <div className="absolute h-1.5 w-1.5 rounded-full bg-white/20"
+                               style={{top: '30%', left: '20%', transform: 'translateZ(5px)', opacity: 0.7,
+                                       animation: 'float-particle 4s ease-in-out infinite'}}>
+                          </div>
+                          <div className="absolute h-1 w-1 rounded-full bg-white/20"
+                               style={{top: '45%', left: '70%', transform: 'translateZ(8px)', opacity: 0.5,
+                                       animation: 'float-particle 3.5s ease-in-out infinite 0.5s'}}>
+                          </div>
+                          <div className="absolute h-0.5 w-0.5 rounded-full bg-white/20"
+                               style={{top: '65%', left: '40%', transform: 'translateZ(12px)', opacity: 0.4,
+                                       animation: 'float-particle 5s ease-in-out infinite 1s'}}>
+                          </div>
+                        </>
+                      )}
+                      
+                      {/* Indicador de novidade redesenhado */}
                       {topico.novoConteudo && (
-                        <div className="absolute top-2 right-2 flex items-center gap-1">
-                          <div className="h-2 w-2 rounded-full bg-[#FF6B00] animate-pulse"></div>
-                          <div className="absolute h-3 w-3 rounded-full bg-[#FF6B00]/30 animate-ping-slow"></div>
+                        <div className="absolute top-3 right-3 z-20">
+                          <div className="relative">
+                            <div className="absolute -inset-0.5 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-full opacity-75 blur-sm animate-pulse"></div>
+                            <div className="h-2 w-2 rounded-full bg-white"></div>
+                          </div>
                         </div>
                       )}
 
-                      <div className="relative z-10" style={{ transform: "translateZ(15px)" }}>
-                        <div className="profile-3d-element mb-2" style={{ 
-                          fontSize: "2rem",
-                          textShadow: "0 2px 5px rgba(0,0,0,0.5)",
-                          transform: "translateZ(5px)"
-                        }}>{topico.icon}</div>
-                        <h4 className="text-white font-semibold text-sm profile-3d-text">{topico.nome}</h4>
-                        <div className="flex items-center gap-1 mt-1" style={{ transform: "translateZ(5px)" }}>
-                          <div className="text-white/80 text-xs flex items-center bg-black/20 px-1.5 py-0.5 rounded-full">
-                            <Users className="h-3 w-3 mr-0.5" />
+                      {/* Grafico hexagonal de fundo para elementos destacados */}
+                      {isTopicFeatured(topico) && (
+                        <div className="absolute inset-0 z-5 opacity-10"
+                             style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5.7735C32.094 5.7735 34.1627 6.456 35.7735 7.7735L52.2265 17.7735C55.5206 19.7735 57.2265 23.3726 57.2265 27.2265V47.2265C57.2265 51.0804 55.5206 54.6795 52.2265 56.6795L35.7735 66.6795C34.1627 67.997 32.094 68.6795 30 68.6795C27.906 68.6795 25.8373 67.997 24.2265 66.6795L7.7735 56.6795C4.47944 54.6795 2.7735 51.0804 2.7735 47.2265V27.2265C2.7735 23.3726 4.47944 19.7735 7.7735 17.7735L24.2265 7.7735C25.8373 6.456 27.906 5.7735 30 5.7735Z' fill='none' stroke='%23FFFFFF' stroke-width='0.3'/%3E%3C/svg%3E")`,
+                              backgroundSize: '150px 150px',
+                              backgroundPosition: 'center',
+                              mixBlendMode: 'overlay',
+                              transform: 'translateZ(-15px) scale(1.2) rotate(30deg)'
+                        }}></div>
+                      )}
+
+                      {/* Conteúdo principal com efeito 3D */}
+                      <div className="relative z-10" style={{ transform: "translateZ(25px)" }}>
+                        {/* Ícone 3D com sombra e reflexo */}
+                        <div className="profile-3d-element mb-3 relative flex items-center justify-center"
+                             style={{ transform: "translateZ(10px)" }}>
+                          <div className="absolute -inset-1 rounded-full bg-gradient-to-b from-white/10 to-transparent opacity-50"
+                               style={{ filter: 'blur(2px)', transform: 'translateZ(-2px)' }}></div>
+                          <div className="h-12 w-12 rounded-xl flex items-center justify-center relative" 
+                               style={{ 
+                                 backgroundColor: topico.cor,
+                                 boxShadow: `0 10px 15px -5px ${topico.cor}40, 0 0 8px ${topico.cor}30 inset`,
+                                 transform: 'translateZ(5px)'
+                               }}>
+                            {/* Ícones personalizados baseados no nome do tópico */}
+                            {topico.nome === "Matemática" && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>}
+                            {topico.nome === "Física" && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>}
+                            {topico.nome === "Química" && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>}
+                            {topico.nome === "Literatura" && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>}
+                            {topico.nome === "Biologia" && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>}
+                            {topico.nome === "Ciências" && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>}
+                            {topico.nome === "Computação" && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>}
+                            {topico.nome === "Geografia" && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>}
+                            {topico.nome === "Engenharia" && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>}
+                          </div>
+                        </div>
+                        
+                        {/* Título do tópico com efeito de destaque */}
+                        <h4 className="text-white font-semibold text-sm profile-3d-text"
+                            style={{ 
+                              textShadow: "0 2px 3px rgba(0,0,0,0.5), 0 0 5px rgba(0,0,0,0.2)",
+                            }}>{topico.nome}</h4>
+                        
+                        {/* Estatísticas com estilo moderno */}
+                        <div className="flex items-center gap-1.5 mt-2" style={{ transform: "translateZ(8px)" }}>
+                          <div className="text-white/90 text-xs flex items-center bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-full border border-white/5">
+                            <Users className="h-3 w-3 mr-1" />
                             {topico.grupos}
                           </div>
                           {topico.tendencia === "alta" && (
-                            <div className="bg-emerald-500/10 px-1.5 py-0.5 rounded-full flex items-center">
+                            <div className="bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-sm px-2 py-0.5 rounded-full flex items-center">
                               <TrendingUp className="h-3 w-3 text-emerald-400" />
                             </div>
                           )}
