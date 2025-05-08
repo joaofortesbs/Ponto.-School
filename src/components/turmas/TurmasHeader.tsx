@@ -67,15 +67,14 @@ const TurmasHeader: React.FC<TurmasHeaderProps> = ({
   );
 };
 
-// Import TabsNav component
 import TurmasTabsNav from "./TurmasTabsNav";
 
 const TurmasHeaderWithNav: React.FC<TurmasHeaderProps> = (props) => {
   return (
-    <>
-      <TurmasHeader {...props} />
+    <div className="space-y-4">
       <TurmasTabsNav />
-    </>
+      <TurmasHeader {...props} />
+    </div>
   );
 };
 

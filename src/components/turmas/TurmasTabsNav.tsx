@@ -43,36 +43,34 @@ const TurmasTabsNav: React.FC = () => {
   };
 
   return (
-    <div className="flex justify-center mt-4 mb-6">
-      <div className="bg-[#001427] p-1 rounded-xl flex space-x-1 shadow-md border border-[#FF6B00]/20">
-        {tabs.map((tab) => {
-          const isActive = tab.value === currentView;
-          return (
-            <button
-              key={tab.value}
-              onClick={() => handleTabChange(tab.value)}
-              className={cn(
-                "relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2",
-                isActive
-                  ? "text-white"
-                  : "text-gray-300 hover:text-white hover:bg-white/10"
-              )}
-            >
-              {isActive && (
-                <motion.div
-                  layoutId="activeTurmaTab"
-                  className="absolute inset-0 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg"
-                  transition={{ type: "spring", duration: 0.5 }}
-                />
-              )}
-              <span className="relative z-10 flex items-center gap-2">
-                {tab.icon}
-                {tab.name}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+    <div className="bg-[#001427] p-1 rounded-xl flex space-x-1 shadow-md border border-[#FF6B00]/20">
+      {tabs.map((tab) => {
+        const isActive = tab.value === currentView;
+        return (
+          <button
+            key={tab.value}
+            onClick={() => handleTabChange(tab.value)}
+            className={cn(
+              "relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2",
+              isActive
+                ? "text-white"
+                : "text-gray-300 hover:text-white hover:bg-white/10"
+            )}
+          >
+            {isActive && (
+              <motion.div
+                layoutId="activeTurmaTab"
+                className="absolute inset-0 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg"
+                transition={{ type: "spring", duration: 0.5 }}
+              />
+            )}
+            <span className="relative z-10 flex items-center gap-2">
+              {tab.icon}
+              {tab.name}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 };
