@@ -15,6 +15,3 @@ const GruposEstudoView: React.FC<GruposEstudoViewProps> = ({ className }) => {
 };
 
 export default GruposEstudoView;
-};
-
-export default GruposEstudoView;
