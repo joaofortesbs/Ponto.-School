@@ -171,9 +171,9 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
           {/* Botão de Prompt Aprimorado - visível apenas quando o usuário começar a digitar */}
           {inputMessage.trim().length > 0 && (
             <motion.button
-              className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+              className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-[#007aff] to-[#007aff] 
                        flex items-center justify-center shadow-lg text-white"
-              whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+              whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(0, 122, 255, 0.5)" }}
               whileTap={{ scale: 0.95 }}
               onClick={() => handleButtonClick('PromptAprimorado')}
               title="Prompt Aprimorado com IA"
@@ -184,9 +184,9 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
 
           {/* Botão de sugestão de prompts inteligentes - sempre visível */}
           <motion.button
-            className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+            className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-[#007aff] to-[#007aff] 
                      flex items-center justify-center shadow-lg text-white"
-            whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+            whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(0, 122, 255, 0.5)" }}
             whileTap={{ scale: 0.95 }}
             onClick={() => handleButtonClick('SugestaoPrompts')}
             title="Sugestão de Prompts Inteligentes"
@@ -197,9 +197,9 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
           {/* Botão de microfone (quando não há texto) */}
           {!inputMessage.trim() ? (
             <motion.button 
-              className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+              className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-[#007aff] to-[#007aff] 
                        flex items-center justify-center shadow-lg text-white"
-              whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+              whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(0, 122, 255, 0.5)" }}
               whileTap={{ scale: 0.95 }}
             >
               <Mic size={16} />
@@ -207,12 +207,12 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
           ) : (
             /* Botão de enviar - Visível apenas quando há conteúdo no input */
             <motion.button
-              className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] 
+              className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-[#007aff] to-[#007aff] 
                        flex items-center justify-center shadow-lg text-white"
-              whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(13, 35, 160, 0.5)" }}
+              whileHover={{ scale: 1.05, boxShadow: "0 0 15px rgba(0, 122, 255, 0.5)" }}
               whileTap={{ scale: 0.95 }}
               animate={{ 
-                boxShadow: ["0 0 0px rgba(13, 35, 160, 0)", "0 0 15px rgba(13, 35, 160, 0.5)", "0 0 0px rgba(13, 35, 160, 0)"],
+                boxShadow: ["0 0 0px rgba(0, 122, 255, 0)", "0 0 15px rgba(0, 122, 255, 0.5)", "0 0 0px rgba(0, 122, 255, 0)"],
               }}
               transition={{ duration: 2, repeat: Infinity }}
               onClick={handleSendMessage}
