@@ -51,7 +51,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
-import GruposEstudoView from "@/components/turmas/minisecao-gruposdeestudo/GruposEstudoView"; // Import added here
 
 // Sample data for classes
 const turmasData = [
@@ -1187,7 +1186,10 @@ export default function TurmasPage() {
                 <DesempenhoView />
               </TabsContent>
               <TabsContent value="grupos-estudo" className="mt-6">
-                <GruposEstudoView /> {/* iframe removed, GruposEstudoView added */}
+                {/* Import the correct component */}
+                <div className="container mx-auto py-6 px-4">
+                  <iframe src="/turmas?view=grupos-estudo" className="w-full h-[80vh] border-none"></iframe>
+                </div>
               </TabsContent>
             </Tabs>
           </div>
@@ -1197,4 +1199,11 @@ export default function TurmasPage() {
   );
 }
 
-// GruposEstudoView is imported from an external file, so we don't need to redefine it here
+function GruposEstudoView() {
+  return (
+    <div>
+      {/* Implement Grupos de Estudo view here */}
+      <p>Grupos de Estudo view</p>
+    </div>
+  );
+}
