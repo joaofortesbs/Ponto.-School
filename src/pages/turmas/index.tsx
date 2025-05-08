@@ -1197,11 +1197,4 @@ export default function TurmasPage() {
   );
 }
 
-function GruposEstudoView() {
-  return (
-    <div>
-      {/* Implement Grupos de Estudo view here */}
-      <p>Grupos de Estudo view</p>
-    </div>
-  );
-}
+// GruposEstudoView is imported from an external file, so we don't need to redefine it here
