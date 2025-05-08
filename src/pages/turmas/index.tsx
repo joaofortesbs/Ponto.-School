@@ -10,6 +10,7 @@ import TurmaFilters from "@/components/turmas/TurmaFilters";
 import EpictusIAHelper from "@/components/turmas/EpictusIAHelper";
 import DesempenhoView from "@/components/turmas/DesempenhoView";
 import GruposEstudoView from "@/components/turmas/minisecao-gruposdeestudo/GruposEstudoView";
+import TopicosEstudoView from "@/components/turmas/TopicosEstudoView";
 import {
   Atom,
   Calculator,
