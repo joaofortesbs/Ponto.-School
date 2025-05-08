@@ -1,0 +1,1167 @@
+[plugin:vite:react-swc] × the name `GruposEstudoView` is defined multiple times
+      ╭─[/home/runner/workspace/src/pages/turmas/index.tsx:51:1]
+   51 │ import { Button } from "@/components/ui/button";
+   52 │ import { Badge } from "@/components/ui/badge";
+   53 │ import { motion } from "framer-motion";
+   54 │ import GruposEstudoView from "@/components/turmas/minisecao-gruposdeestudo/GruposEstudoView"; // Import added here
+      ·        ────────┬───────
+      ·                ╰── previous definition of `GruposEstudoView` here
+   55 │ 
+   56 │ // Sample data for classes
+   57 │ const turmasData = [
+   58 │   // Turmas Oficiais
+   59 │   {
+   60 │     id: "mat",
+   61 │     nome: "Matemática",
+   62 │     professor: "Prof. Ricardo Oliveira",
+   63 │     imagem:
+   64 │       "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=800&q=80",
+   65 │     progresso: 68,
+   66 │     proximaAula: {
+   67 │       titulo: "Aula 7: Funções Trigonométricas",
+   68 │       data: "18/03",
+   69 │       hora: "10:00",
+   70 │       prazoProximo: false,
+   71 │     },
+   72 │     status: "Em Andamento",
+   73 │     novasMensagens: 2,
+   74 │     disciplina: "Matemática",
+   75 │     icone: <Calculator className="h-6 w-6 text-[#FF6B00]" />,
+   76 │     categoria: "oficial",
+   77 │   },
+   78 │   {
+   79 │     id: "port",
+   80 │     nome: "Língua Portuguesa",
+   81 │     professor: "Profa. Carla Mendes",
+   82 │     imagem:
+   83 │       "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&q=80",
+   84 │     progresso: 75,
+   85 │     proximaAula: {
+   86 │       titulo: "Aula 8: Literatura Modernista",
+   87 │       data: "16/03",
+   88 │       hora: "14:00",
+   89 │       prazoProximo: false,
+   90 │     },
+   91 │     status: "Em Andamento",
+   92 │     novasMensagens: 0,
+   93 │     disciplina: "Português",
+   94 │     icone: <BookText className="h-6 w-6 text-[#FF6B00]" />,
+   95 │     categoria: "oficial",
+   96 │   },
+   97 │   {
+   98 │     id: "fis",
+   99 │     nome: "Física",
+  100 │     professor: "Prof. Carlos Santos",
+  101 │     imagem:
+  102 │       "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&q=80",
+  103 │     progresso: 65,
+  104 │     proximaAula: {
+  105 │       titulo: "Aula 5: Termodinâmica",
+  106 │       data: "18/03",
+  107 │       hora: "14:00",
+  108 │       prazoProximo: false,
+  109 │     },
+  110 │     status: "Em Andamento",
+  111 │     novasMensagens: 3,
+  112 │     disciplina: "Física",
+  113 │     icone: <Atom className="h-6 w-6 text-[#FF8C40]" />,
+  114 │     categoria: "oficial",
+  115 │   },
+  116 │   {
+  117 │     id: "quim",
+  118 │     nome: "Química",
+  119 │     professor: "Prof. Roberto Alves",
+  120 │     imagem:
+  121 │       "https://images.unsplash.com/photo-1603126857599-f6e157fa2fe6?w=800&q=80",
+  122 │     progresso: 90,
+  123 │     proximaAula: {
+  124 │       titulo: "Aula 8: Polímeros",
+  125 │       data: "20/03",
+  126 │       hora: "16:30",
+  127 │       prazoProximo: false,
+  128 │     },
+  129 │     status: "Em Andamento",
+  130 │     novasMensagens: 5,
+  131 │     disciplina: "Química",
+  132 │     icone: <Beaker className="h-6 w-6 text-[#E85D04]" />,
+  133 │     categoria: "oficial",
+  134 │   },
+  135 │   {
+  136 │     id: "bio",
+  137 │     nome: "Biologia",
+  138 │     professor: "Profa. Mariana Costa",
+  139 │     imagem:
+  140 │       "https://images.unsplash.com/photo-1530026186672-2cd00ffc50fe?w=800&q=80",
+  141 │     progresso: 78,
+  142 │     proximaAula: {
+  143 │       titulo: "Aula 6: Genética",
+  144 │       data: "19/03",
+  145 │       hora: "13:15",
+  146 │       prazoProximo: false,
+  147 │     },
+  148 │     status: "Em Andamento",
+  149 │     novasMensagens: 1,
+  150 │     disciplina: "Biologia",
+  151 │     icone: <Dna className="h-6 w-6 text-[#DC2F02]" />,
+  152 │     categoria: "oficial",
+  153 │   },
+  154 │   {
+  155 │     id: "geo",
+  156 │     nome: "Geografia",
+  157 │     professor: "Profa. Lúcia Ferreira",
+  158 │     imagem:
+  159 │       "https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800&q=80",
+  160 │     progresso: 30,
+  161 │     proximaAula: {
+  162 │       titulo: "Aula 2: Geopolítica",
+  163 │       data: "16/03",
+  164 │       hora: "11:30",
+  165 │       prazoProximo: false,
+  166 │     },
+  167 │     status: "Em Andamento",
+  168 │     novasMensagens: 2,
+  169 │     disciplina: "Geografia",
+  170 │     icone: <Globe className="h-6 w-6 text-[#0077B6]" />,
+  171 │     categoria: "oficial",
+  172 │   },
+  173 │   {
+  174 │     id: "hist",
+  175 │     nome: "História",
+  176 │     professor: "Prof. Paulo Mendes",
+  177 │     imagem:
+  178 │       "https://images.unsplash.com/photo-1447069387593-a5de0862481e?w=800&q=80",
+  179 │     progresso: 55,
+  180 │     proximaAula: {
+  181 │       titulo: "Aula 4: Guerra Fria",
+  182 │       data: "17/03",
+  183 │       hora: "09:00",
+  184 │       prazoProximo: false,
+  185 │     },
+  186 │     status: "Em Andamento",
+  187 │     novasMensagens: 0,
+  188 │     disciplina: "História",
+  189 │     icone: <Landmark className="h-6 w-6 text-[#9D0208]" />,
+  190 │     categoria: "oficial",
+  191 │   },
+  192 │   {
+  193 │     id: "filo",
+  194 │     nome: "Filosofia",
+  195 │     professor: "Prof. André Martins",
+  196 │     imagem:
+  197 │       "https://images.unsplash.com/photo-1544396821-4dd40b938ad3?w=800&q=80",
+  198 │     progresso: 45,
+  199 │     proximaAula: {
+  200 │       titulo: "Aula 3: Filosofia Moderna",
+  201 │       data: "19/03",
+  202 │       hora: "10:30",
+  203 │       prazoProximo: false,
+  204 │     },
+  205 │     status: "Em Andamento",
+  206 │     novasMensagens: 1,
+  207 │     disciplina: "Filosofia",
+  208 │     icone: <Scroll className="h-6 w-6 text-[#6D597A]" />,
+  209 │     categoria: "oficial",
+  210 │   },
+  211 │   {
+  212 │     id: "socio",
+  213 │     nome: "Sociologia",
+  214 │     professor: "Profa. Beatriz Lima",
+  215 │     imagem:
+  216 │       "https://images.unsplash.com/photo-1491438590914-bc09fcaaf77a?w=800&q=80",
+  217 │     progresso: 60,
+  218 │     proximaAula: {
+  219 │       titulo: "Aula 5: Movimentos Sociais",
+  220 │       data: "21/03",
+  221 │       hora: "15:45",
+  222 │       prazoProximo: false,
+  223 │     },
+  224 │     status: "Em Andamento",
+  225 │     novasMensagens: 0,
+  226 │     disciplina: "Sociologia",
+  227 │     icone: <Users2 className="h-6 w-6 text-[#457B9D]" />,
+  228 │     categoria: "oficial",
+  229 │   },
+  230 │   {
+  231 │     id: "arte",
+  232 │     nome: "Arte",
+  233 │     professor: "Prof. Fernando Gomes",
+  234 │     imagem:
+  235 │       "https://images.unsplash.com/photo-1452802447250-470a88ac82bc?w=800&q=80",
+  236 │     progresso: 70,
+  237 │     proximaAula: {
+  238 │       titulo: "Aula 6: Arte Contemporânea",
+  239 │       data: "22/03",
+  240 │       hora: "13:00",
+  241 │       prazoProximo: false,
+  242 │     },
+  243 │     status: "Em Andamento",
+  244 │     novasMensagens: 2,
+  245 │     disciplina: "Arte",
+  246 │     icone: <Palette className="h-6 w-6 text-[#E63946]" />,
+  247 │     categoria: "oficial",
+  248 │   },
+  249 │   {
+  250 │     id: "ing",
+  251 │     nome: "Inglês",
+  252 │     professor: "Prof. John Smith",
+  253 │     imagem:
+  254 │       "https://images.unsplash.com/photo-1493612276216-ee3925520721?w=800&q=80",
+  255 │     progresso: 85,
+  256 │     proximaAula: {
+  257 │       titulo: "Aula 7: Business English",
+  258 │       data: "17/03",
+  259 │       hora: "16:00",
+  260 │       prazoProximo: false,
+  261 │     },
+  262 │     status: "Em Andamento",
+  263 │     novasMensagens: 0,
+  264 │     disciplina: "Inglês",
+  265 │     icone: <Languages className="h-6 w-6 text-[#118AB2]" />,
+  266 │     categoria: "oficial",
+  267 │   },
+  268 │   {
+  269 │     id: "etica",
+  270 │     nome: "Ética",
+  271 │     professor: "Profa. Camila Rocha",
+  272 │     imagem:
+  273 │       "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=800&q=80",
+  274 │     progresso: 50,
+  275 │     proximaAula: {
+  276 │       titulo: "Aula 4: Ética Profissional",
+  277 │       data: "23/03",
+  278 │       hora: "11:00",
+  279 │       prazoProximo: false,
+  280 │     },
+  281 │     status: "Em Andamento",
+  282 │     novasMensagens: 1,
+  283 │     disciplina: "Ética",
+  284 │     icone: <BookText className="h-6 w-6 text-[#588157]" />,
+  285 │     categoria: "oficial",
+  286 │   },
+  287 │ 
+  288 │   // Projetos Interdisciplinares
+  289 │   {
+  290 │     id: "astro",
+  291 │     nome: "Astronomia",
+  292 │     professor: "Prof. Lucas Pereira",
+  293 │     imagem:
+  294 │       "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=800&q=80",
+  295 │     progresso: 40,
+  296 │     proximaAula: {
+  297 │       titulo: "Observação: Sistema Solar",
+  298 │       data: "25/03",
+  299 │       hora: "20:00",
+  300 │       prazoProximo: false,
+  301 │     },
+  302 │     status: "Em Andamento",
+  303 │     novasMensagens: 3,
+  304 │     disciplina: "Interdisciplinar",
+  305 │     icone: <Telescope className="h-6 w-6 text-[#073B4C]" />,
+  306 │     categoria: "projeto",
+  307 │   },
+  308 │   {
+  309 │     id: "fin",
+  310 │     nome: "Educação Financeira",
+  311 │     professor: "Prof. Marcos Silva",
+  312 │     imagem:
+  313 │       "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800&q=80",
+  314 │     progresso: 65,
+  315 │     proximaAula: {
+  316 │       titulo: "Workshop: Investimentos",
+  317 │       data: "24/03",
+  318 │       hora: "14:30",
+  319 │       prazoProximo: false,
+  320 │     },
+  321 │     status: "Em Andamento",
+  322 │     novasMensagens: 0,
+  323 │     disciplina: "Interdisciplinar",
+  324 │     icone: <DollarSign className="h-6 w-6 text-[#38B000]" />,
+  325 │     categoria: "projeto",
+  326 │   },
+  327 │   {
+  328 │     id: "onu",
+  329 │     nome: "Debates ONU",
+  330 │     professor: "Profa. Helena Castro",
+  331 │     imagem:
+  332 │       "https://images.unsplash.com/photo-1526280760714-f9e8b26f318f?w=800&q=80",
+  333 │     progresso: 55,
+  334 │     proximaAula: {
+  335 │       titulo: "Simulação: Conselho de Segurança",
+  336 │       data: "26/03",
+  337 │       hora: "15:00",
+  338 │       prazoProximo: true,
+  339 │     },
+  340 │     status: "Em Andamento",
+  341 │     novasMensagens: 5,
+  342 │     disciplina: "Interdisciplinar",
+  343 │     icone: <Globe2 className="h-6 w-6 text-[#3A86FF]" />,
+  344 │     categoria: "projeto",
+  345 │   },
+  346 │   {
+  347 │     id: "robo",
+  348 │     nome: "Robótica",
+  349 │     professor: "Prof. Rafael Moreira",
+  350 │     imagem:
+  351 │       "https://images.unsplash.com/photo-1531746790731-6c087fecd65a?w=800&q=80",
+  352 │     progresso: 70,
+  353 │     proximaAula: {
+  354 │       titulo: "Prática: Montagem de Robôs",
+  355 │       data: "27/03",
+  356 │       hora: "16:30",
+  357 │       prazoProximo: false,
+  358 │     },
+  359 │     status: "Em Andamento",
+  360 │     novasMensagens: 2,
+  361 │     disciplina: "Interdisciplinar",
+  362 │     icone: <Cpu className="h-6 w-6 text-[#FB5607]" />,
+  363 │     categoria: "projeto",
+  364 │   },
+  365 │ 
+  366 │   // Turmas próprias (criadas pelo usuário)
+  367 │   {
+  368 │     id: "7",
+  369 │     nome: "Grupo de Estudos - Matemática",
+  370 │     professor: "Você",
+  371 │     imagem:
+  372 │       "https://images.unsplash.com/photo-1596495578065-6e0763fa1178?w=800&q=80",
+  373 │     progresso: 25,
+  374 │     proximaAula: {
+  375 │       titulo: "Encontro Semanal",
+  376 │       data: "15/03",
+  377 │       hora: "18:00",
+  378 │       prazoProximo: false,
+  379 │     },
+  380 │     status: "Em Andamento",
+  381 │     novasMensagens: 0,
+  382 │     disciplina: "Matemática",
+  383 │     icone: <UserCircle className="h-6 w-6 text-[#FF6B00]" />,
+  384 │     categoria: "propria",
+  385 │   },
+  386 │   {
+  387 │     id: "8",
+  388 │     nome: "Clube de Leitura Científica",
+  389 │     professor: "Você",
+  390 │     imagem:
+  391 │       "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=800&q=80",
+  392 │     progresso: 40,
+  393 │     proximaAula: {
+  394 │       titulo: "Discussão do Livro",
+  395 │       data: "20/03",
+  396 │       hora: "19:30",
+  397 │       prazoProximo: false,
+  398 │     },
+  399 │     status: "Em Andamento",
+  400 │     novasMensagens: 3,
+  401 │     disciplina: "Interdisciplinar",
+  402 │     icone: <Sparkles className="h-6 w-6 text-[#FF8C40]" />,
+  403 │     categoria: "propria",
+  404 │   },
+  405 │ ];
+  406 │ 
+  407 │ // Sample data for a specific class
+  408 │ const turmaDetalhada = {
+  409 │   id: "1",
+  410 │   nome: "Física Quântica",
+  411 │   professor: {
+  412 │     nome: "Prof. Carlos Santos",
+  413 │     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Carlos",
+  414 │     email: "carlos.santos@pontoschool.com",
+  415 │     especialidade: "Física Teórica",
+  416 │   },
+  417 │   imagem:
+  418 │     "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=1200&q=90",
+  419 │   progresso: 65,
+  420 │   status: "Em Andamento",
+  421 │   descricao:
+  422 │     "Estudo dos princípios fundamentais da física quântica e suas aplicações no mundo moderno. Abordagem teórica e prática com experimentos virtuais.",
+  423 │   inicioFim: "01/02/2023 - 30/06/2023",
+  424 │   horarios: "Segundas e Quartas, 14:00 - 16:00",
+  425 │   cargaHoraria: "80 horas",
+  426 │   modulos: [
+  427 │     {
+  428 │       id: "m1",
+  429 │       titulo: "Módulo 1: Fundamentos da Física Quântica",
+  430 │       descricao: "Introdução aos conceitos básicos da física quântica",
+  431 │       progresso: 100,
+  432 │       conteudos: [
+  433 │         {
+  434 │           id: "c1-1",
+  435 │           tipo: "aula",
+  436 │           titulo: "Aula 1: Introdução à Física Quântica",
+  437 │           duracao: "120 min",
+  438 │           data: "01/02/2023",
+  439 │           status: "concluido",
+  440 │           icone: <Video className="h-5 w-5 text-blue-500" />,
+  441 │         },
+  442 │         {
+  443 │           id: "c1-2",
+  444 │           tipo: "leitura",
+  445 │           titulo: "Capítulo 1: História da Física Quântica",
+  446 │           duracao: "45 min",
+  447 │           data: "03/02/2023",
+  448 │           status: "concluido",
+  449 │           icone: <BookOpen className="h-5 w-5 text-purple-500" />,
+  450 │         },
+  451 │         {
+  452 │           id: "c1-3",
+  453 │           tipo: "exercicio",
+  454 │           titulo: "Lista de Exercícios 1",
+  455 │           duracao: "60 min",
+  456 │           data: "05/02/2023",
+  457 │           status: "concluido",
+  458 │           icone: <FileText className="h-5 w-5 text-green-500" />,
+  459 │         },
+  460 │         {
+  461 │           id: "c1-4",
+  462 │           tipo: "video",
+  463 │           titulo: "Vídeo: Experimento da Dupla Fenda",
+  464 │           duracao: "30 min",
+  465 │           data: "08/02/2023",
+  466 │           status: "concluido",
+  467 │           icone: <Play className="h-5 w-5 text-red-500" />,
+  468 │         },
+  469 │       ],
+  470 │     },
+  471 │     {
+  472 │       id: "m2",
+  473 │       titulo: "Módulo 2: Mecânica Quântica",
+  474 │       descricao: "Estudo dos princípios da mecânica quântica e suas aplicações",
+  475 │       progresso: 75,
+  476 │       conteudos: [
+  477 │         {
+  478 │           id: "c2-1",
+  479 │           tipo: "aula",
+  480 │           titulo: "Aula 2: Equação de Schrödinger",
+  481 │           duracao: "120 min",
+  482 │           data: "15/02/2023",
+  483 │           status: "concluido",
+  484 │           icone: <Video className="h-5 w-5 text-blue-500" />,
+  485 │         },
+  486 │         {
+  487 │           id: "c2-2",
+  488 │           tipo: "leitura",
+  489 │           titulo: "Capítulo 2: Princípio da Incerteza",
+  490 │           duracao: "60 min",
+  491 │           data: "17/02/2023",
+  492 │           status: "concluido",
+  493 │           icone: <BookOpen className="h-5 w-5 text-purple-500" />,
+  494 │         },
+  495 │         {
+  496 │           id: "c2-3",
+  497 │           tipo: "exercicio",
+  498 │           titulo: "Lista de Exercícios 2",
+  499 │           duracao: "90 min",
+  500 │           data: "20/02/2023",
+  501 │           status: "concluido",
+  502 │           icone: <FileText className="h-5 w-5 text-green-500" />,
+  503 │         },
+  504 │         {
+  505 │           id: "c2-4",
+  506 │           tipo: "discussao",
+  507 │           titulo: "Discussão: Interpretações da Mecânica Quântica",
+  508 │           duracao: "45 min",
+  509 │           data: "22/02/2023",
+  510 │           status: "pendente",
+  511 │           icone: <MessageCircle className="h-5 w-5 text-amber-500" />,
+  512 │         },
+  513 │       ],
+  514 │     },
+  515 │     {
+  516 │       id: "m3",
+  517 │       titulo: "Módulo 3: Aplicações da Física Quântica",
+  518 │       descricao:
+  519 │         "Exploração das aplicações práticas da física quântica no mundo moderno",
+  520 │       progresso: 30,
+  521 │       conteudos: [
+  522 │         {
+  523 │           id: "c3-1",
+  524 │           tipo: "aula",
+  525 │           titulo: "Aula 3: Computação Quântica",
+  526 │           duracao: "120 min",
+  527 │           data: "01/03/2023",
+  528 │           status: "concluido",
+  529 │           icone: <Video className="h-5 w-5 text-blue-500" />,
+  530 │         },
+  531 │         {
+  532 │           id: "c3-2",
+  533 │           tipo: "leitura",
+  534 │           titulo: "Capítulo 3: Criptografia Quântica",
+  535 │           duracao: "60 min",
+  536 │           data: "03/03/2023",
+  537 │           status: "pendente",
+  538 │           icone: <BookOpen className="h-5 w-5 text-purple-500" />,
+  539 │         },
+  540 │         {
+  541 │           id: "c3-3",
+  542 │           tipo: "exercicio",
+  543 │           titulo: "Lista de Exercícios 3",
+  544 │           duracao: "90 min",
+  545 │           data: "06/03/2023",
+  546 │           status: "pendente",
+  547 │           icone: <FileText className="h-5 w-5 text-green-500" />,
+  548 │         },
+  549 │         {
+  550 │           id: "c3-4",
+  551 │           tipo: "video",
+  552 │           titulo: "Vídeo: Futuro da Tecnologia Quântica",
+  553 │           duracao: "45 min",
+  554 │           data: "08/03/2023",
+  555 │           status: "pendente",
+  556 │           icone: <Play className="h-5 w-5 text-red-500" />,
+  557 │         },
+  558 │       ],
+  559 │     },
+  560 │     {
+  561 │       id: "m4",
+  562 │       titulo: "Módulo 4: Física Quântica Avançada",
+  563 │       descricao: "Tópicos avançados em física quântica para aprofundamento",
+  564 │       progresso: 0,
+  565 │       conteudos: [
+  566 │         {
+  567 │           id: "c4-1",
+  568 │           tipo: "aula",
+  569 │           titulo: "Aula 4: Teoria Quântica de Campos",
+  570 │           duracao: "120 min",
+  571 │           data: "15/03/2023",
+  572 │           status: "pendente",
+  573 │           icone: <Video className="h-5 w-5 text-blue-500" />,
+  574 │         },
+  575 │         {
+  576 │           id: "c4-2",
+  577 │           tipo: "leitura",
+  578 │           titulo: "Capítulo 4: Emaranhamento Quântico",
+  579 │           duracao: "60 min",
+  580 │           data: "17/03/2023",
+  581 │           status: "pendente",
+  582 │           icone: <BookOpen className="h-5 w-5 text-purple-500" />,
+  583 │         },
+  584 │         {
+  585 │           id: "c4-3",
+  586 │           tipo: "exercicio",
+  587 │           titulo: "Lista de Exercícios 4",
+  588 │           duracao: "90 min",
+  589 │           data: "20/03/2023",
+  590 │           status: "pendente",
+  591 │           icone: <FileText className="h-5 w-5 text-green-500" />,
+  592 │         },
+  593 │         {
+  594 │           id: "c4-4",
+  595 │           tipo: "projeto",
+  596 │           titulo: "Projeto Final: Simulação Quântica",
+  597 │           duracao: "240 min",
+  598 │           data: "25/03/2023",
+  599 │           status: "pendente",
+  600 │           icone: <Rocket className="h-5 w-5 text-indigo-500" />,
+  601 │         },
+  602 │       ],
+  603 │     },
+  604 │   ],
+  605 │   recomendacoes: [
+  606 │     {
+  607 │       id: "r1",
+  608 │       titulo: "Revisar o conceito de Dualidade Onda-Partícula",
+  609 │       tipo: "revisao",
+  610 │       prioridade: "alta",
+  611 │       icone: <Lightbulb className="h-5 w-5 text-[#FF6B00]" />,
+  612 │     },
+  613 │     {
+  614 │       id: "r2",
+  615 │       titulo: "Praticar exercícios sobre Equação de Schrödinger",
+  616 │       tipo: "exercicio",
+  617 │       prioridade: "media",
+  618 │       icone: <FileQuestion className="h-5 w-5 text-[#FF8C40]" />,
+  619 │     },
+  620 │     {
+  621 │       id: "r3",
+  622 │       titulo: "Assistir vídeo complementar sobre Computação Quântica",
+  623 │       tipo: "video",
+  624 │       prioridade: "baixa",
+  625 │       icone: <Play className="h-5 w-5 text-[#E85D04]" />,
+  626 │     },
+  627 │   ],
+  628 │   pontosFracos: ["Equação de Schrödinger", "Princípio da Incerteza"],
+  629 │   pontosFortes: [
+  630 │     "História da Física Quântica",
+  631 │     "Experimento da Dupla Fenda",
+  632 │     "Computação Quântica",
+  633 │   ],
+  634 │   metasSemanais: [
+  635 │     {
+  636 │       id: "m1",
+  637 │       titulo: "Completar o Módulo 2",
+  638 │       progresso: 75,
+  639 │     },
+  640 │     {
+  641 │       id: "m2",
+  642 │       titulo: "Fazer 20 exercícios de Mecânica Quântica",
+  643 │       progresso: 60,
+  644 │     },
+  645 │     {
+  646 │       id: "m3",
+  647 │       titulo: "Participar de 3 discussões no fórum",
+  648 │       progresso: 33,
+  649 │     },
+  650 │   ],
+  651 │   comparativoTurma: {
+  652 │     participacao: "acima",
+  653 │     entregaTarefas: "na media",
+  654 │     desempenhoGeral: "acima",
+  655 │   },
+  656 │   colegas: [
+  657 │     {
+  658 │       id: "a1",
+  659 │       nome: "Ana Silva",
+  660 │       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ana",
+  661 │       online: true,
+  662 │     },
+  663 │     {
+  664 │       id: "a2",
+  665 │       nome: "Pedro Oliveira",
+  666 │       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Pedro",
+  667 │       online: false,
+  668 │     },
+  669 │     {
+  670 │       id: "a3",
+  671 │       nome: "Mariana Santos",
+  672 │       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mariana",
+  673 │       online: true,
+  674 │     },
+  675 │     {
+  676 │       id: "a4",
+  677 │       nome: "João Costa",
+  678 │       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Joao",
+  679 │       online: false,
+  680 │     },
+  681 │     {
+  682 │       id: "a5",
+  683 │       nome: "Carla Mendes",
+  684 │       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Carla",
+  685 │       online: true,
+  686 │     },
+  687 │   ],
+  688 │   forumTopicos: [
+  689 │     {
+  690 │       id: "t1",
+  691 │       titulo: "Dúvida sobre o Princípio da Incerteza",
+  692 │       autor: "Ana Silva",
+  693 │       data: "10/02/2023",
+  694 │       respostas: 5,
+  695 │       visualizacoes: 28,
+  696 │       fixado: true,
+  697 │     },
+  698 │     {
+  699 │       id: "t2",
+  700 │       titulo: "Material complementar sobre Computação Quântica",
+  701 │       autor: "Prof. Carlos Santos",
+  702 │       data: "01/03/2023",
+  703 │       respostas: 3,
+  704 │       visualizacoes: 42,
+  705 │       fixado: true,
+  706 │     },
+  707 │     {
+  708 │       id: "t3",
+  709 │       titulo: "Dificuldade com os exercícios da Lista 2",
+  710 │       autor: "Pedro Oliveira",
+  711 │       data: "22/02/2023",
+  712 │       respostas: 8,
+  713 │       visualizacoes: 35,
+  714 │       fixado: false,
+  715 │     },
+  716 │     {
+  717 │       id: "t4",
+  718 │       titulo: "Grupo de estudo para o projeto final",
+  719 │       autor: "Mariana Santos",
+  720 │       data: "05/03/2023",
+  721 │       respostas: 12,
+  722 │       visualizacoes: 40,
+  723 │       fixado: false,
+  724 │     },
+  725 │     {
+  726 │       id: "t5",
+  727 │       titulo: "Artigo interessante sobre Emaranhamento Quântico",
+  728 │       autor: "João Costa",
+  729 │       data: "08/03/2023",
+  730 │       respostas: 2,
+  731 │       visualizacoes: 15,
+  732 │       fixado: false,
+  733 │     },
+  734 │   ],
+  735 │   eventos: [
+  736 │     {
+  737 │       id: "e1",
+  738 │       titulo: "Aula 4: Teoria Quântica de Campos",
+  739 │       data: "15/03/2023",
+  740 │       hora: "14:00 - 16:00",
+  741 │       tipo: "aula",
+  742 │       local: "Sala Virtual 3",
+  743 │     },
+  744 │     {
+  745 │       id: "e2",
+  746 │       titulo: "Entrega da Lista de Exercícios 3",
+  747 │       data: "20/03/2023",
+  748 │       hora: "23:59",
+  749 │       tipo: "tarefa",
+  750 │       local: "Plataforma",
+  751 │     },
+  752 │     {
+  753 │       id: "e3",
+  754 │       titulo: "Discussão: Interpretações da Mecânica Quântica",
+  755 │       data: "22/03/2023",
+  756 │       hora: "15:00 - 16:00",
+  757 │       tipo: "discussao",
+  758 │       local: "Fórum da Turma",
+  759 │     },
+  760 │     {
+  761 │       id: "e4",
+  762 │       titulo: "Prova Parcial",
+  763 │       data: "30/03/2023",
+  764 │       hora: "14:00 - 16:00",
+  765 │       tipo: "avaliacao",
+  766 │       local: "Sala Virtual 3",
+  767 │     },
+  768 │   ],
+  769 │   notas: [
+  770 │     {
+  771 │       id: "n1",
+  772 │       avaliacao: "Lista de Exercícios 1",
+  773 │       nota: 9.5,
+  774 │       peso: 10,
+  775 │       data: "10/02/2023",
+  776 │     },
+  777 │     {
+  778 │       id: "n2",
+  779 │       avaliacao: "Participação nas Discussões - Módulo 1",
+  780 │       nota: 8.0,
+  781 │       peso: 5,
+  782 │       data: "14/02/2023",
+  783 │     },
+  784 │     {
+  785 │       id: "n3",
+  786 │       avaliacao: "Lista de Exercícios 2",
+  787 │       nota: 7.5,
+  788 │       peso: 10,
+  789 │       data: "25/02/2023",
+  790 │     },
+  791 │     {
+  792 │       id: "n4",
+  793 │       avaliacao: "Participação nas Discussões - Módulo 2",
+  794 │       nota: 9.0,
+  795 │       peso: 5,
+  796 │       data: "28/02/2023",
+  797 │     },
+  798 │     {
+  799 │       id: "n5",
+  800 │       avaliacao: "Prova Parcial",
+  801 │       nota: null,
+  802 │       peso: 30,
+  803 │       data: "30/03/2023",
+  804 │     },
+  805 │   ],
+  806 │   gruposEstudo: [
+  807 │     {
+  808 │       id: "g1",
+  809 │       nome: "Grupo de Mecânica Quântica",
+  810 │       membros: ["Ana Silva", "Pedro Oliveira", "Você"],
+  811 │       proximaReuniao: "16/03/2023, 18:00",
+  812 │     },
+  813 │     {
+  814 │       id: "g2",
+  815 │       nome: "Preparação para o Projeto Final",
+  816 │       membros: ["Mariana Santos", "João Costa", "Carla Mendes", "Você"],
+  817 │       proximaReuniao: "23/03/2023, 19:00",
+  818 │     },
+  819 │   ],
+  820 │ };
+  821 │ 
+  822 │ export default function TurmasPage() {
+  823 │   const navigate = useNavigate();
+  824 │   const location = useLocation();
+  825 │   const [searchQuery, setSearchQuery] = useState("");
+  826 │   const [filteredTurmas, setFilteredTurmas] = useState(turmasData);
+  827 │   const [selectedTurma, setSelectedTurma] = useState<string | null>(null);
+  828 │   const searchParams = new URLSearchParams(location.search);
+  829 │   const currentView = searchParams.get("view") || "todas";
+  830 │   const currentAction = searchParams.get("action");
+  831 │   const [showOnboarding, setShowOnboarding] = useState(true);
+  832 │   const [showTour, setShowTour] = useState(false);
+  833 │   const [favoritos, setFavoritos] = useState<string[]>(["mat", "fis"]);
+  834 │   const [activeFilters, setActiveFilters] = useState<any>({});
+  835 │ 
+  836 │   // Filter classes based on search query, view, and active filters
+  837 │   useEffect(() => {
+  838 │     let filtered = turmasData;
+  839 │ 
+  840 │     // Filter by view/category
+  841 │     if (currentView === "proprias") {
+  842 │       filtered = filtered.filter((turma) => turma.categoria === "propria");
+  843 │     } else if (currentView === "oficiais") {
+  844 │       filtered = filtered.filter((turma) => turma.categoria === "oficial");
+  845 │     } else if (currentView === "projetos") {
+  846 │       filtered = filtered.filter((turma) => turma.categoria === "projeto");
+  847 │     } else if (currentView === "grupos") {
+  848 │       filtered = filtered.filter((turma) => turma.categoria === "grupo");
+  849 │     }
+  850 │ 
+  851 │     // Filter by search query
+  852 │     if (searchQuery.trim() !== "") {
+  853 │       filtered = filtered.filter(
+  854 │         (turma) =>
+  855 │           turma.nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  856 │           turma.professor.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  857 │           turma.disciplina.toLowerCase().includes(searchQuery.toLowerCase()),
+  858 │       );
+  859 │     }
+  860 │ 
+  861 │     // Apply additional filters
+  862 │     if (activeFilters.professores && activeFilters.professores.length > 0) {
+  863 │       // This is a simplified example - in a real app, you'd have professor IDs
+  864 │       filtered = filtered.filter((turma) =>
+  865 │         activeFilters.professores.some((prof: string) =>
+  866 │           turma.professor.includes(prof),
+  867 │         ),
+  868 │       );
+  869 │     }
+  870 │ 
+  871 │     if (activeFilters.disciplinas && activeFilters.disciplinas.length > 0) {
+  872 │       filtered = filtered.filter((turma) =>
+  873 │         activeFilters.disciplinas.includes(turma.id),
+  874 │       );
+  875 │     }
+  876 │ 
+  877 │     if (activeFilters.favoritos) {
+  878 │       filtered = filtered.filter((turma) => favoritos.includes(turma.id));
+  879 │     }
+  880 │ 
+  881 │     // Sort by progress if needed
+  882 │     if (activeFilters.progressoSort) {
+  883 │       filtered = [...filtered].sort((a, b) => {
+  884 │         if (activeFilters.progressoSort === "desc") {
+  885 │           return b.progresso - a.progresso;
+  886 │         } else {
+  887 │           return a.progresso - b.progresso;
+  888 │         }
+  889 │       });
+  890 │     }
+  891 │ 
+  892 │     // Add isFavorite property to each turma
+  893 │     filtered = filtered.map((turma) => ({
+  894 │       ...turma,
+  895 │       isFavorite: favoritos.includes(turma.id),
+  896 │       notificacoes: {
+  897 │         mensagens: turma.novasMensagens,
+  898 │         tarefas: Math.floor(Math.random() * 3), // Simulated data
+  899 │         materiais: Math.floor(Math.random() * 2), // Simulated data
+  900 │       },
+  901 │     }));
+  902 │ 
+  903 │     setFilteredTurmas(filtered);
+  904 │   }, [searchQuery, currentView, activeFilters, favoritos]);
+  905 │ 
+  906 │   // Check if onboarding should be shown
+  907 │   useEffect(() => {
+  908 │     const hideOnboarding = localStorage.getItem("hideMinhasTurmasOnboarding");
+  909 │     if (hideOnboarding === "true") {
+  910 │       setShowOnboarding(false);
+  911 │     }
+  912 │   }, []);
+  913 │ 
+  914 │   const handleTurmaSelect = (turmaId: string) => {
+  915 │     // Find the selected turma
+  916 │     const selectedTurmaData = turmasData.find((turma) => turma.id === turmaId);
+  917 │ 
+  918 │     // In a real app, you would fetch the detailed data for this specific turma
+  919 │     // For now, we'll just set the ID and let the detail component handle it
+  920 │     setSelectedTurma(turmaId);
+  921 │   };
+  922 │ 
+  923 │   const handleBackToList = () => {
+  924 │     setSelectedTurma(null);
+  925 │   };
+  926 │ 
+  927 │   const handleViewForum = (e: React.MouseEvent, turmaId: string) => {
+  928 │     e.stopPropagation();
+  929 │     // In a real app, this would navigate to the forum view
+  930 │     console.log(`View forum for turma ${turmaId}`);
+  931 │   };
+  932 │ 
+  933 │   const handleToggleFavorite = (turmaId: string) => {
+  934 │     setFavoritos((prev) =>
+  935 │       prev.includes(turmaId)
+  936 │         ? prev.filter((id) => id !== turmaId)
+  937 │         : [...prev, turmaId],
+  938 │     );
+  939 │   };
+  940 │ 
+  941 │   const handleFilterChange = (filters: any) => {
+  942 │     setActiveFilters(filters);
+  943 │   };
+  944 │ 
+  945 │   const [showAddTurmaModal, setShowAddTurmaModal] = useState(false);
+  946 │ 
+  947 │   const handleAddTurma = () => {
+  948 │     setShowAddTurmaModal(true);
+  949 │   };
+  950 │ 
+  951 │   const handleAddTurmaSubmit = (code: string) => {
+  952 │     // In a real app, this would add the turma with the given code
+  953 │     console.log(`Adding turma with code: ${code}`);
+  954 │     // For demo purposes, let's just show a notification or redirect
+  955 │     setShowAddTurmaModal(false);
+  956 │   };
+  957 │ 
+  958 │   const handleStartTour = () => {
+  959 │     setShowOnboarding(false);
+  960 │     setShowTour(true);
+  961 │   };
+  962 │ 
+  963 │   const handleCompleteTour = () => {
+  964 │     setShowTour(false);
+  965 │   };
+  966 │ 
+  967 │   const handleSkipTour = () => {
+  968 │     setShowTour(false);
+  969 │   };
+  970 │ 
+  971 │   const handleExplore = () => {
+  972 │     // In a real app, this would navigate to a page with available classes
+  973 │     console.log("Explore turmas");
+  974 │   };
+  975 │ 
+  976 │   return (
+  977 │     <div className="w-full h-full bg-[#f7f9fa] dark:bg-[#001427] p-6 space-y-6 transition-colors duration-300">
+  978 │       {/* Onboarding Modal */}
+  979 │       <OnboardingModal
+  980 │         isOpen={showOnboarding}
+  981 │         onClose={() => setShowOnboarding(false)}
+  982 │         onStartTour={handleStartTour}
+  983 │       />
+  984 │ 
+  985 │       {/* Tour Guide */}
+  986 │       {showTour && (
+  987 │         <TourGuide
+  988 │           isActive={showTour}
+  989 │           onComplete={handleCompleteTour}
+  990 │           onSkip={handleSkipTour}
+  991 │         />
+  992 │       )}
+  993 │ 
+  994 │       {/* Add Turma Modal */}
+  995 │       <AddTurmaModal
+  996 │         isOpen={showAddTurmaModal || currentAction === "add"}
+  997 │         onClose={() => {
+  998 │           setShowAddTurmaModal(false);
+  999 │           if (currentAction === "add") {
+ 1000 │             navigate("/turmas");
+ 1001 │           }
+ 1002 │         }}
+ 1003 │         onAddTurma={handleAddTurmaSubmit}
+ 1004 │       />
+ 1005 │ 
+ 1006 │       {/* Header */}
+ 1007 │       <div className="turmas-header">
+ 1008 │         <TurmasHeader
+ 1009 │           searchQuery={searchQuery}
+ 1010 │           setSearchQuery={setSearchQuery}
+ 1011 │           onAddTurma={handleAddTurma}
+ 1012 │         />
+ 1013 │       </div>
+ 1014 │ 
+ 1015 │       {/* Main Content */}
+ 1016 │       {selectedTurma ? (
+ 1017 │         <TurmaDetail
+ 1018 │           turmaDetalhada={turmaDetalhada}
+ 1019 │           onBack={handleBackToList}
+ 1020 │         />
+ 1021 │       ) : (
+ 1022 │         <>
+ 1023 │           <div className="flex items-center justify-end mb-4">
+ 1024 │             <div className="flex items-center gap-2 epictus-ia-helper">
+ 1025 │               <EpictusIAHelper
+ 1026 │                 context="turmas"
+ 1027 │                 suggestions={[
+ 1028 │                   "Como posso melhorar meu desempenho nas turmas?",
+ 1029 │                   "Quais materiais complementares você recomenda?",
+ 1030 │                   "Ajude-me a criar um plano de estudos para esta disciplina",
+ 1031 │                   "Quais são os tópicos mais importantes desta matéria?",
+ 1032 │                 ]}
+ 1033 │               />
+ 1034 │             </div>
+ 1035 │           </div>
+ 1036 │ 
+ 1037 │           <div className="space-y-6">
+ 1038 │             {/* Category Tabs */}
+ 1039 │             <Tabs value={currentView} className="w-full">
+ 1040 │               <TabsList className="turmas-tabs w-full max-w-4xl mx-auto bg-white dark:bg-[#1E293B] p-1.5 rounded-xl shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 flex justify-between animate-gradient-x hidden">
+ 1041 │                 <motion.div className="contents" layout>
+ 1042 │                   <TabsTrigger
+ 1043 │                     value="todas"
+ 1044 │                     onClick={() => navigate("/turmas?view=todas")}
+ 1045 │                     className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B00]/10 data-[state=active]:to-[#FF8C40]/10 data-[state=active]:text-[#FF6B00] data-[state=active]:border-[#FF6B00] border rounded-lg px-4 py-2 font-montserrat flex items-center gap-2 transition-all duration-300 hover:shadow-md data-[state=active]:shadow-md transform hover:scale-[1.02] data-[state=active]:scale-[1.02]"
+ 1046 │                   >
+ 1047 │                     <Home className="h-4 w-4" /> Todas
+ 1048 │                   </TabsTrigger>
+ 1049 │                   <TabsTrigger
+ 1050 │                     value="oficiais"
+ 1051 │                     onClick={() => navigate("/turmas?view=oficiais")}
+ 1052 │                     className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B00]/10 data-[state=active]:to-[#FF8C40]/10 data-[state=active]:text-[#FF6B00] data-[state=active]:border-[#FF6B00] border rounded-lg px-4 py-2 font-montserrat flex items-center gap-2 transition-all duration-300 hover:shadow-md data-[state=active]:shadow-md transform hover:scale-[1.02] data-[state=active]:scale-[1.02]"
+ 1053 │                   >
+ 1054 │                     <GraduationCap className="h-4 w-4" /> Turmas Oficiais
+ 1055 │                   </TabsTrigger>
+ 1056 │                   <TabsTrigger
+ 1057 │                     value="proprias"
+ 1058 │                     onClick={() => navigate("/turmas?view=proprias")}
+ 1059 │                     className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B00]/10 data-[state=active]:to-[#FF8C40]/10 data-[state=active]:text-[#FF6B00] data-[state=active]:border-[#FF6B00] border rounded-lg px-4 py-2 font-montserrat flex items-center gap-2 transition-all duration-300 hover:shadow-md data-[state=active]:shadow-md transform hover:scale-[1.02] data-[state=active]:scale-[1.02]"
+ 1060 │                   >
+ 1061 │                     <FolderKanban className="h-4 w-4" /> Minhas Turmas
+ 1062 │                   </TabsTrigger>
+ 1063 │                   <TabsTrigger
+ 1064 │                     value="grupos-estudo"
+ 1065 │                     onClick={() => navigate("/turmas?view=grupos-estudo")}
+ 1066 │                     className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B00]/10 data-[state=active]:to-[#FF8C40]/10 data-[state=active]:text-[#FF6B00] data-[state=active]:border-[#FF6B00] border rounded-lg px-4 py-2 font-montserrat flex items-center gap-2 transition-all duration-300 hover:shadow-md data-[state=active]:shadow-md transform hover:scale-[1.02] data-[state=active]:scale-[1.02]"
+ 1067 │                   >
+ 1068 │                     <Users2 className="h-4 w-4" /> Grupos de Estudo
+ 1069 │                   </TabsTrigger>
+ 1070 │                   <TabsTrigger
+ 1071 │                     value="desempenho"
+ 1072 │                     onClick={() => navigate("/turmas?view=desempenho")}
+ 1073 │                     className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B00]/10 data-[state=active]:to-[#FF8C40]/10 data-[state=active]:text-[#FF6B00] data-[state=active]:border-[#FF6B00] border rounded-lg px-4 py-2 font-montserrat flex items-center gap-2 transition-all duration-300 hover:shadow-md data-[state=active]:shadow-md transform hover:scale-[1.02] data-[state=active]:scale-[1.02]"
+ 1074 │                   >
+ 1075 │                     <BarChart className="h-4 w-4" /> Desempenho
+ 1076 │                   </TabsTrigger>
+ 1077 │                 </motion.div>
+ 1078 │               </TabsList>
+ 1079 │ 
+ 1080 │               {/* Tab Content */}
+ 1081 │               <TabsContent value="todas" className="mt-6">
+ 1082 │                 <div className="mb-4 turmas-filters">
+ 1083 │                   <TurmaFilters
+ 1084 │                     professores={[
+ 1085 │                       { id: "prof1", nome: "Prof. Ricardo Oliveira" },
+ 1086 │                       { id: "prof2", nome: "Profa. Carla Mendes" },
+ 1087 │                       { id: "prof3", nome: "Prof. Carlos Santos" },
+ 1088 │                       { id: "prof4", nome: "Prof. Roberto Alves" },
+ 1089 │                       { id: "prof5", nome: "Profa. Mariana Costa" },
+ 1090 │                     ]}
+ 1091 │                     disciplinas={[
+ 1092 │                       { id: "mat", nome: "Matemática" },
+ 1093 │                       { id: "port", nome: "Língua Portuguesa" },
+ 1094 │                       { id: "fis", nome: "Física" },
+ 1095 │                       { id: "quim", nome: "Química" },
+ 1096 │                       { id: "bio", nome: "Biologia" },
+ 1097 │                     ]}
+ 1098 │                     onFilterChange={handleFilterChange}
+ 1099 │                     favoritos={favoritos}
+ 1100 │                   />
+ 1101 │                 </div>
+ 1102 │                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 turmas-grid">
+ 1103 │                   {filteredTurmas.map((turma) => (
+ 1104 │                     <TurmaCard
+ 1105 │                       key={turma.id}
+ 1106 │                       turma={turma}
+ 1107 │                       onClick={handleTurmaSelect}
+ 1108 │                       onViewForum={handleViewForum}
+ 1109 │                       onToggleFavorite={handleToggleFavorite}
+ 1110 │                     />
+ 1111 │                   ))}
+ 1112 │                 </div>
+ 1113 │               </TabsContent>
+ 1114 │ 
+ 1115 │               <TabsContent value="oficiais" className="mt-6">
+ 1116 │                 <div className="mb-4 flex justify-between items-center">
+ 1117 │                   <TurmaFilters
+ 1118 │                     professores={[
+ 1119 │                       { id: "prof1", nome: "Prof. Ricardo Oliveira" },
+ 1120 │                       { id: "prof2", nome: "Profa. Carla Mendes" },
+ 1121 │                       { id: "prof3", nome: "Prof. Carlos Santos" },
+ 1122 │                       { id: "prof4", nome: "Prof. Roberto Alves" },
+ 1123 │                       { id: "prof5", nome: "Profa. Mariana Costa" },
+ 1124 │                     ]}
+ 1125 │                     disciplinas={[
+ 1126 │                       { id: "mat", nome: "Matemática" },
+ 1127 │                       { id: "port", nome: "Língua Portuguesa" },
+ 1128 │                       { id: "fis", nome: "Física" },
+ 1129 │                       { id: "quim", nome: "Química" },
+ 1130 │                       { id: "bio", nome: "Biologia" },
+ 1131 │                     ]}
+ 1132 │                     onFilterChange={handleFilterChange}
+ 1133 │                     favoritos={favoritos}
+ 1134 │                   />
+ 1135 │                   <EpictusIAHelper context="turmas oficiais" />
+ 1136 │                 </div>
+ 1137 │                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 turmas-grid">
+ 1138 │                   {filteredTurmas
+ 1139 │                     .filter((turma) => turma.categoria === "oficial")
+ 1140 │                     .map((turma) => (
+ 1141 │                       <TurmaCard
+ 1142 │                         key={turma.id}
+ 1143 │                         turma={turma}
+ 1144 │                         onClick={handleTurmaSelect}
+ 1145 │                         onViewForum={handleViewForum}
+ 1146 │                         onToggleFavorite={handleToggleFavorite}
+ 1147 │                       />
+ 1148 │                     ))}
+ 1149 │                 </div>
+ 1150 │               </TabsContent>
+ 1151 │ 
+ 1152 │               <TabsContent value="proprias" className="mt-6">
+ 1153 │                 <div className="mb-4 flex justify-end">
+ 1154 │                   <EpictusIAHelper context="minhas turmas" />
+ 1155 │                 </div>
+ 1156 │                 <div className="text-center py-8">
+ 1157 │                   <motion.div
+ 1158 │                     initial={{ opacity: 0, y: 20 }}
+ 1159 │                     animate={{ opacity: 1, y: 0 }}
+ 1160 │                     transition={{ duration: 0.5 }}
+ 1161 │                     className="flex flex-col items-center justify-center"
+ 1162 │                   >
+ 1163 │                     <div className="w-24 h-24 rounded-full bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20 flex items-center justify-center mb-6 animate-pulse-custom">
+ 1164 │                       <FolderKanban className="h-12 w-12 text-[#FF6B00]" />
+ 1165 │                     </div>
+ 1166 │                     <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-white mb-3 font-montserrat animate-highlight">
+ 1167 │                       Você ainda não criou nenhuma turma própria
+ 1168 │                     </h3>
+ 1169 │                     <p className="text-gray-600 dark:text-gray-400 max-w-md mb-8 font-open-sans">
+ 1170 │                       Crie sua primeira turma personalizada e comece a
+ 1171 │                       compartilhar conhecimento com outros estudantes.
+ 1172 │                     </p>
+ 1173 │                     <Button
+ 1174 │                       className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white px-6 py-6 rounded-xl shadow-md transition-all duration-300 hover:shadow-lg transform hover:scale-[1.02] font-montserrat font-semibold text-lg animate-gradient-x"
+ 1175 │                       onClick={() => navigate("/turmas/criar-turma")}
+ 1176 │                     >
+ 1177 │                       <Plus className="h-5 w-5 mr-2" /> Criar Minha Primeira
+ 1178 │                       Turma
+ 1179 │                     </Button>
+ 1180 │                   </motion.div>
+ 1181 │                 </div>
+ 1182 │               </TabsContent>
+ 1183 │ 
+ 1184 │ 
+ 1185 │ 
+ 1186 │               <TabsContent value="desempenho" className="mt-6">
+ 1187 │                 <DesempenhoView />
+ 1188 │               </TabsContent>
+ 1189 │               <TabsContent value="grupos-estudo" className="mt-6">
+ 1190 │                 <GruposEstudoView /> {/* iframe removed, GruposEstudoView added */}
+ 1191 │               </TabsContent>
+ 1192 │             </Tabs>
+ 1193 │           </div>
+ 1194 │         </>
+ 1195 │       )}
+ 1196 │     </div>
+ 1197 │   );
+ 1198 │ }
+ 1199 │ 
+ 1200 │ function GruposEstudoView() {
+      ·          ────────┬───────
+      ·                  ╰── `GruposEstudoView` redefined here
+ 1201 │   return (
+ 1202 │     <div>
+ 1203 │       {/* Implement Grupos de Estudo view here */}
+      ╰────
+/home/runner/workspace/src/pages/turmas/index.tsx:51:1
+465|            data: "08/02/2023",
+466|            status: "concluido",
+467|            icone: <Play className="h-5 w-5 text-red-500" />,
+   |                                                     ^
+468|          },
+469|        ],
