@@ -93,11 +93,11 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
       );
     }
     
-    if (selectedDisciplina) {
+    if (selectedDisciplina && selectedDisciplina !== "todas") {
       filtered = filtered.filter((grupo) => grupo.disciplina === selectedDisciplina);
     }
     
-    if (selectedNivel) {
+    if (selectedNivel && selectedNivel !== "todos") {
       filtered = filtered.filter((grupo) => grupo.nivel === selectedNivel);
     }
     
@@ -180,7 +180,7 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
               <SelectValue placeholder="Disciplina" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas as disciplinas</SelectItem>
+              <SelectItem value="todas">Todas as disciplinas</SelectItem>
               {disciplinas.map((disciplina) => (
                 <SelectItem key={disciplina} value={disciplina}>
                   {disciplina}
@@ -194,7 +194,7 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
               <SelectValue placeholder="Nível" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos os níveis</SelectItem>
+              <SelectItem value="todos">Todos os níveis</SelectItem>
               {niveis.map((nivel) => (
                 <SelectItem key={nivel} value={nivel}>
                   {nivel}
