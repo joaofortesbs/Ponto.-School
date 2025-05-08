@@ -401,7 +401,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
               </div>
               </div>
 
-              <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-4 gap-y-8 overflow-x-auto pb-6 hide-scrollbar">
+              <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-4 overflow-x-auto pb-2 hide-scrollbar">
                 {topicosEstudo.map((topico) => (
                   <motion.div
                     key={topico.id}
@@ -427,7 +427,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                     className={`profile-3d-element bg-gradient-to-b from-[#121620]/90 to-[#0a0d14]/80 backdrop-blur-lg 
                       rounded-xl overflow-hidden cursor-pointer 
                       transition-all duration-300 relative h-full flex flex-col transform-gpu
-                      perspective-1000 shadow-xl min-h-[180px]
+                      perspective-1000 shadow-xl
                       ${selectedTopic === topico.id ? 'topic-selected' : 'border border-white/10'}
                       ${isTopicFeatured(topico) ? 'featured-topic border-[0.5px] border-[#FF6B00]/40' : ''}`}
                     style={{
@@ -529,7 +529,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                             }}>{topico.nome}</h4>
                         
                         {/* Estatísticas com estilo moderno */}
-                        <div className="flex items-center gap-1.5 mt-4 mb-2" style={{ transform: "translateZ(8px)" }}>
+                        <div className="flex items-center gap-1.5 mt-2" style={{ transform: "translateZ(8px)" }}>
                           <div className="text-white/90 text-xs flex items-center bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-full border border-white/5">
                             <Users className="h-3 w-3 mr-1" />
                             {topico.grupos}
