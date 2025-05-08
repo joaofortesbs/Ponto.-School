@@ -3,7 +3,7 @@ import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { Home, BookOpen, Users2, BarChart } from "lucide-react";
+import { Home, BookOpen, Users2, BarChart, FolderKanban } from "lucide-react";
 
 const TurmasTabsNav: React.FC = () => {
   const navigate = useNavigate();
@@ -21,6 +21,11 @@ const TurmasTabsNav: React.FC = () => {
       name: "Turmas Oficiais",
       value: "oficiais",
       icon: <BookOpen className="h-4 w-4" />,
+    },
+    {
+      name: "Minhas Turmas",
+      value: "proprias",
+      icon: <FolderKanban className="h-4 w-4" />,
     },
     {
       name: "Grupos de Estudo",
