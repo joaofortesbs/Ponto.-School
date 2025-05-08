@@ -16,10 +16,10 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
           </div>
           <div>
             <h2 className="text-2xl font-bold bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent font-montserrat">
-              Desempenho Acadêmico
+              Grupos de Estudo
             </h2>
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              Acompanhe seu progresso e evolução nas turmas
+              Conecte-se e aprenda com seus colegas
             </p>
           </div>
         </div>
