@@ -7,6 +7,7 @@ import { toast } from "@/components/ui/use-toast";
 import QuickActionButton from "./QuickActionButton";
 import AddButton from "@/components/ui/add-button";
 import DeepSearchModal from "./DeepSearchModal";
+import BibliotecaModal from "./BibliotecaModal";
 
 
 interface EpictusMessageBoxProps {
@@ -31,6 +32,7 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
   handleButtonClick
 }) => {
   const [isDeepSearchModalOpen, setIsDeepSearchModalOpen] = useState(false);
+  const [isBibliotecaModalOpen, setIsBibliotecaModalOpen] = useState(false);
   const [isSearchActive, setIsSearchActive] = useState(false);
   return (
     <motion.div 
@@ -88,7 +90,7 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
                        rounded-lg border border-white/10 backdrop-blur-sm hover:bg-gradient-to-r 
                        hover:from-[#0D23A0]/40 hover:to-[#5B21BD]/40 hover:border-amber-500/30
                        hover:text-white transition-all duration-300 flex-shrink-0 shadow-sm"
-              onClick={() => handleButtonClick('Biblioteca')}
+              onClick={() => setIsBibliotecaModalOpen(true)}
             >
               <BookOpen size={14} className="text-amber-300" />
               <span>Biblioteca</span>
@@ -238,6 +240,12 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
             setInputMessage(searchMessage);
           }
         }}
+      />
+
+      {/* Biblioteca Modal */}
+      <BibliotecaModal 
+        isOpen={isBibliotecaModalOpen}
+        onClose={() => setIsBibliotecaModalOpen(false)}
       />
     </motion.div>
   );

@@ -1,0 +1,471 @@
+
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Search, Upload, FileText, Link2, Edit3, Plus, HelpCircle, ChevronDown, MoreVertical, Eye, Trash2, Tag, FileIcon, Image as ImageIcon, Film, Headphones, BookOpen, ExternalLink } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Checkbox } from "@/components/ui/checkbox";
+
+export interface ConteudoBiblioteca {
+  id: string;
+  titulo: string;
+  tipo: "pdf" | "documento" | "imagem" | "audio" | "video" | "link" | "nota";
+  tags: string[];
+  ativo: boolean;
+  data: string;
+  tamanho?: string;
+  url?: string;
+}
+
+interface BibliotecaModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+// Dados simulados para demonstração
+const dadosSimulados: ConteudoBiblioteca[] = [
+  {
+    id: "1",
+    titulo: "Resumo Matemática - Funções Trigonométricas",
+    tipo: "pdf",
+    tags: ["matemática", "trigonometria", "resumo"],
+    ativo: true,
+    data: "2024-07-10",
+    tamanho: "1.2 MB"
+  },
+  {
+    id: "2",
+    titulo: "Anotações de Física - Leis de Newton",
+    tipo: "documento",
+    tags: ["física", "mecânica", "leis de newton"],
+    ativo: true,
+    data: "2024-07-08",
+    tamanho: "520 KB"
+  },
+  {
+    id: "3",
+    titulo: "Mapa Mental - História do Brasil",
+    tipo: "imagem",
+    tags: ["história", "brasil", "mapa mental"],
+    ativo: false,
+    data: "2024-07-05",
+    tamanho: "3.7 MB"
+  },
+  {
+    id: "4",
+    titulo: "Podcast - Revolução Francesa",
+    tipo: "audio",
+    tags: ["história", "revolução francesa", "podcast"],
+    ativo: true,
+    data: "2024-07-01",
+    tamanho: "15.3 MB"
+  },
+  {
+    id: "5",
+    titulo: "Aula - Biologia Celular",
+    tipo: "video",
+    tags: ["biologia", "célula", "aula"],
+    ativo: true,
+    data: "2024-06-28",
+    tamanho: "87.2 MB"
+  },
+  {
+    id: "6",
+    titulo: "Artigo - Inteligência Artificial na Educação",
+    tipo: "link",
+    tags: ["tecnologia", "IA", "educação"],
+    ativo: true,
+    data: "2024-06-25",
+    url: "https://exemplo.com/artigo-ia-educacao"
+  },
+  {
+    id: "7",
+    titulo: "Notas pessoais - Redação ENEM",
+    tipo: "nota",
+    tags: ["redação", "enem", "dicas"],
+    ativo: true,
+    data: "2024-06-20"
+  },
+];
+
+const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose }) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [conteudos, setConteudos] = useState<ConteudoBiblioteca[]>(dadosSimulados);
+  const [activeTab, setActiveTab] = useState("todos");
+  const [permiteUsarTodos, setPermiteUsarTodos] = useState(true);
+  const [showAddOptionsMenu, setShowAddOptionsMenu] = useState(false);
+
+  // Filtrar conteúdos com base na busca e na categoria selecionada
+  const conteudosFiltrados = conteudos.filter(item => {
+    const matchesSearch = 
+      searchTerm === "" || 
+      item.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesTab = 
+      activeTab === "todos" || 
+      item.tipo === activeTab;
+    
+    return matchesSearch && matchesTab;
+  });
+
+  // Alternar ativação de um conteúdo
+  const toggleConteudoAtivo = (id: string) => {
+    setConteudos(conteudos.map(item => 
+      item.id === id ? { ...item, ativo: !item.ativo } : item
+    ));
+  };
+
+  // Obter ícone baseado no tipo de arquivo
+  const getIconForType = (tipo: string) => {
+    switch (tipo) {
+      case "pdf":
+        return <FileText className="h-5 w-5 text-red-500" />;
+      case "documento":
+        return <FileIcon className="h-5 w-5 text-blue-500" />;
+      case "imagem":
+        return <ImageIcon className="h-5 w-5 text-green-500" />;
+      case "audio":
+        return <Headphones className="h-5 w-5 text-purple-500" />;
+      case "video":
+        return <Film className="h-5 w-5 text-pink-500" />;
+      case "link":
+        return <Link2 className="h-5 w-5 text-cyan-500" />;
+      case "nota":
+        return <BookOpen className="h-5 w-5 text-amber-500" />;
+      default:
+        return <FileText className="h-5 w-5 text-gray-500" />;
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-4xl p-0 h-[90vh] right-0 overflow-hidden border-0 rounded-l-2xl rounded-r-none bg-gradient-to-br from-[#0a0f1a] to-[#131d2e] text-white shadow-2xl"
+        style={{ 
+          position: "fixed", 
+          top: "5vh", 
+          transform: "translateX(0%)",
+          margin: 0
+        }}
+      >
+        <AnimatePresence>
+          <motion.div
+            initial={{ x: 100, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 100, opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="w-full h-full flex flex-col"
+          >
+            {/* Cabeçalho */}
+            <div className="flex justify-between items-start p-6 border-b border-white/10">
+              <div>
+                <h2 className="text-2xl font-bold flex items-center">
+                  <span className="mr-2">📚</span> Biblioteca Inteligente
+                </h2>
+                <p className="mt-1 text-sm text-gray-300 max-w-xl">
+                  Todos os seus arquivos que podem ser usados como base de conhecimento pela IA
+                </p>
+              </div>
+              <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-white/10">
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+
+            {/* Barra de busca */}
+            <div className="p-4 bg-[#0a1321]/60">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Buscar por título, tipo de conteúdo ou tag…"
+                  className="pl-10 py-5 bg-[#131d2e]/40 border-white/10 text-white placeholder:text-gray-400 rounded-lg focus-visible:ring-[#0D23A0] focus-visible:ring-opacity-50"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Conteúdo principal com abas */}
+            <div className="flex-grow overflow-hidden flex flex-col">
+              <Tabs defaultValue="todos" className="flex-grow flex flex-col h-full" onValueChange={setActiveTab}>
+                <div className="border-b border-white/10 px-4">
+                  <TabsList className="bg-transparent border-b-0 justify-start px-0 py-0">
+                    <TabsTrigger 
+                      value="todos" 
+                      className="px-4 py-2 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-[#0D23A0] data-[state=active]:shadow-none rounded-none data-[state=active]:bg-transparent text-sm"
+                    >
+                      Todos
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="pdf" 
+                      className="px-4 py-2 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-[#0D23A0] data-[state=active]:shadow-none rounded-none data-[state=active]:bg-transparent text-sm"
+                    >
+                      PDFs
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="documento" 
+                      className="px-4 py-2 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-[#0D23A0] data-[state=active]:shadow-none rounded-none data-[state=active]:bg-transparent text-sm"
+                    >
+                      Documentos
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="imagem" 
+                      className="px-4 py-2 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-[#0D23A0] data-[state=active]:shadow-none rounded-none data-[state=active]:bg-transparent text-sm"
+                    >
+                      Imagens
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="audio" 
+                      className="px-4 py-2 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-[#0D23A0] data-[state=active]:shadow-none rounded-none data-[state=active]:bg-transparent text-sm"
+                    >
+                      Áudios
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="video" 
+                      className="px-4 py-2 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-[#0D23A0] data-[state=active]:shadow-none rounded-none data-[state=active]:bg-transparent text-sm"
+                    >
+                      Vídeos
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="link" 
+                      className="px-4 py-2 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-[#0D23A0] data-[state=active]:shadow-none rounded-none data-[state=active]:bg-transparent text-sm"
+                    >
+                      Links
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="nota" 
+                      className="px-4 py-2 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-[#0D23A0] data-[state=active]:shadow-none rounded-none data-[state=active]:bg-transparent text-sm"
+                    >
+                      Notas
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+
+                <TabsContent value={activeTab} className="flex-grow overflow-y-auto p-4 data-[state=active]:mt-0">
+                  {conteudosFiltrados.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-3">
+                      {conteudosFiltrados.map(item => (
+                        <ConteudoCard 
+                          key={item.id} 
+                          conteudo={item} 
+                          toggleAtivo={() => toggleConteudoAtivo(item.id)}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-center p-8">
+                      <div className="w-16 h-16 rounded-full bg-[#0D23A0]/20 flex items-center justify-center mb-4">
+                        <Search className="h-8 w-8 text-[#0D23A0]/70" />
+                      </div>
+                      <h3 className="text-xl font-medium mb-2">Nenhum conteúdo encontrado</h3>
+                      <p className="text-gray-400 max-w-md mb-6">
+                        {searchTerm 
+                          ? "Tente ajustar sua busca ou remover filtros para encontrar o que procura." 
+                          : "Você ainda não tem conteúdos nesta categoria. Adicione novos materiais para enriquecer sua base de conhecimento."}
+                      </p>
+                      <Button 
+                        className="bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] hover:from-[#0D23A0]/90 hover:to-[#5B21BD]/90 text-white border-none"
+                        onClick={() => setShowAddOptionsMenu(true)}
+                      >
+                        <Plus className="mr-2 h-4 w-4" /> Adicionar Conteúdo
+                      </Button>
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </div>
+
+            {/* Rodapé */}
+            <div className="p-4 border-t border-white/10 bg-[#0a1321]/80 backdrop-blur-sm">
+              <div className="flex flex-col gap-4">
+                <div className="flex relative">
+                  <div className="relative">
+                    <Button
+                      className="bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] hover:from-[#0D23A0]/90 hover:to-[#5B21BD]/90 text-white border-none"
+                      onClick={() => setShowAddOptionsMenu(!showAddOptionsMenu)}
+                    >
+                      <Plus className="mr-2 h-4 w-4" /> Adicionar Novo Conteúdo
+                      <ChevronDown className={`ml-2 h-4 w-4 transition-transform ${showAddOptionsMenu ? 'rotate-180' : ''}`} />
+                    </Button>
+
+                    {/* Menu dropdown para adicionar conteúdo */}
+                    <AnimatePresence>
+                      {showAddOptionsMenu && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="absolute bottom-full left-0 mb-2 w-64 bg-[#131d2e] border border-white/10 rounded-lg shadow-xl z-10 overflow-hidden"
+                        >
+                          <div className="py-1">
+                            <Button variant="ghost" className="w-full justify-start text-left px-4 py-2.5 text-white hover:bg-white/10 rounded-none">
+                              <Upload className="mr-2 h-4 w-4" /> Upload de arquivo
+                            </Button>
+                            <Button variant="ghost" className="w-full justify-start text-left px-4 py-2.5 text-white hover:bg-white/10 rounded-none">
+                              <Edit3 className="mr-2 h-4 w-4" /> Criar nota manual
+                            </Button>
+                            <Button variant="ghost" className="w-full justify-start text-left px-4 py-2.5 text-white hover:bg-white/10 rounded-none">
+                              <Link2 className="mr-2 h-4 w-4" /> Adicionar link externo
+                            </Button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="permitir-todos" 
+                      checked={permiteUsarTodos}
+                      onCheckedChange={(checked) => setPermiteUsarTodos(checked as boolean)}
+                      className="bg-[#131d2e]/50 border-white/30 data-[state=checked]:bg-[#0D23A0] data-[state=checked]:border-[#0D23A0]"
+                    />
+                    <label htmlFor="permitir-todos" className="text-sm font-medium text-gray-200 cursor-pointer">
+                      Permitir que a IA use todos os conteúdos marcados como base
+                    </label>
+                  </div>
+
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white hover:bg-white/10 rounded-full h-8 w-8">
+                          <HelpCircle className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="bg-[#131d2e] border border-white/10 text-white max-w-xs">
+                        <p>Quanto mais organizado, mais inteligente será o uso da sua biblioteca pela IA</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// Componente de card de conteúdo
+interface ConteudoCardProps {
+  conteudo: ConteudoBiblioteca;
+  toggleAtivo: () => void;
+}
+
+const ConteudoCard: React.FC<ConteudoCardProps> = ({ conteudo, toggleAtivo }) => {
+  const [showPreview, setShowPreview] = useState(false);
+
+  const formatarData = (dataString: string) => {
+    const data = new Date(dataString);
+    return data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
+  const getIconForType = (tipo: string) => {
+    switch (tipo) {
+      case "pdf":
+        return <FileText className="h-5 w-5 text-red-500" />;
+      case "documento":
+        return <FileIcon className="h-5 w-5 text-blue-500" />;
+      case "imagem":
+        return <ImageIcon className="h-5 w-5 text-green-500" />;
+      case "audio":
+        return <Headphones className="h-5 w-5 text-purple-500" />;
+      case "video":
+        return <Film className="h-5 w-5 text-pink-500" />;
+      case "link":
+        return <Link2 className="h-5 w-5 text-cyan-500" />;
+      case "nota":
+        return <BookOpen className="h-5 w-5 text-amber-500" />;
+      default:
+        return <FileText className="h-5 w-5 text-gray-500" />;
+    }
+  };
+
+  return (
+    <Card className="bg-[#131d2e]/50 border border-white/10 hover:bg-[#182448]/50 transition-colors p-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3 flex-grow min-w-0">
+          <div className="w-10 h-10 rounded-lg bg-[#0a1321] flex items-center justify-center flex-shrink-0">
+            {getIconForType(conteudo.tipo)}
+          </div>
+          <div className="flex-grow min-w-0">
+            <h3 className="font-medium text-white truncate">{conteudo.titulo}</h3>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              {conteudo.tags.map((tag, index) => (
+                <Badge 
+                  key={index} 
+                  className="bg-[#0D23A0]/20 text-[#8EABFF] hover:bg-[#0D23A0]/30 text-xs py-0.5 px-1.5"
+                >
+                  {tag}
+                </Badge>
+              ))}
+              <span className="text-xs text-gray-400">
+                {formatarData(conteudo.data)} {conteudo.tamanho && `• ${conteudo.tamanho}`}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+          <Switch 
+            checked={conteudo.ativo} 
+            onCheckedChange={toggleAtivo}
+            className="data-[state=checked]:bg-[#0D23A0]"
+          />
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="text-gray-400 hover:text-white hover:bg-white/10 rounded-full h-8 w-8"
+                  onClick={() => setShowPreview(true)}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="bg-[#131d2e] border border-white/10 text-white">
+                <p>Pré-visualizar</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white hover:bg-white/10 rounded-full h-8 w-8">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="bg-[#131d2e] border border-white/10 text-white">
+              <DropdownMenuItem className="hover:bg-white/10 cursor-pointer">
+                <Tag className="h-4 w-4 mr-2" /> Editar tags
+              </DropdownMenuItem>
+              {conteudo.url && (
+                <DropdownMenuItem className="hover:bg-white/10 cursor-pointer">
+                  <ExternalLink className="h-4 w-4 mr-2" /> Abrir link
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator className="bg-white/10" />
+              <DropdownMenuItem className="text-red-400 hover:bg-red-500/10 hover:text-red-300 cursor-pointer">
+                <Trash2 className="h-4 w-4 mr-2" /> Remover
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+    </Card>
+  );
+};
+
+export default BibliotecaModal;
