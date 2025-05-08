@@ -305,7 +305,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
             <div className="flex bg-black/30 p-0.5 rounded-lg shadow-inner border border-white/5 min-w-[280px] max-w-[280px]">
               <button
                 onClick={() => setInterfaceAtiva("meus-grupos")}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                className={`flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-all flex items-center justify-center gap-1 ${
                   interfaceAtiva === "meus-grupos"
                     ? "bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-sm"
                     : "text-white/70 hover:bg-white/5"
@@ -315,7 +315,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
               </button>
               <button
                 onClick={() => setInterfaceAtiva("recomendacoes-ia")}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                className={`flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-all flex items-center justify-center gap-1 ${
                   interfaceAtiva === "recomendacoes-ia"
                     ? "bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-sm"
                     : "text-white/70 hover:bg-white/5"
