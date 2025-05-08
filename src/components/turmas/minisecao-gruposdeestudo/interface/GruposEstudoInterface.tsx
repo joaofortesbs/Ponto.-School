@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, Users, Calendar, Filter, ChevronRight } from "lucide-react";
+import { Search, Plus, Users, Calendar, Filter, ChevronRight, Users2 } from "lucide-react";
 import GroupCard from "../../GroupCard";
 
 // Mock data for study groups
@@ -123,9 +123,9 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 mt-6">
         {filteredGrupos.map((grupo) => (
-          <div key={grupo.id} className="min-w-[300px]">
+          <div key={grupo.id}>
             <GroupCard group={grupo} onClick={() => handleGroupSelect(grupo)} />
           </div>
         ))}

@@ -51,6 +51,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
+import GruposEstudoView from "@/components/turmas/minisecao-gruposdeestudo/GruposEstudoView"; // Import added here
 
 // Sample data for classes
 const turmasData = [
@@ -1186,10 +1187,7 @@ export default function TurmasPage() {
                 <DesempenhoView />
               </TabsContent>
               <TabsContent value="grupos-estudo" className="mt-6">
-                {/* Import the correct component */}
-                <div className="container mx-auto py-6 px-4">
-                  <iframe src="/turmas?view=grupos-estudo" className="w-full h-[80vh] border-none"></iframe>
-                </div>
+                <GruposEstudoView /> {/* iframe removed, GruposEstudoView added */}
               </TabsContent>
             </Tabs>
           </div>
