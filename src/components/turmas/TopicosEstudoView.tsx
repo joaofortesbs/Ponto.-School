@@ -393,44 +393,75 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                 </Button>
               </div>
 
-              <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3 overflow-x-auto pb-2 hide-scrollbar">
+              <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-4 overflow-x-auto pb-2 hide-scrollbar">
                 {topicosEstudo.map((topico) => (
                   <motion.div
                     key={topico.id}
+                    initial={{ rotateY: 0 }}
                     whileHover={{ 
-                      scale: 1.05, 
-                      boxShadow: `0 0 20px ${topico.cor}40`,
-                      borderColor: `${topico.cor}80`
+                      scale: 1.05,
+                      rotateY: 5,
+                      z: 10,
+                      boxShadow: `0 10px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.2), 0 0 15px ${topico.cor}30`
                     }}
-                    className={`bg-gradient-to-b from-black/60 to-black/30 backdrop-blur-sm rounded-xl overflow-hidden cursor-pointer border border-white/5 transition-all duration-300 relative h-full flex flex-col
-                      ${isTopicFeatured(topico) ? 'featured-topic' : ''}`}
+                    transition={{ 
+                      type: "spring", 
+                      stiffness: 300,
+                      damping: 15
+                    }}
+                    className={`profile-3d-element bg-gradient-to-b from-black/70 to-black/40 backdrop-blur-sm 
+                      rounded-xl overflow-hidden cursor-pointer border border-white/10 
+                      transition-all duration-300 relative h-full flex flex-col transform-gpu
+                      perspective-1000 shadow-md
+                      ${isTopicFeatured(topico) ? 'featured-topic border-[0.5px] border-[#FF6B00]/30' : ''}`}
+                    style={{
+                      transformStyle: "preserve-3d",
+                    }}
                   >
                     <div
-                      className="w-full h-24 flex flex-col justify-end p-3 relative overflow-hidden"
+                      className="w-full h-28 flex flex-col justify-end p-3 relative overflow-hidden"
                     >
-                      {/* Fundo com gradiente baseado na cor do tópico */}
+                      {/* Fundo com gradiente 3D baseado na cor do tópico */}
                       <div 
-                        className="absolute inset-0 opacity-20 z-0"
+                        className="absolute inset-0 opacity-15 z-0"
                         style={{ 
-                          background: `radial-gradient(circle at center, ${topico.cor} 0%, transparent 70%)`,
+                          background: `radial-gradient(circle at 30% 30%, ${topico.cor} 0%, transparent 70%)`,
+                          transform: "translateZ(-10px)",
                         }}
+                      />
+                      
+                      {/* Efeito de profundidade */}
+                      <div className="absolute top-0 left-0 w-full h-full" 
+                        style={{ 
+                          boxShadow: `inset 0 0 30px rgba(0,0,0,0.4)`,
+                          borderRadius: "inherit" 
+                        }} 
                       />
                       
                       {/* Pequeno indicador de novidade no canto */}
                       {topico.novoConteudo && (
-                        <div className="absolute top-2 right-2 h-2 w-2 rounded-full bg-[#FF6B00] animate-pulse"></div>
+                        <div className="absolute top-2 right-2 flex items-center gap-1">
+                          <div className="h-2 w-2 rounded-full bg-[#FF6B00] animate-pulse"></div>
+                          <div className="absolute h-3 w-3 rounded-full bg-[#FF6B00]/30 animate-ping-slow"></div>
+                        </div>
                       )}
 
-                      <div className="relative z-10">
-                        <div className="text-white text-2xl mb-2" style={{ textShadow: "0 2px 10px rgba(0,0,0,0.5)" }}>{topico.icon}</div>
-                        <h4 className="text-white font-semibold text-sm">{topico.nome}</h4>
-                        <div className="flex items-center gap-1 mt-1">
-                          <div className="text-white/70 text-xs flex items-center">
+                      <div className="relative z-10" style={{ transform: "translateZ(15px)" }}>
+                        <div className="profile-3d-element mb-2" style={{ 
+                          fontSize: "2rem",
+                          textShadow: "0 2px 5px rgba(0,0,0,0.5)",
+                          transform: "translateZ(5px)"
+                        }}>{topico.icon}</div>
+                        <h4 className="text-white font-semibold text-sm profile-3d-text">{topico.nome}</h4>
+                        <div className="flex items-center gap-1 mt-1" style={{ transform: "translateZ(5px)" }}>
+                          <div className="text-white/80 text-xs flex items-center bg-black/20 px-1.5 py-0.5 rounded-full">
                             <Users className="h-3 w-3 mr-0.5" />
                             {topico.grupos}
                           </div>
                           {topico.tendencia === "alta" && (
-                            <TrendingUp className="h-3 w-3 text-emerald-400 ml-1" />
+                            <div className="bg-emerald-500/10 px-1.5 py-0.5 rounded-full flex items-center">
+                              <TrendingUp className="h-3 w-3 text-emerald-400" />
+                            </div>
                           )}
                         </div>
                       </div>

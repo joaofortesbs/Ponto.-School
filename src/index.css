@@ -50,6 +50,42 @@
   animation: ping-slow 3s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 
+/* Estilos para efeitos 3D */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-gpu {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Ajustes de profundidade para cartões 3D */
+.profile-3d-element {
+  transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+  transform-style: preserve-3d;
+}
+
+.profile-3d-text {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease-out, text-shadow 0.2s ease-out;
+}
+
+@keyframes ping-slow {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+}
+
 /* Melhorias de animação para cards */
 .animate-smooth-hover {
   transition: all 0.2s ease-in-out;
