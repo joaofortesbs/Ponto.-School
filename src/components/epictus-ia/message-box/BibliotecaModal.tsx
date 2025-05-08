@@ -121,13 +121,13 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose, onPe
   // Identificar tipo de arquivo
   const identificarTipoArquivo = (filename: string): "pdf" | "documento" | "imagem" | "audio" | "video" | "link" | "nota" => {
     const ext = filename.split('.').pop()?.toLowerCase() || '';
-    
+
     if (ext === 'pdf') return 'pdf';
     if (['doc', 'docx', 'txt', 'rtf', 'odt'].includes(ext)) return 'documento';
     if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext)) return 'imagem';
     if (['mp3', 'wav', 'ogg', 'aac', 'm4a'].includes(ext)) return 'audio';
     if (['mp4', 'webm', 'mov', 'avi', 'mkv'].includes(ext)) return 'video';
-    
+
     return 'documento';
   };
 
@@ -144,7 +144,7 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose, onPe
     if (uploadedFile) {
       const tipo = identificarTipoArquivo(uploadedFile.name);
       const fileSize = formatarTamanhoArquivo(uploadedFile.size);
-      
+
       const novoConteudo: ConteudoBiblioteca = {
         id: Date.now().toString(),
         titulo: uploadedFile.name,
@@ -154,7 +154,7 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose, onPe
         data: new Date().toISOString().split('T')[0],
         tamanho: fileSize
       };
-      
+
       adicionarConteudo(novoConteudo);
       setShowTagsModal(false);
       setUploadedFile(null);
@@ -173,7 +173,7 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose, onPe
       data: new Date().toISOString().split('T')[0],
       url: url
     };
-    
+
     adicionarConteudo(novoConteudo);
   };
 
@@ -187,7 +187,7 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose, onPe
       ativo: true,
       data: new Date().toISOString().split('T')[0]
     };
-    
+
     adicionarConteudo(novoConteudo);
   };
 
@@ -244,18 +244,55 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose, onPe
             className="w-full h-full flex flex-col"
           >
             {/* Cabeçalho */}
-            <div className="flex justify-between items-start p-6 border-b border-white/10">
-              <div>
-                <h2 className="text-2xl font-bold flex items-center">
-                  <span className="mr-2">📚</span> Biblioteca Inteligente
-                </h2>
-                <p className="mt-1 text-sm text-gray-300 max-w-xl">
-                  Todos os seus arquivos que podem ser usados como base de conhecimento pela IA
-                </p>
+            <div className="relative overflow-hidden p-6 border-b border-white/10">
+              {/* Fundo animado e gradiente */}
+              <div className="absolute inset-0 bg-gradient-to-r from-[#0a1526] via-[#162a4c] to-[#0a1526] opacity-80"></div>
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiMyMDRlOTkiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRjMC0yLjIgMS44LTQgNC00czQgMS44IDQgNC0xLjggNC00IDQtNC0xLjgtNC00eiIvPjwvZz48L2c+PC9zdmc+')] opacity-20"></div>
+
+              {/* Partículas decorativas */}
+              <div className="absolute top-4 right-24 w-1.5 h-1.5 rounded-full bg-blue-400 opacity-40"></div>
+              <div className="absolute top-12 right-48 w-1 h-1 rounded-full bg-blue-300 opacity-30"></div>
+              <div className="absolute top-8 right-96 w-2 h-2 rounded-full bg-amber-300 opacity-20"></div>
+
+              <div className="flex justify-between items-start relative z-10">
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    {/* Ícone principal com efeito de brilho */}
+                    <div className="relative flex items-center justify-center">
+                      <div className="absolute -inset-3 rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 opacity-30 blur-lg"></div>
+                      <div className="relative flex items-center justify-center p-2 bg-gradient-to-br from-[#1a3a75] to-[#2c1f63] rounded-lg shadow-xl border border-white/10">
+                        <div className="absolute inset-0 rounded-lg bg-gradient-to-tr from-blue-400/20 to-transparent opacity-80"></div>
+                        <BookOpen className="h-6 w-6 text-white drop-shadow-md relative z-10" />
+
+                        {/* Decoração no canto */}
+                        <div className="absolute -bottom-1.5 -right-1.5 p-1 bg-gradient-to-br from-amber-300 to-amber-500 rounded-full shadow-lg border border-white/20">
+                          <Brain className="h-3 w-3 text-[#0a1321]" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Título com efeitos modernos */}
+                    <div>
+                      <h2 className="text-2xl font-bold flex items-center relative">
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-white tracking-tight select-none">
+                          Biblioteca Inteligente
+                        </span>
+                        <span className="absolute -top-2 -right-12 text-xs px-2 py-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full font-medium tracking-tight shadow-md">BETA</span>
+                      </h2>
+
+                      {/* Descrição com estilo moderno */}
+                      <p className="text-sm text-blue-100/80 mt-1 max-w-xl relative flex items-center">
+                        <span className="border-l-2 border-blue-400/30 pl-3 py-0.5">
+                          Todos os seus arquivos que podem ser usados como base de conhecimento pela IA
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-white/10">
+                  <X className="h-5 w-5" />
+                </Button>
               </div>
-              <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-white/10">
-                <X className="h-5 w-5" />
-              </Button>
             </div>
 
             {/* Barra de busca */}
@@ -368,13 +405,13 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose, onPe
                     </ScrollArea>
                   </div>
                 </TabsContent>
-                
+
                 {/* Modal para adicionar tags ao arquivo */}
                 <Dialog open={showTagsModal} onOpenChange={(open) => !open && setShowTagsModal(false)}>
                   <DialogContent className="bg-[#131d2e] border border-white/10 text-white p-6 max-w-md">
                     <h2 className="text-xl font-bold mb-4">Adicionar tags</h2>
                     <p className="text-gray-400 mb-4">Adicione tags para classificar seu arquivo "{uploadedFile?.name}"</p>
-                    
+
                     <div className="grid gap-4">
                       <div className="flex flex-wrap gap-2 mb-2">
                         {newTags.map((tag, index) => (
@@ -392,7 +429,7 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose, onPe
                           </Badge>
                         ))}
                       </div>
-                      
+
                       <div className="flex gap-2">
                         <Input 
                           type="text" 
@@ -406,7 +443,7 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose, onPe
                           <Plus className="h-4 w-4" />
                         </Button>
                       </div>
-                      
+
                       <div className="flex justify-between mt-4">
                         <Button 
                           variant="outline" 
@@ -429,7 +466,7 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose, onPe
                     </div>
                   </DialogContent>
                 </Dialog>
-                
+
                 {/* Input invisível para upload de arquivo */}
                 <input 
                   type="file" 
@@ -543,9 +580,9 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose, onPe
                       >
                         Desmarcar todos
                       </Button>
-                      
+
                       <div className="h-4 w-px bg-white/20 mx-1"></div>
-                      
+
                       <Checkbox 
                         id="permitir-todos" 
                         checked={permiteUsarTodos}
@@ -624,7 +661,7 @@ const ConteudoCard: React.FC<ConteudoCardProps> = ({
       case "audio":
         return <Headphones className="h-5 w-5 text-purple-500" />;
       case "video":
-        return <Film className="h-5 w-5 text-pink-500" />;
+        return <Film className="h5 w-5 text-pink-500" />;
       case "link":
         return <Link2 className="h-5 w-5 text-cyan-500" />;
       case "nota":
@@ -721,7 +758,7 @@ const ConteudoCard: React.FC<ConteudoCardProps> = ({
                 {formatarData(conteudo.data)} {conteudo.tamanho && `• ${conteudo.tamanho}`}
               </span>
             </div>
-            
+
             {showEditTags && (
               <div className="mt-2 flex items-center gap-2">
                 <Input 
