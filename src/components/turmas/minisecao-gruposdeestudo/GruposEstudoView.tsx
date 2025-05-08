@@ -7,7 +7,11 @@ interface GruposEstudoViewProps {
 
 const GruposEstudoView: React.FC<GruposEstudoViewProps> = ({ className }) => {
   return (
-    <div className={`w-full ${className}`}>
+    <div className={`w-full ${className} card-container`} style={{ 
+      contain: 'content',
+      overflowY: 'auto',
+      overflowX: 'hidden'
+    }}>
       {/* Conteúdo removido conforme solicitado */}
     </div>
   );

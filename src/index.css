@@ -50,6 +50,29 @@
   animation: ping-slow 3s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 
+/* Melhorias de animação para cards */
+.animate-smooth-hover {
+  transition: all 0.2s ease-in-out;
+  will-change: transform, box-shadow;
+  backface-visibility: hidden;
+}
+
+/* Otimização de renderização para elementos animados */
+.card-container {
+  contain: layout style;
+  transform: translateZ(0);
+}
+
+/* Prevenir travamentos em dispositivos de baixo desempenho */
+@media (prefers-reduced-motion: reduce) {
+  .animate-smooth-hover,
+  .transition-all {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+
 /* Gradiente radial para efeitos de fundo */
 .bg-gradient-radial {
   background-image: radial-gradient(var(--tw-gradient-stops));

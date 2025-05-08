@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, Filter, GraduationCap, Users2 } from "lucide-react";
@@ -67,31 +66,43 @@ const GrupoEstudoCard = ({
   );
 };
 
-const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [grupos, setGrupos] = useState<GrupoEstudo[]>([]);
+const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className }) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedFilter, setSelectedFilter] = useState("todos");
+  const [displayedGroups, setDisplayedGroups] = useState(gruposEstudo);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
-    // Em uma aplicação real, você buscaria os grupos do backend
-    // Usando os dados de mock por enquanto
-    setGrupos(gruposEstudo);
-  }, []);
+    let filtered = gruposEstudo;
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+    // Filtrar por termo de busca
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (grupo) =>
+          grupo.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          grupo.materia.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          grupo.descricao.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+
+    setDisplayedGroups(filtered);
+  }, [searchTerm, selectedFilter]);
+
+  // Função para lidar com clique no grupo com debounce para evitar múltiplos cliques
+  const handleGroupClick = (id: string) => {
+    if (isAnimating) return; // Evita múltiplos cliques durante animação
+
+    setIsAnimating(true);
+    console.log(`Grupo clicado: ${id}`);
+
+    // Reset do estado de animação após 300ms
+    setTimeout(() => {
+      setIsAnimating(false);
+    }, 300);
+
+    // Implementar navegação ou abertura de modal aqui
   };
-
-  const handleGrupoClick = (id: string) => {
-    // Navegar para a página de detalhes do grupo
-    console.log(`Navegando para o grupo ${id}`);
-  };
-
-  const filteredGrupos = grupos.filter(
-    (grupo) =>
-      grupo.nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      grupo.materia.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      grupo.descricao.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   return (
     <div className="space-y-6">
@@ -101,8 +112,8 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = () => {
           <Input
             placeholder="Buscar grupo de estudos..."
             className="pl-9 bg-white dark:bg-[#1E293B] border-[#FF6B00]/10 dark:border-[#FF6B00]/20"
-            value={searchQuery}
-            onChange={handleSearch}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -121,24 +132,39 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = () => {
         </div>
       </div>
 
-      {filteredGrupos.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredGrupos.slice(0, 6).map((grupo) => (
-            <GrupoEstudoCard 
-              key={grupo.id} 
-              grupo={grupo} 
-              onClick={handleGrupoClick}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-col justify-center items-center p-12 text-gray-500 dark:text-gray-400">
-          <p className="text-lg mb-2">Nenhum grupo de estudo encontrado</p>
-          <p className="text-sm">Tente ajustar sua pesquisa ou crie um novo grupo</p>
-        </div>
-      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+        {displayedGroups.map((grupo, index) => (
+          <motion.div
+            key={grupo.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ 
+              duration: 0.25, 
+              ease: "easeOut", 
+              delay: index * 0.05, // Escalonar a animação para cada card
+              staggerChildren: 0.05 
+            }}
+            className="animate-smooth-hover"
+            layout="position"
+            layoutId={`grupo-${grupo.id}`}
+          >
+            <GrupoEstudoCard grupo={grupo} onClick={handleGroupClick} />
+          </motion.div>
+        ))}
 
-      {filteredGrupos.length > 6 && (
+        {displayedGroups.length === 0 && (
+          <motion.div 
+            className="col-span-3 text-center py-8 text-gray-500"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            Nenhum grupo encontrado com os filtros selecionados.
+          </motion.div>
+        )}
+      </div>
+
+      {displayedGroups.length > 6 && (
         <div className="flex justify-center mt-6">
           <Button variant="outline" className="text-[#FF6B00] border-[#FF6B00] hover:bg-[#FF6B00]/10">
             Ver todos os grupos
