@@ -31,6 +31,7 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
   handleButtonClick
 }) => {
   const [isDeepSearchModalOpen, setIsDeepSearchModalOpen] = useState(false);
+  const [isSearchActive, setIsSearchActive] = useState(false);
   return (
     <motion.div 
       className="relative w-[60%] h-auto mx-auto bg-transparent rounded-2xl shadow-xl 
@@ -51,13 +52,15 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
             <button 
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gradient-to-r from-[#0a1625]/70 to-[#182c4d]/70 text-gray-200 
-                       rounded-lg border border-white/10 backdrop-blur-sm hover:bg-gradient-to-r 
-                       hover:from-[#0D23A0]/40 hover:to-[#5B21BD]/40 hover:border-blue-500/30
-                       hover:text-white transition-all duration-300 flex-shrink-0 shadow-sm"
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs 
+                       rounded-lg border backdrop-blur-sm transition-all duration-300 flex-shrink-0 shadow-sm
+                       ${isSearchActive 
+                         ? "bg-gradient-to-r from-[#0D23A0]/70 to-[#5B21BD]/70 text-white border-blue-500/50" 
+                         : "bg-gradient-to-r from-[#0a1625]/70 to-[#182c4d]/70 text-gray-200 border-white/10 hover:bg-gradient-to-r hover:from-[#0D23A0]/40 hover:to-[#5B21BD]/40 hover:border-blue-500/30 hover:text-white"
+                       }`}
               onClick={() => setIsDeepSearchModalOpen(true)}
             >
-              <Search size={14} className="text-blue-300" />
+              <Search size={14} className={isSearchActive ? "text-blue-100" : "text-blue-300"} />
               <span>Buscar</span>
             </button>
             <button 
@@ -213,6 +216,12 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
         onSearch={(query, options) => {
           // Fechar o modal
           setIsDeepSearchModalOpen(false);
+          
+          // Verificar se pelo menos uma opção está selecionada
+          const hasActiveOptions = options.webGlobal || options.academico || options.social;
+          
+          // Atualizar o estado de busca ativa
+          setIsSearchActive(hasActiveOptions);
           
           // Construir a mensagem de busca avançada
           let searchMessage = `🔍 DeepSearch`;
