@@ -399,6 +399,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                   Ver todos <ChevronRight className="h-3 w-3 ml-1" />
                 </Button>
               </div>
+              </div>
 
               <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-4 overflow-x-auto pb-2 hide-scrollbar">
                 {topicosEstudo.map((topico) => (
