@@ -257,34 +257,30 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose, onPe
               <div className="flex justify-between items-start relative z-10">
                 <div>
                   <div className="flex items-center gap-3 mb-2">
-                    {/* Ícone principal com efeito de brilho */}
+                    {/* Ícone principal com efeito reduzido */}
                     <div className="relative flex items-center justify-center">
-                      <div className="absolute -inset-3 rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 opacity-30 blur-lg"></div>
-                      <div className="relative flex items-center justify-center p-2 bg-gradient-to-br from-[#1a3a75] to-[#2c1f63] rounded-lg shadow-xl border border-white/10">
-                        <div className="absolute inset-0 rounded-lg bg-gradient-to-tr from-blue-400/20 to-transparent opacity-80"></div>
-                        <BookOpen className="h-6 w-6 text-white drop-shadow-md relative z-10" />
+                      <div className="relative flex items-center justify-center p-2 bg-gradient-to-br from-[#1a3a75] to-[#2c1f63] rounded-lg shadow-md border border-white/10">
+                        <BookOpen className="h-6 w-6 text-white relative z-10" />
 
                         {/* Decoração no canto */}
-                        <div className="absolute -bottom-1.5 -right-1.5 p-1 bg-gradient-to-br from-amber-300 to-amber-500 rounded-full shadow-lg border border-white/20">
+                        <div className="absolute -bottom-1.5 -right-1.5 p-1 bg-gradient-to-br from-amber-300 to-amber-500 rounded-full shadow-md border border-white/20">
                           <Brain className="h-3 w-3 text-[#0a1321]" />
                         </div>
                       </div>
                     </div>
 
-                    {/* Título com efeitos modernos */}
+                    {/* Título com badge BETA ao lado */}
                     <div>
                       <h2 className="text-2xl font-bold flex items-center relative">
                         <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-white tracking-tight select-none">
                           Biblioteca Inteligente
                         </span>
-                        <span className="absolute -top-2 -right-12 text-xs px-2 py-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full font-medium tracking-tight shadow-md">BETA</span>
+                        <span className="ml-2 text-xs px-2 py-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full font-medium tracking-tight shadow-md">BETA</span>
                       </h2>
 
-                      {/* Descrição com estilo moderno */}
-                      <p className="text-sm text-blue-100/80 mt-1 max-w-xl relative flex items-center">
-                        <span className="border-l-2 border-blue-400/30 pl-3 py-0.5">
-                          Todos os seus arquivos que podem ser usados como base de conhecimento pela IA
-                        </span>
+                      {/* Descrição sem borda lateral */}
+                      <p className="text-sm text-blue-100/80 mt-1 max-w-xl">
+                        Todos os seus arquivos que podem ser usados como base de conhecimento pela IA
                       </p>
                     </div>
                   </div>
