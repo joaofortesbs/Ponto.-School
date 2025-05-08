@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Search, Upload, FileText, Link2, Edit3, Plus, HelpCircle, ChevronDown, MoreVertical, Eye, Trash2, Tag, FileIcon, Image as ImageIcon, Film, Headphones, BookOpen, ExternalLink, Check, Brain } from "lucide-react";
+import { X, Search, Upload, FileText, Link2, Edit3, Plus, HelpCircle, ChevronDown, MoreVertical, Eye, Trash2, Tag, FileIcon, Image as ImageIcon, Film, Headphones, BookOpen, ExternalLink, Check } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -244,20 +244,12 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose, onPe
             className="w-full h-full flex flex-col"
           >
             {/* Cabeçalho */}
-            <div className="flex justify-between items-start p-6 border-b border-white/10 bg-gradient-to-r from-[#0a1321]/80 to-transparent">
+            <div className="flex justify-between items-start p-6 border-b border-white/10">
               <div>
-                <h2 className="text-2xl font-bold flex items-center mb-1">
-                  <div className="relative mr-3 bg-gradient-to-br from-[#0D23A0] to-[#5B21BD] p-1.5 rounded-lg flex items-center justify-center shadow-lg">
-                    <BookOpen className="h-5 w-5 text-white" />
-                    <div className="absolute -bottom-1 -right-1 bg-amber-400 rounded-full p-0.5 shadow-md">
-                      <Brain className="h-3 w-3 text-[#131d2e]" />
-                    </div>
-                  </div>
-                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300 tracking-tight">
-                    Biblioteca Inteligente
-                  </span>
+                <h2 className="text-2xl font-bold flex items-center">
+                  <span className="mr-2">📚</span> Biblioteca Inteligente
                 </h2>
-                <p className="mt-1 text-sm text-gray-300 max-w-xl pl-11 border-l-2 border-[#0D23A0]/40 ml-1.5">
+                <p className="mt-1 text-sm text-gray-300 max-w-xl">
                   Todos os seus arquivos que podem ser usados como base de conhecimento pela IA
                 </p>
               </div>
