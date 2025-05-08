@@ -1,6 +1,5 @@
 
 import React from "react";
-import GruposEstudoInterface from "./interface/GruposEstudoInterface";
 import { Users2 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -29,7 +28,7 @@ const GruposEstudoView: React.FC<GruposEstudoViewProps> = ({ className }) => {
           </p>
         </div>
       </motion.div>
-      <GruposEstudoInterface />
+      {/* Conteúdo removido conforme solicitado */}
     </div>
   );
 };
