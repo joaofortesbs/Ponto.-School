@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Filter, AcademicCap, Users2 } from "lucide-react";
+import { Plus, Search, Filter, GraduationCap, Users2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import { gruposEstudo } from "@/components/estudos/data/gruposEstudo";
@@ -38,7 +38,7 @@ const GrupoEstudoCard = ({
     >
       <div className="flex items-start gap-3">
         <div className="h-12 w-12 bg-gradient-to-br from-[#FF6B00]/20 to-[#FF8C40]/20 rounded-lg flex items-center justify-center">
-          <AcademicCap className="h-6 w-6 text-[#FF6B00]" />
+          <GraduationCap className="h-6 w-6 text-[#FF6B00]" />
         </div>
         <div className="flex-1">
           <h3 className="font-semibold text-gray-900 dark:text-white font-montserrat">
