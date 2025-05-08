@@ -1,6 +1,8 @@
 
 import React from "react";
 import GruposEstudoInterface from "./interface/GruposEstudoInterface";
+import { Users2 } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface GruposEstudoViewProps {
   className?: string;
@@ -9,9 +11,14 @@ interface GruposEstudoViewProps {
 const GruposEstudoView: React.FC<GruposEstudoViewProps> = ({ className }) => {
   return (
     <div className={`w-full ${className}`}>
-      <div className="flex items-center gap-3 mb-6">
-        <div className="h-10 w-10 bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-lg">
-          <Users className="h-5 w-5 text-white" />
+      <motion.div 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex items-center gap-3 mb-6"
+      >
+        <div className="h-12 w-12 bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center shadow-lg">
+          <Users2 className="h-6 w-6 text-white" />
         </div>
         <div>
           <h2 className="text-2xl font-bold bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent font-montserrat">
@@ -21,7 +28,7 @@ const GruposEstudoView: React.FC<GruposEstudoViewProps> = ({ className }) => {
             Conecte-se e aprenda com seus colegas
           </p>
         </div>
-      </div>
+      </motion.div>
       <GruposEstudoInterface />
     </div>
   );

@@ -9,6 +9,7 @@ import EmptyTurmasState from "@/components/turmas/EmptyTurmasState";
 import TurmaFilters from "@/components/turmas/TurmaFilters";
 import EpictusIAHelper from "@/components/turmas/EpictusIAHelper";
 import DesempenhoView from "@/components/turmas/DesempenhoView";
+import GruposEstudoView from "@/components/turmas/minisecao-gruposdeestudo/GruposEstudoView";
 import {
   Atom,
   Calculator,
@@ -1186,8 +1187,7 @@ export default function TurmasPage() {
                 <DesempenhoView />
               </TabsContent>
               <TabsContent value="grupos-estudo" className="mt-6">
-                {/* Renderize o GruposEstudoView somente quando a visualização 'grupos' estiver ativa */}
-                {currentView === "grupos-estudo" && <GruposEstudoView />}
+                <GruposEstudoView className="min-h-[60vh]" />
               </TabsContent>
             </Tabs>
           </div>
