@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Search, Upload, FileText, Link2, Edit3, Plus, HelpCircle, ChevronDown, MoreVertical, Eye, Trash2, Tag, FileIcon, Image as ImageIcon, Film, Headphones, BookOpen, ExternalLink } from "lucide-react";
+import { X, Search, Upload, FileText, Link2, Edit3, Plus, HelpCircle, ChevronDown, MoreVertical, Eye, Trash2, Tag, FileIcon, Image as ImageIcon, Film, Headphones, BookOpen, ExternalLink, SlidersHorizontal } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -101,19 +101,101 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose }) =>
   const [activeTab, setActiveTab] = useState("todos");
   const [permiteUsarTodos, setPermiteUsarTodos] = useState(true);
   const [showAddOptionsMenu, setShowAddOptionsMenu] = useState(false);
+  const [filtrosAtivos, setFiltrosAtivos] = useState({
+    data: {
+      ultimos7Dias: false,
+      ultimos30Dias: false,
+      ultimos3Meses: false
+    },
+    tipos: {
+      pdf: false,
+      documento: false,
+      imagem: false,
+      audio: false,
+      video: false,
+      link: false,
+      nota: false
+    },
+    tamanho: {
+      pequeno: false,
+      medio: false,
+      grande: false
+    },
+    status: {
+      ativo: false,
+      inativo: false
+    },
+    tags: [] as string[]
+  });
 
-  // Filtrar conteúdos com base na busca e na categoria selecionada
+  // Filtrar conteúdos com base na busca, categoria selecionada e filtros adicionais
   const conteudosFiltrados = conteudos.filter(item => {
+    // Filtro por busca
     const matchesSearch = 
       searchTerm === "" || 
       item.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
 
+    // Filtro por categoria (tab)
     const matchesTab = 
       activeTab === "todos" || 
       item.tipo === activeTab;
+      
+    // Filtro por data
+    let matchesDate = true;
+    if (filtrosAtivos.data.ultimos7Dias || filtrosAtivos.data.ultimos30Dias || filtrosAtivos.data.ultimos3Meses) {
+      const uploadDate = new Date(item.data);
+      const hoje = new Date();
+      const diffDias = Math.floor((hoje.getTime() - uploadDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      matchesDate = (
+        (filtrosAtivos.data.ultimos7Dias && diffDias <= 7) ||
+        (filtrosAtivos.data.ultimos30Dias && diffDias <= 30) ||
+        (filtrosAtivos.data.ultimos3Meses && diffDias <= 90)
+      );
+    }
+    
+    // Filtro por tipo
+    let matchesTipo = true;
+    const tiposSelecionados = Object.entries(filtrosAtivos.tipos)
+      .filter(([_, selecionado]) => selecionado)
+      .map(([tipo]) => tipo);
+      
+    if (tiposSelecionados.length > 0) {
+      matchesTipo = tiposSelecionados.includes(item.tipo);
+    }
+    
+    // Filtro por tamanho
+    let matchesTamanho = true;
+    if (filtrosAtivos.tamanho.pequeno || filtrosAtivos.tamanho.medio || filtrosAtivos.tamanho.grande) {
+      if (!item.tamanho) {
+        matchesTamanho = false;
+      } else {
+        const tamanhoMB = parseFloat(item.tamanho.replace(' MB', ''));
+        matchesTamanho = (
+          (filtrosAtivos.tamanho.pequeno && tamanhoMB < 1) ||
+          (filtrosAtivos.tamanho.medio && tamanhoMB >= 1 && tamanhoMB <= 10) ||
+          (filtrosAtivos.tamanho.grande && tamanhoMB > 10)
+        );
+      }
+    }
+    
+    // Filtro por status (ativo/inativo)
+    let matchesStatus = true;
+    if (filtrosAtivos.status.ativo || filtrosAtivos.status.inativo) {
+      matchesStatus = (
+        (filtrosAtivos.status.ativo && item.ativo) ||
+        (filtrosAtivos.status.inativo && !item.ativo)
+      );
+    }
+    
+    // Filtro por tags
+    let matchesTags = true;
+    if (filtrosAtivos.tags.length > 0) {
+      matchesTags = item.tags.some(tag => filtrosAtivos.tags.includes(tag));
+    }
 
-    return matchesSearch && matchesTab;
+    return matchesSearch && matchesTab && matchesDate && matchesTipo && matchesTamanho && matchesStatus && matchesTags;
   });
 
   // Alternar ativação de um conteúdo
@@ -254,7 +336,108 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose }) =>
 
                 <TabsContent value={activeTab} className="flex-grow p-4 data-[state=active]:mt-0 overflow-hidden">
                   <div className="flex h-full gap-4">
-                    {/* Conteúdo principal sem barra lateral */}
+                    {/* Barra lateral de Filtros */}
+                    <div className="w-64 flex-shrink-0 bg-[#0a1321]/60 rounded-lg border border-white/10 p-4 overflow-hidden flex flex-col">
+                      <h3 className="text-sm font-semibold text-white mb-3 flex items-center">
+                        <SlidersHorizontal className="h-4 w-4 mr-2 text-[#0D23A0]" />
+                        Filtros
+                      </h3>
+                      
+                      <ScrollArea className="flex-grow overflow-y-auto pr-2">
+                        {/* Seção: Data de Upload */}
+                        <div className="mb-4">
+                          <h4 className="text-xs font-medium text-gray-300 mb-2">Data de Upload</h4>
+                          <div className="space-y-2">
+                            <div className="flex items-center">
+                              <Checkbox id="data-7dias" className="bg-[#131d2e]/50 border-white/20 data-[state=checked]:bg-[#0D23A0] data-[state=checked]:border-[#0D23A0]" />
+                              <label htmlFor="data-7dias" className="ml-2 text-xs text-gray-200">Últimos 7 dias</label>
+                            </div>
+                            <div className="flex items-center">
+                              <Checkbox id="data-30dias" className="bg-[#131d2e]/50 border-white/20 data-[state=checked]:bg-[#0D23A0] data-[state=checked]:border-[#0D23A0]" />
+                              <label htmlFor="data-30dias" className="ml-2 text-xs text-gray-200">Últimos 30 dias</label>
+                            </div>
+                            <div className="flex items-center">
+                              <Checkbox id="data-3meses" className="bg-[#131d2e]/50 border-white/20 data-[state=checked]:bg-[#0D23A0] data-[state=checked]:border-[#0D23A0]" />
+                              <label htmlFor="data-3meses" className="ml-2 text-xs text-gray-200">Últimos 3 meses</label>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Seção: Tipos de Conteúdo */}
+                        <div className="mb-4">
+                          <h4 className="text-xs font-medium text-gray-300 mb-2">Tipos de Conteúdo</h4>
+                          <div className="space-y-2">
+                            {["pdf", "documento", "imagem", "audio", "video", "link", "nota"].map(tipo => (
+                              <div key={tipo} className="flex items-center">
+                                <Checkbox 
+                                  id={`tipo-${tipo}`} 
+                                  className="bg-[#131d2e]/50 border-white/20 data-[state=checked]:bg-[#0D23A0] data-[state=checked]:border-[#0D23A0]"
+                                />
+                                <label htmlFor={`tipo-${tipo}`} className="ml-2 text-xs text-gray-200 capitalize">{tipo}</label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Seção: Tags Populares */}
+                        <div className="mb-4">
+                          <h4 className="text-xs font-medium text-gray-300 mb-2">Tags Populares</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {['matemática', 'física', 'história', 'biologia', 'redação', 'enem'].map(tag => (
+                              <Badge 
+                                key={tag}
+                                className="bg-[#0D23A0]/20 text-[#8EABFF] hover:bg-[#0D23A0]/40 cursor-pointer text-xs py-0.5 px-1.5"
+                              >
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Seção: Tamanho do Arquivo */}
+                        <div className="mb-4">
+                          <h4 className="text-xs font-medium text-gray-300 mb-2">Tamanho do Arquivo</h4>
+                          <div className="space-y-2">
+                            <div className="flex items-center">
+                              <Checkbox id="tamanho-pequeno" className="bg-[#131d2e]/50 border-white/20 data-[state=checked]:bg-[#0D23A0] data-[state=checked]:border-[#0D23A0]" />
+                              <label htmlFor="tamanho-pequeno" className="ml-2 text-xs text-gray-200">Pequeno (&lt; 1MB)</label>
+                            </div>
+                            <div className="flex items-center">
+                              <Checkbox id="tamanho-medio" className="bg-[#131d2e]/50 border-white/20 data-[state=checked]:bg-[#0D23A0] data-[state=checked]:border-[#0D23A0]" />
+                              <label htmlFor="tamanho-medio" className="ml-2 text-xs text-gray-200">Médio (1-10MB)</label>
+                            </div>
+                            <div className="flex items-center">
+                              <Checkbox id="tamanho-grande" className="bg-[#131d2e]/50 border-white/20 data-[state=checked]:bg-[#0D23A0] data-[state=checked]:border-[#0D23A0]" />
+                              <label htmlFor="tamanho-grande" className="ml-2 text-xs text-gray-200">Grande (&gt; 10MB)</label>
+                            </div>
+                          </div>
+                        </div>
+                      
+                        {/* Seção: Status do Arquivo */}
+                        <div className="mb-4">
+                          <h4 className="text-xs font-medium text-gray-300 mb-2">Status</h4>
+                          <div className="space-y-2">
+                            <div className="flex items-center">
+                              <Checkbox id="status-ativo" className="bg-[#131d2e]/50 border-white/20 data-[state=checked]:bg-[#0D23A0] data-[state=checked]:border-[#0D23A0]" />
+                              <label htmlFor="status-ativo" className="ml-2 text-xs text-gray-200">Ativos</label>
+                            </div>
+                            <div className="flex items-center">
+                              <Checkbox id="status-inativo" className="bg-[#131d2e]/50 border-white/20 data-[state=checked]:bg-[#0D23A0] data-[state=checked]:border-[#0D23A0]" />
+                              <label htmlFor="status-inativo" className="ml-2 text-xs text-gray-200">Inativos</label>
+                            </div>
+                          </div>
+                        </div>
+                      </ScrollArea>
+                      
+                      <div className="mt-4 flex justify-between pt-3 border-t border-white/10">
+                        <Button variant="outline" size="sm" className="text-xs text-gray-300 border-white/20 hover:bg-white/10 hover:text-white">
+                          Limpar filtros
+                        </Button>
+                        <Button size="sm" className="text-xs bg-[#0D23A0] hover:bg-[#0D23A0]/80">
+                          Aplicar
+                        </Button>
+                      </div>
+                    </div>
 
                     {/* Conteúdo principal */}
                     <ScrollArea className="flex-grow h-full overflow-y-auto" scrollHideDelay={0}>
