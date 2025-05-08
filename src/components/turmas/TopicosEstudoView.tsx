@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Search, Filter, Sparkles, BookOpen, Users, TrendingUp, ChevronRight, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -119,7 +120,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                     <ChevronRight className="h-5 w-5" />
                   </Button>
                 </div>
-
+                
                 {hoveredTopic === topico.id && (
                   <motion.div 
                     initial={{ opacity: 0, height: 0 }}
@@ -153,7 +154,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                 IA Premium
               </Badge>
             </div>
-
+            
             <p className="text-white/60 text-sm mb-6">
               Nossa IA analisou seu perfil e encontrou estes grupos perfeitos para seu estilo de aprendizado:
             </p>
@@ -204,7 +205,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
               <TrendingUp className="h-5 w-5 mr-2 text-[#FF6B00]" />
               Análise de Participação
             </h3>
-
+            
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
@@ -220,7 +221,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                   <span className="ml-1">este mês</span>
                 </div>
               </motion.div>
-
+              
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -235,7 +236,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                   <span className="ml-1">este mês</span>
                 </div>
               </motion.div>
-
+              
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -251,7 +252,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                 </div>
               </motion.div>
             </div>
-
+            
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -400,7 +401,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
               </div>
               </div>
 
-              <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-4 gap-y-12 overflow-x-auto pb-10 mt-8 hide-scrollbar">
+              <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-4 overflow-x-auto pb-2 hide-scrollbar">
                 {topicosEstudo.map((topico) => (
                   <motion.div
                     key={topico.id}
@@ -426,7 +427,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                     className={`profile-3d-element bg-gradient-to-b from-[#121620]/90 to-[#0a0d14]/80 backdrop-blur-lg 
                       rounded-xl overflow-hidden cursor-pointer 
                       transition-all duration-300 relative h-full flex flex-col transform-gpu
-                      perspective-1000 shadow-xl min-h-[190px]
+                      perspective-1000 shadow-xl
                       ${selectedTopic === topico.id ? 'topic-selected' : 'border border-white/10'}
                       ${isTopicFeatured(topico) ? 'featured-topic border-[0.5px] border-[#FF6B00]/40' : ''}`}
                     style={{
@@ -446,7 +447,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                           filter: "blur(1px)"
                         }}
                       />
-
+                      
                       {/* Efeito de profundidade avançado */}
                       <div className="absolute top-0 left-0 w-full h-full" 
                         style={{ 
@@ -455,7 +456,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                           background: `radial-gradient(circle at 70% 80%, rgba(255,255,255,0.03) 0%, transparent 50%)`
                         }} 
                       />
-
+                      
                       {/* Partículas flutuantes sutis (somente para tópicos em destaque) */}
                       {isTopicFeatured(topico) && (
                         <>
@@ -473,7 +474,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                           </div>
                         </>
                       )}
-
+                      
                       {/* Indicador de novidade redesenhado */}
                       {topico.novoConteudo && (
                         <div className="absolute top-3 right-3 z-20">
@@ -520,13 +521,13 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                             {topico.nome === "Engenharia" && <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>}
                           </div>
                         </div>
-
+                        
                         {/* Título do tópico com efeito de destaque */}
                         <h4 className="text-white font-semibold text-sm profile-3d-text"
                             style={{ 
                               textShadow: "0 2px 3px rgba(0,0,0,0.5), 0 0 5px rgba(0,0,0,0.2)",
                             }}>{topico.nome}</h4>
-
+                        
                         {/* Estatísticas com estilo moderno */}
                         <div className="flex items-center gap-1.5 mt-2" style={{ transform: "translateZ(8px)" }}>
                           <div className="text-white/90 text-xs flex items-center bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-full border border-white/5">
