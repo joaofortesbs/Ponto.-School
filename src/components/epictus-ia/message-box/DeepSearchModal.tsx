@@ -25,22 +25,14 @@ const DeepSearchModal: React.FC<DeepSearchModalProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOptions, setSearchOptions] = useState<DeepSearchOptions>({
-    webGlobal: true,
-    academico: true,
+    webGlobal: false,
+    academico: false,
     social: false,
     searchDepth: "padrão",
   });
 
   const handleSearch = () => {
-    if (!searchOptions.webGlobal && !searchOptions.academico && !searchOptions.social) {
-      toast({
-        title: "Nenhuma fonte selecionada",
-        description: "Por favor, selecione pelo menos uma fonte de pesquisa.",
-        duration: 3000,
-      });
-      return;
-    }
-
+    // Permitir aplicar mesmo sem nenhuma opção selecionada
     onSearch("", searchOptions);
     onClose();
   };

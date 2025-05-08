@@ -216,28 +216,27 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
         onSearch={(query, options) => {
           // Fechar o modal
           setIsDeepSearchModalOpen(false);
-          
-          // Verificar se pelo menos uma opção está selecionada
-          const hasActiveOptions = options.webGlobal || options.academico || options.social;
-          
-          // Atualizar o estado de busca ativa
-          setIsSearchActive(hasActiveOptions);
-          
-          // Construir a mensagem de busca avançada
-          let searchMessage = `🔍 DeepSearch`;
-          
-          // Adicionar fontes selecionadas
-          const fontes = [];
-          if (options.webGlobal) fontes.push("Web Global");
-          if (options.academico) fontes.push("Acadêmico");
-          if (options.social) fontes.push("Social");
-          searchMessage += ` [Fontes: ${fontes.join(", ")}]`;
-          
-          // Adicionar profundidade da busca
-          searchMessage += ` [Profundidade: ${options.searchDepth}]`;
-          
-          // Definir a mensagem no campo de input
-          setInputMessage(searchMessage);
+
+          // Verificar se há alguma opção ativa para destacar o botão de busca
+          setIsSearchActive(options.webGlobal || options.academico || options.social);
+
+          if (options.webGlobal || options.academico || options.social) {
+            // Construir a mensagem de busca avançada apenas se tiver opções ativas
+            let searchMessage = `🔍 DeepSearch`;
+
+            // Adicionar fontes selecionadas
+            const fontes = [];
+            if (options.webGlobal) fontes.push("Web Global");
+            if (options.academico) fontes.push("Acadêmico");
+            if (options.social) fontes.push("Social");
+            searchMessage += ` [Fontes: ${fontes.join(", ")}]`;
+
+            // Adicionar profundidade da busca
+            searchMessage += ` [Profundidade: ${options.searchDepth}]`;
+
+            // Definir a mensagem no campo de input
+            setInputMessage(searchMessage);
+          }
         }}
       />
     </motion.div>
