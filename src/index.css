@@ -662,14 +662,25 @@ body.modal-open {
 }
 
 .scrollbar-thin::-webkit-scrollbar {
-  width: 4px;
+  width: 6px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-track {
   background: transparent;
+  margin: 4px 0;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgba(13, 35, 160, 0.5);
+  border-radius: 20px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(13, 35, 160, 0.7);
+}
+
+/* Estilos antigos mantidos */
+.scrollbar-orange::-webkit-scrollbar-thumb {
   background-color: rgba(255, 107, 0, 0.2);
   border-radius: 20px;
 }

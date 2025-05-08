@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Search, Upload, FileText, Link2, Edit3, Plus, HelpCircle, ChevronDown, MoreVertical, Eye, Trash2, Tag, FileIcon, Image as ImageIcon, Film, Headphones, BookOpen, ExternalLink } from "lucide-react";
@@ -12,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
+import ScrollArea from "@/components/ui/ScrollArea"; // Assuming this component exists
 
 export interface ConteudoBiblioteca {
   id: string;
@@ -108,11 +108,11 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose }) =>
       searchTerm === "" || 
       item.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-    
+
     const matchesTab = 
       activeTab === "todos" || 
       item.tipo === activeTab;
-    
+
     return matchesSearch && matchesTab;
   });
 
@@ -249,36 +249,38 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose }) =>
                   </TabsList>
                 </div>
 
-                <TabsContent value={activeTab} className="flex-grow overflow-y-auto p-4 data-[state=active]:mt-0">
-                  {conteudosFiltrados.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-3">
-                      {conteudosFiltrados.map(item => (
-                        <ConteudoCard 
-                          key={item.id} 
-                          conteudo={item} 
-                          toggleAtivo={() => toggleConteudoAtivo(item.id)}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-center p-8">
-                      <div className="w-16 h-16 rounded-full bg-[#0D23A0]/20 flex items-center justify-center mb-4">
-                        <Search className="h-8 w-8 text-[#0D23A0]/70" />
+                <TabsContent value={activeTab} className="flex-grow p-4 data-[state=active]:mt-0">
+                  <ScrollArea className="flex-grow h-full"> {/* Added ScrollArea */}
+                    {conteudosFiltrados.length > 0 ? (
+                      <div className="grid grid-cols-1 gap-3">
+                        {conteudosFiltrados.map(item => (
+                          <ConteudoCard 
+                            key={item.id} 
+                            conteudo={item} 
+                            toggleAtivo={() => toggleConteudoAtivo(item.id)}
+                          />
+                        ))}
                       </div>
-                      <h3 className="text-xl font-medium mb-2">Nenhum conteúdo encontrado</h3>
-                      <p className="text-gray-400 max-w-md mb-6">
-                        {searchTerm 
-                          ? "Tente ajustar sua busca ou remover filtros para encontrar o que procura." 
-                          : "Você ainda não tem conteúdos nesta categoria. Adicione novos materiais para enriquecer sua base de conhecimento."}
-                      </p>
-                      <Button 
-                        className="bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] hover:from-[#0D23A0]/90 hover:to-[#5B21BD]/90 text-white border-none"
-                        onClick={() => setShowAddOptionsMenu(true)}
-                      >
-                        <Plus className="mr-2 h-4 w-4" /> Adicionar Conteúdo
-                      </Button>
-                    </div>
-                  )}
+                    ) : (
+                      <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-8"> {/* Added min-h */}
+                        <div className="w-16 h-16 rounded-full bg-[#0D23A0]/20 flex items-center justify-center mb-4">
+                          <Search className="h-8 w-8 text-[#0D23A0]/70" />
+                        </div>
+                        <h3 className="text-xl font-medium mb-2">Nenhum conteúdo encontrado</h3>
+                        <p className="text-gray-400 max-w-md mb-6">
+                          {searchTerm 
+                            ? "Tente ajustar sua busca ou remover filtros para encontrar o que procura." 
+                            : "Você ainda não tem conteúdos nesta categoria. Adicione novos materiais para enriquecer sua base de conhecimento."}
+                        </p>
+                        <Button 
+                          className="bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] hover:from-[#0D23A0]/90 hover:to-[#5B21BD]/90 text-white border-none"
+                          onClick={() => setShowAddOptionsMenu(true)}
+                        >
+                          <Plus className="mr-2 h-4 w-4" /> Adicionar Conteúdo
+                        </Button>
+                      </div>
+                    )}
+                  </ScrollArea>
                 </TabsContent>
               </Tabs>
             </div>
