@@ -1208,10 +1208,6 @@ export default function TurmasPage() {
               <TabsContent value="desempenho" className="mt-6">
                 <DesempenhoView />
               </TabsContent>
-
-              <TabsContent value="estudos" className="mt-6">
-                <EstudosView />
-              </TabsContent>
             </Tabs>
           </div>
         </>
