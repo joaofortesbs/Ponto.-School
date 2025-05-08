@@ -250,37 +250,119 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose }) =>
                 </div>
 
                 <TabsContent value={activeTab} className="flex-grow p-4 data-[state=active]:mt-0">
-                  <ScrollArea className="flex-grow h-full"> {/* Added ScrollArea */}
-                    {conteudosFiltrados.length > 0 ? (
-                      <div className="grid grid-cols-1 gap-3">
-                        {conteudosFiltrados.map(item => (
-                          <ConteudoCard 
-                            key={item.id} 
-                            conteudo={item} 
-                            toggleAtivo={() => toggleConteudoAtivo(item.id)}
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-8"> {/* Added min-h */}
-                        <div className="w-16 h-16 rounded-full bg-[#0D23A0]/20 flex items-center justify-center mb-4">
-                          <Search className="h-8 w-8 text-[#0D23A0]/70" />
-                        </div>
-                        <h3 className="text-xl font-medium mb-2">Nenhum conteúdo encontrado</h3>
-                        <p className="text-gray-400 max-w-md mb-6">
-                          {searchTerm 
-                            ? "Tente ajustar sua busca ou remover filtros para encontrar o que procura." 
-                            : "Você ainda não tem conteúdos nesta categoria. Adicione novos materiais para enriquecer sua base de conhecimento."}
-                        </p>
-                        <Button 
-                          className="bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] hover:from-[#0D23A0]/90 hover:to-[#5B21BD]/90 text-white border-none"
-                          onClick={() => setShowAddOptionsMenu(true)}
-                        >
-                          <Plus className="mr-2 h-4 w-4" /> Adicionar Conteúdo
-                        </Button>
+                  <div className="flex h-full gap-4">
+                    {/* Barra lateral de arquivos */}
+                    {activeTab === "todos" && conteudosFiltrados.length > 0 && (
+                      <div className="w-64 flex-shrink-0 border-r border-white/10 pr-3">
+                        <div className="text-sm font-medium mb-2 text-gray-300">Tipos de Conteúdo</div>
+                        <ScrollArea className="h-[calc(100%-30px)]">
+                          <div className="space-y-1.5">
+                            {["pdf", "documento", "imagem", "audio", "video", "link", "nota"].map(tipo => {
+                              const count = conteudos.filter(item => item.tipo === tipo).length;
+                              let icon;
+                              let color;
+
+                              switch (tipo) {
+                                case "pdf":
+                                  icon = <FileText className="h-4 w-4 text-red-500" />;
+                                  color = "text-red-500";
+                                  break;
+                                case "documento":
+                                  icon = <FileIcon className="h-4 w-4 text-blue-500" />;
+                                  color = "text-blue-500";
+                                  break;
+                                case "imagem":
+                                  icon = <ImageIcon className="h-4 w-4 text-green-500" />;
+                                  color = "text-green-500";
+                                  break;
+                                case "audio":
+                                  icon = <Headphones className="h-4 w-4 text-purple-500" />;
+                                  color = "text-purple-500";
+                                  break;
+                                case "video":
+                                  icon = <Film className="h-4 w-4 text-pink-500" />;
+                                  color = "text-pink-500";
+                                  break;
+                                case "link":
+                                  icon = <Link2 className="h-4 w-4 text-cyan-500" />;
+                                  color = "text-cyan-500";
+                                  break;
+                                case "nota":
+                                  icon = <BookOpen className="h-4 w-4 text-amber-500" />;
+                                  color = "text-amber-500";
+                                  break;
+                                default:
+                                  icon = <FileText className="h-4 w-4 text-gray-500" />;
+                                  color = "text-gray-500";
+                              }
+
+                              return (
+                                <button
+                                  key={tipo}
+                                  className="flex items-center justify-between w-full px-3 py-2 text-sm rounded-md hover:bg-white/5 transition-colors"
+                                  onClick={() => setActiveTab(tipo)}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    {icon}
+                                    <span className="capitalize">{tipo === "pdf" ? "PDF" : tipo}s</span>
+                                  </div>
+                                  <Badge className="bg-[#0a1321] text-gray-300 text-xs">{count}</Badge>
+                                </button>
+                              );
+                            })}
+
+                            <div className="pt-2 mt-2 border-t border-white/10">
+                              <div className="text-sm font-medium mb-2 text-gray-300">Tags Populares</div>
+                              <div className="flex flex-wrap gap-1.5">
+                                {Array.from(new Set(conteudos.flatMap(item => item.tags))).slice(0, 8).map((tag, index) => (
+                                  <Badge 
+                                    key={index} 
+                                    className="bg-[#0D23A0]/20 text-[#8EABFF] hover:bg-[#0D23A0]/30 cursor-pointer text-xs"
+                                    onClick={() => setSearchTerm(tag)}
+                                  >
+                                    {tag}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </ScrollArea>
                       </div>
                     )}
-                  </ScrollArea>
+
+                    {/* Conteúdo principal */}
+                    <ScrollArea className="flex-grow h-full">
+                      {conteudosFiltrados.length > 0 ? (
+                        <div className="grid grid-cols-1 gap-3">
+                          {conteudosFiltrados.map(item => (
+                            <ConteudoCard 
+                              key={item.id} 
+                              conteudo={item} 
+                              toggleAtivo={() => toggleConteudoAtivo(item.id)}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-8">
+                          <div className="w-16 h-16 rounded-full bg-[#0D23A0]/20 flex items-center justify-center mb-4">
+                            <Search className="h-8 w-8 text-[#0D23A0]/70" />
+                          </div>
+                          <h3 className="text-xl font-medium mb-2">Nenhum conteúdo encontrado</h3>
+                          <p className="text-gray-400 max-w-md mb-6">
+                            {searchTerm 
+                              ? "Tente ajustar sua busca ou remover filtros para encontrar o que procura." 
+                              : "Você ainda não tem conteúdos nesta categoria. Adicione novos materiais para enriquecer sua base de conhecimento."}
+                          </p>
+                          <Button 
+                            className="bg-gradient-to-r from-[#0D23A0] to-[#5B21BD] hover:from-[#0D23A0]/90 hover:to-[#5B21BD]/90 text-white border-none"
+                            onClick={() => setShowAddOptionsMenu(true)}
+                          >
+                            <Plus className="mr-2 h-4 w-4" /> Adicionar Conteúdo
+                          </Button>
+                        </div>
+                      )}
+                    </ScrollArea>
+                  </div>
                 </TabsContent>
               </Tabs>
             </div>
