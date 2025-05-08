@@ -844,7 +844,7 @@ export default function TurmasPage() {
     } else if (currentView === "projetos") {
       filtered = filtered.filter((turma) => turma.categoria === "projeto");
     } else if (currentView === "grupos") {
-      filtered = filtered.filter((turma) => turma.categoria === "grupo");
+      filtered = filtered.filter((turma) => turma.categoria === "propria");
     }
 
     // Filter by search query
@@ -1186,10 +1186,8 @@ export default function TurmasPage() {
                 <DesempenhoView />
               </TabsContent>
               <TabsContent value="grupos-estudo" className="mt-6">
-                {/* Import the correct component */}
-                <div className="container mx-auto py-6 px-4">
-                  <iframe src="/turmas?view=grupos-estudo" className="w-full h-[80vh] border-none"></iframe>
-                </div>
+                {/* Renderize o GruposEstudoView somente quando a visualização 'grupos' estiver ativa */}
+                {currentView === "grupos-estudo" && <GruposEstudoView />}
               </TabsContent>
             </Tabs>
           </div>

@@ -28,3 +28,5 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
 };
 
 export default GruposEstudoInterface;
+
+export default GruposEstudoInterface;

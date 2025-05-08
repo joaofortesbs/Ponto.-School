@@ -1572,7 +1572,7 @@ const TurmasView: React.FC = () => {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
                               <Users className="h-4 w-4 text-[#FF6B00]" />
-                              <span>{grupo.membros.length} membros</span>
+                              <span>{Array.isArray(grupo.membros) ? grupo.membros.length : grupo.membros} membros</span>
                             </div>
 
                             <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
