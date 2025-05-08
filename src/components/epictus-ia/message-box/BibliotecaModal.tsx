@@ -521,15 +521,40 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose }) =>
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="permitir-todos" 
-                      checked={permiteUsarTodos}
-                      onCheckedChange={(checked) => setPermiteUsarTodos(checked as boolean)}
-                      className="bg-[#131d2e]/50 border-white/30 data-[state=checked]:bg-[#0D23A0] data-[state=checked]:border-[#0D23A0]"
-                    />
-                    <label htmlFor="permitir-todos" className="text-sm font-medium text-gray-200 cursor-pointer">
-                      Permitir que a IA use todos os conteúdos marcados como base
-                    </label>
+                    <div className="flex items-center gap-3">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-xs h-7 border-white/20 text-white hover:bg-white/10"
+                        onClick={() => {
+                          setConteudos(conteudos.map(item => ({ ...item, ativo: true })));
+                        }}
+                      >
+                        Marcar todos
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-xs h-7 border-white/20 text-white hover:bg-white/10"
+                        onClick={() => {
+                          setConteudos(conteudos.map(item => ({ ...item, ativo: false })));
+                        }}
+                      >
+                        Desmarcar todos
+                      </Button>
+                      
+                      <div className="h-4 w-px bg-white/20 mx-1"></div>
+                      
+                      <Checkbox 
+                        id="permitir-todos" 
+                        checked={permiteUsarTodos}
+                        onCheckedChange={(checked) => setPermiteUsarTodos(checked as boolean)}
+                        className="bg-[#131d2e]/50 border-white/30 data-[state=checked]:bg-[#0D23A0] data-[state=checked]:border-[#0D23A0]"
+                      />
+                      <label htmlFor="permitir-todos" className="text-sm font-medium text-gray-200 cursor-pointer">
+                        Permitir que a IA use todos os conteúdos marcados como base
+                      </label>
+                    </div>
                   </div>
 
                   <TooltipProvider>
