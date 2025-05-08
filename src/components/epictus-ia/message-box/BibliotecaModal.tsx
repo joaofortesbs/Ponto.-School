@@ -282,77 +282,23 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose }) =>
             {/* Conteúdo principal com abas */}
             <div className="flex-grow overflow-hidden flex flex-col">
               <Tabs defaultValue="todos" className="flex-grow flex flex-col h-full" onValueChange={setActiveTab}>
-                <div className="border-b border-white/10 px-4">
-                  <TabsList className="bg-transparent border-b-0 justify-start px-0 py-0">
-                    <TabsTrigger 
-                      value="todos" 
-                      className="px-4 py-2 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-[#0D23A0] data-[state=active]:shadow-none rounded-none data-[state=active]:bg-transparent text-sm"
-                    >
-                      Todos
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="pdf" 
-                      className="px-4 py-2 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-[#0D23A0] data-[state=active]:shadow-none rounded-none data-[state=active]:bg-transparent text-sm"
-                    >
-                      PDFs
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="documento" 
-                      className="px-4 py-2 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-[#0D23A0] data-[state=active]:shadow-none rounded-none data-[state=active]:bg-transparent text-sm"
-                    >
-                      Documentos
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="imagem" 
-                      className="px-4 py-2 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-[#0D23A0] data-[state=active]:shadow-none rounded-none data-[state=active]:bg-transparent text-sm"
-                    >
-                      Imagens
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="audio" 
-                      className="px-4 py-2 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-[#0D23A0] data-[state=active]:shadow-none rounded-none data-[state=active]:bg-transparent text-sm"
-                    >
-                      Áudios
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="video" 
-                      className="px-4 py-2 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-[#0D23A0] data-[state=active]:shadow-none rounded-none data-[state=active]:bg-transparent text-sm"
-                    >
-                      Vídeos
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="link" 
-                      className="px-4 py-2 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-[#0D23A0] data-[state=active]:shadow-none rounded-none data-[state=active]:bg-transparent text-sm"
-                    >
-                      Links
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="nota" 
-                      className="px-4 py-2 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-[#0D23A0] data-[state=active]:shadow-none rounded-none data-[state=active]:bg-transparent text-sm"
-                    >
-                      Notas
-                    </TabsTrigger>
-                  </TabsList>
-                </div>
 
-                <TabsContent value={activeTab} className="flex-grow p-4 data-[state=active]:mt-0 overflow-hidden">
-                  <div className="flex h-full gap-4">
-                    {/* Barra lateral de Filtros - Colapsável */}
-                    <div className="w-auto flex-shrink-0">
-                      <Collapsible 
-                        className="overflow-hidden" 
-                        defaultOpen={false}
-                      >
-                        <div className="w-12 p-2 rounded-lg border border-white/10 bg-[#0a1321]/60 flex flex-col items-center justify-center cursor-pointer hover:bg-[#131d2e]/60 transition-colors">
-                          <CollapsibleTrigger className="w-full flex items-center justify-center">
-                            <div className="flex flex-col items-center">
-                              <SlidersHorizontal className="h-5 w-5 text-[#0D23A0]" />
-                              <span className="text-xs text-gray-200 mt-1 font-medium">Filtros</span>
-                            </div>
-                          </CollapsibleTrigger>
-                        </div>
-                        
-                        <CollapsibleContent>
+                <div className="border-b border-white/10 px-4 flex">
+                  {/* Barra lateral de Filtros - Colapsável */}
+                  <div className="w-auto flex-shrink-0 mr-3">
+                    <Collapsible 
+                      className="overflow-hidden" 
+                      defaultOpen={false}
+                    >
+                      <div className="w-12 p-2 rounded-lg border border-white/10 bg-[#0a1321]/60 flex flex-col items-center justify-center cursor-pointer hover:bg-[#131d2e]/60 transition-colors">
+                        <CollapsibleTrigger className="w-full flex items-center justify-center">
+                          <div className="flex items-center justify-center">
+                            <SlidersHorizontal className="h-5 w-5 text-[#0D23A0]" />
+                          </div>
+                        </CollapsibleTrigger>
+                      </div>
+                      
+                      <CollapsibleContent>
                           <div className="mt-2 w-64 flex-shrink-0 bg-[#0a1321]/60 rounded-lg border border-white/10 p-4 overflow-hidden flex flex-col">
                             <ScrollArea className="flex-grow overflow-y-auto pr-2 max-h-[500px]">
                               {/* Seção: Data de Upload */}
@@ -596,7 +542,61 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose }) =>
                         </CollapsibleContent>
                       </Collapsible>
                     </div>
+                 
+                  <TabsList className="bg-transparent border-b-0 justify-start px-0 py-0">
+                    <TabsTrigger 
+                      value="todos" 
+                      className="px-4 py-2 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-[#0D23A0] data-[state=active]:shadow-none rounded-none data-[state=active]:bg-transparent text-sm"
+                    >
+                      Todos
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="pdf" 
+                      className="px-4 py-2 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-[#0D23A0] data-[state=active]:shadow-none rounded-none data-[state=active]:bg-transparent text-sm"
+                    >
+                      PDFs
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="documento" 
+                      className="px-4 py-2 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-[#0D23A0] data-[state=active]:shadow-none rounded-none data-[state=active]:bg-transparent text-sm"
+                    >
+                      Documentos
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="imagem" 
+                      className="px-4 py-2 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-[#0D23A0] data-[state=active]:shadow-none rounded-none data-[state=active]:bg-transparent text-sm"
+                    >
+                      Imagens
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="audio" 
+                      className="px-4 py-2 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-[#0D23A0] data-[state=active]:shadow-none rounded-none data-[state=active]:bg-transparent text-sm"
+                    >
+                      Áudios
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="video" 
+                      className="px-4 py-2 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-[#0D23A0] data-[state=active]:shadow-none rounded-none data-[state=active]:bg-transparent text-sm"
+                    >
+                      Vídeos
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="link" 
+                      className="px-4 py-2 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-[#0D23A0] data-[state=active]:shadow-none rounded-none data-[state=active]:bg-transparent text-sm"
+                    >
+                      Links
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="nota" 
+                      className="px-4 py-2 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-[#0D23A0] data-[state=active]:shadow-none rounded-none data-[state=active]:bg-transparent text-sm"
+                    >
+                      Notas
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
 
+                <TabsContent value={activeTab} className="flex-grow p-4 data-[state=active]:mt-0 overflow-hidden">
+                  <div className="flex h-full">
                     {/* Conteúdo principal */}
                     <ScrollArea className="flex-grow h-full overflow-y-auto" scrollHideDelay={0}>
                       {conteudosFiltrados.length > 0 ? (
