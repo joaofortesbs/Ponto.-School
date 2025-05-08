@@ -85,10 +85,25 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
 
   return (
     <div className={`bg-white dark:bg-[#121827] p-6 rounded-xl shadow-sm ${className}`}>
+      {/* Modern Title Section Inspired by Reference */}
+      <div className="flex items-start gap-3 mb-6 bg-[#121827] dark:bg-[#0A101E] p-4 rounded-lg">
+        <div className="flex-shrink-0 bg-[#FF6B00] rounded-lg p-2 flex items-center justify-center">
+          <Users2 className="h-6 w-6 text-white" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-white font-montserrat">
+            Grupos de Estudo
+          </h2>
+          <p className="text-gray-400 text-sm">
+            Colabore, aprenda e evolua junto com seus colegas
+          </p>
+        </div>
+      </div>
+      
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-[#001427] dark:text-white font-montserrat">
-          Grupos de Estudo
-        </h2>
+        <h3 className="text-xl font-semibold text-[#001427] dark:text-white font-montserrat">
+          Seus Grupos
+        </h3>
         <div className="flex gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
