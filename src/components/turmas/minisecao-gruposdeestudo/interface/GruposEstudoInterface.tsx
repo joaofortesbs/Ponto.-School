@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Filter } from "lucide-react";
+import { Plus, Search, Filter, AcademicCap } from "lucide-react"; // Added AcademicCap icon
 import { Input } from "@/components/ui/input";
 import GrupoEstudoCard from "./GrupoEstudoCard";
 import { gruposEstudo } from "@/components/estudos/data/gruposEstudo";
@@ -13,7 +12,7 @@ interface GruposEstudoInterfaceProps {
 const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className }) => {
   const [grupos, setGrupos] = useState(gruposEstudo);
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   // Filtra os grupos quando o termo de pesquisa mudar
   useEffect(() => {
     if (searchTerm.trim() === "") {
@@ -37,10 +36,13 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
   return (
     <div className={`bg-white dark:bg-[#121827] p-6 rounded-xl shadow-sm ${className}`}>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent font-montserrat relative">
-          <span className="relative z-10">Grupos de Estudo Colaborativo</span>
-          <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] opacity-70"></span>
-        </h2>
+        <div className="flex items-center"> {/*Added a div to group title and icon */}
+          <AcademicCap className="h-6 w-6 mr-2 text-[#FF6B00]" /> {/* Added icon */}
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] bg-clip-text text-transparent font-montserrat relative">
+            <span className="relative z-10">Grupos de Estudo Colaborativo</span>
+            <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] opacity-70"></span>
+          </h2>
+        </div>
         <div className="flex gap-3 items-center">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -60,7 +62,7 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
           </Button>
         </div>
       </div>
-      
+
       {grupos.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {grupos.slice(0, 6).map((grupo) => (
@@ -77,7 +79,7 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
           <p className="text-sm">Tente ajustar sua pesquisa ou crie um novo grupo</p>
         </div>
       )}
-      
+
       {grupos.length > 6 && (
         <div className="flex justify-center mt-6">
           <Button variant="outline" className="text-[#FF6B00] border-[#FF6B00] hover:bg-[#FF6B00]/10">
