@@ -413,22 +413,22 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                       boxShadow: `0 20px 40px -10px rgba(0, 0, 0, 0.4), 0 10px 20px -5px rgba(0, 0, 0, 0.3), 0 0 25px ${topico.cor}40`
                     }}
                     animate={selectedTopic === topico.id ? {
-                      scale: 1.08,
-                      rotateY: 10,
-                      z: 30,
-                      boxShadow: `0 25px 50px -10px rgba(0, 0, 0, 0.5), 0 15px 30px -5px rgba(0, 0, 0, 0.4), 0 0 35px ${topico.cor}60`
+                      scale: 1.04,
+                      rotateY: 5,
+                      z: 20,
+                      boxShadow: `0 15px 30px -10px rgba(0, 0, 0, 0.4), 0 10px 20px -5px rgba(0, 0, 0, 0.3), 0 0 20px ${topico.cor}30`
                     } : {}}
                     onClick={() => setSelectedTopic(selectedTopic === topico.id ? null : topico.id)}
                     transition={{ 
                       type: "spring", 
-                      stiffness: 350,
-                      damping: 18
+                      stiffness: 300,
+                      damping: 22
                     }}
                     className={`profile-3d-element bg-gradient-to-b from-[#121620]/90 to-[#0a0d14]/80 backdrop-blur-lg 
-                      rounded-xl overflow-hidden cursor-pointer border 
+                      rounded-xl overflow-hidden cursor-pointer 
                       transition-all duration-300 relative h-full flex flex-col transform-gpu
                       perspective-1000 shadow-xl
-                      ${selectedTopic === topico.id ? 'border-2 border-[#FF6B00] active-topic' : 'border border-white/10'}
+                      ${selectedTopic === topico.id ? 'topic-selected' : 'border border-white/10'}
                       ${isTopicFeatured(topico) ? 'featured-topic border-[0.5px] border-[#FF6B00]/40' : ''}`}
                     style={{
                       transformStyle: "preserve-3d",
