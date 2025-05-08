@@ -1036,7 +1036,7 @@ export default function TurmasPage() {
           <div className="space-y-6">
             {/* Category Tabs */}
             <Tabs value={currentView} className="w-full">
-              <TabsList className="turmas-tabs w-full max-w-4xl mx-auto bg-white dark:bg-[#1E293B] p-1.5 rounded-xl shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 flex justify-between animate-gradient-x">
+              <TabsList className="turmas-tabs w-full max-w-4xl mx-auto bg-white dark:bg-[#1E293B] p-1.5 rounded-xl shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20 flex justify-between animate-gradient-x hidden">
                 <motion.div className="contents" layout>
                   <TabsTrigger
                     value="todas"
@@ -1186,7 +1186,10 @@ export default function TurmasPage() {
                 <DesempenhoView />
               </TabsContent>
               <TabsContent value="grupos-estudo" className="mt-6">
-                <GruposEstudoView /> {/* Placeholder component */}
+                {/* Import the correct component */}
+                <div className="container mx-auto py-6 px-4">
+                  <iframe src="/turmas?view=grupos-estudo" className="w-full h-[80vh] border-none"></iframe>
+                </div>
               </TabsContent>
             </Tabs>
           </div>

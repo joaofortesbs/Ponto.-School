@@ -19,7 +19,7 @@ const TurmasTabsNav: React.FC = () => {
     },
     {
       name: "Turmas Oficiais",
-      value: "ativas",
+      value: "oficiais",
       icon: <BookOpen className="h-4 w-4" />,
     },
     {
@@ -44,7 +44,7 @@ const TurmasTabsNav: React.FC = () => {
 
   return (
     <div className="flex justify-center mt-4 mb-6">
-      <div className="bg-gray-800/30 backdrop-blur-sm p-1 rounded-lg flex space-x-1">
+      <div className="bg-[#001427] p-1 rounded-xl flex space-x-1 shadow-md border border-[#FF6B00]/20">
         {tabs.map((tab) => {
           const isActive = tab.value === currentView;
           return (
@@ -52,7 +52,7 @@ const TurmasTabsNav: React.FC = () => {
               key={tab.value}
               onClick={() => handleTabChange(tab.value)}
               className={cn(
-                "relative px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-2",
+                "relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2",
                 isActive
                   ? "text-white"
                   : "text-gray-300 hover:text-white hover:bg-white/10"
@@ -61,7 +61,7 @@ const TurmasTabsNav: React.FC = () => {
               {isActive && (
                 <motion.div
                   layoutId="activeTurmaTab"
-                  className="absolute inset-0 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-md"
+                  className="absolute inset-0 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg"
                   transition={{ type: "spring", duration: 0.5 }}
                 />
               )}

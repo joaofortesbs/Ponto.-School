@@ -67,7 +67,7 @@ const TurmasHeader: React.FC<TurmasHeaderProps> = ({
   );
 };
 
-// Also include TurmasTabsNav below the header
+// Import TabsNav component
 import TurmasTabsNav from "./TurmasTabsNav";
 
 const TurmasHeaderWithNav: React.FC<TurmasHeaderProps> = (props) => {
