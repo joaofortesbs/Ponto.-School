@@ -120,16 +120,16 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
           <Button
             variant="outline"
             size="sm"
-            className="text-gray-600 dark:text-gray-400 border-[#FF6B00]/10 dark:border-[#FF6B00]/20 h-10 interface-selector"
+            className="text-gray-600 dark:text-gray-400 border-[#FF6B00]/10 dark:border-[#FF6B00]/20 h-9 interface-selector"
           >
             <span className="interface-selector-icon">
-              <Filter className="h-5 w-5" />
+              <Filter className="h-4 w-4" />
             </span>
             <span className="interface-selector-text">Filtrar</span>
           </Button>
-          <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white h-10 interface-selector">
+          <Button className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white h-9 interface-selector">
             <span className="interface-selector-icon">
-              <Plus className="h-5 w-5" />
+              <Plus className="h-4 w-4" />
             </span>
             <span className="interface-selector-text">Criar Grupo</span>
           </Button>
