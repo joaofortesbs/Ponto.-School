@@ -31,6 +31,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
   const [interfaceAtiva, setInterfaceAtiva] = useState<InterfaceType>("meus-grupos");
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [hoveredTopic, setHoveredTopic] = useState<number | null>(null);
+  const [selectedTopic, setSelectedTopic] = useState<number | null>(null);
 
   // Filtrar tópicos baseado na busca e filtros selecionados
   const topicosFilterados = topicosEstudo.filter(
@@ -388,6 +389,12 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                     Tópicos de Estudo
                   </h3>
                 </div>
+                <div className="flex items-center gap-2">
+                {selectedTopic && (
+                  <Badge className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white">
+                    {topicosEstudo.find(t => t.id === selectedTopic)?.nome} selecionado
+                  </Badge>
+                )}
                 <Button variant="outline" size="sm" className="text-white/80 border-white/10 hover:border-white/20 hover:bg-white/5 rounded-lg text-xs">
                   Ver todos <ChevronRight className="h-3 w-3 ml-1" />
                 </Button>
@@ -404,15 +411,23 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                       z: 20,
                       boxShadow: `0 20px 40px -10px rgba(0, 0, 0, 0.4), 0 10px 20px -5px rgba(0, 0, 0, 0.3), 0 0 25px ${topico.cor}40`
                     }}
+                    animate={selectedTopic === topico.id ? {
+                      scale: 1.08,
+                      rotateY: 10,
+                      z: 30,
+                      boxShadow: `0 25px 50px -10px rgba(0, 0, 0, 0.5), 0 15px 30px -5px rgba(0, 0, 0, 0.4), 0 0 35px ${topico.cor}60`
+                    } : {}}
+                    onClick={() => setSelectedTopic(selectedTopic === topico.id ? null : topico.id)}
                     transition={{ 
                       type: "spring", 
                       stiffness: 350,
                       damping: 18
                     }}
                     className={`profile-3d-element bg-gradient-to-b from-[#121620]/90 to-[#0a0d14]/80 backdrop-blur-lg 
-                      rounded-xl overflow-hidden cursor-pointer border border-white/10 
+                      rounded-xl overflow-hidden cursor-pointer border 
                       transition-all duration-300 relative h-full flex flex-col transform-gpu
                       perspective-1000 shadow-xl
+                      ${selectedTopic === topico.id ? 'border-2 border-[#FF6B00] active-topic' : 'border border-white/10'}
                       ${isTopicFeatured(topico) ? 'featured-topic border-[0.5px] border-[#FF6B00]/40' : ''}`}
                     style={{
                       transformStyle: "preserve-3d",

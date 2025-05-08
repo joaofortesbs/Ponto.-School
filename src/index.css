@@ -50,6 +50,74 @@
   animation: ping-slow 3s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 
+/* Efeito para tópicos selecionados/ativos */
+.active-topic {
+  position: relative;
+  z-index: 10;
+}
+
+.active-topic::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  background: linear-gradient(135deg, rgba(255, 107, 0, 0.8), rgba(255, 140, 64, 0.4));
+  border-radius: inherit;
+  z-index: -1;
+  animation: pulse-active 2s infinite ease-in-out;
+}
+
+.active-topic::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 
+    inset 0 0 15px rgba(255, 107, 0, 0.3),
+    0 0 25px rgba(255, 107, 0, 0.5);
+  z-index: -1;
+  animation: glow-active 3s infinite alternate ease-in-out;
+}
+
+@keyframes pulse-active {
+  0%, 100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+}
+
+@keyframes glow-active {
+  0% {
+    box-shadow: 
+      inset 0 0 15px rgba(255, 107, 0, 0.3),
+      0 0 25px rgba(255, 107, 0, 0.5);
+  }
+  100% {
+    box-shadow: 
+      inset 0 0 25px rgba(255, 107, 0, 0.5),
+      0 0 40px rgba(255, 107, 0, 0.7);
+  }
+}
+
+.active-topic .h-12.w-12.rounded-xl {
+  transform: translateZ(15px) !important;
+  box-shadow: 
+    0 15px 25px -8px rgba(0, 0, 0, 0.6),
+    0 0 15px rgba(255, 107, 0, 0.6) !important;
+}
+
+.active-topic .profile-3d-text {
+  text-shadow: 
+    0 2px 5px rgba(0, 0, 0, 0.8),
+    0 0 8px rgba(255, 107, 0, 0.6) !important;
+  color: white;
+  font-weight: 700;
+}
+
+
 /* Estilos para efeitos 3D */
 .perspective-1000 {
   perspective: 1000px;
