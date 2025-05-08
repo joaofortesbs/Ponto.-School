@@ -32,15 +32,6 @@ const DeepSearchModal: React.FC<DeepSearchModalProps> = ({
   });
 
   const handleSearch = () => {
-    if (!searchQuery.trim()) {
-      toast({
-        title: "Pesquisa vazia",
-        description: "Por favor, digite algo para pesquisar.",
-        duration: 3000,
-      });
-      return;
-    }
-
     if (!searchOptions.webGlobal && !searchOptions.academico && !searchOptions.social) {
       toast({
         title: "Nenhuma fonte selecionada",
@@ -50,7 +41,7 @@ const DeepSearchModal: React.FC<DeepSearchModalProps> = ({
       return;
     }
 
-    onSearch(searchQuery, searchOptions);
+    onSearch("", searchOptions);
     onClose();
   };
 
@@ -90,22 +81,6 @@ const DeepSearchModal: React.FC<DeepSearchModalProps> = ({
             >
               <X className="w-5 h-5" />
             </button>
-          </div>
-
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="O que você deseja pesquisar?"
-              className="w-full bg-[#1A2234] text-white placeholder-gray-400 rounded-md py-2 pl-10 pr-3 border border-[#2A3548] focus:outline-none focus:border-blue-500"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleSearch();
-                }
-              }}
-            />
           </div>
 
           <div>

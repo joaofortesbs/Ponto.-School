@@ -215,7 +215,7 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
           setIsDeepSearchModalOpen(false);
           
           // Construir a mensagem de busca avançada
-          let searchMessage = `🔍 DeepSearch: "${query}"`;
+          let searchMessage = `🔍 DeepSearch`;
           
           // Adicionar fontes selecionadas
           const fontes = [];
@@ -229,12 +229,6 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
           
           // Definir a mensagem no campo de input
           setInputMessage(searchMessage);
-          
-          // Enviar a mensagem automaticamente
-          setTimeout(() => {
-            handleButtonClick('Buscar');
-            handleSendMessage();
-          }, 100);
         }}
       />
     </motion.div>
