@@ -9,7 +9,6 @@ import EmptyTurmasState from "@/components/turmas/EmptyTurmasState";
 import TurmaFilters from "@/components/turmas/TurmaFilters";
 import EpictusIAHelper from "@/components/turmas/EpictusIAHelper";
 import DesempenhoView from "@/components/turmas/DesempenhoView";
-import EstudosView from "@/components/turmas/EstudosView";
 import {
   Atom,
   Calculator,

@@ -973,7 +973,7 @@ const TurmasView: React.FC = () => {
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchQuery(query);
-    
+
     if (query.trim() === "") {
       setFilteredTurmas(turmasData);
     } else {
@@ -1163,7 +1163,7 @@ const TurmasView: React.FC = () => {
               Minhas Turmas
             </h1>
             <p className="text-[#778DA9] dark:text-gray-400 text-sm">
-              Seu centro de estudos personalizado
+              Suas turmas e grupos de estudo
             </p>
           </div>
         </div>
@@ -1191,18 +1191,11 @@ const TurmasView: React.FC = () => {
       {!selectedTurma ? (
         // Turmas List View with Topics and Study Groups
         <div className="space-y-8">
-          {/* Study Groups by Topics Section */}
-          <GruposEstudoPorTopico 
-            gruposEstudosPorTopico={gruposEstudosPorTopico} 
-            getTopicIcon={getTopicIcon}
-            scrollContainer={scrollContainer}
-            handleGroupSelect={handleGroupSelect}
-          />
-          
+
           {/* Regular Classes Section */}
           <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
             <h2 className="text-2xl font-bold text-[#001427] dark:text-white mb-6 font-montserrat">Minhas Turmas</h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredTurmas.map((turma) => (
                 <motion.div
@@ -1233,7 +1226,7 @@ const TurmasView: React.FC = () => {
                         </p>
                       </div>
                     </div>
-                    
+
                     <div className="p-4 flex-1 flex flex-col justify-between">
                       <div>
                         <div className="mb-4">
@@ -1250,7 +1243,7 @@ const TurmasView: React.FC = () => {
                             className="h-2.5 bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20"
                           />
                         </div>
-                        
+
                         <div className="space-y-2">
                           <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                             <Clock className="h-4 w-4 text-[#FF6B00]" />
@@ -1258,12 +1251,12 @@ const TurmasView: React.FC = () => {
                               {turma.proximaAula.titulo} - {turma.proximaAula.data}, {turma.proximaAula.hora}
                             </span>
                           </div>
-                          
+
                           <div className="flex items-center justify-between">
                             <Badge className="bg-[#FF6B00]/10 text-[#FF6B00] dark:bg-[#FF6B00]/20 dark:text-[#FF8C40]">
                               {turma.status}
                             </Badge>
-                            
+
                             {turma.novasMensagens > 0 && (
                               <Badge className="bg-blue-500 text-white">
                                 <MessageCircle className="h-3 w-3 mr-1" />
@@ -1273,7 +1266,7 @@ const TurmasView: React.FC = () => {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="flex gap-2 mt-4">
                         <Button
                           className="flex-1 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-montserrat font-semibold uppercase text-xs"
@@ -1284,7 +1277,7 @@ const TurmasView: React.FC = () => {
                         >
                           Acessar Turma
                         </Button>
-                        
+
                         <Button
                           variant="outline"
                           className="border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/10 font-montserrat text-xs"
@@ -1314,7 +1307,7 @@ const TurmasView: React.FC = () => {
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-            
+
             <div className="absolute top-4 left-4">
               <Button
                 variant="ghost"
@@ -1324,7 +1317,7 @@ const TurmasView: React.FC = () => {
                 <ArrowRight className="h-4 w-4 mr-1 rotate-180" /> Voltar para Minhas Turmas
               </Button>
             </div>
-            
+
             <div className="absolute top-4 right-4 flex gap-2">
               <Button
                 variant="ghost"
@@ -1332,7 +1325,7 @@ const TurmasView: React.FC = () => {
               >
                 <MessageCircle className="h-4 w-4 mr-1" /> Ver Fórum
               </Button>
-              
+
               <Button
                 variant="ghost"
                 className="bg-black/30 text-white hover:bg-black/50 backdrop-blur-sm"
@@ -1340,7 +1333,7 @@ const TurmasView: React.FC = () => {
                 <Users className="h-4 w-4 mr-1" /> Ver Colegas
               </Button>
             </div>
-            
+
             <div className="absolute bottom-0 left-0 right-0 p-6">
               <div className="flex items-center gap-3 mb-2">
                 <Avatar className="h-12 w-12 border-2 border-white">
@@ -1356,17 +1349,17 @@ const TurmasView: React.FC = () => {
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-4">
                 <Badge className="bg-[#FF6B00]/20 text-[#FF6B00] backdrop-blur-sm">
                   {turmaDetalhada.status}
                 </Badge>
-                
+
                 <div className="flex items-center gap-1 text-white text-sm">
                   <Calendar className="h-4 w-4 text-[#FF6B00]" />
                   <span>{turmaDetalhada.inicioFim}</span>
                 </div>
-                
+
                 <div className="flex items-center gap-1 text-white text-sm">
                   <Clock className="h-4 w-4 text-[#FF6B00]" />
                   <span>{turmaDetalhada.horarios}</span>
@@ -1374,7 +1367,7 @@ const TurmasView: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Tabs */}
           <Tabs
             value={activeTab}
@@ -1388,28 +1381,28 @@ const TurmasView: React.FC = () => {
               >
                 <BookOpen className="h-4 w-4 mr-2" /> Conteúdo
               </TabsTrigger>
-              
+
               <TabsTrigger
                 value="visao-geral"
                 className="data-[state=active]:bg-[#FF6B00]/10 data-[state=active]:text-[#FF6B00] rounded-lg px-4 py-2"
               >
                 <BarChart className="h-4 w-4 mr-2" /> Visão Geral
               </TabsTrigger>
-              
+
               <TabsTrigger
                 value="forum"
                 className="data-[state=active]:bg-[#FF6B00]/10 data-[state=active]:text-[#FF6B00] rounded-lg px-4 py-2"
               >
                 <MessageCircle className="h-4 w-4 mr-2" /> Fórum
               </TabsTrigger>
-              
+
               <TabsTrigger
                 value="agenda"
                 className="data-[state=active]:bg-[#FF6B00]/10 data-[state=active]:text-[#FF6B00] rounded-lg px-4 py-2"
               >
                 <Calendar className="h-4 w-4 mr-2" /> Agenda
               </TabsTrigger>
-              
+
               <TabsTrigger
                 value="notas"
                 className="data-[state=active]:bg-[#FF6B00]/10 data-[state=active]:text-[#FF6B00] rounded-lg px-4 py-2"
@@ -1417,7 +1410,7 @@ const TurmasView: React.FC = () => {
                 <FileText className="h-4 w-4 mr-2" /> Notas
               </TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="conteudo" className="space-y-6">
               {/* Content Tab */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1425,7 +1418,7 @@ const TurmasView: React.FC = () => {
                   {/* Modules */}
                   <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
                     <h3 className="text-xl font-bold text-[#001427] dark:text-white mb-4 font-montserrat">Módulos</h3>
-                    
+
                     <div className="space-y-4">
                       {turmaDetalhada.modulos.map((modulo) => (
                         <div key={modulo.id} className="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
@@ -1437,7 +1430,7 @@ const TurmasView: React.FC = () => {
                               <h4 className="font-bold text-[#001427] dark:text-white">{modulo.titulo}</h4>
                               <p className="text-sm text-gray-600 dark:text-gray-400">{modulo.descricao}</p>
                             </div>
-                            
+
                             <div className="flex items-center gap-3">
                               <div className="flex items-center gap-2">
                                 <span className="text-sm font-medium text-[#FF6B00]">{modulo.progresso}%</span>
@@ -1446,7 +1439,7 @@ const TurmasView: React.FC = () => {
                                   className="h-2 w-20 bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20"
                                 />
                               </div>
-                              
+
                               {expandedModules.includes(modulo.id) ? (
                                 <ChevronUp className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                               ) : (
@@ -1454,7 +1447,7 @@ const TurmasView: React.FC = () => {
                               )}
                             </div>
                           </div>
-                          
+
                           {expandedModules.includes(modulo.id) && (
                             <div className="p-4 bg-white dark:bg-[#1E293B] space-y-3">
                               {modulo.conteudos.map((conteudo) => (
@@ -1466,7 +1459,7 @@ const TurmasView: React.FC = () => {
                                     <div className="p-2 bg-gray-100 dark:bg-[#0f1525] rounded-lg">
                                       {conteudo.icone}
                                     </div>
-                                    
+
                                     <div>
                                       <h5 className="font-medium text-[#001427] dark:text-white">{conteudo.titulo}</h5>
                                       <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
@@ -1479,7 +1472,7 @@ const TurmasView: React.FC = () => {
                                       </div>
                                     </div>
                                   </div>
-                                  
+
                                   <div className="flex items-center gap-2">
                                     <Badge className={`${getStatusColor(conteudo.status)}`}>
                                       <div className="flex items-center gap-1">
@@ -1487,7 +1480,7 @@ const TurmasView: React.FC = () => {
                                         <span className="capitalize">{conteudo.status}</span>
                                       </div>
                                     </Badge>
-                                    
+
                                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full">
                                       <MoreVertical className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                                     </Button>
@@ -1496,17 +1489,18 @@ const TurmasView: React.FC = () => {
                               ))}
                             </div>
                           )}
+                        ```javascript
                         </div>
                       ))}
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-6">
                   {/* Recommendations */}
                   <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
                     <h3 className="text-xl font-bold text-[#001427] dark:text-white mb-4 font-montserrat">Recomendações</h3>
-                    
+
                     <div className="space-y-3">
                       {turmaDetalhada.recomendacoes.map((recomendacao) => (
                         <div 
@@ -1516,7 +1510,7 @@ const TurmasView: React.FC = () => {
                           <div className="p-2 bg-white dark:bg-[#0f1525] rounded-lg">
                             {recomendacao.icone}
                           </div>
-                          
+
                           <div>
                             <h5 className="font-medium">{recomendacao.titulo}</h5>
                             <div className="flex items-center gap-1 text-xs mt-1">
@@ -1532,11 +1526,11 @@ const TurmasView: React.FC = () => {
                       ))}
                     </div>
                   </div>
-                  
+
                   {/* Weekly Goals */}
                   <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
                     <h3 className="text-xl font-bold text-[#001427] dark:text-white mb-4 font-montserrat">Metas Semanais</h3>
-                    
+
                     <div className="space-y-4">
                       {turmaDetalhada.metasSemanais.map((meta) => (
                         <div key={meta.id} className="space-y-2">
@@ -1552,11 +1546,11 @@ const TurmasView: React.FC = () => {
                       ))}
                     </div>
                   </div>
-                  
+
                   {/* Study Groups */}
                   <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
                     <h3 className="text-xl font-bold text-[#001427] dark:text-white mb-4 font-montserrat">Grupos de Estudo</h3>
-                    
+
                     <div className="space-y-3">
                       {turmaDetalhada.gruposEstudo.map((grupo) => (
                         <div 
@@ -1564,13 +1558,13 @@ const TurmasView: React.FC = () => {
                           className="p-4 rounded-lg border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-[#0f1525] transition-colors cursor-pointer"
                         >
                           <h5 className="font-medium text-[#001427] dark:text-white mb-2">{grupo.nome}</h5>
-                          
+
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
                               <Users className="h-4 w-4 text-[#FF6B00]" />
                               <span>{grupo.membros.length} membros</span>
                             </div>
-                            
+
                             <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
                               <Calendar className="h-4 w-4 text-[#FF6B00]" />
                               <span>{grupo.proximaReuniao}</span>
@@ -1583,7 +1577,7 @@ const TurmasView: React.FC = () => {
                 </div>
               </div>
             </TabsContent>
-            
+
             <TabsContent value="visao-geral">
               {/* Overview Tab */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1593,12 +1587,12 @@ const TurmasView: React.FC = () => {
                     <h3 className="text-xl font-bold text-[#001427] dark:text-white mb-4 font-montserrat">Descrição da Turma</h3>
                     <p className="text-gray-700 dark:text-gray-300">{turmaDetalhada.descricao}</p>
                   </div>
-                  
+
                   {/* Strengths and Weaknesses */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
                       <h3 className="text-xl font-bold text-[#001427] dark:text-white mb-4 font-montserrat">Pontos Fortes</h3>
-                      
+
                       <div className="space-y-2">
                         {turmaDetalhada.pontosFortes.map((ponto, index) => (
                           <div 
@@ -1611,10 +1605,10 @@ const TurmasView: React.FC = () => {
                         ))}
                       </div>
                     </div>
-                    
+
                     <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
                       <h3 className="text-xl font-bold text-[#001427] dark:text-white mb-4 font-montserrat">Pontos a Melhorar</h3>
-                      
+
                       <div className="space-y-2">
                         {turmaDetalhada.pontosFracos.map((ponto, index) => (
                           <div 
@@ -1628,13 +1622,178 @@ const TurmasView: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Comparative Performance */}
                   <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
                     <h3 className="text-xl font-bold text-[#001427] dark:text-white mb-4 font-montserrat">Comparativo com a Turma</h3>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="p-4 rounded-lg bg-gray-50 dark:bg-[#0f1525] border border-gray-200 dark:border-gray-800">
                         <div className="flex items-center justify-between mb-2">
                           <h5 className="font-medium text-[#001427] dark:text-white">Participação</h5>
-                          {getCom
+                          {getComparativeIcon(turmaDetalhada.comparativoTurma.participacao)}
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {turmaDetalhada.comparativoTurma.participacao === "acima" ? "Sua participação está acima da média da turma!" :
+                            turmaDetalhada.comparativoTurma.participacao === "abaixo" ? "Sua participação está abaixo da média da turma. Procure participar mais das discussões e atividades." :
+                              "Sua participação está na média da turma."}
+                        </p>
+                      </div>
+
+                      <div className="p-4 rounded-lg bg-gray-50 dark:bg-[#0f1525] border border-gray-200 dark:border-gray-800">
+                        <div className="flex items-center justify-between mb-2">
+                          <h5 className="font-medium text-[#001427] dark:text-white">Entrega de Tarefas</h5>
+                          {getComparativeIcon(turmaDetalhada.comparativoTurma.entregaTarefas)}
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {turmaDetalhada.comparativoTurma.entregaTarefas === "acima" ? "Você está entregando as tarefas acima da média da turma!" :
+                            turmaDetalhada.comparativoTurma.entregaTarefas === "abaixo" ? "Você está entregando as tarefas abaixo da média da turma. Procure se organizar melhor para cumprir os prazos." :
+                              "Você está entregando as tarefas na média da turma."}
+                        </p>
+                      </div>
+
+                      <div className="p-4 rounded-lg bg-gray-50 dark:bg-[#0f1525] border border-gray-200 dark:border-gray-800">
+                        <div className="flex items-center justify-between mb-2">
+                          <h5 className="font-medium text-[#001427] dark:text-white">Desempenho Geral</h5>
+                          {getComparativeIcon(turmaDetalhada.comparativoTurma.desempenhoGeral)}
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {turmaDetalhada.comparativoTurma.desempenhoGeral === "acima" ? "Seu desempenho geral está acima da média da turma!" :
+                            turmaDetalhada.comparativoTurma.desempenhoGeral === "abaixo" ? "Seu desempenho geral está abaixo da média da turma. Procure estudar mais e focar em seus pontos fracos." :
+                              "Seu desempenho geral está na média da turma."}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Colleagues */}
+                <div className="space-y-6">
+                  <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
+                    <h3 className="text-xl font-bold text-[#001427] dark:text-white mb-4 font-montserrat">Colegas de Turma</h3>
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {turmaDetalhada.colegas.map((colega) => (
+                        <div key={colega.id} className="relative">
+                          <Avatar className="h-12 w-12">
+                            <AvatarImage src={colega.avatar} />
+                            <AvatarFallback>{colega.nome.charAt(0)}</AvatarFallback>
+                          </Avatar>
+
+                          <span className="absolute top-0 right-0 p-1 rounded-full bg-green-500 text-white text-xs">
+                            {colega.online ? "Online" : "Offline"}
+                          </span>
+
+                          <p className="text-sm text-gray-700 dark:text-gray-300 text-center mt-1">
+                            {colega.nome}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Forum Topics */}
+                  <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
+                    <h3 className="text-xl font-bold text-[#001427] dark:text-white mb-4 font-montserrat">Tópicos do Fórum</h3>
+
+                    <div className="space-y-3">
+                      {forumTopicos.map((topico) => (
+                        <div key={topico.id} className="p-4 rounded-lg border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-[#0f1525] transition-colors cursor-pointer">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={topico.autor.avatar} />
+                                <AvatarFallback>{topico.autor.nome.charAt(0)}</AvatarFallback>
+                              </Avatar>
+
+                              <div>
+                                <h5 className="font-medium text-[#001427] dark:text-white">{topico.titulo}</h5>
+                                <p className="text-xs text-gray-600 dark:text-gray-400">Por {topico.autor.nome} - {topico.data}</p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <Badge className="bg-blue-500 text-white">
+                                <MessageCircle className="h-3 w-3 mr-1" /> {topico.respostas.length} respostas
+                              </Badge>
+                              <Badge className="bg-gray-300 text-gray-800 dark:bg-gray-800 dark:text-gray-300">
+                                <Eye className="h-3 w-3 mr-1" /> {topico.visualizacoes} visualizações
+                              </Badge>
+                            </div>
+                          </div>
+
+                          {topico.fixado && (
+                            <Badge className="bg-amber-500 text-white mb-1">Fixado</Badge>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="agenda">
+              {/* Agenda Tab */}
+              <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
+                <h3 className="text-xl font-bold text-[#001427] dark:text-white mb-4 font-montserrat">Agenda</h3>
+
+                <div className="space-y-3">
+                  {turmaDetalhada.eventos.map((evento) => (
+                    <div key={evento.id} className="p-4 rounded-lg border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-[#0f1525] transition-colors flex items-center gap-3">
+                      <div className="p-2 bg-gray-100 dark:bg-[#0f1525] rounded-lg">
+                        {getEventTypeIcon(evento.tipo)}
+                      </div>
+
+                      <div>
+                        <h5 className="font-medium text-[#001427] dark:text-white">{evento.titulo}</h5>
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                          <Calendar className="h-3 w-3" /> {evento.data} - {evento.hora}
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                          <span>{evento.local}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="notas">
+              {/* Grades Tab */}
+              <div className="bg-white dark:bg-[#1E293B] rounded-xl p-6 shadow-md border border-[#FF6B00]/10 dark:border-[#FF6B00]/20">
+                <h3 className="text-xl font-bold text-[#001427] dark:text-white mb-4 font-montserrat">Notas</h3>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full table-auto border-collapse">
+                    <thead>
+                      <tr>
+                        <th className="p-2 border border-gray-200 dark:border-gray-800 text-left text-gray-700 dark:text-gray-300">Avaliação</th>
+                        <th className="p-2 border border-gray-200 dark:border-gray-800 text-left text-gray-700 dark:text-gray-300">Nota</th>
+                        <th className="p-2 border border-gray-200 dark:border-gray-800 text-left text-gray-700 dark:text-gray-300">Peso</th>
+                        <th className="p-2 border border-gray-200 dark:border-gray-800 text-left text-gray-700 dark:text-gray-300">Data</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {turmaDetalhada.notas.map((nota) => (
+                        <tr key={nota.id}>
+                          <td className="p-2 border border-gray-200 dark:border-gray-800 text-left">{nota.avaliacao}</td>
+                          <td className="p-2 border border-gray-200 dark:border-gray-800 text-left">{nota.nota === null ? "Pendente" : nota.nota}</td>
+                          <td className="p-2 border border-gray-200 dark:border-gray-800 text-left">{nota.peso}%</td>
+                          <td className="p-2 border border-gray-200 dark:border-gray-800 text-left">{nota.data}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default TurmasView;
