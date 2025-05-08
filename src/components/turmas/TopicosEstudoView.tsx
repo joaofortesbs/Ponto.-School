@@ -334,14 +334,14 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
               </button>
             </div>
 
-            {/* Barra de pesquisa sofisticada */}
-            <div className="relative flex-1 group">
+            {/* Barra de pesquisa sofisticada - tamanho reduzido */}
+            <div className="relative w-64 group">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-4 w-4 text-white/40 group-focus-within:text-[#FF6B00] transition-colors" />
               </div>
               <Input
                 type="text"
-                placeholder="Buscar por grupos ou temas específicos..."
+                placeholder="Buscar grupos..."
                 className="pl-10 pr-20 py-2 bg-black/30 border-white/5 hover:border-white/10 focus:border-[#FF6B00]/50 focus:ring-[#FF6B00]/10 h-10 rounded-lg w-full text-white shadow-inner text-sm"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
