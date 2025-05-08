@@ -153,7 +153,10 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose }) =>
           top: "5vh",
           left: "50%",
           transform: "translateX(-50%)",
-          margin: 0
+          margin: 0,
+          maxHeight: "90vh",
+          display: "flex",
+          flexDirection: "column"
         }}
       >
         <AnimatePresence>
@@ -249,14 +252,14 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose }) =>
                   </TabsList>
                 </div>
 
-                <TabsContent value={activeTab} className="flex-grow p-4 data-[state=active]:mt-0">
+                <TabsContent value={activeTab} className="flex-grow p-4 data-[state=active]:mt-0 overflow-hidden">
                   <div className="flex h-full gap-4">
                     {/* Barra lateral de arquivos */}
                     {activeTab === "todos" && conteudosFiltrados.length > 0 && (
                       <div className="w-64 flex-shrink-0 border-r border-white/10 pr-3">
                         <div className="text-sm font-medium mb-2 text-gray-300">Tipos de Conteúdo</div>
-                        <ScrollArea className="h-[calc(100%-30px)]">
-                          <div className="space-y-1.5">
+                        <ScrollArea className="h-[calc(100%-30px)]" scrollHideDelay={0}>
+                          <div className="space-y-1.5 pr-2">
                             {["pdf", "documento", "imagem", "audio", "video", "link", "nota"].map(tipo => {
                               const count = conteudos.filter(item => item.tipo === tipo).length;
                               let icon;
@@ -331,9 +334,9 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose }) =>
                     )}
 
                     {/* Conteúdo principal */}
-                    <ScrollArea className="flex-grow h-full">
+                    <ScrollArea className="flex-grow h-full overflow-y-auto" scrollHideDelay={0}>
                       {conteudosFiltrados.length > 0 ? (
-                        <div className="grid grid-cols-1 gap-3">
+                        <div className="grid grid-cols-1 gap-3 pr-4">
                           {conteudosFiltrados.map(item => (
                             <ConteudoCard 
                               key={item.id} 
