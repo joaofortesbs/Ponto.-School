@@ -579,23 +579,21 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose, onPe
 
                       <div className="h-4 w-px bg-white/20 mx-1"></div>
 
-                      <div className="flex items-center py-1.5 px-3 bg-[#000a18] w-full rounded-none border-y border-white/5 hover:bg-[#000a18]/80 transition-colors">
-                        <Checkbox 
-                          id="permitir-todos" 
-                          checked={permiteUsarTodos}
-                          onCheckedChange={(checked) => {
-                            const value = checked as boolean;
-                            setPermiteUsarTodos(value);
-                            if (onPermiteUsarTodosChange) {
-                              onPermiteUsarTodosChange(value);
-                            }
-                          }}
-                          className="bg-transparent border-white/30 data-[state=checked]:bg-[#0D23A0] data-[state=checked]:border-[#0D23A0]"
-                        />
-                        <label htmlFor="permitir-todos" className="ml-2 text-sm font-medium text-white cursor-pointer whitespace-nowrap">
-                          Permitir que a IA use todos os conteúdos marcados como base
-                        </label>
-                      </div>
+                      <Checkbox 
+                        id="permitir-todos" 
+                        checked={permiteUsarTodos}
+                        onCheckedChange={(checked) => {
+                          const value = checked as boolean;
+                          setPermiteUsarTodos(value);
+                          if (onPermiteUsarTodosChange) {
+                            onPermiteUsarTodosChange(value);
+                          }
+                        }}
+                        className="bg-[#131d2e]/50 border-white/30 data-[state=checked]:bg-[#0D23A0] data-[state=checked]:border-[#0D23A0]"
+                      />
+                      <label htmlFor="permitir-todos" className="text-sm font-medium text-gray-200 cursor-pointer">
+                        Permitir que a IA use todos os conteúdos marcados como base
+                      </label>
                     </div>
                   </div>
 
@@ -666,7 +664,8 @@ const ConteudoCard: React.FC<ConteudoCardProps> = ({
         return <BookOpen className="h-5 w-5 text-amber-500" />;
       default:
         return <FileText className="h-5 w-5 text-gray-500" />;
-    }  };
+    }
+  };
 
   const handleAddTag = () => {
     if (newTag.trim() && !conteudo.tags.includes(newTag.trim())) {
