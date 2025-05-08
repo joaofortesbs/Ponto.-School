@@ -1059,13 +1059,7 @@ export default function TurmasPage() {
                   >
                     <FolderKanban className="h-4 w-4" /> Minhas Turmas
                   </TabsTrigger>
-                  <TabsTrigger
-                    value="grupos"
-                    onClick={() => navigate("/turmas?view=grupos")}
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF6B00]/10 data-[state=active]:to-[#FF8C40]/10 data-[state=active]:text-[#FF6B00] data-[state=active]:border-[#FF6B00] border rounded-lg px-4 py-2 font-montserrat flex items-center gap-2 transition-all duration-300 hover:shadow-md data-[state=active]:shadow-md transform hover:scale-[1.02] data-[state=active]:scale-[1.02]"
-                  >
-                    <Users2 className="h-4 w-4" /> Grupos de Estudo
-                  </TabsTrigger>
+                  
                   <TabsTrigger
                     value="desempenho"
                     onClick={() => navigate("/turmas?view=desempenho")}
@@ -1180,30 +1174,7 @@ export default function TurmasPage() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="grupos" className="mt-6">
-                <div className="mb-4 flex justify-end">
-                  <EpictusIAHelper context="grupos de estudo" />
-                </div>
-                <div className="text-center py-8">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="flex flex-col items-center justify-center"
-                  >
-                    <div className="w-24 h-24 rounded-full bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20 flex items-center justify-center mb-6 animate-pulse-custom">
-                      <Users2 className="h-12 w-12 text-[#FF6B00]" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3 font-montserrat animate-highlight">
-                      Grupos de Estudo em breve
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400 max-w-md mb-8 font-open-sans">
-                      Esta funcionalidade estará disponível em uma atualização
-                      futura.
-                    </p>
-                  </motion.div>
-                </div>
-              </TabsContent>
+              
 
               <TabsContent value="desempenho" className="mt-6">
                 <DesempenhoView />

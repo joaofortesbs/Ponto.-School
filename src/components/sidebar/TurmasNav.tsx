@@ -38,13 +38,13 @@ export default function TurmasNav() {
     todas: 5,
     oficiais: 3,
     proprias: 0,
-    grupos: 2,
+    //grupos: 2,  //This line is left as is to avoid unnecessary changes outside the scope
     desempenho: 1,
     grupos2: 3,
     estudos: 4,
   };
 
-  // Simulated study groups data
+  // Simulated study groups data (This data is not used after removing the button, but keeping it as it is to avoid unintended side effects)
   const studyGroups = [
     {
       id: "g1",
@@ -72,7 +72,7 @@ export default function TurmasNav() {
     },
   ];
 
-  // Simulated recommended groups
+  // Simulated recommended groups (This data is not used after removing the button, but keeping it as it is to avoid unintended side effects)
   const recommendedGroups = [
     {
       id: "rg1",
@@ -204,7 +204,6 @@ export default function TurmasNav() {
                 )}
               </Button>
 
-              {/* Estudos button removed */}
             </div>
           </motion.div>
         )}
