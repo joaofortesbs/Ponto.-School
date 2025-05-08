@@ -34,6 +34,19 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
   const [isDeepSearchModalOpen, setIsDeepSearchModalOpen] = useState(false);
   const [isBibliotecaModalOpen, setIsBibliotecaModalOpen] = useState(false);
   const [isSearchActive, setIsSearchActive] = useState(false);
+  const [isBibliotecaActive, setIsBibliotecaActive] = useState(() => {
+    try {
+      // Verificar se há uma configuração salva no localStorage
+      const bibliotecaConteudos = localStorage.getItem('bibliotecaConteudos');
+      if (bibliotecaConteudos) {
+        // Por padrão, se existirem conteúdos na biblioteca, assumimos que a opção está ativa
+        return true;
+      }
+    } catch (e) {
+      console.error("Erro ao carregar estado da biblioteca:", e);
+    }
+    return false;
+  });
   return (
     <motion.div 
       className="relative w-[60%] h-auto mx-auto bg-transparent rounded-2xl shadow-xl 
@@ -86,13 +99,15 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
               <span>Gerar Imagem</span>
             </button>
             <button 
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gradient-to-r from-[#0a1625]/70 to-[#182c4d]/70 text-gray-200 
-                       rounded-lg border border-white/10 backdrop-blur-sm hover:bg-gradient-to-r 
-                       hover:from-[#0D23A0]/40 hover:to-[#5B21BD]/40 hover:border-amber-500/30
-                       hover:text-white transition-all duration-300 flex-shrink-0 shadow-sm"
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs 
+                       rounded-lg border backdrop-blur-sm transition-all duration-300 flex-shrink-0 shadow-sm
+                       ${isBibliotecaActive 
+                         ? "bg-gradient-to-r from-[#0D23A0]/70 to-[#5B21BD]/70 text-white border-amber-500/50" 
+                         : "bg-gradient-to-r from-[#0a1625]/70 to-[#182c4d]/70 text-gray-200 border-white/10 hover:bg-gradient-to-r hover:from-[#0D23A0]/40 hover:to-[#5B21BD]/40 hover:border-amber-500/30 hover:text-white"
+                       }`}
               onClick={() => setIsBibliotecaModalOpen(true)}
             >
-              <BookOpen size={14} className="text-amber-300" />
+              <BookOpen size={14} className={isBibliotecaActive ? "text-amber-100" : "text-amber-300"} />
               <span>Biblioteca</span>
             </button>
           </div>
@@ -246,6 +261,7 @@ const EpictusMessageBox: React.FC<EpictusMessageBoxProps> = ({
       <BibliotecaModal 
         isOpen={isBibliotecaModalOpen}
         onClose={() => setIsBibliotecaModalOpen(false)}
+        onPermiteUsarTodosChange={(value) => setIsBibliotecaActive(value)}
       />
     </motion.div>
   );

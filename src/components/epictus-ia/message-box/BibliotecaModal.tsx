@@ -27,9 +27,10 @@ export interface ConteudoBiblioteca {
 interface BibliotecaModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onPermiteUsarTodosChange?: (value: boolean) => void;
 }
 
-const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose }) => {
+const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose, onPermiteUsarTodosChange }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [conteudos, setConteudos] = useState<ConteudoBiblioteca[]>([]);
   const [activeTab, setActiveTab] = useState("todos");
@@ -548,7 +549,13 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose }) =>
                       <Checkbox 
                         id="permitir-todos" 
                         checked={permiteUsarTodos}
-                        onCheckedChange={(checked) => setPermiteUsarTodos(checked as boolean)}
+                        onCheckedChange={(checked) => {
+                          const value = checked as boolean;
+                          setPermiteUsarTodos(value);
+                          if (onPermiteUsarTodosChange) {
+                            onPermiteUsarTodosChange(value);
+                          }
+                        }}
                         className="bg-[#131d2e]/50 border-white/30 data-[state=checked]:bg-[#0D23A0] data-[state=checked]:border-[#0D23A0]"
                       />
                       <label htmlFor="permitir-todos" className="text-sm font-medium text-gray-200 cursor-pointer">
