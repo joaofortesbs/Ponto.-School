@@ -401,8 +401,31 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
               </div>
               </div>
 
-              <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-4 overflow-x-auto pb-2 hide-scrollbar">
-                {topicosEstudo.map((topico) => (
+              <div className="relative mt-2">
+                {/* Botão de rolagem para a esquerda */}
+                <button 
+                  onClick={() => {
+                    const container = document.getElementById('topicos-container');
+                    if (container) {
+                      container.scrollBy({ left: -300, behavior: 'smooth' });
+                    }
+                  }}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-gradient-to-r from-[#070e1a] to-transparent pr-8 pl-2 h-10 flex items-center justify-center text-white/80 hover:text-white rounded-r-lg transition-opacity duration-300"
+                  style={{ opacity: '0.8' }}
+                  aria-label="Rolar para a esquerda"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                    <path d="m15 18-6-6 6-6"/>
+                  </svg>
+                </button>
+
+                {/* Container com rolagem horizontal */}
+                <div 
+                  id="topicos-container"
+                  className="flex overflow-x-auto pb-4 pt-2 hide-scrollbar gap-4 scroll-smooth"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                  {topicosEstudo.map((topico) => (
                   <motion.div
                     key={topico.id}
                     initial={{ rotateY: 0 }}
@@ -544,6 +567,24 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                     </div>
                   </motion.div>
                 ))}
+                </div>
+
+                {/* Botão de rolagem para a direita */}
+                <button 
+                  onClick={() => {
+                    const container = document.getElementById('topicos-container');
+                    if (container) {
+                      container.scrollBy({ left: 300, behavior: 'smooth' });
+                    }
+                  }}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-gradient-to-l from-[#070e1a] to-transparent pl-8 pr-2 h-10 flex items-center justify-center text-white/80 hover:text-white rounded-l-lg transition-opacity duration-300"
+                  style={{ opacity: '0.8' }}
+                  aria-label="Rolar para a direita"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                    <path d="m9 18 6-6-6-6"/>
+                  </svg>
+                </button>
               </div>
             </motion.div>
           )}

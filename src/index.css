@@ -126,6 +126,24 @@
 }
 
 
+/* Estilos para botões de navegação dos tópicos */
+#topicos-container {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+#topicos-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Animação suave para os botões de rolagem */
+@keyframes fade-in-out {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
 /* Estilos para efeitos 3D */
 .perspective-1000 {
   perspective: 1000px;
