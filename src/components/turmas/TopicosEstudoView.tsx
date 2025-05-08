@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Search, Filter, Sparkles, BookOpen, Users, TrendingUp, ChevronRight, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -119,7 +118,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                     <ChevronRight className="h-5 w-5" />
                   </Button>
                 </div>
-                
+
                 {hoveredTopic === topico.id && (
                   <motion.div 
                     initial={{ opacity: 0, height: 0 }}
@@ -153,7 +152,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                 IA Premium
               </Badge>
             </div>
-            
+
             <p className="text-white/60 text-sm mb-6">
               Nossa IA analisou seu perfil e encontrou estes grupos perfeitos para seu estilo de aprendizado:
             </p>
@@ -204,7 +203,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
               <TrendingUp className="h-5 w-5 mr-2 text-[#FF6B00]" />
               Análise de Participação
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
@@ -220,7 +219,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                   <span className="ml-1">este mês</span>
                 </div>
               </motion.div>
-              
+
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -235,7 +234,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                   <span className="ml-1">este mês</span>
                 </div>
               </motion.div>
-              
+
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -251,7 +250,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                 </div>
               </motion.div>
             </div>
-            
+
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -305,7 +304,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
             <div className="flex bg-black/30 p-0.5 rounded-lg shadow-inner border border-white/5 min-w-[280px] max-w-[280px]">
               <button
                 onClick={() => setInterfaceAtiva("meus-grupos")}
-                className={`flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-all flex items-center justify-center gap-1 ${
+                className={`flex-1 py-1.5 px-4 rounded-md text-xs font-medium transition-all flex items-center justify-center gap-1.5 ${
                   interfaceAtiva === "meus-grupos"
                     ? "bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-sm"
                     : "text-white/70 hover:bg-white/5"
@@ -315,7 +314,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
               </button>
               <button
                 onClick={() => setInterfaceAtiva("recomendacoes-ia")}
-                className={`flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-all flex items-center justify-center gap-1 ${
+                className={`flex-1 py-1.5 px-4 rounded-md text-xs font-medium transition-all flex items-center justify-center gap-1.5 ${
                   interfaceAtiva === "recomendacoes-ia"
                     ? "bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-sm"
                     : "text-white/70 hover:bg-white/5"
@@ -325,7 +324,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
               </button>
               <button
                 onClick={() => setInterfaceAtiva("estatisticas")}
-                className={`flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-all flex items-center justify-center gap-1 ${
+                className={`flex-1 py-1.5 px-4 rounded-md text-xs font-medium transition-all flex items-center justify-center gap-1.5 ${
                   interfaceAtiva === "estatisticas"
                     ? "bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-sm"
                     : "text-white/70 hover:bg-white/5"
@@ -415,7 +414,7 @@ const TopicosEstudoView: React.FC<TopicosEstudoViewProps> = ({ className }) => {
                           background: `radial-gradient(circle at center, ${topico.cor} 0%, transparent 70%)`,
                         }}
                       />
-                      
+
                       {/* Pequeno indicador de novidade no canto */}
                       {topico.novoConteudo && (
                         <div className="absolute top-2 right-2 h-2 w-2 rounded-full bg-[#FF6B00] animate-pulse"></div>
