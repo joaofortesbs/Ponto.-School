@@ -5,54 +5,23 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Search, Plus, Users, Calendar, Filter, ChevronRight } from "lucide-react";
 import GroupCard from "../../GroupCard";
+import { gruposEstudo } from "@/components/estudos/data/gruposEstudo";
+import SimpleGroupCard from "../../SimpleGroupCard";
 
-// Mock data for study groups
-const mockGruposEstudo = [
-  {
-    id: "g1",
-    name: "Grupo de Mecânica Quântica",
-    members: ["Ana", "Pedro", "Você"],
-    nextMeeting: "16/03, 18:00",
-    course: "Física Quântica",
-    description: "Grupo dedicado ao estudo de Mecânica Quântica, com foco na preparação para o projeto final da disciplina.",
-    hasNewMessages: true,
-    lastActivity: "Hoje, 14:30",
-    coverImage: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&q=80",
-  },
-  {
-    id: "g2",
-    name: "Preparação para o Projeto Final",
-    members: ["Mariana", "João", "Carla", "Você"],
-    nextMeeting: "23/03, 19:00",
-    course: "Física Quântica",
-    description: "Grupo focado na preparação para o projeto final do semestre, com ênfase em aplicações práticas.",
-    hasNewMessages: true,
-    lastActivity: "Ontem, 20:15",
-    coverImage: "https://images.unsplash.com/photo-1606326608606-aa0b62935f2b?w=800&q=80",
-  },
-  {
-    id: "g3",
-    name: "Grupo de Cálculo Avançado",
-    members: ["Roberto", "Luiza", "Você"],
-    nextMeeting: "18/03, 17:30",
-    course: "Cálculo Avançado",
-    description: "Discussões sobre tópicos avançados de cálculo diferencial e integral, com resolução de exercícios.",
-    hasNewMessages: false,
-    lastActivity: "3 dias atrás",
-    coverImage: "https://images.unsplash.com/photo-1596495578065-6e0763fa1178?w=800&q=80",
-  },
-  {
-    id: "g4",
-    name: "Programação em Python",
-    members: ["Rafael", "Camila", "Gustavo", "Você"],
-    nextMeeting: "25/03, 15:00",
-    course: "Introdução à Programação",
-    description: "Grupo para prática de programação em Python, desenvolvimento de projetos e resolução de desafios.",
-    hasNewMessages: false,
-    lastActivity: "1 semana atrás",
-    coverImage: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80",
-  },
-];
+// Estrutura adaptada para o formato do GroupCard
+const adaptedGrupos = gruposEstudo.map(grupo => ({
+  id: grupo.id,
+  name: grupo.nome,
+  members: [`${grupo.membros} membros`],
+  nextMeeting: grupo.proximaReuniao,
+  course: grupo.disciplina,
+  description: grupo.descricao || `Grupo de estudos sobre ${grupo.topico}`,
+  hasNewMessages: grupo.novasMensagens,
+  lastActivity: `Progresso: ${grupo.progresso}%`,
+  coverImage: grupo.imagem,
+  topico: grupo.topico,
+  nivel: grupo.nivel
+}));
 
 interface GruposEstudoInterfaceProps {
   className?: string;
@@ -60,22 +29,38 @@ interface GruposEstudoInterfaceProps {
 
 const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className }) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredGrupos, setFilteredGrupos] = useState(mockGruposEstudo);
+  const [selectedDisciplina, setSelectedDisciplina] = useState<string | null>(null);
+  const [selectedNivel, setSelectedNivel] = useState<string | null>(null);
+  const [filteredGrupos, setFilteredGrupos] = useState(adaptedGrupos);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  // Filter groups based on search query
+  // Obter disciplinas e níveis únicos para filtros
+  const disciplinas = Array.from(new Set(gruposEstudo.map(grupo => grupo.disciplina)));
+  const niveis = Array.from(new Set(gruposEstudo.map(grupo => grupo.nivel)));
+
+  // Filtrar grupos com base na pesquisa e filtros selecionados
   useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setFilteredGrupos(mockGruposEstudo);
-    } else {
-      const filtered = mockGruposEstudo.filter(
+    let filtered = adaptedGrupos;
+    
+    if (searchQuery.trim() !== "") {
+      filtered = filtered.filter(
         (grupo) =>
           grupo.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          grupo.course.toLowerCase().includes(searchQuery.toLowerCase())
+          grupo.course.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (grupo.description && grupo.description.toLowerCase().includes(searchQuery.toLowerCase()))
       );
-      setFilteredGrupos(filtered);
     }
-  }, [searchQuery]);
+    
+    if (selectedDisciplina && selectedDisciplina !== "todas") {
+      filtered = filtered.filter((grupo) => grupo.course === selectedDisciplina);
+    }
+    
+    if (selectedNivel && selectedNivel !== "todos") {
+      filtered = filtered.filter((grupo) => grupo.nivel === selectedNivel);
+    }
+    
+    setFilteredGrupos(filtered);
+  }, [searchQuery, selectedDisciplina, selectedNivel]);
 
   const handleGroupSelect = (group: any) => {
     console.log("Selected group:", group);
@@ -108,11 +93,53 @@ const GruposEstudoInterface: React.FC<GruposEstudoInterfaceProps> = ({ className
           </Button>
         </div>
       </div>
+      
+      <div className="mb-4 flex flex-wrap gap-3">
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="px-3 py-1 bg-gray-100 dark:bg-gray-800 flex items-center">
+            <Filter className="h-3 w-3 mr-1 text-gray-500" />
+            <span className="text-sm text-gray-600 dark:text-gray-300">Filtros:</span>
+          </Badge>
+        </div>
+        
+        <div className="flex items-center">
+          <select
+            className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-[#FF6B00] focus:border-[#FF6B00] p-1.5"
+            value={selectedDisciplina || "todas"}
+            onChange={(e) => setSelectedDisciplina(e.target.value === "todas" ? null : e.target.value)}
+          >
+            <option value="todas">Todas as disciplinas</option>
+            {disciplinas.map((disciplina) => (
+              <option key={disciplina} value={disciplina}>
+                {disciplina}
+              </option>
+            ))}
+          </select>
+        </div>
+        
+        <div className="flex items-center">
+          <select
+            className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-[#FF6B00] focus:border-[#FF6B00] p-1.5"
+            value={selectedNivel || "todos"}
+            onChange={(e) => setSelectedNivel(e.target.value === "todos" ? null : e.target.value)}
+          >
+            <option value="todos">Todos os níveis</option>
+            {niveis.map((nivel) => (
+              <option key={nivel} value={nivel}>
+                {nivel}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredGrupos.map((grupo) => (
           <div key={grupo.id} className="min-w-[300px]">
-            <GroupCard group={grupo} onClick={() => handleGroupSelect(grupo)} />
+            <GroupCard 
+              group={grupo} 
+              onClick={() => handleGroupSelect(grupo)} 
+            />
           </div>
         ))}
       </div>
