@@ -1197,7 +1197,8 @@ export default function TurmasPage() {
   );
 }
 
-function GruposEstudoView() {
+// Esta é uma função local apenas para fallback
+function GruposEstudoPlaceholder() {
   return (
     <div>
       {/* Implement Grupos de Estudo view here */}
