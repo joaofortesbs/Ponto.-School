@@ -147,19 +147,20 @@ const BibliotecaModal: React.FC<BibliotecaModalProps> = ({ isOpen, onClose }) =>
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl p-0 h-[90vh] right-0 overflow-hidden border-0 rounded-l-2xl rounded-r-none bg-gradient-to-br from-[#0a0f1a] to-[#131d2e] text-white shadow-2xl"
+      <DialogContent className="max-w-4xl p-0 h-[90vh] overflow-hidden border-0 rounded-2xl bg-gradient-to-br from-[#0a0f1a] to-[#131d2e] text-white shadow-2xl"
         style={{ 
-          position: "fixed", 
-          top: "5vh", 
-          transform: "translateX(0%)",
+          position: "fixed",
+          top: "5vh",
+          left: "50%",
+          transform: "translateX(-50%)",
           margin: 0
         }}
       >
         <AnimatePresence>
           <motion.div
-            initial={{ x: 100, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 100, opacity: 0 }}
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 20, opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="w-full h-full flex flex-col"
           >
